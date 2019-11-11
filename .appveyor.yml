@@ -1,3 +1,5 @@
+image: Visual Studio 2019
+
 environment:
   matrix:
     - compiler: msvc-16-seh
