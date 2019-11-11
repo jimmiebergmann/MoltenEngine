@@ -1,30 +1,48 @@
-image: Visual Studio 2019
-
 environment:
   matrix:
-    - compiler: msvc-16-seh
+  
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+      compiler: msvc-16-seh
       generator: "Visual Studio 16 2019"
       configuration: Debug
       arch: x64
       
-    - compiler: msvc-16-seh
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+      compiler: msvc-16-seh
+      generator: "Visual Studio 16 2019"
+      configuration: Release
+      arch: Win32
+    
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+      compiler: msvc-16-seh
+      generator: "Visual Studio 16 2019"
+      configuration: Release
+      arch: x64
+      
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+      compiler: msvc-16-seh
       generator: "Visual Studio 16 2019"
       configuration: Debug
       arch: Win32
       
-    - compiler: msvc-15-seh
+      
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      compiler: msvc-15-seh
       generator: "Visual Studio 15 2017"
       configuration: Debug
 
-    - compiler: msvc-15-seh
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      compiler: msvc-15-seh
       generator: "Visual Studio 15 2017 Win64"
       configuration: Debug
 
-    - compiler: msvc-15-seh
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      compiler: msvc-15-seh
       generator: "Visual Studio 15 2017"
       configuration: Release
 
-    - compiler: msvc-15-seh
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      compiler: msvc-15-seh
       generator: "Visual Studio 15 2017 Win64"
       configuration: Release
       
