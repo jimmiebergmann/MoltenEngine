@@ -1,31 +1,43 @@
-image:
-  - Visual Studio 2015
-  - Visual Studio 2017
-  - Visual Studio 2019
+environment:
+  matrix:
+    - compiler: msvc-16-seh
+      generator: "Visual Studio 16 2019"
+      configuration: Debug
+      arch: x64
+      
+    - compiler: msvc-16-seh
+      generator: "Visual Studio 16 2019"
+      configuration: Debug
+      arch: Win32
+      
+    - compiler: msvc-15-seh
+      generator: "Visual Studio 15 2017"
+      configuration: Debug
 
-configuration:
-  - Debug
-  - Release
+    - compiler: msvc-15-seh
+      generator: "Visual Studio 15 2017 Win64"
+      configuration: Debug
+
+    - compiler: msvc-15-seh
+      generator: "Visual Studio 15 2017"
+      configuration: Release
+
+    - compiler: msvc-15-seh
+      generator: "Visual Studio 15 2017 Win64"
+      configuration: Release
+      
   
-platform:
-  - x86
-  - x64
-  
-matrix:
-  fast_finish: false
-  
-before_build:
+install:
   - git submodule update --init --recursive
+  - cmake --version
+  
+build_script:
   - mkdir build
   - cd build
-  - cmake ..
-  - cd ..
-  
-build:
-  parallel: true
-  project: build\CurseEngine.sln
-  verbosity: minimal
-  
+  - echo %configuration%
+  - cmake -G "%generator%" -A "%arch%" "-DCMAKE_BUILD_TYPE=%configuration%" ..
+  - cmake --build . --config %configuration%
+   
 after_build:
-   - cd bin
+   - cd ../bin
    - CurseCoreTest.exe
