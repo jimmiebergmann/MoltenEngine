@@ -5,6 +5,10 @@ find_package(Threads)
 
 option(CODE_COVERAGE "Enables coverage reporting" OFF)
 
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED OFF)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 set(CoreIncludeDir "${CMAKE_SOURCE_DIR}/core/include")
 set(CoreSourceDir "${CMAKE_SOURCE_DIR}/core/source")
 file(GLOB_RECURSE CoreSources "${CoreSourceDir}/*.c" "${CoreSourceDir}/*.cpp")

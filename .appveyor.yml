@@ -10,7 +10,7 @@ environment:
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
       compiler: msvc-16-seh
       generator: "Visual Studio 16 2019"
-      configuration: Release
+      configuration: Debug
       arch: Win32
     
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
@@ -22,7 +22,7 @@ environment:
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
       compiler: msvc-16-seh
       generator: "Visual Studio 16 2019"
-      configuration: Debug
+      configuration: Release
       arch: Win32
       
       
@@ -44,6 +44,27 @@ environment:
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
       compiler: msvc-15-seh
       generator: "Visual Studio 15 2017 Win64"
+      configuration: Release
+      
+    
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+      compiler: msvc-14-seh
+      generator: "Visual Studio 14 2015"
+      configuration: Debug
+
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+      compiler: msvc-14-seh
+      generator: "Visual Studio 14 2015 Win64"
+      configuration: Debug
+
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+      compiler: msvc-14-seh
+      generator: "Visual Studio 14 2015"
+      configuration: Release
+
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+      compiler: msvc-14-seh
+      generator: "Visual Studio 14 2015 Win64"
       configuration: Release
       
   
