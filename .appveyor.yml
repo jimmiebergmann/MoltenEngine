@@ -1,0 +1,31 @@
+image:
+  - Visual Studio 2015
+  - Visual Studio 2017
+  - Visual Studio 2019
+
+configuration:
+  - Debug
+  - Release
+  
+platform:
+  - x86
+  - x64
+  
+matrix:
+  fast_finish: false
+  
+before_build:
+  - git submodule update --init --recursive
+  - mkdir build
+  - cd build
+  - cmake ..
+  - cd ..
+  
+build:
+  parallel: true
+  project: build\CurseEngine.sln
+  verbosity: minimal
+  
+after_build:
+   - cd bin
+   - CurseCoreTest.exe
