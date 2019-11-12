@@ -37,9 +37,9 @@ set_target_properties( CurseCoreTest
   PROPERTIES
   OUTPUT_NAME_DEBUG "CurseCoreTestDebug"
   OUTPUT_NAME_RELEASE "CurseCoreTest"
-  RUNTIME_OUTPUT_DIRECTORY "${RootDir}/bin/test"
-  RUNTIME_OUTPUT_DIRECTORY_DEBUG "${RootDir}/bin/test"
-  RUNTIME_OUTPUT_DIRECTORY_RELEASE "${RootDir}/bin/test"
+  RUNTIME_OUTPUT_DIRECTORY "${RootDir}/bin"
+  RUNTIME_OUTPUT_DIRECTORY_DEBUG "${RootDir}/bin"
+  RUNTIME_OUTPUT_DIRECTORY_RELEASE "${RootDir}/bin"
 )
 
 if(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU") ## Code coverage

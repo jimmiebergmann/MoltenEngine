@@ -47,9 +47,9 @@ script:
   - cmake -DCODE_COVERAGE=ON -DCMAKE_BUILD_TYPE=${CONFIG} ..
   - cmake --build . --config ${CONFIG}
   # Run test
-  - cd ../bin/test
+  - cd ../bin
   - valgrind --leak-check=full --track-origins=yes --error-exitcode=1 ./CurseCoreTest${OUTPUT_NAME_POSTFIX}
-  - cd ../../build
+  - cd ../build
   
 after_success:
   #- lcov --directory ./CMakeFiles/CurseCoreTest.dir --capture --output-file coverage.info

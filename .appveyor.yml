@@ -86,5 +86,5 @@ build_script:
   - cmake --build . --config %configuration%
    
 after_build:
-   - cd ../bin/test
+   - cd ../bin
    - CurseCoreTest%output_name_postfix%.exe
