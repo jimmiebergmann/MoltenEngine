@@ -5,6 +5,8 @@
 /bin
 /lib
 /Lib
+/docs
+/Docs
 
 # Prerequisites
 *.d
