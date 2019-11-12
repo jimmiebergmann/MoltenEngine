@@ -20,28 +20,21 @@ matrix:
       compiler: gcc
       env:
         - CONFIG=Release
-        #- MATRIX_EVAL="CC=gcc-6 CXX=g++-6"
         
     - os: linux
       compiler: gcc
       env:
         - CONFIG=Debug OUTPUT_NAME_POSTFIX=Debug
-        #- MATRIX_EVAL="CC=gcc-6 CXX=g++-6"
         
     - os: linux
       compiler: clang
       env:
         - CONFIG=Release
-        #- MATRIX_EVAL="CC=clang-6.0 CXX=clang++-6.0"
         
     - os: linux
       compiler: clang
       env:
         - CONFIG=Debug OUTPUT_NAME_POSTFIX=Debug
-        #- MATRIX_EVAL="CC=clang-6.0 CXX=clang++-6.0"
-
-#before_install:
-#  - eval "${MATRIX_EVAL}" 
   
 script:
   # Checks
