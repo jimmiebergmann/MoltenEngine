@@ -14,11 +14,8 @@ set(CoreIncludeDir "${RootDir}/core/include")
 set(CoreTestDir "${CMAKE_CURRENT_SOURCE_DIR}")
 file(GLOB_RECURSE CoreTestSources "${CoreTestDir}/*.c" "${CoreTestDir}/*.cpp")
 
-message("${CMAKE_CURRENT_SOURCE_DIR}")
-message("${RootDir}")
-message("${CoreIncludeDir}")
-message("${CoreTestDir}")
-message("${CoreTestSources}")
+message("Current source dir: ${CMAKE_CURRENT_SOURCE_DIR}")
+message("Code coverage: ${CODE_COVERAGE}")
 
 
 SET(gtest_force_shared_crt on CACHE BOOL

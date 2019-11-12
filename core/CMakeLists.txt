@@ -15,11 +15,8 @@ set(CoreSourceDir "${CMAKE_CURRENT_SOURCE_DIR}/source")
 file(GLOB_RECURSE CoreHeaders "${CoreIncludeDir}/*.h" "${CoreIncludeDir}/*.hpp" "${CoreIncludeDir}/*.inl")
 file(GLOB_RECURSE CoreSources "${CoreSourceDir}/*.c" "${CoreSourceDir}/*.cpp")
 
-message("${CMAKE_CURRENT_SOURCE_DIR}")
-message("${CoreIncludeDir}")
-message("${CoreSourceDir}")
-message("${CoreHeaders}")
-message("${CoreSources}")
+message("Current source dir: ${CMAKE_CURRENT_SOURCE_DIR}")
+message("Code coverage: ${CODE_COVERAGE}")
 
 
 include_directories ("${CoreIncludeDir}")
@@ -44,5 +41,10 @@ set_target_properties( Curse
   RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_CURRENT_SOURCE_DIR}/../bin"
   RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_CURRENT_SOURCE_DIR}/../bin"
 )
+
+if(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+  set_target_properties(Curse PROPERTIES COMPILE_FLAGS "-lgcov --coverage")
+  target_link_libraries(Curse "gcov")
+endif(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU")
 
 
