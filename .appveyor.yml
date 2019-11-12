@@ -5,12 +5,14 @@ environment:
       compiler: msvc-16-seh
       generator: "Visual Studio 16 2019"
       configuration: Debug
+      output_name_postfix: Debug
       arch: x64
       
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
       compiler: msvc-16-seh
       generator: "Visual Studio 16 2019"
       configuration: Debug
+      output_name_postfix: Debug
       arch: Win32
     
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
@@ -30,11 +32,13 @@ environment:
       compiler: msvc-15-seh
       generator: "Visual Studio 15 2017"
       configuration: Debug
+      output_name_postfix: Debug
 
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
       compiler: msvc-15-seh
       generator: "Visual Studio 15 2017 Win64"
       configuration: Debug
+      output_name_postfix: Debug
 
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
       compiler: msvc-15-seh
@@ -51,11 +55,13 @@ environment:
       compiler: msvc-14-seh
       generator: "Visual Studio 14 2015"
       configuration: Debug
+      output_name_postfix: Debug
 
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
       compiler: msvc-14-seh
       generator: "Visual Studio 14 2015 Win64"
       configuration: Debug
+      output_name_postfix: Debug
 
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
       compiler: msvc-14-seh
@@ -81,4 +87,4 @@ build_script:
    
 after_build:
    - cd ../bin/test
-   - CurseCoreTest%configuration%.exe
+   - CurseCoreTest%output_name_postfix%.exe

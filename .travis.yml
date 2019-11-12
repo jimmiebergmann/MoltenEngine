@@ -1,64 +1,47 @@
 language: cpp
 
 dist: trusty
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - g++-4.9
+      - clang-3.9
+      - lcov
+      - valgrind
+    update: true
   
 matrix:
   include:
   
     - os: linux
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - g++-6
-            - valgrind
-            - lcov
+      compiler: gcc
       env:
-        - CONFIG=RELEASE
-        - MATRIX_EVAL="CC=gcc-6 CXX=g++-6"
+        - CONFIG=Release
+        #- MATRIX_EVAL="CC=gcc-6 CXX=g++-6"
         
     - os: linux
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - g++-6
-            - valgrind
-            - lcov
+      compiler: gcc
       env:
         - CONFIG=Debug OUTPUT_NAME_POSTFIX=Debug
-        - MATRIX_EVAL="CC=gcc-6 CXX=g++-6"
+        #- MATRIX_EVAL="CC=gcc-6 CXX=g++-6"
         
     - os: linux
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - g++-6
-            - valgrind
-            - lcov
+      compiler: clang
       env:
-        - CONFIG=RELEASE
-        - MATRIX_EVAL="CC=clang-6.0 CXX=clang++-6.0"
+        - CONFIG=Release
+        #- MATRIX_EVAL="CC=clang-6.0 CXX=clang++-6.0"
         
     - os: linux
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - g++-6
-            - valgrind
-            - lcov
+      compiler: clang
       env:
         - CONFIG=Debug OUTPUT_NAME_POSTFIX=Debug
-        - MATRIX_EVAL="CC=clang-6.0 CXX=clang++-6.0"
+        #- MATRIX_EVAL="CC=clang-6.0 CXX=clang++-6.0"
 
-before_install:
-  - eval "${MATRIX_EVAL}" 
+#before_install:
+#  - eval "${MATRIX_EVAL}" 
   
 script:
   # Checks
