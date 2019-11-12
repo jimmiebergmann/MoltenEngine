@@ -80,5 +80,5 @@ build_script:
   - cmake --build . --config %configuration%
    
 after_build:
-   - cd ../bin
-   - CurseCoreTest.exe
+   - cd ../bin/test
+   - CurseCoreTest%configuration%.exe
