@@ -1,11 +1,11 @@
 ignore:
-  - "bin"
-  - "out"
-  - "build"
-  - "editor"
-  - "out"
-  - "test"
-  - "vendor"
+  - "Bin"
+  - "Out"
+  - "Build"
+  - "Editor"
+  - "Out"
+  - "Test"
+  - "Vendor"
 coverage:
   range: 50..80
   round: down
