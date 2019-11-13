@@ -70,4 +70,37 @@ namespace Curse
         return time;
     }
 
+    template<typename T>
+    inline Time Milliseconds(const T milliseconds)
+    {
+        std::chrono::duration<T> durSecs(milliseconds);
+        auto durNano = std::chrono::duration_cast<std::chrono::nanoseconds>(durSecs);
+
+        Time time;
+        time.m_duration = std::chrono::nanoseconds(durNano);
+        return time;
+    }
+
+    template<typename T>
+    inline Time Microseconds(const T microseconds)
+    {
+        std::chrono::duration<T> durSecs(milliseconds);
+        auto durNano = std::chrono::duration_cast<std::chrono::nanoseconds>(durSecs);
+
+        Time time;
+        time.m_duration = std::chrono::nanoseconds(durNano);
+        return time;
+    }
+
+    template<typename T>
+    inline Time Nanoseconds(const T nanoseconds)
+    {
+        std::chrono::duration<T> durSecs(milliseconds);
+        auto durNano = std::chrono::duration_cast<std::chrono::nanoseconds>(durSecs);
+
+        Time time;
+        time.m_duration = std::chrono::nanoseconds(durNano);
+        return time;
+    }
+
 }

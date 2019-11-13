@@ -33,7 +33,8 @@
 
 namespace Curse
 {
-    TEST(System, Time)
+   
+    TEST(System, Time_Construction)
     {
         {
             EXPECT_EQ(Seconds<float>(1.0f).AsSeconds<float>(), 1.0f);
@@ -43,12 +44,25 @@ namespace Curse
             EXPECT_EQ(Seconds<int32_t>(12345).AsSeconds<int32_t>(), 12345);
             EXPECT_EQ(Seconds<int32_t>(-12345).AsSeconds<int32_t>(), -12345);
             EXPECT_EQ(Seconds<float>(1.5f).AsSeconds<int32_t>(), 1);
-        }
-        {
+  
             EXPECT_EQ(Seconds<int64_t>(2).AsSeconds<int64_t>(), 2LL);
             EXPECT_EQ(Seconds<int64_t>(2).AsMilliseconds<int64_t>(), 2000LL);
             EXPECT_EQ(Seconds<int64_t>(2).AsMicroseconds<int64_t>(), 2000000LL);
             EXPECT_EQ(Seconds<int64_t>(2).AsNanoseconds<int64_t>(), 2000000000LL);
+        }
+        {
+            /*EXPECT_EQ(Seconds<float>(1.0f).AsSeconds<float>(), 1.0f);
+            EXPECT_EQ(Seconds<float>(2.0f).AsSeconds<float>(), 2.0f);
+            EXPECT_EQ(Seconds<float>(-1.0f).AsSeconds<float>(), -1.0f);
+            EXPECT_EQ(Seconds<float>(-2.0f).AsSeconds<float>(), -2.0f);
+            EXPECT_EQ(Seconds<int32_t>(12345).AsSeconds<int32_t>(), 12345);
+            EXPECT_EQ(Seconds<int32_t>(-12345).AsSeconds<int32_t>(), -12345);
+            EXPECT_EQ(Seconds<float>(1.5f).AsSeconds<int32_t>(), 1);
+
+            EXPECT_EQ(Seconds<int64_t>(2).AsSeconds<int64_t>(), 2LL);
+            EXPECT_EQ(Seconds<int64_t>(2).AsMilliseconds<int64_t>(), 2000LL);
+            EXPECT_EQ(Seconds<int64_t>(2).AsMicroseconds<int64_t>(), 2000000LL);
+            EXPECT_EQ(Seconds<int64_t>(2).AsNanoseconds<int64_t>(), 2000000000LL);*/
         }
     }
     TEST(System, Time_Operators)
@@ -83,7 +97,7 @@ namespace Curse
         }
         {
             Time time = Seconds<int32_t>(5) * -6.5f;
-            EXPECT_EQ(time.AsSeconds<int32_t>(), -31);
+            EXPECT_EQ(time.AsSeconds<int32_t>(), -32);
         }
     }
 

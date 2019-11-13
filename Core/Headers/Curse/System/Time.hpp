@@ -117,8 +117,29 @@ namespace Curse
 
     };
 
+    /**
+    * @brief Function for constructing a time object in seconds.
+    */
     template<typename T>
     Time Seconds(const T seconds);
+
+    /**
+    * @brief Function for constructing a time object in milliseconds.
+    */
+    template<typename T>
+    Time Milliseconds(const T milliseconds);
+
+    /**
+    * @brief Function for constructing a time object in microseconds.
+    */
+    template<typename T>
+    Time Microseconds(const T microseconds);
+
+    /**
+    * @brief Function for constructing a time object in nanoseconds.
+    */
+    template<typename T>
+    Time Nanoseconds(const T nanoseconds);
 
 }
 
