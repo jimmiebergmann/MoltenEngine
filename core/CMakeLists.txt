@@ -1,8 +1,20 @@
 project (Curse)
 cmake_minimum_required(VERSION 2.8)
-include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/Tools.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/../Cmake/Tools.cmake)
 
 find_package(Threads)
+
+# Force warnings as errors
+if(MSVC)
+  if(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
+    string(REGEX REPLACE "/W[0-4]" "/W4" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+  else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
+  endif()
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /WX")
+elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-long-long -pedantic -fno-elide-constructors")
+endif()
 
 option(CODE_COVERAGE "Enables coverage reporting" OFF)
 
@@ -10,36 +22,37 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED OFF)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-set(CoreIncludeDir "${CMAKE_CURRENT_SOURCE_DIR}/include")
-set(CoreSourceDir "${CMAKE_CURRENT_SOURCE_DIR}/source")
-file(GLOB_RECURSE CoreHeaders "${CoreIncludeDir}/*.h" "${CoreIncludeDir}/*.hpp" "${CoreIncludeDir}/*.inl")
+set(RootDir "${CMAKE_CURRENT_SOURCE_DIR}/..")
+set(CoreHeadersDir "${CMAKE_CURRENT_SOURCE_DIR}/Headers")
+set(CoreSourceDir "${CMAKE_CURRENT_SOURCE_DIR}/Source")
+file(GLOB_RECURSE CoreHeaders "${CoreHeadersDir}/*.h" "${CoreHeadersDir}/*.hpp" "${CoreHeadersDir}/*.inl")
 file(GLOB_RECURSE CoreSources "${CoreSourceDir}/*.c" "${CoreSourceDir}/*.cpp")
 
 message("Current source dir: ${CMAKE_CURRENT_SOURCE_DIR}")
 message("Code coverage: ${CODE_COVERAGE}")
 
 
-include_directories ("${CoreIncludeDir}")
+include_directories ("${CoreHeadersDir}")
 add_library(Curse SHARED "${CoreSources}" "${CoreHeaders}")  
 
 CreateSourceGroups("${CoreSources}" "${CoreSourceDir}")
-CreateSourceGroups("${CoreHeaders}" "${CoreIncludeDir}")
+CreateSourceGroups("${CoreHeaders}" "${CoreHeadersDir}")
 
 target_compile_definitions(Curse PRIVATE CURSE_EXPORT)
-install(TARGETS Curse DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}/lib") # Install library
+install(TARGETS Curse DESTINATION "${RootDir}/Lib") # Install library
 set_target_properties( Curse
   PROPERTIES
   OUTPUT_NAME_DEBUG "CurseDebug"
   OUTPUT_NAME_RELEASE "Curse"
-  ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../lib"
-  ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${CMAKE_CURRENT_SOURCE_DIR}/../lib"
-  ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${CMAKE_CURRENT_SOURCE_DIR}/../lib"
-  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../lib"
-  LIBRARY_OUTPUT_DIRECTORY_DEBUG "${CMAKE_CURRENT_SOURCE_DIR}/../lib"
-  LIBRARY_OUTPUT_DIRECTORY_RELEASE "${CMAKE_CURRENT_SOURCE_DIR}/../lib"
-  RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../bin"
-  RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_CURRENT_SOURCE_DIR}/../bin"
-  RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_CURRENT_SOURCE_DIR}/../bin"
+  ARCHIVE_OUTPUT_DIRECTORY "${RootDir}/Lib"
+  ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${RootDir}/Lib"
+  ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${RootDir}/Lib"
+  LIBRARY_OUTPUT_DIRECTORY "${RootDir}/Lib"
+  LIBRARY_OUTPUT_DIRECTORY_DEBUG "${RootDir}/Lib"
+  LIBRARY_OUTPUT_DIRECTORY_RELEASE "${RootDir}/Lib"
+  RUNTIME_OUTPUT_DIRECTORY "${RootDir}/Bin"
+  RUNTIME_OUTPUT_DIRECTORY_DEBUG "${RootDir}/Bin"
+  RUNTIME_OUTPUT_DIRECTORY_RELEASE "${RootDir}/Bin"
 )
 
 if(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU")

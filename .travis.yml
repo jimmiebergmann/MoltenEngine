@@ -42,17 +42,17 @@ script:
   - gcc --version
   - gcov --version
   # Build
-  - mkdir build
-  - cd build
+  - mkdir Build
+  - cd Build
   - cmake -DCODE_COVERAGE=ON -DCMAKE_BUILD_TYPE=${CONFIG} ..
   - cmake --build . --config ${CONFIG}
   # Run test
-  - cd ../bin
+  - cd ../Bin
   - valgrind --leak-check=full --track-origins=yes --error-exitcode=1 ./CurseCoreTest${OUTPUT_NAME_POSTFIX}
-  - cd ../build
+  - cd ../Build
   
 after_success:
-  - lcov --directory ./core --capture --output-file coverage.info
+  - lcov --directory ./Core --capture --output-file coverage.info
   - lcov -e coverage.info '*/source/Curse/*' --output-file coverage.info
   - lcov --list coverage.info
   - bash <(curl -s https://codecov.io/bash)

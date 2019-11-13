@@ -79,12 +79,12 @@ install:
   - cmake --version
   
 build_script:
-  - mkdir build
-  - cd build
+  - mkdir Build
+  - cd Build
   - echo %configuration%
   - cmake -G "%generator%" -A "%arch%" "-DCMAKE_BUILD_TYPE=%configuration%" ..
   - cmake --build . --config %configuration%
    
 after_build:
-   - cd ../bin
+   - cd ../Bin
    - CurseCoreTest%output_name_postfix%.exe

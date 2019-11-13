@@ -23,59 +23,51 @@
 *
 */
 
-#include "Curse/System/Semaphore.hpp"
-
 namespace Curse
 {
 
-    Semaphore::Semaphore() :
-        m_value(0),
-        m_waitCount(0)
+    template<typename T>
+    inline T Time::AsSeconds() const
     {
+        return static_cast<T>(m_duration.count() / std::nano::den);
     }
 
-    size_t Semaphore::GetWaitCount() const
+    template<typename T>
+    inline T Time::AsMilliseconds() const
     {
-        std::lock_guard<std::mutex> lock(m_mutex);
-        return m_waitCount;
+        return static_cast<T>(m_duration.count() / std::micro::den);
     }
 
-    void Semaphore::NotifyAll()
+    template<typename T>
+    inline T Time::AsMicroseconds() const
     {
-        std::unique_lock<std::mutex> lock(m_mutex);
-        m_value += static_cast<int32_t>(m_waitCount);
-        m_condition.notify_all();
+        return static_cast<T>(m_duration.count() / std::milli::den);
     }
 
-    void Semaphore::NotifyOne()
+    template<typename T>
+    inline T Time::AsNanoseconds() const
     {
-        std::unique_lock<std::mutex> lock(m_mutex);
-        ++m_value;
-        m_condition.notify_one();
+        return static_cast<T>(m_duration.count());
     }
 
-    void Semaphore::Wait()
+    template<typename T>
+    inline Time Time::operator * (const T multiplier) const
     {
-        std::unique_lock<std::mutex> lock(m_mutex);
-        ++m_waitCount;
-        while (!m_value)
-        {
-            m_condition.wait(lock);
-        }
-        --m_waitCount;
-        --m_value;
+        Time newTime;
+        std::chrono::duration<T, std::nano> newDur(m_duration * multiplier);
+        newTime.m_duration = std::chrono::duration_cast<std::chrono::nanoseconds>(newDur);
+        return newTime;
     }
 
-    void Semaphore::WaitFor(const std::chrono::duration<float>& duration)
-    {
-        std::unique_lock<std::mutex> lock(m_mutex);
-        ++m_waitCount;
-        while (!m_value)
-        {
-            m_condition.wait_for(lock, duration);
-        }
-        --m_waitCount;
-        --m_value;
+    template<typename T>
+    inline Time Seconds(const T seconds)
+    {   
+        std::chrono::duration<T> durSecs(seconds);
+        auto durNano = std::chrono::duration_cast<std::chrono::nanoseconds>(durSecs);
+
+        Time time;
+        time.m_duration = std::chrono::nanoseconds(durNano);
+        return time;
     }
 
 }

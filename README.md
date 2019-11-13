@@ -7,9 +7,10 @@ Real-time game engine framework and editor.
 ## Build
 ```sh
 $ git clone --recurse-submodules https://github.com/jimmiebergmann/CurseEngine.git
-$ mkdir CurseEngine/build
-$ cd CurseEngine/build
+$ mkdir CurseEngine/Build
+$ cd CurseEngine/Build
 $ cmake ..
+$ cmake --build . --config Release
 ```
 
 ## Branches

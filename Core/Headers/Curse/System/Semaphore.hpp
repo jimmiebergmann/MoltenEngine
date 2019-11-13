@@ -23,16 +23,18 @@
 *
 */
 
-#include "Curse/Types.hpp"
+#ifndef CURSE_CORE_SYSTEM_SEMAPHORE_HPP
+#define CURSE_CORE_SYSTEM_SEMAPHORE_HPP
+
+#include "Curse/System/Time.hpp"
 #include <mutex>
 #include <condition_variable>
-#include <chrono>
 
 namespace Curse
 {
 
     /**
-    * @brief Sempahore class.
+    * @brief Thread safe sempahore class.
     *        Providing a lockable object,
     *        making it possible to block the current thread, until being notified and unblocked.
     */
@@ -48,14 +50,14 @@ namespace Curse
         Semaphore();
 
         /**
-        * @brief Block current thread.
+        * @brief Deleted copy constructor.
         */
-        void Wait();
+        Semaphore(const Semaphore &) = delete;
 
         /**
-        * @brief Block current thread by given maximum duration.
+        * @brief Get number of blocked threads by Wait() or WaitFor().
         */
-        void WaitFor(const std::chrono::duration<float> & duration);
+        size_t GetWaitCount() const;
 
         /**
         * @brief Unblocks all threads being blocked by a call to Wait() or TryWait().
@@ -64,16 +66,29 @@ namespace Curse
 
         /**
         * @brief Unblocks any waiting thread.
+        *        Increments value of semaphore.
         */
         void NotifyOne();
+
+        /**
+        * @brief Block current thread.
+        */
+        void Wait();
+
+        /**
+        * @brief Block current thread by given maximum duration.
+        */
+        void WaitFor(const std::chrono::duration<float> & duration);      
 
     private:
 
         int32_t m_value;
-        std::mutex m_mutex;
+        mutable std::mutex m_mutex;
         std::condition_variable m_condition;
+        size_t m_waitCount;
 
     };
 
 }
 
+#endif

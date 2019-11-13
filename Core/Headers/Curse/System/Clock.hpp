@@ -23,11 +23,47 @@
 *
 */
 
-#ifndef CURSE_TYPES_HPP
-#define CURSE_TYPES_HPP
+#ifndef CURSE_CORE_SYSTEM_CLOCK_HPP
+#define CURSE_CORE_SYSTEM_CLOCK_HPP
 
-#include "Curse/Core.hpp"
-#include <stdint.h>
-#include <stddef.h>
+#include "Curse/System/Time.hpp"
+
+namespace Curse
+{
+
+    /**
+    * @brief Clock class.
+    *        It's not possible to stop or pause a clock.
+    *        Clock starts to tick at construction.
+    */
+    class CURSE_API Clock
+    {
+
+    public:
+
+        /**
+        * @brief Constructor.
+        *
+        * @param startTime Initial time of clock.
+        */
+        Clock(const Time startTime = Time::Zero);
+
+        /**
+        * @brief Copy constructor.
+        */
+        Clock(const Clock& clock);
+
+        /**
+        * @brief Get current time of clock.
+        */
+        Time GetTime() const;
+
+    private:
+
+        //Time m_startTime;
+
+    };
+
+}
 
 #endif

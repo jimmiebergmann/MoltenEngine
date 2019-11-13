@@ -23,59 +23,33 @@
 *
 */
 
-#include "Curse/System/Semaphore.hpp"
+#include "Curse/System/Clock.hpp"
 
 namespace Curse
 {
 
-    Semaphore::Semaphore() :
-        m_value(0),
-        m_waitCount(0)
+    Clock::Clock(const Time /*startTime*/)// :
+       // m_startTime(startTime)
+    {
+        /*std::chrono::time_point<std::chrono::system_clock> time;
+
+
+        std::chrono::duration<float> dur(1.0f);
+
+        auto left = time - dur;
+
+        left.time_since_epoch().count();*/
+    }
+
+    Clock::Clock(const Clock& /*clock*/)// :
+        //m_startTime(clock.m_startTime)
     {
     }
 
-    size_t Semaphore::GetWaitCount() const
+    Time Clock::GetTime() const
     {
-        std::lock_guard<std::mutex> lock(m_mutex);
-        return m_waitCount;
-    }
-
-    void Semaphore::NotifyAll()
-    {
-        std::unique_lock<std::mutex> lock(m_mutex);
-        m_value += static_cast<int32_t>(m_waitCount);
-        m_condition.notify_all();
-    }
-
-    void Semaphore::NotifyOne()
-    {
-        std::unique_lock<std::mutex> lock(m_mutex);
-        ++m_value;
-        m_condition.notify_one();
-    }
-
-    void Semaphore::Wait()
-    {
-        std::unique_lock<std::mutex> lock(m_mutex);
-        ++m_waitCount;
-        while (!m_value)
-        {
-            m_condition.wait(lock);
-        }
-        --m_waitCount;
-        --m_value;
-    }
-
-    void Semaphore::WaitFor(const std::chrono::duration<float>& duration)
-    {
-        std::unique_lock<std::mutex> lock(m_mutex);
-        ++m_waitCount;
-        while (!m_value)
-        {
-            m_condition.wait_for(lock, duration);
-        }
-        --m_waitCount;
-        --m_value;
+        Time time;
+        return time;
     }
 
 }

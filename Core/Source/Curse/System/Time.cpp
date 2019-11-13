@@ -23,59 +23,45 @@
 *
 */
 
-#include "Curse/System/Semaphore.hpp"
+#include "Curse/System/Time.hpp"
+#include <iostream>
 
 namespace Curse
 {
 
-    Semaphore::Semaphore() :
-        m_value(0),
-        m_waitCount(0)
+    const Time Time::Zero;
+
+    Time::Time() :
+        m_duration(0)
     {
     }
 
-    size_t Semaphore::GetWaitCount() const
+    Time Time::operator - (const Time& time) const
     {
-        std::lock_guard<std::mutex> lock(m_mutex);
-        return m_waitCount;
+        Time newTime;
+        newTime.m_duration = m_duration - time.m_duration;
+        return newTime;
     }
 
-    void Semaphore::NotifyAll()
+    Time Time::operator + (const Time& time) const
     {
-        std::unique_lock<std::mutex> lock(m_mutex);
-        m_value += static_cast<int32_t>(m_waitCount);
-        m_condition.notify_all();
+        Time newTime;
+        newTime.m_duration = m_duration + time.m_duration;
+        return newTime;
     }
 
-    void Semaphore::NotifyOne()
+    Time Time::operator / (const Time& time) const
     {
-        std::unique_lock<std::mutex> lock(m_mutex);
-        ++m_value;
-        m_condition.notify_one();
+        Time newTime;
+        newTime.m_duration = std::chrono::nanoseconds(m_duration / time.m_duration);
+        return newTime;
     }
 
-    void Semaphore::Wait()
-    {
-        std::unique_lock<std::mutex> lock(m_mutex);
-        ++m_waitCount;
-        while (!m_value)
-        {
-            m_condition.wait(lock);
-        }
-        --m_waitCount;
-        --m_value;
-    }
-
-    void Semaphore::WaitFor(const std::chrono::duration<float>& duration)
-    {
-        std::unique_lock<std::mutex> lock(m_mutex);
-        ++m_waitCount;
-        while (!m_value)
-        {
-            m_condition.wait_for(lock, duration);
-        }
-        --m_waitCount;
-        --m_value;
+    Time Time::GetSystemTime()
+    {      
+        Time time;        
+        time.m_duration = std::chrono::steady_clock::now().time_since_epoch();
+        return time;
     }
 
 }

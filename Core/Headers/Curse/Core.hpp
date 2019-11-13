@@ -23,8 +23,8 @@
 *
 */
 
-#ifndef CURSE_CORE_HPP
-#define CURSE_CORE_HPP
+#ifndef CURSE_CORE_CORE_HPP
+#define CURSE_CORE_CORE_HPP
 
 // Windows
 #if defined( _WIN32 ) || defined( __WIN32__ ) || defined( _WIN64 ) || defined( __WIN64__ )
