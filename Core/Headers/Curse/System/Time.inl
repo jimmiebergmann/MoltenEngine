@@ -29,25 +29,29 @@ namespace Curse
     template<typename T>
     inline T Time::AsSeconds() const
     {
-        return static_cast<T>(m_duration.count() / std::nano::den);
+        auto time = std::chrono::duration_cast<std::chrono::duration<T> >(m_duration);
+        return static_cast<T>(time.count());
     }
 
     template<typename T>
     inline T Time::AsMilliseconds() const
     {
-        return static_cast<T>(m_duration.count() / std::micro::den);
+        auto time = std::chrono::duration_cast<std::chrono::duration<T, std::milli> >(m_duration);
+        return static_cast<T>(time.count());
     }
 
     template<typename T>
     inline T Time::AsMicroseconds() const
     {
-        return static_cast<T>(m_duration.count() / std::milli::den);
+        auto time = std::chrono::duration_cast<std::chrono::duration<T, std::micro> >(m_duration);
+        return static_cast<T>(time.count());
     }
 
     template<typename T>
     inline T Time::AsNanoseconds() const
     {
-        return static_cast<T>(m_duration.count());
+        auto time = std::chrono::duration_cast<std::chrono::duration<T, std::nano> >(m_duration);
+        return static_cast<T>(time.count());
     }
 
     template<typename T>
@@ -62,44 +66,44 @@ namespace Curse
     template<typename T>
     inline Time Seconds(const T seconds)
     {   
-        std::chrono::duration<T> durSecs(seconds);
-        auto durNano = std::chrono::duration_cast<std::chrono::nanoseconds>(durSecs);
+        std::chrono::duration<T> durBase(seconds);
+        auto dur = std::chrono::duration_cast<std::chrono::nanoseconds>(durBase);
 
         Time time;
-        time.m_duration = std::chrono::nanoseconds(durNano);
+        time.m_duration = std::chrono::nanoseconds(dur);
         return time;
     }
 
     template<typename T>
     inline Time Milliseconds(const T milliseconds)
     {
-        std::chrono::duration<T> durSecs(milliseconds);
-        auto durNano = std::chrono::duration_cast<std::chrono::nanoseconds>(durSecs);
+        std::chrono::duration<T, std::milli> durBase(milliseconds);
+        auto dur = std::chrono::duration_cast<std::chrono::microseconds>(durBase);
 
         Time time;
-        time.m_duration = std::chrono::nanoseconds(durNano);
+        time.m_duration = std::chrono::nanoseconds(dur);
         return time;
     }
 
     template<typename T>
     inline Time Microseconds(const T microseconds)
     {
-        std::chrono::duration<T> durSecs(milliseconds);
-        auto durNano = std::chrono::duration_cast<std::chrono::nanoseconds>(durSecs);
+        std::chrono::duration<T, std::micro> durBase(microseconds);
+        auto dur = std::chrono::duration_cast<std::chrono::microseconds>(durBase);
 
         Time time;
-        time.m_duration = std::chrono::nanoseconds(durNano);
+        time.m_duration = std::chrono::nanoseconds(dur);
         return time;
     }
 
     template<typename T>
     inline Time Nanoseconds(const T nanoseconds)
     {
-        std::chrono::duration<T> durSecs(milliseconds);
-        auto durNano = std::chrono::duration_cast<std::chrono::nanoseconds>(durSecs);
+        std::chrono::duration<T, std::nano> durBase(nanoseconds);
+        auto dur = std::chrono::duration_cast<std::chrono::nanoseconds>(durBase);
 
         Time time;
-        time.m_duration = std::chrono::nanoseconds(durNano);
+        time.m_duration = std::chrono::nanoseconds(dur);
         return time;
     }
 

@@ -114,6 +114,9 @@ namespace Curse
         std::chrono::nanoseconds m_duration;
 
         template<typename T> friend Time Seconds(const T seconds);
+        template<typename T> friend Time Milliseconds(const T milliseconds);
+        template<typename T> friend Time Microseconds(const T microseconds);
+        template<typename T> friend Time Nanoseconds(const T nanoseconds);
 
     };
 
