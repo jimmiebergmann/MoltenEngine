@@ -20,7 +20,7 @@ message("Code coverage: ${CODE_COVERAGE}")
 
 
 include_directories ("${CoreIncludeDir}")
-add_library(Curse SHARED ${CoreSources} ${CoreHeaders})  
+add_library(Curse SHARED "${CoreSources}" "${CoreHeaders}")  
 
 CreateSourceGroups("${CoreSources}" "${CoreSourceDir}")
 CreateSourceGroups("${CoreHeaders}" "${CoreIncludeDir}")

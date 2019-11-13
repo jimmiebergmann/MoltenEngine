@@ -1,5 +1,7 @@
 project (CurseCoreTests)
 cmake_minimum_required(VERSION 2.8)
+include(${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/Tools.cmake)
+
 
 find_package(Threads)
 
@@ -13,6 +15,7 @@ set(RootDir "${CMAKE_CURRENT_SOURCE_DIR}/../..")
 set(CoreIncludeDir "${RootDir}/core/include")
 set(CoreTestDir "${CMAKE_CURRENT_SOURCE_DIR}")
 file(GLOB_RECURSE CoreTestSources "${CoreTestDir}/*.c" "${CoreTestDir}/*.cpp")
+file(GLOB_RECURSE CoreTestHeaders "${CoreTestDir}/*.h" "${CoreTestDir}/*.hpp")
 
 message("Current source dir: ${CMAKE_CURRENT_SOURCE_DIR}")
 message("Code coverage: ${CODE_COVERAGE}")
@@ -29,7 +32,11 @@ if (CMAKE_VERSION VERSION_LESS 2.8.11)
 endif()
 include_directories ("${CoreIncludeDir}")
 
-add_executable(CurseCoreTest "${CoreTestSources}")
+add_executable(CurseCoreTest "${CoreTestSources}" "${CoreTestHeaders}")
+
+CreateSourceGroups("${CoreTestSources}" "${CoreTestDir}")
+CreateSourceGroups("${CoreTestHeaders}" "${CoreTestDir}")
+
 set_target_properties( CurseCoreTest
   PROPERTIES
   OUTPUT_NAME_DEBUG "CurseCoreTestDebug"

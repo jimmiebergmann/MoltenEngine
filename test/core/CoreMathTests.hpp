@@ -23,11 +23,18 @@
 *
 */
 
-#ifndef CURSE_TYPES_HPP
-#define CURSE_TYPES_HPP
+#ifndef CURSE_TEST_CORE_MATH_HPP
+#define CURSE_TEST_CORE_MATH_HPP
 
-#include "Curse/Core.hpp"
-#include <stdint.h>
-#include <stddef.h>
+#include "gtest/gtest.h"
+#include "Curse/Math/Vector.hpp"
+
+namespace Curse
+{
+    TEST(Math, Vector)
+    {
+    }
+
+}
 
 #endif

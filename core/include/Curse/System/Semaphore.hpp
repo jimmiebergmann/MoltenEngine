@@ -35,8 +35,6 @@ namespace Curse
     * @brief Sempahore class.
     *        Providing a lockable object,
     *        making it possible to block the current thread, until being notified and unblocked.
-    *
-    * Calling Wait() or TryWait() on multiple threads is undefined behaviour.
     */
     class CURSE_API Semaphore
     {
@@ -48,12 +46,6 @@ namespace Curse
         *        Initialized as unblocked.
         */
         Semaphore();
-
-        /**
-        * @brief Destructor of semaphore.
-        *        Thread is being unblocked at destruction.
-        */
-        ~Semaphore();
 
         /**
         * @brief Block current thread.

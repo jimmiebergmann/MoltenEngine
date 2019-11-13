@@ -23,6 +23,8 @@
 *
 */
 
+#ifndef CURSE_CORE_HPP
+#define CURSE_CORE_HPP
 
 // Windows
 #if defined( _WIN32 ) || defined( __WIN32__ ) || defined( _WIN64 ) || defined( __WIN64__ )
@@ -46,9 +48,10 @@
     #define CURSE_BUILD_DEBUG
 #endif
 
+// Export API
 #if !defined(CURSE_STATIC)
-    // Turn off microsoft STL vsc warning
     #ifdef _MSC_VER
+        // Turn off microsoft STL vsc warning
         #pragma warning(disable : 4251) // identifier' : class 'type' needs to have dll-interface to be used by clients of class 'type2'
     #endif
 
@@ -65,3 +68,6 @@
 #else
     #define CURSE_API
 #endif
+
+
+#endif // CURSE_CORE_HPP

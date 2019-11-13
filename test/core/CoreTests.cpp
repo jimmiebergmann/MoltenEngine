@@ -24,21 +24,8 @@
 */
 
 #include "gtest/gtest.h"
-#include "Curse/Math/Vector.hpp"
-#include "Curse/System/Semaphore.hpp"
-
-using namespace Curse;
-
-TEST(Math, Vector)
-{
-
-}
-
-TEST(System, Semaphore)
-{
-    Semaphore sem;
-}
-
+#include "CoreSystemTests.hpp"
+#include "CoreMathTests.hpp"
 
 int main(int argc, char** argv)
 {
