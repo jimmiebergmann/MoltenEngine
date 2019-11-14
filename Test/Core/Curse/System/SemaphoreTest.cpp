@@ -26,6 +26,7 @@
 #include "gtest/gtest.h"
 #include "Curse/System/Semaphore.hpp"
 #include "Curse/System/Clock.hpp"
+#include <thread>
 
 namespace Curse
 {
