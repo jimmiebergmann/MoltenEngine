@@ -28,36 +28,108 @@ namespace Curse
 
     // Vector D.
     template<size_t D, typename T>
-    Vector<D, T>::Vector()
+    inline Vector<D, T>::Vector()
     {
     }
 
     // Vector 2.
     template<typename T>
-    Vector<2, T>::Vector()
+    inline Vector<2, T>::Vector()
     {
     }
 
     template<typename T>
-    Vector<2, T>::Vector(const Type xy) :
-        x(xy), y(xy)
+    template<typename U>
+    inline Vector<2, T>::Vector(const U xy) :
+        x(static_cast<T>(xy)), y(static_cast<T>(xy))
     {
     }
 
     template<typename T>
-    Vector<2, T>::Vector(const Type x, const Type y) :
-       x(x), y(y)
+    template<typename U1, typename U2>
+    inline Vector<2, T>::Vector(const U1 x, const U2 y) :
+       x(static_cast<T>(x)), y(static_cast<T>(y))
     {
     }
 
     template<typename T>
-    Vector<2, T> Vector<2, T>::operator + (const Vector<2, T>& vector) const
+    inline Vector<2, T> Vector<2, T>::Absolute() const
+    {
+        return Vector2<T>(std::abs(x), std::abs(y));
+    }
+
+    template<typename T>
+    template<typename U>
+    inline U Vector<2, T>::Dot(const Vector<2, T>& vector) const
+    {
+        return static_cast<U>((x * vector.x) + (y * vector.y));
+    }
+
+    template<typename T>
+    template<typename U>
+    inline U Vector<2, T>::Length() const
+    {
+        return static_cast<U>(std::sqrt((x * x) + (y * y)));
+    }
+
+    template<typename T>
+    inline Vector<2, T> Vector<2, T>::Normal() const
+    {
+        T len = static_cast<T>(std::sqrt((x * x) + (y * y)));
+        if (len == static_cast<T>(0))
+        {
+            return { static_cast<T>(0), static_cast<T>(0) };
+        }
+        return { x / len, y / len };
+    }
+    template<>
+    inline Vector<2, float> Vector<2, float>::Normal() const
+    {
+        auto len = static_cast<float>(std::sqrt((x * x) + (y * y)));
+        if (len == 0.0f)
+        {
+            return { 0.0f, 0.0f };
+        }
+        len = 1.0f / len;
+        return { x * len, y * len };
+    }
+    template<>
+    inline Vector<2, double> Vector<2, double>::Normal() const
+    {
+        auto len = static_cast<double>(std::sqrt((x * x) + (y * y)));
+        if (len == 0.0f)
+        {
+            return { 0.0f, 0.0f };
+        }
+        len = 1.0f / len;
+        return { x * len, y * len };
+    }
+    template<>
+    inline Vector<2, long double> Vector<2, long double>::Normal() const
+    {
+        auto len = static_cast<long double>(std::sqrt((x * x) + (y * y)));
+        if (len == 0.0f)
+        {
+            return { 0.0f, 0.0f };
+        }
+        len = 1.0f / len;
+        return { x * len, y * len };
+    }
+
+    template<typename T>
+    inline Vector<2, T>& Vector<2, T>::Normalize()
+    {
+        return *this = Normal();
+    }
+
+    template<typename T>
+    inline Vector<2, T> Vector<2, T>::operator + (const Vector<2, T>& vector) const
     {
         return { x + vector.x, y + vector.y };
     }
 
     template<typename T>
-    Vector<2, T>& Vector<2, T>::operator += (const Vector<2, T>& vector)
+    inline Vector<2, T>& Vector<2, T>::operator += (const Vector<2, T>& vector)
     {
         x += vector.x;
         y += vector.y;
@@ -71,7 +143,7 @@ namespace Curse
     }
 
     template<typename T>
-    Vector<2, T>& Vector<2, T>::operator -= (const Vector<2, T>& vector)
+    inline Vector<2, T>& Vector<2, T>::operator -= (const Vector<2, T>& vector)
     {
         x -= vector.x;
         y -= vector.y;
@@ -79,25 +151,25 @@ namespace Curse
     }
 
     template<typename T>
-    Vector<2, T> Vector<2, T>::operator * (const Vector<2, T>& vector) const
+    inline Vector<2, T> Vector<2, T>::operator * (const Vector<2, T>& vector) const
     {
         return { x * vector.x, y * vector.y };
     }
     template<typename T>
-    Vector<2, T> Vector<2, T>::operator * (const Type scalar) const
+    inline Vector<2, T> Vector<2, T>::operator * (const T scalar) const
     {
         return { x * scalar, y * scalar };
     }
 
     template<typename T>
-    Vector<2, T>& Vector<2, T>::operator *= (const Vector<2, T>& vector)
+    inline Vector<2, T>& Vector<2, T>::operator *= (const Vector<2, T>& vector)
     {
         x *= vector.x;
         y *= vector.y;
         return *this;
     }
     template<typename T>
-    Vector<2, T>& Vector<2, T>::operator *= (const Type scalar)
+    inline Vector<2, T>& Vector<2, T>::operator *= (const T scalar)
     {
         x *= scalar;
         y *= scalar;
@@ -105,25 +177,25 @@ namespace Curse
     }
 
     template<typename T>
-    Vector<2, T> Vector<2, T>::operator / (const Vector<2, T>& vector) const
+    inline Vector<2, T> Vector<2, T>::operator / (const Vector<2, T>& vector) const
     {
         return { x / vector.x, y / vector.y };
     }
     template<typename T>
-    Vector<2, T> Vector<2, T>::operator / (const Type scalar) const
+    inline Vector<2, T> Vector<2, T>::operator / (const T scalar) const
     {
         return { x / scalar, y / scalar };
     }
 
     template<typename T>
-    Vector<2, T>& Vector<2, T>::operator /= (const Vector<2, T>& vector)
+    inline Vector<2, T>& Vector<2, T>::operator /= (const Vector<2, T>& vector)
     {
         x /= vector.x;
         y /= vector.y;
         return *this;
     }
     template<typename T>
-    Vector<2, T>& Vector<2, T>::operator /= (const Type scalar)
+    inline Vector<2, T>& Vector<2, T>::operator /= (const T scalar)
     {
         x /= scalar;
         y /= scalar;
@@ -131,13 +203,13 @@ namespace Curse
     }
 
     template<typename T>
-    bool Vector<2, T>::operator == (const Vector<2, Type>& vector) const
+    inline bool Vector<2, T>::operator == (const Vector<2, T>& vector) const
     {
         return x == vector.x && y == vector.y;
     }
 
     template<typename T>
-    bool Vector<2, T>::operator != (const Vector<2, Type>& vector) const
+    inline bool Vector<2, T>::operator != (const Vector<2, T>& vector) const
     {
         return x != vector.x || y != vector.y;
     }

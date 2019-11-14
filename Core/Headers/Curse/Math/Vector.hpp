@@ -27,6 +27,7 @@
 #define CURSE_CORE_MATH_VECTOR_HPP
 
 #include "Curse/Types.hpp"
+#include <cmath>
 
 namespace Curse
 {
@@ -49,7 +50,7 @@ namespace Curse
         */
         Vector();
 
-        Type c[Dimensions]; //< Components of vector.
+        T c[Dimensions]; //< Components of vector.
 
     };
 
@@ -75,91 +76,120 @@ namespace Curse
         * @brief Constructor.
         *        Initializes all components by input parameter.
         */
-        Vector(const Type xy);
+        template<typename U>
+        Vector(const U xy);
 
         /**
         * @brief Constructor.
         *        Initializes all components separately by input parameters.
         */
-        Vector(const Type x, const Type y);
+        template<typename U1, typename U2>
+        Vector(const U1 x, const U2 y);
+
+        /**
+        * @brief Get the absolute valute vector.
+        */
+        Vector<2, T> Absolute() const;
+
+        /**
+        * @brief Get dot product of vector.
+        */
+        template<typename U = T>
+        U Dot(const Vector<2, T>& vector) const;
+
+        /**
+        * @brief Get length of vector.
+        */
+        template<typename U = T>
+        U Length() const;
+
+        /**
+        * @brief Get normal out of vector.
+        */
+        Vector<2, T> Normal() const;
+
+        /**
+        * @brief Normalize vector.
+        */
+        Vector<2, T>& Normalize();
 
         /**
         * @brief Arithmetic addition operator.
         */
-        Vector<2, Type> operator + (const Vector<2, Type>& vector) const;
+        Vector<2, T> operator + (const Vector<2, T>& vector) const;
 
         /**
         * @brief Arithmetic addition assignment operator.
         */
-        Vector<2, Type>& operator += (const Vector<2, Type>& vector);
+        Vector<2, T>& operator += (const Vector<2, T>& vector);
 
         /**
         * @brief Arithmetic subtraction operator.
         */
-        Vector<2, Type> operator - (const Vector<2, Type>& vector) const;
+        Vector<2, T> operator - (const Vector<2, T>& vector) const;
 
         /**
         * @brief Arithmetic subtraction assignment operator.
         */
-        Vector<2, Type>& operator -= (const Vector<2, Type>& vector);
+        Vector<2, T>& operator -= (const Vector<2, T>& vector);
 
         /**
         * @brief Arithmetic multiplication operator.
         */
-        Vector<2, Type> operator * (const Vector<2, Type>& vector) const;
+        Vector<2, T> operator * (const Vector<2, T>& vector) const;
 
         /**
         * @brief Arithmetic multiplication operator.
         */
-        Vector<2, Type> operator * (const Type scalar) const;
+        Vector<2, T> operator * (const T scalar) const;
 
         /**
         * @brief Arithmetic multiplication assignment operator.
         */
-        Vector<2, Type>& operator *= (const Vector<2, Type>& vector);
+        Vector<2, T>& operator *= (const Vector<2, T>& vector);
 
         /**
         * @brief Arithmetic multiplication operator.
         */
-        Vector<2, Type>& operator *= (const Type scalar);
+        Vector<2, T>& operator *= (const T scalar);
 
         /**
         * @brief Arithmetic division operator.
         */
-        Vector<2, Type> operator / (const Vector<2, Type>& vector) const;
+        Vector<2, T> operator / (const Vector<2, T>& vector) const;
 
         /**
         * @brief Arithmetic division operator.
         */
-        Vector<2, Type> operator / (const Type scalar) const;
+        Vector<2, T> operator / (const T scalar) const;
 
         /**
         * @brief Arithmetic division assignment operator.
         */
-        Vector<2, Type>& operator /= (const Vector<2, Type>& vector);
+        Vector<2, T>& operator /= (const Vector<2, T>& vector);
 
         /**
         * @brief Arithmetic division assignment operator.
         */
-        Vector<2, Type>& operator /= (const Type scalar);
+        Vector<2, T>& operator /= (const T scalar);
 
         /**
         * @brief Equals to time comparation operator.
         */
-        bool operator == (const Vector<2, Type>& vector) const;
+        bool operator == (const Vector<2, T>& vector) const;
         /**
         * @brief Not equals to time comparation operator.
         */
-        bool operator != (const Vector<2, Type>& vector) const;
+        bool operator != (const Vector<2, T>& vector) const;
 
         union
         {
             struct
             {
-                Type x; //< X component of vector.
-                Type y; //< Y component of vector.
-            };
-            Type c[Dimensions]; //< Components of vector.
+                T x; //< X component of vector.
+                T y; //< Y component of vector.
+            } ;
+            T c[Dimensions]; //< Components of vector.
         };
 
     };

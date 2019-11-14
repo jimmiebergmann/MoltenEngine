@@ -236,4 +236,108 @@ namespace Curse
         }
     }
 
+    TEST(Math, Vector2_Length)
+    {
+        {
+            Vector2i32 vec(3, 4);
+            EXPECT_EQ(vec.Length(), int32_t(5));
+        }
+        {
+            Vector2f32 vec(50.0f, 0.0f);
+            EXPECT_EQ(vec.Length(), float(50.0f));
+        }
+        {
+            Vector2f32 vec(0.0f, -60.0f);
+            EXPECT_EQ(vec.Length(), float(60.0f));
+        }
+    }
+    TEST(Math, Vector2_Normal)
+    {
+        {
+            {
+                Vector2i32 vec1(100, 0);
+                EXPECT_EQ(vec1.Normal(), Vector2i32(1, 0));
+                Vector2i32 vec2(-200, 0);
+                EXPECT_EQ(vec2.Normal(), Vector2i32(-1, 0));
+                Vector2i32 vec3(0, 300);
+                EXPECT_EQ(vec3.Normal(), Vector2i32(0, 1));
+                Vector2i32 vec4(0, -400);
+                EXPECT_EQ(vec4.Normal(), Vector2i32(0, -1));
+            }
+            {
+                Vector2f32 vec1(100.0f, 0.0f);
+                EXPECT_EQ(vec1.Normal(), Vector2f32(1.0f, 0.0f));
+                Vector2f32 vec2(-200.0f, 0.0f);
+                EXPECT_EQ(vec2.Normal(), Vector2f32(-1.0f, 0.0f));
+                Vector2f32 vec3(0.0f, 300.0f);
+                EXPECT_EQ(vec3.Normal(), Vector2f32(0.0f, 1.0f));
+                Vector2f32 vec4(0.0f, -400.0f);
+                EXPECT_EQ(vec4.Normal(), Vector2f32(0.0f, -1.0f));
+            }
+            {
+                Vector2f64 vec1(100.0f, 0.0f);
+                EXPECT_EQ(vec1.Normal(), Vector2f64(1.0f, 0.0f));
+                Vector2f64 vec2(-200.0f, 0.0f);
+                EXPECT_EQ(vec2.Normal(), Vector2f64(-1.0f, 0.0f));
+                Vector2f64 vec3(0.0f, 300.0f);
+                EXPECT_EQ(vec3.Normal(), Vector2f64(0.0f, 1.0f));
+                Vector2f64 vec4(0.0f, -400.0f);
+                EXPECT_EQ(vec4.Normal(), Vector2f64(0.0f, -1.0f));
+            }
+            {
+                Vector2<long double> vec1(100.0f, 0.0f);
+                EXPECT_EQ(vec1.Normal(), Vector2<long double>(1.0f, 0.0f));
+                Vector2<long double> vec2(-200.0f, 0.0f);
+                EXPECT_EQ(vec2.Normal(), Vector2<long double>(-1.0f, 0.0f));
+                Vector2<long double> vec3(0.0f, 300.0f);
+                EXPECT_EQ(vec3.Normal(), Vector2<long double>(0.0f, 1.0f));
+                Vector2<long double> vec4(0.0f, -400.0f);
+                EXPECT_EQ(vec4.Normal(), Vector2<long double>(0.0f, -1.0f));
+            }
+        }
+        {
+            {
+                Vector2i32 vec(100, 0);
+                vec.Normalize();
+                EXPECT_EQ(vec, Vector2i32(1, 0));
+            }
+            {
+                Vector2i32 vec(-200, 0);
+                vec.Normalize();
+                EXPECT_EQ(vec, Vector2i32(-1, 0));
+            }
+            {
+                Vector2i32 vec(0, 300);
+                vec.Normalize();
+                EXPECT_EQ(vec, Vector2i32(0, 1));
+            }
+            {
+                Vector2i32 vec(0, -400);
+                vec.Normalize();
+                EXPECT_EQ(vec, Vector2i32(0, -1));
+            }
+        }
+    }
+
+    TEST(Math, Vector2_Dot)
+    {
+        {
+            Vector2f32 vec1(1.0f, 0.0f);
+            Vector2f32 vec2(1.0f, 0.0f);
+            EXPECT_EQ(vec1.Dot(vec2), float(1.0f));
+        }
+        {
+            Vector2f32 vec1(1.0f, 0.0f);
+            Vector2f32 vec2(-1.0f, 0.0f);
+            EXPECT_EQ(vec1.Dot(vec2), float(-1.0f));
+        }
+        {
+            Vector2f32 vec1(1.0f, 0.0f);
+            Vector2f32 vec2(0.0f, 1.0f);
+            Vector2f32 vec3(0.0f, -1.0f);
+            EXPECT_EQ(vec1.Dot(vec2), float(0.0f));
+            EXPECT_EQ(vec1.Dot(vec3), float(0.0f));
+        }
+    }
+
 }
