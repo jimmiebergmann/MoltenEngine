@@ -55,8 +55,8 @@ namespace Curse
     };
 
     /**
-   * @brief Linear algebra class for vectors.
-   */
+    * @brief Linear algebra class for vectors.
+    */
     template<typename T>
     class Vector<2, T>
     {
@@ -182,6 +182,8 @@ namespace Curse
         */
         bool operator != (const Vector<2, T>& vector) const;
 
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wpedantic"
         union
         {
             struct
@@ -191,6 +193,7 @@ namespace Curse
             } ;
             T c[Dimensions]; //< Components of vector.
         };
+        #pragma GCC diagnostic pop
 
     };
 
