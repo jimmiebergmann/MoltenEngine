@@ -118,7 +118,7 @@ namespace Curse
                 EXPECT_EQ(time.AsSeconds<int32_t>(), int32_t(-32));
             }
             {
-                Time time = Seconds<int32_t>(5) * long double(-6.5f);
+                Time time = Seconds<int32_t>(5) * (long double)(-6.5f);
                 EXPECT_EQ(time.AsSeconds<int32_t>(), int32_t(-32));
             }
         }
@@ -140,7 +140,7 @@ namespace Curse
             }
             {
                 Time time = Seconds<int32_t>(5);
-                time *= long double(-6.5f);
+                time *= (long double)(-6.5f);
                 EXPECT_EQ(time.AsSeconds<int32_t>(), int32_t(-32));
             }
         }
@@ -158,7 +158,7 @@ namespace Curse
                 EXPECT_EQ(time.AsSeconds<float>(), float(-0.5f));
             }
             {
-                Time time = Seconds<float>(20.0f) / long double(-40.0f);
+                Time time = Seconds<float>(20.0f) / (long double)(-40.0f);
                 EXPECT_EQ(time.AsSeconds<float>(), float(-0.5f));
             }
         }
@@ -180,7 +180,7 @@ namespace Curse
             }
             {
                 Time time = Seconds<float>(20.0f);
-                time /= long double(-40.0f);
+                time /= (long double)(-40.0f);
                 EXPECT_EQ(time.AsSeconds<float>(), float(-0.5f));
             }
         }

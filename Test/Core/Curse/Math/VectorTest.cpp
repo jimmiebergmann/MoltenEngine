@@ -23,38 +23,24 @@
 *
 */
 
-#ifndef CURSE_CORE_MATH_VECTOR_HPP
-#define CURSE_CORE_MATH_VECTOR_HPP
-
-#include "Curse/Types.hpp"
+#include "gtest/gtest.h"
+#include "Curse/Math/Vector.hpp"
 
 namespace Curse
 {
-
-    /**
-    * @brief Linear algebra class for vectors.
-    */
-    template<size_t D, typename T>
-    class Vector
+    TEST(Math, Vector)
     {
+        Vector<5, int> vec5i;
+        for (size_t i = 0; i < 5; i++)
+        {
+            vec5i.c[i] = static_cast<int>(i);
+        }
 
-    public:
-
-        using Type = T; //< Data type of vector components.
-        static const size_t Dimensions = D; //< Number of componenets.
-
-        /**
-        * @brief Constructor.
-        *        Vector's components are uninitialized.
-        */
-        Vector();
-
-        T c[D]; //< Components of vector.
-
-    };
+        EXPECT_EQ(vec5i.c[0], int(0));
+        EXPECT_EQ(vec5i.c[1], int(1));
+        EXPECT_EQ(vec5i.c[2], int(2));
+        EXPECT_EQ(vec5i.c[3], int(3));
+        EXPECT_EQ(vec5i.c[4], int(4));
+    }
 
 }
-
-#include "Vector.inl"
-
-#endif
