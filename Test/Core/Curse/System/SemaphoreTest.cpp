@@ -105,7 +105,7 @@ namespace Curse
             sem.WaitFor(Seconds(1));
             auto time = clock.GetTime();
             EXPECT_GE(time, Seconds(1.0f));
-            EXPECT_LE(time, Seconds(1.2f));
+            EXPECT_LE(time, Seconds(5.0f));
         }
     }
 
