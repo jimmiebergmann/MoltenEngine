@@ -75,7 +75,37 @@ namespace Curse
     }
     TEST(System, Time_Operators)
     {
-        
+        {
+            {
+                Time time = Seconds<int32_t>(3000) + Seconds<int32_t>(1000);
+                EXPECT_EQ(time.AsSeconds<int32_t>(), int32_t(4000));
+            }
+            {
+                Time time = Seconds<int32_t>(5000) + Seconds<int32_t>(6000);
+                EXPECT_EQ(time.AsSeconds<int32_t>(), int32_t(11000));
+            }
+            {
+                Time time = Seconds<int32_t>(5000) + Seconds<int32_t>(-6000);
+                EXPECT_EQ(time.AsSeconds<int32_t>(), int32_t(-1000));
+            }
+        }
+        {
+            {
+                Time time = Seconds<int32_t>(3000);
+                time += Seconds<int32_t>(1000);
+                EXPECT_EQ(time.AsSeconds<int32_t>(), int32_t(4000));
+            }
+            {
+                Time time = Seconds<int32_t>(5000);
+                time += Seconds<int32_t>(6000);
+                EXPECT_EQ(time.AsSeconds<int32_t>(), int32_t(11000));
+            }
+            {
+                Time time = Seconds<int32_t>(5000);
+                time += Seconds<int32_t>(-6000);
+                EXPECT_EQ(time.AsSeconds<int32_t>(), int32_t(-1000));
+            }
+        }
         {
             {
                 Time time = Seconds<int32_t>(3000) - Seconds<int32_t>(1000);
@@ -92,16 +122,19 @@ namespace Curse
         }
         {
             {
-                Time time = Seconds<int32_t>(3000) + Seconds<int32_t>(1000);
-                EXPECT_EQ(time.AsSeconds<int32_t>(), int32_t(4000));
+                Time time = Seconds<int32_t>(3000);
+                time -= Seconds<int32_t>(1000);
+                EXPECT_EQ(time.AsSeconds<int32_t>(), int32_t(2000));
             }
             {
-                Time time = Seconds<int32_t>(5000) + Seconds<int32_t>(6000);
-                EXPECT_EQ(time.AsSeconds<int32_t>(), int32_t(11000));
-            }
-            {
-                Time time = Seconds<int32_t>(5000) + Seconds<int32_t>(-6000);
+                Time time = Seconds<int32_t>(5000);
+                time -= Seconds<int32_t>(6000);
                 EXPECT_EQ(time.AsSeconds<int32_t>(), int32_t(-1000));
+            }
+            {
+                Time time = Seconds<int32_t>(5000);
+                time -= Seconds<int32_t>(-6000);
+                EXPECT_EQ(time.AsSeconds<int32_t>(), int32_t(11000));
             }
         }
         {
@@ -191,6 +224,18 @@ namespace Curse
             }
             {
                 Time time = Seconds<int32_t>(300) % Seconds<int32_t>(14);
+                EXPECT_EQ(time, Seconds<int32_t>(6));
+            }
+        }
+        {
+            {
+                Time time = Seconds<int32_t>(300);
+                time %= Seconds<int32_t>(10);
+                EXPECT_EQ(time, Seconds<int32_t>(0));
+            }
+            {
+                Time time = Seconds<int32_t>(300);
+                time %= Seconds<int32_t>(14);
                 EXPECT_EQ(time, Seconds<int32_t>(6));
             }
         }

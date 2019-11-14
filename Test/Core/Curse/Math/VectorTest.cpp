@@ -28,19 +28,44 @@
 
 namespace Curse
 {
-    TEST(Math, Vector)
+    TEST(Math, VectorD)
     {
-        Vector<5, int> vec5i;
-        for (size_t i = 0; i < 5; i++)
+        Vector<5, int32_t> vec5i;
+        EXPECT_EQ(vec5i.Dimensions, size_t(5));
+        EXPECT_TRUE((std::is_same<Vector<5, int32_t>::Type, int32_t>::value));
+
+        for (size_t i = 0; i < vec5i.Dimensions; i++)
         {
             vec5i.c[i] = static_cast<int>(i);
         }
 
-        EXPECT_EQ(vec5i.c[0], int(0));
-        EXPECT_EQ(vec5i.c[1], int(1));
-        EXPECT_EQ(vec5i.c[2], int(2));
-        EXPECT_EQ(vec5i.c[3], int(3));
-        EXPECT_EQ(vec5i.c[4], int(4));
+        EXPECT_EQ(vec5i.c[0], int32_t(0));
+        EXPECT_EQ(vec5i.c[1], int32_t(1));
+        EXPECT_EQ(vec5i.c[2], int32_t(2));
+        EXPECT_EQ(vec5i.c[3], int32_t(3));
+        EXPECT_EQ(vec5i.c[4], int32_t(4));
+    }
+    TEST(Math, Vector2)
+    {
+        {
+            Vector<2, int32_t> vec2i;
+            EXPECT_EQ(vec2i.Dimensions, size_t(2));
+            EXPECT_TRUE((std::is_same<Vector<2, int32_t>::Type, int32_t>::value));
+        }
+        {
+            Vector<2, int32_t> vec2i(int32_t(100));
+            EXPECT_EQ(vec2i.x, int32_t(100));
+            EXPECT_EQ(vec2i.y, int32_t(100));
+            EXPECT_EQ(vec2i.c[0], int32_t(100));
+            EXPECT_EQ(vec2i.c[1], int32_t(100));
+        }
+        {
+            Vector<2, int32_t> vec2i(int32_t(100), int32_t(200));
+            EXPECT_EQ(vec2i.x, int32_t(100));
+            EXPECT_EQ(vec2i.y, int32_t(200));
+            EXPECT_EQ(vec2i.c[0], int32_t(100));
+            EXPECT_EQ(vec2i.c[1], int32_t(200));
+        }
     }
 
 }

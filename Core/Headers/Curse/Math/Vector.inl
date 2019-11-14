@@ -26,8 +26,27 @@
 namespace Curse
 {
 
+    // Vector D.
     template<size_t D, typename T>
     Vector<D, T>::Vector()
+    {
+    }
+
+    // Vector 2.
+    template<typename T>
+    Vector<2, T>::Vector()
+    {
+    }
+
+    template<typename T>
+    Vector<2, T>::Vector(const Type xy) :
+        x(xy), y(xy)
+    {
+    }
+
+    template<typename T>
+    Vector<2, T>::Vector(const Type x, const Type y) :
+       x(x), y(y)
     {
     }
 

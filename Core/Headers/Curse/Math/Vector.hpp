@@ -40,8 +40,8 @@ namespace Curse
 
     public:
 
-        using Type = T; //< Data type of vector components.
         static const size_t Dimensions = D; //< Number of componenets.
+        using Type = T; //< Data type of vector components.
 
         /**
         * @brief Constructor.
@@ -49,9 +49,69 @@ namespace Curse
         */
         Vector();
 
-        T c[D]; //< Components of vector.
+        Type c[Dimensions]; //< Components of vector.
 
     };
+
+    /**
+   * @brief Linear algebra class for vectors.
+   */
+    template<typename T>
+    class Vector<2, T>
+    {
+
+    public:
+
+        static const size_t Dimensions = 2; //< Number of componenets.
+        using Type = T; //< Data type of vector components.   
+
+        /**
+        * @brief Constructor.
+        *        Vector's components are uninitialized.
+        */
+        Vector();
+
+        /**
+        * @brief Constructor.
+        *        Initializes all components by input parameter.
+        */
+        Vector(const Type xy);
+
+        /**
+        * @brief Constructor.
+        *        Initializes all components separately by input parameters.
+        */
+        Vector(const Type x, const Type y);
+
+        union
+        {
+            struct
+            {
+                Type x; //< X component of vector.
+                Type y; //< Y component of vector.
+            };
+            Type c[Dimensions]; //< Components of vector.
+        };
+
+    };
+
+    template<typename T>
+    using Vector2 = Vector<2, T>;
+    using Vector2i32 = Vector2<int32_t>;
+    using Vector2ui32 = Vector2<uint32_t>;
+    using Vector2i64 = Vector2<int64_t>;
+    using Vector2ui64 = Vector2<uint64_t>;
+    using Vector2f32 = Vector2<float>;
+    using Vector2f64 = Vector2<double>;
+
+    template<typename T>
+    using Vector3 = Vector<3, T>;
+    using Vector3i32 = Vector3<int32_t>;
+    using Vector3ui32 = Vector3<uint32_t>;
+    using Vector3i64 = Vector3<int64_t>;
+    using Vector3ui64 = Vector3<uint64_t>;
+    using Vector3f32 = Vector3<float>;
+    using Vector3f64 = Vector3<double>;
 
 }
 
