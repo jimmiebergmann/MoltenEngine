@@ -83,6 +83,75 @@ namespace Curse
         */
         Vector(const Type x, const Type y);
 
+        /**
+        * @brief Arithmetic addition operator.
+        */
+        Vector<2, Type> operator + (const Vector<2, Type>& vector) const;
+
+        /**
+        * @brief Arithmetic addition assignment operator.
+        */
+        Vector<2, Type>& operator += (const Vector<2, Type>& vector);
+
+        /**
+        * @brief Arithmetic subtraction operator.
+        */
+        Vector<2, Type> operator - (const Vector<2, Type>& vector) const;
+
+        /**
+        * @brief Arithmetic subtraction assignment operator.
+        */
+        Vector<2, Type>& operator -= (const Vector<2, Type>& vector);
+
+        /**
+        * @brief Arithmetic multiplication operator.
+        */
+        Vector<2, Type> operator * (const Vector<2, Type>& vector) const;
+
+        /**
+        * @brief Arithmetic multiplication operator.
+        */
+        Vector<2, Type> operator * (const Type scalar) const;
+
+        /**
+        * @brief Arithmetic multiplication assignment operator.
+        */
+        Vector<2, Type>& operator *= (const Vector<2, Type>& vector);
+
+        /**
+        * @brief Arithmetic multiplication operator.
+        */
+        Vector<2, Type>& operator *= (const Type scalar);
+
+        /**
+        * @brief Arithmetic division operator.
+        */
+        Vector<2, Type> operator / (const Vector<2, Type>& vector) const;
+
+        /**
+        * @brief Arithmetic division operator.
+        */
+        Vector<2, Type> operator / (const Type scalar) const;
+
+        /**
+        * @brief Arithmetic division assignment operator.
+        */
+        Vector<2, Type>& operator /= (const Vector<2, Type>& vector);
+
+        /**
+        * @brief Arithmetic division assignment operator.
+        */
+        Vector<2, Type>& operator /= (const Type scalar);
+
+        /**
+        * @brief Equals to time comparation operator.
+        */
+        bool operator == (const Vector<2, Type>& vector) const;
+        /**
+        * @brief Not equals to time comparation operator.
+        */
+        bool operator != (const Vector<2, Type>& vector) const;
+
         union
         {
             struct
@@ -97,6 +166,7 @@ namespace Curse
 
     template<typename T>
     using Vector2 = Vector<2, T>;
+    using Vector2b = Vector2<bool>;
     using Vector2i32 = Vector2<int32_t>;
     using Vector2ui32 = Vector2<uint32_t>;
     using Vector2i64 = Vector2<int64_t>;
@@ -106,6 +176,7 @@ namespace Curse
 
     template<typename T>
     using Vector3 = Vector<3, T>;
+    using Vector3b = Vector3<bool>;
     using Vector3i32 = Vector3<int32_t>;
     using Vector3ui32 = Vector3<uint32_t>;
     using Vector3i64 = Vector3<int64_t>;

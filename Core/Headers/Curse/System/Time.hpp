@@ -136,6 +136,7 @@ namespace Curse
         * @brief Equals to time comparation operator.
         */
         bool operator == (const Time& time) const;
+
         /**
         * @brief Not equals to time comparation operator.
         */

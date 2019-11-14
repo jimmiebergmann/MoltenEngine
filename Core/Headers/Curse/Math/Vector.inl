@@ -50,4 +50,96 @@ namespace Curse
     {
     }
 
+    template<typename T>
+    Vector<2, T> Vector<2, T>::operator + (const Vector<2, T>& vector) const
+    {
+        return { x + vector.x, y + vector.y };
+    }
+
+    template<typename T>
+    Vector<2, T>& Vector<2, T>::operator += (const Vector<2, T>& vector)
+    {
+        x += vector.x;
+        y += vector.y;
+        return *this;
+    }
+
+    template<typename T>
+    Vector<2, T> Vector<2, T>::operator - (const Vector<2, T>& vector) const
+    {
+        return { x - vector.x, y - vector.y };
+    }
+
+    template<typename T>
+    Vector<2, T>& Vector<2, T>::operator -= (const Vector<2, T>& vector)
+    {
+        x -= vector.x;
+        y -= vector.y;
+        return *this;
+    }
+
+    template<typename T>
+    Vector<2, T> Vector<2, T>::operator * (const Vector<2, T>& vector) const
+    {
+        return { x * vector.x, y * vector.y };
+    }
+    template<typename T>
+    Vector<2, T> Vector<2, T>::operator * (const Type scalar) const
+    {
+        return { x * scalar, y * scalar };
+    }
+
+    template<typename T>
+    Vector<2, T>& Vector<2, T>::operator *= (const Vector<2, T>& vector)
+    {
+        x *= vector.x;
+        y *= vector.y;
+        return *this;
+    }
+    template<typename T>
+    Vector<2, T>& Vector<2, T>::operator *= (const Type scalar)
+    {
+        x *= scalar;
+        y *= scalar;
+        return *this;
+    }
+
+    template<typename T>
+    Vector<2, T> Vector<2, T>::operator / (const Vector<2, T>& vector) const
+    {
+        return { x / vector.x, y / vector.y };
+    }
+    template<typename T>
+    Vector<2, T> Vector<2, T>::operator / (const Type scalar) const
+    {
+        return { x / scalar, y / scalar };
+    }
+
+    template<typename T>
+    Vector<2, T>& Vector<2, T>::operator /= (const Vector<2, T>& vector)
+    {
+        x /= vector.x;
+        y /= vector.y;
+        return *this;
+    }
+    template<typename T>
+    Vector<2, T>& Vector<2, T>::operator /= (const Type scalar)
+    {
+        x /= scalar;
+        y /= scalar;
+        return *this;
+    }
+
+    template<typename T>
+    bool Vector<2, T>::operator == (const Vector<2, Type>& vector) const
+    {
+        return x == vector.x && y == vector.y;
+    }
+
+    template<typename T>
+    bool Vector<2, T>::operator != (const Vector<2, Type>& vector) const
+    {
+        return x != vector.x || y != vector.y;
+    }
+
 }
