@@ -52,7 +52,7 @@ namespace Curse
         /**
         * @brief Deleted copy constructor.
         */
-        Semaphore(const Semaphore &) = delete;
+        Semaphore(const Semaphore&) = delete;
 
         /**
         * @brief Get number of blocked threads by Wait() or WaitFor().
@@ -76,9 +76,9 @@ namespace Curse
         void Wait();
 
         /**
-        * @brief Block current thread by given maximum duration.
+        * @brief Block current thread by some maximum amount of time.
         */
-        void WaitFor(const std::chrono::duration<float> & duration);      
+        void WaitFor(const Time & time);
 
     private:
 

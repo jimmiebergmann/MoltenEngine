@@ -23,18 +23,26 @@
 *
 */
 
-#ifndef CURSE_TEST_CORE_MATH_HPP
-#define CURSE_TEST_CORE_MATH_HPP
-
 #include "gtest/gtest.h"
-#include "Curse/Math/Vector.hpp"
+#include "Curse/System/Clock.hpp"
+#include <thread>
 
 namespace Curse
 {
-    TEST(Math, Vector)
+    TEST(System, Clock)
     {
+        Clock clock;
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        auto time = clock.GetTime();
+        EXPECT_GE(time, Milliseconds(100));
+        EXPECT_LE(time, Milliseconds(120));
+        
+        clock.Reset(Milliseconds(1000));
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        time = clock.GetTime();
+        EXPECT_GE(time, Milliseconds(1200));
+        EXPECT_LE(time, Milliseconds(1240));
     }
 
 }
-
-#endif

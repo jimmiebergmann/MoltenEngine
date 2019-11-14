@@ -24,8 +24,6 @@
 */
 
 #include "gtest/gtest.h"
-#include "CoreSystemTests.hpp"
-#include "CoreMathTests.hpp"
 
 int main(int argc, char** argv)
 {

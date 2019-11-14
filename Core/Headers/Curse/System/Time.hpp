@@ -79,25 +79,87 @@ namespace Curse
         T AsNanoseconds() const;
 
         /**
+        * @brief Arithmetic addition operator.
+        */
+        Time operator + (const Time& time) const;
+
+        /**
+        * @brief Assignment addition operator.
+        */
+        Time & operator += (const Time& time);
+
+        /**
         * @brief Time subtraction operator.
         */
         Time operator - (const Time& time) const;
 
         /**
-        * @brief Time addition operator.
+        * @brief Assignment subtraction operator.
         */
-        Time operator + (const Time& time) const;
+        Time& operator -= (const Time& time);
 
         /**
         * @brief Time multiplication operator.
         */
         template<typename T>
-        Time operator * (const T multiplier) const;
+        Time operator * (const T scalar) const;
+
+        /**
+        * @brief Time multiplication assignment operator.
+        */
+        template<typename T>
+        Time & operator *= (const T scalar);
 
         /**
         * @brief Time division operator.
         */
-        Time operator / (const Time& time) const;
+        template<typename T>
+        Time operator / (const T scalar) const;
+
+        /**
+        * @brief Time division assignment operator.
+        */
+        template<typename T>
+        Time & operator /= (const T scalar);
+
+        /**
+        * @brief Time modulus operator.
+        */
+        Time operator % (const Time& time) const;
+
+        /**
+        * @brief Time modulus assignment operator.
+        */
+        Time & operator %= (const Time& time);
+
+        /**
+        * @brief Equals to time comparation operator.
+        */
+        bool operator == (const Time& time) const;
+        /**
+        * @brief Not equals to time comparation operator.
+        */
+        bool operator != (const Time& time) const;
+
+        /**
+        * @brief Less than time comparation operator.
+        */
+        bool operator < (const Time& time) const;
+
+        /**
+        * @brief Less than or equal to time comparation operator.
+        */
+        bool operator <= (const Time& time) const;
+
+        /**
+        * @brief Greater than time comparation operator.
+        */
+        bool operator > (const Time& time) const;
+
+        /**
+        * @brief Greater than or equal to time comparation operator.
+        */
+        bool operator >= (const Time& time) const;
 
         /**
         * @brief Static function to retreive the current cpu time.
@@ -110,6 +172,8 @@ namespace Curse
         static const Time Zero;
 
     private:
+
+        Time(const std::chrono::nanoseconds nanoseconds);
 
         std::chrono::nanoseconds m_duration;
 

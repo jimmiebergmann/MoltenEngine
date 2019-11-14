@@ -28,28 +28,19 @@
 namespace Curse
 {
 
-    Clock::Clock(const Time /*startTime*/)// :
-       // m_startTime(startTime)
-    {
-        /*std::chrono::time_point<std::chrono::system_clock> time;
-
-
-        std::chrono::duration<float> dur(1.0f);
-
-        auto left = time - dur;
-
-        left.time_since_epoch().count();*/
-    }
-
-    Clock::Clock(const Clock& /*clock*/)// :
-        //m_startTime(clock.m_startTime)
+    Clock::Clock(const Time startTime) :
+        m_startTime(Time::GetSystemTime() - startTime)
     {
     }
 
     Time Clock::GetTime() const
     {
-        Time time;
-        return time;
+        return { Time::GetSystemTime() - m_startTime };
+    }
+
+    void Clock::Reset(const Time startTime)
+    {
+        m_startTime = Time::GetSystemTime() - startTime;
     }
 
 }

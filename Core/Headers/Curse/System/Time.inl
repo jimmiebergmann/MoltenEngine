@@ -53,14 +53,116 @@ namespace Curse
         auto time = std::chrono::duration_cast<std::chrono::duration<T, std::nano> >(m_duration);
         return static_cast<T>(time.count());
     }
+    template<>
+    inline std::chrono::nanoseconds::rep Time::AsNanoseconds() const
+    {
+        return m_duration.count();
+    }
 
     template<typename T>
-    inline Time Time::operator * (const T multiplier) const
+    inline Time Time::operator * (const T scalar) const
     {
-        Time newTime;
-        std::chrono::duration<T, std::nano> newDur(m_duration * multiplier);
-        newTime.m_duration = std::chrono::duration_cast<std::chrono::nanoseconds>(newDur);
-        return newTime;
+        auto count = m_duration.count() * static_cast<std::chrono::nanoseconds::rep>(scalar);
+        return { std::chrono::nanoseconds(count) };
+    }
+    template <>
+    inline Time Time::operator * (const float scalar) const
+    {
+        std::chrono::duration<double, std::nano> dur(m_duration * static_cast<double>(scalar));
+        return { std::chrono::duration_cast<std::chrono::nanoseconds>(dur) };
+    }
+    template <>
+    inline Time Time::operator * (const double scalar) const
+    {
+        std::chrono::duration<double, std::nano> dur(m_duration * scalar);
+        return { std::chrono::duration_cast<std::chrono::nanoseconds>(dur) };
+    }
+    template <>
+    inline Time Time::operator * (const long double scalar) const
+    {
+        std::chrono::duration<double, std::nano> dur(m_duration * static_cast<double>(scalar));
+        return { std::chrono::duration_cast<std::chrono::nanoseconds>(dur) };
+    }
+
+    template<typename T>
+    inline Time& Time::operator *= (const T scalar)
+    {
+        m_duration *= static_cast<std::chrono::nanoseconds::rep>(scalar);
+        return *this;
+    }
+    template <>
+    inline Time& Time::operator *= (const float scalar)
+    {
+        std::chrono::duration<double, std::nano> dur(m_duration * static_cast<double>(scalar));
+        m_duration = std::chrono::duration_cast<std::chrono::nanoseconds>(dur);
+        return *this;
+    }
+    template <>
+    inline Time& Time::operator *= (const double scalar)
+    {
+        std::chrono::duration<double, std::nano> dur(m_duration * scalar);
+        m_duration = std::chrono::duration_cast<std::chrono::nanoseconds>(dur);
+        return *this;
+    }
+    template <>
+    inline Time& Time::operator *= (const long double scalar)
+    {
+        std::chrono::duration<double, std::nano> dur(m_duration * static_cast<double>(scalar));
+        m_duration = std::chrono::duration_cast<std::chrono::nanoseconds>(dur);
+        return *this;
+    }
+
+    template<typename T>
+    inline Time Time::operator / (const T scalar) const
+    {
+        auto count = m_duration.count() / static_cast<std::chrono::nanoseconds::rep>(scalar);
+        return { std::chrono::nanoseconds(count) };
+    }
+    template <>
+    inline Time Time::operator / (const float scalar) const
+    {
+        std::chrono::duration<double, std::nano> dur(m_duration / static_cast<double>(scalar));
+        return { std::chrono::duration_cast<std::chrono::nanoseconds>(dur) };
+    }
+    template <>
+    inline Time Time::operator / (const double scalar) const
+    {
+        std::chrono::duration<double, std::nano> dur(m_duration / scalar);
+        return { std::chrono::duration_cast<std::chrono::nanoseconds>(dur) };
+    }
+    template <>
+    inline Time Time::operator / (const long double scalar) const
+    {
+        std::chrono::duration<double, std::nano> dur(m_duration / static_cast<double>(scalar));
+        return { std::chrono::duration_cast<std::chrono::nanoseconds>(dur) };
+    }
+
+    template<typename T>
+    inline Time& Time::operator /= (const T scalar)
+    {
+        m_duration /= static_cast<std::chrono::nanoseconds::rep>(scalar);
+        return *this;
+    }
+    template <>
+    inline Time& Time::operator /= (const float scalar)
+    {
+        std::chrono::duration<double, std::nano> dur(m_duration / static_cast<double>(scalar));
+        m_duration = std::chrono::duration_cast<std::chrono::nanoseconds>(dur);
+        return *this;
+    }
+    template <>
+    inline Time& Time::operator /= (const double scalar)
+    {
+        std::chrono::duration<double, std::nano> dur(m_duration / scalar);
+        m_duration = std::chrono::duration_cast<std::chrono::nanoseconds>(dur);
+        return *this;
+    }
+    template <>
+    inline Time& Time::operator /= (const long double scalar)
+    {
+        std::chrono::duration<double, std::nano> dur(m_duration / static_cast<double>(scalar));
+        m_duration = std::chrono::duration_cast<std::chrono::nanoseconds>(dur);
+        return *this;
     }
 
     template<typename T>
@@ -68,10 +170,7 @@ namespace Curse
     {   
         std::chrono::duration<T> durBase(seconds);
         auto dur = std::chrono::duration_cast<std::chrono::nanoseconds>(durBase);
-
-        Time time;
-        time.m_duration = std::chrono::nanoseconds(dur);
-        return time;
+        return { std::chrono::nanoseconds(dur) };
     }
 
     template<typename T>
@@ -79,10 +178,7 @@ namespace Curse
     {
         std::chrono::duration<T, std::milli> durBase(milliseconds);
         auto dur = std::chrono::duration_cast<std::chrono::microseconds>(durBase);
-
-        Time time;
-        time.m_duration = std::chrono::nanoseconds(dur);
-        return time;
+        return { std::chrono::nanoseconds(dur) };
     }
 
     template<typename T>
@@ -90,10 +186,7 @@ namespace Curse
     {
         std::chrono::duration<T, std::micro> durBase(microseconds);
         auto dur = std::chrono::duration_cast<std::chrono::microseconds>(durBase);
-
-        Time time;
-        time.m_duration = std::chrono::nanoseconds(dur);
-        return time;
+        return { std::chrono::nanoseconds(dur) };
     }
 
     template<typename T>
@@ -101,10 +194,7 @@ namespace Curse
     {
         std::chrono::duration<T, std::nano> durBase(nanoseconds);
         auto dur = std::chrono::duration_cast<std::chrono::nanoseconds>(durBase);
-
-        Time time;
-        time.m_duration = std::chrono::nanoseconds(dur);
-        return time;
+        return { std::chrono::nanoseconds(dur) };
     }
 
 }

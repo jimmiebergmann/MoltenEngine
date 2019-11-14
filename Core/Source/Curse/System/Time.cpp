@@ -36,32 +36,77 @@ namespace Curse
     {
     }
 
-    Time Time::operator - (const Time& time) const
-    {
-        Time newTime;
-        newTime.m_duration = m_duration - time.m_duration;
-        return newTime;
-    }
-
     Time Time::operator + (const Time& time) const
     {
-        Time newTime;
-        newTime.m_duration = m_duration + time.m_duration;
-        return newTime;
+        return { m_duration + time.m_duration };
     }
 
-    Time Time::operator / (const Time& time) const
+    Time& Time::operator += (const Time& time)
     {
-        Time newTime;
-        newTime.m_duration = std::chrono::nanoseconds(m_duration / time.m_duration);
-        return newTime;
+        m_duration += time.m_duration;
+        return *this;
+    }
+
+    Time Time::operator - (const Time& time) const
+    {
+        return { m_duration - time.m_duration };
+    }
+
+    Time& Time::operator -= (const Time& time)
+    {
+        m_duration -= time.m_duration;
+        return *this;
+    }
+
+    Time Time::operator % (const Time& time) const
+    {
+        return { m_duration % time.m_duration };
+    }
+
+    Time& Time::operator %= (const Time& time)
+    {
+        m_duration %= time.m_duration;
+        return *this;
+    }
+
+    bool Time::operator == (const Time& time) const
+    {
+        return m_duration == time.m_duration;
+    }
+
+    bool Time::operator != (const Time& time) const
+    {
+        return m_duration != time.m_duration;
+    }
+
+    bool Time::operator < (const Time& time) const
+    {
+        return m_duration < time.m_duration;
+    }
+
+    bool Time::operator <= (const Time& time) const
+    {
+        return m_duration <= time.m_duration;
+    }
+
+    bool Time::operator > (const Time& time) const
+    {
+        return m_duration > time.m_duration;
+    }
+
+    bool Time::operator >= (const Time& time) const
+    {
+        return m_duration >= time.m_duration;
     }
 
     Time Time::GetSystemTime()
     {      
-        Time time;        
-        time.m_duration = std::chrono::steady_clock::now().time_since_epoch();
-        return time;
+        return { std::chrono::steady_clock::now().time_since_epoch() };
+    }
+
+    Time::Time(const std::chrono::nanoseconds nanoseconds) :
+        m_duration(nanoseconds)
+    {
     }
 
 }

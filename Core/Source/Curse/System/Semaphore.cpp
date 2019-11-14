@@ -66,13 +66,17 @@ namespace Curse
         --m_value;
     }
 
-    void Semaphore::WaitFor(const std::chrono::duration<float>& duration)
+    void Semaphore::WaitFor(const Time& time)
     {
         std::unique_lock<std::mutex> lock(m_mutex);
         ++m_waitCount;
         while (!m_value)
         {
-            m_condition.wait_for(lock, duration);
+            auto waitTime = std::chrono::nanoseconds(time.AsNanoseconds<std::chrono::nanoseconds::rep>());
+            if (m_condition.wait_for(lock, waitTime) == std::cv_status::timeout)
+            {
+                break;
+            }
         }
         --m_waitCount;
         --m_value;

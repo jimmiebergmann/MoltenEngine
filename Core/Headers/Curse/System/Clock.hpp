@@ -49,18 +49,18 @@ namespace Curse
         Clock(const Time startTime = Time::Zero);
 
         /**
-        * @brief Copy constructor.
-        */
-        Clock(const Clock& clock);
-
-        /**
         * @brief Get current time of clock.
         */
         Time GetTime() const;
 
+        /**
+        * @brief Resets clock, sets initial time. 
+        */
+        void Reset(const Time startTime = Time::Zero);
+
     private:
 
-        //Time m_startTime;
+        Time m_startTime;
 
     };
 
