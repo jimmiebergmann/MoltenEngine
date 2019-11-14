@@ -20,11 +20,13 @@ matrix:
       compiler: gcc
       env:
         - CONFIG=Release
+        - CODECOV_UPLOAD=Yes
         
     - os: linux
       compiler: gcc
       env:
         - CONFIG=Debug OUTPUT_NAME_POSTFIX=Debug
+        - CODECOV_UPLOAD=Yes
         
     - os: linux
       compiler: clang
@@ -55,7 +57,7 @@ after_success:
   - lcov --directory ./Core --capture --output-file coverage.info
   - lcov -e coverage.info '*/source/Curse/*' --output-file coverage.info
   - lcov --list coverage.info
-  - bash <(curl -s https://codecov.io/bash)
+  - if [ ${CODECOV_UPLOAD} ]; then curl -s https://codecov.io/bash; fi
 
 notifications:
   email: false
