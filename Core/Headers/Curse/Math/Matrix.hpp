@@ -53,11 +53,44 @@ namespace Curse
 
         union
         {
-            T v[Dx][Dy]; //< Components of vector.
-            T c[ComponentCount]; //< Components of vector.
+            T v[Width][Height]; //< 2D array of matrix components.
+            T c[ComponentCount]; //< Components of matrix.
         };
-        
+
     };
+
+    /**
+    * @brief Linear algebra class for matrix.
+    */
+    template<typename T>
+    class Matrix<4, 4, T>
+    {
+
+    public:
+
+        static constexpr size_t Width = 4; //< Number of componenets in x.
+        static constexpr size_t Height = 4; //< Number of componenets in y.
+        static constexpr size_t ComponentCount = Width * Height; //< Number of componenets in matrix.
+        using Type = T; //< Data type of matrix components.
+
+        /**
+        * @brief Constructor.
+        *        Vector's components are uninitialized.
+        */
+        Matrix();
+
+        union
+        {
+            T v[Width][Height]; //< 2D array of matrix components.
+            T c[ComponentCount]; //< Components of matrix.
+        };
+
+    };
+
+    template<typename T>
+    using Matrix4x4 = Matrix<4, 4, T>;
+    using Matrix4x4f32 = Matrix4x4<float>;
+    using Matrix4x4f64 = Matrix4x4<double>;
 
 }
 

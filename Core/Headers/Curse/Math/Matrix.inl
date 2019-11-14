@@ -26,8 +26,33 @@
 namespace Curse
 {
 
+    // Matrix X * Y
+    template<size_t Dx, size_t Dy, typename T>
+    constexpr size_t Matrix<Dx, Dy, T>::Width;
+
+    template<size_t Dx, size_t Dy, typename T>
+    constexpr size_t Matrix<Dx, Dy, T>::Height;
+
+    template<size_t Dx, size_t Dy, typename T>
+    constexpr size_t Matrix<Dx, Dy, T>::ComponentCount;
+
     template<size_t Dx, size_t Dy, typename T>
     Matrix<Dx, Dy, T>::Matrix()
+    {
+    }
+
+    // Matrix 4 * 4
+    template<typename T>
+    constexpr size_t Matrix<4, 4, T>::Width;
+
+    template<typename T>
+    constexpr size_t Matrix<4, 4, T>::Height;
+
+    template<typename T>
+    constexpr size_t Matrix<4, 4, T>::ComponentCount;
+
+    template<typename T>
+    Matrix<4, 4, T>::Matrix()
     {
     }
 

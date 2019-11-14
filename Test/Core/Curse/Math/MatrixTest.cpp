@@ -29,9 +29,52 @@
 namespace Curse
 {
 
+    TEST(Math, Matrix_Typedefs)
+    {
+        {
+            EXPECT_TRUE((std::is_same<Matrix4x4f32::Type, float>::value));
+            EXPECT_TRUE((std::is_same<Matrix4x4f64::Type, double>::value));
+        }
+        {
+            EXPECT_EQ(Matrix4x4<int32_t>::Width, size_t(4));
+            EXPECT_EQ(Matrix4x4<int32_t>::Height, size_t(4));
+            EXPECT_EQ(Matrix4x4<int32_t>::ComponentCount, size_t(16));
+
+            EXPECT_EQ(Matrix4x4f32::Width, size_t(4));
+            EXPECT_EQ(Matrix4x4f32::Height, size_t(4));
+            EXPECT_EQ(Matrix4x4f32::ComponentCount, size_t(16));
+
+            EXPECT_EQ(Matrix4x4f64::Width, size_t(4));
+            EXPECT_EQ(Matrix4x4f64::Height, size_t(4));
+            EXPECT_EQ(Matrix4x4f64::ComponentCount, size_t(16));
+        }
+    }
+
     TEST(Math, Matrix)
     {
+        const size_t x = 6;
+        const size_t y = 10;
+        Matrix<x, y, int32_t> matrix;
 
+        int32_t counter = 0;
+        for (size_t xx = 0; xx < x; xx++)
+        {
+            for (size_t yy = 0; yy < y; yy++)
+            {
+                matrix.v[xx][yy] = counter;
+                ++counter;
+            }
+        }
+
+        for (size_t i = 0; i < x * y; i++)
+        {
+            EXPECT_EQ(matrix.c[i], static_cast<size_t>(i));
+        }
+    }
+
+    TEST(Math, Matrix4x4)
+    {
+        //Matrix
     }
 
 }

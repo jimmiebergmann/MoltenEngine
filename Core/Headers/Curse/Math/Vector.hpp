@@ -182,8 +182,7 @@ namespace Curse
         */
         bool operator != (const Vector<2, T>& vector) const;
 
-        #pragma GCC diagnostic push
-        #pragma GCC diagnostic ignored "-Wpedantic"
+        CURSE_ANONYMOUS_STRUCTURE_BEGIN
         union
         {
             struct
@@ -193,7 +192,7 @@ namespace Curse
             } ;
             T c[Dimensions]; //< Components of vector.
         };
-        #pragma GCC diagnostic pop
+        CURSE_ANONYMOUS_STRUCTURE_END
 
     };
 

@@ -26,12 +26,22 @@
 #ifndef CURSE_CORE_CORE_HPP
 #define CURSE_CORE_CORE_HPP
 
+#define CURSE_ANONYMOUS_STRUCTURE_BEGIN
+#define CURSE_ANONYMOUS_STRUCTURE_END
+
 // Windows
 #if defined( _WIN32 ) || defined( __WIN32__ ) || defined( _WIN64 ) || defined( __WIN64__ )
     #define CURSE_PLATFORM_WINDOWS
+    
 // Linux
 #elif defined( linux ) || defined( __linux )
     #define CURSE_PLATFORM_LINUX
+    
+    #undef CURSE_ANONYMOUS_STRUCTURE_BEGIN
+    #undef CURSE_ANONYMOUS_STRUCTURE_END
+    #define CURSE_ANONYMOUS_STRUCTURE_BEGIN #pragma GCC diagnostic push \
+                                            #pragma GCC diagnostic ignored "-Wpedantic"
+    #define CURSE_ANONYMOUS_STRUCTURE_END #pragma GCC diagnostic pop
 #else
     #error Unkown platform.
 #endif
