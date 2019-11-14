@@ -39,9 +39,9 @@
     
     #undef CURSE_ANONYMOUS_STRUCTURE_BEGIN
     #undef CURSE_ANONYMOUS_STRUCTURE_END
-    #define CURSE_ANONYMOUS_STRUCTURE_BEGIN #pragma GCC diagnostic push \
-                                            #pragma GCC diagnostic ignored "-Wpedantic"
-    #define CURSE_ANONYMOUS_STRUCTURE_END #pragma GCC diagnostic pop
+    #define CURSE_ANONYMOUS_STRUCTURE_BEGIN _Pragma("GCC diagnostic push") \
+                                            _Pragma("GCC diagnostic ignored \"-Wpedantic\"")
+    #define CURSE_ANONYMOUS_STRUCTURE_END _Pragma("GCC diagnostic pop")
 #else
     #error Unkown platform.
 #endif
