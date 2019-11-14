@@ -60,7 +60,7 @@ after_success:
   - lcov --directory ./Core --capture --output-file coverage.info
   - lcov -e coverage.info '*/Core/Headers/*' '*/Core/Source/*' --output-file coverage.info
   - lcov --list coverage.info
-  - if [ ${CODECOV_UPLOAD} ]; then bash<(curl -s https://codecov.io/bash); fi
+  - if [ ${CODECOV_UPLOAD} ]; then bash <(curl -s https://codecov.io/bash); fi
   - if [ ${CODECOV_UPLOAD} ]; then coveralls --root . -E "/Test/*" -E ".*gtest.*" -E ".*CMakeFiles.*"; fi
 
 notifications:
