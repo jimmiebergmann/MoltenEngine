@@ -56,4 +56,16 @@ namespace Curse
     {
     }
 
+    template<typename T>
+    Matrix<4, 4, T>::Matrix(const T s00, const T s10, const T s20, const T s30,
+                            const T s01, const T s11, const T s21, const T s31,
+                            const T s02, const T s12, const T s22, const T s32,
+                            const T s03, const T s13, const T s23, const T s33) :
+        c{ s00, s01, s02, s03,
+           s10, s11, s12, s13,
+           s20, s21, s22, s23,
+           s30, s31, s32, s33 }
+    {
+    }
+
 }

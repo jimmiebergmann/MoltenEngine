@@ -79,6 +79,14 @@ namespace Curse
         */
         Matrix();
 
+        /**
+        * @brief Constructing and initializing all components.
+        */
+        Matrix(const T s00, const T s10, const T s20, const T s30,
+               const T s01, const T s11, const T s21, const T s31,
+               const T s02, const T s12, const T s22, const T s32,
+               const T s03, const T s13, const T s23, const T s33);
+
         union
         {
             T v[Width][Height]; //< 2D array of matrix components.
@@ -89,6 +97,8 @@ namespace Curse
 
     template<typename T>
     using Matrix4x4 = Matrix<4, 4, T>;
+    using Matrix4x4i32 = Matrix4x4<int32_t>;
+    using Matrix4x4i64 = Matrix4x4<int64_t>;
     using Matrix4x4f32 = Matrix4x4<float>;
     using Matrix4x4f64 = Matrix4x4<double>;
 
