@@ -1,8 +1,11 @@
 # Directories
 .vs
 /out
+/Out
 /build
+/Build
 /bin
+/Bin
 /lib
 /Lib
 /docs

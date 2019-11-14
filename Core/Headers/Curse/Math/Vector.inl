@@ -28,11 +28,17 @@ namespace Curse
 
     // Vector D.
     template<size_t D, typename T>
+    constexpr size_t Vector<D, T>::Dimensions;    
+
+    template<size_t D, typename T>
     inline Vector<D, T>::Vector()
     {
     }
 
     // Vector 2.
+    template<typename T>
+    constexpr size_t Vector<2, T>::Dimensions;
+
     template<typename T>
     inline Vector<2, T>::Vector()
     {
