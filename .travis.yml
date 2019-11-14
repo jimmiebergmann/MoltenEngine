@@ -12,6 +12,9 @@ addons:
       - lcov
       - valgrind
     update: true
+    
+before_install:
+  - pip install --user cpp-coveralls
   
 matrix:
   include:
@@ -58,6 +61,7 @@ after_success:
   - lcov -e coverage.info '*/source/Curse/*' --output-file coverage.info
   - lcov --list coverage.info
   - if [ ${CODECOV_UPLOAD} ]; then curl -s https://codecov.io/bash; fi
+  - if [ ${CODECOV_UPLOAD} ]; then coveralls --root . -E "/Test/*" -E ".*gtest.*" -E ".*CMakeFiles.*"; fi
 
 notifications:
   email: false
