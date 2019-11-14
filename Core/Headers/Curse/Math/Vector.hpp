@@ -41,7 +41,7 @@ namespace Curse
 
     public:
 
-        static const size_t Dimensions = D; //< Number of componenets.
+        static constexpr size_t Dimensions = D; //< Number of componenets.
         using Type = T; //< Data type of vector components.
 
         /**
@@ -63,7 +63,7 @@ namespace Curse
 
     public:
 
-        static const size_t Dimensions = 2; //< Number of componenets.
+        static constexpr size_t Dimensions = 2; //< Number of componenets.
         using Type = T; //< Data type of vector components.   
 
         /**

@@ -35,14 +35,14 @@ namespace Curse
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         auto time = clock.GetTime();
         EXPECT_GE(time, Milliseconds(100));
-        EXPECT_LE(time, Milliseconds(120));
+        EXPECT_LE(time, Milliseconds(1000));
         
         clock.Reset(Milliseconds(1000));
 
         std::this_thread::sleep_for(std::chrono::milliseconds(200));
         time = clock.GetTime();
         EXPECT_GE(time, Milliseconds(1200));
-        EXPECT_LE(time, Milliseconds(1240));
+        EXPECT_LE(time, Milliseconds(2000));
     }
 
 }
