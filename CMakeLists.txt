@@ -4,4 +4,5 @@ cmake_minimum_required(VERSION 2.8)
 option(CODE_COVERAGE "Enables coverage reporting" OFF)
 
 add_subdirectory(Core)
+add_subdirectory(Editor)
 add_subdirectory(Test)

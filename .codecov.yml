@@ -2,10 +2,10 @@ ignore:
   - "Bin"
   - "Out"
   - "Build"
-  - "Editor"
-  - "Out"
-  - "Test"
   - "Vendor"
+  - "Editor"
+  - "Test"
+
 coverage:
   range: 50..80
   round: down

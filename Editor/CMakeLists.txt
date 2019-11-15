@@ -1,6 +1,6 @@
-project (CurseCoreTests)
+project (CurseEditor)
 cmake_minimum_required(VERSION 2.8)
-include(${CMAKE_CURRENT_SOURCE_DIR}/../../Cmake/Tools.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/../Cmake/Tools.cmake)
 
 find_package(Threads)
 
@@ -22,49 +22,42 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED OFF)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-set(RootDir "${CMAKE_CURRENT_SOURCE_DIR}/../..")
+set(RootDir "${CMAKE_CURRENT_SOURCE_DIR}/..")
 set(CoreDir "${RootDir}/Core")
 set(CoreHeadersDir "${CoreDir}/Headers")
-set(CoreTestDir "${CMAKE_CURRENT_SOURCE_DIR}")
-file(GLOB_RECURSE CoreTestSources "${CoreTestDir}/*.c" "${CoreTestDir}/*.cpp")
-file(GLOB_RECURSE CoreTestHeaders "${CoreTestDir}/*.h" "${CoreTestDir}/*.hpp")
+set(EditorDir "${CMAKE_CURRENT_SOURCE_DIR}")
+set(EditorHeadersDir "${CMAKE_CURRENT_SOURCE_DIR}/Headers")
+set(EditorSourceDir "${CMAKE_CURRENT_SOURCE_DIR}/Source")
+file(GLOB_RECURSE EditorHeaders "${EditorHeadersDir}/*.h" "${EditorHeadersDir}/*.hpp" "${EditorHeadersDir}/*.inl")
+file(GLOB_RECURSE EditorSources "${EditorSourceDir}/*.c" "${EditorSourceDir}/*.cpp")
 
 message("Current source dir: ${CMAKE_CURRENT_SOURCE_DIR}")
 message("Code coverage: ${CODE_COVERAGE}")
 
-
-SET(gtest_force_shared_crt on CACHE BOOL
-  "Use shared (DLL) run-time lib even when Google Test is built as static lib.")
-add_subdirectory(${RootDir}/Vendor/googletest/googletest
-                 ${RootDir}/Vendor/googletest/googletest
-                 EXCLUDE_FROM_ALL)
-
 if (NOT TARGET Curse)
 	add_subdirectory(${CoreDir} ${CoreDir} EXCLUDE_FROM_ALL)
 endif() 
-				 
-if (CMAKE_VERSION VERSION_LESS 2.8.11)
-  include_directories("${gtest_SOURCE_DIR}/include")
-endif()
+
+include_directories ("${EditorHeadersDir}")				 
 include_directories ("${CoreHeadersDir}")
 
-add_executable(CurseCoreTest "${CoreTestSources}" "${CoreTestHeaders}")
+add_executable(CurseEditor "${EditorSources}" "${EditorHeaders}")
 
-CreateSourceGroups("${CoreTestSources}" "${CoreTestDir}")
-CreateSourceGroups("${CoreTestHeaders}" "${CoreTestDir}")
+CreateSourceGroups("${EditorSources}" "${EditorSourceDir}")
+CreateSourceGroups("${EditorHeaders}" "${EditorHeadersDir}")
 
-set_target_properties( CurseCoreTest
+set_target_properties( CurseEditor
   PROPERTIES
-  OUTPUT_NAME_DEBUG "CurseCoreTestDebug"
-  OUTPUT_NAME_RELEASE "CurseCoreTest"
+  OUTPUT_NAME_DEBUG "CurseEditorDebug"
+  OUTPUT_NAME_RELEASE "CurseEditor"
   RUNTIME_OUTPUT_DIRECTORY "${RootDir}/Bin"
   RUNTIME_OUTPUT_DIRECTORY_DEBUG "${RootDir}/Bin"
   RUNTIME_OUTPUT_DIRECTORY_RELEASE "${RootDir}/Bin"
 )
 
 if(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU") ## Code coverage
-  set_target_properties(CurseCoreTest PROPERTIES COMPILE_FLAGS "--coverage")
-  target_link_libraries(CurseCoreTest "gcov")
+  set_target_properties(CurseEditor PROPERTIES COMPILE_FLAGS "--coverage")
+  target_link_libraries(CurseEditor "gcov")
 endif(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU")
 
-target_link_libraries(CurseCoreTest Curse gtest_main)
+target_link_libraries(CurseEditor Curse)
