@@ -11,6 +11,12 @@ addons:
       - clang-3.9
       - lcov
       - valgrind
+      - mesa-utils
+      - xvfb
+      - libgl1-mesa-dri
+      - libglapi-mesa
+      - libosmesa6
+      #- libxi-dev
     update: true
     
 before_install:
@@ -40,6 +46,9 @@ matrix:
       compiler: clang
       env:
         - CONFIG=Debug OUTPUT_NAME_POSTFIX=Debug
+        
+before_script:
+  - export DISPLAY=:99.0; sh -e /etc/init.d/xvfb start
   
 script:
   # Checks
@@ -49,7 +58,7 @@ script:
   # Build
   - mkdir Build
   - cd Build
-  - cmake -DCODE_COVERAGE=ON -DCMAKE_BUILD_TYPE=${CONFIG} ..
+  - cmake -DCURSE_ENABLE_COVERAGE=ON -DCMAKE_BUILD_TYPE=${CONFIG} ..
   - cmake --build . --config ${CONFIG}
   # Run test
   - cd ../Bin

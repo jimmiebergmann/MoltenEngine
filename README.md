@@ -12,10 +12,7 @@ $ cd CurseEngine/Build
 $ cmake ..
 $ cmake --build . --config Release
 ```
-
-## Branches
-Info here about branch structure.
-
+See [CMake.md](https://github.com/jimmiebergmann/CurseEngine/blob/master/CMake/CMake.md) for available build options.
 
 ## Build status
 | Branch | Linux | Windows |

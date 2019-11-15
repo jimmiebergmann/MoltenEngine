@@ -27,6 +27,7 @@
 
 #if defined CURSE_PLATFORM_WINDOWS
 
+#include "Curse/System/Exception.hpp"
 #include <sstream>
 
 namespace Curse
@@ -65,7 +66,7 @@ namespace Curse
 
         if (::CoCreateGuid(&guid.guid) != S_OK)
         {
-            throw std::runtime_error("Win32: Failed to generate GUID.");
+            throw Exception("Win32: Failed to generate GUID.");
         }
 
         uint16_t* ptr = &guid.part;
@@ -101,7 +102,7 @@ namespace Curse
 
         if (!::RegisterClass(&winClass))
         {
-            throw std::runtime_error("Win32: Failed to register Window class.");
+            throw Exception("Win32: Failed to register Window class.");
         }
         m_windowClassName = className;
         m_instance = winInstance;
@@ -113,7 +114,7 @@ namespace Curse
         windowRect.bottom = static_cast<LONG>(size.y);
         if (!::AdjustWindowRectEx(&windowRect, m_style, FALSE, m_extendedStyle))
         {
-            throw std::runtime_error("Win32: Failed to adjust window rect.");
+            throw Exception("Win32: Failed to adjust window rect.");
         }
 
         m_window = ::CreateWindowEx(
@@ -132,7 +133,7 @@ namespace Curse
 
         if (m_window == NULL)
         {
-            throw std::runtime_error("Win32: Failed to create window.");
+            throw Exception("Win32: Failed to create window.");
         }
         m_deviceContext = GetDC(m_window);
   
@@ -144,19 +145,19 @@ namespace Curse
     {
         if (m_deviceContext && !::ReleaseDC(m_window, m_deviceContext))
         {
-            throw std::runtime_error("Win32: Failed to release device context.");
+            throw Exception("Win32: Failed to release device context.");
         }
         m_deviceContext = NULL;
 
         if (m_window && !::DestroyWindow(m_window))
         {
-            throw std::runtime_error("Win32: Failed to destroy class.");
+            throw Exception("Win32: Failed to destroy class.");
         }
         m_window = NULL;
         
         if (m_windowClassName.size() && !::UnregisterClass(m_windowClassName.c_str(), m_instance))
         {
-            throw std::runtime_error("Win32: Failed to unregister class.");
+            throw Exception("Win32: Failed to unregister class.");
         }
         m_instance = NULL;
 

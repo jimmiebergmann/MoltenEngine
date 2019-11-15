@@ -23,52 +23,67 @@
 *
 */
 
-#include "Curse/Window/WindowX11.hpp"
 
-#if defined CURSE_PLATFORM_LINUX
+#include "Curse/Renderer/OpenGL/RendererOpenGL.hpp"
 
+#if CURSE_OPENGL_IS_AVAILABLE
+
+#include "Curse/Window/WindowBase.hpp"
 #include "Curse/System/Exception.hpp"
 
 namespace Curse
 {
 
-    WindowX11::WindowX11()
+    RendererOpenGL::RendererOpenGL() :
+#if defined(CURSE_PLATFORM_WINDOWS)
+        m_deviceContext(NULL),
+        m_context(NULL)
+#elif defined(CURSE_PLATFORM_LINUX)
+
+#endif
     {
     }
 
-    WindowX11::WindowX11(const std::string& title, const Vector2ui32 size) :
-        WindowX11()
+    RendererOpenGL::RendererOpenGL(const WindowBase& window) :
+        RendererOpenGL()
     {
-        Open(title, size);
+        Create(window);
     }
 
-    WindowX11::~WindowX11()
-    {
-    }
-
-    void WindowX11::Open(const std::string& /*title*/, const Vector2ui32 /*size*/)
-    {       
-    }
-
-    void WindowX11::Close()
-    { 
-    }
-
-    void WindowX11::Update()
+ 
+    RendererOpenGL::~RendererOpenGL()
     {
     }
 
-    void WindowX11::Show(const bool /*show*/)
+    void RendererOpenGL::Create(const WindowBase& window)
     {
+        window.GetWin32DeviceContext();
     }
 
-    void WindowX11::Hide()
+    void RendererOpenGL::Destroy()
     {
-    }
+    #if defined(CURSE_PLATFORM_WINDOWS)
 
-    bool WindowX11::IsOpen() const
-    {
-        return false;
+        if (m_context)
+        {
+            // Release the context from the current thread
+            if (!wglMakeCurrent(NULL, NULL))
+            {
+                throw Exception("RendererOpenGL: Failed to set current context to null.");
+            }
+
+            // Delete the context
+            if (!wglDeleteContext(m_context))
+            {
+                throw Exception("RendererOpenGL: Failed to delete context.");
+            }
+
+            m_context = NULL;
+        }
+
+    #elif defined(CURSE_PLATFORM_LINUX)
+
+    #endif
     }
 
 }

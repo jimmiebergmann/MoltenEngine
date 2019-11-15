@@ -37,11 +37,50 @@
 // Windows
 #if defined( _WIN32 ) || defined( __WIN32__ ) || defined( _WIN64 ) || defined( __WIN64__ )
     #define CURSE_PLATFORM_WINDOWS
-    
+
+    #if defined(_M_ARM)
+        #error Not supporting ARM architecture.
+    #endif
+
+    #if defined(_M_IX86)
+        #define CURSE_ARCH_X86_32
+    #elif defined(_M_AMD64)
+        #define CURSE_ARCH_X86_64
+    #else
+        #error Unkown architecture.
+    #endif
+
+    #define CURSE_OPENGL_IS_AVAILABLE 0
+    #if defined(CURSE_ENABLE_OPENGL)
+        #undef CURSE_OPENGL_IS_AVAILABLE
+        #define CURSE_OPENGL_IS_AVAILABLE 1
+    #endif
+
 // Linux
 #elif defined( linux ) || defined( __linux )
     #define CURSE_PLATFORM_LINUX
-    
+
+    #if defined(__arm__)
+        #error Not supporting ARM architecture.
+    #endif
+
+    #if defined(__amd64__) || defined(__amd64)
+        #if defined(__x86_64__) || defined(__x86_64)
+            #define CURSE_ARCH_X86_64
+        #else
+            #define CURSE_ARCH_X86_32
+        #endif
+    #else
+        #error Unkown architecture.
+    #endif
+
+    #define CURSE_OPENGL_IS_AVAILABLE 0
+    #if defined(CURSE_ENABLE_OPENGL) && defined(CURSE_ENABLE_X11)
+        #undef CURSE_OPENGL_IS_AVAILABLE
+        #define CURSE_OPENGL_IS_AVAILABLE 1
+    #endif
+
+
     #undef CURSE_ANONYMOUS_STRUCTURE_BEGIN
     #undef CURSE_ANONYMOUS_STRUCTURE_END
     #define CURSE_ANONYMOUS_STRUCTURE_BEGIN _Pragma("GCC diagnostic push") \
@@ -83,6 +122,5 @@
 #else
     #define CURSE_API
 #endif
-
 
 #endif // CURSE_CORE_HPP

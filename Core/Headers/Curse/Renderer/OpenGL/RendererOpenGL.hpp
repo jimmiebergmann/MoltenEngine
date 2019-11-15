@@ -23,21 +23,68 @@
 *
 */
 
-#ifndef CURSE_CORE_PLATFORM_WIN32_HEADERS_HPP
-#define CURSE_CORE_PLATFORM_WIN32_HEADERS_HPP
+#ifndef CURSE_CORE_RENDERER_OPENGL_RENDEREROPENGL_HPP
+#define CURSE_CORE_RENDERER_OPENGL_RENDEREROPENGL_HPP
 
 #include "Curse/Core.hpp"
 
-#if defined CURSE_PLATFORM_WINDOWS
+#if CURSE_OPENGL_IS_AVAILABLE
 
-#include <Windows.h>
+#include "Curse/Renderer/Renderer.hpp"
+#include "Curse/Platform/Win32Headers.hpp"
 
-#ifdef max
-    #undef max
-#endif
-#ifdef min
-    #undef min
-#endif
+namespace Curse
+{
+
+    /**
+    * @brief OpenGL Renderer class.
+    */
+    class CURSE_API RendererOpenGL : public Renderer
+    {
+
+    public:
+
+        /**
+        * @brief Constructor.
+        */
+        RendererOpenGL();
+
+        /**
+        * @brief Constructs and creates renderer.
+        *
+        * @param window Render target window.
+        */
+        RendererOpenGL(const WindowBase & window);
+
+        /**
+        * @brief Virtual destructor.
+        */
+        ~RendererOpenGL();
+
+        /**
+        * @brief Creates renderer.
+        *
+        * @param window Render target window.
+        */
+        virtual void Create(const WindowBase & window);
+
+        /**
+        * @brief Destroys renderer.
+        */
+        virtual void Destroy();
+
+    private:
+
+    #if defined(CURSE_PLATFORM_WINDOWS)
+        HDC m_deviceContext;
+        HGLRC m_context;
+    #elif defined(CURSE_PLATFORM_LINUX)
+        
+    #endif
+
+    };
+
+}
 
 #endif
 

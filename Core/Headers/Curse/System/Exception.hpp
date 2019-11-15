@@ -23,22 +23,48 @@
 *
 */
 
-#ifndef CURSE_CORE_PLATFORM_WIN32_HEADERS_HPP
-#define CURSE_CORE_PLATFORM_WIN32_HEADERS_HPP
+#ifndef CURSE_CORE_SYSTEM_EXCEPTION_HPP
+#define CURSE_CORE_SYSTEM_EXCEPTION_HPP
 
 #include "Curse/Core.hpp"
+#include <stdexcept>
+#include <string>
 
-#if defined CURSE_PLATFORM_WINDOWS
+namespace Curse
+{
 
-#include <Windows.h>
+    /**
+    * @brief Base exception class.
+    */
+    class Exception : public std::runtime_error
+    {
 
-#ifdef max
-    #undef max
-#endif
-#ifdef min
-    #undef min
-#endif
+    public:
 
-#endif
+        /**
+        * @brief Constructor.
+        */
+        Exception();
+
+        /**
+        * @brief Constructor.
+        */
+        Exception(const char * message);
+
+        /**
+        * @brief Constructor.
+        */
+        Exception(const std::string & message);
+
+        /**
+        * @brief Get message of exception.
+        */
+        std::string GetMessage() const;
+
+    };
+
+}
+
+#include "Exception.inl"
 
 #endif

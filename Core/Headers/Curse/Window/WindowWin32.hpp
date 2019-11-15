@@ -23,15 +23,14 @@
 *
 */
 
-#ifndef CURSE_CORE_WINDOW_WINDOW_WIN32_HPP
-#define CURSE_CORE_WINDOW_WINDOW_WIN32_HPP
+#ifndef CURSE_CORE_WINDOW_WINDOWWIN32_HPP
+#define CURSE_CORE_WINDOW_WINDOWWIN32_HPP
 
 #include "Curse/Window/WindowBase.hpp"
 
 #if defined CURSE_PLATFORM_WINDOWS
 
 #include "Curse/Platform/Win32Headers.hpp"
-#include <stdexcept>
 
 namespace Curse
 {

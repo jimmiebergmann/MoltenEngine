@@ -23,14 +23,12 @@
 *
 */
 
-#ifndef CURSE_CORE_WINDOW_WINDOW_X11_HPP
-#define CURSE_CORE_WINDOW_WINDOW_X11_HPP
+#ifndef CURSE_CORE_WINDOW_WINDOWX11_HPP
+#define CURSE_CORE_WINDOW_WINDOWX11_HPP
 
 #include "Curse/Window/WindowBase.hpp"
 
 #if defined CURSE_PLATFORM_LINUX
-
-#include <stdexcept>
 
 namespace Curse
 {

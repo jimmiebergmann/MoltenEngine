@@ -23,21 +23,24 @@
 *
 */
 
-#ifndef CURSE_CORE_PLATFORM_WIN32_HEADERS_HPP
-#define CURSE_CORE_PLATFORM_WIN32_HEADERS_HPP
+#ifndef CURSE_CORE_RENDERER_OPENGL_OPENGLFUNCTIONS_HPP
+#define CURSE_CORE_RENDERER_OPENGL_OPENGLFUNCTIONS_HPP
 
-#include "Curse/Core.hpp"
+#include "Curse/Renderer/OpenGL/OpengGLHeaders.hpp"
 
-#if defined CURSE_PLATFORM_WINDOWS
+#if CURSE_OPENGL_IS_AVAILABLE
 
-#include <Windows.h>
+namespace Curse
+{
 
-#ifdef max
-    #undef max
-#endif
-#ifdef min
-    #undef min
-#endif
+    namespace OpenGL
+    {
+
+        CURSE_API bool BindOpenGLExtensions();
+
+    }
+
+}
 
 #endif
 

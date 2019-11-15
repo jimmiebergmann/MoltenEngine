@@ -23,22 +23,43 @@
 *
 */
 
-#ifndef CURSE_CORE_PLATFORM_WIN32_HEADERS_HPP
-#define CURSE_CORE_PLATFORM_WIN32_HEADERS_HPP
+#ifndef CURSE_CORE_RENDERER_RENDERER_HPP
+#define CURSE_CORE_RENDERER_RENDERER_HPP
 
-#include "Curse/Core.hpp"
+#include "Curse/Types.hpp"
 
-#if defined CURSE_PLATFORM_WINDOWS
+namespace Curse
+{
 
-#include <Windows.h>
+    class WindowBase;
 
-#ifdef max
-    #undef max
-#endif
-#ifdef min
-    #undef min
-#endif
+    /**
+    * @brief Base class of renderer.
+    */
+    class CURSE_API Renderer
+    {
 
-#endif
+    public:
+
+        /**
+        * @brief Virtual destructor.
+        */
+        virtual ~Renderer();
+
+        /**
+        * @brief Creates renderer.
+        *
+        * @param window Render target window.
+        */
+        virtual void Create(const WindowBase& window) = 0;
+
+        /**
+        * @brief Destroys renderer.
+        */
+        virtual void Destroy() = 0;
+
+    };
+
+}
 
 #endif

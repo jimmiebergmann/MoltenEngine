@@ -1,8 +1,30 @@
 project (Curse)
-cmake_minimum_required(VERSION 2.8)
-include(${CMAKE_CURRENT_SOURCE_DIR}/../Cmake/Tools.cmake)
+cmake_minimum_required(VERSION 3.1)
+include(${CMAKE_CURRENT_SOURCE_DIR}/../CMake/Tools.cmake)
 
-find_package(Threads)
+# Options.
+option(CURSE_ENABLE_OPENGL "Enables OpenGL." ON)
+option(CURSE_ENABLE_X11 "Enables X server." ON)
+option(CURSE_ENABLE_COVERAGE "Enables coverage reporting." OFF)
+
+
+# Linux configurations.
+if(UNIX AND NOT APPLE)
+	set(LINUX TRUE)
+	find_package(Threads)
+	
+	if(CURSE_ENABLE_OPENGL AND (NOT CURSE_ENABLE_X11))
+		message(FATAL_ERROR "X11(CURSE_ENABLE_X11) is required if OpenGL(CURSE_ENABLE_OPENGL) is enabled.")
+	endif()
+else()
+	set(CURSE_ENABLE_X11 OFF)
+endif()
+
+# OpenGL configurations
+if(CURSE_ENABLE_OPENGL)
+	find_package(OpenGL)
+	message("FOUND OPENGL: ${OpenGL_FOUND}, Lib: ${OPENGL_gl_LIBRARY}")
+endif()
 
 # Force warnings as errors
 if(MSVC)
@@ -16,8 +38,8 @@ elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-long-long -pedantic -fno-elide-constructors")
 endif()
 
-option(CODE_COVERAGE "Enables coverage reporting" OFF)
 
+# Curse project generation
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED OFF)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -29,7 +51,7 @@ file(GLOB_RECURSE CoreHeaders "${CoreHeadersDir}/*.h" "${CoreHeadersDir}/*.hpp" 
 file(GLOB_RECURSE CoreSources "${CoreSourceDir}/*.c" "${CoreSourceDir}/*.cpp")
 
 message("Current source dir: ${CMAKE_CURRENT_SOURCE_DIR}")
-message("Code coverage: ${CODE_COVERAGE}")
+message("Code coverage: ${CURSE_ENABLE_COVERAGE}")
 
 
 include_directories ("${CoreHeadersDir}")
@@ -55,9 +77,17 @@ set_target_properties( Curse
   RUNTIME_OUTPUT_DIRECTORY_RELEASE "${RootDir}/Bin"
 )
 
-if(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+# Linking and setting compile definitions.
+if(CURSE_ENABLE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU")
   set_target_properties(Curse PROPERTIES COMPILE_FLAGS "-lgcov --coverage")
   target_link_libraries(Curse "gcov")
-endif(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+endif()
 
+if(CURSE_ENABLE_OPENGL AND OpenGL_FOUND )
+	target_link_libraries(Curse ${OPENGL_gl_LIBRARY})
+	target_compile_definitions(Curse PUBLIC "CURSE_ENABLE_OPENGL")
+endif()
 
+if(CURSE_ENABLE_X11)
+	target_compile_definitions(Curse PUBLIC "CURSE_ENABLE_X11")
+endif()

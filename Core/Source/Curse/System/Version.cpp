@@ -23,22 +23,16 @@
 *
 */
 
-#ifndef CURSE_CORE_PLATFORM_WIN32_HEADERS_HPP
-#define CURSE_CORE_PLATFORM_WIN32_HEADERS_HPP
+#include "Curse/System/Version.hpp"
 
-#include "Curse/Core.hpp"
+namespace Curse
+{
 
-#if defined CURSE_PLATFORM_WINDOWS
+    Version::Version(const uint32_t major, const uint32_t minor, const uint32_t patch) :
+        Major(major),
+        Minor(minor),
+        Patch(patch)
+    {
+    }
 
-#include <Windows.h>
-
-#ifdef max
-    #undef max
-#endif
-#ifdef min
-    #undef min
-#endif
-
-#endif
-
-#endif
+}

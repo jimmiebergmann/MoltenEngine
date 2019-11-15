@@ -23,8 +23,8 @@
 *
 */
 
-#ifndef CURSE_CORE_WINDOW_WINDOW_BASE_HPP
-#define CURSE_CORE_WINDOW_WINDOW_BASE_HPP
+#ifndef CURSE_CORE_WINDOW_WINDOWBASE_HPP
+#define CURSE_CORE_WINDOW_WINDOWBASE_HPP
 
 #include "Curse/Math/Vector.hpp"
 #include "Curse/Platform/Win32Headers.hpp"

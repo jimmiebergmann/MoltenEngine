@@ -23,22 +23,27 @@
 *
 */
 
-#ifndef CURSE_CORE_PLATFORM_WIN32_HEADERS_HPP
-#define CURSE_CORE_PLATFORM_WIN32_HEADERS_HPP
+namespace Curse
+{
 
-#include "Curse/Core.hpp"
+    inline Exception::Exception() :
+        std::runtime_error("")
+    {
+    }
 
-#if defined CURSE_PLATFORM_WINDOWS
+    inline Exception::Exception(const char* message) :
+        std::runtime_error(message)
+    {
+    }
 
-#include <Windows.h>
+    inline Exception::Exception(const std::string& message) :
+        std::runtime_error(message.c_str())
+    {
+    }
 
-#ifdef max
-    #undef max
-#endif
-#ifdef min
-    #undef min
-#endif
+    inline std::string Exception::GetMessage() const
+    {
+        return std::runtime_error::what();
+    }
 
-#endif
-
-#endif
+}

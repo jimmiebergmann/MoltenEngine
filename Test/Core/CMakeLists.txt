@@ -1,6 +1,8 @@
 project (CurseCoreTests)
-cmake_minimum_required(VERSION 2.8)
-include(${CMAKE_CURRENT_SOURCE_DIR}/../../Cmake/Tools.cmake)
+cmake_minimum_required(VERSION 3.1)
+include(${CMAKE_CURRENT_SOURCE_DIR}/../../CMake/Tools.cmake)
+
+option(CURSE_ENABLE_COVERAGE "Enables coverage reporting" OFF)
 
 find_package(Threads)
 
@@ -16,8 +18,6 @@ elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-long-long -pedantic -fno-elide-constructors")
 endif()
 
-option(CODE_COVERAGE "Enables coverage reporting" OFF)
-
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED OFF)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -30,7 +30,7 @@ file(GLOB_RECURSE CoreTestSources "${CoreTestDir}/*.c" "${CoreTestDir}/*.cpp")
 file(GLOB_RECURSE CoreTestHeaders "${CoreTestDir}/*.h" "${CoreTestDir}/*.hpp")
 
 message("Current source dir: ${CMAKE_CURRENT_SOURCE_DIR}")
-message("Code coverage: ${CODE_COVERAGE}")
+message("Code coverage: ${CURSE_ENABLE_COVERAGE}")
 
 
 SET(gtest_force_shared_crt on CACHE BOOL
@@ -62,9 +62,9 @@ set_target_properties( CurseCoreTest
   RUNTIME_OUTPUT_DIRECTORY_RELEASE "${RootDir}/Bin"
 )
 
-if(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU") ## Code coverage
+if(CURSE_ENABLE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU") ## Code coverage
   set_target_properties(CurseCoreTest PROPERTIES COMPILE_FLAGS "--coverage")
   target_link_libraries(CurseCoreTest "gcov")
-endif(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+endif()
 
 target_link_libraries(CurseCoreTest Curse gtest_main)

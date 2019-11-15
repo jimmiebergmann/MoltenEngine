@@ -23,22 +23,13 @@
 *
 */
 
-#ifndef CURSE_CORE_PLATFORM_WIN32_HEADERS_HPP
-#define CURSE_CORE_PLATFORM_WIN32_HEADERS_HPP
+#include "Curse/Renderer/Renderer.hpp"
 
-#include "Curse/Core.hpp"
+namespace Curse
+{
 
-#if defined CURSE_PLATFORM_WINDOWS
+    Renderer::~Renderer()
+    {
+    }
 
-#include <Windows.h>
-
-#ifdef max
-    #undef max
-#endif
-#ifdef min
-    #undef min
-#endif
-
-#endif
-
-#endif
+}

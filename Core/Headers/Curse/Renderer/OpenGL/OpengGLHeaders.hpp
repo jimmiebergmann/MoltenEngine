@@ -23,20 +23,18 @@
 *
 */
 
-#ifndef CURSE_CORE_PLATFORM_WIN32_HEADERS_HPP
-#define CURSE_CORE_PLATFORM_WIN32_HEADERS_HPP
+#ifndef CURSE_CORE_RENDERER_OPENGL_OPENGLHEADERS_HPP
+#define CURSE_CORE_RENDERER_OPENGL_OPENGLHEADERS_HPP
 
 #include "Curse/Core.hpp"
 
-#if defined CURSE_PLATFORM_WINDOWS
+#if CURSE_OPENGL_IS_AVAILABLE
 
-#include <Windows.h>
+#if defined(CURSE_PLATFORM_WINDOWS)
+    #include <Windows.h>
+    #include <GL/gl.h>
+#elif defined(CURSE_PLATFORM_LINUX)
 
-#ifdef max
-    #undef max
-#endif
-#ifdef min
-    #undef min
 #endif
 
 #endif
