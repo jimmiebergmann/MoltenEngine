@@ -33,8 +33,10 @@
 #if defined(CURSE_PLATFORM_WINDOWS)
     #include <Windows.h>
     #include <GL/gl.h>
+    #include "Curse/Renderer/OpenGL/wglext.h"
+    #include "Curse/Renderer/OpenGL/glext.h"
 #elif defined(CURSE_PLATFORM_LINUX)
-
+    #include "Curse/Renderer/OpenGL/glext.h"
 #endif
 
 #endif

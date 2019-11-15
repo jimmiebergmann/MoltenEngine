@@ -32,12 +32,17 @@
 
 #include <Windows.h>
 
+// Getting rid of conflicting Win32 definitions.
+#ifdef GetMessage
+    #undef GetMessage
+#endif
 #ifdef max
     #undef max
 #endif
 #ifdef min
     #undef min
 #endif
+
 
 #endif
 

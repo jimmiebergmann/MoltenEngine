@@ -28,14 +28,53 @@
 
 #if CURSE_OPENGL_IS_AVAILABLE
 
+#if defined(CURSE_PLATFORM_WINDOWS)
+    #define GetProcAddress(ext) ::wglGetProcAddress(ext)
+#elif defined( CURSE_PLATFORM_LINUX )
+#endif
+
+#include "Curse/System/Exception.hpp"
+
 namespace Curse
 {
 
-    bool Curse::OpenGL::BindOpenGLExtensions()
+    namespace OpenGL
     {
-        return false;
+
+        PFNGLGETSTRINGIPROC GetStringi = NULL;
+
+        PFNGLBINDVERTEXARRAYPROC BindVertexArray = NULL;
+        PFNGLDELETEVERTEXARRAYSPROC DeleteVertexArrays = NULL;
+        PFNGLGENVERTEXARRAYSPROC GenVertexArrays = NULL;
+        PFNGLISVERTEXARRAYPROC IsVertexArray = NULL;
+
+        bool Curse::OpenGL::BindOpenGLExtensions()
+        {
+            bool error = false;
+
+        #if defined(CURSE_PLATFORM_WINDOWS)
+
+            error |= (GetStringi = (PFNGLGETSTRINGIPROC)GetProcAddress("glGetStringi")) == NULL;
+            if (error)
+            {
+                if (::GetLastError() == ERROR_INVALID_HANDLE)
+                {
+                    throw Exception("Cannot bind OpenGL extensions. No context is current.");
+                }
+            }
+
+            error |= (BindVertexArray = (PFNGLBINDVERTEXARRAYPROC)GetProcAddress("glBindVertexArray")) == NULL;
+            error |= (DeleteVertexArrays = (PFNGLDELETEVERTEXARRAYSPROC)GetProcAddress("glDeleteVertexArrays")) == NULL;
+            error |= (GenVertexArrays = (PFNGLGENVERTEXARRAYSPROC)GetProcAddress("glGenVertexArrays")) == NULL;
+            error |= (IsVertexArray = (PFNGLISVERTEXARRAYPROC)GetProcAddress("glIsVertexArray")) == NULL;
+
+        #endif
+
+            return !error;
+        }
+
     }
-    
+
 }
 
 #endif

@@ -25,8 +25,28 @@
 
 #include "Curse/Renderer/Renderer.hpp"
 
+#include "Curse/Renderer/OpenGL/RendererOpenGL.hpp"
+
 namespace Curse
 {
+
+    Ref<Renderer> Renderer::Create(const Type type)
+    {
+        switch (type)
+        {
+        case Type::OpenGL:
+            #if CURSE_OPENGL_IS_AVAILABLE
+                return Ref<RendererOpenGL>::Create();
+            #else
+                return nullptr;
+            #endif
+            break;
+        default:
+            break;
+        }
+
+        return {};
+    }
 
     Renderer::~Renderer()
     {

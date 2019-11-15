@@ -52,9 +52,9 @@ namespace Curse
         /**
         * @brief Constructs and creates renderer.
         *
-        * @param window Render target window.
+        * @param window[in] Render target window.
         */
-        RendererOpenGL(const WindowBase & window);
+        RendererOpenGL(const WindowBase & window, const Version& version);
 
         /**
         * @brief Virtual destructor.
@@ -62,18 +62,48 @@ namespace Curse
         ~RendererOpenGL();
 
         /**
-        * @brief Creates renderer.
+        * @brief Opens renderer.
         *
-        * @param window Render target window.
+        * @param window[in] Render target window.
         */
-        virtual void Create(const WindowBase & window);
+        virtual void Open(const WindowBase & window, const Version& version = Version::None);
 
         /**
-        * @brief Destroys renderer.
+        * @brief Closing renderer.
         */
-        virtual void Destroy();
+        virtual void Close();
+
+        /**
+        * @brief Get renderer API type.
+        */
+        virtual Type GetType() const;
+
+        /**
+        * @brief Get renderer API version.
+        */
+        virtual Version GetVersion() const;
 
     private:
+
+        /**
+        * @brief Open opengl context by provided version.
+        *
+        * @param version[in] Opened version.
+        *
+        * @throw Exception If failed to open provided version.
+        */
+        bool OpenVersion(HDC deviceContext, const Version& version);
+
+        /**
+        * @brief Open the best available opengl context.
+        *
+        * @param version[out] Opened version.
+        *
+        * @throw Exception If failed to open any opengl context.
+        */
+        void OpenBestVersion(HDC deviceContext, Version& version);
+
+        Version m_version;
 
     #if defined(CURSE_PLATFORM_WINDOWS)
         HDC m_deviceContext;

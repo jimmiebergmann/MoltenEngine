@@ -28,11 +28,83 @@
 namespace Curse
 {
 
+    const Version Version::None = Version(0, 0, 0);
+
     Version::Version(const uint32_t major, const uint32_t minor, const uint32_t patch) :
         Major(major),
         Minor(minor),
         Patch(patch)
     {
+    }
+
+    std::string Version::AsString(const bool ignoreTrail) const
+    {
+        std::string str = std::to_string(Major);
+
+        if (!ignoreTrail || Minor != 0 || Patch != 0)
+        {
+            str += "." + std::to_string(Minor);
+        }
+        if (!ignoreTrail|| Patch != 0)
+        {
+            str += "." + std::to_string(Patch);
+        }
+
+        return str;
+    }
+
+    bool Version::operator == (const Version& version) const
+    {
+        return Major == version.Major && Minor == version.Minor && Patch == version.Patch;
+    }
+
+    bool Version::operator != (const Version& version) const
+    {
+        return Major != version.Major || Minor != version.Minor || Patch != version.Patch;
+    }
+
+    bool Version::operator < (const Version& version) const
+    {
+        if (Major < version.Major)
+        {
+            return true;
+        }
+        if (Minor < version.Minor)
+        {
+            return true;
+        }
+        if (Patch < version.Patch)
+        {
+            return true;
+        }
+        return false;
+    }
+
+    bool Version::operator <= (const Version& version) const
+    {
+        return *this == version || *this < version;
+    }
+
+    bool Version::operator > (const Version& version) const
+    {
+        if (Major > version.Major)
+        {
+            return true;
+        }
+        if (Minor > version.Minor)
+        {
+            return true;
+        }
+        if (Patch > version.Patch)
+        {
+            return true;
+        }
+        return false;
+    }
+
+    bool Version::operator >= (const Version& version) const
+    {
+        return *this == version || *this > version;
     }
 
 }

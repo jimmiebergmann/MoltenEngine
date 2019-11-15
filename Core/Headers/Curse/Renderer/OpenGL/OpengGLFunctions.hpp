@@ -38,6 +38,13 @@ namespace Curse
 
         CURSE_API bool BindOpenGLExtensions();
 
+        extern PFNGLGETSTRINGIPROC GetStrigi;
+
+        extern PFNGLBINDVERTEXARRAYPROC BindVertexArray;
+        extern PFNGLDELETEVERTEXARRAYSPROC DeleteVertexArrays;
+        extern PFNGLGENVERTEXARRAYSPROC GenVertexArrays;
+        extern PFNGLISVERTEXARRAYPROC IsVertexArray;
+
     }
 
 }

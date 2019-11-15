@@ -27,6 +27,7 @@
 #define CURSE_CORE_SYSTEM_VERSION_HPP
 
 #include "Curse/Types.hpp"
+#include <string>
 
 namespace Curse
 {
@@ -40,9 +41,52 @@ namespace Curse
     public:
 
         /**
+        * @brief Version object representing no version.
+        */
+        static const Version None;
+
+        /**
         * @brief Constructor.
         */
-        Version(const uint32_t major, const uint32_t minor, const uint32_t patch);
+        Version(const uint32_t major = 0, const uint32_t minor = 0, const uint32_t patch = 0);
+
+        /**
+        * @brief Get version as string.
+        *
+        * @param ignoreTrail[in] Ignoring trailing zeros of version.
+        *                        Major version is always returned, even if being 0.
+        */
+        std::string AsString(const bool ignoreTrail = true) const;
+
+        /**
+        * @brief Equal to compare operator.
+        */
+        bool operator == (const Version& version) const;
+
+        /**
+        * @brief Not equal to compare operator.
+        */
+        bool operator != (const Version& version) const;
+
+        /**
+        * @brief Less than compare operator.
+        */
+        bool operator < (const Version& version) const;
+
+        /**
+        * @brief Less than or equal to compare operator.
+        */
+        bool operator <= (const Version& version) const;
+
+        /**
+        * @brief Greater than compare operator.
+        */
+        bool operator > (const Version& version) const;
+
+        /**
+        * @brief Greater than or equal to compare operator.
+        */
+        bool operator >= (const Version& version) const;
 
         uint32_t Major;
         uint32_t Minor;
