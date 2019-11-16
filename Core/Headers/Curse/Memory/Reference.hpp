@@ -27,8 +27,8 @@
 #define CURSE_CORE_MEMORY_REFERENCE_HPP
 
 #include "Curse/System/Exception.hpp"
-#include <mutex>
 #include <atomic>
+#include <utility>
 
 namespace Curse
 {
@@ -53,14 +53,16 @@ namespace Curse
         * @param args[in] Arguments being passed to constructor of T.
         */
         template<typename ... Args>
-        static Reference<T> Create(Args ... args);
+        static Reference<T> Create(Args&& ... args);
 
         /**
         * @brief Constructor.
         */
         Reference();
 
-
+        /**
+        * @brief Copy constructor.
+        */
         Reference(const Reference& ref);
 
         Reference<T>& operator = (const Reference& ref); 

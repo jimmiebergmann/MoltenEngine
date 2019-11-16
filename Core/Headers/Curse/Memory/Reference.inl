@@ -28,9 +28,9 @@ namespace Curse
 
     template<typename T>
     template<typename ... Args>
-    inline Reference<T> Reference<T>::Create(Args ... args)
+    inline Reference<T> Reference<T>::Create(Args&& ... args)
     {
-        return { new Controller(new T(args...)) };
+        return { new Controller(new T(std::forward<Args>(args)...)) };
     }
 
     template<typename T>
@@ -141,7 +141,7 @@ namespace Curse
     template<typename T>
     inline size_t Reference<T>::GetUseCount() const
     {
-        return m_controller ? m_controller->m_counter : 0;
+        return m_controller ? static_cast<size_t>(m_controller->m_counter) : 0;
     }
 
     template<typename T>

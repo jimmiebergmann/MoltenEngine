@@ -34,7 +34,181 @@ namespace Curse
 {
     TEST(Memory, Reference)
     {
-        EXPECT_TRUE((std::is_same<Reference<int>, Ref<int> >::value));   
+        EXPECT_TRUE((std::is_same<Reference<int>, Ref<int> >::value));
+    }
+    TEST(Memory, Reference_Create)
+    {
+        {
+            auto ref = Ref<int32_t>::Create(12345);
+            EXPECT_EQ(*ref, int32_t(12345));
+
+            ref = Ref<int32_t>::Create(5432);
+            EXPECT_EQ(*ref, int32_t(5432));
+        }
+        {
+            struct TestStruct
+            {
+                TestStruct() :
+                    value1(333),
+                    value2("Test string")
+                { }
+
+                TestStruct(const int32_t value1, const std::string & value2 = "Default string") :
+                    value1(value1),
+                    value2(value2)
+                { }
+
+                int32_t value1;
+                std::string value2;
+            };
+
+            {
+                Ref<TestStruct> ref = Ref<TestStruct>::Create(112233, "My string");
+                TestStruct* ref_ptr = ref.Get();
+                TestStruct & ref_ref = *ref;
+
+                EXPECT_TRUE(ref_ptr != nullptr);
+                EXPECT_EQ(ref_ptr, &ref_ref);
+                EXPECT_EQ(ref_ptr->value1, int32_t(112233));
+                EXPECT_EQ(ref_ref.value1, int32_t(112233));
+                EXPECT_STREQ(ref_ptr->value2.c_str(), "My string");            
+                EXPECT_STREQ(ref_ref.value2.c_str(), "My string");
+            }
+            {
+                Ref<TestStruct> ref = Ref<TestStruct>::Create(112233);
+                TestStruct* ref_ptr = ref.Get();
+                TestStruct& ref_ref = *ref;
+
+                EXPECT_TRUE(ref_ptr != nullptr);
+                EXPECT_EQ(ref_ptr, &ref_ref);
+                EXPECT_EQ(ref_ptr->value1, int32_t(112233));
+                EXPECT_EQ(ref_ref.value1, int32_t(112233));
+                EXPECT_STREQ(ref_ptr->value2.c_str(), "Default string");
+                EXPECT_STREQ(ref_ref.value2.c_str(), "Default string");
+            }
+            {
+                Ref<TestStruct> ref = Ref<TestStruct>::Create();
+                TestStruct* ref_ptr = ref.Get();
+                TestStruct& ref_ref = *ref;
+
+                EXPECT_TRUE(ref_ptr != nullptr);
+                EXPECT_EQ(ref_ptr, &ref_ref);
+                EXPECT_EQ(ref.GetUseCount(), size_t(1));
+                EXPECT_EQ(ref_ptr->value1, int32_t(333));
+                EXPECT_EQ(ref_ref.value1, int32_t(333));
+                EXPECT_STREQ(ref_ptr->value2.c_str(), "Test string");
+                EXPECT_STREQ(ref_ref.value2.c_str(), "Test string");
+            }         
+        }
+        {
+
+        }
+    }
+
+    TEST(Memory, Reference_Copy)
+    {
+        Ref<int64_t> ref = Ref<int64_t>::Create(112233);
+        EXPECT_EQ(ref.GetUseCount(), size_t(1));
+
+        auto ref_copy_1 = ref;
+        EXPECT_EQ(ref.GetUseCount(), size_t(2));
+        Ref<int64_t> ref_copy_2;
+        EXPECT_EQ(ref.GetUseCount(), size_t(2));
+        ref_copy_2 = ref;
+        EXPECT_EQ(ref.GetUseCount(), size_t(3));
+    }
+
+    TEST(Memory, Reference_Move)
+    {
+        Ref<int64_t> ref = Ref<int64_t>::Create(112233);
+        EXPECT_EQ(ref.GetUseCount(), size_t(1));
+
+        auto ref_copy_1 = ref;
+        EXPECT_EQ(ref.GetUseCount(), size_t(2));
+        EXPECT_EQ(ref_copy_1.GetUseCount(), size_t(2));
+
+        Ref<int64_t> ref_move_1; 
+        EXPECT_EQ(ref.GetUseCount(), size_t(2));
+        EXPECT_EQ(ref_copy_1.GetUseCount(), size_t(2));
+
+        ref_move_1 = std::move(ref);
+        EXPECT_EQ(ref.GetUseCount(), size_t(0));      
+        EXPECT_EQ(ref_copy_1.GetUseCount(), size_t(2));
+        EXPECT_EQ(ref_move_1.GetUseCount(), size_t(2));
+
+        EXPECT_EQ(ref.Get(), nullptr);
+        EXPECT_NE(ref_copy_1.Get(), nullptr);
+        EXPECT_NE(ref_move_1.Get(), nullptr);
+    }
+
+    TEST(Memory, Reference_Destructor)
+    {
+
+        struct MyObj
+        {
+            MyObj(bool& destroyed) :
+                destroyed(destroyed),
+                value(5000)
+            {
+                EXPECT_FALSE(destroyed);
+            }
+
+            ~MyObj()
+            {
+                EXPECT_FALSE(destroyed);
+                destroyed = true;
+                EXPECT_TRUE(destroyed);
+            }
+
+            int32_t value;
+            bool& destroyed;
+        };
+
+        class TestDestruct
+        {
+        public:
+
+            TestDestruct(MyObj& object, bool& destroyed) :
+                object(object),
+                value(998877),
+                destroyed(destroyed)
+            {
+                EXPECT_FALSE(destroyed);
+            }
+
+            ~TestDestruct()
+            {
+                EXPECT_FALSE(destroyed);
+                destroyed = true;
+                EXPECT_TRUE(destroyed);
+            }
+
+            MyObj& object;
+            int32_t value;
+            bool& destroyed;
+        };
+  
+        {
+            bool destroyed_1 = false;
+            bool destroyed_2 = false;
+
+            { 
+                MyObj obj(destroyed_1);
+
+                EXPECT_FALSE(destroyed_1);
+                EXPECT_FALSE(destroyed_2);
+
+                {
+                    Ref<TestDestruct> ref = Ref<TestDestruct>::Create(obj, destroyed_2);
+
+                    EXPECT_FALSE(destroyed_1);
+                    EXPECT_FALSE(destroyed_2);
+                }
+
+                EXPECT_TRUE(destroyed_2);
+            }
+            EXPECT_TRUE(destroyed_1);
+        }
     }
 
 
