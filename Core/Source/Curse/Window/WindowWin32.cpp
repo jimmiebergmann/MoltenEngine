@@ -54,6 +54,7 @@ namespace Curse
 
     WindowWin32::~WindowWin32()
     {
+        Close();
     }
 
     static std::string CreateGuid()
