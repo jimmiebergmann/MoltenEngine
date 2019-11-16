@@ -39,7 +39,7 @@ namespace Curse
             return {};
             //return Ref<RendererOpenGL>::Create();
             #else
-                return nullptr;
+            return {};
             #endif
             break;
         default:

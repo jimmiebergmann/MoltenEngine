@@ -7,7 +7,7 @@ static int Run()
 {
     Curse::Window window("", Curse::Vector2ui32(800, 600));
 
-    /*auto renderer = Curse::Renderer::Create(Curse::Renderer::Type::OpenGL);
+    //auto renderer = Curse::Renderer::Create(Curse::Renderer::Type::OpenGL);
     //renderer->Open(window);
 
     window.Show();
@@ -15,7 +15,7 @@ static int Run()
     while (window.IsOpen())
     {
         window.Update();
-    }*/
+    }
 
     return 0;
 }
@@ -23,10 +23,6 @@ static int Run()
 int main()
 {
     std::cout << "Curse Editor v" << Curse::Version(CURSE_VERSION_MAJOR, CURSE_VERSION_MINOR, CURSE_VERSION_PATCH).AsString(false) << std::endl;
-
-#if defined(CURSE_PLATFORM_LINUX)
-    return 0;
-#endif
 
     try
     {

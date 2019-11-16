@@ -48,7 +48,7 @@ namespace Curse
         PFNGLGENVERTEXARRAYSPROC GenVertexArrays = NULL;
         PFNGLISVERTEXARRAYPROC IsVertexArray = NULL;
 
-        bool Curse::OpenGL::BindOpenGLExtensions()
+        bool BindOpenGLExtensions()
         {
             bool error = false;
 

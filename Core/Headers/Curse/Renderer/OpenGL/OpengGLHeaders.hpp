@@ -36,6 +36,8 @@
     #include "Curse/Renderer/OpenGL/wglext.h"
     #include "Curse/Renderer/OpenGL/glext.h"
 #elif defined(CURSE_PLATFORM_LINUX)
+    #include <X11/Xlib.h>
+    #include <GL/gl.h>
     #include "Curse/Renderer/OpenGL/glext.h"
 #endif
 

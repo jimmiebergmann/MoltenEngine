@@ -132,7 +132,7 @@ namespace Curse
     #if defined(CURSE_BUILD_DEBUG)
         Curse::Test::PrintInfo("Debug - Unoptimized.");
     #elif defined(CURSE_BUILD_RELEASE)
-        Curse::Test::PrintInfo("Debug - Optimized.");
+        Curse::Test::PrintInfo("Release - Optimized.");
     #endif
 
         EXPECT_NO_THROW(RefCopyTest(loops));
@@ -198,7 +198,7 @@ namespace Curse
     #if defined(CURSE_BUILD_DEBUG)
         Curse::Test::PrintInfo("Debug - Unoptimized.");
     #elif defined(CURSE_BUILD_RELEASE)
-        Curse::Test::PrintInfo("Debug - Optimized.");
+        Curse::Test::PrintInfo("Release - Optimized.");
     #endif
 
         EXPECT_NO_THROW(RefMoveTest(loops));

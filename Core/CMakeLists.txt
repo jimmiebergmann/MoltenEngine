@@ -26,7 +26,7 @@ if(CURSE_ENABLE_OPENGL)
 	message("FOUND OPENGL: ${OpenGL_FOUND}, Lib: ${OPENGL_gl_LIBRARY}")
 endif()
 
-# Force warnings as errors
+# Set compiler flags
 if(MSVC)
   if(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
     string(REGEX REPLACE "/W[0-4]" "/W4" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
@@ -37,6 +37,8 @@ if(MSVC)
 elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-long-long -pedantic -fno-elide-constructors")
 endif()
+set(CMAKE_CXX_FLAGS_DEBUG "-g")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 
 # Curse project generation

@@ -24,9 +24,10 @@
 */
 
 
-#include "Curse/Renderer/OpenGL/RendererOpenGL.hpp"
+#include "Curse/Renderer/OpenGL/RendererOpenGLX11.hpp"
 
 #if CURSE_OPENGL_IS_AVAILABLE
+#if defined(CURSE_PLATFORM_LINUX)
 
 #include "Curse/Renderer/OpenGL/OpengGLFunctions.hpp"
 #include "Curse/Window/WindowBase.hpp"
@@ -35,37 +36,29 @@
 namespace Curse
 {
 
-    RendererOpenGL::RendererOpenGL() :
-#if defined(CURSE_PLATFORM_WINDOWS)
-        m_deviceContext(NULL),
-        m_context(NULL)
-#elif defined(CURSE_PLATFORM_LINUX)
-
-#endif
+    RendererOpenGLX11::RendererOpenGLX11()
     {
     }
 
-    RendererOpenGL::RendererOpenGL(const WindowBase& window, const Version& version) :
-        RendererOpenGL()
+    RendererOpenGLX11::RendererOpenGLX11(const WindowBase& window, const Version& version) :
+        RendererOpenGLX11()
     {
         Open(window, version);
     }
 
-    RendererOpenGL::~RendererOpenGL()
+    RendererOpenGLX11::~RendererOpenGLX11()
     {
         Close();
     }
 
-    void RendererOpenGL::Open(const WindowBase& window, const Version& version)
+    void RendererOpenGLX11::Open(const WindowBase& /*window*/, const Version& /*version*/)
     {
-    #if defined(CURSE_PLATFORM_WINDOWS)
-
-        HGLRC temporaryContext = NULL;
+        /*HGLRC temporaryContext = NULL;
 
         auto deviceContext = window.GetWin32DeviceContext();
         if (deviceContext == NULL)
         {
-            throw Exception("RendererOpenGL: Device context of parameter \"window\" is null.");
+            throw Exception("RendererOpenGLWin32: Device context of parameter \"window\" is null.");
         }
 
         try
@@ -97,17 +90,17 @@ namespace Curse
 
             if ((pixelFormat = ChoosePixelFormat(deviceContext, &pixelFormatDescriptor)) == 0)
             {
-                throw Exception("RendererOpenGL: Failed to choose pixel format for Win32 device context.");
+                throw Exception("RendererOpenGLWin32: Failed to choose pixel format for Win32 device context.");
             }
             if ((SetPixelFormat(deviceContext, pixelFormat, &pixelFormatDescriptor)) == false)
             {
-                throw Exception("RendererOpenGL: Failed to set pixel format for Win32 device context.");
+                throw Exception("RendererOpenGLWin32: Failed to set pixel format for Win32 device context.");
             }
 
             temporaryContext = ::wglCreateContext(deviceContext);
             if (temporaryContext == NULL)
             {
-                throw Exception("RendererOpenGL: Failed to create primitive Win32 OpenGL context.");
+                throw Exception("RendererOpenGLWin32: Failed to create primitive Win32 OpenGL context.");
             }
 
             ::wglMakeCurrent(NULL, NULL);
@@ -142,47 +135,40 @@ namespace Curse
             throw;
         }
 
-        OpenGL::BindOpenGLExtensions();
-    #endif
+        OpenGL::BindOpenGLExtensions();*/
     }
 
-    void RendererOpenGL::Close()
+    void RendererOpenGLX11::Close()
     {
-    #if defined(CURSE_PLATFORM_WINDOWS)
-
-        if (m_context)
+        /*if (m_context)
         {
             // Release the context from the current thread
             if (!wglMakeCurrent(NULL, NULL))
             {
-                throw Exception("RendererOpenGL: Failed to set current context to null.");
+                throw Exception("RendererOpenGLWin32: Failed to set current context to null.");
             }
 
             // Delete the context
             if (!wglDeleteContext(m_context))
             {
-                throw Exception("RendererOpenGL: Failed to delete context.");
+                throw Exception("RendererOpenGLWin32: Failed to delete context.");
             }
 
             m_context = NULL;
-        }
-
-    #elif defined(CURSE_PLATFORM_LINUX)
-
-    #endif
+        }*/
     }
 
-    RendererOpenGL::Type RendererOpenGL::GetType() const
+    RendererOpenGLX11::Type RendererOpenGLX11::GetType() const
     {
         return Type::OpenGL;
     }
 
-    Version RendererOpenGL::GetVersion() const
+    Version RendererOpenGLX11::GetVersion() const
     {
         return m_version;
     }
 
-    bool RendererOpenGL::OpenVersion(HDC deviceContext, const Version& version)
+    /*bool RendererOpenGLWin32::OpenVersion(HDC deviceContext, const Version& version)
     {
         PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB = NULL;
         if ((wglCreateContextAttribsARB = (PFNWGLCREATECONTEXTATTRIBSARBPROC)wglGetProcAddress("wglCreateContextAttribsARB")) == NULL)
@@ -203,10 +189,13 @@ namespace Curse
         }
 
         return true;
-    }
+    }*/
 
-    void RendererOpenGL::OpenBestVersion(HDC deviceContext, Version& /*version*/)
+    /*void RendererOpenGLWin32::OpenBestVersion(HDC deviceContext, Version& version)
     {
+
+        // USE VECTOR AND USE FOR EACH LOOP!
+
         static const size_t versionCount = 13;
         static const Version versions[versionCount] =
         {
@@ -225,12 +214,15 @@ namespace Curse
             Version(2, 0)
         };
 
+        version = Version::None;
+
         for (size_t i = 0; i < versionCount; i++)
         {
             try
             {
                 if (OpenVersion(deviceContext, versions[i]))
                 {
+                    version = versions[i];
                     return;
                 }
             }
@@ -240,11 +232,13 @@ namespace Curse
                 {
                     continue;
                 }
-                throw Exception("RendererOpenGL: Failed to create best OpenGL context, last error: " + e.GetMessage());
+                throw Exception("RendererOpenGLWin32: Failed to create best OpenGL context, last error: " + e.GetMessage());
             }
         }
-    }
+    }*/
 
 }
+
+#endif
 
 #endif
