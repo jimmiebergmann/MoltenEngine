@@ -52,6 +52,7 @@ namespace Curse
 
     WindowX11::~WindowX11()
     {
+        Close();
     }
 
     void WindowX11::Open(const std::string& title, const Vector2ui32 size)
@@ -86,6 +87,17 @@ namespace Curse
                                  CWBorderPixel | CWEventMask | CWColormap,
                                  &windowAttributes);
 
+        if (!m_window)
+        {
+            throw Exception("X11: Failed to create window.");
+        }
+
+        Atom wmDeleteMessage = XInternAtom(m_display, "WM_DELETE_WINDOW", false);
+        XSetWMProtocols(m_display, m_window, &wmDeleteMessage, 1);
+        XStoreName(m_display, m_window, title.c_str());
+
+
+
         XMapWindow(m_display, m_window);
         XFlush(m_display);
 
@@ -98,14 +110,19 @@ namespace Curse
     { 
         if(m_display)
         {
-            XDestroyWindow(m_display, m_window);
+            if(m_display)
+            {
+                XDestroyWindow(m_display, m_window);
+                XFlush(m_display);          
+            }
+
             XCloseDisplay(m_display);
-            m_display = NULL;
-            m_screen = 0;
-            m_window = 0;
         }
 
         m_open = false;
+        m_display = NULL;
+        m_screen = 0;
+        m_window = 0;
     }
 
     void WindowX11::Update()
@@ -115,6 +132,7 @@ namespace Curse
             return;
         }
 
+
         XEvent event;
         while(XPending(m_display) > 0)
         {
@@ -123,10 +141,11 @@ namespace Curse
             switch(event.type)
             {
                 case ClientMessage:
-                {
+                {                  
                     // This is ahacky way of checking if we closed the window
                     if(std::strcmp(XGetAtomName(m_display, event.xclient.message_type), "WM_PROTOCOLS") == 0)
                     {
+
                         Close();
                         return;
                     }
