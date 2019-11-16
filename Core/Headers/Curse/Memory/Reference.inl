@@ -27,80 +27,139 @@ namespace Curse
 {
 
     template<typename T>
-    inline Reference<T> Reference<T>::Create()
+    template<typename ... Args>
+    inline Reference<T> Reference<T>::Create(Args ... args)
     {
-        return { new ControlObject(new T) };
+        return { new Controller(new T(args...)) };
     }
 
     template<typename T>
     inline Reference<T>::Reference() :
-        m_controlObject(nullptr)
+        m_controller(nullptr)
     {
     }
-
+ 
     template<typename T>
-    template<typename U>
-    inline Reference<T>::Reference(const Reference<U>& ref) :
-        m_controlObject(ref.m_controlObject)
+    inline Reference<T>::Reference(const Reference& ref) :
+        m_controller(nullptr)
     {
-        if (m_controlObject)
+        auto old = m_controller;
+        m_controller = ref.m_controller;
+        if (m_controller && m_controller != old)
         {
-            m_controlObject.m_counter++;
+            ++m_controller->m_counter;
         }
     }
 
     template<typename T>
-    template<typename U>
-    inline Reference<T>::Reference(Reference<U>&& ref) :
-        m_controlObject(reinterpret_cast<ControlObject*>(ref.m_controlObject))
+    Reference<T>& Reference<T>::operator = (const Reference& ref)
     {
-        static_assert(std::is_same<T, U>::value || std::is_base_of<T, U>::value,
-            "T is not same or base of U");
-
-        ref.m_controlObject = nullptr;
-
-        if (m_controlObject)
+        auto old = m_controller;
+        m_controller = ref.m_controller;
+        if (m_controller && m_controller != old)
         {
-            m_controlObject->m_counter++;
+            ++m_controller->m_counter;
         }
+        return *this;
+    }
+
+    template<typename T>
+    inline Reference<T>::Reference(Reference&& ref) :
+        m_controller(nullptr)
+    {
+        auto old = m_controller;
+        m_controller = ref.m_controller;
+        ref.m_controller = nullptr;
+        if (m_controller)
+        {
+            ref.m_controller = nullptr;
+        
+            if (m_controller == old)
+            {
+                size_t counter = m_controller->m_counter--;
+                if (!counter && m_controller->m_object)
+                {
+                    delete m_controller;
+                }
+            }
+        }
+    }
+
+    template<typename T>
+    Reference<T>& Reference<T>::operator = (Reference&& ref)
+    {
+        auto old = m_controller;
+        m_controller = ref.m_controller;
+        ref.m_controller = nullptr;
+        if (m_controller)
+        {
+            ref.m_controller = nullptr;
+            
+            if (m_controller == old)
+            {
+                size_t counter = m_controller->m_counter--;
+                if (!counter && m_controller->m_object)
+                {
+                    delete m_controller;
+                }
+            }          
+        }
+
+        return *this;
+    }
+
+    template<typename T>
+    T& Reference<T>::operator *() const
+    {
+        if (m_controller)
+        {
+            return *m_controller->m_object;
+        }
+
+        throw Exception("Accessing null ptr.");
+    }
+
+    template<typename T>
+    T* Reference<T>::Get() const
+    {
+        return m_controller ? m_controller->m_object : nullptr;
     }
 
     template<typename T>
     inline Reference<T>::~Reference()
     {
-        if (m_controlObject)
+        if (m_controller)
         {
-            m_controlObject->m_counter--;
-            if(!m_controlObject->m_counter && m_controlObject->m_object)
+            size_t counter = m_controller->m_counter--;
+            if (!counter && m_controller->m_object)
             {
-                delete m_controlObject;
+                delete m_controller;
             }
-            
         }
     }
 
     template<typename T>
     inline size_t Reference<T>::GetUseCount() const
     {
-        return m_controlObject ? m_controlObject->m_counter : 0;
+        return m_controller ? m_controller->m_counter : 0;
     }
 
     template<typename T>
-    inline Reference<T>::Reference(ControlObject* controlObject) :
-        m_controlObject(controlObject)
+    inline Reference<T>::Reference(Controller* controlObject) :
+        m_controller(controlObject)
     {
     }
 
 
     template<typename T>
-    inline Reference<T>::ControlObject::ControlObject(T* object) :
+    inline Reference<T>::Controller::Controller(T* object) :
         m_object(object),
-        m_counter(0)
+        m_counter(1)
     {
     }
 
     template<typename T>
-    inline Reference<T>::ControlObject::~ControlObject()
+    inline Reference<T>::Controller::~Controller()
     {
         if (m_object)
         {

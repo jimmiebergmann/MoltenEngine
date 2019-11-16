@@ -26,7 +26,8 @@
 #ifndef CURSE_CORE_MEMORY_REFERENCE_HPP
 #define CURSE_CORE_MEMORY_REFERENCE_HPP
 
-#include "Curse/Types.hpp"
+#include "Curse/System/Exception.hpp"
+#include <mutex>
 #include <atomic>
 
 namespace Curse
@@ -48,25 +49,30 @@ namespace Curse
 
         /**
         * @brief Function for constructing a new reference object.
+        *
+        * @param args[in] Arguments being passed to constructor of T.
         */
-        static Reference<T> Create();
+        template<typename ... Args>
+        static Reference<T> Create(Args ... args);
 
         /**
         * @brief Constructor.
         */
         Reference();
 
-        /**
-        * @brief Copy constructor. Increments the counter.
-        */
-        template<typename U>
-        Reference(const Reference<U>& ref);
 
-        /**
-        * @brief Move constructor. Counter is not incremented.
-        */
-        template<typename U>
-        Reference(Reference<U>&& ref);
+        Reference(const Reference& ref);
+
+        Reference<T>& operator = (const Reference& ref); 
+
+        Reference(Reference&& ref);
+
+        Reference<T>& operator = (Reference&& ref);
+
+        T& operator *() const;
+
+        T* Get() const;
+
 
         /**
         * @brief Destructor.
@@ -80,20 +86,20 @@ namespace Curse
 
     private:
 
-        struct ControlObject
+        struct Controller
         {
-            ControlObject(T* object);
-            ControlObject(const ControlObject&) = delete;
-            ControlObject(ControlObject&&) = delete;
-            ~ControlObject();
+            Controller(T* object);
+            Controller(const Controller&) = delete;
+            Controller(Controller&&) = delete;
+            ~Controller();
 
             T* m_object;
-            size_t m_counter;
+            std::atomic_size_t m_counter;
         };
 
-        Reference(ControlObject * controlObject);
+        Reference(Controller * controlObject);
 
-        ControlObject* m_controlObject;
+        Controller* m_controller;
 
         template<typename U> friend class Reference;
     };

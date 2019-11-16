@@ -24,8 +24,12 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(RootDir "${CMAKE_CURRENT_SOURCE_DIR}/../..")
 set(CoreDir "${RootDir}/Core")
+set(TestDir "${CMAKE_CURRENT_SOURCE_DIR}/..")
+set(TestHeadersDir "${TestDir}/Headers")
 set(CoreHeadersDir "${CoreDir}/Headers")
-set(CoreTestDir "${CMAKE_CURRENT_SOURCE_DIR}")
+set(CoreTestDir "${CMAKE_CURRENT_SOURCE_DIR}/Core")
+file(GLOB_RECURSE TestSources "${TestDir}/*.c" "${TestDir}/*.cpp")
+file(GLOB_RECURSE TestHeaders "${TestDir}/*.h" "${TestDir}/*.hpp")
 file(GLOB_RECURSE CoreTestSources "${CoreTestDir}/*.c" "${CoreTestDir}/*.cpp")
 file(GLOB_RECURSE CoreTestHeaders "${CoreTestDir}/*.h" "${CoreTestDir}/*.hpp")
 
@@ -46,9 +50,13 @@ endif()
 if (CMAKE_VERSION VERSION_LESS 2.8.11)
   include_directories("${gtest_SOURCE_DIR}/include")
 endif()
+include_directories ("${TestHeadersDir}")
 include_directories ("${CoreHeadersDir}")
 
-add_executable(CurseCoreTest "${CoreTestSources}" "${CoreTestHeaders}")
+add_executable(CurseCoreTest "${TestSources}" "${TestHeaders}" "${CoreTestSources}" "${CoreTestHeaders}")
+
+CreateSourceGroups("${TestSources}" "${TestDir}")
+CreateSourceGroups("${TestHeaders}" "${TestDir}")
 
 CreateSourceGroups("${CoreTestSources}" "${CoreTestDir}")
 CreateSourceGroups("${CoreTestHeaders}" "${CoreTestDir}")

@@ -23,7 +23,7 @@
 *
 */
 
-#include "gtest/gtest.h"
+#include "Test.hpp"
 #include "Curse/System/Clock.hpp"
 #include <thread>
 

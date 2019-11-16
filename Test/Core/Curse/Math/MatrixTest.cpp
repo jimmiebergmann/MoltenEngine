@@ -23,7 +23,7 @@
 *
 */
 
-#include "gtest/gtest.h"
+#include "Test.hpp"
 #include "Curse/Math/Matrix.hpp"
 
 namespace Curse

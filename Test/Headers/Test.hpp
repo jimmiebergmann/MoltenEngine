@@ -23,34 +23,21 @@
 *
 */
 
-#include "Curse/Renderer/Renderer.hpp"
+#ifndef CURSE_TEST_HPP
+#define CURSE_TEST_HPP
 
-#include "Curse/Renderer/OpenGL/RendererOpenGL.hpp"
+#include "gtest/gtest.h"
 
 namespace Curse
 {
 
-    Ref<Renderer> Renderer::Create(const Type type)
+    namespace Test
     {
-        switch (type)
-        {
-        case Type::OpenGL:
-            #if CURSE_OPENGL_IS_AVAILABLE
-            return {};
-            //return Ref<RendererOpenGL>::Create();
-            #else
-                return nullptr;
-            #endif
-            break;
-        default:
-            break;
-        }
 
-        return {};
-    }
+        void PrintInfo(const std::string& message);
 
-    Renderer::~Renderer()
-    {
     }
 
 }
+
+#endif

@@ -23,7 +23,7 @@
 *
 */
 
-#include "gtest/gtest.h"
+#include "Test.hpp"
 
 int main(int argc, char** argv)
 {

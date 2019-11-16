@@ -7,7 +7,7 @@ static int Run()
 {
     Curse::Window window("", Curse::Vector2ui32(800, 600));
 
-    auto renderer = Curse::Renderer::Create(Curse::Renderer::Type::OpenGL);
+    /*auto renderer = Curse::Renderer::Create(Curse::Renderer::Type::OpenGL);
     //renderer->Open(window);
 
     window.Show();
@@ -15,7 +15,7 @@ static int Run()
     while (window.IsOpen())
     {
         window.Update();
-    }
+    }*/
 
     return 0;
 }

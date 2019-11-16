@@ -23,12 +23,12 @@
 *
 */
 
-#include "gtest/gtest.h"
+#include "Test.hpp"
 #include "Curse/Memory/Reference.hpp"
-#include <type_traits>
-
 #include <Curse/System/Clock.hpp>
 #include <memory>
+#include <type_traits>
+
 
 namespace Curse
 {
@@ -36,20 +36,62 @@ namespace Curse
     {
         EXPECT_TRUE((std::is_same<Reference<int>, Ref<int> >::value));   
     }
-    TEST(Memory, Reference_Create)
-    {
-        Ref<int> ref = Ref<int>::Create();
-    }
 
-    static void RefTest(const size_t loops)
-    {
-        Ref<int> ref_1 = Ref<int>::Create();
-        Ref<int> ref_9;
 
-        {
+    static void RefCopyTest(const size_t loops)
+    {
+        Ref<int> ref = Ref<int>::Create(123);
+        Ref<int> ref_10;
+        {       
             Clock clock;
 
             for (size_t i = 0; i < loops; i++)
+            {
+                auto ref_1 = ref;
+                {
+                    auto ref_2 = ref_1;
+                    {
+                        auto ref_3 = ref_2;
+                        {
+                            auto ref_4 = ref_3;
+                            {
+                                auto ref_5 = ref_4;
+                                {
+                                    auto ref_6 = ref_5;
+                                    {
+                                        auto ref_7 = ref_6;
+                                        {
+                                            auto ref_8 = ref_7;
+                                            {
+                                                auto ref_9 = ref_8;
+                                                {
+                                                    ref_10 = ref_9;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            auto time = clock.GetTime().AsNanoseconds<uint64_t>();
+            Test::PrintInfo("Curse::Reference - Copy time: " + std::to_string(time) + " ns.    Value: " + std::to_string(*ref_10) );
+        }
+    }
+
+    static void StdCopyRefTest(const size_t loops)
+    {
+        std::shared_ptr<int> ref = std::make_shared<int>(123);
+        std::shared_ptr<int> ref_10;
+
+        Clock clock;
+
+        for (size_t i = 0; i < loops; i++)
+        {
+            auto ref_1 = ref;
             {
                 auto ref_2 = ref_1;
                 {
@@ -65,7 +107,10 @@ namespace Curse
                                     {
                                         auto ref_8 = ref_7;
                                         {
-                                            ref_9 = ref_8;
+                                            auto ref_9 = ref_8;
+                                            {
+                                                ref_10 = ref_9;
+                                            }
                                         }
                                     }
                                 }
@@ -74,58 +119,91 @@ namespace Curse
                     }
                 }
             }
-
-            auto time = clock.GetTime().AsSeconds<float>();
-            std::cout << "Ref(" << &ref_9 << ") time:" << time << std::endl;
-
         }
+
+        auto time = clock.GetTime().AsNanoseconds<uint64_t>();
+        Test::PrintInfo("std::shared_ptr  - Copy time: " + std::to_string(time) + " ns.    Value: " + std::to_string(*ref_10));
+    }
+    TEST(Memory, Reference_CopySpeedTest)
+    { 
+        const size_t loops = 1000;
+        Curse::Test::PrintInfo("------------------");
+
+    #if defined(CURSE_BUILD_DEBUG)
+        Curse::Test::PrintInfo("Debug - Unoptimized.");
+    #elif defined(CURSE_BUILD_RELEASE)
+        Curse::Test::PrintInfo("Debug - Optimized.");
+    #endif
+
+        EXPECT_NO_THROW(RefCopyTest(loops));
+        EXPECT_NO_THROW(StdCopyRefTest(loops));
+        Curse::Test::PrintInfo("------------------");
     }
 
-    static void StdRefTest(const size_t loops)
+    static void RefMoveTest(const size_t loops)
     {
-        std::shared_ptr<int> ref_1 = std::make_shared<int>(1);
-        std::shared_ptr<int> ref_9;
+        Ref<int> ref_10 = Ref<int>::Create(123);
 
+        Clock clock;
+
+        for (size_t i = 0; i < loops; i++)
         {
-            Clock clock;
-
-            for (size_t i = 0; i < loops; i++)
-            {
-                auto ref_2 = ref_1;
-                {
-                    auto ref_3 = ref_2;
-                    {
-                        auto ref_4 = ref_3;
-                        {
-                            auto ref_5 = ref_4;
-                            {
-                                auto ref_6 = ref_5;
-                                {
-                                    auto ref_7 = ref_6;
-                                    {
-                                        auto ref_8 = ref_7;
-                                        {
-                                            ref_9 = ref_8;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            auto time = clock.GetTime().AsSeconds<float>();
-            std::cout << "Std Ref(" << &ref_9 << ") time:" << time << std::endl;
-
+            auto ref = std::move(ref_10);
+            auto ref_1 = std::move(ref);
+            auto ref_2 = std::move(ref_1);
+            auto ref_3 = std::move(ref_2);
+            auto ref_4 = std::move(ref_3);
+            auto ref_5 = std::move(ref_4);
+            auto ref_6 = std::move(ref_5);
+            auto ref_7 = std::move(ref_6);
+            auto ref_8 = std::move(ref_7);
+            auto ref_9 = std::move(ref_8);
+            ref_10 = std::move(ref_9);
         }
+
+        auto time = clock.GetTime().AsNanoseconds<uint64_t>();
+        Test::PrintInfo("Curse::Reference  - Move time: " + std::to_string(time) + " ns.    Value: " + std::to_string(*ref_10));
     }
 
-    TEST(Memory, Reference_Speed)
+    static void StdMoveRefTest(const size_t loops)
     {
-        const size_t loops = 1000000;
-        RefTest(loops);
-        StdRefTest(loops);
+        std::shared_ptr<int> ref_10 = std::make_shared<int>(123);
+        
+        Clock clock;
+
+        for (size_t i = 0; i < loops; i++)
+        {
+            auto ref = std::move(ref_10);
+            auto ref_1 = std::move(ref);
+            auto ref_2 = std::move(ref_1);
+            auto ref_3 = std::move(ref_2);
+            auto ref_4 = std::move(ref_3);
+            auto ref_5 = std::move(ref_4);
+            auto ref_6 = std::move(ref_5);
+            auto ref_7 = std::move(ref_6);
+            auto ref_8 = std::move(ref_7);
+            auto ref_9 = std::move(ref_8);
+            ref_10 = std::move(ref_9);
+        }
+
+        auto time = clock.GetTime().AsNanoseconds<uint64_t>();
+        Test::PrintInfo("std::shared_ptr   - Move time: " + std::to_string(time) + " ns.    Value: " + std::to_string(*ref_10));      
+    }
+
+    TEST(Memory, Reference_MoveSpeedTest)
+    {
+        const size_t loops = 1000;
+        Curse::Test::PrintInfo("------------------");
+
+    #if defined(CURSE_BUILD_DEBUG)
+        Curse::Test::PrintInfo("Debug - Unoptimized.");
+    #elif defined(CURSE_BUILD_RELEASE)
+        Curse::Test::PrintInfo("Debug - Optimized.");
+    #endif
+
+        EXPECT_NO_THROW(RefMoveTest(loops));
+        EXPECT_NO_THROW(StdMoveRefTest(loops));
+        Curse::Test::PrintInfo("------------------");
     }
 
 }
