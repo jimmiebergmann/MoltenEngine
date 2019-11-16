@@ -76,7 +76,7 @@ namespace Curse
         
             if (m_controller == old)
             {
-                size_t counter = m_controller->m_counter--;
+                size_t counter = --m_controller->m_counter;
                 if (!counter && m_controller->m_object)
                 {
                     delete m_controller;
@@ -97,7 +97,7 @@ namespace Curse
             
             if (m_controller == old)
             {
-                size_t counter = m_controller->m_counter--;
+                size_t counter = --m_controller->m_counter;
                 if (!counter && m_controller->m_object)
                 {
                     delete m_controller;
@@ -130,7 +130,7 @@ namespace Curse
     {
         if (m_controller)
         {
-            size_t counter = m_controller->m_counter--;
+            size_t counter = --m_controller->m_counter;
             if (!counter && m_controller->m_object)
             {
                 delete m_controller;
