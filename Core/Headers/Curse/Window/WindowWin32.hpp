@@ -92,17 +92,17 @@ namespace Curse
         virtual bool IsOpen() const;
 
         /**
-        * @brief Get win32 window handle. Only available on Windows.
+        * @brief Get win32 window handle.
         */
         virtual HWND GetWin32Window() const;
 
         /**
-        * @brief Get win32 instance handle. Only available on Windows.
+        * @brief Get win32 instance handle.
         */
         virtual HINSTANCE GetWin32Instance() const;
 
         /**
-        * @brief Get win32 device context handle. Only available on Windows.
+        * @brief Get win32 device context handle.
         */
         virtual HDC GetWin32DeviceContext() const;
 

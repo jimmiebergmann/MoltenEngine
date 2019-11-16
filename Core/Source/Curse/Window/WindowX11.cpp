@@ -28,11 +28,19 @@
 #if defined CURSE_PLATFORM_LINUX
 
 #include "Curse/System/Exception.hpp"
+#include <cstring>
 
 namespace Curse
 {
 
-    WindowX11::WindowX11()
+    WindowX11::WindowX11() :
+        m_display(NULL),
+        m_screen(0),
+        m_window(0),
+        m_open(false),
+        m_initialSize(0, 0),
+        m_currentSize(0, 0),
+        m_title("")
     {
     }
 
@@ -46,16 +54,88 @@ namespace Curse
     {
     }
 
-    void WindowX11::Open(const std::string& /*title*/, const Vector2ui32 /*size*/)
-    {       
+    void WindowX11::Open(const std::string& title, const Vector2ui32 size)
+    {
+        Close();
+
+        if((m_display = XOpenDisplay(NULL)) == NULL)
+        {
+            throw Exception("X11: Failed to connect to X server.");
+        }
+
+        ::XInitThreads( );
+
+        m_screen = DefaultScreen(m_display);
+
+        // Creat the window attributes
+        XSetWindowAttributes windowAttributes;
+        windowAttributes.colormap = DefaultColormap(m_display, m_screen);
+        windowAttributes.event_mask =   KeyPressMask | KeyReleaseMask |
+                                        ButtonPressMask | ButtonReleaseMask | ButtonMotionMask | PointerMotionMask |
+                                        EnterWindowMask | LeaveWindowMask | VisibilityChangeMask |
+                                        FocusChangeMask | ExposureMask | StructureNotifyMask;
+
+        // Create the window
+        m_window = ::XCreateWindow(m_display,
+                                 DefaultRootWindow(m_display),
+                                 0, 0, size.x, size.y,
+                                 0,
+                                 DefaultDepth(m_display, m_screen),
+                                 InputOutput,
+                                 DefaultVisual(m_display, m_screen),
+                                 CWBorderPixel | CWEventMask | CWColormap,
+                                 &windowAttributes);
+
+        XMapWindow(m_display, m_window);
+        XFlush(m_display);
+
+        m_title = title;
+        m_initialSize = m_currentSize = size;
+        m_open = true;
     }
 
     void WindowX11::Close()
     { 
+        if(m_display)
+        {
+            XDestroyWindow(m_display, m_window);
+            XCloseDisplay(m_display);
+            m_display = NULL;
+            m_screen = 0;
+            m_window = 0;
+        }
+
+        m_open = false;
     }
 
     void WindowX11::Update()
     {
+        if(!m_open)
+        {
+            return;
+        }
+
+        XEvent event;
+        while(XPending(m_display) > 0)
+        {
+            XNextEvent(m_display, &event);
+
+            switch(event.type)
+            {
+                case ClientMessage:
+                {
+                    // This is ahacky way of checking if we closed the window
+                    if(std::strcmp(XGetAtomName(m_display, event.xclient.message_type), "WM_PROTOCOLS") == 0)
+                    {
+                        Close();
+                        return;
+                    }
+                }
+                break;
+                default:
+                    break;
+            }
+        }
     }
 
     void WindowX11::Show(const bool /*show*/)
@@ -68,8 +148,24 @@ namespace Curse
 
     bool WindowX11::IsOpen() const
     {
-        return false;
+        return m_open;
     }
+
+    ::Display * WindowX11::GetX11DisplayDevice() const
+    {
+        return m_display;
+    }
+
+    ::Window WindowX11::GetX11WindowDevice() const
+    {
+        return m_window;
+    }
+
+    int WindowX11::GetX11ScreenDevice() const
+    {
+        return m_screen;
+    }
+
 
 }
 

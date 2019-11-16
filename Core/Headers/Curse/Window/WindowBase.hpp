@@ -80,6 +80,7 @@ namespace Curse
         virtual bool IsOpen() const = 0;
 
     #if defined(CURSE_PLATFORM_WINDOWS)
+       
         /**
         * @brief Get win32 window handle. Only available on Windows.
         */
@@ -94,6 +95,24 @@ namespace Curse
         * @brief Get win32 device context handle. Only available on Windows.
         */
         virtual HDC GetWin32DeviceContext() const = 0;
+    
+    #elif defined(CURSE_PLATFORM_WINDOWS)
+       
+        /**
+        * @brief Get X11 display Device. Only available on Linux.
+        */
+        virtual ::Display * GetX11DisplayDevice( ) const = 0;
+
+        /**
+        * @brief Get X11 window Device. Only available on Linux.
+        */
+        virtual ::Window GetX11WindowDevice( ) const = 0;
+
+        /**
+        * @brief Get X11 screen Device. Only available on Linux.
+        */
+        virtual int GetX11ScreenDevice( ) const = 0;
+
     #endif
 
     };

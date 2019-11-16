@@ -30,6 +30,8 @@
 
 #if defined CURSE_PLATFORM_LINUX
 
+#include "Curse/Platform/X11Headers.hpp"
+
 namespace Curse
 {
 
@@ -89,8 +91,30 @@ namespace Curse
         */
         virtual bool IsOpen() const;
 
+        /**
+        * @brief Get X11 display Device.
+        */
+        virtual ::Display * GetX11DisplayDevice() const;
+
+        /**
+        * @brief Get X11 window Device.
+        */
+        virtual ::Window GetX11WindowDevice() const;
+
+        /**
+        * @brief Get X11 screen Device.
+        */
+        virtual int GetX11ScreenDevice() const;
+
     private:
 
+        ::Display * m_display;
+        int m_screen;
+        ::Window m_window;
+        bool m_open;
+        Vector2ui32 m_initialSize;
+        Vector2ui32 m_currentSize;
+        std::string m_title;
 
     };
 

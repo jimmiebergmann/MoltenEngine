@@ -31,12 +31,12 @@
 #if CURSE_OPENGL_IS_AVAILABLE
 
 #if defined(CURSE_PLATFORM_WINDOWS)
-    #include <Windows.h>
+    #include "Curse/Platform/Win32headers.hpp"
     #include <GL/gl.h>
     #include "Curse/Renderer/OpenGL/wglext.h"
     #include "Curse/Renderer/OpenGL/glext.h"
 #elif defined(CURSE_PLATFORM_LINUX)
-    #include <X11/Xlib.h>
+    #include "Curse/Platform/X11Headers.hpp"
     #include <GL/gl.h>
     #include "Curse/Renderer/OpenGL/glext.h"
 #endif

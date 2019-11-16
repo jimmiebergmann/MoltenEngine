@@ -4,13 +4,14 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/../CMake/Tools.cmake)
 
 # Options.
 option(CURSE_ENABLE_OPENGL "Enables OpenGL." ON)
-option(CURSE_ENABLE_X11 "Enables X server." ON)
 option(CURSE_ENABLE_COVERAGE "Enables coverage reporting." OFF)
 
 
 # Linux configurations.
 if(UNIX AND NOT APPLE)
-	set(LINUX TRUE)
+	option(CURSE_ENABLE_X11 "Enables X server." ON)
+
+  set(LINUX TRUE)
 	find_package(Threads)
 	
 	if(CURSE_ENABLE_OPENGL AND (NOT CURSE_ENABLE_X11))
@@ -91,5 +92,6 @@ if(CURSE_ENABLE_OPENGL AND OpenGL_FOUND )
 endif()
 
 if(CURSE_ENABLE_X11)
+  target_link_libraries(Curse "X11")
 	target_compile_definitions(Curse PUBLIC "CURSE_ENABLE_X11")
 endif()

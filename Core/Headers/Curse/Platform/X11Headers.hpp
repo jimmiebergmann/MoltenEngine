@@ -23,26 +23,19 @@
 *
 */
 
-#ifndef CURSE_CORE_PLATFORM_WIN32HEADERS_HPP
-#define CURSE_CORE_PLATFORM_WIN32HEADERS_HPP
+#ifndef CURSE_CORE_PLATFORM_X11HEADERS_HPP
+#define CURSE_CORE_PLATFORM_X11HEADERS_HPP
 
 #include "Curse/Core.hpp"
 
-#if defined CURSE_PLATFORM_WINDOWS
+#if defined CURSE_PLATFORM_LINUX
 
-#include <Windows.h>
+#include <X11/Xlib.h>
 
 // Getting rid of conflicting Win32 definitions.
-#ifdef GetMessage
-    #undef GetMessage
+#ifdef None
+    #undef None
 #endif
-#ifdef max
-    #undef max
-#endif
-#ifdef min
-    #undef min
-#endif
-
 
 #endif
 
