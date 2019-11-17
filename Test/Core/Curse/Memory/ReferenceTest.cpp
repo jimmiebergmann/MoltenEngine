@@ -107,6 +107,9 @@ namespace Curse
                     valueA(valueA)
                 {}
 
+                virtual ~TestClassA()
+                { }
+
                 int32_t valueA;
             };
 
@@ -116,6 +119,9 @@ namespace Curse
                     TestClassA(valueA),
                     valueB(valueB)
                 {}
+
+                virtual ~TestClassB()
+                { }
 
                 int32_t valueB;
             };
@@ -251,7 +257,16 @@ namespace Curse
             bool& destroyed;
         };
 
-        class TestDestruct
+        class TestDestructBase
+        {
+        public:
+
+            virtual ~TestDestructBase()
+            { }
+
+        };
+
+        class TestDestruct : public TestDestructBase
         {
         public:
 
@@ -277,56 +292,113 @@ namespace Curse
   
         // Scope delete.
         {
-            bool destroyed_1 = false;
-            bool destroyed_2 = false;
-
-            { 
-                MyObj obj(destroyed_1);
-
-                EXPECT_FALSE(destroyed_1);
-                EXPECT_FALSE(destroyed_2);
+            {
+                bool destroyed_1 = false;
+                bool destroyed_2 = false;
 
                 {
-                    Ref<TestDestruct> ref = Ref<TestDestruct>::Create(obj, destroyed_2);
+                    MyObj obj(destroyed_1);
 
                     EXPECT_FALSE(destroyed_1);
                     EXPECT_FALSE(destroyed_2);
-                }
 
-                EXPECT_TRUE(destroyed_2);
+                    {
+                        Ref<TestDestruct> ref = Ref<TestDestruct>::Create(obj, destroyed_2);
+
+                        EXPECT_FALSE(destroyed_1);
+                        EXPECT_FALSE(destroyed_2);
+                    }
+
+                    EXPECT_TRUE(destroyed_2);
+                }
+                EXPECT_TRUE(destroyed_1);
             }
-            EXPECT_TRUE(destroyed_1);
+            {
+                bool destroyed_1 = false;
+                bool destroyed_2 = false;
+
+                {
+                    MyObj obj(destroyed_1);
+
+                    EXPECT_FALSE(destroyed_1);
+                    EXPECT_FALSE(destroyed_2);
+
+                    {
+                        Ref<TestDestructBase> ref = Ref<TestDestruct>::Create(obj, destroyed_2);
+
+                        EXPECT_FALSE(destroyed_1);
+                        EXPECT_FALSE(destroyed_2);
+                    }
+
+                    EXPECT_TRUE(destroyed_2);
+                }
+                EXPECT_TRUE(destroyed_1);
+            }
+           
         }
 
-        // Copy delete.
+        // Assign delete
         {
-            bool destroyed_dummy = false;
-            bool destroyed = false;
-
             {
-                MyObj obj(destroyed_dummy);
-                Ref<TestDestruct> ref = Ref<TestDestruct>::Create(obj, destroyed);
-                Ref<TestDestruct> ref_none;
+                bool destroyed_dummy = false;
+                bool destroyed = false;
 
-                EXPECT_FALSE(destroyed);
-                ref = ref_none;
-                EXPECT_TRUE(destroyed);
+                {
+                    MyObj obj(destroyed_dummy);
+                    Ref<TestDestruct> ref = Ref<TestDestruct>::Create(obj, destroyed);
+                    Ref<TestDestruct> ref_none;
+
+                    EXPECT_FALSE(destroyed);
+                    ref = ref_none;
+                    EXPECT_TRUE(destroyed);
+                }
             }
+            {
+                bool destroyed_dummy = false;
+                bool destroyed = false;
+
+                {
+                    MyObj obj(destroyed_dummy);
+                    Ref<TestDestructBase> ref = Ref<TestDestruct>::Create(obj, destroyed);
+                    Ref<TestDestruct> ref_none;
+
+                    EXPECT_FALSE(destroyed);
+                    ref = ref_none;
+                    EXPECT_TRUE(destroyed);
+                }
+            }
+            
         }
 
         // Move delete.
         {
-            bool destroyed_dummy = false;
-            bool destroyed = false;
-
             {
-                MyObj obj(destroyed_dummy);
-                Ref<TestDestruct> ref = Ref<TestDestruct>::Create(obj, destroyed);
-                Ref<TestDestruct> ref_none;
+                bool destroyed_dummy = false;
+                bool destroyed = false;
 
-                EXPECT_FALSE(destroyed);
-                ref = std::move(ref_none);
-                EXPECT_TRUE(destroyed);
+                {
+                    MyObj obj(destroyed_dummy);
+                    Ref<TestDestruct> ref = Ref<TestDestruct>::Create(obj, destroyed);
+                    Ref<TestDestruct> ref_none;
+
+                    EXPECT_FALSE(destroyed);
+                    ref = std::move(ref_none);
+                    EXPECT_TRUE(destroyed);
+                }
+            }
+            {
+                bool destroyed_dummy = false;
+                bool destroyed = false;
+
+                {
+                    MyObj obj(destroyed_dummy);
+                    Ref<TestDestructBase> ref = Ref<TestDestruct>::Create(obj, destroyed);
+                    Ref<TestDestruct> ref_none;
+
+                    EXPECT_FALSE(destroyed);
+                    ref = std::move(ref_none);
+                    EXPECT_TRUE(destroyed);
+                }
             }
         }
     }

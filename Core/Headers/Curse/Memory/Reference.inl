@@ -43,23 +43,10 @@ namespace Curse
     inline Reference<T>::Reference(const Reference& ref) :
         m_controller(nullptr)
     {
-        Controller* old = m_controller;
         m_controller = ref.m_controller;
-
-        if (old != m_controller)
+        if (m_controller)
         {
-            if (m_controller)
-            {
-                ++m_controller->m_counter;
-            }
-            if (old)
-            {
-                const size_t counter = --old->m_counter;
-                if (!counter && old->m_object)
-                {
-                    delete old;
-                }
-            }
+            ++m_controller->m_counter;
         }
     }
 
@@ -71,23 +58,10 @@ namespace Curse
         static_assert(std::is_same<T, U>::value || std::is_base_of<T, U>::value || std::is_base_of<U, T>::value,
             "Data types T and U are not related.");
 
-        Controller* old = m_controller;
         m_controller = reinterpret_cast<Controller*>(ref.m_controller);
-
-        if (old != m_controller)
+        if (m_controller)
         {
-            if (m_controller)
-            {
-                ++m_controller->m_counter;
-            }
-            if (old)
-            {
-                const size_t counter = --old->m_counter;
-                if (!counter && old->m_object)
-                {
-                    delete old;
-                }
-            }
+            ++m_controller->m_counter;
         }
     }
 
