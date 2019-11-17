@@ -161,9 +161,9 @@ namespace Curse
         }
     }
 
-    RendererOpenGLWin32::Type RendererOpenGLWin32::GetType() const
+    Renderer::Api RendererOpenGLWin32::GetApi() const
     {
-        return Type::OpenGL;
+        return Renderer::Api::OpenGL;
     }
 
     Version RendererOpenGLWin32::GetVersion() const

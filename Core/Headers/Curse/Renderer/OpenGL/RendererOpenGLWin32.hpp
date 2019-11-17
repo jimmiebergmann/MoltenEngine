@@ -77,7 +77,7 @@ namespace Curse
         /**
         * @brief Get renderer API type.
         */
-        virtual Type GetType() const;
+        virtual Api GetApi() const;
 
         /**
         * @brief Get renderer API version.

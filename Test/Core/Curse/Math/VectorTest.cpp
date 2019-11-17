@@ -94,7 +94,7 @@ namespace Curse
         {
             using sizeofType = decltype(sizeof(int32_t));
 
-            EXPECT_EQ(sizeof(Vector<10, int32_t>), 40);
+            EXPECT_EQ(sizeof(Vector<10, int32_t>), sizeofType(40));
 
             EXPECT_EQ(sizeof(Vector2i32), sizeofType(8));
             EXPECT_EQ(sizeof(Vector2i64), sizeofType(16));

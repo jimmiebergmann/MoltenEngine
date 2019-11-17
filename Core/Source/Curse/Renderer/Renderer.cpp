@@ -30,11 +30,11 @@
 namespace Curse
 {
 
-    Ref<Renderer> Renderer::Create(const Type type)
+    Ref<Renderer> Renderer::Create(const Api renderApi)
     {
-        switch (type)
+        switch (renderApi)
         {
-        case Type::OpenGL:
+        case Api::OpenGL:
             #if CURSE_OPENGL_IS_AVAILABLE
                 return Ref<RendererOpenGL>::Create();
             #else

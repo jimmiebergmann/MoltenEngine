@@ -46,7 +46,7 @@ namespace Curse
         /**
         * @brief Types of renderers.
         */
-        enum class Type
+        enum class Api
         {
             OpenGL
         };
@@ -57,7 +57,7 @@ namespace Curse
         *
         * @return Pointer to renderer, nullptr if the type of renderer is unavailable.
         */
-        static Ref<Renderer> Create(const Type type);
+        static Ref<Renderer> Create(const Api renderApi);
 
         /**
         * @brief Virtual destructor.
@@ -79,7 +79,7 @@ namespace Curse
         /**
         * @brief Get renderer API type.
         */
-        virtual Type GetType() const = 0;
+        virtual Api GetApi() const = 0;
 
         /**
         * @brief Get renderer API version.

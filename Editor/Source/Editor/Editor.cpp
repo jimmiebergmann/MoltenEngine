@@ -7,7 +7,7 @@
 static int Run()
 {
     auto window = Curse::Window::Create("Curse Editor", Curse::Vector2ui32(800, 600));
-    auto renderer = Curse::Renderer::Create(Curse::Renderer::Type::OpenGL);
+    auto renderer = Curse::Renderer::Create(Curse::Renderer::Api::OpenGL);
     
     renderer->Open(*window);
 
@@ -18,6 +18,7 @@ static int Run()
         window->Update();
         renderer->SwapBuffers();
     }
+
 
     return 0;
 }
