@@ -29,6 +29,7 @@
 #include "Curse/System/Exception.hpp"
 #include <atomic>
 #include <utility>
+#include <type_traits>
 
 namespace Curse
 {
@@ -65,21 +66,70 @@ namespace Curse
         */
         Reference(const Reference& ref);
 
+        /**
+        * @brief Copy constructor, from another reference type.
+        *        Used for assignment of base class reference objects.
+        */
+        template<typename U>
+        Reference(const Reference<U>& ref);
+
+        /**
+        * @brief Assigment operator.
+        */
         Reference<T>& operator = (const Reference& ref); 
 
+        /**
+        * @brief Assigment operator, from another reference type.
+        *        Used for assignment of base class reference objects.
+        */
+        template<typename U>
+        Reference<T>& operator = (const Reference<U>& ref);
+
+        /**
+        * @brief Move constructor.
+        */
         Reference(Reference&& ref);
 
+        /**
+        * @brief Move constructor, from another reference type.
+        *        Used for moving base class reference objects.
+        */
+        template<typename U>
+        Reference(Reference<U>&& ref);
+
+        /**
+        * @brief Move Assignment operator.
+        */
         Reference<T>& operator = (Reference&& ref);
 
+        /**
+        * @brief Move Assignment operator, from another reference type.
+        *        Used for moving base class reference objects.
+        */
+        template<typename U>
+        Reference<T>& operator = (Reference<U>&& ref);
+
+        /**
+        * @brief Dereference operator.
+        *        Access reference data via this operator.
+        */
         T& operator *() const;
 
-        T* Get() const;
-
+        /**
+        * @brief Member access operator.
+        *        Access reference data via this operator.
+        */
+        T* operator->() const;
 
         /**
         * @brief Destructor.
         */
         ~Reference();
+
+        /**
+        * @brief Access reference data via this function.
+        */
+        T* Get() const;
 
         /**
         * @brief Get use count of object.

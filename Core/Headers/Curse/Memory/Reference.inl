@@ -38,12 +38,12 @@ namespace Curse
         m_controller(nullptr)
     {
     }
- 
+
     template<typename T>
     inline Reference<T>::Reference(const Reference& ref) :
         m_controller(nullptr)
     {
-        auto old = m_controller;
+        Controller* old = m_controller;
         m_controller = ref.m_controller;
         if (m_controller && m_controller != old)
         {
@@ -52,10 +52,42 @@ namespace Curse
     }
 
     template<typename T>
-    Reference<T>& Reference<T>::operator = (const Reference& ref)
+    template<typename U>
+    inline Reference<T>::Reference(const Reference<U>& ref) :
+        m_controller(nullptr)
     {
-        auto old = m_controller;
+        static_assert(std::is_same<T, U>::value || std::is_base_of<T, U>::value || std::is_base_of<U, T>::value,
+            "Data types T and U are not related.");
+
+        Controller* old = m_controller;
+        m_controller = reinterpret_cast<Controller*>(ref.m_controller);
+        if (m_controller && m_controller != old)
+        {
+            ++m_controller->m_counter;
+        }
+    }
+
+    template<typename T>
+    inline Reference<T>& Reference<T>::operator = (const Reference& ref)
+    {
+        Controller* old = m_controller;
         m_controller = ref.m_controller;
+        if (m_controller && m_controller != old)
+        {
+            ++m_controller->m_counter;
+        }
+        return *this;
+    }
+
+    template<typename T>
+    template<typename U>
+    inline Reference<T>& Reference<T>::operator = (const Reference<U>& ref)
+    {
+        static_assert(std::is_same<T, U>::value || std::is_base_of<T, U>::value || std::is_base_of<U, T>::value,
+            "Data types T and U are not related.");
+
+        Controller* old = m_controller;
+        m_controller = reinterpret_cast<Controller*>(ref.m_controller);
         if (m_controller && m_controller != old)
         {
             ++m_controller->m_counter;
@@ -67,49 +99,86 @@ namespace Curse
     inline Reference<T>::Reference(Reference&& ref) :
         m_controller(nullptr)
     {
-        auto old = m_controller;
+        Controller* old = m_controller;
         m_controller = ref.m_controller;
         ref.m_controller = nullptr;
-        if (m_controller)
+
+        if (old && old != m_controller)
         {
-            ref.m_controller = nullptr;
-        
-            if (m_controller == old)
+            const size_t counter = --old->m_counter;
+            if (!counter && old->m_object)
             {
-                size_t counter = --m_controller->m_counter;
-                if (!counter && m_controller->m_object)
-                {
-                    delete m_controller;
-                }
+                delete old;
             }
         }
     }
 
     template<typename T>
-    Reference<T>& Reference<T>::operator = (Reference&& ref)
+    template<typename U>
+    inline Reference<T>::Reference(Reference<U>&& ref) :
+        m_controller(nullptr)
     {
-        auto old = m_controller;
+        static_assert(std::is_same<T, U>::value || std::is_base_of<T, U>::value || std::is_base_of<U, T>::value,
+            "Data types T and U are not related.");
+
+        Controller* old = m_controller;
+        m_controller = reinterpret_cast<Controller*>(ref.m_controller);
+        ref.m_controller = nullptr;
+
+        if (old && old != m_controller)
+        {
+            const size_t counter = --old->m_counter;
+            if (!counter && old->m_object)
+            {
+                delete old;
+            }
+        }
+    }
+
+    template<typename T>
+    inline Reference<T>& Reference<T>::operator = (Reference&& ref)
+    {
+        Controller* old = m_controller;
         m_controller = ref.m_controller;
         ref.m_controller = nullptr;
-        if (m_controller)
+
+        if (old && old != m_controller)
         {
-            ref.m_controller = nullptr;
-            
-            if (m_controller == old)
+            const size_t counter = --old->m_counter;
+            if (!counter && old->m_object)
             {
-                size_t counter = --m_controller->m_counter;
-                if (!counter && m_controller->m_object)
-                {
-                    delete m_controller;
-                }
-            }          
+                delete old;
+            }
         }
 
         return *this;
     }
 
     template<typename T>
-    T& Reference<T>::operator *() const
+    template<typename U>
+    inline Reference<T>& Reference<T>::operator = (Reference<U>&& ref)
+    {
+        static_assert(std::is_same<T, U>::value || std::is_base_of<T, U>::value || std::is_base_of<U, T>::value,
+            "Data types T and U are not related.");
+
+        Controller* old = m_controller;
+        m_controller = reinterpret_cast<Controller*>(ref.m_controller);
+        ref.m_controller = nullptr;
+
+        if (old && old != m_controller)
+        {
+            const size_t counter = --old->m_counter;
+            if (!counter && old->m_object)
+            {
+                delete old;
+            }
+        }
+
+        return *this;
+    }
+
+    template<typename T>
+    inline T& Reference<T>::operator *() const
     {
         if (m_controller)
         {
@@ -120,7 +189,7 @@ namespace Curse
     }
 
     template<typename T>
-    T* Reference<T>::Get() const
+    inline T* Reference<T>::operator->() const
     {
         return m_controller ? m_controller->m_object : nullptr;
     }
@@ -136,6 +205,12 @@ namespace Curse
                 delete m_controller;
             }
         }
+    }
+
+    template<typename T>
+    inline T* Reference<T>::Get() const
+    {
+        return m_controller ? m_controller->m_object : nullptr;
     }
 
     template<typename T>

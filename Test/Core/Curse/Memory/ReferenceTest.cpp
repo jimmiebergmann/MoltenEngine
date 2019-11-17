@@ -101,7 +101,74 @@ namespace Curse
             }         
         }
         {
+            struct TestClassA
+            {
+                TestClassA(const int32_t valueA) :
+                    valueA(valueA)
+                {}
 
+                int32_t valueA;
+            };
+
+            struct TestClassB : public TestClassA
+            {
+                TestClassB(const int32_t valueA, const int32_t valueB) :
+                    TestClassA(valueA),
+                    valueB(valueB)
+                {}
+
+                int32_t valueB;
+            };
+
+            struct TestClassC : public TestClassB
+            {
+                TestClassC(const int32_t valueA, const int32_t valueB, const int32_t valueC) :
+                    TestClassB(valueA, valueB),
+                    valueC(valueC)
+                {}
+
+                int32_t valueC;
+            };
+
+            {
+                Ref<TestClassA> ref = Ref<TestClassA>::Create(100);
+                EXPECT_EQ(ref->valueA, int32_t(100));
+                EXPECT_EQ(ref.Get()->valueA, int32_t(100));
+            }
+            {
+                Ref<TestClassB> ref = Ref<TestClassB>::Create(200, 300);
+                EXPECT_EQ(ref->valueA, int32_t(200));
+                EXPECT_EQ(ref.Get()->valueA, int32_t(200));
+                EXPECT_EQ(ref->valueB, int32_t(300));
+                EXPECT_EQ(ref.Get()->valueB, int32_t(300));
+            }
+            {
+                Ref<TestClassC> ref_A = Ref<TestClassC>::Create(400, 500, 600);
+                EXPECT_EQ(ref_A->valueA, int32_t(400));
+                EXPECT_EQ(ref_A.Get()->valueA, int32_t(400));
+
+                Ref<TestClassB> ref_B = ref_A;
+                EXPECT_EQ(ref_B->valueA, int32_t(400));
+                EXPECT_EQ(ref_B.Get()->valueA, int32_t(400));
+                EXPECT_EQ(ref_B->valueB, int32_t(500));
+                EXPECT_EQ(ref_B.Get()->valueB, int32_t(500));
+
+                Ref<TestClassC> ref_C1 = ref_A;
+                EXPECT_EQ(ref_C1->valueA, int32_t(400));
+                EXPECT_EQ(ref_C1.Get()->valueA, int32_t(400));
+                EXPECT_EQ(ref_C1->valueB, int32_t(500));
+                EXPECT_EQ(ref_C1.Get()->valueB, int32_t(500));
+                EXPECT_EQ(ref_C1->valueC, int32_t(600));
+                EXPECT_EQ(ref_C1.Get()->valueC, int32_t(600));
+
+                Ref<TestClassC> ref_C2 = ref_B;
+                EXPECT_EQ(ref_C2->valueA, int32_t(400));
+                EXPECT_EQ(ref_C2.Get()->valueA, int32_t(400));
+                EXPECT_EQ(ref_C2->valueB, int32_t(500));
+                EXPECT_EQ(ref_C2.Get()->valueB, int32_t(500));
+                EXPECT_EQ(ref_C2->valueC, int32_t(600));
+                EXPECT_EQ(ref_C2.Get()->valueC, int32_t(600));
+            }
         }
     }
 
@@ -304,9 +371,9 @@ namespace Curse
         Curse::Test::PrintInfo("------------------");
 
     #if defined(CURSE_BUILD_DEBUG)
-        Curse::Test::PrintInfo("Debug - Unoptimized.");
+        Curse::Test::PrintInfo("Ref copy test - Debug - Unoptimized.");
     #elif defined(CURSE_BUILD_RELEASE)
-        Curse::Test::PrintInfo("Release - Optimized.");
+        Curse::Test::PrintInfo("Ref copy test - Release - Optimized.");
     #endif
 
         EXPECT_NO_THROW(RefCopyTest(loops));
@@ -370,9 +437,9 @@ namespace Curse
         Curse::Test::PrintInfo("------------------");
 
     #if defined(CURSE_BUILD_DEBUG)
-        Curse::Test::PrintInfo("Debug - Unoptimized.");
+        Curse::Test::PrintInfo("Ref move test - Debug - Unoptimized.");
     #elif defined(CURSE_BUILD_RELEASE)
-        Curse::Test::PrintInfo("Release - Optimized.");
+        Curse::Test::PrintInfo("Ref move test - Release - Optimized.");
     #endif
 
         EXPECT_NO_THROW(RefMoveTest(loops));
