@@ -55,7 +55,7 @@ namespace Curse
     };
 
     /**
-    * @brief Linear algebra class for vectors.
+    * @brief Linear algebra class for 2D vector.
     */
     template<typename T>
     class Vector<2, T>
@@ -94,14 +94,14 @@ namespace Curse
         /**
         * @brief Get dot product of vector.
         */
-        template<typename U = T>
-        U Dot(const Vector<2, T>& vector) const;
+        template<typename R = T, typename U>
+        R Dot(const Vector<2, U>& vector) const;
 
         /**
         * @brief Get length of vector.
         */
-        template<typename U = T>
-        U Length() const;
+        template<typename R = T>
+        R Length() const;
 
         /**
         * @brief Get normal out of vector.
@@ -116,71 +116,85 @@ namespace Curse
         /**
         * @brief Arithmetic addition operator.
         */
-        Vector<2, T> operator + (const Vector<2, T>& vector) const;
+        template<typename U>
+        Vector<2, T> operator + (const Vector<2, U>& vector) const;
 
         /**
         * @brief Arithmetic addition assignment operator.
         */
-        Vector<2, T>& operator += (const Vector<2, T>& vector);
+        template<typename U>
+        Vector<2, T>& operator += (const Vector<2, U>& vector);
 
         /**
         * @brief Arithmetic subtraction operator.
         */
-        Vector<2, T> operator - (const Vector<2, T>& vector) const;
+        template<typename U>
+        Vector<2, T> operator - (const Vector<2, U>& vector) const;
 
         /**
         * @brief Arithmetic subtraction assignment operator.
         */
-        Vector<2, T>& operator -= (const Vector<2, T>& vector);
+        template<typename U>
+        Vector<2, T>& operator -= (const Vector<2, U>& vector);
 
         /**
         * @brief Arithmetic multiplication operator.
         */
-        Vector<2, T> operator * (const Vector<2, T>& vector) const;
+        template<typename U>
+        Vector<2, T> operator * (const Vector<2, U>& vector) const;
 
         /**
         * @brief Arithmetic multiplication operator.
         */
-        Vector<2, T> operator * (const T scalar) const;
+        template<typename U>
+        Vector<2, T> operator * (const U scalar) const;
 
         /**
         * @brief Arithmetic multiplication assignment operator.
         */
-        Vector<2, T>& operator *= (const Vector<2, T>& vector);
+        template<typename U>
+        Vector<2, T>& operator *= (const Vector<2, U>& vector);
 
         /**
         * @brief Arithmetic multiplication operator.
         */
-        Vector<2, T>& operator *= (const T scalar);
+        template<typename U>
+        Vector<2, T>& operator *= (const U scalar);
 
         /**
         * @brief Arithmetic division operator.
         */
-        Vector<2, T> operator / (const Vector<2, T>& vector) const;
+        template<typename U>
+        Vector<2, T> operator / (const Vector<2, U>& vector) const;
 
         /**
         * @brief Arithmetic division operator.
         */
-        Vector<2, T> operator / (const T scalar) const;
+        template<typename U>
+        Vector<2, T> operator / (const U scalar) const;
 
         /**
         * @brief Arithmetic division assignment operator.
         */
-        Vector<2, T>& operator /= (const Vector<2, T>& vector);
+        template<typename U>
+        Vector<2, T>& operator /= (const Vector<2, U>& vector);
 
         /**
         * @brief Arithmetic division assignment operator.
         */
-        Vector<2, T>& operator /= (const T scalar);
+        template<typename U>
+        Vector<2, T>& operator /= (const U scalar);
 
         /**
         * @brief Equals to time comparation operator.
         */
-        bool operator == (const Vector<2, T>& vector) const;
+        template<typename U>
+        bool operator == (const Vector<2, U>& vector) const;
         /**
         * @brief Not equals to time comparation operator.
         */
-        bool operator != (const Vector<2, T>& vector) const;
+        template<typename U>
+        bool operator != (const Vector<2, U>& vector) const;
 
         CURSE_ANONYMOUS_STRUCTURE_BEGIN
         union
@@ -190,6 +204,327 @@ namespace Curse
                 T x; //< X component of vector.
                 T y; //< Y component of vector.
             } ;
+            T c[Dimensions]; //< Components of vector.
+        };
+        CURSE_ANONYMOUS_STRUCTURE_END
+
+    };
+
+    /**
+    * @brief Linear algebra class for 3D vector.
+    */
+    template<typename T>
+    class Vector<3, T>
+    {
+
+    public:
+
+        static constexpr size_t Dimensions = 3; //< Number of componenets.
+        using Type = T; //< Data type of vector components.   
+
+        /**
+        * @brief Constructor.
+        *        Vector's components are uninitialized.
+        */
+        Vector();
+
+        /**
+        * @brief Constructor.
+        *        Initializes all components by input parameter.
+        */
+        template<typename U>
+        Vector(const U xyz);
+
+        /**
+        * @brief Constructor.
+        *        Initializes all components separately by input parameters.
+        */
+        template<typename U1, typename U2, typename U3>
+        Vector(const U1 x, const U2 y, const U3 z);
+
+        /**
+        * @brief Get the absolute valute vector.
+        */
+        Vector<3, T> Absolute() const;
+
+        /**
+        * @brief Get dot product of vector.
+        */
+        template<typename R = T, typename U>
+        R Dot(const Vector<3, U>& vector) const;
+
+        /**
+        * @brief Get cross product of vector.
+        */
+        template<typename U>
+        Vector<3, T> Cross(const Vector<3, U>& vector) const;
+
+        /**
+        * @brief Get length of vector.
+        */
+        template<typename R = T>
+        R Length() const;
+
+        /**
+        * @brief Get normal out of vector.
+        */
+        Vector<3, T> Normal() const;
+
+        /**
+        * @brief Normalize vector.
+        */
+        Vector<3, T>& Normalize();
+
+        /**
+        * @brief Arithmetic addition operator.
+        */
+        template<typename U>
+        Vector<3, T> operator + (const Vector<3, U>& vector) const;
+
+        /**
+        * @brief Arithmetic addition assignment operator.
+        */
+        template<typename U>
+        Vector<3, T>& operator += (const Vector<3, U>& vector);
+
+        /**
+        * @brief Arithmetic subtraction operator.
+        */
+        template<typename U>
+        Vector<3, T> operator - (const Vector<3, U>& vector) const;
+
+        /**
+        * @brief Arithmetic subtraction assignment operator.
+        */
+        template<typename U>
+        Vector<3, T>& operator -= (const Vector<3, U>& vector);
+
+        /**
+        * @brief Arithmetic multiplication operator.
+        */
+        template<typename U>
+        Vector<3, T> operator * (const Vector<3, U>& vector) const;
+
+        /**
+        * @brief Arithmetic multiplication operator.
+        */
+        template<typename U>
+        Vector<3, T> operator * (const U scalar) const;
+
+        /**
+        * @brief Arithmetic multiplication assignment operator.
+        */
+        template<typename U>
+        Vector<3, T>& operator *= (const Vector<3, U>& vector);
+
+        /**
+        * @brief Arithmetic multiplication operator.
+        */
+        template<typename U>
+        Vector<3, T>& operator *= (const U scalar);
+
+        /**
+        * @brief Arithmetic division operator.
+        */
+        template<typename U>
+        Vector<3, T> operator / (const Vector<3, U>& vector) const;
+
+        /**
+        * @brief Arithmetic division operator.
+        */
+        template<typename U>
+        Vector<3, T> operator / (const U scalar) const;
+
+        /**
+        * @brief Arithmetic division assignment operator.
+        */
+        template<typename U>
+        Vector<3, T>& operator /= (const Vector<3, U>& vector);
+
+        /**
+        * @brief Arithmetic division assignment operator.
+        */
+        template<typename U>
+        Vector<3, T>& operator /= (const U scalar);
+
+        /**
+        * @brief Equals to time comparation operator.
+        */
+        template<typename U>
+        bool operator == (const Vector<3, U>& vector) const;
+        /**
+        * @brief Not equals to time comparation operator.
+        */
+        template<typename U>
+        bool operator != (const Vector<3, U>& vector) const;
+
+        CURSE_ANONYMOUS_STRUCTURE_BEGIN
+            union
+        {
+            struct
+            {
+                T x; //< X component of vector.
+                T y; //< Y component of vector.
+                T z; //< Z component of vector.
+            };
+            T c[Dimensions]; //< Components of vector.
+        };
+        CURSE_ANONYMOUS_STRUCTURE_END
+
+    };
+
+    /**
+    * @brief Linear algebra class for 4D vector.
+    */
+    template<typename T>
+    class Vector<4, T>
+    {
+
+    public:
+
+        static constexpr size_t Dimensions = 4; //< Number of componenets.
+        using Type = T; //< Data type of vector components.   
+
+        /**
+        * @brief Constructor.
+        *        Vector's components are uninitialized.
+        */
+        Vector();
+
+        /**
+        * @brief Constructor.
+        *        Initializes all components by input parameter.
+        */
+        template<typename U>
+        Vector(const U xyzw);
+
+        /**
+        * @brief Constructor.
+        *        Initializes all components separately by input parameters.
+        */
+        template<typename U1, typename U2, typename U3, typename U4>
+        Vector(const U1 x, const U2 y, const U3 z, const U4 w);
+
+        /**
+        * @brief Get the absolute valute vector.
+        */
+        Vector<4, T> Absolute() const;
+
+        /**
+        * @brief Get dot product of vector.
+        */
+        template<typename R = T, typename U>
+        R Dot(const Vector<4, U>& vector) const;
+
+        /**
+        * @brief Get length of vector.
+        */
+        template<typename R = T>
+        R Length() const;
+
+        /**
+        * @brief Get normal out of vector.
+        */
+        Vector<4, T> Normal() const;
+
+        /**
+        * @brief Normalize vector.
+        */
+        Vector<4, T>& Normalize();
+
+        /**
+        * @brief Arithmetic addition operator.
+        */
+        template<typename U>
+        Vector<4, T> operator + (const Vector<4, U>& vector) const;
+
+        /**
+        * @brief Arithmetic addition assignment operator.
+        */
+        template<typename U>
+        Vector<4, T>& operator += (const Vector<4, U>& vector);
+
+        /**
+        * @brief Arithmetic subtraction operator.
+        */
+        template<typename U>
+        Vector<4, T> operator - (const Vector<4, U>& vector) const;
+
+        /**
+        * @brief Arithmetic subtraction assignment operator.
+        */
+        template<typename U>
+        Vector<4, T>& operator -= (const Vector<4, U>& vector);
+
+        /**
+        * @brief Arithmetic multiplication operator.
+        */
+        template<typename U>
+        Vector<4, T> operator * (const Vector<4, U>& vector) const;
+
+        /**
+        * @brief Arithmetic multiplication operator.
+        */
+        template<typename U>
+        Vector<4, T> operator * (const U scalar) const;
+
+        /**
+        * @brief Arithmetic multiplication assignment operator.
+        */
+        template<typename U>
+        Vector<4, T>& operator *= (const Vector<4, U>& vector);
+
+        /**
+        * @brief Arithmetic multiplication operator.
+        */
+        template<typename U>
+        Vector<4, T>& operator *= (const U scalar);
+
+        /**
+        * @brief Arithmetic division operator.
+        */
+        template<typename U>
+        Vector<4, T> operator / (const Vector<4, U>& vector) const;
+
+        /**
+        * @brief Arithmetic division operator.
+        */
+        template<typename U>
+        Vector<4, T> operator / (const U scalar) const;
+
+        /**
+        * @brief Arithmetic division assignment operator.
+        */
+        template<typename U>
+        Vector<4, T>& operator /= (const Vector<4, U>& vector);
+
+        /**
+        * @brief Arithmetic division assignment operator.
+        */
+        template<typename U>
+        Vector<4, T>& operator /= (const U scalar);
+
+        /**
+        * @brief Equals to time comparation operator.
+        */
+        template<typename U>
+        bool operator == (const Vector<4, U>& vector) const;
+        /**
+        * @brief Not equals to time comparation operator.
+        */
+        template<typename U>
+        bool operator != (const Vector<4, U>& vector) const;
+
+        CURSE_ANONYMOUS_STRUCTURE_BEGIN
+            union
+        {
+            struct
+            {
+                T x; //< X component of vector.
+                T y; //< Y component of vector.
+                T z; //< Z component of vector.
+                T w; //< W component of vector.
+            };
             T c[Dimensions]; //< Components of vector.
         };
         CURSE_ANONYMOUS_STRUCTURE_END
@@ -215,6 +550,16 @@ namespace Curse
     using Vector3ui64 = Vector3<uint64_t>;
     using Vector3f32 = Vector3<float>;
     using Vector3f64 = Vector3<double>;
+
+    template<typename T>
+    using Vector4 = Vector<4, T>;
+    using Vector4b = Vector4<bool>;
+    using Vector4i32 = Vector4<int32_t>;
+    using Vector4ui32 = Vector4<uint32_t>;
+    using Vector4i64 = Vector4<int64_t>;
+    using Vector4ui64 = Vector4<uint64_t>;
+    using Vector4f32 = Vector4<float>;
+    using Vector4f64 = Vector4<double>;
 
 }
 
