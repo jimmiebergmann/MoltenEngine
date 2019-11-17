@@ -168,6 +168,11 @@ namespace Curse
         return m_version;
     }
 
+    void RendererOpenGLWin32::SwapBuffers()
+    {
+
+    }
+
     /*bool RendererOpenGLWin32::OpenVersion(HDC deviceContext, const Version& version)
     {
         PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB = NULL;

@@ -23,33 +23,38 @@
 *
 */
 
-#include "Curse/Renderer/Renderer.hpp"
+#ifndef CURSE_CORE_SYSTEM_MOUSE_HPP
+#define CURSE_CORE_SYSTEM_MOUSE_HPP
 
-#include "Curse/Renderer/OpenGL/RendererOpenGL.hpp"
+#include "Curse/Types.hpp"
 
 namespace Curse
 {
 
-    Ref<Renderer> Renderer::Create(const Type type)
+    /**
+    * @brief Mouse class.
+    */
+    class CURSE_API Mouse
     {
-        switch (type)
+
+    public:
+
+        enum class Button : uint8_t
         {
-        case Type::OpenGL:
-            #if CURSE_OPENGL_IS_AVAILABLE
-                return Ref<RendererOpenGL>::Create();
-            #else
-                return {};
-            #endif
-            break;
-        default:
-            break;
-        }
+            Left,
+            Middle,
+            Right,
+            Forward,
+            Backward
+        };
 
-        return {};
-    }
+        /**
+        * @brief Checks if mouse button is currently pressed down.
+        */
+        static bool IsDown(const Button button);
 
-    Renderer::~Renderer()
-    {
-    }
+    };
 
 }
+
+#endif

@@ -31,6 +31,7 @@
 #if defined CURSE_PLATFORM_WINDOWS
 
 #include "Curse/Platform/Win32Headers.hpp"
+#include "Curse/Memory/Reference.hpp"
 
 namespace Curse
 {
@@ -42,6 +43,14 @@ namespace Curse
     {
 
     public:
+
+        /**
+        * @brief Construct reference object of Window.
+        *
+        * @param args[in] Constructor parameters.
+        */
+        template<typename ... Args>
+        static Ref<WindowWin32> Create(Args&& ... args);
 
         /**
         * @brief Constructor.
@@ -124,6 +133,8 @@ namespace Curse
     };
 
 }
+
+#include "WindowWin32.inl"
 
 #endif
 

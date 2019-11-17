@@ -23,33 +23,13 @@
 *
 */
 
-#include "Curse/Renderer/Renderer.hpp"
-
-#include "Curse/Renderer/OpenGL/RendererOpenGL.hpp"
-
 namespace Curse
 {
 
-    Ref<Renderer> Renderer::Create(const Type type)
+    template<typename ... Args>
+    inline Ref<WindowX11> WindowX11::Create(Args&& ... args)
     {
-        switch (type)
-        {
-        case Type::OpenGL:
-            #if CURSE_OPENGL_IS_AVAILABLE
-                return Ref<RendererOpenGL>::Create();
-            #else
-                return {};
-            #endif
-            break;
-        default:
-            break;
-        }
-
-        return {};
-    }
-
-    Renderer::~Renderer()
-    {
+        return Ref<WindowX11>::Create(std::forward<Args>(args)...);
     }
 
 }

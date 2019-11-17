@@ -23,33 +23,31 @@
 *
 */
 
-#include "Curse/Renderer/Renderer.hpp"
+#include "Curse/System/Mouse.hpp"
 
-#include "Curse/Renderer/OpenGL/RendererOpenGL.hpp"
+#include "Curse/Platform/Win32Headers.hpp"
 
 namespace Curse
 {
 
-    Ref<Renderer> Renderer::Create(const Type type)
+    bool Mouse::IsDown(const Button button)
     {
-        switch (type)
+    #if defined(CURSE_PLATFORM_WINDOWS)
+       
+        static const int virtualKeys[] =
         {
-        case Type::OpenGL:
-            #if CURSE_OPENGL_IS_AVAILABLE
-                return Ref<RendererOpenGL>::Create();
-            #else
-                return {};
-            #endif
-            break;
-        default:
-            break;
-        }
+            VK_LBUTTON,
+            VK_MBUTTON,
+            VK_RBUTTON,
+            VK_XBUTTON2,
+            VK_XBUTTON1 
+        };
 
-        return {};
-    }
+        return ((::GetKeyState(virtualKeys[static_cast<size_t>(button)]) & 0x100) != 0);
 
-    Renderer::~Renderer()
-    {
+    #elif defined(CURSE_PLATFORM_LINUX)
+        return false;
+    #endif
     }
 
 }

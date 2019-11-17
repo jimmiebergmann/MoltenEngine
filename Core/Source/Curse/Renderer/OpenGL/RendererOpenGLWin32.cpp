@@ -32,6 +32,7 @@
 #include "Curse/Renderer/OpenGL/OpengGLFunctions.hpp"
 #include "Curse/Window/WindowBase.hpp"
 #include "Curse/System/Exception.hpp"
+#include <vector>
 
 namespace Curse
 {
@@ -170,6 +171,11 @@ namespace Curse
         return m_version;
     }
 
+    void RendererOpenGLWin32::SwapBuffers()
+    {
+        ::SwapBuffers(m_deviceContext);
+    }
+
     bool RendererOpenGLWin32::OpenVersion(HDC deviceContext, const Version& version)
     {
         PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB = NULL;
@@ -195,11 +201,7 @@ namespace Curse
 
     void RendererOpenGLWin32::OpenBestVersion(HDC deviceContext, Version& version)
     {
-
-        // USE VECTOR AND USE FOR EACH LOOP!
-
-        static const size_t versionCount = 13;
-        static const Version versions[versionCount] =
+        static const std::vector<Version> versions =
         {
             Version(4, 9),
             Version(4, 5),
@@ -218,19 +220,20 @@ namespace Curse
 
         version = Version::None;
 
-        for (size_t i = 0; i < versionCount; i++)
+        for(auto it = versions.begin(); it != versions.end(); it++)
         {
             try
             {
-                if (OpenVersion(deviceContext, versions[i]))
+                const Version& ver = *it;
+                if (OpenVersion(deviceContext, ver))
                 {
-                    version = versions[i];
+                    version = ver;
                     return;
                 }
             }
             catch (Exception & e)
             {
-                if (i < versionCount - 1)
+                if(std::next(it) != versions.end())
                 {
                     continue;
                 }

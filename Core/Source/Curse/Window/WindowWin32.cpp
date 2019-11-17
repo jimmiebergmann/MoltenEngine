@@ -184,20 +184,12 @@ namespace Curse
 
     void WindowWin32::Show(const bool show)
     {
-        if (!m_window)
-        {
-            return;
-        }
         auto flag = show ? true : SW_HIDE;
         ::ShowWindow(m_window, flag);
     }
 
     void WindowWin32::Hide()
     {
-        if (!m_window)
-        {
-            return;
-        }
         ::ShowWindow(m_window, SW_HIDE);
     }
 

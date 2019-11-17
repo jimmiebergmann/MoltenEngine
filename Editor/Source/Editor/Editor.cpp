@@ -1,20 +1,22 @@
 #include "Curse/Window/Window.hpp"
 #include "Curse/Renderer/Renderer.hpp"
 #include "Curse/System/Exception.hpp"
+#include "Curse/System/Mouse.hpp"
 #include <iostream>
 
 static int Run()
 {
-    Curse::Window window("", Curse::Vector2ui32(800, 600));
+    auto window = Curse::Window::Create("Curse Editor", Curse::Vector2ui32(800, 600));
+    auto renderer = Curse::Renderer::Create(Curse::Renderer::Type::OpenGL);
+    
+    renderer->Open(*window);
 
-    //auto renderer = Curse::Renderer::Create(Curse::Renderer::Type::OpenGL);
-    //renderer->Open(window);
+    window->Show();
 
-    window.Show();
-
-    while (window.IsOpen())
+    while (window->IsOpen())
     {
-        window.Update();
+        window->Update();
+        renderer->SwapBuffers();
     }
 
     return 0;

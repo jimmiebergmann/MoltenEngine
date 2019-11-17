@@ -85,6 +85,12 @@ namespace Curse
         */
         virtual Version GetVersion() const = 0;
 
+        /**
+        * @brief Swap buffers.
+        *        Necessary to do in order to present the frame, if double/tripple buffering is used.
+        */
+        virtual void SwapBuffers() = 0;
+
     };
 
 }

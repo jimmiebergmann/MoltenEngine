@@ -23,33 +23,18 @@
 *
 */
 
-#include "Curse/Renderer/Renderer.hpp"
-
-#include "Curse/Renderer/OpenGL/RendererOpenGL.hpp"
+#include "Test.hpp"
+#include "Curse/System/Mouse.hpp"
 
 namespace Curse
 {
-
-    Ref<Renderer> Renderer::Create(const Type type)
+    TEST(System, Mouse)
     {
-        switch (type)
-        {
-        case Type::OpenGL:
-            #if CURSE_OPENGL_IS_AVAILABLE
-                return Ref<RendererOpenGL>::Create();
-            #else
-                return {};
-            #endif
-            break;
-        default:
-            break;
-        }
-
-        return {};
-    }
-
-    Renderer::~Renderer()
-    {
+        EXPECT_NO_THROW(Mouse::IsDown(Mouse::Button::Left));
+        EXPECT_NO_THROW(Mouse::IsDown(Mouse::Button::Middle));
+        EXPECT_NO_THROW(Mouse::IsDown(Mouse::Button::Right));
+        EXPECT_NO_THROW(Mouse::IsDown(Mouse::Button::Forward));
+        EXPECT_NO_THROW(Mouse::IsDown(Mouse::Button::Backward));
     }
 
 }
