@@ -168,7 +168,7 @@ namespace Curse
         return m_version;
     }
 
-    void RendererOpenGLWin32::SwapBuffers()
+    void RendererOpenGLX11::SwapBuffers()
     {
 
     }

@@ -26,8 +26,9 @@
 #ifndef CURSE_CORE_RENDERER_RENDERER_HPP
 #define CURSE_CORE_RENDERER_RENDERER_HPP
 
-#include "Curse/System/Version.hpp"
 #include "Curse/Memory/Reference.hpp"
+#include "Curse/System/Version.hpp"
+#include "Curse/Math/Vector.hpp"
 
 namespace Curse
 {

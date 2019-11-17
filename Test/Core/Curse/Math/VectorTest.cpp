@@ -92,22 +92,24 @@ namespace Curse
             EXPECT_EQ(Vector4f64::Dimensions, size_t(4));
         }
         {
+            using sizeofType = decltype(sizeof(int32_t));
+
             EXPECT_EQ(sizeof(Vector<10, int32_t>), 40);
 
-            EXPECT_EQ(sizeof(Vector2i32), 8);
-            EXPECT_EQ(sizeof(Vector2i64), 16);
-            EXPECT_EQ(sizeof(Vector2f32), 8);
-            EXPECT_EQ(sizeof(Vector2f64), 16);
+            EXPECT_EQ(sizeof(Vector2i32), sizeofType(8));
+            EXPECT_EQ(sizeof(Vector2i64), sizeofType(16));
+            EXPECT_EQ(sizeof(Vector2f32), sizeofType(8));
+            EXPECT_EQ(sizeof(Vector2f64), sizeofType(16));
 
-            EXPECT_EQ(sizeof(Vector3i32), 12);
-            EXPECT_EQ(sizeof(Vector3i64), 24);
-            EXPECT_EQ(sizeof(Vector3f32), 12);
-            EXPECT_EQ(sizeof(Vector3f64), 24);
+            EXPECT_EQ(sizeof(Vector3i32), sizeofType(12));
+            EXPECT_EQ(sizeof(Vector3i64), sizeofType(24));
+            EXPECT_EQ(sizeof(Vector3f32), sizeofType(12));
+            EXPECT_EQ(sizeof(Vector3f64), sizeofType(24));
 
-            EXPECT_EQ(sizeof(Vector4i32), 16);
-            EXPECT_EQ(sizeof(Vector4i64), 32);
-            EXPECT_EQ(sizeof(Vector4i32), 16);
-            EXPECT_EQ(sizeof(Vector4i64), 32);
+            EXPECT_EQ(sizeof(Vector4i32), sizeofType(16));
+            EXPECT_EQ(sizeof(Vector4i64), sizeofType(32));
+            EXPECT_EQ(sizeof(Vector4i32), sizeofType(16));
+            EXPECT_EQ(sizeof(Vector4i64), sizeofType(32));
         }
     }
 
