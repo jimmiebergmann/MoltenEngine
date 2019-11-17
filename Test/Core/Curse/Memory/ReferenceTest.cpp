@@ -36,6 +36,35 @@ namespace Curse
     {
         EXPECT_TRUE((std::is_same<Reference<int>, Ref<int> >::value));
     }
+
+    TEST(Memory, Reference_Constuct)
+    {
+        {
+            Ref<int32_t> ref;
+            EXPECT_EQ(ref.Get(), nullptr);
+        }
+        {
+            Ref<int32_t> ref(new int(6543));
+            EXPECT_NE(ref.Get(), nullptr);
+            EXPECT_EQ(*ref, int32_t(6543));
+        }
+        {
+            bool destroyed = false;
+
+            {
+                Ref<int32_t> ref(new int(6543), [&destroyed](int32_t* ptr)
+                    {
+                        destroyed = true;
+                        delete ptr;
+                    });
+                EXPECT_NE(ref.Get(), nullptr);
+                EXPECT_EQ(*ref, int32_t(6543));
+                EXPECT_FALSE(destroyed);
+            }
+            EXPECT_TRUE(destroyed);
+        }
+    }
+
     TEST(Memory, Reference_Create)
     {
         {

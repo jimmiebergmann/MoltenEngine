@@ -30,12 +30,14 @@
 #include <atomic>
 #include <utility>
 #include <type_traits>
+#include <functional>
 
 namespace Curse
 {
 
     /**
-    * @brief Smart shared pointer class, being called "reference" in Curse.
+    * @brief Smart shared pointer class, called "reference" in Curse.
+    *        NOTE: Arrays([]) are not yet supported.
     */
     template<typename T>
     class Reference
@@ -49,7 +51,13 @@ namespace Curse
         using Type = T;
 
         /**
+        * @brief Deleter type.
+        */
+        using Deleter = std::function<void(T * object)>;
+
+        /**
         * @brief Function for constructing a new reference object.
+        *        Use the constructor directly to set a custom deleter.
         *
         * @param args[in] Arguments being passed to constructor of T.
         */
@@ -60,6 +68,16 @@ namespace Curse
         * @brief Constructor.
         */
         Reference();
+
+        /**
+        * @brief Constructing reference by passing an object.
+        */
+        Reference(T * object);
+
+        /**
+        * @brief Constructing reference by passing an object and deleter function.
+        */
+        Reference(T* object, Deleter deleter);
 
         /**
         * @brief Copy constructor.
@@ -141,12 +159,14 @@ namespace Curse
         struct Controller
         {
             Controller(T* object);
+            Controller(T* object, Deleter deleter);
             Controller(const Controller&) = delete;
             Controller(Controller&&) = delete;
             ~Controller();
 
             T* m_object;
             std::atomic_size_t m_counter;
+            Deleter m_deleter;
         };
 
         Reference(Controller * controlObject);

@@ -40,6 +40,18 @@ namespace Curse
     }
 
     template<typename T>
+    Reference<T>::Reference(T* object) :
+        m_controller(object ? new Controller(object) : nullptr)
+    {
+    }
+
+    template<typename T>
+    Reference<T>::Reference(T* object, Deleter deleter) :
+        m_controller(object ? new Controller(object, deleter) : nullptr)
+    {
+    }
+
+    template<typename T>
     inline Reference<T>::Reference(const Reference& ref) :
         m_controller(nullptr)
     {
@@ -253,7 +265,19 @@ namespace Curse
     template<typename T>
     inline Reference<T>::Controller::Controller(T* object) :
         m_object(object),
-        m_counter(1)
+        m_counter(1),
+        m_deleter([](T * object)
+            {
+                delete object;
+            })
+    {
+    }
+
+    template<typename T>
+    inline Reference<T>::Controller::Controller(T* object, Deleter deleter) :
+        m_object(object),
+        m_counter(1),
+        m_deleter(deleter)
     {
     }
 
@@ -262,7 +286,7 @@ namespace Curse
     {
         if (m_object)
         {
-            delete m_object;
+            m_deleter(m_object);
         }
     }
 
