@@ -31,6 +31,7 @@
 #if defined CURSE_PLATFORM_LINUX
 
 #include "Curse/Platform/X11Headers.hpp"
+#include "Curse/Memory/Reference.hpp"
 
 namespace Curse
 {

@@ -23,6 +23,8 @@
 *
 */
 
+#if defined CURSE_PLATFORM_LINUX
+
 namespace Curse
 {
 
@@ -33,3 +35,5 @@ namespace Curse
     }
 
 }
+
+#endif
