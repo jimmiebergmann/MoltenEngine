@@ -174,15 +174,35 @@ namespace Curse
 
     TEST(Memory, Reference_Copy)
     {
-        Ref<int64_t> ref = Ref<int64_t>::Create(112233);
-        EXPECT_EQ(ref.GetUseCount(), size_t(1));
+        {
+            Ref<int64_t> ref = Ref<int64_t>::Create(112233);
+            EXPECT_EQ(ref.GetUseCount(), size_t(1));
 
-        auto ref_copy_1 = ref;
-        EXPECT_EQ(ref.GetUseCount(), size_t(2));
-        Ref<int64_t> ref_copy_2;
-        EXPECT_EQ(ref.GetUseCount(), size_t(2));
-        ref_copy_2 = ref;
-        EXPECT_EQ(ref.GetUseCount(), size_t(3));
+            auto ref_copy_1 = ref;
+            EXPECT_EQ(ref.GetUseCount(), size_t(2));
+            Ref<int64_t> ref_copy_2;
+            EXPECT_EQ(ref.GetUseCount(), size_t(2));
+            ref_copy_2 = ref;
+            EXPECT_EQ(ref.GetUseCount(), size_t(3));
+        }
+        {
+            Ref<int32_t> ref_1_data_1 = Ref<int32_t>::Create(123);
+            Ref<int32_t> ref_2_data_1 = ref_1_data_1;
+            Ref<int32_t> ref_1_data_2 = Ref<int32_t>::Create(123);
+            Ref<int32_t> ref_2_data_2 = ref_1_data_2;
+
+            EXPECT_EQ(ref_1_data_1.GetUseCount(), size_t(2));
+            EXPECT_EQ(ref_2_data_1.GetUseCount(), size_t(2));
+            EXPECT_EQ(ref_1_data_2.GetUseCount(), size_t(2));
+            EXPECT_EQ(ref_2_data_2.GetUseCount(), size_t(2));
+
+            ref_2_data_2 = ref_1_data_1;
+
+            EXPECT_EQ(ref_1_data_1.GetUseCount(), size_t(3));
+            EXPECT_EQ(ref_2_data_1.GetUseCount(), size_t(3));
+            EXPECT_EQ(ref_1_data_2.GetUseCount(), size_t(1));
+            EXPECT_EQ(ref_2_data_2.GetUseCount(), size_t(3));
+        }
     }
 
     TEST(Memory, Reference_Move)
@@ -255,6 +275,7 @@ namespace Curse
             bool& destroyed;
         };
   
+        // Scope delete.
         {
             bool destroyed_1 = false;
             bool destroyed_2 = false;
@@ -275,6 +296,38 @@ namespace Curse
                 EXPECT_TRUE(destroyed_2);
             }
             EXPECT_TRUE(destroyed_1);
+        }
+
+        // Copy delete.
+        {
+            bool destroyed_dummy = false;
+            bool destroyed = false;
+
+            {
+                MyObj obj(destroyed_dummy);
+                Ref<TestDestruct> ref = Ref<TestDestruct>::Create(obj, destroyed);
+                Ref<TestDestruct> ref_none;
+
+                EXPECT_FALSE(destroyed);
+                ref = ref_none;
+                EXPECT_TRUE(destroyed);
+            }
+        }
+
+        // Move delete.
+        {
+            bool destroyed_dummy = false;
+            bool destroyed = false;
+
+            {
+                MyObj obj(destroyed_dummy);
+                Ref<TestDestruct> ref = Ref<TestDestruct>::Create(obj, destroyed);
+                Ref<TestDestruct> ref_none;
+
+                EXPECT_FALSE(destroyed);
+                ref = std::move(ref_none);
+                EXPECT_TRUE(destroyed);
+            }
         }
     }
 

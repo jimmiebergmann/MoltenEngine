@@ -45,9 +45,21 @@ namespace Curse
     {
         Controller* old = m_controller;
         m_controller = ref.m_controller;
-        if (m_controller && m_controller != old)
+
+        if (old != m_controller)
         {
-            ++m_controller->m_counter;
+            if (m_controller)
+            {
+                ++m_controller->m_counter;
+            }
+            if (old)
+            {
+                const size_t counter = --old->m_counter;
+                if (!counter && old->m_object)
+                {
+                    delete old;
+                }
+            }
         }
     }
 
@@ -61,9 +73,21 @@ namespace Curse
 
         Controller* old = m_controller;
         m_controller = reinterpret_cast<Controller*>(ref.m_controller);
-        if (m_controller && m_controller != old)
+
+        if (old != m_controller)
         {
-            ++m_controller->m_counter;
+            if (m_controller)
+            {
+                ++m_controller->m_counter;
+            }
+            if (old)
+            {
+                const size_t counter = --old->m_counter;
+                if (!counter && old->m_object)
+                {
+                    delete old;
+                }
+            }
         }
     }
 
@@ -72,10 +96,23 @@ namespace Curse
     {
         Controller* old = m_controller;
         m_controller = ref.m_controller;
-        if (m_controller && m_controller != old)
+
+        if (old != m_controller)
         {
-            ++m_controller->m_counter;
+            if (m_controller)
+            {
+                ++m_controller->m_counter;
+            }
+            if (old)
+            {
+                const size_t counter = --old->m_counter;
+                if (!counter && old->m_object)
+                {
+                    delete old;
+                }
+            }
         }
+
         return *this;
     }
 
@@ -88,10 +125,23 @@ namespace Curse
 
         Controller* old = m_controller;
         m_controller = reinterpret_cast<Controller*>(ref.m_controller);
-        if (m_controller && m_controller != old)
+
+        if (old != m_controller)
         {
-            ++m_controller->m_counter;
+            if (m_controller)
+            {
+                ++m_controller->m_counter;
+            }
+            if (old)
+            {
+                const size_t counter = --old->m_counter;
+                if (!counter && old->m_object)
+                {
+                    delete old;
+                }
+            }
         }
+
         return *this;
     }
 
