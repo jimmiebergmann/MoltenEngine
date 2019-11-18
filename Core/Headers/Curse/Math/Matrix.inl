@@ -27,17 +27,17 @@ namespace Curse
 {
 
     // Matrix X * Y
-    template<size_t Rows, size_t Columns, typename T>
-    constexpr size_t Matrix<Rows, Columns, T>::Rows;
+    template<size_t _Rows, size_t _Columns, typename T>
+    constexpr size_t Matrix<_Rows, _Columns, T>::Rows;
 
-    template<size_t Rows, size_t Columns, typename T>
-    constexpr size_t Matrix<Rows, Columns, T>::Columns;
+    template<size_t _Rows, size_t _Columns, typename T>
+    constexpr size_t Matrix<_Rows, _Columns, T>::Columns;
 
-    template<size_t Rows, size_t Columns, typename T>
-    constexpr size_t Matrix<Rows, Columns, T>::Components;
+    template<size_t _Rows, size_t _Columns, typename T>
+    constexpr size_t Matrix<_Rows, _Columns, T>::Components;
 
-    template<size_t Rows, size_t Columns, typename T>
-    Matrix<Rows, Columns, T>::Matrix()
+    template<size_t _Rows, size_t _Columns, typename T>
+    Matrix<_Rows, _Columns, T>::Matrix()
     {
     }
 

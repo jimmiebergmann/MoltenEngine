@@ -35,14 +35,14 @@ namespace Curse
     /**
     * @brief Linear algebra class for matrix.
     */
-    template<size_t Rows, size_t Columns, typename T>
+    template<size_t _Rows, size_t _Columns, typename T>
     class Matrix
     {
 
     public:
 
-        static constexpr size_t Rows = Rows;
-        static constexpr size_t Columns = Columns;
+        static constexpr size_t Rows = _Rows;
+        static constexpr size_t Columns = _Columns;
         static constexpr size_t Components = Rows * Columns;
         using Type = T;
 
