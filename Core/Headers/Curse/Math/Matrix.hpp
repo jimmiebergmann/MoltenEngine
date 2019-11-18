@@ -26,6 +26,7 @@
 #ifndef CURSE_CORE_MATH_MATRIX_HPP
 #define CURSE_CORE_MATH_MATRIX_HPP
 
+#include "Curse/Math.hpp"
 #include "Curse/Math/Vector.hpp"
 
 namespace Curse
@@ -34,27 +35,27 @@ namespace Curse
     /**
     * @brief Linear algebra class for matrix.
     */
-    template<size_t Dx, size_t Dy, typename T>
+    template<size_t Rows, size_t Columns, typename T>
     class Matrix
     {
 
     public:
 
-        static constexpr size_t Width = Dx; //< Number of componenets in x.
-        static constexpr size_t Height = Dy; //< Number of componenets in y.
-        static constexpr size_t ComponentCount = Width * Height; //< Number of componenets in matrix.
-        using Type = T; //< Data type of matrix components.
+        static constexpr size_t Rows = Rows;
+        static constexpr size_t Columns = Columns;
+        static constexpr size_t Components = Rows * Columns;
+        using Type = T;
 
         /**
         * @brief Constructor.
-        *        Vector's components are uninitialized.
+        *        Elements are uninitialized.
         */
         Matrix();
 
         union
         {
-            T v[Width][Height]; //< 2D array of matrix components.
-            T c[ComponentCount]; //< Components of matrix.
+            T e[Components]; //< Elements of matrix.
+            Vector<Columns, T> row[Rows];  //< Rows of matrix.
         };
 
     };
@@ -68,29 +69,41 @@ namespace Curse
 
     public:
 
-        static constexpr size_t Width = 4; //< Number of componenets in x.
-        static constexpr size_t Height = 4; //< Number of componenets in y.
-        static constexpr size_t ComponentCount = Width * Height; //< Number of componenets in matrix.
-        using Type = T; //< Data type of matrix components.
+        static constexpr size_t Rows = 4;
+        static constexpr size_t Columns = 4;
+        static constexpr size_t Components = Rows * Columns;
+        using Type = T;
+
+        /**
+        * @brief Creates a perspective projection matrix.
+        */
+        static Matrix<4, 4, T> Perspective(const T fov, const T aspect, const T zNear, const T zFar);
+
+
+        /**
+        * @brief Creates an orthographic projection matrix.
+        */
+        static Matrix<4, 4, T> Orthographic(const T left, const T right, const T bottom, const T top,
+                                            const T zNear, const T zFar);
 
         /**
         * @brief Constructor.
-        *        Vector's components are uninitialized.
+        *        Elements are uninitialized.
         */
         Matrix();
 
         /**
-        * @brief Constructing and initializing all components.
+        * @brief Constructing and initializing all elements.
         */
-        Matrix(const T s00, const T s10, const T s20, const T s30,
-               const T s01, const T s11, const T s21, const T s31,
-               const T s02, const T s12, const T s22, const T s32,
-               const T s03, const T s13, const T s23, const T s33);
+        Matrix(const T e1,  const T e2,  const T e3,  const T e4,
+               const T e5,  const T e6,  const T e7,  const T e8,
+               const T e9,  const T e10, const T e11, const T e12,
+               const T e13, const T e14, const T e15, const T e16);
 
         union
-        {
-            T v[Width][Height]; //< 2D array of matrix components.
-            T c[ComponentCount]; //< Components of matrix.
+        {        
+            T e[Components];    //< Elements of matrix.
+            Vector4<T> row[4];  //< Rows of matrix.
         };
 
     };

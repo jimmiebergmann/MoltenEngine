@@ -35,6 +35,12 @@ namespace Curse
     {
     }
 
+    template<size_t D, typename T>
+    inline T Vector<D, T>::operator[](const size_t index) const
+    {
+        return c[index];
+    }
+
     // Vector 2.
     template<typename T>
     constexpr size_t Vector<2, T>::Dimensions;
@@ -234,6 +240,12 @@ namespace Curse
     inline bool Vector<2, T>::operator != (const Vector<2, U>& vector) const
     {
         return x != static_cast<T>(vector.x) || y != static_cast<T>(vector.y);
+    }
+
+    template<typename T>
+    inline T Vector<2, T>::operator[](const size_t index) const
+    {
+        return c[index];
     }
 
 
@@ -467,6 +479,12 @@ namespace Curse
         return x != static_cast<T>(vector.x) ||
                y != static_cast<T>(vector.y) ||
                z != static_cast<T>(vector.z);
+    }
+
+    template<typename T>
+    inline T Vector<3, T>::operator[](const size_t index) const
+    {
+        return c[index];
     }
 
 
@@ -706,5 +724,11 @@ namespace Curse
                y != static_cast<T>(vector.y) ||
                z != static_cast<T>(vector.z) ||
                w != static_cast<T>(vector.w);
+    }
+
+    template<typename T>
+    inline T Vector<4, T>::operator[](const size_t index) const
+    {
+        return c[index];
     }
 }

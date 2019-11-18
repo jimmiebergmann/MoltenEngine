@@ -158,9 +158,9 @@ namespace Curse
         }*/
     }
 
-    Renderer::Api RendererOpenGLX11::GetApi() const
+    Renderer::BackendApi RendererOpenGLX11::GetBackendApi() const
     {
-        return Renderer::Api::OpenGL;
+        return Renderer::BackendApi::OpenGL;
     }
 
     Version RendererOpenGLX11::GetVersion() const

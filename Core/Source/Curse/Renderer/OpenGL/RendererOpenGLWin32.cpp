@@ -161,9 +161,9 @@ namespace Curse
         }
     }
 
-    Renderer::Api RendererOpenGLWin32::GetApi() const
+    Renderer::BackendApi RendererOpenGLWin32::GetBackendApi() const
     {
-        return Renderer::Api::OpenGL;
+        return Renderer::BackendApi::OpenGL;
     }
 
     Version RendererOpenGLWin32::GetVersion() const

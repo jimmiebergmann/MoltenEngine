@@ -601,4 +601,169 @@ namespace Curse
         Curse::Test::PrintInfo("------------------");
     }
 
+
+
+
+    // Array tests
+    TEST(Memory, Reference_Array)
+    {
+        EXPECT_TRUE((std::is_same<Reference<int[]>, Ref<int[]> >::value));
+    }
+
+    TEST(Memory, Reference_Array_Create)
+    {
+        Ref<int[]> ref_1 = Ref<int[]>::Create(10);
+        Ref<int[]> ref_2 = Ref<int[]>::Create(10);
+    }
+    
+    TEST(Memory, Reference_Array_Destructor)
+    {
+
+        class TestDestructBase
+        {
+        public:
+
+            virtual ~TestDestructBase()
+            { }
+
+        };
+
+        class TestDestruct : public TestDestructBase
+        {
+        public:
+
+            TestDestruct() :
+                value(998877),
+                counter(nullptr)
+            {
+                EXPECT_TRUE(counter == nullptr);
+            }
+
+            ~TestDestruct()
+            {
+                EXPECT_TRUE(counter != nullptr);
+                (*counter)++;
+            }
+            int32_t value;
+            size_t * counter;
+        };
+
+        // Scope delete.
+        {
+            {
+                size_t counter = 0;
+
+                EXPECT_EQ(counter, size_t(0));
+
+                {
+                    Ref<TestDestruct[]> ref = Ref<TestDestruct[]>::Create(3);
+                    ref[0].counter = &counter;
+                    ref[1].counter = &counter;
+                    ref[2].counter = &counter;
+
+                    EXPECT_EQ(counter, size_t(0));
+                }
+
+                EXPECT_EQ(counter, size_t(3));
+            }
+            {
+                size_t counter = 0;
+
+                EXPECT_EQ(counter, size_t(0));
+
+                {
+                    Ref<TestDestructBase[]> ref_base;
+                    {
+                        Ref<TestDestruct[]> ref = Ref<TestDestruct[]>::Create(3);
+                        ref[0].counter = &counter;
+                        ref[1].counter = &counter;
+                        ref[2].counter = &counter;
+
+                        EXPECT_EQ(counter, size_t(0));
+                        ref_base = ref;
+                    }
+                    EXPECT_EQ(counter, size_t(0));
+                }
+
+                EXPECT_EQ(counter, size_t(3));
+            }
+        }
+        
+        // Assign delete
+        {
+            {
+                size_t counter = 0;
+
+                EXPECT_EQ(counter, size_t(0));
+
+                {
+                    Ref<TestDestruct[]> ref = Ref<TestDestruct[]>::Create(3);
+                    ref[0].counter = &counter;
+                    ref[1].counter = &counter;
+                    ref[2].counter = &counter;
+                    Ref<TestDestruct[]> ref_none;
+
+                    EXPECT_EQ(counter, size_t(0));
+                    ref = ref_none;
+                    EXPECT_EQ(counter, size_t(3));
+                }
+            }
+            {
+                size_t counter = 0;
+
+                EXPECT_EQ(counter, size_t(0));
+
+                {
+                    Ref<TestDestruct[]> ref = Ref<TestDestruct[]>::Create(3);
+                    ref[0].counter = &counter;
+                    ref[1].counter = &counter;
+                    ref[2].counter = &counter;
+                    Ref<TestDestructBase[]> ref_none;
+
+                    EXPECT_EQ(counter, size_t(0));
+                    ref = ref_none;
+                    EXPECT_EQ(counter, size_t(3));
+                }
+            }
+        }
+        
+        // Move delete.
+        {
+            {
+                size_t counter = 0;
+
+                EXPECT_EQ(counter, size_t(0));
+
+                {
+                    Ref<TestDestruct[]> ref = Ref<TestDestruct[]>::Create(3);
+                    ref[0].counter = &counter;
+                    ref[1].counter = &counter;
+                    ref[2].counter = &counter;
+                    Ref<TestDestruct[]> ref_none;
+
+                    EXPECT_EQ(counter, size_t(0));
+                    ref = std::move(ref_none);
+                    EXPECT_EQ(counter, size_t(3));
+                }
+            }
+            {
+                size_t counter = 0;
+
+                EXPECT_EQ(counter, size_t(0));
+
+                {
+                    Ref<TestDestruct[]> ref = Ref<TestDestruct[]>::Create(3);
+                    ref[0].counter = &counter;
+                    ref[1].counter = &counter;
+                    ref[2].counter = &counter;
+                    Ref<TestDestructBase[]> ref_none;
+
+                    EXPECT_EQ(counter, size_t(0));
+                    ref = std::move(ref_none);
+                    EXPECT_EQ(counter, size_t(3));
+                }
+            }
+        }
+    }
+
 }

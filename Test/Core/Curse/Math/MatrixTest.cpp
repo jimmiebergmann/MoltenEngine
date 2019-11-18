@@ -38,48 +38,50 @@ namespace Curse
             EXPECT_TRUE((std::is_same<Matrix4x4f64::Type, double>::value));
         }
         {
-            EXPECT_EQ(Matrix4x4<int32_t>::Width, size_t(4));
-            EXPECT_EQ(Matrix4x4<int32_t>::Height, size_t(4));
-            EXPECT_EQ(Matrix4x4<int32_t>::ComponentCount, size_t(16));
+            EXPECT_EQ(Matrix4x4<int32_t>::Rows, size_t(4));
+            EXPECT_EQ(Matrix4x4<int32_t>::Columns, size_t(4));
+            EXPECT_EQ(Matrix4x4<int32_t>::Components, size_t(16));
 
-            EXPECT_EQ(Matrix4x4i32::Width, size_t(4));
-            EXPECT_EQ(Matrix4x4i32::Height, size_t(4));
-            EXPECT_EQ(Matrix4x4i32::ComponentCount, size_t(16));
+            EXPECT_EQ(Matrix4x4i32::Rows, size_t(4));
+            EXPECT_EQ(Matrix4x4i32::Columns, size_t(4));
+            EXPECT_EQ(Matrix4x4i32::Components, size_t(16));
 
-            EXPECT_EQ(Matrix4x4i64::Width, size_t(4));
-            EXPECT_EQ(Matrix4x4i64::Height, size_t(4));
-            EXPECT_EQ(Matrix4x4i64::ComponentCount, size_t(16));
+            EXPECT_EQ(Matrix4x4i64::Rows, size_t(4));
+            EXPECT_EQ(Matrix4x4i64::Columns, size_t(4));
+            EXPECT_EQ(Matrix4x4i64::Components, size_t(16));
 
-            EXPECT_EQ(Matrix4x4f32::Width, size_t(4));
-            EXPECT_EQ(Matrix4x4f32::Height, size_t(4));
-            EXPECT_EQ(Matrix4x4f32::ComponentCount, size_t(16));
+            EXPECT_EQ(Matrix4x4f32::Rows, size_t(4));
+            EXPECT_EQ(Matrix4x4f32::Columns, size_t(4));
+            EXPECT_EQ(Matrix4x4f32::Components, size_t(16));
 
-            EXPECT_EQ(Matrix4x4f64::Width, size_t(4));
-            EXPECT_EQ(Matrix4x4f64::Height, size_t(4));
-            EXPECT_EQ(Matrix4x4f64::ComponentCount, size_t(16));
+            EXPECT_EQ(Matrix4x4f64::Rows, size_t(4));
+            EXPECT_EQ(Matrix4x4f64::Columns, size_t(4));
+            EXPECT_EQ(Matrix4x4f64::Components, size_t(16));
         }
     }
 
     TEST(Math, Matrix)
     {
-        const size_t x = 6;
-        const size_t y = 10;
-        Matrix<x, y, int32_t> matrix;
+        const size_t rows = 6;
+        const size_t columns = 10;
+        Matrix<rows, columns, int32_t> matrix;
 
-        int32_t counter = 0;
-        for (size_t xx = 0; xx < x; xx++)
+        for (int32_t i = 0; i < rows * columns; i++)
         {
-            for (size_t yy = 0; yy < y; yy++)
+            matrix.e[i] = i;
+        }
+
+        for (int32_t y = 0; y < rows; y++)
+        {
+            for (int32_t x = 0; x < columns; x++)
             {
-                matrix.v[xx][yy] = counter;
-                ++counter;
+                int32_t i = (y * columns) + x;
+                EXPECT_EQ(matrix.e[i], static_cast<int32_t>(i));
+                EXPECT_EQ(matrix.row[y][x], static_cast<int32_t>(i));
+                EXPECT_EQ(matrix.row[y].c[x], static_cast<int32_t>(i));
             }
         }
-
-        for (size_t i = 0; i < x * y; i++)
-        {
-            EXPECT_EQ(matrix.c[i], static_cast<int32_t>(i));
-        }
+        
     }
 
     TEST(Math, Matrix4x4)
@@ -91,23 +93,62 @@ namespace Curse
                 9, 10, 11, 12,
                 13, 14, 15, 16);
 
-            EXPECT_EQ(mat.c[0], int32_t(1));
-            EXPECT_EQ(mat.c[1], int32_t(5));
-            EXPECT_EQ(mat.c[2], int32_t(9));
-            EXPECT_EQ(mat.c[3], int32_t(13));
-            EXPECT_EQ(mat.c[4], int32_t(2));
-            EXPECT_EQ(mat.c[5], int32_t(6));
-            EXPECT_EQ(mat.c[6], int32_t(10));
-            EXPECT_EQ(mat.c[7], int32_t(14));
-            EXPECT_EQ(mat.c[8], int32_t(3));
-            EXPECT_EQ(mat.c[9], int32_t(7));
-            EXPECT_EQ(mat.c[10], int32_t(11));
-            EXPECT_EQ(mat.c[11], int32_t(15));
-            EXPECT_EQ(mat.c[12], int32_t(4));
-            EXPECT_EQ(mat.c[13], int32_t(8));
-            EXPECT_EQ(mat.c[14], int32_t(12));
-            EXPECT_EQ(mat.c[15], int32_t(16));
+            EXPECT_EQ(mat.e[0], int32_t(1));
+            EXPECT_EQ(mat.e[1], int32_t(2));
+            EXPECT_EQ(mat.e[2], int32_t(3));
+            EXPECT_EQ(mat.e[3], int32_t(4));
+            EXPECT_EQ(mat.e[4], int32_t(5));
+            EXPECT_EQ(mat.e[5], int32_t(6));
+            EXPECT_EQ(mat.e[6], int32_t(7));
+            EXPECT_EQ(mat.e[7], int32_t(8));
+            EXPECT_EQ(mat.e[8], int32_t(9));
+            EXPECT_EQ(mat.e[9], int32_t(10));
+            EXPECT_EQ(mat.e[10], int32_t(11));
+            EXPECT_EQ(mat.e[11], int32_t(12));
+            EXPECT_EQ(mat.e[12], int32_t(13));
+            EXPECT_EQ(mat.e[13], int32_t(14));
+            EXPECT_EQ(mat.e[14], int32_t(15));
+            EXPECT_EQ(mat.e[15], int32_t(16));
+
+            EXPECT_EQ(mat.row[0][0], int32_t(1));
+            EXPECT_EQ(mat.row[0][1], int32_t(2));
+            EXPECT_EQ(mat.row[0][2], int32_t(3));
+            EXPECT_EQ(mat.row[0][3], int32_t(4));
+            EXPECT_EQ(mat.row[1][0], int32_t(5));
+            EXPECT_EQ(mat.row[1][1], int32_t(6));
+            EXPECT_EQ(mat.row[1][2], int32_t(7));
+            EXPECT_EQ(mat.row[1][3], int32_t(8));
+            EXPECT_EQ(mat.row[2][0], int32_t(9));
+            EXPECT_EQ(mat.row[2][1], int32_t(10));
+            EXPECT_EQ(mat.row[2][2], int32_t(11));
+            EXPECT_EQ(mat.row[2][3], int32_t(12));
+            EXPECT_EQ(mat.row[3][0], int32_t(13));
+            EXPECT_EQ(mat.row[3][1], int32_t(14));
+            EXPECT_EQ(mat.row[3][2], int32_t(15));
+            EXPECT_EQ(mat.row[3][3], int32_t(16));
+
+            EXPECT_EQ(mat.row[0].x, int32_t(1));
+            EXPECT_EQ(mat.row[0].y, int32_t(2));
+            EXPECT_EQ(mat.row[0].z, int32_t(3));
+            EXPECT_EQ(mat.row[0].w, int32_t(4));
+            EXPECT_EQ(mat.row[1].x, int32_t(5));
+            EXPECT_EQ(mat.row[1].y, int32_t(6));
+            EXPECT_EQ(mat.row[1].z, int32_t(7));
+            EXPECT_EQ(mat.row[1].w, int32_t(8));
+            EXPECT_EQ(mat.row[2].x, int32_t(9));
+            EXPECT_EQ(mat.row[2].y, int32_t(10));
+            EXPECT_EQ(mat.row[2].z, int32_t(11));
+            EXPECT_EQ(mat.row[2].w, int32_t(12));
+            EXPECT_EQ(mat.row[3].x, int32_t(13));
+            EXPECT_EQ(mat.row[3].y, int32_t(14));
+            EXPECT_EQ(mat.row[3].z, int32_t(15));
+            EXPECT_EQ(mat.row[3].w, int32_t(16));
         }
+    }
+
+    TEST(Math, Matrix4x4_Perspective)
+    {
+        auto mat = Matrix4x4f32::Perspective(60.0f, 1.0f, 1.0f, 0.0f);
     }
 
 }

@@ -23,33 +23,36 @@
 *
 */
 
-#include "Curse/Renderer/Renderer.hpp"
+#include "Test.hpp"
+#include "Curse/Math.hpp"
+#include <type_traits>
 
-#include "Curse/Renderer/OpenGL/RendererOpenGL.hpp"
+#include <stdio.h>
+#include <iostream>
 
 namespace Curse
 {
 
-    Ref<Renderer> Renderer::Create(const BackendApi backendApi)
+    TEST(Math, Constants)
     {
-        switch (backendApi)
         {
-        case BackendApi::OpenGL:
-            #if CURSE_OPENGL_IS_AVAILABLE
-                return Ref<RendererOpenGL>::Create();
-            #else
-                return {};
-            #endif
-            break;
-        default:
-            break;
+            constexpr auto pi_1 = Constants::Pi<float>();
+            float pi_2 = pi_1;
+            EXPECT_TRUE((std::is_same<decltype(pi_2), float>::value));
+            EXPECT_NEAR(pi_2, 3.1415927410125732421875f, 1e-16);
+        }
+        {
+            constexpr auto pi_1 = Constants::Pi<double>();
+            double pi_2 = pi_1;
+            EXPECT_TRUE((std::is_same<decltype(pi_2), double>::value));
+            EXPECT_NEAR(pi_2, 3.141592653589793115997963468544185161590576171875, 1e-61);
+        }
+        {
+            constexpr auto pi_1 = Constants::Pi<long double>();
+            long double pi_2 = pi_1;
+            EXPECT_TRUE((std::is_same<decltype(pi_2), long double>::value));
+            EXPECT_NEAR(static_cast<double>(pi_2), 3.141592653589793115997963468544185161590576171875, 1e-61);
         }
 
-        return {};
     }
-
-    Renderer::~Renderer()
-    {
-    }
-
 }

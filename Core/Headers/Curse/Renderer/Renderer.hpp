@@ -35,6 +35,23 @@ namespace Curse
 
     class WindowBase;
 
+
+    /**
+    * @brief Base class of renderer creators.
+    */
+    class CURSE_API RendererCreators
+    {
+
+    public:
+
+        virtual void* CreateFrameBuffer() = 0;
+        virtual void* CreateTexture() = 0;
+        virtual void* CreateVertexArray() = 0;
+        virtual void* CreateVertexBuffer() = 0;
+
+
+    };
+
     /**
     * @brief Base class of renderer.
     */
@@ -46,7 +63,7 @@ namespace Curse
         /**
         * @brief Types of renderers.
         */
-        enum class Api
+        enum class BackendApi
         {
             OpenGL
         };
@@ -57,7 +74,7 @@ namespace Curse
         *
         * @return Pointer to renderer, nullptr if the type of renderer is unavailable.
         */
-        static Ref<Renderer> Create(const Api renderApi);
+        static Ref<Renderer> Create(const BackendApi renderApi);
 
         /**
         * @brief Virtual destructor.
@@ -77,9 +94,9 @@ namespace Curse
         virtual void Close() = 0;
 
         /**
-        * @brief Get renderer API type.
+        * @brief Get backend API type.
         */
-        virtual Api GetApi() const = 0;
+        virtual BackendApi GetBackendApi() const = 0;
 
         /**
         * @brief Get renderer API version.

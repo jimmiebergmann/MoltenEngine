@@ -23,33 +23,28 @@
 *
 */
 
-#include "Curse/Renderer/Renderer.hpp"
+#ifndef CURSE_CORE_MATH_HPP
+#define CURSE_CORE_MATH_HPP
 
-#include "Curse/Renderer/OpenGL/RendererOpenGL.hpp"
+#include "Curse/Types.hpp"
+#include <cmath>
 
 namespace Curse
 {
 
-    Ref<Renderer> Renderer::Create(const BackendApi backendApi)
+    namespace Constants
     {
-        switch (backendApi)
-        {
-        case BackendApi::OpenGL:
-            #if CURSE_OPENGL_IS_AVAILABLE
-                return Ref<RendererOpenGL>::Create();
-            #else
-                return {};
-            #endif
-            break;
-        default:
-            break;
-        }
 
-        return {};
-    }
+        /**
+        * @brief Contant PI, for float, double and long double.
+        */
+        template<typename T>
+        constexpr T Pi();
 
-    Renderer::~Renderer()
-    {
     }
 
 }
+
+#include "Math.inl"
+
+#endif

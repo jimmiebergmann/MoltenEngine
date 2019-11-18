@@ -37,7 +37,6 @@ namespace Curse
 
     /**
     * @brief Smart shared pointer class, called "reference" in Curse.
-    *        NOTE: Arrays([]) are not yet supported.
     */
     template<typename T>
     class Reference
@@ -49,11 +48,13 @@ namespace Curse
         * @brief Data type of reference.
         */
         using Type = T;
+        using TypePtr = Type*;
+        using TypeRef = Type&;
 
         /**
         * @brief Deleter type.
         */
-        using Deleter = std::function<void(T * object)>;
+        using Deleter = std::function<void(TypePtr object)>;
 
         /**
         * @brief Function for constructing a new reference object.
@@ -72,12 +73,12 @@ namespace Curse
         /**
         * @brief Constructing reference by passing an object.
         */
-        Reference(T * object);
+        Reference(TypePtr object);
 
         /**
         * @brief Constructing reference by passing an object and deleter function.
         */
-        Reference(T* object, Deleter deleter);
+        Reference(TypePtr object, Deleter deleter);
 
         /**
         * @brief Copy constructor.
@@ -94,7 +95,7 @@ namespace Curse
         /**
         * @brief Assigment operator.
         */
-        Reference<T>& operator = (const Reference& ref); 
+        Reference<T>& operator = (const Reference& ref);
 
         /**
         * @brief Assigment operator, from another reference type.
@@ -131,40 +132,39 @@ namespace Curse
         * @brief Dereference operator.
         *        Access reference data via this operator.
         */
-        T& operator *() const;
+        TypeRef operator *() const;
 
         /**
         * @brief Member access operator.
         *        Access reference data via this operator.
         */
-        T* operator->() const;
+        TypePtr operator->() const;
 
         /**
         * @brief Destructor.
         */
-        ~Reference();
+        virtual ~Reference();
 
         /**
         * @brief Access reference data via this function.
         */
-        T* Get() const;
+        TypePtr Get() const;
 
         /**
         * @brief Get use count of object.
         */
         size_t GetUseCount() const;
 
-    private:
+    protected:
 
         struct Controller
         {
-            Controller(T* object);
-            Controller(T* object, Deleter deleter);
+            Controller(TypePtr object, Deleter deleter);
             Controller(const Controller&) = delete;
             Controller(Controller&&) = delete;
             ~Controller();
 
-            T* m_object;
+            TypePtr m_object;
             std::atomic_size_t m_counter;
             Deleter m_deleter;
         };
@@ -175,6 +175,154 @@ namespace Curse
 
         template<typename U> friend class Reference;
     };
+
+    /**
+    * @brief Smart shared pointer array class, called "reference" in Curse.
+    */
+    template<typename T>
+    class Reference<T[]>
+    {
+
+    public:
+
+        /**
+        * @brief Data type of reference.
+        */
+        using Type = std::remove_reference_t<decltype(*std::declval<T[]>())>;
+        using TypePtr = Type*;
+        using TypeRef = Type&;
+
+        /**
+        * @brief Deleter type.
+        */
+        using Deleter = std::function<void(TypePtr object)>;
+
+        /**
+        * @brief Function for constructing a new array reference object.
+        *        Use the constructor directly to set a custom deleter.
+        *
+        * @param size[in] Size of new array object.
+        */
+        static Reference<T[]> Create(const size_t size);
+
+        /**
+        * @brief Constructor.
+        */
+        Reference();
+
+        /**
+        * @brief Constructing reference by passing an object.
+        */
+        Reference(TypePtr object);
+
+        /**
+        * @brief Constructing reference by passing an object and deleter function.
+        */
+        Reference(TypePtr object, Deleter deleter);
+
+        /**
+        * @brief Copy constructor.
+        */
+        Reference(const Reference& ref);
+
+        /**
+        * @brief Copy constructor, from another reference type.
+        *        Used for assignment of base class reference objects.
+        */
+        template<typename U>
+        Reference(const Reference<U[]>& ref);
+
+        /**
+        * @brief Assigment operator.
+        */
+        Reference<T[]>& operator = (const Reference& ref);
+
+        /**
+        * @brief Assigment operator, from another reference type.
+        *        Used for assignment of base class reference objects.
+        */
+        template<typename U>
+        Reference<T[]>& operator = (const Reference<U[]>& ref);
+
+        /**
+        * @brief Move constructor.
+        */
+        Reference(Reference&& ref);
+
+        /**
+        * @brief Move constructor, from another reference type.
+        *        Used for moving base class reference objects.
+        */
+        template<typename U>
+        Reference(Reference<U[]>&& ref);
+
+        /**
+        * @brief Move Assignment operator.
+        */
+        Reference<T[]>& operator = (Reference&& ref);
+
+        /**
+        * @brief Move Assignment operator, from another reference type.
+        *        Used for moving base class reference objects.
+        */
+        template<typename U>
+        Reference<T[]>& operator = (Reference<U[]>&& ref);
+
+        /**
+        * @brief Dereference operator.
+        *        Access reference data via this operator.
+        */
+        TypeRef operator *() const;
+
+        /**
+        * @brief Member access operator.
+        *        Access reference data via this operator.
+        */
+        TypePtr operator->() const;
+
+        /**
+        * @brief Member access operator.
+        *        Access reference data element via this operator.
+        */
+        TypeRef operator[](const size_t index) const;
+
+        /**
+        * @brief Destructor.
+        */
+        virtual ~Reference();
+
+        /**
+        * @brief Access reference data via this function.
+        */
+        TypePtr Get() const;
+
+        /**
+        * @brief Get use count of object.
+        */
+        size_t GetUseCount() const;
+
+    protected:
+
+        struct Controller
+        {
+            Controller(TypePtr object, Deleter deleter);
+            Controller(const Controller&) = delete;
+            Controller(Controller&&) = delete;
+            ~Controller();
+
+            TypePtr m_object;
+            std::atomic_size_t m_counter;
+            Deleter m_deleter;
+        };
+
+        Reference(Controller* controlObject);
+
+        Controller* m_controller;
+
+        template<typename U> friend class Reference;
+
+    };
+
 
     /**
     * @brief A shorter name for Reference class.

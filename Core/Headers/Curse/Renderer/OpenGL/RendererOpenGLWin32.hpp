@@ -75,9 +75,9 @@ namespace Curse
         virtual void Close();
 
         /**
-        * @brief Get renderer API type.
+        * @brief Get backend API type.
         */
-        virtual Api GetApi() const;
+        virtual BackendApi GetBackendApi() const;
 
         /**
         * @brief Get renderer API version.

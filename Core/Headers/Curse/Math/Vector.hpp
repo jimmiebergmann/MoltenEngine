@@ -50,6 +50,11 @@ namespace Curse
         */
         Vector();
 
+        /**
+        * @brief Access vector component by index.
+        */
+        T operator[](const size_t index) const;
+
         T c[Dimensions]; //< Components of vector.
 
     };
@@ -195,6 +200,11 @@ namespace Curse
         */
         template<typename U>
         bool operator != (const Vector<2, U>& vector) const;
+
+        /**
+        * @brief Access vector component by index.
+        */
+        T operator[](const size_t index) const;
 
         CURSE_ANONYMOUS_STRUCTURE_BEGIN
         union
@@ -358,8 +368,13 @@ namespace Curse
         template<typename U>
         bool operator != (const Vector<3, U>& vector) const;
 
+        /**
+        * @brief Access vector component by index.
+        */
+        T operator[](const size_t index) const;
+
         CURSE_ANONYMOUS_STRUCTURE_BEGIN
-            union
+        union
         {
             struct
             {
@@ -515,8 +530,13 @@ namespace Curse
         template<typename U>
         bool operator != (const Vector<4, U>& vector) const;
 
+        /**
+        * @brief Access vector component by index.
+        */
+        T operator[](const size_t index) const;
+
         CURSE_ANONYMOUS_STRUCTURE_BEGIN
-            union
+        union
         {
             struct
             {

@@ -23,33 +23,30 @@
 *
 */
 
-#include "Curse/Renderer/Renderer.hpp"
-
-#include "Curse/Renderer/OpenGL/RendererOpenGL.hpp"
-
 namespace Curse
 {
 
-    Ref<Renderer> Renderer::Create(const BackendApi backendApi)
+    namespace Constants
     {
-        switch (backendApi)
+
+        template<>
+        constexpr float Pi()
         {
-        case BackendApi::OpenGL:
-            #if CURSE_OPENGL_IS_AVAILABLE
-                return Ref<RendererOpenGL>::Create();
-            #else
-                return {};
-            #endif
-            break;
-        default:
-            break;
+            return static_cast<float>(3.14159265358979323846264338327950288419716939937510582097494459230781640628620899L);
         }
 
-        return {};
-    }
+        template<>
+        constexpr double Pi()
+        {
+            return static_cast<double>(3.14159265358979323846264338327950288419716939937510582097494459230781640628620899);
+        }
 
-    Renderer::~Renderer()
-    {
+        template<>
+        constexpr long double Pi()
+        {
+            return static_cast<long double>(3.14159265358979323846264338327950288419716939937510582097494459230781640628620899L);
+        }
+
     }
 
 }

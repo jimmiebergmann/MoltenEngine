@@ -27,44 +27,74 @@ namespace Curse
 {
 
     // Matrix X * Y
-    template<size_t Dx, size_t Dy, typename T>
-    constexpr size_t Matrix<Dx, Dy, T>::Width;
+    template<size_t Rows, size_t Columns, typename T>
+    constexpr size_t Matrix<Rows, Columns, T>::Rows;
 
-    template<size_t Dx, size_t Dy, typename T>
-    constexpr size_t Matrix<Dx, Dy, T>::Height;
+    template<size_t Rows, size_t Columns, typename T>
+    constexpr size_t Matrix<Rows, Columns, T>::Columns;
 
-    template<size_t Dx, size_t Dy, typename T>
-    constexpr size_t Matrix<Dx, Dy, T>::ComponentCount;
+    template<size_t Rows, size_t Columns, typename T>
+    constexpr size_t Matrix<Rows, Columns, T>::Components;
 
-    template<size_t Dx, size_t Dy, typename T>
-    Matrix<Dx, Dy, T>::Matrix()
+    template<size_t Rows, size_t Columns, typename T>
+    Matrix<Rows, Columns, T>::Matrix()
     {
     }
 
     // Matrix 4 * 4
     template<typename T>
-    constexpr size_t Matrix<4, 4, T>::Width;
+    constexpr size_t Matrix<4, 4, T>::Rows;
 
     template<typename T>
-    constexpr size_t Matrix<4, 4, T>::Height;
+    constexpr size_t Matrix<4, 4, T>::Columns;
 
     template<typename T>
-    constexpr size_t Matrix<4, 4, T>::ComponentCount;
+    constexpr size_t Matrix<4, 4, T>::Components;
 
     template<typename T>
-    Matrix<4, 4, T>::Matrix()
+    inline Matrix<4, 4, T> Matrix<4, 4, T>::Perspective(const T fov, const T aspect, const T zNear, const T zFar)
+    {
+        static constexpr T radiansExpr = static_cast<T>(1) / (static_cast<T>(2) * Constants::Pi<T>() / static_cast<T>(180));
+        const T radians = fov * radiansExpr;
+        const T sine = std::sin(radians);
+        const T zRange = zFar - zNear;    
+
+        if (zRange == static_cast<T>(0) || sine == static_cast<T>(0) || aspect == static_cast<T>(0))
+        {
+            return {};
+        }
+
+        const T cotan = std::cos(radians) / sine;
+
+        return { cotan / aspect,    static_cast<T>(0), static_cast<T>(0),        static_cast<T>(0),
+                 static_cast<T>(0), cotan,             static_cast<T>(0),        static_cast<T>(0),
+                 static_cast<T>(0), static_cast<T>(0), -(zFar + zNear) / zRange, static_cast<T>(-1),
+                 static_cast<T>(0), static_cast<T>(0) , 0, static_cast<T>(0) };
+    }
+
+    template<typename T>
+    inline Matrix<4, 4, T> Matrix<4, 4, T>::Orthographic(const T left, const T right, const T bottom, const T top,
+                                                         const T zNear, const T zFar)
+    {
+        return {};
+    }
+
+    template<typename T>
+    inline Matrix<4, 4, T>::Matrix()
     {
     }
 
     template<typename T>
-    Matrix<4, 4, T>::Matrix(const T s00, const T s10, const T s20, const T s30,
-                            const T s01, const T s11, const T s21, const T s31,
-                            const T s02, const T s12, const T s22, const T s32,
-                            const T s03, const T s13, const T s23, const T s33) :
-        c{ s00, s01, s02, s03,
-           s10, s11, s12, s13,
-           s20, s21, s22, s23,
-           s30, s31, s32, s33 }
+    inline Matrix<4, 4, T>::Matrix(
+            const T e1,  const T e2,  const T e3,  const T e4,
+            const T e5,  const T e6,  const T e7,  const T e8,
+            const T e9,  const T e10, const T e11, const T e12,
+            const T e13, const T e14, const T e15, const T e16) :
+
+        e{ e1,  e2,  e3,  e4,
+           e5,  e6,  e7,  e8,
+           e9,  e10, e11, e12,
+           e13, e14, e15, e16 }
     {
     }
 

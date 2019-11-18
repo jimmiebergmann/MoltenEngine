@@ -7,8 +7,8 @@
 static int Run()
 {
     auto window = Curse::Window::Create("Curse Editor", Curse::Vector2ui32(800, 600));
-    auto renderer = Curse::Renderer::Create(Curse::Renderer::Api::OpenGL);
-    
+    auto renderer = Curse::Renderer::Create(Curse::Renderer::BackendApi::OpenGL);
+
     renderer->Open(*window);
 
     window->Show();
