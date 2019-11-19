@@ -14,16 +14,22 @@ static int Run()
     };
 
     auto renderer = Curse::Renderer::Create(Curse::Renderer::BackendApi::Vulkan);
-    renderer->Open(*window, Curse::Version(1, 1), debugPrinter);
+    try
+    {
+        renderer->Open(*window, Curse::Version(1, 1), debugPrinter);
+    }
+    catch (Curse::Exception & e)
+    {
+        std::cout << "Error: " << e.what() << std::endl;
+        return -1;
+    }
 
     window->Show();
-
     while (window->IsOpen())
     {
         window->Update();
         renderer->SwapBuffers();
     }
-
 
     return 0;
 }

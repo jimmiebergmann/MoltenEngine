@@ -96,7 +96,7 @@ if(CURSE_ENABLE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU")
 endif()
 
 if(CURSE_ENABLE_VULKAN AND Vulkan_FOUND )
-	target_include_directories(Curse PRIVATE "${Vulkan_INCLUDE}")
+	target_include_directories(Curse PUBLIC "${Vulkan_INCLUDE}")
 	target_link_libraries(Curse ${Vulkan_LIBRARY})	
 	target_compile_definitions(Curse PUBLIC "CURSE_ENABLE_VULKAN")
 endif()

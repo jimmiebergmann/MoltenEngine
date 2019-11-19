@@ -23,24 +23,22 @@
 *
 */
 
-#ifndef CURSE_CORE_RENDERER_OPENGL_OPENGLHEADERS_HPP
-#define CURSE_CORE_RENDERER_OPENGL_OPENGLHEADERS_HPP
+#include "Test.hpp"
+#include "Curse/Renderer/Vulkan/RendererVulkan.hpp"
+#include "Curse/Window/Window.hpp"
+#include <thread>
 
-#include "Curse/Core.hpp"
+#if defined(CURSE_ENABLE_VULKAN)
 
-#if defined(CURSE_ENABLE_OPENGL)
+namespace Curse
+{
+    TEST(Renderer, VulkanRenderer)
+    {
+        Ref<Window> window = Window::Create();
+        Ref<RendererVulkan> renderer(new RendererVulkan);
+        EXPECT_NO_THROW(renderer->Open(*window));
+    }
 
-#if CURSE_PLATFORM == CURSE_PLATFORM_WINDOWS
-    #include "Curse/Platform/Win32headers.hpp"
-    #include <GL/gl.h>
-    #include "Curse/Renderer/OpenGL/wglext.h"
-    #include "Curse/Renderer/OpenGL/glext.h"
-#elif CURSE_PLATFORM == CURSE_PLATFORM_LINUX
-    #include "Curse/Platform/X11Headers.hpp"
-    #include <GL/gl.h>
-    #include "Curse/Renderer/OpenGL/glext.h"
-#endif
-
-#endif
+}
 
 #endif

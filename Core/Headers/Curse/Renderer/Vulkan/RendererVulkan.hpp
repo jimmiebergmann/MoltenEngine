@@ -32,8 +32,16 @@
 
 #include "Curse/Renderer/Renderer.hpp"
 #include "vulkan/vulkan.h"
+
+#if CURSE_PLATFORM == CURSE_PLATFORM_WINDOWS
+    #include "Curse/Platform/Win32Headers.hpp"
+    #include "vulkan/vulkan_win32.h"
+#elif CURSE_PLATFORM == CURSE_PLATFORM_LINUX
+    #include "Curse/Platform/X11Headers.hpp"
+    #include "vulkan/vulkan_xlib.h"
+#endif
+
 #include <vector>
-//#include "Curse/Platform/Win32Headers.hpp"
 
 namespace Curse
 {
@@ -96,21 +104,47 @@ namespace Curse
         struct DebugMessenger
         {
             DebugMessenger();
+            void Clear();
 
             VkDebugUtilsMessengerEXT messenger;
             PFN_vkCreateDebugUtilsMessengerEXT CreateDebugUtilsMessengerEXT;
             PFN_vkDestroyDebugUtilsMessengerEXT DestroyDebugUtilsMessengerEXT;
+            bool validationDebugger;
             DebugCallback callback;
         };
 
+        struct PhysicalDevice
+        {
+            PhysicalDevice();
+            PhysicalDevice(VkPhysicalDevice device);
+            PhysicalDevice(VkPhysicalDevice device, uint32_t graphicsQueueIndex, uint32_t presentQueueIndex);
+            void Clear();
+
+            VkPhysicalDevice device;
+            uint32_t graphicsQueueIndex;
+            uint32_t presentQueueIndex;
+        };
+
         PFN_vkVoidFunction GetVulkanFunction(const char* functionName) const;
-        bool SetupDebugger(VkInstanceCreateInfo& instanceInfo, VkDebugUtilsMessengerCreateInfoEXT& debugMessageInfo, DebugCallback debugCallback);
-        bool GetRequiredExtensions(std::vector<const char*>& extensions) const;
+        void LoadInstance(const Version& version, DebugCallback debugCallback);
+        bool GetRequiredExtensions(std::vector<std::string>& extensions, const bool requestDebugger) const;
+        bool LoadDebugger(VkInstanceCreateInfo& instanceInfo, VkDebugUtilsMessengerCreateInfoEXT& debugMessageInfo, DebugCallback debugCallback);     
+        void LoadSurface(const WindowBase& window);
+        void LoadPhysicalDevice();
+        bool ScorePhysicalDevice(PhysicalDevice& physicalDevice, uint32_t & score);
+        bool CheckDeviceExtensionSupport(PhysicalDevice & physicalDevice);
+        void LoadLogicalDevice();      
 
         Version m_version;
         VkInstance m_instance;
-        DebugMessenger m_debugMessenger;     
-        VkPhysicalDevice m_physicalDevice;
+        std::vector<const char*> m_validationLayers;
+        std::vector<const char*> m_deviceExtensions;
+        DebugMessenger m_debugMessenger;
+        VkSurfaceKHR m_surface;
+        PhysicalDevice m_physicalDevice;
+        VkDevice m_logicalDevice;
+        VkQueue m_graphicsQueue;
+        VkQueue m_presentQueue;   
 
     };
 
