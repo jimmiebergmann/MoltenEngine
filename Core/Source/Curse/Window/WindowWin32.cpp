@@ -25,7 +25,7 @@
 
 #include "Curse/Window/WindowWin32.hpp"
 
-#if defined CURSE_PLATFORM_WINDOWS
+#if CURSE_PLATFORM == CURSE_PLATFORM_WINDOWS
 
 #include "Curse/System/Exception.hpp"
 #include <sstream>

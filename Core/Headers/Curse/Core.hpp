@@ -26,33 +26,87 @@
 #ifndef CURSE_CORE_CORE_HPP
 #define CURSE_CORE_CORE_HPP
 
+/*
+* Current version of Curse.
+*/
 #define CURSE_VERSION_MAJOR 0
 #define CURSE_VERSION_MINOR 1
 #define CURSE_VERSION_PATCH 0
 
+#define CURSE_MAKE_VERSION Curse::Version(CURSE_VERSION_MAJOR, CURSE_VERSION_MINOR, CURSE_VERSION_PATCH)
 
+/*
+* For checking platform, example:
+*   #if CURSE_PLATFORM == CURSE_PLATFORM_LINUX
+*   ...
+*   auto name = CURSE_PLATFORM_NAME;
+*
+*/
+#define CURSE_PLATFORM_LINUX 1
+#define CURSE_PLATFORM_WINDOWS 2
+#define CURSE_PLATFORM_LINUX_NAME "Linux"
+#define CURSE_PLATFORM_WINDOWS_NAME "Windows"
+
+/*
+* For checking architecture, example:
+*   #if CURSE_ARCH == CURSE_ARCH_X86_64
+*   ...
+*   auto name = CURSE_ARCH_NAME;
+* ...
+* #endif
+*/
+#define CURSE_ARCH_X86_32 1
+#define CURSE_ARCH_X86_64 2
+#define CURSE_ARCH_X86_32_NAME "x86-32"
+#define CURSE_ARCH_X86_64_NAME "x86-64"
+
+/*
+* For checking if build is in debug or release mode, example:
+*   #if CURSE_BUILD == CURSE_BUILD_DEBUG
+*   ...
+*   auto name = CURSE_BUILD_NAME;
+*/
+#define CURSE_BUILD_DEBUG 1
+#define CURSE_BUILD_RELEASE 2
+#define CURSE_BUILD_DEBUG_NAME "Debug"
+#define CURSE_BUILD_RELEASE_NAME "Release"
+
+/*
+* DLL import or export, required for Windows, example:
+*   class CURSE_API MyClass {};
+*/
+#define CURSE_API
+
+/*
+* Disable anymous structure warnings,
+* by encapsulating with CURSE_ANONYMOUS_STRUCTURE_BEGIN and CURSE_ANONYMOUS_STRUCTURE_END.
+*/
 #define CURSE_ANONYMOUS_STRUCTURE_BEGIN
 #define CURSE_ANONYMOUS_STRUCTURE_END
 
 // Windows
 #if defined( _WIN32 ) || defined( __WIN32__ ) || defined( _WIN64 ) || defined( __WIN64__ )
-    #define CURSE_PLATFORM_WINDOWS
+    #define CURSE_PLATFORM CURSE_PLATFORM_WINDOWS
+    #define CURSE_PLATFORM_NAME CURSE_PLATFORM_WINDOWS_NAME
 
     #if defined(_M_ARM)
         #error Not supporting ARM architecture.
     #endif
 
     #if defined(_M_IX86)
-        #define CURSE_ARCH_X86_32
+        #define CURSE_ARCH CURSE_ARCH_X86_32
+        #define CURSE_ARCH_NAME CURSE_ARCH_X86_32_NAME
     #elif defined(_M_AMD64)
-        #define CURSE_ARCH_X86_64
+        #define CURSE_ARCH CURSE_ARCH_X86_64
+        #define CURSE_ARCH_NAME CURSE_ARCH_X86_64_NAME
     #else
         #error Unkown architecture.
     #endif
 
 // Linux
 #elif defined( linux ) || defined( __linux )
-    #define CURSE_PLATFORM_LINUX
+    #define CURSE_PLATFORM CURSE_PLATFORM_LINUX
+    #define CURSE_PLATFORM_NAME CURSE_PLATFORM_LINUX_NAME
 
     #if defined(__arm__)
         #error Not supporting ARM architecture.
@@ -60,9 +114,11 @@
 
     #if defined(__amd64__) || defined(__amd64)
         #if defined(__x86_64__) || defined(__x86_64)
-            #define CURSE_ARCH_X86_64
+            #define CURSE_ARCH CURSE_ARCH_X86_64
+            #define CURSE_ARCH_NAME CURSE_ARCH_X86_64_NAME
         #else
-            #define CURSE_ARCH_X86_32
+            #define CURSE_ARCH CURSE_ARCH_X86_32
+            #define CURSE_ARCH_NAME CURSE_ARCH_X86_32_NAME
         #endif
     #else
         #error Unkown architecture.
@@ -84,9 +140,11 @@
 
 // Build type
 #if defined( NDEBUG ) || !defined( _DEBUG )
-    #define CURSE_BUILD_RELEASE
+    #define CURSE_BUILD CURSE_BUILD_RELEASE
+    #define CURSE_BUILD_NAME CURSE_BUILD_RELEASE_NAME
 #else
-    #define CURSE_BUILD_DEBUG
+    #define CURSE_BUILD CURSE_BUILD_DEBUG
+    #define CURSE_BUILD_NAME CURSE_BUILD_DEBUG_NAME
 #endif
 
 // Export API
@@ -97,17 +155,14 @@
     #endif
 
     // Define as export or import, if FLARE_EXPORTS is defined.
-    #if defined(CURSE_PLATFORM_WINDOWS)
+    #if CURSE_PLATFORM == CURSE_PLATFORM_WINDOWS
+        #undef CURSE_API
         #if defined(CURSE_EXPORT)
             #define CURSE_API __declspec(dllexport)
         #else
             #define CURSE_API __declspec(dllimport)
         #endif
-    #else
-        #define CURSE_API
     #endif
-#else
-    #define CURSE_API
 #endif
 
 #endif // CURSE_CORE_HPP

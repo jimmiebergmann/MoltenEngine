@@ -25,7 +25,7 @@
 
 #include "Curse/Window/WindowX11.hpp"
 
-#if defined CURSE_PLATFORM_LINUX
+#if CURSE_PLATFORM == CURSE_PLATFORM_LINUX
 
 #include "Curse/System/Exception.hpp"
 #include <cstring>

@@ -28,6 +28,7 @@
 
 #include "Curse/Math/Vector.hpp"
 #include "Curse/Platform/Win32Headers.hpp"
+#include "Curse/Platform/X11Headers.hpp"
 #include <string>
 
 namespace Curse

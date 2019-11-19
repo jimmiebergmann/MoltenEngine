@@ -27,7 +27,7 @@
 #include "Curse/Renderer/OpenGL/RendererOpenGLX11.hpp"
 
 #if defined(CURSE_ENABLE_OPENGL)
-#if defined(CURSE_PLATFORM_LINUX)
+#if CURSE_PLATFORM == CURSE_PLATFORM_LINUX
 
 #include "Curse/Renderer/OpenGL/OpengGLFunctions.hpp"
 #include "Curse/Window/WindowBase.hpp"
@@ -40,10 +40,10 @@ namespace Curse
     {
     }
 
-    RendererOpenGLX11::RendererOpenGLX11(const WindowBase& window, const Version& version) :
+    RendererOpenGLX11::RendererOpenGLX11(const WindowBase& window, const Version& version, DebugCallback debugCallback) :
         RendererOpenGLX11()
     {
-        Open(window, version);
+        Open(window, version, debugCallback);
     }
 
     RendererOpenGLX11::~RendererOpenGLX11()
@@ -51,7 +51,7 @@ namespace Curse
         Close();
     }
 
-    void RendererOpenGLX11::Open(const WindowBase& /*window*/, const Version& /*version*/)
+    void RendererOpenGLX11::Open(const WindowBase& /*window*/, const Version& /*version*/, DebugCallback /*debugCallback*/)
     {
         /*HGLRC temporaryContext = NULL;
 

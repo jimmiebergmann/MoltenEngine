@@ -30,9 +30,9 @@
 
 #if defined(CURSE_ENABLE_OPENGL)
 
-#if defined(CURSE_PLATFORM_WINDOWS)
+#if CURSE_PLATFORM == CURSE_PLATFORM_WINDOWS
     #include "Curse/Renderer/OpenGL/RendererOpenGLWin32.hpp"
-#elif defined(CURSE_PLATFORM_LINUX)
+#elif CURSE_PLATFORM == CURSE_PLATFORM_LINUX
     #include "Curse/Renderer/OpenGL/RendererOpenGLX11.hpp"
 #endif
 

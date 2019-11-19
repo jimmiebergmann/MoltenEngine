@@ -28,7 +28,7 @@
 
 #include "Curse/Window/WindowBase.hpp"
 
-#if defined CURSE_PLATFORM_LINUX
+#if CURSE_PLATFORM == CURSE_PLATFORM_LINUX
 
 #include "Curse/Platform/X11Headers.hpp"
 #include "Curse/Memory/Reference.hpp"

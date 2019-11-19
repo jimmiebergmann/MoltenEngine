@@ -27,7 +27,7 @@
 #include "Curse/Renderer/OpenGL/RendererOpenGLWin32.hpp"
 
 #if defined(CURSE_ENABLE_OPENGL)
-#if defined(CURSE_PLATFORM_WINDOWS)
+#if CURSE_PLATFORM == CURSE_PLATFORM_WINDOWS
 
 #include "Curse/Renderer/OpenGL/OpengGLFunctions.hpp"
 #include "Curse/Window/WindowBase.hpp"
@@ -43,10 +43,10 @@ namespace Curse
     {
     }
 
-    RendererOpenGLWin32::RendererOpenGLWin32(const WindowBase& window, const Version& version) :
+    RendererOpenGLWin32::RendererOpenGLWin32(const WindowBase& window, const Version& version, DebugCallback debugCallback) :
         RendererOpenGLWin32()
     {
-        Open(window, version);
+        Open(window, version, debugCallback);
     }
 
     RendererOpenGLWin32::~RendererOpenGLWin32()
@@ -54,7 +54,7 @@ namespace Curse
         Close();
     }
 
-    void RendererOpenGLWin32::Open(const WindowBase& window, const Version& version)
+    void RendererOpenGLWin32::Open(const WindowBase& window, const Version& version, DebugCallback /*debugCallback*/)
     {
         HGLRC temporaryContext = NULL;
 

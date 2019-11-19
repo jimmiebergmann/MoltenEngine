@@ -28,9 +28,9 @@
 
 #include "Curse/Types.hpp"
 
-#if defined(CURSE_PLATFORM_WINDOWS)
+#if CURSE_PLATFORM == CURSE_PLATFORM_WINDOWS
     #include "Curse/Window/WindowWin32.hpp"
-#elif defined(CURSE_PLATFORM_LINUX)
+#elif CURSE_PLATFORM == CURSE_PLATFORM_LINUX
     #include "Curse/Window/WindowX11.hpp"
 #endif
 

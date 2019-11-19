@@ -31,6 +31,8 @@
 #if defined(CURSE_ENABLE_VULKAN)
 
 #include "Curse/Renderer/Renderer.hpp"
+#include "vulkan/vulkan.h"
+#include <vector>
 //#include "Curse/Platform/Win32Headers.hpp"
 
 namespace Curse
@@ -54,7 +56,7 @@ namespace Curse
         *
         * @param window[in] Render target window.
         */
-        RendererVulkan(const WindowBase& window, const Version& version);
+        RendererVulkan(const WindowBase& window, const Version& version, DebugCallback debugCallback = nullptr);
 
         /**
         * @brief Virtual destructor.
@@ -66,7 +68,7 @@ namespace Curse
         *
         * @param window[in] Render target window.
         */
-        virtual void Open(const WindowBase& window, const Version& version = Version::None);
+        virtual void Open(const WindowBase& window, const Version& version = Version::None, DebugCallback debugCallback = nullptr);
 
         /**
         * @brief Closing renderer.
@@ -91,9 +93,24 @@ namespace Curse
 
     private:
 
+        struct DebugMessenger
+        {
+            DebugMessenger();
+
+            VkDebugUtilsMessengerEXT messenger;
+            PFN_vkCreateDebugUtilsMessengerEXT CreateDebugUtilsMessengerEXT;
+            PFN_vkDestroyDebugUtilsMessengerEXT DestroyDebugUtilsMessengerEXT;
+            DebugCallback callback;
+        };
+
+        PFN_vkVoidFunction GetVulkanFunction(const char* functionName) const;
+        bool SetupDebugger(VkInstanceCreateInfo& instanceInfo, VkDebugUtilsMessengerCreateInfoEXT& debugMessageInfo, DebugCallback debugCallback);
+        bool GetRequiredExtensions(std::vector<const char*>& extensions) const;
+
         Version m_version;
-        //HDC m_deviceContext;
-        //HGLRC m_context;
+        VkInstance m_instance;
+        DebugMessenger m_debugMessenger;     
+        VkPhysicalDevice m_physicalDevice;
 
     };
 

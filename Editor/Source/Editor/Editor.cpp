@@ -7,9 +7,14 @@
 static int Run()
 {
     auto window = Curse::Window::Create("Curse Editor", Curse::Vector2ui32(800, 600));
-    auto renderer = Curse::Renderer::Create(Curse::Renderer::BackendApi::OpenGL);
+    
+    auto debugPrinter = [](const std::string & message)
+    {
+        std::cout << "[Debug] Renderer: " << message << std::endl;
+    };
 
-    renderer->Open(*window);
+    auto renderer = Curse::Renderer::Create(Curse::Renderer::BackendApi::Vulkan);
+    renderer->Open(*window, Curse::Version(1, 1), debugPrinter);
 
     window->Show();
 

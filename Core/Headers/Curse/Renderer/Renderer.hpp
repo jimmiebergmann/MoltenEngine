@@ -28,7 +28,7 @@
 
 #include "Curse/Memory/Reference.hpp"
 #include "Curse/System/Version.hpp"
-#include "Curse/Math/Vector.hpp"
+#include <functional>
 
 namespace Curse
 {
@@ -70,6 +70,12 @@ namespace Curse
         };
 
         /**
+        * @brief Debug callback function.
+        *        The function takes a const std::string & parameter for the debug message.
+        */
+        using DebugCallback = std::function<void(const std::string &)>;
+
+        /**
         * @brief Static function for creating any renderer by Type.
         *        Make sure to open the renderer before using it.
         *
@@ -87,7 +93,7 @@ namespace Curse
         *
         * @param window Render target window.
         */
-        virtual void Open(const WindowBase& window, const Version& version = Version::None) = 0;
+        virtual void Open(const WindowBase& window, const Version& version = Version::None, DebugCallback debugCallback = nullptr) = 0;
 
         /**
         * @brief Closing renderer.

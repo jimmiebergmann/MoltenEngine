@@ -29,7 +29,7 @@
 #include "Curse/Core.hpp"
 
 #if defined(CURSE_ENABLE_OPENGL)
-#if defined(CURSE_PLATFORM_WINDOWS)
+#if CURSE_PLATFORM == CURSE_PLATFORM_WINDOWS
 
 #include "Curse/Renderer/Renderer.hpp"
 #include "Curse/Platform/Win32Headers.hpp"
@@ -55,7 +55,7 @@ namespace Curse
         *
         * @param window[in] Render target window.
         */
-        RendererOpenGLWin32(const WindowBase & window, const Version& version);
+        RendererOpenGLWin32(const WindowBase & window, const Version& version, DebugCallback debugCallback = nullptr);
 
         /**
         * @brief Virtual destructor.
@@ -67,7 +67,7 @@ namespace Curse
         *
         * @param window[in] Render target window.
         */
-        virtual void Open(const WindowBase & window, const Version& version = Version::None);
+        virtual void Open(const WindowBase & window, const Version& version = Version::None, DebugCallback debugCallback = nullptr);
 
         /**
         * @brief Closing renderer.

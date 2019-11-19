@@ -28,7 +28,7 @@
 
 #include "Curse/Core.hpp"
 
-#if defined CURSE_PLATFORM_WINDOWS
+#if CURSE_PLATFORM == CURSE_PLATFORM_WINDOWS
 
 #include <Windows.h>
 
