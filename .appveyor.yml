@@ -86,8 +86,8 @@ install:
   - ps: >-
       if($env:CURSE_ENABLE_VULKAN)
       { 
-        echo Vulkan is enabled for this build.
-        echo Check cache and install.
+        echo "Vulkan is enabled for this build."
+        echo "Check cache and install."
         
         cd C:\ProgramData
         ls
@@ -99,23 +99,26 @@ install:
         ls
         if(!(Test-Path VulkanSDK_Latest.exe -PathType Leaf))
         { 
-          echo Downloading Vulkan.
+          echo "Downloading Vulkan."
           wget "https://vulkan.lunarg.com/sdk/download/1.1.126.0/windows/VulkanSDK-1.1.126.0-Installer.exe?Human=true" -outfile "VulkanSDK_Latest.exe"
-          echo Download of Vulkan is complete.
+          echo "Download of Vulkan is complete."
           ls
         }
-        echo Installing Vulkan.
-        .\VulkanSDK_Latest.exe
-        echo Installing Vulkan is complete.
+        echo "Installing Vulkan."
+        .\VulkanSDK_Latest.exe /S
+        echo "Installing Vulkan is complete."
         
+        echo "Changing to appVeyor build folder: $env:APPVEYOR_BUILD_FOLDER"
         cd $env:APPVEYOR_BUILD_FOLDER
       }
       else
       {
-        echo Ignoring vulkan.
+        echo "Ignoring vulkan."
       }
   
 build_script:
+  - ls
+  - cd %APPVEYOR_BUILD_FOLDER%
   - mkdir Build
   - cd Build
   - echo %configuration%
