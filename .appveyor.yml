@@ -122,7 +122,7 @@ build_script:
   - mkdir Build
   - cd Build
   - echo %configuration%
-  - cmake -G "%generator%" -A "%arch%" "-DCMAKE_BUILD_TYPE=%configuration%" -DCURSE_ENABLE_VULKAN=Off %CURSE_ENABLE_VULKAN%" ..
+  - cmake -G "%generator%" -A "%arch%" "-DCMAKE_BUILD_TYPE=%configuration%" "-DCURSE_ENABLE_VULKAN=Off" "%CURSE_ENABLE_VULKAN%" ..
   - cmake --build . --config %configuration%
    
 after_build:
