@@ -26,16 +26,6 @@
 namespace Curse
 {
 
-    // Matrix X * Y
-    template<size_t _Rows, size_t _Columns, typename T>
-    constexpr size_t Matrix<_Rows, _Columns, T>::Rows;
-
-    template<size_t _Rows, size_t _Columns, typename T>
-    constexpr size_t Matrix<_Rows, _Columns, T>::Columns;
-
-    template<size_t _Rows, size_t _Columns, typename T>
-    constexpr size_t Matrix<_Rows, _Columns, T>::Components;
-
     template<size_t _Rows, size_t _Columns, typename T>
     Matrix<_Rows, _Columns, T>::Matrix()
     {
@@ -61,31 +51,59 @@ namespace Curse
     }
 
     template<typename T>
-    inline Matrix<4, 4, T> Matrix<4, 4, T>::Perspective(const T fov, const T aspect, const T zNear, const T zFar)
+    inline Matrix<4, 4, T> Matrix<4, 4, T>::Perspective(const T fov, const T aspect, const T near, const T far)
     {
         static constexpr T radiansExpr = static_cast<T>(1) / (static_cast<T>(2) * Constants::Pi<T>() / static_cast<T>(180));
         const T fovRadians = fov * radiansExpr;
         const T sine = std::sin(fovRadians);
-        const T zRange = zFar - zNear;    
+        const T zRange = far - near;    
 
-        if (zRange == static_cast<T>(0) || sine == static_cast<T>(0) || aspect == static_cast<T>(0))
+        if (zRange == static_cast<T>(0) )
         {
-            return {};
+            throw Exception("Matrix::Perspective: Difference between near and far is 0.");
+        }
+        if (sine == static_cast<T>(0) )
+        {
+            throw Exception("Matrix::Perspective: FOV is 0 or invalid.");
+        }
+        if (aspect == static_cast<T>(0))
+        {
+            throw Exception("Matrix::Perspective: Aspect ratio is 0.");
         }
 
         const T cotan = std::cos(fovRadians) / sine;
 
-        return { cotan / aspect,    static_cast<T>(0), static_cast<T>(0),        static_cast<T>(0),
-                 static_cast<T>(0), cotan,             static_cast<T>(0),        static_cast<T>(0),
-                 static_cast<T>(0), static_cast<T>(0), -(zFar + zNear) / zRange, static_cast<T>(-1),
-                 static_cast<T>(0), static_cast<T>(0) , static_cast<T>(-2) * zNear * zFar / zRange, static_cast<T>(0) };
+        return { cotan / aspect,    static_cast<T>(0), static_cast<T>(0),                       static_cast<T>(0),
+                 static_cast<T>(0), cotan,             static_cast<T>(0),                       static_cast<T>(0),
+                 static_cast<T>(0), static_cast<T>(0), -(far + near) / zRange,                  static_cast<T>(-1),
+                 static_cast<T>(0), static_cast<T>(0), static_cast<T>(-2) * near* far / zRange, static_cast<T>(0) };
     }
 
     template<typename T>
     inline Matrix<4, 4, T> Matrix<4, 4, T>::Orthographic(const T left, const T right, const T bottom, const T top,
-                                                         const T zNear, const T zFar)
-    {
-        return {};
+                                                         const T near, const T far)
+    {     
+        const T rangeX = right - left;
+        const T rangeY = top - bottom;
+        const T rangeZ = near - far;
+
+        if (rangeX == static_cast<T>(0))
+        {
+            throw Exception("Matrix::Perspective: Difference between left and right is 0.");
+        }
+        if (rangeY == static_cast<T>(0))
+        {
+            throw Exception("Matrix::Perspective: Difference between top and bottom is 0.");
+        }
+        if (rangeZ == static_cast<T>(0))
+        {
+            throw Exception("Matrix::Perspective: Difference between near and far is 0.");
+        }
+
+        return { static_cast<T>(2) / rangeX, static_cast<T>(0), static_cast<T>(0),  -(right + left) / rangeX,
+                 static_cast<T>(0), static_cast<T>(2) / rangeY, static_cast<T>(0),  -(top + bottom) / rangeY,
+                 static_cast<T>(0), static_cast<T>(0), static_cast<T>(-2) / rangeZ, -(far + near) / rangeZ,
+                 static_cast<T>(0), static_cast<T>(0), static_cast<T>(0), static_cast<T>(1) };
     }
 
     template<typename T>

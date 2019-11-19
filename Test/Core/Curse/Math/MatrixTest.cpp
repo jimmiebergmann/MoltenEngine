@@ -58,6 +58,14 @@ namespace Curse
             EXPECT_EQ(Matrix4x4f64::Columns, size_t(4));
             EXPECT_EQ(Matrix4x4f64::Components, size_t(16));
         }
+        {
+            using sizeofType = decltype(sizeof(int32_t));
+
+            EXPECT_EQ(sizeof(Matrix4x4i32), sizeofType(64));
+            EXPECT_EQ(sizeof(Matrix4x4i64), sizeofType(128));
+            EXPECT_EQ(sizeof(Matrix4x4f32), sizeofType(64));
+            EXPECT_EQ(sizeof(Matrix4x4f64), sizeofType(128));
+        }
     }
 
     TEST(Math, Matrix)
@@ -205,8 +213,21 @@ namespace Curse
     }
 
     TEST(Math, Matrix4x4_Perspective)
-    {
+    {       
         EXPECT_NO_THROW(Matrix4x4f32::Perspective(60.0f, 1.0f, 1.0f, 0.0f));
+
+        EXPECT_THROW(Matrix4x4f32::Perspective(0.0f, 1.0f, 1.0f, 0.0f), Exception);
+        EXPECT_THROW(Matrix4x4f32::Perspective(60.0f, 0.0f, 1.0f, 0.0f), Exception);
+        EXPECT_THROW(Matrix4x4f32::Perspective(60.0f, 1.0f, 1.0f, 1.0f), Exception);
+    }
+
+    TEST(Math, Matrix4x4_Orthographic)
+    {
+        EXPECT_NO_THROW(Matrix4x4f32::Orthographic(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f));
+
+        EXPECT_THROW(Matrix4x4f32::Orthographic(1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f), Exception);
+        EXPECT_THROW(Matrix4x4f32::Orthographic(-1.0f, 1.0f, 1.0f, 1.0f, -1.0f, 1.0f), Exception);
+        EXPECT_THROW(Matrix4x4f32::Orthographic(-1.0f, 1.0f, -1.0f, 1.0f, 1.0f, 1.0f), Exception);
     }
 
     TEST(Math, Matrix4x4_Mult)

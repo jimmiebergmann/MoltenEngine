@@ -493,7 +493,7 @@ namespace Curse
             return m_controller->m_object[index];
         }
 
-        throw Exception("Array out of bound.");
+        throw Exception("Accessing null ptr.");
     }
 
     template<typename T>

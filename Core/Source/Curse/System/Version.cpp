@@ -73,11 +73,7 @@ namespace Curse
         {
             return true;
         }
-        if (Patch < version.Patch)
-        {
-            return true;
-        }
-        return false;
+        return Patch < version.Patch;
     }
 
     bool Version::operator <= (const Version& version) const
@@ -95,11 +91,7 @@ namespace Curse
         {
             return true;
         }
-        if (Patch > version.Patch)
-        {
-            return true;
-        }
-        return false;
+        return Patch > version.Patch;
     }
 
     bool Version::operator >= (const Version& version) const

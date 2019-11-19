@@ -28,6 +28,7 @@
 
 #include "Curse/Math.hpp"
 #include "Curse/Math/Vector.hpp"
+#include "Curse/System/Exception.hpp"
 
 namespace Curse
 {
@@ -41,9 +42,9 @@ namespace Curse
 
     public:
 
-        static constexpr size_t Rows = _Rows;
-        static constexpr size_t Columns = _Columns;
-        static constexpr size_t Components = Rows * Columns;
+        constexpr static size_t Rows = _Rows;
+        constexpr static size_t Columns = _Columns;
+        constexpr static size_t Components = Rows * Columns;
         using Type = T;
 
         /**
@@ -69,9 +70,9 @@ namespace Curse
 
     public:
 
-        static constexpr size_t Rows = 4;
-        static constexpr size_t Columns = 4;
-        static constexpr size_t Components = Rows * Columns;
+        constexpr static size_t Rows = 4;
+        constexpr static size_t Columns = 4;
+        constexpr static size_t Components = Rows * Columns;
         using Type = T;
 
         /**
@@ -82,14 +83,14 @@ namespace Curse
         /**
         * @brief Creates a perspective projection matrix.
         */
-        static Matrix<4, 4, T> Perspective(const T fov, const T aspect, const T zNear, const T zFar);
+        static Matrix<4, 4, T> Perspective(const T fov, const T aspect, const T near, const T far);
 
 
         /**
         * @brief Creates an orthographic projection matrix.
         */
         static Matrix<4, 4, T> Orthographic(const T left, const T right, const T bottom, const T top,
-                                            const T zNear, const T zFar);
+                                            const T near, const T far);
 
         /**
         * @brief Constructor.
