@@ -188,7 +188,7 @@ namespace Curse
         /**
         * @brief Data type of reference.
         */
-        using Type = std::remove_reference_t<decltype(*std::declval<T[]>())>;
+        using Type = T;
         using TypePtr = Type*;
         using TypeRef = Type&;
 

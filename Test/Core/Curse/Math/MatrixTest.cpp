@@ -62,8 +62,8 @@ namespace Curse
 
     TEST(Math, Matrix)
     {
-        const size_t rows = 6;
-        const size_t columns = 10;
+        const int32_t rows = 6;
+        const int32_t columns = 10;
         Matrix<rows, columns, int32_t> matrix;
 
         for (int32_t i = 0; i < rows * columns; i++)
@@ -206,7 +206,7 @@ namespace Curse
 
     TEST(Math, Matrix4x4_Perspective)
     {
-        auto mat = Matrix4x4f32::Perspective(60.0f, 1.0f, 1.0f, 0.0f);
+        EXPECT_NO_THROW(Matrix4x4f32::Perspective(60.0f, 1.0f, 1.0f, 0.0f));
     }
 
 }

@@ -268,9 +268,9 @@ namespace Curse
 
         struct MyObj
         {
-            MyObj(bool& destroyed) :
-                destroyed(destroyed),
-                value(5000)
+            MyObj(bool& destroyed) :               
+                value(5000),
+                destroyed(destroyed)
             {
                 EXPECT_FALSE(destroyed);
             }
