@@ -107,6 +107,7 @@ install:
         echo "Installing Vulkan."
         Start-Process VulkanSDK_Latest.exe /S -Wait
         echo "Installing Vulkan is complete."
+        ls
         echo "Vulkan SDK path: $env:VULKAN_SDK"
         
         echo "Changing to appVeyor build folder: $env:APPVEYOR_BUILD_FOLDER"
