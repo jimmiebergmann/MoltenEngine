@@ -7,7 +7,7 @@ environment:
       configuration: Debug
       output_name_postfix: Debug
       arch: x64
-      CURSE_ENABLE_VULKAN: -DCURSE_ENABLE_VULKAN
+      CURSE_ENABLE_VULKAN: -DCURSE_ENABLE_VULKAN=On
       
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
       compiler: msvc-16-seh
@@ -84,7 +84,7 @@ install:
   
   # Vulkan cache installer
   - ps: >-
-      if(!$env:CURSE_ENABLE_VULKAN)
+      if($env:CURSE_ENABLE_VULKAN)
       { 
         echo Vulkan is enabled for this build.
         echo Check cache and install.
@@ -100,7 +100,7 @@ install:
         if(!(Test-Path VulkanSDK_Latest.exe -PathType Leaf))
         { 
           echo Downloading Vulkan.
-          wget "https://vulkan.lunarg.com/sdk/home#sdk/downloadConfirm/latest/windows/vulkan-sdk.exe?Human=true" -outfile "VulkanSDK_Latest.exe"
+          wget "https://vulkan.lunarg.com/sdk/download/1.1.126.0/windows/VulkanSDK-1.1.126.0-Installer.exe?Human=true" -outfile "VulkanSDK_Latest.exe"
           echo Download of Vulkan is complete.
           ls
         }
@@ -119,7 +119,7 @@ build_script:
   - mkdir Build
   - cd Build
   - echo %configuration%
-  - cmake -G "%generator%" -A "%arch%" "-DCMAKE_BUILD_TYPE=%configuration%" %CURSE_ENABLE_VULKAN%" ..
+  - cmake -G "%generator%" -A "%arch%" "-DCMAKE_BUILD_TYPE=%configuration%" -DCURSE_ENABLE_VULKAN=Off %CURSE_ENABLE_VULKAN%" ..
   - cmake --build . --config %configuration%
    
 after_build:
