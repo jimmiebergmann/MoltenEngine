@@ -55,8 +55,8 @@ namespace Curse
     inline Matrix<4, 4, T> Matrix<4, 4, T>::Perspective(const T fov, const T aspect, const T zNear, const T zFar)
     {
         static constexpr T radiansExpr = static_cast<T>(1) / (static_cast<T>(2) * Constants::Pi<T>() / static_cast<T>(180));
-        const T radians = fov * radiansExpr;
-        const T sine = std::sin(radians);
+        const T fovRadians = fov * radiansExpr;
+        const T sine = std::sin(fovRadians);
         const T zRange = zFar - zNear;    
 
         if (zRange == static_cast<T>(0) || sine == static_cast<T>(0) || aspect == static_cast<T>(0))
@@ -64,12 +64,12 @@ namespace Curse
             return {};
         }
 
-        const T cotan = std::cos(radians) / sine;
+        const T cotan = std::cos(fovRadians) / sine;
 
         return { cotan / aspect,    static_cast<T>(0), static_cast<T>(0),        static_cast<T>(0),
                  static_cast<T>(0), cotan,             static_cast<T>(0),        static_cast<T>(0),
                  static_cast<T>(0), static_cast<T>(0), -(zFar + zNear) / zRange, static_cast<T>(-1),
-                 static_cast<T>(0), static_cast<T>(0) , 0, static_cast<T>(0) };
+                 static_cast<T>(0), static_cast<T>(0) , static_cast<T>(-2) * zNear * zFar / zRange, static_cast<T>(0) };
     }
 
     template<typename T>
@@ -95,7 +95,12 @@ namespace Curse
            e5,  e6,  e7,  e8,
            e9,  e10, e11, e12,
            e13, e14, e15, e16 }
-    {
-    }
+    {}
+
+    template<typename T>
+    inline Matrix<4, 4, T>::Matrix(const Vector4<T>& row1, const Vector4<T>& row2,
+                                   const Vector4<T>& row3, const Vector4<T>& row4) :
+        row{ row1, row2, row3, row4 }
+    {}
 
 }

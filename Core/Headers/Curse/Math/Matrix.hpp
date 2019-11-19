@@ -100,6 +100,11 @@ namespace Curse
                const T e9,  const T e10, const T e11, const T e12,
                const T e13, const T e14, const T e15, const T e16);
 
+        /**
+        * @brief Constructing and initializing all elements.
+        */
+        Matrix(const Vector4<T>& row1, const Vector4<T>& row2, const Vector4<T>& row3, const Vector4<T>& row4);
+
         union
         {        
             T e[Components];    //< Elements of matrix.
