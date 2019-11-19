@@ -28,9 +28,9 @@
 
 #if defined(CURSE_ENABLE_OPENGL)
 
-#if defined(CURSE_PLATFORM_WINDOWS)
+#if CURSE_PLATFORM == CURSE_PLATFORM_WINDOWS
     #define GetProcAddress(ext) ::wglGetProcAddress(ext)
-#elif defined(CURSE_PLATFORM_LINUX)
+#elif CURSE_PLATFORM == CURSE_PLATFORM_LINUX
     #define GetProcAddress(ext) glXGetProcAddress((const GLubyte *)ext)
 #endif
 

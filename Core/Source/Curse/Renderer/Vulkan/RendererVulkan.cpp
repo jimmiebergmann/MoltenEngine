@@ -404,7 +404,7 @@ namespace Curse
             throw Exception("Failed to find any physical device supporting the requirements.");
         }
 
-        m_physicalDevice = scoredDevices.rbegin()->second;;
+        m_physicalDevice = scoredDevices.rbegin()->second;
     }
 
     bool RendererVulkan::ScorePhysicalDevice(PhysicalDevice& physicalDevice, uint32_t& score)
@@ -417,7 +417,9 @@ namespace Curse
         vkGetPhysicalDeviceProperties(device, &deviceProps);
         vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
 
-        if (!deviceFeatures.geometryShader || !CheckDeviceExtensionSupport(physicalDevice))
+        if (!deviceFeatures.geometryShader ||
+            !CheckDeviceExtensionSupport(physicalDevice) ||
+            !FetchSwapChainSupport(physicalDevice))
         {
             return false;
         }
@@ -514,6 +516,36 @@ namespace Curse
         return missingExtensions.size() == 0;
     }
 
+    bool RendererVulkan::FetchSwapChainSupport(PhysicalDevice& physicalDevice)
+    {
+        VkPhysicalDevice device = physicalDevice.device;
+        SwapChainSupport& support = physicalDevice.swapChainSupport;
+        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, m_surface, &support.capabilities);
+
+        uint32_t formatCount;
+        vkGetPhysicalDeviceSurfaceFormatsKHR(device, m_surface, &formatCount, nullptr);
+        if (!formatCount)
+        {
+            return false;
+        }
+
+        support.formats.resize(formatCount);
+        vkGetPhysicalDeviceSurfaceFormatsKHR(device, m_surface, &formatCount, support.formats.data());
+
+        uint32_t presentModeCount;
+        vkGetPhysicalDeviceSurfacePresentModesKHR(device, m_surface, &presentModeCount, nullptr);
+
+        if (!presentModeCount)
+        {
+            return false;
+        }
+        
+        support.presentModes.resize(presentModeCount);
+        vkGetPhysicalDeviceSurfacePresentModesKHR(device, m_surface, &presentModeCount, support.presentModes.data());
+
+        return true;
+    }
+
     void RendererVulkan::LoadLogicalDevice()
     {
         std::vector<VkDeviceQueueCreateInfo> queueInfos;
@@ -537,8 +569,10 @@ namespace Curse
         deviceInfo.queueCreateInfoCount = static_cast<uint32_t>(queueInfos.size());
         deviceInfo.pQueueCreateInfos = queueInfos.data();
         deviceInfo.pEnabledFeatures = &deviceFeatures;
-        deviceInfo.enabledLayerCount = 0;
+        deviceInfo.enabledExtensionCount = static_cast<uint32_t>(m_deviceExtensions.size());
+        deviceInfo.ppEnabledExtensionNames = m_deviceExtensions.data();
 
+        deviceInfo.enabledLayerCount = 0;
         if (m_debugMessenger.validationDebugger)
         {
             deviceInfo.enabledLayerCount = static_cast<uint32_t>(m_validationLayers.size());

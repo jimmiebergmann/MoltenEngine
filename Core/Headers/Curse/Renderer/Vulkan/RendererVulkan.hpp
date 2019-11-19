@@ -113,6 +113,13 @@ namespace Curse
             DebugCallback callback;
         };
 
+        struct SwapChainSupport
+        {
+            VkSurfaceCapabilitiesKHR capabilities;
+            std::vector<VkSurfaceFormatKHR> formats;
+            std::vector<VkPresentModeKHR> presentModes;
+        };
+
         struct PhysicalDevice
         {
             PhysicalDevice();
@@ -123,7 +130,8 @@ namespace Curse
             VkPhysicalDevice device;
             uint32_t graphicsQueueIndex;
             uint32_t presentQueueIndex;
-        };
+            SwapChainSupport swapChainSupport;
+        };  
 
         PFN_vkVoidFunction GetVulkanFunction(const char* functionName) const;
         void LoadInstance(const Version& version, DebugCallback debugCallback);
@@ -133,7 +141,8 @@ namespace Curse
         void LoadPhysicalDevice();
         bool ScorePhysicalDevice(PhysicalDevice& physicalDevice, uint32_t & score);
         bool CheckDeviceExtensionSupport(PhysicalDevice & physicalDevice);
-        void LoadLogicalDevice();      
+        bool FetchSwapChainSupport(PhysicalDevice& physicalDevice);
+        void LoadLogicalDevice();           
 
         Version m_version;
         VkInstance m_instance;
