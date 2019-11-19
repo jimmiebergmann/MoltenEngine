@@ -28,7 +28,7 @@
 
 #include "Curse/Renderer/OpenGL/OpengGLHeaders.hpp"
 
-#if CURSE_OPENGL_IS_AVAILABLE
+#if defined(CURSE_ENABLE_OPENGL)
 
 namespace Curse
 {

@@ -26,7 +26,7 @@
 
 #include "Curse/Renderer/OpenGL/RendererOpenGLWin32.hpp"
 
-#if CURSE_OPENGL_IS_AVAILABLE
+#if defined(CURSE_ENABLE_OPENGL)
 #if defined(CURSE_PLATFORM_WINDOWS)
 
 #include "Curse/Renderer/OpenGL/OpengGLFunctions.hpp"
@@ -203,7 +203,7 @@ namespace Curse
     {
         static const std::vector<Version> versions =
         {
-            Version(4, 9),
+            Version(4, 6),
             Version(4, 5),
             Version(4, 4),
             Version(4, 3),

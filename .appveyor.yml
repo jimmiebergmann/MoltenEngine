@@ -7,6 +7,7 @@ environment:
       configuration: Debug
       output_name_postfix: Debug
       arch: x64
+      CURSE_ENABLE_VULKAN: -DCURSE_ENABLE_VULKAN
       
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
       compiler: msvc-16-seh
@@ -73,16 +74,52 @@ environment:
       generator: "Visual Studio 14 2015 Win64"
       configuration: Release
       
+cache:
+  - C:\ProgramData\VulkanSDK_Installer -> appveyor.yml
+      
   
 install:
   - git submodule update --init --recursive
   - cmake --version
   
+  # Vulkan cache installer
+  - ps: >-
+      if(!$env:CURSE_ENABLE_VULKAN)
+      { 
+        echo Vulkan is enabled for this build.
+        echo Check cache and install.
+        
+        cd C:\ProgramData
+        ls
+        if(!(Test-Path VulkanSDK_Installer))
+        {
+          mkdir VulkanSDK_Installer
+        }
+        cd VulkanSDK_Installer
+        ls
+        if(!(Test-Path VulkanSDK_Latest.exe -PathType Leaf))
+        { 
+          echo Downloading Vulkan.
+          wget "https://vulkan.lunarg.com/sdk/home#sdk/downloadConfirm/latest/windows/vulkan-sdk.exe?Human=true" -outfile "VulkanSDK_Latest.exe"
+          echo Download of Vulkan is complete.
+          ls
+        }
+        echo Installing Vulkan.
+        .\VulkanSDK_Latest.exe
+        echo Installing Vulkan is complete.
+        
+        cd $env:APPVEYOR_BUILD_FOLDER
+      }
+      else
+      {
+        echo Ignoring vulkan.
+      }
+  
 build_script:
   - mkdir Build
   - cd Build
   - echo %configuration%
-  - cmake -G "%generator%" -A "%arch%" "-DCMAKE_BUILD_TYPE=%configuration%" ..
+  - cmake -G "%generator%" -A "%arch%" "-DCMAKE_BUILD_TYPE=%configuration%" %CURSE_ENABLE_VULKAN%" ..
   - cmake --build . --config %configuration%
    
 after_build:

@@ -28,7 +28,7 @@
 
 #include "Curse/Types.hpp"
 
-#if CURSE_OPENGL_IS_AVAILABLE
+#if defined(CURSE_ENABLE_OPENGL)
 
 #if defined(CURSE_PLATFORM_WINDOWS)
     #include "Curse/Renderer/OpenGL/RendererOpenGLWin32.hpp"

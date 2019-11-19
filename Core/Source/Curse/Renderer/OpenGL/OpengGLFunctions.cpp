@@ -26,11 +26,12 @@
 
 #include "Curse/Renderer/OpenGL/OpengGLFunctions.hpp"
 
-#if CURSE_OPENGL_IS_AVAILABLE
+#if defined(CURSE_ENABLE_OPENGL)
 
 #if defined(CURSE_PLATFORM_WINDOWS)
     #define GetProcAddress(ext) ::wglGetProcAddress(ext)
-#elif defined( CURSE_PLATFORM_LINUX )
+#elif defined(CURSE_PLATFORM_LINUX)
+    #define GetProcAddress(ext) glXGetProcAddress((const GLubyte *)ext)
 #endif
 
 #include "Curse/System/Exception.hpp"

@@ -65,7 +65,8 @@ namespace Curse
         */
         enum class BackendApi
         {
-            OpenGL
+            OpenGL,
+            Vulkan
         };
 
         /**

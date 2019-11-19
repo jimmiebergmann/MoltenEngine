@@ -23,24 +23,23 @@
 *
 */
 
-#ifndef CURSE_CORE_RENDERER_OPENGL_RENDEREROPENGLX11_HPP
-#define CURSE_CORE_RENDERER_OPENGL_RENDEREROPENGLX11_HPP
+#ifndef CURSE_CORE_RENDERER_VULKAN_RENDERERVULKAN_HPP
+#define CURSE_CORE_RENDERER_VULKAN_RENDERERVULKAN_HPP
 
 #include "Curse/Core.hpp"
 
-#if defined(CURSE_ENABLE_OPENGL)
-#if defined(CURSE_PLATFORM_LINUX)
+#if defined(CURSE_ENABLE_VULKAN)
 
 #include "Curse/Renderer/Renderer.hpp"
-
+//#include "Curse/Platform/Win32Headers.hpp"
 
 namespace Curse
 {
 
     /**
-    * @brief OpenGL renderer class for Win32.
+    * @brief Vulkan renderer class.
     */
-    class CURSE_API RendererOpenGLX11 : public Renderer
+    class CURSE_API RendererVulkan : public Renderer
     {
 
     public:
@@ -48,26 +47,26 @@ namespace Curse
         /**
         * @brief Constructor.
         */
-        RendererOpenGLX11();
+        RendererVulkan();
 
         /**
         * @brief Constructs and creates renderer.
         *
         * @param window[in] Render target window.
         */
-        RendererOpenGLX11(const WindowBase & window, const Version& version);
+        RendererVulkan(const WindowBase& window, const Version& version);
 
         /**
         * @brief Virtual destructor.
         */
-        ~RendererOpenGLX11();
+        ~RendererVulkan();
 
         /**
         * @brief Opens renderer.
         *
         * @param window[in] Render target window.
         */
-        virtual void Open(const WindowBase & window, const Version& version = Version::None);
+        virtual void Open(const WindowBase& window, const Version& version = Version::None);
 
         /**
         * @brief Closing renderer.
@@ -92,31 +91,13 @@ namespace Curse
 
     private:
 
-        /**
-        * @brief Open opengl context by provided version.
-        *
-        * @param version[in] Opened version.
-        *
-        * @throw Exception If failed to open provided version.
-        */
-       // bool OpenVersion(HDC deviceContext, const Version& version);
-
-        /**
-        * @brief Open the best available opengl context.
-        *
-        * @param version[out] Opened version.
-        *
-        * @throw Exception If failed to open any opengl context.
-        */
-        //void OpenBestVersion(HDC deviceContext, Version& version);
-
         Version m_version;
+        //HDC m_deviceContext;
+        //HGLRC m_context;
 
     };
 
 }
-
-#endif
 
 #endif
 

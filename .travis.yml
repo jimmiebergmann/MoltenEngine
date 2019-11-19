@@ -49,6 +49,12 @@ matrix:
         
 before_script:
   - export DISPLAY=:99.0; sh -e /etc/init.d/xvfb start
+  #- mkdir VulkanSDK_latest
+  #- cd VulkanSDK_latest
+  #- wget -O VulkanSDK_latest.run https://vulkan.lunarg.com/sdk/download/1.0.51.0/linux/vulkansdk-linux-x86_64-1.0.51.0.run?Human=true
+  #- tar xf $HOME/Downloads/vulkansdk-linux-x86_64-1.1.xx.y.tar.gz
+  #- cd ..
+  
   
 script:
   # Checks
@@ -58,7 +64,7 @@ script:
   # Build
   - mkdir Build
   - cd Build
-  - cmake -DCURSE_ENABLE_COVERAGE=ON -DCMAKE_BUILD_TYPE=${CONFIG} ..
+  - cmake -DCURSE_ENABLE_COVERAGE=ON -DCURSE_ENABLE_VULKAN=OFF -DCMAKE_BUILD_TYPE=${CONFIG} ..
   - cmake --build . --config ${CONFIG}
   # Run test
   - cd ../Bin

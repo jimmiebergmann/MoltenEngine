@@ -2,7 +2,9 @@ project (Curse)
 cmake_minimum_required(VERSION 3.1)
 include(${CMAKE_CURRENT_SOURCE_DIR}/../CMake/Tools.cmake)
 
+
 # Options.
+option(CURSE_ENABLE_VULKAN "Enables OpenGL." ON)
 option(CURSE_ENABLE_OPENGL "Enables OpenGL." ON)
 option(CURSE_ENABLE_COVERAGE "Enables coverage reporting." OFF)
 
@@ -11,7 +13,7 @@ option(CURSE_ENABLE_COVERAGE "Enables coverage reporting." OFF)
 if(UNIX AND NOT APPLE)
 	option(CURSE_ENABLE_X11 "Enables X server." ON)
 
-  set(LINUX TRUE)
+	set(LINUX TRUE)
 	find_package(Threads)
 	
 	if(CURSE_ENABLE_OPENGL AND (NOT CURSE_ENABLE_X11))
@@ -19,6 +21,12 @@ if(UNIX AND NOT APPLE)
 	endif()
 else()
 	set(CURSE_ENABLE_X11 OFF)
+endif()
+
+# Vulkan configurations
+if(CURSE_ENABLE_VULKAN)
+	include(${CMAKE_CURRENT_SOURCE_DIR}/../CMake/FindVulkan.cmake)
+	message("FOUND Vulkan: ${Vulkan_FOUND}, Lib: ${Vulkan_LIBRARY}")
 endif()
 
 # OpenGL configurations
@@ -57,8 +65,9 @@ message("Current source dir: ${CMAKE_CURRENT_SOURCE_DIR}")
 message("Code coverage: ${CURSE_ENABLE_COVERAGE}")
 
 
-include_directories ("${CoreHeadersDir}")
+#include_directories ("${CoreHeadersDir}")
 add_library(Curse SHARED "${CoreSources}" "${CoreHeaders}")  
+target_include_directories(Curse PUBLIC "${CoreHeadersDir}")
 
 CreateSourceGroups("${CoreSources}" "${CoreSourceDir}")
 CreateSourceGroups("${CoreHeaders}" "${CoreHeadersDir}")
@@ -84,6 +93,12 @@ set_target_properties( Curse
 if(CURSE_ENABLE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU")
   set_target_properties(Curse PROPERTIES COMPILE_FLAGS "-lgcov --coverage")
   target_link_libraries(Curse "gcov")
+endif()
+
+if(CURSE_ENABLE_VULKAN AND Vulkan_FOUND )
+	target_include_directories(Curse PRIVATE "${Vulkan_INCLUDE}")
+	target_link_libraries(Curse ${Vulkan_LIBRARY})	
+	target_compile_definitions(Curse PUBLIC "CURSE_ENABLE_VULKAN")
 endif()
 
 if(CURSE_ENABLE_OPENGL AND OpenGL_FOUND )

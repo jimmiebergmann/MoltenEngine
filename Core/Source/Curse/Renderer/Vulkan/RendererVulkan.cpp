@@ -23,24 +23,58 @@
 *
 */
 
-#ifndef CURSE_CORE_RENDERER_OPENGL_OPENGLHEADERS_HPP
-#define CURSE_CORE_RENDERER_OPENGL_OPENGLHEADERS_HPP
 
-#include "Curse/Core.hpp"
+#include "Curse/Renderer/Vulkan/RendererVulkan.hpp"
 
-#if defined(CURSE_ENABLE_OPENGL)
+#if defined(CURSE_ENABLE_VULKAN)
 
-#if defined(CURSE_PLATFORM_WINDOWS)
-    #include "Curse/Platform/Win32headers.hpp"
-    #include <GL/gl.h>
-    #include "Curse/Renderer/OpenGL/wglext.h"
-    #include "Curse/Renderer/OpenGL/glext.h"
-#elif defined(CURSE_PLATFORM_LINUX)
-    #include "Curse/Platform/X11Headers.hpp"
-    #include <GL/gl.h>
-    #include "Curse/Renderer/OpenGL/glext.h"
-#endif
+#include "Curse/Window/WindowBase.hpp"
+#include "Curse/System/Exception.hpp"
 
-#endif
+namespace Curse
+{
+
+    RendererVulkan::RendererVulkan()
+    {
+    }
+
+    RendererVulkan::RendererVulkan(const WindowBase& window, const Version& version) :
+        RendererVulkan()
+    {
+        Open(window, version);
+    }
+
+    RendererVulkan::~RendererVulkan()
+    {
+        Close();
+    }
+
+    void RendererVulkan::Open(const WindowBase& /*window*/, const Version& /*version*/)
+    {
+
+    }
+
+    void RendererVulkan::Close()
+    {
+        
+    }
+
+    Renderer::BackendApi RendererVulkan::GetBackendApi() const
+    {
+        return Renderer::BackendApi::Vulkan;
+    }
+
+    Version RendererVulkan::GetVersion() const
+    {
+        return m_version;
+    }
+
+    void RendererVulkan::SwapBuffers()
+    {
+        //::SwapBuffers(m_deviceContext);
+    }
+
+
+}
 
 #endif
