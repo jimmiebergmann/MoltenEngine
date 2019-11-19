@@ -105,7 +105,7 @@ install:
           ls
         }
         echo "Installing Vulkan."
-        .\VulkanSDK_Latest.exe /S
+        Start-Process VulkanSDK_Latest.exe /S -Wait
         echo "Installing Vulkan is complete."
         echo "Vulkan SDK path: $env:VULKAN_SDK"
         
