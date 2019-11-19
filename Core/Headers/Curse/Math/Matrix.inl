@@ -52,6 +52,15 @@ namespace Curse
     constexpr size_t Matrix<4, 4, T>::Components;
 
     template<typename T>
+    Matrix<4, 4, T> Matrix<4, 4, T>::Identity()
+    {
+        return { static_cast<T>(1), static_cast<T>(0), static_cast<T>(0), static_cast<T>(0),
+                 static_cast<T>(0), static_cast<T>(1), static_cast<T>(0), static_cast<T>(0),
+                 static_cast<T>(0), static_cast<T>(0), static_cast<T>(1), static_cast<T>(0),
+                 static_cast<T>(0), static_cast<T>(0), static_cast<T>(0), static_cast<T>(1) };
+    }
+
+    template<typename T>
     inline Matrix<4, 4, T> Matrix<4, 4, T>::Perspective(const T fov, const T aspect, const T zNear, const T zFar)
     {
         static constexpr T radiansExpr = static_cast<T>(1) / (static_cast<T>(2) * Constants::Pi<T>() / static_cast<T>(180));
@@ -102,5 +111,78 @@ namespace Curse
                                    const Vector4<T>& row3, const Vector4<T>& row4) :
         row{ row1, row2, row3, row4 }
     {}
+
+    template<typename T>
+    inline void Matrix<4, 4, T>::Translate(const Vector3<T>& translation)
+    {
+        Matrix<4, 4, T> trans =
+        {
+            Vector4<T>(1, 0, 0, translation.x),
+            Vector4<T>(0, 1, 0, translation.y),
+            Vector4<T>(0, 0, 1, translation.z),
+            Vector4<T>(0, 0, 0, 1)
+        };
+        (*this) *= trans;
+    }
+
+    template<typename T>
+    inline void Matrix<4, 4, T>::Scale(const Vector3<T>& scale)
+    {
+        Matrix<4, 4, T> trans =
+        {
+            Vector4<T>(scale.x, 0, 0, 0),
+            Vector4<T>(0, scale.y, 0, 0),
+            Vector4<T>(0, 0, scale.z, 0),
+            Vector4<T>(0, 0, 0, 1)
+        };
+        (*this) *= trans;
+    }
+
+    template<typename T>
+    inline Matrix<4, 4, T> Matrix<4, 4, T>::operator *(const Matrix<4, 4, T>& matrix) const
+    {
+        return
+        {
+            (e[0] * matrix.e[0]) + (e[1] * matrix.e[4]) + (e[2] * matrix.e[8])  + (e[3] * matrix.e[12]),
+            (e[0] * matrix.e[1]) + (e[1] * matrix.e[5]) + (e[2] * matrix.e[9])  + (e[3] * matrix.e[13]),
+            (e[0] * matrix.e[2]) + (e[1] * matrix.e[6]) + (e[2] * matrix.e[10]) + (e[3] * matrix.e[14]),
+            (e[0] * matrix.e[3]) + (e[1] * matrix.e[7]) + (e[2] * matrix.e[11]) + (e[3] * matrix.e[15]),
+
+            (e[4] * matrix.e[0]) + (e[5] * matrix.e[4]) + (e[6] * matrix.e[8])  + (e[7] * matrix.e[12]),
+            (e[4] * matrix.e[1]) + (e[5] * matrix.e[5]) + (e[6] * matrix.e[9])  + (e[7] * matrix.e[13]),
+            (e[4] * matrix.e[2]) + (e[5] * matrix.e[6]) + (e[6] * matrix.e[10]) + (e[7] * matrix.e[14]),
+            (e[4] * matrix.e[3]) + (e[5] * matrix.e[7]) + (e[6] * matrix.e[11]) + (e[7] * matrix.e[15]),
+
+            (e[8] * matrix.e[0]) + (e[9] * matrix.e[4]) + (e[10] * matrix.e[8])  + (e[11] * matrix.e[12]),
+            (e[8] * matrix.e[1]) + (e[9] * matrix.e[5]) + (e[10] * matrix.e[9])  + (e[11] * matrix.e[13]),
+            (e[8] * matrix.e[2]) + (e[9] * matrix.e[6]) + (e[10] * matrix.e[10]) + (e[11] * matrix.e[14]),
+            (e[8] * matrix.e[3]) + (e[9] * matrix.e[7]) + (e[10] * matrix.e[11]) + (e[11] * matrix.e[15]),
+
+            (e[12] * matrix.e[0]) + (e[13] * matrix.e[4]) + (e[14] * matrix.e[8])  + (e[15] * matrix.e[12]),
+            (e[12] * matrix.e[1]) + (e[13] * matrix.e[5]) + (e[14] * matrix.e[9])  + (e[15] * matrix.e[13]),
+            (e[12] * matrix.e[2]) + (e[13] * matrix.e[6]) + (e[14] * matrix.e[10]) + (e[15] * matrix.e[14]),
+            (e[12] * matrix.e[3]) + (e[13] * matrix.e[7]) + (e[14] * matrix.e[11]) + (e[15] * matrix.e[15])
+        };
+    }
+
+    template<typename T>
+    inline Matrix<4, 4, T>& Matrix<4, 4, T>::operator *=(const Matrix<4, 4, T>& matrix)
+    {
+        (*this) = (*this) * matrix;
+        return *this;
+    }
+
+
+    template<typename T>
+    inline Vector<4, T> Matrix<4, 4, T>::operator *(const Vector<4, T>& vector) const
+    {
+        return
+        {
+            (e[0]  * vector.c[0]) + (e[1]  * vector.c[1]) + (e[2]  * vector.c[2]) + (e[3]  * vector.c[3]),
+            (e[4]  * vector.c[0]) + (e[5]  * vector.c[1]) + (e[6]  * vector.c[2]) + (e[7]  * vector.c[3]),
+            (e[8]  * vector.c[0]) + (e[9]  * vector.c[1]) + (e[10] * vector.c[2]) + (e[11] * vector.c[3]),
+            (e[12] * vector.c[0]) + (e[13] * vector.c[1]) + (e[14] * vector.c[2]) + (e[15] * vector.c[3])
+        };
+    }
 
 }

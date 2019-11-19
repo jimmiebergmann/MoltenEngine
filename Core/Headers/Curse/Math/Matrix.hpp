@@ -75,6 +75,11 @@ namespace Curse
         using Type = T;
 
         /**
+        * @brief Creates an identity matrix.
+        */
+        static Matrix<4, 4, T> Identity();
+
+        /**
         * @brief Creates a perspective projection matrix.
         */
         static Matrix<4, 4, T> Perspective(const T fov, const T aspect, const T zNear, const T zFar);
@@ -101,14 +106,39 @@ namespace Curse
                const T e13, const T e14, const T e15, const T e16);
 
         /**
-        * @brief Constructing and initializing all elements.
+        * @brief Constructing and initializing all elements by rows.
         */
         Matrix(const Vector4<T>& row1, const Vector4<T>& row2, const Vector4<T>& row3, const Vector4<T>& row4);
 
+        /**
+        * @brief Translate matrix.
+        */
+        void Translate(const Vector3<T> & translation);
+
+        /**
+        * @brief Scale matrix.
+        */
+        void Scale(const Vector3<T>& scale);
+
+        /**
+        * @brief Multiplication by matrix operator.
+        */
+        Matrix<4, 4, T> operator *(const Matrix<4, 4, T>& matrix) const;
+
+        /**
+        * @brief Multiplication by matrix assignment operator.
+        */
+        Matrix<4, 4, T> & operator *=(const Matrix<4, 4, T>& matrix);
+
+        /**
+        * @brief Multiplication by vector operator.
+        */
+        Vector<4, T> operator *(const Vector<4, T>& vector) const;
+
         union
         {        
-            T e[Components];    //< Elements of matrix.
-            Vector4<T> row[4];  //< Rows of matrix.
+            T e[Components]; //< Elements of matrix.
+            Vector<4, T> row[4]; //< Rows of matrix.
         };
 
     };
