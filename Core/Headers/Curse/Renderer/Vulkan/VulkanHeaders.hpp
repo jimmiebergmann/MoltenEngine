@@ -23,37 +23,24 @@
 *
 */
 
-#include "Curse/Renderer/Renderer.hpp"
+#ifndef CURSE_CORE_RENDERER_VULKAN_VULKANHEADERS_HPP
+#define CURSE_CORE_RENDERER_VULKAN_VULKANHEADERS_HPP
 
-#include "Curse/Renderer/OpenGL/RendererOpenGL.hpp"
-#include "Curse/Renderer/Vulkan/RendererVulkan.hpp"
+#include "Curse/Core.hpp"
 
-namespace Curse
-{
+#if defined(CURSE_ENABLE_VULKAN)
 
-    Renderer * Renderer::Create(const BackendApi backendApi)
-    {
-        switch (backendApi)
-        {
-        case BackendApi::OpenGL:
-            #if CURSE_ENABLE_OPENGL
-                return new RendererOpenGL;
-            #endif
-            break;
-        case BackendApi::Vulkan:
-            #if CURSE_ENABLE_VULKAN
-                return new RendererVulkan;
-            #endif
-            break;
-        default:
-            break;
-        }
+#define VK_DEFINE_NON_DISPATCHABLE_HANDLE(object) typedef uint64_t object;
+#include "vulkan/vulkan.h"
 
-        return nullptr;
-    }
+#if CURSE_PLATFORM == CURSE_PLATFORM_WINDOWS
+#include "Curse/Platform/Win32Headers.hpp"
+#include "vulkan/vulkan_win32.h"
+#elif CURSE_PLATFORM == CURSE_PLATFORM_LINUX
+#include "Curse/Platform/X11Headers.hpp"
+#include "vulkan/vulkan_xlib.h"
+#endif
 
-    Renderer::~Renderer()
-    {
-    }
+#endif
 
-}
+#endif

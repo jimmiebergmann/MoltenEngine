@@ -23,37 +23,43 @@
 *
 */
 
-#include "Curse/Renderer/Renderer.hpp"
+#ifndef CURSE_CORE_RENDERER_RESOURCETRACKER_HPP
+#define CURSE_CORE_RENDERER_RESOURCETRACKER_HPP
 
-#include "Curse/Renderer/OpenGL/RendererOpenGL.hpp"
-#include "Curse/Renderer/Vulkan/RendererVulkan.hpp"
+#include "Curse/Types.hpp"
 
 namespace Curse
 {
 
-    Renderer * Renderer::Create(const BackendApi backendApi)
+    /**
+    * @brief Renderer resource tracker class.
+    */
+    /*template<size_t TypeCount>
+    class CURSE_API ResourceTracker
     {
-        switch (backendApi)
+
+    public:
+
+        class Item
         {
-        case BackendApi::OpenGL:
-            #if CURSE_ENABLE_OPENGL
-                return new RendererOpenGL;
-            #endif
-            break;
-        case BackendApi::Vulkan:
-            #if CURSE_ENABLE_VULKAN
-                return new RendererVulkan;
-            #endif
-            break;
-        default:
-            break;
-        }
 
-        return nullptr;
-    }
+        public:
 
-    Renderer::~Renderer()
-    {
-    }
+
+        private:
+
+
+
+
+        };
+
+       
+        ResourceTracker();
+
+
+
+    };*/
 
 }
+
+#endif

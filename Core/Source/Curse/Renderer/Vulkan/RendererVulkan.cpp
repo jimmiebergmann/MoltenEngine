@@ -28,10 +28,14 @@
 
 #if defined(CURSE_ENABLE_VULKAN)
 
+#include "Curse/Renderer/Vulkan/ShaderVulkan.hpp"
+#include "Curse/Renderer/Vulkan/TextureVulkan.hpp"
 #include "Curse/Window/WindowBase.hpp"
 #include "Curse/System/Exception.hpp"
+#include "Curse/System/FileSystem.hpp"
 #include <map>
 #include <set>
+#include <algorithm>
 
 namespace Curse
 {
@@ -43,7 +47,10 @@ namespace Curse
         m_physicalDevice(),
         m_logicalDevice(VK_NULL_HANDLE),
         m_graphicsQueue(VK_NULL_HANDLE),
-        m_presentQueue(VK_NULL_HANDLE)
+        m_presentQueue(VK_NULL_HANDLE),
+        m_swapChain(VK_NULL_HANDLE),
+        m_swapChainImageFormat(VK_FORMAT_UNDEFINED),
+        m_swapChainExtent{0, 0}
     {
     }
 
@@ -65,16 +72,23 @@ namespace Curse
         LoadSurface(window);
         LoadPhysicalDevice(); 
         LoadLogicalDevice();
+        LoadSwapChain(window);
+        LoadImageViews();
+        LoadGraphicsPipeline();
     }
 
     void RendererVulkan::Close()
     {
         if (m_logicalDevice)
         {
+            for (auto& imageView : m_swapChainImageViews)
+            {
+                vkDestroyImageView(m_logicalDevice, imageView, nullptr);
+            }
+            m_swapChainImageViews.clear();
+
+            vkDestroySwapchainKHR(m_logicalDevice, m_swapChain, nullptr);
             vkDestroyDevice(m_logicalDevice, nullptr);
-            m_logicalDevice = VK_NULL_HANDLE;
-            m_graphicsQueue = VK_NULL_HANDLE;
-            m_presentQueue = VK_NULL_HANDLE;
         }
         if (m_instance)
         {
@@ -86,17 +100,27 @@ namespace Curse
             if (m_surface)
             {
                 vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
-                m_surface = VK_NULL_HANDLE;
+                
             }
 
             vkDestroyInstance(m_instance, nullptr);
-            m_instance = VK_NULL_HANDLE;
-            m_physicalDevice.Clear();
         }
+        
+        m_instance = VK_NULL_HANDLE;
+        m_surface = VK_NULL_HANDLE;
+        m_logicalDevice = VK_NULL_HANDLE;
+        m_graphicsQueue = VK_NULL_HANDLE;
+        m_presentQueue = VK_NULL_HANDLE;
+        m_swapChain = VK_NULL_HANDLE;
+        m_swapChainImageFormat = VK_FORMAT_UNDEFINED;
+        m_swapChainExtent = { 0, 0 };
+        m_swapChainImages.clear();
 
+        m_physicalDevice.Clear();
         m_debugMessenger.Clear();
         m_validationLayers.clear();
         m_deviceExtensions.clear();
+        
     }
 
     Renderer::BackendApi RendererVulkan::GetBackendApi() const
@@ -111,8 +135,64 @@ namespace Curse
 
     void RendererVulkan::SwapBuffers()
     {
-       
+
     }
+
+    Shader* RendererVulkan::CreateShader(const ShaderDescriptor& descriptor)
+    {
+        const uint8_t* rawData = descriptor.data;
+        size_t dataSize = descriptor.dataSize;
+
+        std::vector<uint8_t> data;
+        if (!rawData)
+        {
+            if (!descriptor.filename)
+            {
+                return nullptr;
+            }
+
+            data = FileSystem::ReadFile(descriptor.filename);
+            if (!data.size())
+            {
+                return nullptr;
+            }
+
+            rawData = data.data();
+            dataSize = data.size();
+        }
+
+        VkShaderModuleCreateInfo shaderModuleInfo = {};
+        shaderModuleInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+        shaderModuleInfo.codeSize = dataSize;
+        shaderModuleInfo.pCode = reinterpret_cast<const uint32_t *>(rawData);
+
+        VkShaderModule shaderModule;
+        if (vkCreateShaderModule(m_logicalDevice, &shaderModuleInfo, nullptr, &shaderModule) != VK_SUCCESS)
+        {
+            throw Exception("Failed to create shader module.");
+        }
+
+        ShaderVulkan* shader = new ShaderVulkan;
+        shader->resource = static_cast<Resource>(shaderModule);
+        shader->type = descriptor.type;
+        return shader;
+    }
+
+    void RendererVulkan::DeleteShader(Shader* )
+    {
+        //return new TextureVulkan;
+    }
+
+    Texture* RendererVulkan::CreateTexture()
+    {
+        return new TextureVulkan;
+    }
+
+    void RendererVulkan::DeleteTexture(Texture* texture)
+    {
+        delete static_cast<TextureVulkan*>(texture);
+    }
+
 
     RendererVulkan::DebugMessenger::DebugMessenger() :
         messenger(VK_NULL_HANDLE),
@@ -587,7 +667,133 @@ namespace Curse
         vkGetDeviceQueue(m_logicalDevice, m_physicalDevice.graphicsQueueIndex, 0, &m_graphicsQueue);
         vkGetDeviceQueue(m_logicalDevice, m_physicalDevice.presentQueueIndex, 0, &m_presentQueue);
     }
-    
+
+    void RendererVulkan::LoadSwapChain(const WindowBase& window)
+    {
+        SwapChainSupport& swapChainSupport = m_physicalDevice.swapChainSupport;
+
+        VkSurfaceFormatKHR surfaceFormat = {};
+        bool foundSurfaceFormat = false;
+        for (auto& format : swapChainSupport.formats)
+        {
+            if (format.format == VK_FORMAT_B8G8R8A8_UNORM && format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
+            {
+                foundSurfaceFormat = true;
+                surfaceFormat = format;
+                m_swapChainImageFormat = format.format;
+                break;
+            }
+        }
+        if (!foundSurfaceFormat)
+        {
+            throw Exception("Failed find required surface format for the swap chain.");
+        }
+
+        VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR;
+        for (auto& mode : swapChainSupport.presentModes)
+        {
+            if (mode == VK_PRESENT_MODE_MAILBOX_KHR)
+            {  
+                presentMode = mode;
+                break;
+            }
+        }
+
+        VkSurfaceCapabilitiesKHR& capabilities = swapChainSupport.capabilities;
+        m_swapChainExtent = capabilities.currentExtent;
+        if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
+        {
+            auto windowSize = window.GetInitialSize();
+            m_swapChainExtent = {
+                std::max(capabilities.currentExtent.width, std::min(windowSize.x, capabilities.maxImageExtent.width)),
+                std::max(capabilities.currentExtent.height, std::min(windowSize.x, capabilities.maxImageExtent.height))
+            };
+        }
+
+        uint32_t imageCount = std::min(capabilities.minImageCount + 1, capabilities.maxImageCount);
+        if (!imageCount)
+        {
+            throw Exception("Failed to get correct image count: " + std::to_string(imageCount) + ".");
+        }
+
+        VkSwapchainCreateInfoKHR swapchainInfo = {};
+        swapchainInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+        swapchainInfo.oldSwapchain = VK_NULL_HANDLE;
+        swapchainInfo.surface = m_surface;
+        swapchainInfo.presentMode = presentMode;
+        swapchainInfo.clipped = VK_TRUE;
+        swapchainInfo.minImageCount = imageCount;
+        swapchainInfo.imageFormat = surfaceFormat.format;
+        swapchainInfo.imageColorSpace = surfaceFormat.colorSpace;
+        swapchainInfo.imageExtent = m_swapChainExtent;
+        swapchainInfo.imageArrayLayers = 1;
+        swapchainInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+        swapchainInfo.preTransform = capabilities.currentTransform;
+        swapchainInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+
+        const uint32_t queueFamilies[2] = { m_physicalDevice.graphicsQueueIndex, m_physicalDevice.presentQueueIndex };
+        if (queueFamilies[0] != queueFamilies[1])
+        {
+            swapchainInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+            swapchainInfo.queueFamilyIndexCount = 2;
+            swapchainInfo.pQueueFamilyIndices = queueFamilies;
+        }
+        else
+        {
+            swapchainInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+            swapchainInfo.queueFamilyIndexCount = 0;
+            swapchainInfo.pQueueFamilyIndices = nullptr;
+        }
+
+        if (vkCreateSwapchainKHR(m_logicalDevice, &swapchainInfo, nullptr, &m_swapChain) != VK_SUCCESS)
+        {
+            throw Exception("Failed create swap chain.");
+        }
+
+        uint32_t createdImageCount;
+        vkGetSwapchainImagesKHR(m_logicalDevice, m_swapChain, &createdImageCount, nullptr);
+        if (createdImageCount != imageCount)
+        {
+            throw Exception("Failed to create the requested number of swap chain images.");
+        }
+
+        m_swapChainImages.resize(imageCount);
+        vkGetSwapchainImagesKHR(m_logicalDevice, m_swapChain, &createdImageCount, m_swapChainImages.data());
+    }
+
+    void RendererVulkan::LoadImageViews()
+    {
+        m_swapChainImageViews.resize(m_swapChainImages.size());
+
+        for (size_t i = 0; i < m_swapChainImages.size(); i++)
+        {
+            VkImageViewCreateInfo imageViewInfo = {};
+            imageViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+            imageViewInfo.image = m_swapChainImages[i];
+            imageViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+            imageViewInfo.format = m_swapChainImageFormat;
+            imageViewInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+            imageViewInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+            imageViewInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+            imageViewInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+            imageViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            imageViewInfo.subresourceRange.baseMipLevel = 0;
+            imageViewInfo.subresourceRange.levelCount = 1;
+            imageViewInfo.subresourceRange.baseArrayLayer = 0;
+            imageViewInfo.subresourceRange.layerCount = 1;
+
+            if (vkCreateImageView(m_logicalDevice, &imageViewInfo, nullptr, &m_swapChainImageViews[i]) != VK_SUCCESS)
+            {
+                throw Exception("Failed create swap chain.");
+            }
+        }
+    }
+
+    void RendererVulkan::LoadGraphicsPipeline()
+    {
+
+    }
+
 }
 
 #endif

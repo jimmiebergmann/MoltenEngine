@@ -23,37 +23,32 @@
 *
 */
 
-#include "Curse/Renderer/Renderer.hpp"
-
-#include "Curse/Renderer/OpenGL/RendererOpenGL.hpp"
-#include "Curse/Renderer/Vulkan/RendererVulkan.hpp"
+#include "Curse/System/FileSystem.hpp"
+#include "Curse/System/Exception.hpp"
+#include <fstream>
 
 namespace Curse
 {
 
-    Renderer * Renderer::Create(const BackendApi backendApi)
+    std::vector<uint8_t> FileSystem::ReadFile(const std::string& filename)
     {
-        switch (backendApi)
+        std::ifstream file(filename, std::ios::binary);
+        if (!file.is_open())
         {
-        case BackendApi::OpenGL:
-            #if CURSE_ENABLE_OPENGL
-                return new RendererOpenGL;
-            #endif
-            break;
-        case BackendApi::Vulkan:
-            #if CURSE_ENABLE_VULKAN
-                return new RendererVulkan;
-            #endif
-            break;
-        default:
-            break;
+            throw Exception("Unable to open file.");
         }
 
-        return nullptr;
-    }
+        file.seekg(0, std::ios::end);
+        const size_t dataSize = static_cast<size_t>(file.tellg());
+        if (!dataSize)
+        {
+            return {};
+        }
+        file.seekg(0, std::ios::beg);
 
-    Renderer::~Renderer()
-    {
+        std::vector<uint8_t> data(dataSize);
+        file.read(reinterpret_cast<char*>(data.data()), dataSize);
+        return std::move(data);
     }
 
 }

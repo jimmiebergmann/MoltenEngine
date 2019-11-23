@@ -23,37 +23,19 @@
 *
 */
 
-#include "Curse/Renderer/Renderer.hpp"
+#ifndef CURSE_CORE_RENDERER_RESOURCE_HPP
+#define CURSE_CORE_RENDERER_RESOURCE_HPP
 
-#include "Curse/Renderer/OpenGL/RendererOpenGL.hpp"
-#include "Curse/Renderer/Vulkan/RendererVulkan.hpp"
+#include "Curse/Types.hpp"
 
 namespace Curse
 {
 
-    Renderer * Renderer::Create(const BackendApi backendApi)
-    {
-        switch (backendApi)
-        {
-        case BackendApi::OpenGL:
-            #if CURSE_ENABLE_OPENGL
-                return new RendererOpenGL;
-            #endif
-            break;
-        case BackendApi::Vulkan:
-            #if CURSE_ENABLE_VULKAN
-                return new RendererVulkan;
-            #endif
-            break;
-        default:
-            break;
-        }
-
-        return nullptr;
-    }
-
-    Renderer::~Renderer()
-    {
-    }
+    /**
+    * @brief Resource id type.
+    */
+    using Resource = uint64_t;
 
 }
+
+#endif

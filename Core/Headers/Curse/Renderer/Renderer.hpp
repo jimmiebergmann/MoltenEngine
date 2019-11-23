@@ -28,6 +28,8 @@
 
 #include "Curse/Memory/Reference.hpp"
 #include "Curse/System/Version.hpp"
+#include "Curse/Renderer/Shader.hpp"
+#include "Curse/Renderer/Texture.hpp"
 #include <functional>
 
 namespace Curse
@@ -35,22 +37,6 @@ namespace Curse
 
     class WindowBase;
 
-
-    /**
-    * @brief Base class of renderer creators.
-    */
-    class CURSE_API RendererCreators
-    {
-
-    public:
-
-        virtual void* CreateFrameBuffer() = 0;
-        virtual void* CreateTexture() = 0;
-        virtual void* CreateVertexArray() = 0;
-        virtual void* CreateVertexBuffer() = 0;
-
-
-    };
 
     /**
     * @brief Base class of renderer.
@@ -81,7 +67,7 @@ namespace Curse
         *
         * @return Pointer to renderer, nullptr if the type of renderer is unavailable.
         */
-        static Ref<Renderer> Create(const BackendApi renderApi);
+        static Renderer * Create(const BackendApi renderApi);
 
         /**
         * @brief Virtual destructor.
@@ -115,6 +101,26 @@ namespace Curse
         *        Necessary to do in order to present the frame, if double/tripple buffering is used.
         */
         virtual void SwapBuffers() = 0;
+
+        /**
+        * @brief Create shader object.
+        */
+        virtual Shader* CreateShader(const ShaderDescriptor & descriptor) = 0;
+
+        /**
+        * @brief Delete shader object.
+        */
+        virtual void DeleteShader(Shader* shader) = 0;
+
+        /**
+        * @brief Create texture object.
+        */
+        virtual Texture* CreateTexture() = 0;
+
+        /**
+        * @brief Delete texture object.
+        */
+        virtual void DeleteTexture(Texture* texture) = 0;
 
     };
 

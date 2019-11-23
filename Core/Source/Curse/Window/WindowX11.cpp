@@ -170,6 +170,16 @@ namespace Curse
         return m_open;
     }
 
+    Vector2ui32 WindowX11::GetInitialSize() const
+    {
+        return m_initialSize;
+    }
+
+    Vector2ui32 WindowX11::GetCurrentSize() const
+    {
+        return m_currentSize;
+    }
+
     ::Display * WindowX11::GetX11DisplayDevice() const
     {
         return m_display;

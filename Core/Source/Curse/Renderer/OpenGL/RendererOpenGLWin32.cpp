@@ -176,6 +176,24 @@ namespace Curse
         ::SwapBuffers(m_deviceContext);
     }
 
+    Shader* RendererOpenGLWin32::CreateShader(const ShaderDescriptor& )
+    {
+        return nullptr;
+    }
+
+    void RendererOpenGLWin32::DeleteShader(Shader* )
+    {
+    }
+
+    Texture* RendererOpenGLWin32::CreateTexture()
+    {
+        return nullptr;
+    }
+
+    void RendererOpenGLWin32::DeleteTexture(Texture* )
+    {
+    }
+
     bool RendererOpenGLWin32::OpenVersion(HDC deviceContext, const Version& version)
     {
         PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB = NULL;

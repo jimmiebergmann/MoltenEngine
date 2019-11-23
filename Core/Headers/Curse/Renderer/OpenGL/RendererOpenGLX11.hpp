@@ -67,28 +67,48 @@ namespace Curse
         *
         * @param window[in] Render target window.
         */
-        virtual void Open(const WindowBase & window, const Version& version = Version::None, DebugCallback debugCallback = nullptr);
+        virtual void Open(const WindowBase & window, const Version& version = Version::None, DebugCallback debugCallback = nullptr) override;
 
         /**
         * @brief Closing renderer.
         */
-        virtual void Close();
+        virtual void Close() override;
 
         /**
         * @brief Get backend API type.
         */
-        virtual BackendApi GetBackendApi() const;
+        virtual BackendApi GetBackendApi() const override;
 
         /**
         * @brief Get renderer API version.
         */
-        virtual Version GetVersion() const;
+        virtual Version GetVersion() const override;
 
         /**
         * @brief Swap buffers.
         *        Necessary to do in order to present the frame, if double/tripple buffering is used.
         */
-        virtual void SwapBuffers();
+        virtual void SwapBuffers() override;
+
+        /**
+        * @brief Create shader object.
+        */
+        virtual Shader* CreateShader(const ShaderDescriptor& descriptor) override;
+
+        /**
+        * @brief Delete shader object.
+        */
+        virtual void DeleteShader(Shader* shader) override;
+
+        /**
+        * @brief Create texture object.
+        */
+        virtual Texture* CreateTexture() override;
+
+        /**
+        * @brief Delete texture object.
+        */
+        virtual void DeleteTexture(Texture* texture) override;
 
     private:
 

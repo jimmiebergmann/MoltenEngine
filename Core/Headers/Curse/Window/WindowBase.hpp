@@ -80,6 +80,16 @@ namespace Curse
         */
         virtual bool IsOpen() const = 0;
 
+        /**
+        * @brief Get initial size of window.
+        */
+        virtual Vector2ui32 GetInitialSize() const = 0;
+
+        /**
+        * @brief Get current size of window.
+        */
+        virtual Vector2ui32 GetCurrentSize() const = 0;
+
     #if defined(CURSE_PLATFORM_WINDOWS)
        
         /**

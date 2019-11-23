@@ -173,6 +173,24 @@ namespace Curse
 
     }
 
+    Shader* RendererOpenGLX11::CreateShader(const ShaderDescriptor& )
+    {
+        return nullptr;
+    }
+
+    void RendererOpenGLX11::DeleteShader(Shader* )
+    {
+    }
+
+    Texture* RendererOpenGLX11::CreateTexture()
+    {
+        return nullptr;
+    }
+
+    void RendererOpenGLX11::DeleteTexture(Texture* )
+    {
+    }
+
     /*bool RendererOpenGLWin32::OpenVersion(HDC deviceContext, const Version& version)
     {
         PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB = NULL;

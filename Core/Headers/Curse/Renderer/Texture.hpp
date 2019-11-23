@@ -23,37 +23,32 @@
 *
 */
 
-#include "Curse/Renderer/Renderer.hpp"
+#ifndef CURSE_CORE_RENDERER_TEXTURE_HPP
+#define CURSE_CORE_RENDERER_TEXTURE_HPP
 
-#include "Curse/Renderer/OpenGL/RendererOpenGL.hpp"
-#include "Curse/Renderer/Vulkan/RendererVulkan.hpp"
+#include "Curse/Types.hpp"
+#include "Curse/Math/Vector.hpp"
 
 namespace Curse
 {
 
-    Renderer * Renderer::Create(const BackendApi backendApi)
+    class Texture
     {
-        switch (backendApi)
-        {
-        case BackendApi::OpenGL:
-            #if CURSE_ENABLE_OPENGL
-                return new RendererOpenGL;
-            #endif
-            break;
-        case BackendApi::Vulkan:
-            #if CURSE_ENABLE_VULKAN
-                return new RendererVulkan;
-            #endif
-            break;
-        default:
-            break;
-        }
 
-        return nullptr;
-    }
+    public:
 
-    Renderer::~Renderer()
-    {
-    }
+    protected:
+
+        Texture() = default;      
+        Texture(const Texture&) = delete;
+        Texture(Texture&&) = delete;
+        virtual ~Texture() = default;
+
+        uint64_t id;
+
+
+    };
 
 }
+
+#endif

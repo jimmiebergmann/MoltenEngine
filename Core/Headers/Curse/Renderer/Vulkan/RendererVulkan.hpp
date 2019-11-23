@@ -31,16 +31,7 @@
 #if defined(CURSE_ENABLE_VULKAN)
 
 #include "Curse/Renderer/Renderer.hpp"
-#include "vulkan/vulkan.h"
-
-#if CURSE_PLATFORM == CURSE_PLATFORM_WINDOWS
-    #include "Curse/Platform/Win32Headers.hpp"
-    #include "vulkan/vulkan_win32.h"
-#elif CURSE_PLATFORM == CURSE_PLATFORM_LINUX
-    #include "Curse/Platform/X11Headers.hpp"
-    #include "vulkan/vulkan_xlib.h"
-#endif
-
+#include "Curse/Renderer/Vulkan/VulkanHeaders.hpp"
 #include <vector>
 
 namespace Curse
@@ -76,28 +67,48 @@ namespace Curse
         *
         * @param window[in] Render target window.
         */
-        virtual void Open(const WindowBase& window, const Version& version = Version::None, DebugCallback debugCallback = nullptr);
+        virtual void Open(const WindowBase& window, const Version& version = Version::None, DebugCallback debugCallback = nullptr) override;
 
         /**
         * @brief Closing renderer.
         */
-        virtual void Close();
+        virtual void Close() override;
 
         /**
         * @brief Get backend API type.
         */
-        virtual BackendApi GetBackendApi() const;
+        virtual BackendApi GetBackendApi() const override;
 
         /**
         * @brief Get renderer API version.
         */
-        virtual Version GetVersion() const;
+        virtual Version GetVersion() const override;
 
         /**
         * @brief Swap buffers.
         *        Necessary to do in order to present the frame, if double/tripple buffering is used.
         */
-        virtual void SwapBuffers();
+        virtual void SwapBuffers() override;
+
+        /**
+        * @brief Create shader object.
+        */
+        virtual Shader* CreateShader(const ShaderDescriptor& descriptor) override;
+
+        /**
+        * @brief Delete shader object.
+        */
+        virtual void DeleteShader(Shader* shader) override;
+
+        /**
+        * @brief Create texture object.
+        */
+        virtual Texture* CreateTexture() override;
+
+        /**
+        * @brief Delete texture object.
+        */
+        virtual void DeleteTexture(Texture* texture) override;
 
     private:
 
@@ -142,7 +153,10 @@ namespace Curse
         bool ScorePhysicalDevice(PhysicalDevice& physicalDevice, uint32_t & score);
         bool CheckDeviceExtensionSupport(PhysicalDevice & physicalDevice);
         bool FetchSwapChainSupport(PhysicalDevice& physicalDevice);
-        void LoadLogicalDevice();           
+        void LoadLogicalDevice();
+        void LoadSwapChain(const WindowBase& window);
+        void LoadImageViews();
+        void LoadGraphicsPipeline();
 
         Version m_version;
         VkInstance m_instance;
@@ -153,7 +167,13 @@ namespace Curse
         PhysicalDevice m_physicalDevice;
         VkDevice m_logicalDevice;
         VkQueue m_graphicsQueue;
-        VkQueue m_presentQueue;   
+        VkQueue m_presentQueue;
+        
+        VkSwapchainKHR m_swapChain;
+        VkFormat m_swapChainImageFormat;
+        VkExtent2D m_swapChainExtent;
+        std::vector<VkImage> m_swapChainImages;
+        std::vector<VkImageView> m_swapChainImageViews;
 
     };
 

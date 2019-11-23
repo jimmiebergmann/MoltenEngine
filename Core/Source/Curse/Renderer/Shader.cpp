@@ -23,37 +23,35 @@
 *
 */
 
-#include "Curse/Renderer/Renderer.hpp"
-
-#include "Curse/Renderer/OpenGL/RendererOpenGL.hpp"
-#include "Curse/Renderer/Vulkan/RendererVulkan.hpp"
+#include "Curse/Renderer/Shader.hpp"
 
 namespace Curse
 {
 
-    Renderer * Renderer::Create(const BackendApi backendApi)
-    {
-        switch (backendApi)
-        {
-        case BackendApi::OpenGL:
-            #if CURSE_ENABLE_OPENGL
-                return new RendererOpenGL;
-            #endif
-            break;
-        case BackendApi::Vulkan:
-            #if CURSE_ENABLE_VULKAN
-                return new RendererVulkan;
-            #endif
-            break;
-        default:
-            break;
-        }
+    ShaderDescriptor::ShaderDescriptor() :
+        type(Shader::Type::Vertex),
+        filename(nullptr),
+        data(nullptr),
+        dataSize(0)
+    { }
 
-        return nullptr;
-    }
+    ShaderDescriptor::ShaderDescriptor(const Shader::Type type, const char* filename) :
+        type(type),
+        filename(filename),
+        data(nullptr),
+        dataSize(0)
+    { }
 
-    Renderer::~Renderer()
+    ShaderDescriptor::ShaderDescriptor(const Shader::Type type, const uint8_t* data, const size_t dataSize) :
+        type(type),
+        filename(nullptr),
+        data(data),
+        dataSize(dataSize)
+    { }
+
+    Shader::Type Shader::GetType() const
     {
+        return type;
     }
 
 }

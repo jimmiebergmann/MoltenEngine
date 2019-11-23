@@ -70,50 +70,60 @@ namespace Curse
         /**
         * @brief Open window.
         */
-        virtual void Open(const std::string& title, const Vector2ui32 size);
+        virtual void Open(const std::string& title, const Vector2ui32 size) override;
 
         /**
         * @brief Close window.
         */
-        virtual void Close();
+        virtual void Close() override;
 
         /**
         * @brief Update window.
         */
-        virtual void Update();
+        virtual void Update() override;
 
         /**
         * @brief Show window.
         *
         * @param show Shows window if true, else hides window.
         */
-        virtual void Show(const bool show = true);
+        virtual void Show(const bool show = true) override;
 
         /**
         * @brief Hide window.
         */
-        virtual void Hide();
+        virtual void Hide() override;
 
         /**
         * @brief Checks if window has been created and is open.
         *        An open window is not the same as "currently showing".
         */
-        virtual bool IsOpen() const;
+        virtual bool IsOpen() const override;
+
+        /**
+        * @brief Get initial size of window.
+        */
+        virtual Vector2ui32 GetInitialSize() const override;
+
+        /**
+        * @brief Get current size of window.
+        */
+        virtual Vector2ui32 GetCurrentSize() const override;
 
         /**
         * @brief Get win32 window handle.
         */
-        virtual HWND GetWin32Window() const;
+        virtual HWND GetWin32Window() const override;
 
         /**
         * @brief Get win32 instance handle.
         */
-        virtual HINSTANCE GetWin32Instance() const;
+        virtual HINSTANCE GetWin32Instance() const override;
 
         /**
         * @brief Get win32 device context handle.
         */
-        virtual HDC GetWin32DeviceContext() const;
+        virtual HDC GetWin32DeviceContext() const override;
 
     private:
 

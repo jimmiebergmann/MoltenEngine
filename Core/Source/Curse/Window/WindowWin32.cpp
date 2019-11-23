@@ -198,6 +198,16 @@ namespace Curse
         return m_window != NULL;
     }
 
+    Vector2ui32 WindowWin32::GetInitialSize() const
+    {
+        return m_initialSize;
+    }
+
+    Vector2ui32 WindowWin32::GetCurrentSize() const
+    {
+        return m_currentSize;
+    }
+
     HWND WindowWin32::GetWin32Window() const
     {
         return m_window;

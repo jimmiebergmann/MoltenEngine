@@ -23,37 +23,40 @@
 *
 */
 
-#include "Curse/Renderer/Renderer.hpp"
+#ifndef CURSE_CORE_SYSTEM_FILESYSTEM_HPP
+#define CURSE_CORE_SYSTEM_FILESYSTEM_HPP
 
-#include "Curse/Renderer/OpenGL/RendererOpenGL.hpp"
-#include "Curse/Renderer/Vulkan/RendererVulkan.hpp"
+#include "Curse/Types.hpp"
+#include <vector>
+#include <string>
 
 namespace Curse
 {
 
-    Renderer * Renderer::Create(const BackendApi backendApi)
+    /**
+    * @brief Filesystem class.
+    */
+    class CURSE_API FileSystem
     {
-        switch (backendApi)
-        {
-        case BackendApi::OpenGL:
-            #if CURSE_ENABLE_OPENGL
-                return new RendererOpenGL;
-            #endif
-            break;
-        case BackendApi::Vulkan:
-            #if CURSE_ENABLE_VULKAN
-                return new RendererVulkan;
-            #endif
-            break;
-        default:
-            break;
-        }
 
-        return nullptr;
-    }
+    public:
 
-    Renderer::~Renderer()
-    {
-    }
+        /**
+        * @brief Read file of given filename.
+        *
+        * @param filename[in] Full path and name of file to read.
+        * @param dataSize[out] Output of raw data.
+        *
+        * @throw Exception if unable to open file.
+        *
+        * @return Raw pointer of data. User is responsible of deleting the pointer.
+        *         nullptr is returned if file is empty.
+        */
+        static std::vector<uint8_t> ReadFile(const std::string & filename);
+        
+
+    };
 
 }
+
+#endif
