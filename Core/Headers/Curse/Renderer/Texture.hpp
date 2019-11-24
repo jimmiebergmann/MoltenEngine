@@ -32,7 +32,7 @@
 namespace Curse
 {
 
-    class Texture
+    class CURSE_API Texture
     {
 
     public:

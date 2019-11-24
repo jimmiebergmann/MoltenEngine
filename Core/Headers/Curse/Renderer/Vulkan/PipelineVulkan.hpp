@@ -23,27 +23,31 @@
 *
 */
 
-#ifndef CURSE_CORE_RENDERER_SHADERVULKAN_HPP
-#define CURSE_CORE_RENDERER_SHADERVULKAN_HPP
+#ifndef CURSE_CORE_RENDERER_PIPELINEVULKAN_HPP
+#define CURSE_CORE_RENDERER_PIPELINEVULKAN_HPP
 
-#include "Curse/Renderer/Shader.hpp"
+#include "Curse/Renderer/Pipeline.hpp"
 
 namespace Curse
 {
 
     class RendererVulkan;
 
-    class CURSE_API ShaderVulkan : public Shader
+    class CURSE_API PipelineVulkan : public Pipeline
     {
 
     private:
 
-        ShaderVulkan() = default;
-        ShaderVulkan(const ShaderVulkan&) = delete;
-        ShaderVulkan(ShaderVulkan&&) = delete;
-        ~ShaderVulkan() = default;
+        PipelineVulkan() = default;
+        PipelineVulkan(const PipelineVulkan&) = delete;
+        PipelineVulkan(PipelineVulkan&&) = delete;
+        ~PipelineVulkan() = default;
 
         friend class RendererVulkan;
+
+        VkPipeline pipeline;
+        VkRenderPass renderPass;
+        VkPipelineLayout layout;
 
     };
 

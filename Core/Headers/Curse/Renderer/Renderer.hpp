@@ -30,6 +30,7 @@
 #include "Curse/System/Version.hpp"
 #include "Curse/Renderer/Shader.hpp"
 #include "Curse/Renderer/Texture.hpp"
+#include "Curse/Renderer/Pipeline.hpp"
 #include <functional>
 
 namespace Curse
@@ -110,7 +111,7 @@ namespace Curse
         /**
         * @brief Delete shader object.
         */
-        virtual void DeleteShader(Shader* shader) = 0;
+        virtual void DestroyShader(Shader* shader) = 0;
 
         /**
         * @brief Create texture object.
@@ -120,7 +121,17 @@ namespace Curse
         /**
         * @brief Delete texture object.
         */
-        virtual void DeleteTexture(Texture* texture) = 0;
+        virtual void DestroyTexture(Texture* texture) = 0;
+
+        /**
+        * @brief Create pipeline object.
+        */
+        virtual Pipeline* CreatePipeline(const PipelineDescriptor& descriptor) = 0;
+
+        /**
+        * @brief Delete pipeline object.
+        */
+        virtual void DestroyPipeline(Pipeline* pipeline) = 0;
 
     };
 

@@ -33,7 +33,7 @@ namespace Curse
 
     class RendererVulkan;
 
-    class TextureVulkan : public Texture
+    class CURSE_API TextureVulkan : public Texture
     {
 
     private:

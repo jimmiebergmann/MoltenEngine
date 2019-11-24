@@ -181,7 +181,7 @@ namespace Curse
         return nullptr;
     }
 
-    void RendererOpenGLWin32::DeleteShader(Shader* )
+    void RendererOpenGLWin32::DestroyShader(Shader* )
     {
     }
 
@@ -190,9 +190,19 @@ namespace Curse
         return nullptr;
     }
 
-    void RendererOpenGLWin32::DeleteTexture(Texture* )
+    void RendererOpenGLWin32::DestroyTexture(Texture* )
     {
     }
+
+    Pipeline* RendererOpenGLWin32::CreatePipeline(const PipelineDescriptor& /*descriptor*/)
+    {
+        return nullptr;
+    }
+
+    void RendererOpenGLWin32::DestroyPipeline(Pipeline* /*shader*/)
+    {
+    }
+
 
     bool RendererOpenGLWin32::OpenVersion(HDC deviceContext, const Version& version)
     {

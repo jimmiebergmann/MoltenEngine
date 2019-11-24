@@ -33,9 +33,9 @@ namespace Curse
 {
 
     /**
-    * @brief Base shader class.
+    * @brief Shader base class.
     */
-    class Shader
+    class CURSE_API Shader
     {
 
     public:
@@ -70,7 +70,7 @@ namespace Curse
     * @brief Descriptor class of shader class.
     *        It's possible to load shaders via files or raw data.
     */
-    class ShaderDescriptor
+    class CURSE_API ShaderDescriptor
     {
 
     public:

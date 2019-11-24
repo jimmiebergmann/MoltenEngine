@@ -98,7 +98,7 @@ namespace Curse
         /**
         * @brief Delete shader object.
         */
-        virtual void DeleteShader(Shader* shader) override;
+        virtual void DestroyShader(Shader* shader) override;
 
         /**
         * @brief Create texture object.
@@ -108,7 +108,17 @@ namespace Curse
         /**
         * @brief Delete texture object.
         */
-        virtual void DeleteTexture(Texture* texture) override;
+        virtual void DestroyTexture(Texture* texture) override;
+
+        /**
+        * @brief Create pipeline object.
+        */
+        virtual Pipeline* CreatePipeline(const PipelineDescriptor& descriptor) override;
+
+        /**
+        * @brief Delete pipeline object.
+        */
+        virtual void DestroyPipeline(Pipeline* pipeline) override;
 
     private:
 

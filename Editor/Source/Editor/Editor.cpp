@@ -15,22 +15,21 @@ static int Run()
     };
 
     auto renderer = Curse::Renderer::Create(Curse::Renderer::BackendApi::Vulkan);
-    Curse::Texture* texture = nullptr;
-    //Curse::Shader* vertexShader = nullptr;
-    //Curse::Shader* fragmentShader = nullptr;
-    try
-    {
-        renderer->Open(*window, Curse::Version(1, 1), debugPrinter);
-        texture = renderer->CreateTexture();
-        //vertexShader = renderer->CreateShader();
-        //fragmentShader = renderer->CreateShader(Curse::ShaderDescriptor(Curse::Shader::Type::Fragment, ""));
-    }
-    catch (Curse::Exception & e)
-    {
-        std::cout << "Error: " << e.what() << std::endl;
-        return -1;
-    }
+    renderer->Open(*window, Curse::Version(1, 1), debugPrinter);
+    
+    Curse::Texture* texture = renderer->CreateTexture();
+    Curse::Shader* vertexShader = renderer->CreateShader({ Curse::Shader::Type::Vertex, "vert.spv" });
+    Curse::Shader* fragmentShader = renderer->CreateShader({ Curse::Shader::Type::Fragment, "frag.spv" });
 
+    Curse::PipelineDescriptor pipelineDesc;
+    pipelineDesc.shaders.push_back(vertexShader);
+    pipelineDesc.shaders.push_back(fragmentShader);
+    pipelineDesc.topology = Curse::Pipeline::Topology::TriangleList;
+    pipelineDesc.polygonMode = Curse::Pipeline::PolygonMode::Fill;
+    pipelineDesc.frontFace = Curse::Pipeline::FrontFace::Clockwise;
+    pipelineDesc.cullMode = Curse::Pipeline::CullMode::Back;
+    Curse::Pipeline* pipeline = renderer->CreatePipeline(pipelineDesc);
+    
     window->Show();
     while (window->IsOpen())
     {
@@ -38,7 +37,10 @@ static int Run()
         renderer->SwapBuffers();
     }
 
-    renderer->DeleteTexture(texture);
+    renderer->DestroyTexture(texture);
+    renderer->DestroyShader(vertexShader);
+    renderer->DestroyShader(fragmentShader);
+    renderer->DestroyPipeline(pipeline);
 
     return 0;
 }
@@ -53,7 +55,7 @@ int main()
     }
     catch (Curse::Exception & e)
     {
-        std::cout << e.what() << std::endl;
+        std::cout << "Error: " << e.what() << std::endl;
     }
 
     return -1;

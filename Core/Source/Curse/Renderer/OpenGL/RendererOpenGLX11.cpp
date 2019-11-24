@@ -178,7 +178,7 @@ namespace Curse
         return nullptr;
     }
 
-    void RendererOpenGLX11::DeleteShader(Shader* )
+    void RendererOpenGLX11::DestroyShader(Shader* )
     {
     }
 
@@ -187,7 +187,16 @@ namespace Curse
         return nullptr;
     }
 
-    void RendererOpenGLX11::DeleteTexture(Texture* )
+    void RendererOpenGLX11::DestroyTexture(Texture* )
+    {
+    }
+
+    Pipeline* RendererOpenGLX11::CreatePipeline(const PipelineDescriptor& )
+    {
+        return nullptr;
+    }
+
+    void RendererOpenGLX11::DestroyPipeline(Pipeline* )
     {
     }
 
