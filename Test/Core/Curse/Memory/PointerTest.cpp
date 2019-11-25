@@ -33,8 +33,7 @@ class TestBase
 
 public:
 
-    ~TestBase()
-    {}
+    virtual ~TestBase() = default;
 
     virtual T Get() const = 0;
     virtual void Set(const T value) = 0;

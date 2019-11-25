@@ -10,7 +10,7 @@ else()
 	find_library(Vulkan_LIBRARY NAMES "vulkan-1" PATHS "$ENV{VULKAN_SDK}/lib" NO_SYSTEM_ENVIRONMENT_PATH)
 endif()
 
-if("${Vulkan_LIBRARY}" STREQUAL "Vulkan-NOTFOUND")
+if("${Vulkan_LIBRARY}" STREQUAL "Vulkan_LIBRARY-NOTFOUND")
 	set(Vulkan_NOTFOUND "TRUE")
 else()
 	set(Vulkan_FOUND "TRUE")

@@ -2,10 +2,9 @@ project (Curse)
 cmake_minimum_required(VERSION 3.1)
 include(${CMAKE_CURRENT_SOURCE_DIR}/../CMake/Tools.cmake)
 
-
 # Options.
-option(CURSE_ENABLE_VULKAN "Enables OpenGL." ON)
-option(CURSE_ENABLE_OPENGL "Enables OpenGL." ON)
+option(CURSE_ENABLE_VULKAN "Enables Vulkan renderer." ON)
+option(CURSE_ENABLE_OPENGL "Enables OpenGL renderer." ON)
 option(CURSE_ENABLE_COVERAGE "Enables coverage reporting." OFF)
 
 
@@ -13,7 +12,7 @@ option(CURSE_ENABLE_COVERAGE "Enables coverage reporting." OFF)
 if(UNIX AND NOT APPLE)
 	option(CURSE_ENABLE_X11 "Enables X server." ON)
 
-	set(LINUX TRUE)
+  set(LINUX TRUE)
 	find_package(Threads)
 	
 	if(CURSE_ENABLE_OPENGL AND (NOT CURSE_ENABLE_X11))
@@ -32,7 +31,7 @@ endif()
 # OpenGL configurations
 if(CURSE_ENABLE_OPENGL)
 	find_package(OpenGL)
-	message("FOUND OPENGL: ${OpenGL_FOUND}, Lib: ${OPENGL_gl_LIBRARY}")
+	message("FOUND OPENGL: ${OpenGL_FOUND}, Lib: ${OPENGL_LIBRARIES}")
 endif()
 
 # Set compiler flags
@@ -65,9 +64,8 @@ message("Current source dir: ${CMAKE_CURRENT_SOURCE_DIR}")
 message("Code coverage: ${CURSE_ENABLE_COVERAGE}")
 
 
-#include_directories ("${CoreHeadersDir}")
+include_directories ("${CoreHeadersDir}")
 add_library(Curse SHARED "${CoreSources}" "${CoreHeaders}")  
-target_include_directories(Curse PUBLIC "${CoreHeadersDir}")
 
 CreateSourceGroups("${CoreSources}" "${CoreSourceDir}")
 CreateSourceGroups("${CoreHeaders}" "${CoreHeadersDir}")
@@ -96,14 +94,15 @@ if(CURSE_ENABLE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU")
 endif()
 
 if(CURSE_ENABLE_VULKAN AND Vulkan_FOUND )
-	target_include_directories(Curse PUBLIC "${Vulkan_INCLUDE}")
-	target_link_libraries(Curse ${Vulkan_LIBRARY})	
-	target_compile_definitions(Curse PUBLIC "CURSE_ENABLE_VULKAN")
+  target_include_directories(Curse PUBLIC "${Vulkan_INCLUDE}")
+  target_link_libraries(Curse ${Vulkan_LIBRARY})  
+  target_compile_definitions(Curse PUBLIC "CURSE_ENABLE_VULKAN")
 endif()
 
 if(CURSE_ENABLE_OPENGL AND OpenGL_FOUND )
-	target_link_libraries(Curse ${OPENGL_gl_LIBRARY})
+	target_link_libraries(Curse ${OPENGL_LIBRARIES})
 	target_compile_definitions(Curse PUBLIC "CURSE_ENABLE_OPENGL")
+	message("Adding target link to Curse: ${OPENGL_LIBRARIES}")
 endif()
 
 if(CURSE_ENABLE_X11)

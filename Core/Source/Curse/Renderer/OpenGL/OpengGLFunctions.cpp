@@ -31,7 +31,7 @@
 #if CURSE_PLATFORM == CURSE_PLATFORM_WINDOWS
     #define GetProcAddress(ext) ::wglGetProcAddress(ext)
 #elif CURSE_PLATFORM == CURSE_PLATFORM_LINUX
-    #define GetProcAddress(ext) ::glXGetProcAddress((const GLubyte *)ext)
+    #define GetProcAddress(ext) glXGetProcAddress((const GLubyte *)ext)
 #endif
 
 #include "Curse/System/Exception.hpp"
@@ -53,7 +53,7 @@ namespace Curse
         {
             bool error = false;
 
-        #if defined(CURSE_PLATFORM_WINDOWS)
+        #if CURSE_PLATFORM == CURSE_PLATFORM_WINDOWS
 
             error |= (GetStringi = (PFNGLGETSTRINGIPROC)GetProcAddress("glGetStringi")) == NULL;
             if (error)

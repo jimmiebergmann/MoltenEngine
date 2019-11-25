@@ -37,9 +37,9 @@
 namespace Curse
 {
 
-#if defined(CURSE_PLATFORM_WINDOWS)
+#if CURSE_PLATFORM == CURSE_PLATFORM_WINDOWS
     using Window = WindowWin32;
-#elif defined(CURSE_PLATFORM_LINUX)
+#elif CURSE_PLATFORM == CURSE_PLATFORM_LINUX
     using Window = WindowX11;
 #endif
 

@@ -32,7 +32,7 @@ namespace Curse
 
     bool Mouse::IsDown(const Button button)
     {
-    #if defined(CURSE_PLATFORM_WINDOWS)
+    #if CURSE_PLATFORM == CURSE_PLATFORM_WINDOWS
        
         static const int virtualKeys[] =
         {
@@ -45,7 +45,7 @@ namespace Curse
 
         return ((::GetKeyState(virtualKeys[static_cast<size_t>(button)]) & 0x100) != 0);
 
-    #elif defined(CURSE_PLATFORM_LINUX)
+    #elif CURSE_PLATFORM == CURSE_PLATFORM_LINUX
         return false;
     #endif
     }

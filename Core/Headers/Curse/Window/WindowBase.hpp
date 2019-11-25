@@ -90,7 +90,7 @@ namespace Curse
         */
         virtual Vector2ui32 GetCurrentSize() const = 0;
 
-    #if defined(CURSE_PLATFORM_WINDOWS)
+    #if CURSE_PLATFORM == CURSE_PLATFORM_WINDOWS
        
         /**
         * @brief Get win32 window handle. Only available on Windows.
@@ -107,7 +107,7 @@ namespace Curse
         */
         virtual HDC GetWin32DeviceContext() const = 0;
     
-    #elif defined(CURSE_PLATFORM_WINDOWS)
+    #elif CURSE_PLATFORM == CURSE_PLATFORM_LINUX
        
         /**
         * @brief Get X11 display Device. Only available on Linux.

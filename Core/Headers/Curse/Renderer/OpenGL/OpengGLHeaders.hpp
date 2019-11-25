@@ -38,6 +38,7 @@
 #elif CURSE_PLATFORM == CURSE_PLATFORM_LINUX
     #include "Curse/Platform/X11Headers.hpp"
     #include <GL/gl.h>
+	#include <GL/glx.h>
     #include "Curse/Renderer/OpenGL/glext.h"
 #endif
 
