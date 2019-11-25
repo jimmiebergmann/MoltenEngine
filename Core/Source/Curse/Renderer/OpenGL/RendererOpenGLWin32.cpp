@@ -171,11 +171,6 @@ namespace Curse
         return m_version;
     }
 
-    void RendererOpenGLWin32::SwapBuffers()
-    {
-        ::SwapBuffers(m_deviceContext);
-    }
-
     Shader* RendererOpenGLWin32::CreateShader(const ShaderDescriptor& )
     {
         return nullptr;
@@ -200,6 +195,15 @@ namespace Curse
     }
 
     void RendererOpenGLWin32::DestroyPipeline(Pipeline* /*shader*/)
+    {
+    }
+
+    Framebuffer* RendererOpenGLWin32::CreateFramebuffer(const FramebufferDescriptor&)
+    {
+        return nullptr;
+    }
+
+    void RendererOpenGLWin32::DestroyFramebuffer(Framebuffer*)
     {
     }
 

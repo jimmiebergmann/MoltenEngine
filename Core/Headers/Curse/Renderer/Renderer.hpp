@@ -31,6 +31,8 @@
 #include "Curse/Renderer/Shader.hpp"
 #include "Curse/Renderer/Texture.hpp"
 #include "Curse/Renderer/Pipeline.hpp"
+#include "Curse/Renderer/Framebuffer.hpp"
+#include "Curse/Renderer/VertexArray.hpp"
 #include <functional>
 
 namespace Curse
@@ -98,12 +100,6 @@ namespace Curse
         virtual Version GetVersion() const = 0;
 
         /**
-        * @brief Swap buffers.
-        *        Necessary to do in order to present the frame, if double/tripple buffering is used.
-        */
-        virtual void SwapBuffers() = 0;
-
-        /**
         * @brief Create shader object.
         */
         virtual Shader* CreateShader(const ShaderDescriptor & descriptor) = 0;
@@ -132,6 +128,23 @@ namespace Curse
         * @brief Delete pipeline object.
         */
         virtual void DestroyPipeline(Pipeline* pipeline) = 0;
+
+        /**
+        * @brief Create framebuffer object.
+        */
+        virtual Framebuffer* CreateFramebuffer(const FramebufferDescriptor& descriptor) = 0;
+
+        /**
+        * @brief Delete framebuffer object.
+        */
+        virtual void DestroyFramebuffer(Framebuffer* framebuffer) = 0;
+
+        //virtual VertexArray* CreateVertexArray(const VertexArrayDescriptor& descriptor) {}
+        //virtual void DestroyVertexArray(VertexArray* vertexArray) {}
+        virtual void BindPipeline(Pipeline* ) {}
+        virtual void BeginDraw() {}
+        virtual void DrawVertexArray(VertexArray * ) {}
+        virtual void EndDraw() {}
 
     };
 

@@ -37,6 +37,9 @@
 namespace Curse
 {
 
+    class PipelineVulkan;
+    class FramebufferVulkan;
+
     /**
     * @brief Vulkan renderer class.
     */
@@ -85,12 +88,6 @@ namespace Curse
         virtual Version GetVersion() const override;
 
         /**
-        * @brief Swap buffers.
-        *        Necessary to do in order to present the frame, if double/tripple buffering is used.
-        */
-        virtual void SwapBuffers() override;
-
-        /**
         * @brief Create shader object.
         */
         virtual Shader* CreateShader(const ShaderDescriptor& descriptor) override;
@@ -119,6 +116,22 @@ namespace Curse
         * @brief Delete pipeline object.
         */
         virtual void DestroyPipeline(Pipeline* pipeline) override;
+
+        /**
+        * @brief Create framebuffer object.
+        */
+        virtual Framebuffer* CreateFramebuffer(const FramebufferDescriptor& descriptor) override;
+
+        /**
+        * @brief Delete framebuffer object.
+        */
+        virtual void DestroyFramebuffer(Framebuffer* framebuffer) override;
+
+
+        virtual void BindPipeline(Pipeline* pipeline) override;
+        virtual void BeginDraw() override;
+        virtual void DrawVertexArray(VertexArray* vertexArray) override;
+        virtual void EndDraw() override;
 
     private:
 
@@ -166,6 +179,10 @@ namespace Curse
         void LoadLogicalDevice();
         void LoadSwapChain(const WindowBase& window);
         void LoadImageViews();
+        void LoadRenderPass();
+        void LoadPresentFramebuffer();
+        void LoadCommandPool();
+        void LoadSyncObjects();
 
         Version m_version;
         VkInstance m_instance;
@@ -176,13 +193,28 @@ namespace Curse
         PhysicalDevice m_physicalDevice;
         VkDevice m_logicalDevice;
         VkQueue m_graphicsQueue;
-        VkQueue m_presentQueue;
-        
+        VkQueue m_presentQueue;       
         VkSwapchainKHR m_swapChain;
         VkFormat m_swapChainImageFormat;
         VkExtent2D m_swapChainExtent;
         std::vector<VkImage> m_swapChainImages;
         std::vector<VkImageView> m_swapChainImageViews;
+        VkRenderPass m_renderPass;
+        std::vector<FramebufferVulkan*> m_presentFramebuffers;
+        VkCommandPool m_commandPool;
+        std::vector<VkCommandBuffer> m_commandBuffers;
+        std::vector<VkSemaphore> m_imageAvailableSemaphores;
+        std::vector<VkSemaphore> m_renderFinishedSemaphores;
+        std::vector<VkFence> m_inFlightFences;
+        std::vector<VkFence> m_imagesInFlight;
+        size_t m_maxFramesInFlight;
+        size_t m_currentFrame;
+
+        bool m_beginDraw;
+        uint32_t m_currentImageIndex;
+        VkCommandBuffer* m_currentCommandBuffer;
+        VkFramebuffer* m_currentFramebuffer;
+        
 
     };
 

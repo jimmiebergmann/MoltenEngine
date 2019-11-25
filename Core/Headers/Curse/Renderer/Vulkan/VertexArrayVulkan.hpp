@@ -23,29 +23,27 @@
 *
 */
 
-#ifndef CURSE_CORE_RENDERER_PIPELINEVULKAN_HPP
-#define CURSE_CORE_RENDERER_PIPELINEVULKAN_HPP
+#ifndef CURSE_CORE_RENDERER_VERTEXARRAYVULKAN_HPP
+#define CURSE_CORE_RENDERER_VERTEXARRAYVULKAN_HPP
 
-#include "Curse/Renderer/Pipeline.hpp"
+#include "Curse/Renderer/VertexArray.hpp"
 
 namespace Curse
 {
 
     class RendererVulkan;
 
-    class CURSE_API PipelineVulkan : public Pipeline
+    class CURSE_API VertexArrayVulkan : public VertexArray
     {
 
     private:
 
-        PipelineVulkan() = default;
-        PipelineVulkan(const PipelineVulkan&) = delete;
-        PipelineVulkan(PipelineVulkan&&) = delete;
-        ~PipelineVulkan() = default;
+        VertexArrayVulkan() = default;
+        VertexArrayVulkan(const VertexArrayVulkan&) = delete;
+        VertexArrayVulkan(VertexArrayVulkan&&) = delete;
+        ~VertexArrayVulkan() = default;
 
         friend class RendererVulkan;
-
-        VkPipelineLayout layout;
 
     };
 

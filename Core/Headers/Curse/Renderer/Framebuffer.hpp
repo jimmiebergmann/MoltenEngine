@@ -23,29 +23,44 @@
 *
 */
 
-#ifndef CURSE_CORE_RENDERER_PIPELINEVULKAN_HPP
-#define CURSE_CORE_RENDERER_PIPELINEVULKAN_HPP
+#ifndef CURSE_CORE_RENDERER_FRAMEBUFFER_HPP
+#define CURSE_CORE_RENDERER_FRAMEBUFFER_HPP
 
-#include "Curse/Renderer/Pipeline.hpp"
+#include "Curse/Renderer/Resource.hpp"
+#include "Curse/Math/Vector.hpp"
 
 namespace Curse
 {
 
-    class RendererVulkan;
-
-    class CURSE_API PipelineVulkan : public Pipeline
+    /**
+    * @brief Framebuffer base class.
+    */
+    class CURSE_API Framebuffer
     {
 
-    private:
+    protected:
 
-        PipelineVulkan() = default;
-        PipelineVulkan(const PipelineVulkan&) = delete;
-        PipelineVulkan(PipelineVulkan&&) = delete;
-        ~PipelineVulkan() = default;
+        Framebuffer() = default;
+        Framebuffer(const Framebuffer&) = delete;
+        Framebuffer(Framebuffer&&) = delete;
+        virtual ~Framebuffer() = default;
 
-        friend class RendererVulkan;
+        Resource resource;
 
-        VkPipelineLayout layout;
+    };
+
+    /**
+    * @brief Descriptor class of framebuffer class.
+    */
+    class CURSE_API FramebufferDescriptor
+    {
+
+    public:
+
+        FramebufferDescriptor() = default;
+
+        Resource image;
+        Vector2ui32 size;
 
     };
 

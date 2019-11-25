@@ -168,11 +168,6 @@ namespace Curse
         return m_version;
     }
 
-    void RendererOpenGLX11::SwapBuffers()
-    {
-
-    }
-
     Shader* RendererOpenGLX11::CreateShader(const ShaderDescriptor& )
     {
         return nullptr;
@@ -197,6 +192,15 @@ namespace Curse
     }
 
     void RendererOpenGLX11::DestroyPipeline(Pipeline* )
+    {
+    }
+
+    Framebuffer* RendererOpenGLX11::CreateFramebuffer(const FramebufferDescriptor&)
+    {
+        return nullptr;
+    }
+
+    void RendererOpenGLX11::DestroyFramebuffer(Framebuffer*)
     {
     }
 

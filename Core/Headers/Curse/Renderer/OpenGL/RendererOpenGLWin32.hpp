@@ -85,12 +85,6 @@ namespace Curse
         virtual Version GetVersion() const override;
 
         /**
-        * @brief Swap buffers.
-        *        Necessary to do in order to present the frame, if double/tripple buffering is used.
-        */
-        virtual void SwapBuffers() override;
-
-        /**
         * @brief Create shader object.
         */
         virtual Shader* CreateShader(const ShaderDescriptor& descriptor) override;
@@ -119,6 +113,16 @@ namespace Curse
         * @brief Delete pipeline object.
         */
         virtual void DestroyPipeline(Pipeline* pipeline) override;
+
+        /**
+        * @brief Create framebuffer object.
+        */
+        virtual Framebuffer* CreateFramebuffer(const FramebufferDescriptor& descriptor) override;
+
+        /**
+        * @brief Delete framebuffer object.
+        */
+        virtual void DestroyFramebuffer(Framebuffer* framebuffer) override;
 
     private:
 
