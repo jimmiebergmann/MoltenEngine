@@ -29,32 +29,16 @@ static int Run()
     pipelineDesc.frontFace = Curse::Pipeline::FrontFace::Clockwise;
     pipelineDesc.cullMode = Curse::Pipeline::CullMode::Back;
 
-    pipelineDesc.shaders.clear();
-    pipelineDesc.shaders.push_back(vertexShader1);
-    pipelineDesc.shaders.push_back(fragmentShader1);
+    pipelineDesc.shaders = { vertexShader1 , fragmentShader1 };
     Curse::Pipeline* pipeline1 = renderer->CreatePipeline(pipelineDesc);
 
     pipelineDesc.polygonMode = Curse::Pipeline::PolygonMode::Fill;
-    pipelineDesc.shaders.clear();
-    pipelineDesc.shaders.push_back(vertexShader2);
-    pipelineDesc.shaders.push_back(fragmentShader2);
+    pipelineDesc.shaders = { vertexShader2 , fragmentShader2 };
     Curse::Pipeline* pipeline2 = renderer->CreatePipeline(pipelineDesc);
     
-    window->Show();
-
-    size_t ticks = 0;
-    Curse::Clock clock;
-    while (window->IsOpen())
-    {
-        if (clock.GetTime() >= Curse::Seconds(1.0f))
-        {
-            std::cout << "FPS: " << ticks << std::endl;
-            ticks = 0;
-            clock.Reset();
-        }
-        ticks++;
-        
-        window->Update();
+    auto renderFunction = [&]()
+    {      
+        renderer->Resize(window->GetCurrentSize());
         renderer->BeginDraw();
 
         renderer->BindPipeline(pipeline1);
@@ -64,6 +48,41 @@ static int Run()
         renderer->DrawVertexArray(nullptr);
 
         renderer->EndDraw();
+    };
+
+    Curse::Clock resizeTimer;
+    auto resizeCallback = [&](Curse::Vector2ui32 )
+    {
+        if (resizeTimer.GetTime() >= Curse::Seconds(0.1f))
+        {
+            resizeTimer.Reset();
+            
+            Curse::Clock rendererTimer;
+            renderFunction();
+            auto time = rendererTimer.GetTime();
+            //std::cout << "Resize time: " << time.AsSeconds<float>() << std::endl;
+        }
+    };
+
+    window->OnResize.Connect(resizeCallback);
+
+
+    window->Show();
+
+    size_t ticks = 0;
+    Curse::Clock clock;
+    while (window->IsOpen())
+    {
+        if (clock.GetTime() >= Curse::Seconds(1.0f))
+        {
+            //std::cout << "FPS: " << ticks << std::endl;
+            ticks = 0;
+            clock.Reset();
+        }
+        ticks++;
+        
+        window->Update();
+        renderFunction();
     }
 
     renderer->DestroyShader(vertexShader1);

@@ -90,6 +90,12 @@ namespace Curse
         virtual void Close() = 0;
 
         /**
+        * @brief Resize the framebuffers.
+        *        Execute this function as soon as the render target's work area is resized.
+        */
+        virtual void Resize(const Vector2ui32& size) = 0;
+
+        /**
         * @brief Get backend API type.
         */
         virtual BackendApi GetBackendApi() const = 0;
@@ -99,35 +105,6 @@ namespace Curse
         */
         virtual Version GetVersion() const = 0;
 
-        /**
-        * @brief Create shader object.
-        */
-        virtual Shader* CreateShader(const ShaderDescriptor & descriptor) = 0;
-
-        /**
-        * @brief Delete shader object.
-        */
-        virtual void DestroyShader(Shader* shader) = 0;
-
-        /**
-        * @brief Create texture object.
-        */
-        virtual Texture* CreateTexture() = 0;
-
-        /**
-        * @brief Delete texture object.
-        */
-        virtual void DestroyTexture(Texture* texture) = 0;
-
-        /**
-        * @brief Create pipeline object.
-        */
-        virtual Pipeline* CreatePipeline(const PipelineDescriptor& descriptor) = 0;
-
-        /**
-        * @brief Delete pipeline object.
-        */
-        virtual void DestroyPipeline(Pipeline* pipeline) = 0;
 
         /**
         * @brief Create framebuffer object.
@@ -135,16 +112,61 @@ namespace Curse
         virtual Framebuffer* CreateFramebuffer(const FramebufferDescriptor& descriptor) = 0;
 
         /**
+        * @brief Create pipeline object.
+        */
+        virtual Pipeline* CreatePipeline(const PipelineDescriptor& descriptor) = 0;
+
+        /**
+        * @brief Create shader object.
+        */
+        virtual Shader* CreateShader(const ShaderDescriptor& descriptor) = 0;
+
+        /**
+        * @brief Create texture object.
+        */
+        virtual Texture* CreateTexture() = 0;
+
+
+        /**
         * @brief Delete framebuffer object.
         */
         virtual void DestroyFramebuffer(Framebuffer* framebuffer) = 0;
 
-        //virtual VertexArray* CreateVertexArray(const VertexArrayDescriptor& descriptor) {}
-        //virtual void DestroyVertexArray(VertexArray* vertexArray) {}
-        virtual void BindPipeline(Pipeline* ) {}
-        virtual void BeginDraw() {}
-        virtual void DrawVertexArray(VertexArray * ) {}
-        virtual void EndDraw() {}
+        /**
+        * @brief Delete pipeline object.
+        */
+        virtual void DestroyPipeline(Pipeline* pipeline) = 0;
+
+        /**
+        * @brief Delete shader object.
+        */
+        virtual void DestroyShader(Shader* shader) = 0;
+
+        /**
+        * @brief Delete texture object.
+        */
+        virtual void DestroyTexture(Texture* texture) = 0;
+      
+
+        /**
+        * @brief Bind pipeline to draw queue.
+        */
+        virtual void BindPipeline(Pipeline* pipeline) = 0;
+
+        /**
+        * @brief Begin and initialize rendering to framebuffers.
+        */
+        virtual void BeginDraw() = 0;
+
+        /**
+        * @brief Draw vertex buffer, using the current bound pipeline.
+        */
+        virtual void DrawVertexArray(VertexArray * vertexArray) = 0;
+
+        /**
+        * @brief Finalize and present rendering.
+        */
+        virtual void EndDraw() = 0;
 
     };
 

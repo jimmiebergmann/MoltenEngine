@@ -29,6 +29,7 @@
 #include "Curse/Math/Vector.hpp"
 #include "Curse/Platform/Win32Headers.hpp"
 #include "Curse/Platform/X11Headers.hpp"
+#include "Curse/System/Signal.hpp"
 #include <string>
 
 namespace Curse
@@ -41,6 +42,11 @@ namespace Curse
     {
 
     public:
+
+        /**
+        * @brief On resize signal.
+        */
+        Signal<Vector2ui32> OnResize;
 
         /**
         * @brief Virtual destructor.

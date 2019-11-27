@@ -78,6 +78,12 @@ namespace Curse
         virtual void Close() override;
 
         /**
+        * @brief Resize the framebuffers.
+        *        Execute this function as soon as the render target's work area is resized.
+        */
+        virtual void Resize(const Vector2ui32& size) override;
+
+        /**
         * @brief Get backend API type.
         */
         virtual BackendApi GetBackendApi() const override;
@@ -87,35 +93,6 @@ namespace Curse
         */
         virtual Version GetVersion() const override;
 
-        /**
-        * @brief Create shader object.
-        */
-        virtual Shader* CreateShader(const ShaderDescriptor& descriptor) override;
-
-        /**
-        * @brief Delete shader object.
-        */
-        virtual void DestroyShader(Shader* shader) override;
-
-        /**
-        * @brief Create texture object.
-        */
-        virtual Texture* CreateTexture() override;
-
-        /**
-        * @brief Delete texture object.
-        */
-        virtual void DestroyTexture(Texture* texture) override;
-
-        /**
-        * @brief Create pipeline object.
-        */
-        virtual Pipeline* CreatePipeline(const PipelineDescriptor& descriptor) override;
-
-        /**
-        * @brief Delete pipeline object.
-        */
-        virtual void DestroyPipeline(Pipeline* pipeline) override;
 
         /**
         * @brief Create framebuffer object.
@@ -123,14 +100,60 @@ namespace Curse
         virtual Framebuffer* CreateFramebuffer(const FramebufferDescriptor& descriptor) override;
 
         /**
+        * @brief Create pipeline object.
+        */
+        virtual Pipeline* CreatePipeline(const PipelineDescriptor& descriptor) override;
+
+        /**
+        * @brief Create shader object.
+        */
+        virtual Shader* CreateShader(const ShaderDescriptor& descriptor) override;
+
+        /**
+        * @brief Create texture object.
+        */
+        virtual Texture* CreateTexture() override;
+
+
+        /**
         * @brief Delete framebuffer object.
         */
         virtual void DestroyFramebuffer(Framebuffer* framebuffer) override;
 
+        /**
+        * @brief Delete pipeline object.
+        */
+        virtual void DestroyPipeline(Pipeline* pipeline) override;
 
+        /**
+        * @brief Delete shader object.
+        */
+        virtual void DestroyShader(Shader* shader) override;
+
+        /**
+        * @brief Delete texture object.
+        */
+        virtual void DestroyTexture(Texture* texture) override;
+
+
+        /**
+        * @brief Bind pipeline to draw queue.
+        */
         virtual void BindPipeline(Pipeline* pipeline) override;
+
+        /**
+        * @brief Begin and initialize rendering to framebuffers.
+        */
         virtual void BeginDraw() override;
+
+        /**
+        * @brief Draw vertex buffer, using the current bound pipeline.
+        */
         virtual void DrawVertexArray(VertexArray* vertexArray) override;
+
+        /**
+        * @brief Finalize and present rendering.
+        */
         virtual void EndDraw() override;
 
     private:
@@ -171,20 +194,23 @@ namespace Curse
         void LoadInstance(const Version& version, DebugCallback debugCallback);
         bool GetRequiredExtensions(std::vector<std::string>& extensions, const bool requestDebugger) const;
         bool LoadDebugger(VkInstanceCreateInfo& instanceInfo, VkDebugUtilsMessengerCreateInfoEXT& debugMessageInfo, DebugCallback debugCallback);     
-        void LoadSurface(const WindowBase& window);
+        void LoadSurface();
         void LoadPhysicalDevice();
         bool ScorePhysicalDevice(PhysicalDevice& physicalDevice, uint32_t & score);
         bool CheckDeviceExtensionSupport(PhysicalDevice & physicalDevice);
         bool FetchSwapChainSupport(PhysicalDevice& physicalDevice);
         void LoadLogicalDevice();
-        void LoadSwapChain(const WindowBase& window);
+        void LoadSwapChain();
         void LoadImageViews();
         void LoadRenderPass();
         void LoadPresentFramebuffer();
         void LoadCommandPool();
         void LoadSyncObjects();
+        void RecreateSwapChain();
+        void UnloadSwapchain();
 
         Version m_version;
+        const WindowBase * m_renderTarget;
         VkInstance m_instance;
         std::vector<const char*> m_validationLayers;
         std::vector<const char*> m_deviceExtensions;
@@ -210,12 +236,12 @@ namespace Curse
         size_t m_maxFramesInFlight;
         size_t m_currentFrame;
 
+        bool m_resized;
         bool m_beginDraw;
         uint32_t m_currentImageIndex;
         VkCommandBuffer* m_currentCommandBuffer;
         VkFramebuffer* m_currentFramebuffer;
         
-
     };
 
 }

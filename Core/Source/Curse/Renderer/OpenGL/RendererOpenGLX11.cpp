@@ -158,6 +158,10 @@ namespace Curse
         }*/
     }
 
+    void RendererOpenGLX11::Resize(const Vector2ui32& /*size*/)
+    {
+    }
+
     Renderer::BackendApi RendererOpenGLX11::GetBackendApi() const
     {
         return Renderer::BackendApi::OpenGL;
@@ -168,13 +172,19 @@ namespace Curse
         return m_version;
     }
 
-    Shader* RendererOpenGLX11::CreateShader(const ShaderDescriptor& )
+    Framebuffer* RendererOpenGLX11::CreateFramebuffer(const FramebufferDescriptor&)
     {
         return nullptr;
     }
 
-    void RendererOpenGLX11::DestroyShader(Shader* )
+    Pipeline* RendererOpenGLX11::CreatePipeline(const PipelineDescriptor& /*descriptor*/)
     {
+        return nullptr;
+    }
+
+    Shader* RendererOpenGLX11::CreateShader(const ShaderDescriptor&)
+    {
+        return nullptr;
     }
 
     Texture* RendererOpenGLX11::CreateTexture()
@@ -182,25 +192,35 @@ namespace Curse
         return nullptr;
     }
 
-    void RendererOpenGLX11::DestroyTexture(Texture* )
-    {
-    }
-
-    Pipeline* RendererOpenGLX11::CreatePipeline(const PipelineDescriptor& )
-    {
-        return nullptr;
-    }
-
-    void RendererOpenGLX11::DestroyPipeline(Pipeline* )
-    {
-    }
-
-    Framebuffer* RendererOpenGLX11::CreateFramebuffer(const FramebufferDescriptor&)
-    {
-        return nullptr;
-    }
-
     void RendererOpenGLX11::DestroyFramebuffer(Framebuffer*)
+    {
+    }
+
+    void RendererOpenGLX11::DestroyPipeline(Pipeline* /*shader*/)
+    {
+    }
+
+    void RendererOpenGLX11::DestroyShader(Shader*)
+    {
+    }
+
+    void RendererOpenGLX11::DestroyTexture(Texture*)
+    {
+    }
+
+    void RendererOpenGLX11::BindPipeline(Pipeline* /*pipeline*/)
+    {
+    }
+
+    void RendererOpenGLX11::BeginDraw()
+    {
+    }
+
+    void RendererOpenGLX11::DrawVertexArray(VertexArray* /*vertexArray*/)
+    {
+    }
+
+    void RendererOpenGLX11::EndDraw()
     {
     }
 

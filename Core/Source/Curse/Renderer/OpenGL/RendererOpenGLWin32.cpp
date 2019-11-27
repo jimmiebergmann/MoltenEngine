@@ -161,6 +161,10 @@ namespace Curse
         }
     }
 
+    void RendererOpenGLWin32::Resize(const Vector2ui32& /*size*/)
+    {
+    }
+
     Renderer::BackendApi RendererOpenGLWin32::GetBackendApi() const
     {
         return Renderer::BackendApi::OpenGL;
@@ -171,22 +175,9 @@ namespace Curse
         return m_version;
     }
 
-    Shader* RendererOpenGLWin32::CreateShader(const ShaderDescriptor& )
+    Framebuffer* RendererOpenGLWin32::CreateFramebuffer(const FramebufferDescriptor&)
     {
         return nullptr;
-    }
-
-    void RendererOpenGLWin32::DestroyShader(Shader* )
-    {
-    }
-
-    Texture* RendererOpenGLWin32::CreateTexture()
-    {
-        return nullptr;
-    }
-
-    void RendererOpenGLWin32::DestroyTexture(Texture* )
-    {
     }
 
     Pipeline* RendererOpenGLWin32::CreatePipeline(const PipelineDescriptor& /*descriptor*/)
@@ -194,11 +185,12 @@ namespace Curse
         return nullptr;
     }
 
-    void RendererOpenGLWin32::DestroyPipeline(Pipeline* /*shader*/)
+    Shader* RendererOpenGLWin32::CreateShader(const ShaderDescriptor& )
     {
+        return nullptr;
     }
 
-    Framebuffer* RendererOpenGLWin32::CreateFramebuffer(const FramebufferDescriptor&)
+    Texture* RendererOpenGLWin32::CreateTexture()
     {
         return nullptr;
     }
@@ -207,6 +199,33 @@ namespace Curse
     {
     }
 
+    void RendererOpenGLWin32::DestroyPipeline(Pipeline* /*shader*/)
+    {
+    }
+
+    void RendererOpenGLWin32::DestroyShader(Shader* )
+    {
+    }
+
+    void RendererOpenGLWin32::DestroyTexture(Texture* )
+    {
+    }
+
+    void RendererOpenGLWin32::BindPipeline(Pipeline* /*pipeline*/)
+    {
+    }
+
+    void RendererOpenGLWin32::BeginDraw()
+    {
+    }
+
+    void RendererOpenGLWin32::DrawVertexArray(VertexArray* /*vertexArray*/)
+    {
+    }
+
+    void RendererOpenGLWin32::EndDraw()
+    {
+    }
 
     bool RendererOpenGLWin32::OpenVersion(HDC deviceContext, const Version& version)
     {

@@ -252,6 +252,27 @@ namespace Curse
             return 0;
         }
         break;
+        case WM_SIZE:
+        {
+            Vector2i32 windowSize =
+            {
+                static_cast<int32_t>(LOWORD(lParam)),
+                static_cast<int32_t>(HIWORD(lParam))
+            };
+            m_currentSize =
+            {
+                windowSize.x < 0 ? 0 : windowSize.x,
+                windowSize.y < 0 ? 0 : windowSize.y
+            };
+
+            OnResize(m_currentSize);
+        }
+        break;
+        case WM_ERASEBKGND:
+        {
+            return 0;
+        }
+        break;
         default: break;
         }
 
