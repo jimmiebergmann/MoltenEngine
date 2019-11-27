@@ -57,7 +57,7 @@ static int Run()
         {
             resizeTimer.Reset();
             
-            Curse::Clock rendererTimer;
+            //Curse::Clock rendererTimer;
             renderFunction();
             //auto time = rendererTimer.GetTime();
             //std::cout << "Resize time: " << time.AsSeconds<float>() << std::endl;

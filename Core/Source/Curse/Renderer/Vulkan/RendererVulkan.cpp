@@ -165,15 +165,7 @@ namespace Curse
         if (m_logicalDevice)
         {
             vkDeviceWaitIdle(m_logicalDevice);
-
-            for (auto& semaphore : m_imageAvailableSemaphores)
-            {
-                vkDestroySemaphore(m_logicalDevice, semaphore, nullptr);
-            }
-            for (auto& semaphore : m_renderFinishedSemaphores)
-            {
-                vkDestroySemaphore(m_logicalDevice, semaphore, nullptr);
-            } 
+          
             for (auto& fence : m_inFlightFences)
             {
                 vkDestroyFence(m_logicalDevice, fence, nullptr);
@@ -538,13 +530,13 @@ namespace Curse
             m_imageAvailableSemaphores[m_currentFrame], VK_NULL_HANDLE, &m_currentImageIndex);
 
         if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || m_resized)
-        {
+        {  
             m_resized = false;
             RecreateSwapChain();
             BeginDraw();
             return;
         }
-        else if(result != VK_SUCCESS)
+        else if (result != VK_SUCCESS)
         {
             throw Exception("Failed to acquire the next swap chain image.");
         }
@@ -652,7 +644,7 @@ namespace Curse
         presentInfo.pImageIndices = &m_currentImageIndex;
 
         vkQueuePresentKHR(m_presentQueue, &presentInfo);
-             
+
         m_currentFrame = (m_currentFrame + 1) % m_maxFramesInFlight;
         m_beginDraw = false;
     }
@@ -1379,15 +1371,28 @@ namespace Curse
     void RendererVulkan::RecreateSwapChain()
     {
         vkDeviceWaitIdle(m_logicalDevice);
+        //vkQueueWaitIdle(m_graphicsQueue);
+        //vkQueueWaitIdle(m_presentQueue);       
 
         UnloadSwapchain();
         LoadSwapChain();
         LoadImageViews();
         LoadPresentFramebuffer();
+        LoadSyncObjects();
+
     }
 
     void RendererVulkan::UnloadSwapchain()
     {
+        for (auto& semaphore : m_imageAvailableSemaphores)
+        {
+            vkDestroySemaphore(m_logicalDevice, semaphore, nullptr);
+        }
+        for (auto& semaphore : m_renderFinishedSemaphores)
+        {
+            vkDestroySemaphore(m_logicalDevice, semaphore, nullptr);
+        }
+
         for (auto& framebuffer : m_presentFramebuffers)
         {
             DestroyFramebuffer(framebuffer);
