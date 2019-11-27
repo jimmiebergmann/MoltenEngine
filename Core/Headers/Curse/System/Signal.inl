@@ -84,7 +84,9 @@ namespace Curse
 
     template<typename ... Args>
     inline Signal<Args...>::~Signal()
-    { }
+    {
+        DisconnectAll();
+    }
 
     template<typename ... Args>
     inline typename Signal<Args...>::Connection Signal<Args...>::Connect(const Callback & callback)
