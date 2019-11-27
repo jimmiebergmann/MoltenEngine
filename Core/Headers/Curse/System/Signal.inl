@@ -93,7 +93,7 @@ namespace Curse
     {
         Connection connection;
         connection.m_signal = this;
-        connection.m_controller = new Connection::Controller;
+        connection.m_controller = new typename Connection::Controller;
 
         m_connections.insert({ connection.m_controller, callback });
 
