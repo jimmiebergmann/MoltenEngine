@@ -86,6 +86,36 @@ namespace Curse
             FrontAndBack
         };
 
+        /**
+        * @brief Different attribute data formats.
+        */
+        enum class AttributeFormat : uint8_t
+        {
+            R32_Float,
+            R32_G32_Float,
+            R32_G32_B32_Float,
+            R32_G32_B32_A32_Float,
+        };
+
+        /**
+        * @brief Vertex attribute information.
+        */
+        struct VertexAttribute
+        {
+            uint32_t location;
+            uint32_t offset;
+            AttributeFormat format;
+        };
+
+        /**
+        * @brief Vertex binding information.
+        */
+        struct VertexBinding
+        {
+            uint32_t binding;
+            uint32_t stride;
+            std::vector<VertexAttribute> attributes;
+        };
 
     protected:
 
@@ -107,12 +137,13 @@ namespace Curse
     public:
 
         PipelineDescriptor() = default;
-       
-        std::vector<Shader*> shaders;
+        
         Pipeline::Topology topology;
         Pipeline::PolygonMode polygonMode;
         Pipeline::FrontFace frontFace;
         Pipeline::CullMode cullMode;
+        std::vector<Shader*> shaders;
+        std::vector<Pipeline::VertexBinding> vertexBindings;
     };
 
 }

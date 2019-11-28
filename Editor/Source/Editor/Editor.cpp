@@ -29,11 +29,49 @@ static int Run()
     pipelineDesc.frontFace = Curse::Pipeline::FrontFace::Clockwise;
     pipelineDesc.cullMode = Curse::Pipeline::CullMode::Back;
 
-    pipelineDesc.shaders = { vertexShader1 , fragmentShader1 };
+    pipelineDesc.shaders = { vertexShader2 , fragmentShader2 };
     Curse::Pipeline* pipeline1 = renderer->CreatePipeline(pipelineDesc);
 
     pipelineDesc.polygonMode = Curse::Pipeline::PolygonMode::Fill;
-    pipelineDesc.shaders = { vertexShader2 , fragmentShader2 };
+    pipelineDesc.shaders = { vertexShader1 , fragmentShader1 };
+
+    struct Vertex
+    {
+        Curse::Vector2f32 position;
+        Curse::Vector3f32 color;
+    };
+
+    static const size_t vertexCount = 3;
+    static const Vertex vertices[vertexCount] =
+    {
+        { { 0.0f, -0.3f }, { 1.0f, 1.0f, 1.0f } },
+        { { 0.3f, 0.3f },  { 0.0f, 1.0f, 0.0f } },
+        { { -0.3f, 0.3f }, { 0.0f, 0.0f, 1.0f } }
+    };
+
+    Curse::VertexBufferDescriptor vertexBufferDesc;
+    vertexBufferDesc.size = sizeof(Vertex) * vertexCount;
+    vertexBufferDesc.data = static_cast<const void*>(&vertices[0]);
+
+    Curse::VertexBuffer* vertexBuffer = renderer->CreateVertexBuffer(vertexBufferDesc);
+
+    Curse::Pipeline::VertexBinding vertexBinding;
+    vertexBinding.binding = 0;
+    vertexBinding.stride = sizeof(Vertex);
+
+    Curse::Pipeline::VertexAttribute vertexAttrib1;
+    vertexAttrib1.location = 0;
+    vertexAttrib1.offset = offsetof(Vertex, position);
+    vertexAttrib1.format = Curse::Pipeline::AttributeFormat::R32_G32_Float;
+    vertexBinding.attributes.push_back(vertexAttrib1);
+
+    Curse::Pipeline::VertexAttribute vertexAttrib2;
+    vertexAttrib2.location = 1;
+    vertexAttrib2.offset = offsetof(Vertex, color);
+    vertexAttrib2.format = Curse::Pipeline::AttributeFormat::R32_G32_B32_Float;
+    vertexBinding.attributes.push_back(vertexAttrib2);
+
+    pipelineDesc.vertexBindings = { vertexBinding };
     Curse::Pipeline* pipeline2 = renderer->CreatePipeline(pipelineDesc);
     
     auto renderFunction = [&]()
@@ -41,11 +79,11 @@ static int Run()
         renderer->Resize(window->GetCurrentSize());
         renderer->BeginDraw();
 
-        renderer->BindPipeline(pipeline1);
-        renderer->DrawVertexArray(nullptr);
+        //renderer->BindPipeline(pipeline1);
+        //renderer->DrawVertexArray(nullptr);
 
         renderer->BindPipeline(pipeline2);
-        renderer->DrawVertexArray(nullptr);
+        renderer->DrawVertexBuffer(vertexBuffer);
 
         renderer->EndDraw();
     };
@@ -85,6 +123,7 @@ static int Run()
         renderFunction();
     }
 
+    renderer->DestroyVertexBuffer(vertexBuffer);
     renderer->DestroyShader(vertexShader1);
     renderer->DestroyShader(fragmentShader1);
     renderer->DestroyShader(vertexShader2);

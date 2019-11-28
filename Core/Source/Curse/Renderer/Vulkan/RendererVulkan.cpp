@@ -32,6 +32,8 @@
 #include "Curse/Renderer/Vulkan/TextureVulkan.hpp"
 #include "Curse/Renderer/Vulkan/PipelineVulkan.hpp"
 #include "Curse/Renderer/Vulkan/FramebufferVulkan.hpp"
+#include "Curse/Renderer/Vulkan/VertexArrayVulkan.hpp"
+#include "Curse/Renderer/Vulkan/VertexBufferVulkan.hpp"
 #include "Curse/Window/WindowBase.hpp"
 #include "Curse/System/Exception.hpp"
 #include "Curse/System/FileSystem.hpp"
@@ -104,6 +106,19 @@ namespace Curse
             default: break;
         }
         throw Exception("Provided cull mode is not supported by the Vulkan renderer.");
+    }
+
+    static VkFormat GetVertexAttributeFormat(const Pipeline::AttributeFormat format)
+    {
+        switch (format)
+        {
+            case Pipeline::AttributeFormat::R32_Float:             return VkFormat::VK_FORMAT_R32_SFLOAT;
+            case Pipeline::AttributeFormat::R32_G32_Float:         return VkFormat::VK_FORMAT_R32G32_SFLOAT;
+            case Pipeline::AttributeFormat::R32_G32_B32_Float:     return VkFormat::VK_FORMAT_R32G32B32_SFLOAT;
+            case Pipeline::AttributeFormat::R32_G32_B32_A32_Float: return VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT;
+            default: break;
+        }
+        throw Exception("Provided attribute format is not supported by the Vulkan renderer.");
     }
 
 
@@ -309,12 +324,44 @@ namespace Curse
             createInfo.pName = "main";
         }
 
+        std::vector<VkVertexInputBindingDescription> bindings(descriptor.vertexBindings.size());
+        size_t vertexAttributeCount = 0;
+        for(size_t i = 0; i < descriptor.vertexBindings.size(); i++)
+        {
+            auto& binding = bindings[i];
+            auto& descBinding = descriptor.vertexBindings[i];
+            binding.binding = descBinding.binding;
+            binding.stride = descBinding.stride;
+            binding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+            vertexAttributeCount += descBinding.attributes.size();
+        }
+
+        std::vector<VkVertexInputAttributeDescription> vertexInputAttribute(vertexAttributeCount);
+        size_t vertexAttributeIndex = 0;
+        for (size_t i = 0; i < descriptor.vertexBindings.size(); i++)
+        {
+            auto& descBinding = descriptor.vertexBindings[i];
+            uint32_t bindingId = descBinding.binding;
+
+            for (size_t attIndex = 0; attIndex < descBinding.attributes.size(); attIndex++)
+            {
+                auto& attribute = vertexInputAttribute[vertexAttributeIndex];
+                auto& attributeDesc = descBinding.attributes[attIndex];
+                
+                attribute.binding = bindingId;
+                attribute.location = attributeDesc.location;
+                attribute.offset = attributeDesc.offset;
+                attribute.format = GetVertexAttributeFormat(attributeDesc.format);
+                vertexAttributeIndex++;
+            }           
+        }      
+
         VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
         vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-        vertexInputInfo.vertexBindingDescriptionCount = 0;
-        vertexInputInfo.pVertexBindingDescriptions = nullptr;
-        vertexInputInfo.vertexAttributeDescriptionCount = 0;
-        vertexInputInfo.pVertexAttributeDescriptions = nullptr;
+        vertexInputInfo.vertexBindingDescriptionCount = static_cast<uint32_t>(bindings.size());
+        vertexInputInfo.pVertexBindingDescriptions = bindings.data();
+        vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(vertexInputAttribute.size());
+        vertexInputInfo.pVertexAttributeDescriptions = vertexInputAttribute.data();
 
         VkPipelineInputAssemblyStateCreateInfo inputAssemblyStateInfo = {};
         inputAssemblyStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -476,6 +523,63 @@ namespace Curse
         return new TextureVulkan;
     }
 
+    VertexArray* RendererVulkan::CreateVertexArray()
+    {
+        return nullptr;
+    }
+
+    VertexBuffer* RendererVulkan::CreateVertexBuffer(const VertexBufferDescriptor& descriptor)
+    {
+        VkBufferCreateInfo bufferInfo = {};
+        bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        bufferInfo.size = descriptor.size;
+        bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+        bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+        VkBuffer vertexBuffer;
+        if (vkCreateBuffer(m_logicalDevice, &bufferInfo, nullptr, &vertexBuffer) != VK_SUCCESS)
+        {
+            throw Exception("Failed to create vertex buffer.");
+        }
+
+        VkMemoryRequirements memRequirements;
+        vkGetBufferMemoryRequirements(m_logicalDevice, vertexBuffer, &memRequirements);
+
+        uint32_t memoryTypeIndex = 0;
+        if (!FindPhysicalDeviceMemoryType(memoryTypeIndex, memRequirements.memoryTypeBits,
+                                          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))
+        {
+            throw Exception("Failed to find matching memory type for vertex buffer.");
+        }
+
+        VkMemoryAllocateInfo memoryAllocateInfo = {};
+        memoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        memoryAllocateInfo.allocationSize = memRequirements.size;
+        memoryAllocateInfo.memoryTypeIndex = memoryTypeIndex;
+
+        VkDeviceMemory memory;
+        if (vkAllocateMemory(m_logicalDevice, &memoryAllocateInfo, nullptr, &memory) != VK_SUCCESS)
+        {
+            throw Exception("Failed to allocate vertex buffer memory.");
+        }
+
+        if (vkBindBufferMemory(m_logicalDevice, vertexBuffer, memory, 0) != VK_SUCCESS)
+        {
+            throw Exception("Failed to bind memory to vertex buffer.");
+        }
+
+        void* data;
+        vkMapMemory(m_logicalDevice, memory, 0, bufferInfo.size, 0, &data);
+        memcpy(data, descriptor.data, (size_t)bufferInfo.size);
+        vkUnmapMemory(m_logicalDevice, memory);
+
+
+        VertexBufferVulkan* buffer = new VertexBufferVulkan;
+        buffer->resource = vertexBuffer;
+        buffer->memory = memory;
+        return buffer;
+    }
+
     void RendererVulkan::DestroyFramebuffer(Framebuffer* framebuffer)
     {
         FramebufferVulkan* framebufferVulkan = static_cast<FramebufferVulkan*>(framebuffer);
@@ -510,6 +614,18 @@ namespace Curse
     void RendererVulkan::DestroyTexture(Texture* texture)
     {
         delete static_cast<TextureVulkan*>(texture);
+    }
+
+    void RendererVulkan::DestroyVertexArray(VertexArray* /*vertexArray*/)
+    {
+    }
+
+    void RendererVulkan::DestroyVertexBuffer(VertexBuffer* vertexBuffer)
+    {
+        VertexBufferVulkan* shaderVulkan = static_cast<VertexBufferVulkan*>(vertexBuffer);
+        vkDestroyBuffer(m_logicalDevice, shaderVulkan->resource, nullptr);
+        vkFreeMemory(m_logicalDevice, shaderVulkan->memory, nullptr);
+        delete shaderVulkan;
     }
 
     void RendererVulkan::BindPipeline(Pipeline* pipeline)
@@ -597,6 +713,17 @@ namespace Curse
     void RendererVulkan::DrawVertexArray(VertexArray* /*vertexArray*/)
     {
         vkCmdDraw(*m_currentCommandBuffer, 3, 1, 0, 0);
+    }
+
+    void RendererVulkan::DrawVertexBuffer(VertexBuffer* vertexBuffer)
+    {
+        VertexBufferVulkan* vertexBufferVulkan = static_cast<VertexBufferVulkan*>(vertexBuffer);
+
+        VkBuffer vertexBuffers[] = { vertexBufferVulkan->resource };
+        VkDeviceSize offsets[] = { 0 };
+        vkCmdBindVertexBuffers(*m_currentCommandBuffer, 0, 1, vertexBuffers, offsets);
+
+        vkCmdDraw(*m_currentCommandBuffer, static_cast<uint32_t>(3), 1, 0, 0);
     }
 
     void RendererVulkan::EndDraw()
@@ -1410,6 +1537,25 @@ namespace Curse
             vkDestroySwapchainKHR(m_logicalDevice, m_swapChain, nullptr);
             m_swapChain = VK_NULL_HANDLE;
         }      
+    }
+
+    bool RendererVulkan::FindPhysicalDeviceMemoryType(uint32_t& index, const uint32_t filter, const VkMemoryPropertyFlags properties)
+    {
+        /// < MOVE THIS CODE TO ScorePhysicalDevice....
+        VkPhysicalDeviceMemoryProperties memProperties;
+        vkGetPhysicalDeviceMemoryProperties(m_physicalDevice.device, &memProperties);
+        /// < MOVE THIS CODE TO ScorePhysicalDevice....
+
+        for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
+        {
+            if ((filter & (i << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
+            {
+                index = i;
+                return true;
+            }
+        }
+
+        return false;
     }
 }
 

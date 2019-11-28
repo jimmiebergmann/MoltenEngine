@@ -23,40 +23,29 @@
 *
 */
 
-#ifndef CURSE_CORE_RENDERER_VERTEXARRAY_HPP
-#define CURSE_CORE_RENDERER_VERTEXARRAY_HPP
+#ifndef CURSE_CORE_RENDERER_VERTEXBUFFERVULKAN_HPP
+#define CURSE_CORE_RENDERER_VERTEXBUFFERVULKAN_HPP
 
-#include "Curse/Renderer/Resource.hpp"
+#include "Curse/Renderer/VertexBuffer.hpp"
 
 namespace Curse
 {
 
-    /**
-    * @brief Vertex array resource object.
-    */
-    class CURSE_API VertexArray
+    class RendererVulkan;
+
+    class CURSE_API VertexBufferVulkan : public VertexBuffer
     {
 
-    protected:
+    private:
 
-        VertexArray() = default;
-        VertexArray(const VertexArray&) = delete;
-        VertexArray(VertexArray&&) = delete;
-        virtual ~VertexArray() = default;
+        VertexBufferVulkan() = default;
+        VertexBufferVulkan(const VertexBufferVulkan&) = delete;
+        VertexBufferVulkan(VertexBufferVulkan&&) = delete;
+        ~VertexBufferVulkan() = default;
 
-        Resource resource;
+        VkDeviceMemory memory;
 
-    };
-
-    /**
-    * @brief Descriptor class of vertex array class.
-    */
-    class CURSE_API VertexArrayDescriptor
-    {
-
-    public:
-
-        VertexArrayDescriptor() = default;
+        friend class RendererVulkan;
 
     };
 

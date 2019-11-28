@@ -114,26 +114,46 @@ namespace Curse
         */
         virtual Texture* CreateTexture() override;
 
+        /**
+        * @brief Create vertex array object.
+        */
+        virtual VertexArray* CreateVertexArray() override;
 
         /**
-        * @brief Delete framebuffer object.
+        * @brief Create vertex buffer object.
+        */
+        virtual VertexBuffer* CreateVertexBuffer(const VertexBufferDescriptor& descriptor) override;
+
+
+        /**
+        * @brief Destroy framebuffer object.
         */
         virtual void DestroyFramebuffer(Framebuffer* framebuffer) override;
 
         /**
-        * @brief Delete pipeline object.
+        * @brief Destroy pipeline object.
         */
         virtual void DestroyPipeline(Pipeline* pipeline) override;
 
         /**
-        * @brief Delete shader object.
+        * @brief Destroy shader object.
         */
         virtual void DestroyShader(Shader* shader) override;
 
         /**
-        * @brief Delete texture object.
+        * @brief Destroy texture object.
         */
         virtual void DestroyTexture(Texture* texture) override;
+
+        /**
+        * @brief Destroy vertex array object.
+        */
+        virtual void DestroyVertexArray(VertexArray* vertexArray) override;
+
+        /**
+        * @brief Destroy vertex buffer object.
+        */
+        virtual void DestroyVertexBuffer(VertexBuffer* vertexBuffer) override;
 
 
         /**
@@ -147,9 +167,14 @@ namespace Curse
         virtual void BeginDraw() override;
 
         /**
-        * @brief Draw vertex buffer, using the current bound pipeline.
+        * @brief Draw vertex array, using the current bound pipeline.
         */
         virtual void DrawVertexArray(VertexArray* vertexArray) override;
+
+        /**
+        * @brief Draw vertex buffer, using the current bound pipeline.
+        */
+        virtual void DrawVertexBuffer(VertexBuffer* vertexBuffer) override;
 
         /**
         * @brief Finalize and present rendering.
@@ -208,6 +233,7 @@ namespace Curse
         void LoadSyncObjects();
         void RecreateSwapChain();
         void UnloadSwapchain();
+        bool FindPhysicalDeviceMemoryType(uint32_t& index, const uint32_t filter, const VkMemoryPropertyFlags properties);
 
         Version m_version;
         const WindowBase * m_renderTarget;

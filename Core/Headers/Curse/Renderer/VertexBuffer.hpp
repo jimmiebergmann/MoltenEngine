@@ -23,8 +23,8 @@
 *
 */
 
-#ifndef CURSE_CORE_RENDERER_VERTEXARRAY_HPP
-#define CURSE_CORE_RENDERER_VERTEXARRAY_HPP
+#ifndef CURSE_CORE_RENDERER_VERTEXBUFFER_HPP
+#define CURSE_CORE_RENDERER_VERTEXBUFFER_HPP
 
 #include "Curse/Renderer/Resource.hpp"
 
@@ -32,31 +32,34 @@ namespace Curse
 {
 
     /**
-    * @brief Vertex array resource object.
+    * @brief Vertex buffer resource object.
     */
-    class CURSE_API VertexArray
+    class CURSE_API VertexBuffer
     {
 
     protected:
 
-        VertexArray() = default;
-        VertexArray(const VertexArray&) = delete;
-        VertexArray(VertexArray&&) = delete;
-        virtual ~VertexArray() = default;
+        VertexBuffer() = default;
+        VertexBuffer(const VertexBuffer&) = delete;
+        VertexBuffer(VertexBuffer&&) = delete;
+        virtual ~VertexBuffer() = default;
 
         Resource resource;
 
     };
 
     /**
-    * @brief Descriptor class of vertex array class.
+    * @brief Descriptor class of vertex buffer class.
     */
-    class CURSE_API VertexArrayDescriptor
+    class CURSE_API VertexBufferDescriptor
     {
 
     public:
 
-        VertexArrayDescriptor() = default;
+        VertexBufferDescriptor() = default;
+
+        size_t size;
+        const void* data;
 
     };
 

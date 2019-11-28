@@ -33,6 +33,7 @@
 #include "Curse/Renderer/Pipeline.hpp"
 #include "Curse/Renderer/Framebuffer.hpp"
 #include "Curse/Renderer/VertexArray.hpp"
+#include "Curse/Renderer/VertexBuffer.hpp"
 #include <functional>
 
 namespace Curse
@@ -126,26 +127,46 @@ namespace Curse
         */
         virtual Texture* CreateTexture() = 0;
 
+        /**
+        * @brief Create vertex array object.
+        */
+        virtual VertexArray* CreateVertexArray() = 0;
 
         /**
-        * @brief Delete framebuffer object.
+        * @brief Create vertex buffer object.
+        */
+        virtual VertexBuffer* CreateVertexBuffer(const VertexBufferDescriptor& descriptor) = 0;
+
+
+        /**
+        * @brief Destroy framebuffer object.
         */
         virtual void DestroyFramebuffer(Framebuffer* framebuffer) = 0;
 
         /**
-        * @brief Delete pipeline object.
+        * @brief Destroy pipeline object.
         */
         virtual void DestroyPipeline(Pipeline* pipeline) = 0;
 
         /**
-        * @brief Delete shader object.
+        * @brief Destroy shader object.
         */
         virtual void DestroyShader(Shader* shader) = 0;
 
         /**
-        * @brief Delete texture object.
+        * @brief Destroy texture object.
         */
         virtual void DestroyTexture(Texture* texture) = 0;
+
+        /**
+        * @brief Destroy vertex array object.
+        */
+        virtual void DestroyVertexArray(VertexArray* vertexArray) = 0;
+
+        /**
+        * @brief Destroy vertex buffer object.
+        */
+        virtual void DestroyVertexBuffer(VertexBuffer* vertexBuffer) = 0;
       
 
         /**
@@ -159,9 +180,14 @@ namespace Curse
         virtual void BeginDraw() = 0;
 
         /**
-        * @brief Draw vertex buffer, using the current bound pipeline.
+        * @brief Draw vertex array, using the current bound pipeline.
         */
         virtual void DrawVertexArray(VertexArray * vertexArray) = 0;
+
+        /**
+        * @brief Draw vertex buffer, using the current bound pipeline.
+        */
+        virtual void DrawVertexBuffer(VertexBuffer* vertexBuffer) = 0;
 
         /**
         * @brief Finalize and present rendering.
