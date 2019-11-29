@@ -1,6 +1,6 @@
 environment:
   global:
-    - PYTHON: "C:\\Python35"
+    PYTHON: "C:\\Python35"
     
   matrix:
   
