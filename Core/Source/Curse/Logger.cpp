@@ -50,16 +50,25 @@ namespace Curse
         return empty;
     }
 
-    static unsigned int GetOpenModeFlag(FileLogger::OpenMode openMode)
+    static std::ios_base::openmode GetOpenModeFlag(FileLogger::OpenMode openMode, const std::ios_base::openmode baseMode)
     {
+        std::ios_base::openmode mode = baseMode;
         switch (openMode)
         {
-            case FileLogger::OpenMode::Append:   return std::ios_base::app;
-            case FileLogger::OpenMode::Truncate: return std::ios_base::trunc;
+            case FileLogger::OpenMode::Append:
+            {
+                mode |= std::ios_base::app;
+            }
+            break;
+            case FileLogger::OpenMode::Truncate:
+            {
+                mode |= std::ios_base::trunc;
+            }
+            break;
             default: break;
         }
 
-        return 0;
+        return mode;
     }
 
     // Logger implementations.
@@ -142,7 +151,7 @@ namespace Curse
             m_file.close();
         }
 
-        unsigned int mode = std::ios_base::out | GetOpenModeFlag(openMode);
+        std::ios_base::openmode mode = GetOpenModeFlag(openMode, std::ios_base::out);
         m_file.open(filename, mode);
         if (!m_file.is_open())
         {

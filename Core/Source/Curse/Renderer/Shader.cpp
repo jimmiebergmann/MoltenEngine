@@ -60,8 +60,10 @@ namespace Curse
         errorMessage = "";
 
     #if !defined(CURSE_ENABLE_GLSLANG)
-        errorMessage = "Shader compilation is not enabled in this Curse build. Enable it by adding CURSE_ENABLE_GLSLANG flag in cmake generator."
+        
+        errorMessage = "Shader compilation is not enabled in this Curse build. Enable it by adding CURSE_ENABLE_GLSLANG flag in cmake generator.";
         return {};
+
     #else
 
          if (inputFormat != Format::Glsl)
@@ -148,6 +150,7 @@ namespace Curse
          std::memcpy(output.data(), spirv.data(), outputSize);
 
          return std::move(output);
+         
     #endif
     }
 
