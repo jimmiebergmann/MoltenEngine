@@ -12,10 +12,11 @@ static int Run()
 {
     auto window = Curse::Window::Create("Curse Editor", Curse::Vector2ui32(800, 600));
     
-    Curse::Logger logger(static_cast<uint32_t>(Curse::Logger::Severity::Error));
+    Curse::Logger logger;
+    Curse::Logger rendererLogger(static_cast<uint32_t>(Curse::Logger::Severity::Error), &logger);
 
     auto renderer = Curse::Renderer::Create(Curse::Renderer::BackendApi::Vulkan);
-    renderer->Open(*window, Curse::Version(1, 1), &logger);
+    renderer->Open(*window, Curse::Version(1, 1), &rendererLogger);
 
     auto verSpirvSrc = Curse::FileSystem::ReadFile("shader.vert");
     auto verSpirv = renderer->CompileShader(Curse::Shader::Format::Glsl, Curse::Shader::Type::Vertex, verSpirvSrc, Curse::Shader::Format::SpirV);

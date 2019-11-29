@@ -61,9 +61,21 @@ namespace Curse
         static const uint32_t SeverityAllFlags;
 
         /**
-        * @brief Default logger constructor.
+        * @brief Default constructor.
+        *
+        * @param severityFlags Flags of severity levels.
+        *
         */
         Logger(const uint32_t severityFlags = SeverityAllFlags);
+
+        /**
+        * @brief Constructor.
+        *
+        * @param severityFlags Flags of severity levels.
+        * @param parent Parent logger, inheriting the callback, but with possibly different severity flags.
+        *
+        */
+        Logger(const uint32_t severityFlags, Logger* parent);
 
         /**
         * @brief Constructor, by providing a callback function.
@@ -97,6 +109,11 @@ namespace Curse
         virtual void Write(const Severity severity, const std::string& message);        
 
     protected:
+
+        Logger(const Logger&) = delete;
+        Logger(Logger&&) = delete;
+        Logger& operator=(const Logger&) = delete;
+        Logger& operator=(Logger&&) = delete;
 
         uint32_t m_severityFlags;
         Callback m_callback;
