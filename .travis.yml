@@ -58,9 +58,11 @@ before_script:
   
 script:
   # Checks
+  - cmake --version
   - g++ --version
   - gcc --version
   - gcov --version
+  - python --version
   # Build
   - mkdir Build
   - cd Build

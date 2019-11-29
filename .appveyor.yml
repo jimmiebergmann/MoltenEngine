@@ -1,4 +1,7 @@
 environment:
+  global:
+    - PYTHON: "C:\\Python35"
+    
   matrix:
   
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
@@ -81,6 +84,8 @@ cache:
 install:
   - git submodule update --init --recursive
   - cmake --version
+  - SET PATH=%PYTHON%;%PATH%
+  - python --version
   
   # Vulkan cache installer
   - ps: >-
