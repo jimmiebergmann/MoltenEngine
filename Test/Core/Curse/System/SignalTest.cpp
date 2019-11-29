@@ -25,7 +25,6 @@
 
 #include "Test.hpp"
 #include "Curse/System/Signal.hpp"
-#include <thread>
 
 namespace Curse
 {

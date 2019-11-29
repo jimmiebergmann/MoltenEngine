@@ -28,6 +28,7 @@
 
 #include "Curse/Renderer/Resource.hpp"
 #include <string>
+#include <vector>
 
 namespace Curse
 {
@@ -48,6 +49,24 @@ namespace Curse
             Vertex,
             Fragment
         };
+
+        /**
+        * @brief Enumerator of shader formats.
+        */
+        enum class Format : uint8_t
+        {
+            Glsl,
+            Hlsl,
+            SpirV
+        };
+
+        /**
+        * @brief Compile shader.
+        *        Compilation of shaders makes it possible to convert from GLSL to SPIR-V.
+        */
+        static std::vector<uint8_t> Compile(const Shader::Format inputFormat, const Shader::Type inputType,
+                                            const std::vector<uint8_t>& inputData, const Shader::Format outputFormat,
+                                            std::string& errorMessage);
 
         /**
         * @brief Get the type of shader.

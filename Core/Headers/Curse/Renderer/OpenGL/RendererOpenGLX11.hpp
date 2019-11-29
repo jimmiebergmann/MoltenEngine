@@ -55,7 +55,7 @@ namespace Curse
         *
         * @param window[in] Render target window.
         */
-        RendererOpenGLX11(const WindowBase & window, const Version& version, DebugCallback debugCallback = nullptr);
+        RendererOpenGLX11(const WindowBase & window, const Version& version, Logger* logger = nullptr);
 
         /**
         * @brief Virtual destructor.
@@ -67,7 +67,7 @@ namespace Curse
         *
         * @param window[in] Render target window.
         */
-        virtual void Open(const WindowBase & window, const Version& version = Version::None, DebugCallback debugCallback = nullptr) override;
+        virtual void Open(const WindowBase & window, const Version& version = Version::None, Logger* logger = nullptr) override;
 
         /**
         * @brief Closing renderer.
@@ -89,6 +89,13 @@ namespace Curse
         * @brief Get renderer API version.
         */
         virtual Version GetVersion() const override;
+
+        /**
+        * @brief Compile shader.
+        *        Compilation of shaders makes it possible to convert from GLSL to SPIR-V.
+        */
+        virtual std::vector<uint8_t> CompileShader(const Shader::Format inputFormat, const Shader::Type inputType,
+                                                   const std::vector<uint8_t>& inputData, const Shader::Format outputFormat) override;
 
 
         /**
@@ -177,6 +184,11 @@ namespace Curse
         * @brief Finalize and present rendering.
         */
         virtual void EndDraw() override;
+
+        /**
+        * @brief Sleep until the graphical device is ready.
+        */
+        virtual void WaitForDevice() override;
 
     private:
 

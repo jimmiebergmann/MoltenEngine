@@ -24,7 +24,6 @@
 */
 
 #include "Curse/Renderer/Renderer.hpp"
-
 #include "Curse/Renderer/OpenGL/RendererOpenGL.hpp"
 #include "Curse/Renderer/Vulkan/RendererVulkan.hpp"
 

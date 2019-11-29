@@ -4,6 +4,7 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/../CMake/Tools.cmake)
 
 # Options.
 option(CURSE_ENABLE_VULKAN "Enables Vulkan renderer." ON)
+option(CURSE_ENABLE_GLSLANG "Enables glslang compiler." ON)
 option(CURSE_ENABLE_OPENGL "Enables OpenGL renderer." ON)
 option(CURSE_ENABLE_COVERAGE "Enables coverage reporting." OFF)
 
@@ -26,6 +27,12 @@ endif()
 if(CURSE_ENABLE_VULKAN)
 	include(${CMAKE_CURRENT_SOURCE_DIR}/../CMake/FindVulkan.cmake)
 	message("FOUND Vulkan: ${Vulkan_FOUND}, Lib: ${Vulkan_LIBRARY}")
+	
+	if(CURSE_ENABLE_GLSLANG)
+		set(GlslangDir "$ENV{VULKAN_SDK}/glslang")
+		add_subdirectory(${GlslangDir} ${GlslangDir})
+		set(glslang_FOUND "true")
+	endif()
 endif()
 
 # OpenGL configurations
@@ -97,6 +104,12 @@ if(CURSE_ENABLE_VULKAN AND Vulkan_FOUND )
   target_include_directories(Curse PUBLIC "${Vulkan_INCLUDE}")
   target_link_libraries(Curse ${Vulkan_LIBRARY})  
   target_compile_definitions(Curse PUBLIC "CURSE_ENABLE_VULKAN")
+endif()
+
+if(CURSE_ENABLE_GLSLANG AND glslang_FOUND)
+	target_include_directories(Curse PUBLIC ${GlslangDir})
+	target_link_libraries(Curse glslang SPIRV)
+	target_compile_definitions(Curse PUBLIC "CURSE_ENABLE_GLSLANG")
 endif()
 
 if(CURSE_ENABLE_OPENGL AND OpenGL_FOUND )

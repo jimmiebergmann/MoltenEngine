@@ -43,10 +43,10 @@ namespace Curse
     {
     }
 
-    RendererOpenGLWin32::RendererOpenGLWin32(const WindowBase& window, const Version& version, DebugCallback debugCallback) :
+    RendererOpenGLWin32::RendererOpenGLWin32(const WindowBase& window, const Version& version, Logger* logger) :
         RendererOpenGLWin32()
     {
-        Open(window, version, debugCallback);
+        Open(window, version, logger);
     }
 
     RendererOpenGLWin32::~RendererOpenGLWin32()
@@ -54,7 +54,7 @@ namespace Curse
         Close();
     }
 
-    void RendererOpenGLWin32::Open(const WindowBase& window, const Version& version, DebugCallback /*debugCallback*/)
+    void RendererOpenGLWin32::Open(const WindowBase& window, const Version& version, Logger* /*debugCallback*/)
     {
         HGLRC temporaryContext = NULL;
 
@@ -175,6 +175,12 @@ namespace Curse
         return m_version;
     }
 
+    std::vector<uint8_t> RendererOpenGLWin32::CompileShader(const Shader::Format /*inputFormat*/, const Shader::Type /*inputType*/,
+                                                            const std::vector<uint8_t>& /*inputData*/, const Shader::Format /*outputFormat*/)
+    {
+        return {};
+    }
+
     Framebuffer* RendererOpenGLWin32::CreateFramebuffer(const FramebufferDescriptor&)
     {
         return nullptr;
@@ -246,6 +252,10 @@ namespace Curse
     }
 
     void RendererOpenGLWin32::EndDraw()
+    {
+    }
+
+    void RendererOpenGLWin32::WaitForDevice()
     {
     }
 

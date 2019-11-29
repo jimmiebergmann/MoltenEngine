@@ -58,7 +58,7 @@ namespace Curse
         *
         * @param window[in] Render target window.
         */
-        RendererVulkan(const WindowBase& window, const Version& version, DebugCallback debugCallback = nullptr);
+        RendererVulkan(const WindowBase& window, const Version& version, Logger* logger = nullptr);
 
         /**
         * @brief Virtual destructor.
@@ -70,7 +70,7 @@ namespace Curse
         *
         * @param window[in] Render target window.
         */
-        virtual void Open(const WindowBase& window, const Version& version = Version::None, DebugCallback debugCallback = nullptr) override;
+        virtual void Open(const WindowBase& window, const Version& version = Version::None, Logger* logger = nullptr) override;
 
         /**
         * @brief Closing renderer.
@@ -93,6 +93,12 @@ namespace Curse
         */
         virtual Version GetVersion() const override;
 
+        /**
+        * @brief Compile shader.
+        *        Compilation of shaders makes it possible to convert from GLSL to SPIR-V.
+        */
+        virtual std::vector<uint8_t> CompileShader(const Shader::Format inputFormat, const Shader::Type inputType,
+                                                   const std::vector<uint8_t>& inputData, const Shader::Format outputFormat) override;
 
         /**
         * @brief Create framebuffer object.
@@ -180,6 +186,11 @@ namespace Curse
         * @brief Finalize and present rendering.
         */
         virtual void EndDraw() override;
+        
+        /**
+        * @brief Sleep until the graphical device is ready.
+        */
+        virtual void WaitForDevice() override;
 
     private:
 
@@ -191,8 +202,6 @@ namespace Curse
             VkDebugUtilsMessengerEXT messenger;
             PFN_vkCreateDebugUtilsMessengerEXT CreateDebugUtilsMessengerEXT;
             PFN_vkDestroyDebugUtilsMessengerEXT DestroyDebugUtilsMessengerEXT;
-            bool validationDebugger;
-            DebugCallback callback;
         };
 
         struct SwapChainSupport
@@ -216,9 +225,9 @@ namespace Curse
         };  
 
         PFN_vkVoidFunction GetVulkanFunction(const char* functionName) const;
-        void LoadInstance(const Version& version, DebugCallback debugCallback);
+        void LoadInstance(const Version& version);
         bool GetRequiredExtensions(std::vector<std::string>& extensions, const bool requestDebugger) const;
-        bool LoadDebugger(VkInstanceCreateInfo& instanceInfo, VkDebugUtilsMessengerCreateInfoEXT& debugMessageInfo, DebugCallback debugCallback);     
+        bool LoadDebugger(VkInstanceCreateInfo& instanceInfo, VkDebugUtilsMessengerCreateInfoEXT& debugMessageInfo);     
         void LoadSurface();
         void LoadPhysicalDevice();
         bool ScorePhysicalDevice(PhysicalDevice& physicalDevice, uint32_t & score);
@@ -235,6 +244,7 @@ namespace Curse
         void UnloadSwapchain();
         bool FindPhysicalDeviceMemoryType(uint32_t& index, const uint32_t filter, const VkMemoryPropertyFlags properties);
 
+        Logger* m_logger;
         Version m_version;
         const WindowBase * m_renderTarget;
         VkInstance m_instance;

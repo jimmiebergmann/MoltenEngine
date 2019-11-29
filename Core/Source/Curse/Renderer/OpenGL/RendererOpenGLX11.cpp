@@ -40,10 +40,10 @@ namespace Curse
     {
     }
 
-    RendererOpenGLX11::RendererOpenGLX11(const WindowBase& window, const Version& version, DebugCallback debugCallback) :
+    RendererOpenGLX11::RendererOpenGLX11(const WindowBase& window, const Version& version, Logger* logger) :
         RendererOpenGLX11()
     {
-        Open(window, version, debugCallback);
+        Open(window, version, logger);
     }
 
     RendererOpenGLX11::~RendererOpenGLX11()
@@ -51,7 +51,7 @@ namespace Curse
         Close();
     }
 
-    void RendererOpenGLX11::Open(const WindowBase& /*window*/, const Version& /*version*/, DebugCallback /*debugCallback*/)
+    void RendererOpenGLX11::Open(const WindowBase& /*window*/, const Version& /*version*/, Logger* /*debugCallback*/)
     {
         /*HGLRC temporaryContext = NULL;
 
@@ -172,6 +172,12 @@ namespace Curse
         return m_version;
     }
 
+    std::vector<uint8_t> RendererOpenGLX11::CompileShader(const Shader::Format /*inputFormat*/, const Shader::Type /*inputType*/,
+                                                          const std::vector<uint8_t>& /*inputData*/, const Shader::Format /*outputFormat*/)
+    {
+        return {};
+    }
+
     Framebuffer* RendererOpenGLX11::CreateFramebuffer(const FramebufferDescriptor&)
     {
         return nullptr;
@@ -243,6 +249,10 @@ namespace Curse
     }
 
     void RendererOpenGLX11::EndDraw()
+    {
+    }
+
+    void RendererOpenGLX11::WaitForDevice()
     {
     }
 

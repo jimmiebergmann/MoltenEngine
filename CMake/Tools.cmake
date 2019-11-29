@@ -7,3 +7,10 @@ function(CreateSourceGroups files rootPath)
         source_group("${_group_path}" FILES "${_source}")
     endforeach()
 endfunction(CreateSourceGroups)
+
+# Function for setting working directory of Visual Studio project.
+function(SetVisualStudioWorkingDir proj workingDir)
+	if((${CMAKE_VERSION} VERSION_EQ "3.8.0") OR (${CMAKE_VERSION} VERSION_GREATER "3.8.0")) 
+		set_property(TARGET ${proj} APPEND PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${workingDir}")
+	endif()	
+endfunction(SetVisualStudioWorkingDir)

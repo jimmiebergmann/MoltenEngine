@@ -42,7 +42,9 @@
 #ifdef min
     #undef min
 #endif
-
+#ifdef DeleteFile
+    #undef DeleteFile
+#endif
 
 #endif
 

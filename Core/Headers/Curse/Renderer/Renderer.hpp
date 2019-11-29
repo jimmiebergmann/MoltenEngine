@@ -40,6 +40,7 @@ namespace Curse
 {
 
     class WindowBase;
+    class Logger;
 
 
     /**
@@ -60,12 +61,6 @@ namespace Curse
         };
 
         /**
-        * @brief Debug callback function.
-        *        The function takes a const std::string & parameter for the debug message.
-        */
-        using DebugCallback = std::function<void(const std::string &)>;
-
-        /**
         * @brief Static function for creating any renderer by Type.
         *        Make sure to open the renderer before using it.
         *
@@ -83,7 +78,7 @@ namespace Curse
         *
         * @param window Render target window.
         */
-        virtual void Open(const WindowBase& window, const Version& version = Version::None, DebugCallback debugCallback = nullptr) = 0;
+        virtual void Open(const WindowBase& window, const Version& version = Version::None, Logger * logger = nullptr) = 0;
 
         /**
         * @brief Closing renderer.
@@ -105,6 +100,13 @@ namespace Curse
         * @brief Get renderer API version.
         */
         virtual Version GetVersion() const = 0;
+
+        /**
+        * @brief Compile shader.
+        *        Compilation of shaders makes it possible to convert from GLSL to SPIR-V.
+        */
+        virtual std::vector<uint8_t> CompileShader(const Shader::Format inputFormat, const Shader::Type inputType,
+                                                   const std::vector<uint8_t>& inputData, const Shader::Format outputFormat) = 0;
 
 
         /**
@@ -193,6 +195,11 @@ namespace Curse
         * @brief Finalize and present rendering.
         */
         virtual void EndDraw() = 0;
+
+        /**
+        * @brief Sleep until the graphical device is ready.
+        */
+        virtual void WaitForDevice() = 0;
 
     };
 

@@ -35,12 +35,15 @@
 #include "Curse/Renderer/Vulkan/VertexArrayVulkan.hpp"
 #include "Curse/Renderer/Vulkan/VertexBufferVulkan.hpp"
 #include "Curse/Window/WindowBase.hpp"
+#include "Curse/Logger.hpp"
 #include "Curse/System/Exception.hpp"
 #include "Curse/System/FileSystem.hpp"
 #include <map>
 #include <set>
 #include <algorithm>
 #include <limits>
+
+#define CURSE_RENDERER_LOG(severity, message) if(m_logger){ m_logger->Write(severity, message); }
 
 namespace Curse
 {
@@ -121,9 +124,34 @@ namespace Curse
         throw Exception("Provided attribute format is not supported by the Vulkan renderer.");
     }
 
+    static VkDebugUtilsMessageSeverityFlagsEXT GetVulkanLoggerSeverityFlags(const uint32_t severityFlags)
+    {
+        VkDebugUtilsMessageSeverityFlagsEXT flags = 0;
+
+        flags |= (severityFlags & static_cast<uint32_t>(Logger::Severity::Info)) ? VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT : 0;
+        flags |= (severityFlags & static_cast<uint32_t>(Logger::Severity::Warning)) ? VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT : 0;
+        flags |= (severityFlags & static_cast<uint32_t>(Logger::Severity::Error)) ? VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT : 0;
+
+        return flags;
+    }
+
+    static Logger::Severity GetCurseLoggerSeverityFlag(const VkDebugUtilsMessageSeverityFlagsEXT severityFlags)
+    {
+        switch (severityFlags)
+        {
+            case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT: return Logger::Severity::Info;
+            case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT: return Logger::Severity::Warning;
+            case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT: return Logger::Severity::Error;
+            default: break;
+        }
+
+        return Logger::Severity::Info;
+    }
+
 
     // Vulkan renderer class implementations.
     RendererVulkan::RendererVulkan() :
+        m_logger(nullptr),
         m_version(0, 0, 0),
         m_renderTarget(nullptr),
         m_instance(VK_NULL_HANDLE),
@@ -147,10 +175,10 @@ namespace Curse
     {
     }
 
-    RendererVulkan::RendererVulkan(const WindowBase& window, const Version& version, DebugCallback debugCallback) :
+    RendererVulkan::RendererVulkan(const WindowBase& window, const Version& version, Logger* logger) :
         RendererVulkan()
     {
-        Open(window, version, debugCallback);
+        Open(window, version, logger);
     }
 
     RendererVulkan::~RendererVulkan()
@@ -158,21 +186,30 @@ namespace Curse
         Close();
     }
 
-    void RendererVulkan::Open(const WindowBase& window, const Version& version, DebugCallback debugCallback)
+    void RendererVulkan::Open(const WindowBase& window, const Version& version, Logger* logger)
     {
         Close();
 
         m_renderTarget = &window;
-        LoadInstance(version, debugCallback);
-        LoadSurface();
-        LoadPhysicalDevice(); 
-        LoadLogicalDevice();
-        LoadSwapChain();
-        LoadImageViews();
-        LoadRenderPass();
-        LoadPresentFramebuffer();
-        LoadCommandPool();
-        LoadSyncObjects();
+        m_logger = logger;
+
+        try
+        {
+            LoadInstance(version);
+            LoadSurface();
+            LoadPhysicalDevice();
+            LoadLogicalDevice();
+            LoadSwapChain();
+            LoadImageViews();
+            LoadRenderPass();
+            LoadPresentFramebuffer();
+            LoadCommandPool();
+            LoadSyncObjects();
+        }
+        catch (Exception & e)
+        {
+            CURSE_RENDERER_LOG(Logger::Severity::Error, e.GetMessage());
+        }       
     }
 
     void RendererVulkan::Close()
@@ -282,6 +319,19 @@ namespace Curse
     Version RendererVulkan::GetVersion() const
     {
         return m_version;
+    }
+
+    std::vector<uint8_t> RendererVulkan::CompileShader(const Shader::Format inputFormat, const Shader::Type inputType,
+                                                       const std::vector<uint8_t>& inputData, const Shader::Format outputFormat)
+    {
+        std::string errorMessage;
+        auto output = Shader::Compile(inputFormat, inputType, inputData, outputFormat, errorMessage);
+        if (errorMessage.size())
+        {
+            CURSE_RENDERER_LOG(Logger::Severity::Error, errorMessage);
+        }
+
+        return std::move(output);
     }
 
     Framebuffer* RendererVulkan::CreateFramebuffer(const FramebufferDescriptor& descriptor)
@@ -776,23 +826,24 @@ namespace Curse
         m_beginDraw = false;
     }
 
+    void RendererVulkan::WaitForDevice()
+    {
+        vkDeviceWaitIdle(m_logicalDevice);
+    }
+
 
     // DebugMessenger implementations.
     RendererVulkan::DebugMessenger::DebugMessenger() :
         messenger(VK_NULL_HANDLE),
         CreateDebugUtilsMessengerEXT(nullptr),
-        DestroyDebugUtilsMessengerEXT(nullptr),
-        validationDebugger(false),
-        callback(nullptr)
+        DestroyDebugUtilsMessengerEXT(nullptr)
     { }
 
     void RendererVulkan::DebugMessenger::Clear()
     {
         messenger = VK_NULL_HANDLE;
         CreateDebugUtilsMessengerEXT = nullptr;
-        DestroyDebugUtilsMessengerEXT = nullptr;
-        validationDebugger = false;
-        callback = nullptr;       
+        DestroyDebugUtilsMessengerEXT = nullptr;      
     }
 
     RendererVulkan::PhysicalDevice::PhysicalDevice() :
@@ -825,7 +876,7 @@ namespace Curse
         return vkGetInstanceProcAddr(m_instance, functionName);
     }
 
-    void RendererVulkan::LoadInstance(const Version& version, DebugCallback debugCallback)
+    void RendererVulkan::LoadInstance(const Version& version)
     {
         auto newVersion = version;
         if (newVersion == Version::None)
@@ -838,7 +889,7 @@ namespace Curse
 
         // Get required extensions.
         std::vector<std::string> extensions;
-        if (!GetRequiredExtensions(extensions, debugCallback != nullptr))
+        if (!GetRequiredExtensions(extensions, m_logger != nullptr))
         {
             throw Exception("RendererVulkan: The required extensions are unavailable.");
         }
@@ -867,7 +918,7 @@ namespace Curse
         instanceInfo.ppEnabledExtensionNames = ptrExtensions.data();
 
         VkDebugUtilsMessengerCreateInfoEXT debugMessageInfo = {};
-        bool debuggerIsAvailable = LoadDebugger(instanceInfo, debugMessageInfo, debugCallback);
+        bool debuggerIsAvailable = LoadDebugger(instanceInfo, debugMessageInfo);
         
         VkResult result = vkCreateInstance(&instanceInfo, nullptr, &m_instance);
         if (result != VK_SUCCESS)
@@ -890,23 +941,21 @@ namespace Curse
 
             if (!m_debugMessenger.CreateDebugUtilsMessengerEXT)
             {
-                m_debugMessenger.callback("Failed to get function pointer for vkCreateDebugUtilsMessengerEXT.");
+                CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to get function pointer for \"vkCreateDebugUtilsMessengerEXT\".");
                 return;
             }
             else if (!m_debugMessenger.DestroyDebugUtilsMessengerEXT)
             {
-                m_debugMessenger.callback("Failed to get function pointer for \"vkDestroyDebugUtilsMessengerEXT\".");
+                CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to get function pointer for \"vkDestroyDebugUtilsMessengerEXT\".");
                 return;
             }
 
             if (m_debugMessenger.CreateDebugUtilsMessengerEXT(m_instance, &debugMessageInfo, nullptr, &m_debugMessenger.messenger) != VK_SUCCESS)
             {
-                m_debugMessenger.callback("Failed to set up debug messenger.");
+                CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to set up debug messenger.");
                 return;
-            }
-            m_debugMessenger.validationDebugger = true;
+            }     
         }
-
     }
 
     bool RendererVulkan::GetRequiredExtensions(std::vector<std::string>& out, const bool requestDebugger) const
@@ -947,14 +996,14 @@ namespace Curse
         return missingExtensions.size() == 0;
     }
 
-    bool RendererVulkan::LoadDebugger(VkInstanceCreateInfo& instanceInfo, VkDebugUtilsMessengerCreateInfoEXT& debugMessageInfo, DebugCallback debugCallback)
+    bool RendererVulkan::LoadDebugger(VkInstanceCreateInfo& instanceInfo, VkDebugUtilsMessengerCreateInfoEXT& debugMessageInfo)
     {
-        if (!debugCallback)
+        if (!m_logger)
         {
             return false;
         }
      
-        // Add more validations here if desired
+        // Add more validation layers here if desired.
         // ...
         m_validationLayers.push_back("VK_LAYER_KHRONOS_validation");
         // ...
@@ -964,14 +1013,12 @@ namespace Curse
         {
             return false;
         }
-        
-        m_debugMessenger.callback = debugCallback;
 
         uint32_t availableLayersCount = 0;
         vkEnumerateInstanceLayerProperties(&availableLayersCount, nullptr);
         if (!availableLayersCount)
         {
-            m_debugMessenger.callback("Failed to find any validation layers.");
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to find any validation layers.");
             return false;
         }
         std::vector<VkLayerProperties> availableLayers(availableLayersCount);
@@ -989,7 +1036,7 @@ namespace Curse
 
         if (missingLayers.size() != 0)
         {
-            m_debugMessenger.callback("Failed to find all requested validation layers.");
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to find all requested validation layers.");
             return false;
         }       
 
@@ -999,20 +1046,18 @@ namespace Curse
         debugMessageInfo = {};
         debugMessageInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
         debugMessageInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
-                                           VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT |
-                                           VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
-                                           VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+                                           GetVulkanLoggerSeverityFlags(m_logger->GetSeverityFlags());
         debugMessageInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
                                        VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
                                        VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-        debugMessageInfo.pUserData = &m_debugMessenger.callback;
-        debugMessageInfo.pfnUserCallback = [](VkDebugUtilsMessageSeverityFlagBitsEXT /*messageSeverity*/,
+        debugMessageInfo.pUserData = m_logger;
+        debugMessageInfo.pfnUserCallback = [](VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
                                               VkDebugUtilsMessageTypeFlagsEXT /*messageType*/,
                                               const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
                                               void* pUserData) -> VkBool32
         {
-            DebugCallback* callback = static_cast<DebugCallback*>(pUserData);
-            (*callback)(pCallbackData->pMessage);
+            Logger* logger = static_cast<Logger*>(pUserData);
+            logger->Write(GetCurseLoggerSeverityFlag(messageSeverity), pCallbackData->pMessage);
             return VK_FALSE;
         };
         
@@ -1240,7 +1285,7 @@ namespace Curse
         deviceInfo.ppEnabledExtensionNames = m_deviceExtensions.data();
 
         deviceInfo.enabledLayerCount = 0;
-        if (m_debugMessenger.validationDebugger)
+        if (m_debugMessenger.messenger != VK_NULL_HANDLE)
         {
             deviceInfo.enabledLayerCount = static_cast<uint32_t>(m_validationLayers.size());
             deviceInfo.ppEnabledLayerNames = m_validationLayers.data();

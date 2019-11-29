@@ -72,6 +72,8 @@ set_target_properties( CurseCoreTest
   RUNTIME_OUTPUT_DIRECTORY_RELEASE "${RootDir}/Bin"
 )
 
+SetVisualStudioWorkingDir("CurseCoreTest" "${RootDir}/Bin")
+
 if(CURSE_ENABLE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU") ## Code coverage
   set_target_properties(CurseCoreTest PROPERTIES COMPILE_FLAGS "--coverage")
   target_link_libraries(CurseCoreTest "gcov")

@@ -54,6 +54,19 @@ namespace Curse
         */
         static std::vector<uint8_t> ReadFile(const std::string & filename);
         
+        /**
+        * @brief Make directory, from current directory.
+        *        Recursive directoru creation is not yet supported.
+        *        
+        */
+        static bool MakeDirectory(const std::string& directory);
+
+        /**
+        * @brief Delete file, from current directory.
+        *
+        */
+        static bool DeleteFile(const std::string& filename);
+
 
     };
 
