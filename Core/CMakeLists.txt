@@ -30,8 +30,10 @@ if(CURSE_ENABLE_VULKAN)
 	
 	if(CURSE_ENABLE_GLSLANG)
 		set(GlslangDir "$ENV{VULKAN_SDK}/glslang")
-		add_subdirectory(${GlslangDir} ${GlslangDir})
-		set(glslang_FOUND "true")
+		if(EXISTS ${GlslangDir})
+			add_subdirectory(${GlslangDir} ${GlslangDir})
+			set(glslang_FOUND "true")
+		endif()
 	endif()
 endif()
 
