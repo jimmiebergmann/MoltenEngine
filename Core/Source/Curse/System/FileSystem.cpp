@@ -55,9 +55,10 @@ namespace Curse
         return std::move(data);
     }
 
+#if CURSE_PLATFORM == CURSE_PLATFORM_WINDOWS
+
     bool FileSystem::MakeDirectory(const std::string& directory)
     {
-    #if CURSE_PLATFORM == CURSE_PLATFORM_WINDOWS
         const size_t currDirSize = 256;
         char currDir[256];
         if (!GetCurrentDirectory(currDirSize, currDir))
@@ -66,17 +67,11 @@ namespace Curse
         }
 
         const std::string fullDir = std::string(currDir) + "\\" + directory;
-
         return CreateDirectory(fullDir.c_str(), NULL) ? true : false;
-    #else
-        return false;
-    #endif  
     }
-
 
     bool FileSystem::DeleteFile(const std::string& filename)
     {
-    #if CURSE_PLATFORM == CURSE_PLATFORM_WINDOWS
         const size_t currDirSize = 256;
         char currDir[256];
         if (!GetCurrentDirectory(currDirSize, currDir))
@@ -85,11 +80,21 @@ namespace Curse
         }
 
         const std::string fullFilename = std::string(currDir) + "\\" + filename;
-
-        return ::DeleteFileA(fullFilename.c_str()) ? true : false;
-    #else
-        return false;
-    #endif  
+        return ::DeleteFileA(fullFilename.c_str()) ? true : false; 
     }
+
+#else
+
+    bool FileSystem::MakeDirectory(const std::string&)
+    {
+        return false;
+    }
+
+    bool FileSystem::DeleteFile(const std::string&)
+    {
+        return false;
+    }
+    
+#endif  
 
 }
