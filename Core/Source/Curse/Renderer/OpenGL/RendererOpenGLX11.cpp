@@ -51,7 +51,7 @@ namespace Curse
         Close();
     }
 
-    void RendererOpenGLX11::Open(const WindowBase& /*window*/, const Version& /*version*/, Logger* /*debugCallback*/)
+    bool RendererOpenGLX11::Open(const WindowBase& /*window*/, const Version& /*version*/, Logger* /*logger*/)
     {
         /*HGLRC temporaryContext = NULL;
 
@@ -136,6 +136,8 @@ namespace Curse
         }
 
         OpenGL::BindOpenGLExtensions();*/
+
+        return false;
     }
 
     void RendererOpenGLX11::Close()

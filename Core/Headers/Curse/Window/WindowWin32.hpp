@@ -45,14 +45,6 @@ namespace Curse
     public:
 
         /**
-        * @brief Construct reference object of Window.
-        *
-        * @param args[in] Constructor parameters.
-        */
-        template<typename ... Args>
-        static Ref<WindowWin32> Create(Args&& ... args);
-
-        /**
         * @brief Constructor.
         */
         WindowWin32();
@@ -143,8 +135,6 @@ namespace Curse
     };
 
 }
-
-#include "WindowWin32.inl"
 
 #endif
 

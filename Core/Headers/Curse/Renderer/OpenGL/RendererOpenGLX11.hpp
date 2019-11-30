@@ -67,7 +67,7 @@ namespace Curse
         *
         * @param window[in] Render target window.
         */
-        virtual void Open(const WindowBase & window, const Version& version = Version::None, Logger* logger = nullptr) override;
+        virtual bool Open(const WindowBase & window, const Version& version = Version::None, Logger* logger = nullptr) override;
 
         /**
         * @brief Closing renderer.

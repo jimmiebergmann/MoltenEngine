@@ -54,7 +54,7 @@ namespace Curse
         Close();
     }
 
-    void RendererOpenGLWin32::Open(const WindowBase& window, const Version& version, Logger* /*debugCallback*/)
+    bool RendererOpenGLWin32::Open(const WindowBase& window, const Version& version, Logger* /*logger*/)
     {
         HGLRC temporaryContext = NULL;
 
@@ -139,6 +139,8 @@ namespace Curse
         }
 
         OpenGL::BindOpenGLExtensions();
+
+        return false;
     }
 
     void RendererOpenGLWin32::Close()

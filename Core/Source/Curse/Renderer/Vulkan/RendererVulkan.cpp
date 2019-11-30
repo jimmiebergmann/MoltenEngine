@@ -170,6 +170,7 @@ namespace Curse
         m_currentFrame(0),
         m_resized(false),
         m_beginDraw(false),
+        m_currentImageIndex(0),
         m_currentCommandBuffer(nullptr),
         m_currentFramebuffer(nullptr)  
     {
@@ -186,30 +187,26 @@ namespace Curse
         Close();
     }
 
-    void RendererVulkan::Open(const WindowBase& window, const Version& version, Logger* logger)
+    bool RendererVulkan::Open(const WindowBase& window, const Version& version, Logger* logger)
     {
         Close();
 
         m_renderTarget = &window;
         m_logger = logger;
 
-        try
-        {
-            LoadInstance(version);
-            LoadSurface();
-            LoadPhysicalDevice();
-            LoadLogicalDevice();
-            LoadSwapChain();
-            LoadImageViews();
-            LoadRenderPass();
-            LoadPresentFramebuffer();
-            LoadCommandPool();
+        bool loaded =
+            LoadInstance(version) &&
+            LoadSurface() &&
+            LoadPhysicalDevice() &&
+            LoadLogicalDevice() &&
+            LoadSwapChain() &&
+            LoadImageViews() &&
+            LoadRenderPass() &&
+            LoadPresentFramebuffer() &&
+            LoadCommandPool() &&
             LoadSyncObjects();
-        }
-        catch (Exception & e)
-        {
-            CURSE_RENDERER_LOG(Logger::Severity::Error, e.GetMessage());
-        }       
+
+        return loaded;   
     }
 
     void RendererVulkan::Close()
@@ -218,6 +215,15 @@ namespace Curse
         {
             vkDeviceWaitIdle(m_logicalDevice);
           
+            for (auto& semaphore : m_imageAvailableSemaphores)
+            {
+                vkDestroySemaphore(m_logicalDevice, semaphore, nullptr);
+            }
+            for (auto& semaphore : m_renderFinishedSemaphores)
+            {
+                vkDestroySemaphore(m_logicalDevice, semaphore, nullptr);
+            }
+
             for (auto& fence : m_inFlightFences)
             {
                 vkDestroyFence(m_logicalDevice, fence, nullptr);
@@ -297,7 +303,8 @@ namespace Curse
     {
         if (m_beginDraw)
         {
-            throw Exception("Cannot resize renderer while drawing.");
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Cannot resize renderer while drawing.");
+            return;
         }
 
         const Vector2ui32 extent(m_swapChainExtent.width, m_swapChainExtent.height);
@@ -353,7 +360,8 @@ namespace Curse
         VkFramebuffer framebuffer;
         if (vkCreateFramebuffer(m_logicalDevice, &framebufferInfo, nullptr, &framebuffer) != VK_SUCCESS)
         {
-            throw Exception("Failed to create framebuffer.");
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to create framebuffer.");
+            return nullptr;
         }
 
         FramebufferVulkan* framebufferVulkan = new FramebufferVulkan;
@@ -492,7 +500,8 @@ namespace Curse
         VkPipelineLayout pipelineLayout;
         if (vkCreatePipelineLayout(m_logicalDevice, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
         {
-            throw Exception("Failed to create pipeline layout.");
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to create pipeline layout.");
+            return nullptr;
         }
 
         VkGraphicsPipelineCreateInfo pipelineInfo = {};
@@ -519,7 +528,8 @@ namespace Curse
         if (vkCreateGraphicsPipelines(m_logicalDevice, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS)
         {
             vkDestroyPipelineLayout(m_logicalDevice, pipelineLayout, nullptr);
-            throw Exception("Failed to create pipeline.");
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to create pipeline.");
+            return nullptr;
         }
 
         PipelineVulkan* pipeline = new PipelineVulkan;
@@ -559,7 +569,8 @@ namespace Curse
         VkShaderModule shaderModule;
         if (vkCreateShaderModule(m_logicalDevice, &shaderModuleInfo, nullptr, &shaderModule) != VK_SUCCESS)
         {
-            throw Exception("Failed to create shader module.");
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to create shader module.");
+            return nullptr;
         }
 
         ShaderVulkan* shader = new ShaderVulkan;
@@ -589,7 +600,8 @@ namespace Curse
         VkBuffer vertexBuffer;
         if (vkCreateBuffer(m_logicalDevice, &bufferInfo, nullptr, &vertexBuffer) != VK_SUCCESS)
         {
-            throw Exception("Failed to create vertex buffer.");
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to create vertex buffer.");
+            return nullptr;
         }
 
         VkMemoryRequirements memRequirements;
@@ -599,7 +611,9 @@ namespace Curse
         if (!FindPhysicalDeviceMemoryType(memoryTypeIndex, memRequirements.memoryTypeBits,
                                           VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))
         {
-            throw Exception("Failed to find matching memory type for vertex buffer.");
+            vkDestroyBuffer(m_logicalDevice, vertexBuffer, nullptr);
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to find matching memory type for vertex buffer.");
+            return nullptr;
         }
 
         VkMemoryAllocateInfo memoryAllocateInfo = {};
@@ -610,12 +624,17 @@ namespace Curse
         VkDeviceMemory memory;
         if (vkAllocateMemory(m_logicalDevice, &memoryAllocateInfo, nullptr, &memory) != VK_SUCCESS)
         {
-            throw Exception("Failed to allocate vertex buffer memory.");
+            vkDestroyBuffer(m_logicalDevice, vertexBuffer, nullptr);
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to allocate vertex buffer memory.");
+            return nullptr;
         }
 
         if (vkBindBufferMemory(m_logicalDevice, vertexBuffer, memory, 0) != VK_SUCCESS)
         {
-            throw Exception("Failed to bind memory to vertex buffer.");
+            vkDestroyBuffer(m_logicalDevice, vertexBuffer, nullptr);
+            vkFreeMemory(m_logicalDevice, memory, nullptr);
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to bind memory to vertex buffer.");
+            return nullptr;
         }
 
         void* data;
@@ -688,7 +707,8 @@ namespace Curse
     {
         if (m_beginDraw)
         {
-            throw Exception("Drawing has already begun.");
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Drawing has already begun.");
+            return;
         }
       
         vkWaitForFences(m_logicalDevice, 1, &m_inFlightFences[m_currentFrame], VK_TRUE, std::numeric_limits<uint64_t>::max());
@@ -696,7 +716,7 @@ namespace Curse
             m_imageAvailableSemaphores[m_currentFrame], VK_NULL_HANDLE, &m_currentImageIndex);
 
         if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || m_resized)
-        {  
+        {    
             m_resized = false;
             RecreateSwapChain();
             BeginDraw();
@@ -704,7 +724,8 @@ namespace Curse
         }
         else if (result != VK_SUCCESS)
         {
-            throw Exception("Failed to acquire the next swap chain image.");
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to acquire the next swap chain image.");
+            return;
         }
 
         if (m_imagesInFlight[m_currentImageIndex] != VK_NULL_HANDLE)
@@ -715,7 +736,8 @@ namespace Curse
 
         if (m_currentImageIndex >= static_cast<uint32_t>(m_commandBuffers.size()))
         {
-            throw Exception("Received invalid image index.");
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Received invalid image index.");
+            return;
         }
 
         m_currentCommandBuffer = &m_commandBuffers[m_currentImageIndex];
@@ -726,8 +748,10 @@ namespace Curse
         commandBufferBeginInfo.flags = 0;
         commandBufferBeginInfo.pInheritanceInfo = nullptr;
 
-        if (vkBeginCommandBuffer(*m_currentCommandBuffer, &commandBufferBeginInfo) != VK_SUCCESS) {
-            throw Exception("Failed to begin recording command buffer.");
+        if (vkBeginCommandBuffer(*m_currentCommandBuffer, &commandBufferBeginInfo) != VK_SUCCESS)
+        {
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to begin recording command buffer.");
+            return;
         }
 
         VkRenderPassBeginInfo renderPassBeginInfo = {};
@@ -780,13 +804,15 @@ namespace Curse
     {
         if (!m_beginDraw)
         {
-            throw Exception("Drawing has not yet been started.");
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Drawing has not yet been started.");
+            return;
         }
 
         vkCmdEndRenderPass(*m_currentCommandBuffer);
         if (vkEndCommandBuffer(*m_currentCommandBuffer) != VK_SUCCESS)
         {
-            throw Exception("Failed to record command buffer.");
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to record command buffer.");
+            return;
         }
 
         VkSubmitInfo submitInfo = {};
@@ -807,7 +833,8 @@ namespace Curse
         vkResetFences(m_logicalDevice, 1, &m_inFlightFences[m_currentFrame]);
         if (vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, m_inFlightFences[m_currentFrame]) != VK_SUCCESS)
         {
-            throw Exception("Failed to submit draw command buffer.");
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to submit draw command buffer.");
+            return;
         }
 
         VkPresentInfoKHR presentInfo = {};
@@ -876,7 +903,7 @@ namespace Curse
         return vkGetInstanceProcAddr(m_instance, functionName);
     }
 
-    void RendererVulkan::LoadInstance(const Version& version)
+    bool RendererVulkan::LoadInstance(const Version& version)
     {
         auto newVersion = version;
         if (newVersion == Version::None)
@@ -891,7 +918,8 @@ namespace Curse
         std::vector<std::string> extensions;
         if (!GetRequiredExtensions(extensions, m_logger != nullptr))
         {
-            throw Exception("RendererVulkan: The required extensions are unavailable.");
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "The required Vulkan extensions are unavailable.");
+            return false;
         }
         std::vector<const char*> ptrExtensions(extensions.size());
         for (size_t i = 0; i < extensions.size(); i++)
@@ -925,13 +953,18 @@ namespace Curse
         {
             switch (result)
             {
-            case VK_ERROR_INCOMPATIBLE_DRIVER:
-                throw Exception("RendererVulkan: Driver for version " + version.AsString() + " of Vulkan is unavailable.");
+                case VK_ERROR_INCOMPATIBLE_DRIVER:
+                {
+                    CURSE_RENDERER_LOG(Logger::Severity::Error, "RendererVulkan: Driver for version " + version.AsString() + " of Vulkan is unavailable.");
+                    return false;
+                }
                 break;
-            default:
-                break;
+                default:
+                    break;
             }
-            throw Exception("RendererVulkan: Failed to create Vulkan instance.");
+
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to create Vulkan instance.");
+            return false;
         }
 
         if (debuggerIsAvailable)
@@ -942,20 +975,22 @@ namespace Curse
             if (!m_debugMessenger.CreateDebugUtilsMessengerEXT)
             {
                 CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to get function pointer for \"vkCreateDebugUtilsMessengerEXT\".");
-                return;
+                return true;
             }
             else if (!m_debugMessenger.DestroyDebugUtilsMessengerEXT)
             {
                 CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to get function pointer for \"vkDestroyDebugUtilsMessengerEXT\".");
-                return;
+                return true;
             }
 
             if (m_debugMessenger.CreateDebugUtilsMessengerEXT(m_instance, &debugMessageInfo, nullptr, &m_debugMessenger.messenger) != VK_SUCCESS)
             {
                 CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to set up debug messenger.");
-                return;
+                return true;
             }     
         }
+
+        return true;
     }
 
     bool RendererVulkan::GetRequiredExtensions(std::vector<std::string>& out, const bool requestDebugger) const
@@ -1066,9 +1101,10 @@ namespace Curse
         return true;
     }
 
-    void RendererVulkan::LoadSurface()
+    bool RendererVulkan::LoadSurface()
     {       
     #if CURSE_PLATFORM == CURSE_PLATFORM_WINDOWS
+        
         VkWin32SurfaceCreateInfoKHR surfaceInfo = {};
         surfaceInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
         surfaceInfo.hwnd = m_renderTarget->GetWin32Window();
@@ -1076,20 +1112,27 @@ namespace Curse
 
         if (vkCreateWin32SurfaceKHR(m_instance, &surfaceInfo, nullptr, &m_surface) != VK_SUCCESS)
         {
-            throw Exception("Failed to create window surface.");
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to create window surface.");
+            return false;
         }
+        return true;
+
     #else
-        throw Exception("Vulkan surface loading is not supported for platform: " CURSE_PLATFORM_NAME);
+
+        CURSE_RENDERER_LOG(Logger::Severity::Error, "Vulkan surface loading is not supported for platform: " CURSE_PLATFORM_NAME);
+        return false;
+
     #endif
     }
 
-    void RendererVulkan::LoadPhysicalDevice()
+    bool RendererVulkan::LoadPhysicalDevice()
     {
         uint32_t deviceCount = 0;
         vkEnumeratePhysicalDevices(m_instance, &deviceCount, nullptr);
         if (!deviceCount)
         {
-            throw Exception("Failed to find any physical device supporting Vulkan.");
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to find any physical device supporting Vulkan.");
+            return false;
         }
         std::vector<VkPhysicalDevice> devices(deviceCount);
         vkEnumeratePhysicalDevices(m_instance, &deviceCount, devices.data());
@@ -1110,10 +1153,12 @@ namespace Curse
 
         if (!scoredDevices.size())
         {
-            throw Exception("Failed to find any physical device supporting the requirements.");
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to find any physical device supporting the requirements.");
+            return false;
         }
 
         m_physicalDevice = scoredDevices.rbegin()->second;
+        return true;
     }
 
     bool RendererVulkan::ScorePhysicalDevice(PhysicalDevice& physicalDevice, uint32_t& score)
@@ -1211,7 +1256,8 @@ namespace Curse
         
         if (!extensionCount)
         {
-            throw Exception("Failed to find any device extensions.");
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to find any device extensions.");
+            return false;
         }
 
         std::vector<VkExtensionProperties> availableExtensions(extensionCount);
@@ -1256,7 +1302,7 @@ namespace Curse
         return true;
     }
 
-    void RendererVulkan::LoadLogicalDevice()
+    bool RendererVulkan::LoadLogicalDevice()
     {
         std::vector<VkDeviceQueueCreateInfo> queueInfos;
 
@@ -1293,14 +1339,16 @@ namespace Curse
 
         if (vkCreateDevice(m_physicalDevice.device, &deviceInfo, nullptr, &m_logicalDevice) != VK_SUCCESS)
         {
-            throw Exception("Failed to create logical device.");
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to create logical device.");
+            return false;
         }
 
         vkGetDeviceQueue(m_logicalDevice, m_physicalDevice.graphicsQueueIndex, 0, &m_graphicsQueue);
         vkGetDeviceQueue(m_logicalDevice, m_physicalDevice.presentQueueIndex, 0, &m_presentQueue);
+        return true;
     }
 
-    void RendererVulkan::LoadSwapChain()
+    bool RendererVulkan::LoadSwapChain()
     {
         SwapChainSupport& swapChainSupport = m_physicalDevice.swapChainSupport;
 
@@ -1319,7 +1367,8 @@ namespace Curse
         }
         if (!foundSurfaceFormat)
         {
-            throw Exception("Failed find required surface format for the swap chain.");
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed find required surface format for the swap chain.");
+            return false;
         }
 
         VkPresentModeKHR presentMode = VkPresentModeKHR::VK_PRESENT_MODE_FIFO_KHR;
@@ -1348,7 +1397,8 @@ namespace Curse
         uint32_t imageCount = std::min(capabilities.minImageCount + 1, capabilities.maxImageCount);
         if (!imageCount)
         {
-            throw Exception("Failed to get correct image count: " + std::to_string(imageCount) + ".");
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to get correct image count: " + std::to_string(imageCount) + ".");
+            return false;
         }
 
         VkSwapchainCreateInfoKHR swapchainInfo = {};
@@ -1382,23 +1432,28 @@ namespace Curse
 
         if (vkCreateSwapchainKHR(m_logicalDevice, &swapchainInfo, nullptr, &m_swapChain) != VK_SUCCESS)
         {
-            throw Exception("Failed create swap chain.");
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed create swap chain.");
+            return false;
         }
 
         uint32_t createdImageCount;
         vkGetSwapchainImagesKHR(m_logicalDevice, m_swapChain, &createdImageCount, nullptr);
         if (createdImageCount != imageCount)
         {
-            throw Exception("Failed to create the requested number of swap chain images.");
+            vkDestroySwapchainKHR(m_logicalDevice, m_swapChain, nullptr);
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to create the requested number of swap chain images.");
+            return false;
         }
 
         m_swapChainImages.resize(imageCount);
         vkGetSwapchainImagesKHR(m_logicalDevice, m_swapChain, &createdImageCount, m_swapChainImages.data());
+
+        return true;
     }
 
-    void RendererVulkan::LoadImageViews()
+    bool RendererVulkan::LoadImageViews()
     {
-        m_swapChainImageViews.resize(m_swapChainImages.size());
+        m_swapChainImageViews.resize(m_swapChainImages.size(), VK_NULL_HANDLE);
 
         for (size_t i = 0; i < m_swapChainImages.size(); i++)
         {
@@ -1419,12 +1474,15 @@ namespace Curse
 
             if (vkCreateImageView(m_logicalDevice, &imageViewInfo, nullptr, &m_swapChainImageViews[i]) != VK_SUCCESS)
             {
-                throw Exception("Failed create swap chain.");
+                CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed create image view " + std::to_string(i) + ".");
+                return false;
             }
         }
+
+        return true;
     }
 
-    void RendererVulkan::LoadRenderPass()
+    bool RendererVulkan::LoadRenderPass()
     {
         VkAttachmentDescription colorAttachment = {};
         colorAttachment.format = m_swapChainImageFormat;
@@ -1464,11 +1522,14 @@ namespace Curse
 
         if (vkCreateRenderPass(m_logicalDevice, &renderPassInfo, nullptr, &m_renderPass) != VK_SUCCESS)
         {
-            throw Exception("Failed to create render pass.");
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to create render pass.");
+            return false;
         }
+
+        return true;
     }
 
-    void RendererVulkan::LoadPresentFramebuffer()
+    bool RendererVulkan::LoadPresentFramebuffer()
     {
         for (auto& imageView : m_swapChainImageViews)
         {
@@ -1482,13 +1543,16 @@ namespace Curse
 
         if (!m_presentFramebuffers.size())
         {
-            throw Exception("No framebuffers are available.");
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "No framebuffers are available.");
+            return false;
         }
 
         m_maxFramesInFlight = m_presentFramebuffers.size() - 1;
+
+        return true;
     }
 
-    void RendererVulkan::LoadCommandPool()
+    bool RendererVulkan::LoadCommandPool()
     {
         VkCommandPoolCreateInfo commandPoolInfo = {};
         commandPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -1497,7 +1561,8 @@ namespace Curse
 
         if (vkCreateCommandPool(m_logicalDevice, &commandPoolInfo, nullptr, &m_commandPool) != VK_SUCCESS)
         {
-            throw Exception("Failed to create command pool.");
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to create command pool.");
+            return false;
         }
 
         m_commandBuffers.resize(m_presentFramebuffers.size());
@@ -1510,15 +1575,19 @@ namespace Curse
 
         if (vkAllocateCommandBuffers(m_logicalDevice, &commandBufferInfo, m_commandBuffers.data()) != VK_SUCCESS)
         {
-            throw Exception("Failed to allocate command buffers.");
+            vkDestroyCommandPool(m_logicalDevice, m_commandPool, nullptr);
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to allocate command buffers.");
+            return false;
         }
+
+        return true;
     }
 
-    void RendererVulkan::LoadSyncObjects()
+    bool RendererVulkan::LoadSyncObjects()
     {
         m_imageAvailableSemaphores.resize(m_maxFramesInFlight);
         m_renderFinishedSemaphores.resize(m_maxFramesInFlight);
-        m_inFlightFences.resize(m_maxFramesInFlight);
+        m_inFlightFences.resize(m_maxFramesInFlight, VK_NULL_HANDLE);
         m_imagesInFlight.resize(m_swapChainImages.size(), VK_NULL_HANDLE);
 
         VkSemaphoreCreateInfo semaphoreInfo = {};
@@ -1534,36 +1603,41 @@ namespace Curse
                 vkCreateSemaphore(m_logicalDevice, &semaphoreInfo, nullptr, &m_renderFinishedSemaphores[i]) != VK_SUCCESS ||
                 vkCreateFence(m_logicalDevice, &fenceInfo, nullptr, &m_inFlightFences[i]) != VK_SUCCESS)
             {
-
-                throw Exception("Failed to create semaphores and fences.");
+                CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to create semaphores and fences.");
+                return false;
             }
         }
+
+        return true;
     }
 
-    void RendererVulkan::RecreateSwapChain()
+    bool RendererVulkan::RecreateSwapChain()
     {
         vkDeviceWaitIdle(m_logicalDevice);
         //vkQueueWaitIdle(m_graphicsQueue);
         //vkQueueWaitIdle(m_presentQueue);       
 
         UnloadSwapchain();
-        LoadSwapChain();
-        LoadImageViews();
-        LoadPresentFramebuffer();
-        LoadSyncObjects();
 
+        bool loaded =
+            LoadSwapChain() &&
+            LoadImageViews() &&
+            LoadPresentFramebuffer(); //&&
+            //LoadSyncObjects();
+
+        return loaded;
     }
 
     void RendererVulkan::UnloadSwapchain()
     {
-        for (auto& semaphore : m_imageAvailableSemaphores)
+        /*for (auto& semaphore : m_imageAvailableSemaphores)
         {
             vkDestroySemaphore(m_logicalDevice, semaphore, nullptr);
         }
         for (auto& semaphore : m_renderFinishedSemaphores)
         {
             vkDestroySemaphore(m_logicalDevice, semaphore, nullptr);
-        }
+        }*/
 
         for (auto& framebuffer : m_presentFramebuffers)
         {

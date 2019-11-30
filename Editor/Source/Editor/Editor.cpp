@@ -135,6 +135,7 @@ static int Run()
     renderer->DestroyPipeline(pipeline1);
     renderer->DestroyPipeline(pipeline2);
     delete renderer;
+    delete window;
 
     return 0;
 }

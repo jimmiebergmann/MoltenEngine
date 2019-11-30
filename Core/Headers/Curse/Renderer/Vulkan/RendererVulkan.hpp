@@ -70,7 +70,7 @@ namespace Curse
         *
         * @param window[in] Render target window.
         */
-        virtual void Open(const WindowBase& window, const Version& version = Version::None, Logger* logger = nullptr) override;
+        virtual bool Open(const WindowBase& window, const Version& version = Version::None, Logger* logger = nullptr) override;
 
         /**
         * @brief Closing renderer.
@@ -225,22 +225,22 @@ namespace Curse
         };  
 
         PFN_vkVoidFunction GetVulkanFunction(const char* functionName) const;
-        void LoadInstance(const Version& version);
+        bool LoadInstance(const Version& version);
         bool GetRequiredExtensions(std::vector<std::string>& extensions, const bool requestDebugger) const;
-        bool LoadDebugger(VkInstanceCreateInfo& instanceInfo, VkDebugUtilsMessengerCreateInfoEXT& debugMessageInfo);     
-        void LoadSurface();
-        void LoadPhysicalDevice();
+        bool LoadDebugger(VkInstanceCreateInfo& instanceInfo, VkDebugUtilsMessengerCreateInfoEXT& debugMessageInfo);
+        bool LoadSurface();
+        bool LoadPhysicalDevice();
         bool ScorePhysicalDevice(PhysicalDevice& physicalDevice, uint32_t & score);
         bool CheckDeviceExtensionSupport(PhysicalDevice & physicalDevice);
         bool FetchSwapChainSupport(PhysicalDevice& physicalDevice);
-        void LoadLogicalDevice();
-        void LoadSwapChain();
-        void LoadImageViews();
-        void LoadRenderPass();
-        void LoadPresentFramebuffer();
-        void LoadCommandPool();
-        void LoadSyncObjects();
-        void RecreateSwapChain();
+        bool LoadLogicalDevice();
+        bool LoadSwapChain();
+        bool LoadImageViews();
+        bool LoadRenderPass();
+        bool LoadPresentFramebuffer();
+        bool LoadCommandPool();
+        bool LoadSyncObjects();
+        bool RecreateSwapChain();
         void UnloadSwapchain();
         bool FindPhysicalDeviceMemoryType(uint32_t& index, const uint32_t filter, const VkMemoryPropertyFlags properties);
 

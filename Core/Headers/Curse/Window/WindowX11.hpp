@@ -45,14 +45,6 @@ namespace Curse
     public:
 
         /**
-        * @brief Construct reference object of Window.
-        *
-        * @param args[in] Constructor parameters.
-        */
-        template<typename ... Args>
-        static Ref<WindowX11> Create(Args&& ... args);
-
-        /**
         * @brief Constructor.
         */
         WindowX11();

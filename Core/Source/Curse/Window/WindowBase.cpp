@@ -25,8 +25,36 @@
 
 #include "Curse/Window/WindowBase.hpp"
 
+#if CURSE_PLATFORM == CURSE_PLATFORM_WINDOWS
+#include "Curse/Window/WindowWin32.hpp"
+#elif CURSE_PLATFORM == CURSE_PLATFORM_LINUX
+#include "Curse/Window/WindowX11.hpp"
+#endif  
+
 namespace Curse
 {
+
+    WindowBase* WindowBase::Create()
+    {
+    #if CURSE_PLATFORM == CURSE_PLATFORM_WINDOWS
+        return new WindowWin32;
+    #elif CURSE_PLATFORM == CURSE_PLATFORM_LINUX
+        return new WindowX11;
+    #else
+        return nullptr
+    #endif    
+    }
+
+    WindowBase* WindowBase::Create(const std::string& title, const Vector2ui32 size)
+    {
+    #if CURSE_PLATFORM == CURSE_PLATFORM_WINDOWS
+        return new WindowWin32(title, size);
+    #elif CURSE_PLATFORM == CURSE_PLATFORM_LINUX
+        return new WindowX11(title, size);
+    #else
+        return nullptr
+    #endif    
+    }
 
     WindowBase::~WindowBase()
     {

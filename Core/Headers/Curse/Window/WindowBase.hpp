@@ -44,6 +44,15 @@ namespace Curse
     public:
 
         /**
+         * @brief Static function for creating a window object for the current platform.
+         *        Window is being opened if parameters are passed.
+         *
+         * @return Pointer to window, nullptr if no window is available on the current platform.
+         */
+        static WindowBase* Create();
+        static WindowBase* Create(const std::string& title, const Vector2ui32 size);
+
+        /**
         * @brief On resize signal.
         */
         Signal<Vector2ui32> OnResize;
