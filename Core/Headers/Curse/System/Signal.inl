@@ -40,7 +40,7 @@ namespace Curse
     { }
 
     template<typename ... Args>
-    inline Signal<Args...>::Connection::Connection(Connection&& connection) :
+    inline Signal<Args...>::Connection::Connection(Connection&& connection) noexcept :
         m_signal(connection.m_signal),
         m_controller(connection.m_controller)
     {
@@ -132,6 +132,15 @@ namespace Curse
     inline size_t Signal<Args...>::GetConnectionCount() const
     {
         return m_connections.size();
+    }
+
+    template<>
+    inline void Signal<>::operator ()() const
+    {
+        for (auto& connection : m_connections)
+        {
+            connection.second();
+        }
     }
 
     template<typename ... Args>

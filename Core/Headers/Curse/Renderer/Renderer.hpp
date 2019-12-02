@@ -39,7 +39,7 @@
 namespace Curse
 {
 
-    class WindowBase;
+    class Window;
     class Logger;
 
 
@@ -78,7 +78,7 @@ namespace Curse
         *
         * @param window Render target window.
         */
-        virtual bool Open(const WindowBase& window, const Version& version = Version::None, Logger * logger = nullptr) = 0;
+        virtual bool Open(const Window& window, const Version& version = Version::None, Logger * logger = nullptr) = 0;
 
         /**
         * @brief Closing renderer.

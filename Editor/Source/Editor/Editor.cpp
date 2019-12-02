@@ -8,15 +8,19 @@
 #include "Curse/Logger.hpp"
 #include <iostream>
 
-static int Run()
+static Curse::Logger logger;
+static Curse::Window* window = nullptr;
+
+static void Run()
 {
-    auto window = Curse::Window::Create("Curse Editor", Curse::Vector2ui32(800, 600));
-    
-    Curse::Logger logger;
-    Curse::Logger rendererLogger(static_cast<uint32_t>(Curse::Logger::Severity::Error), &logger);
+    window = Curse::Window::Create();
+    if (!window->Open("Curse Editor", { 800, 600 }, &logger))
+    {
+        return;
+    }
 
     auto renderer = Curse::Renderer::Create(Curse::Renderer::BackendApi::Vulkan);
-    renderer->Open(*window, Curse::Version(1, 1), &rendererLogger);
+    renderer->Open(*window, Curse::Version(1, 1), &logger);
 
     auto verSpirvSrc = Curse::FileSystem::ReadFile("shader.vert");
     auto verSpirv = renderer->CompileShader(Curse::Shader::Format::Glsl, Curse::Shader::Type::Vertex, verSpirvSrc, Curse::Shader::Format::SpirV);
@@ -79,7 +83,7 @@ static int Run()
     
     auto renderFunction = [&]()
     {      
-        renderer->Resize(window->GetCurrentSize());
+        renderer->Resize(window->GetSize());
         renderer->BeginDraw();
 
         //renderer->BindPipeline(pipeline1);
@@ -91,38 +95,58 @@ static int Run()
         renderer->EndDraw();
     };
 
-    Curse::Clock resizeTimer;
+    //Curse::Clock resizeTimer;
     auto resizeCallback = [&](Curse::Vector2ui32 )
     {
-        if (resizeTimer.GetTime() >= Curse::Seconds(0.1f))
+        /*if (resizeTimer.GetTime() >= Curse::Seconds(0.1f))
         {
             resizeTimer.Reset();
             
             //Curse::Clock rendererTimer;
-            renderFunction();
+            //renderFunction();
             //auto time = rendererTimer.GetTime();
             //std::cout << "Resize time: " << time.AsSeconds<float>() << std::endl;
-        }
+        }*/
     };
 
+    window->OnMaximize.Connect(resizeCallback);
+    window->OnMinimize.Connect(resizeCallback);
     window->OnResize.Connect(resizeCallback);
-
+    
 
     window->Show();
 
-    size_t ticks = 0;
-    Curse::Clock clock;
+    Curse::Vector2f32 windowPos = window->GetPosition();
+
+    //size_t ticks = 0;
+    Curse::Clock deltaClock;
+    Curse::Clock runClock;
+    float deltaTime = 0.0f;
     while (window->IsOpen())
     {
-        if (clock.GetTime() >= Curse::Seconds(1.0f))
-        {
-            //std::cout << "FPS: " << ticks << std::endl;
-            ticks = 0;
-            clock.Reset();
-        }
-        ticks++;
-        
+        deltaTime = deltaClock.GetTime().AsSeconds<float>();
+        deltaClock.Reset();
+            
+        /*const float resizeSpeed = 2.0f;
+        const float resizeMagniture = 200.0f;
+        float resize = (std::sin(runClock.GetTime().AsSeconds<float>() * resizeSpeed) + 1.0f) / 2.0f * resizeMagniture;
+        auto newSize = Curse::Vector2f32{ 400.0f + resize, 400.0f + resize };
+        auto newPos = Curse::Vector2f32{ 400.0f - (resize / 2.0f), 400.0f - (resize/2.0f) };
+        window->Move(newPos);*/
+        //window->Resize(newSize);
+
+
+        //logger.Write(Curse::Logger::Severity::Debug, std::to_string(resize));
+
+        //window->Move(windowPos);
+        //window->Resize({300, 300});
+
         window->Update();
+        if (!window->IsOpen())
+        {
+            break;
+        }
+
         renderFunction();
     }
 
@@ -136,22 +160,22 @@ static int Run()
     renderer->DestroyPipeline(pipeline2);
     delete renderer;
     delete window;
-
-    return 0;
 }
 
 int main()
 {
-    std::cout << "Curse Editor v" << Curse::Version(CURSE_VERSION_MAJOR, CURSE_VERSION_MINOR, CURSE_VERSION_PATCH).AsString(false) << std::endl;
+    logger.Write(Curse::Logger::Severity::Info, "Starting Curse Editor v" + CURSE_VERSION.AsString(false));
 
     try
     {
-        return Run();
+        Run();
     }
     catch (Curse::Exception & e)
     {
-        std::cout << "Error: " << e.what() << std::endl;
+        logger.Write(Curse::Logger::Severity::Error, "Error: " + e.GetMessage());
+        logger.Write(Curse::Logger::Severity::Info, "Closing Curse Editor.");
+        return -1;
     }
 
-    return -1;
+    return 0;
 }

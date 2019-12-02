@@ -28,26 +28,33 @@
 #if CURSE_PLATFORM == CURSE_PLATFORM_LINUX
 
 #include "Curse/System/Exception.hpp"
+#include "Curse/Logger.hpp"
 #include <cstring>
+
+#define CURSE_WINDOW_LOG(severity, message) if(m_logger){ m_logger->Write(severity, message); }
 
 namespace Curse
 {
 
     WindowX11::WindowX11() :
+        m_logger(nullptr),
         m_display(NULL),
         m_screen(0),
         m_window(0),
         m_open(false),
-        m_initialSize(0, 0),
-        m_currentSize(0, 0),
+        m_showing(false),
+        m_maximized(false),
+        m_minimized(false),
+        m_size(0, 0),
+        m_position(0, 0),
         m_title("")
     {
     }
 
-    WindowX11::WindowX11(const std::string& title, const Vector2ui32 size) :
+    WindowX11::WindowX11(const std::string& title, const Vector2ui32 size, Logger* logger) :
         WindowX11()
     {
-        Open(title, size);
+        Open(title, size, logger);
     }
 
     WindowX11::~WindowX11()
@@ -55,13 +62,16 @@ namespace Curse
         Close();
     }
 
-    void WindowX11::Open(const std::string& title, const Vector2ui32 size)
+    bool WindowX11::Open(const std::string& title, const Vector2ui32 size, Logger* logger)
     {
         Close();
 
+        m_logger = logger;
+
         if((m_display = XOpenDisplay(NULL)) == NULL)
         {
-            throw Exception("X11: Failed to connect to X server.");
+            CURSE_WINDOW_LOG(Logger::Severity::Error, "Failed to connect to X server.");
+            return false;
         }
 
         ::XInitThreads( );
@@ -89,7 +99,8 @@ namespace Curse
 
         if (!m_window)
         {
-            throw Exception("X11: Failed to create window.");
+            CURSE_WINDOW_LOG(Logger::Severity::Error, "Failed to create window.");
+            return false;
         }
 
         Atom wmDeleteMessage = XInternAtom(m_display, "WM_DELETE_WINDOW", false);
@@ -102,8 +113,11 @@ namespace Curse
         XFlush(m_display);
 
         m_title = title;
-        m_initialSize = m_currentSize = size;
+        m_size = m_currentSize = size;
+        // m_position = ?
         m_open = true;
+
+        return true;
     }
 
     void WindowX11::Close()
@@ -119,10 +133,17 @@ namespace Curse
             XCloseDisplay(m_display);
         }
 
+        m_logger = nullptr;
         m_open = false;
         m_display = NULL;
         m_screen = 0;
         m_window = 0;
+      
+        m_showing = false;
+        m_maximized = false;
+        m_minimized = false;
+        m_size = { 0,0 };
+        m_position = { 0,0 };
     }
 
     void WindowX11::Update()
@@ -142,10 +163,9 @@ namespace Curse
             {
                 case ClientMessage:
                 {                  
-                    // This is ahacky way of checking if we closed the window
+                    // This is a hacky way of checking if we closed the window
                     if(std::strcmp(XGetAtomName(m_display, event.xclient.message_type), "WM_PROTOCOLS") == 0)
                     {
-
                         Close();
                         return;
                     }
@@ -157,27 +177,58 @@ namespace Curse
         }
     }
 
-    void WindowX11::Show(const bool /*show*/)
-    {
-    }
-
-    void WindowX11::Hide()
-    {
-    }
-
     bool WindowX11::IsOpen() const
     {
         return m_open;
     }
 
-    Vector2ui32 WindowX11::GetInitialSize() const
+    bool WindowX11::IsShowing() const
     {
-        return m_initialSize;
+        return m_showing;
     }
 
-    Vector2ui32 WindowX11::GetCurrentSize() const
+    bool WindowX11::IsMaximized() const
     {
-        return m_currentSize;
+        return m_maximized;
+    }
+
+    bool WindowX11::IsMinimized() const
+    {
+        return m_minimized;
+    }
+
+    void WindowX11::Show(const bool /*show*/, const bool /*signal*/)
+    {
+    }
+
+    void WindowX11::Hide(const bool /*signal*/)
+    {
+    }
+
+    void WindowX11::Maximize(const bool /*signal*/)
+    {
+    }
+
+    void WindowX11::Minimize(const bool /*signal*/)
+    {
+    }
+
+    void WindowX11::Move(const Vector2i32& /*position*/, const bool /*signal*/)
+    {
+    }
+    
+    void WindowX11::Resize(const Vector2ui32& /*size*/, const bool /*signal*/)
+    {
+    }
+
+    Vector2ui32 WindowX11::GetSize() const
+    {
+        return m_size;
+    }
+
+    Vector2i32 WindowX11::GetPosition() const
+    {
+        return m_position;
     }
 
     ::Display * WindowX11::GetX11DisplayDevice() const

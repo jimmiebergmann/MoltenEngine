@@ -264,6 +264,32 @@ namespace Curse
         }
     }
 
+    TEST(Math, Vector2_Cast)
+    {
+        {
+            Vector2f32 vec1(1.5f, 2.5f);
+            Vector2i32 vec2(vec1);
+            EXPECT_EQ(vec2.x, int32_t(1));
+            EXPECT_EQ(vec2.y, int32_t(2));
+
+            Vector2f32 vec3(vec2);
+            EXPECT_EQ(vec3.x, float(1.0f));
+            EXPECT_EQ(vec3.y, float(2.0f));
+        }
+        {
+            Vector2f32 vec1(1.5f, 2.5f);
+            Vector2i32 vec2;
+            vec2 = vec1;
+            EXPECT_EQ(vec2.x, int32_t(1));
+            EXPECT_EQ(vec2.y, int32_t(2));
+
+            Vector2f32 vec3;
+            vec3 = vec2;
+            EXPECT_EQ(vec3.x, float(1.0f));
+            EXPECT_EQ(vec3.y, float(2.0f));
+        }
+    }
+
     TEST(Math, Vector2_Length)
     {
         {
@@ -446,6 +472,36 @@ namespace Curse
             EXPECT_TRUE(Vector3i32(100, 200, 300) != Vector3i32(100, 200, 301));
             EXPECT_TRUE(Vector3i32(100, 200, 301) != Vector3i32(100, 200, 300));
             EXPECT_TRUE(Vector3i32(100, 200, 300) != Vector3i32(101, 201, 300));
+        }
+    }
+
+    TEST(Math, Vector3_Cast)
+    {
+        {
+            Vector3f32 vec1(1.5f, 2.5f, 3.5f);
+            Vector3i32 vec2(vec1);
+            EXPECT_EQ(vec2.x, int32_t(1));
+            EXPECT_EQ(vec2.y, int32_t(2));
+            EXPECT_EQ(vec2.z, int32_t(3));
+
+            Vector3f32 vec3(vec2);
+            EXPECT_EQ(vec3.x, float(1.0f));
+            EXPECT_EQ(vec3.y, float(2.0f));
+            EXPECT_EQ(vec3.z, float(3.0f));
+        }
+        {
+            Vector3f32 vec1(1.5f, 2.5f, 3.5f);
+            Vector3i32 vec2;
+            vec2 = vec1;
+            EXPECT_EQ(vec2.x, int32_t(1));
+            EXPECT_EQ(vec2.y, int32_t(2));
+            EXPECT_EQ(vec2.z, int32_t(3));
+
+            Vector3f32 vec3;
+            vec3 = vec2;
+            EXPECT_EQ(vec3.x, float(1.0f));
+            EXPECT_EQ(vec3.y, float(2.0f));
+            EXPECT_EQ(vec3.z, float(3.0f));
         }
     }
 

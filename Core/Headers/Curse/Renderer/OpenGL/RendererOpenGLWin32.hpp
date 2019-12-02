@@ -55,7 +55,7 @@ namespace Curse
         *
         * @param window[in] Render target window.
         */
-        RendererOpenGLWin32(const WindowBase & window, const Version& version, Logger* logger = nullptr);
+        RendererOpenGLWin32(const Window& window, const Version& version, Logger* logger = nullptr);
 
         /**
         * @brief Virtual destructor.
@@ -67,7 +67,7 @@ namespace Curse
         *
         * @param window[in] Render target window.
         */
-        virtual bool Open(const WindowBase & window, const Version& version = Version::None, Logger* logger = nullptr) override;
+        virtual bool Open(const Window& window, const Version& version = Version::None, Logger* logger = nullptr) override;
 
         /**
         * @brief Closing renderer.

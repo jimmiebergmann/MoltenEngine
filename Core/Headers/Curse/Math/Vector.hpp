@@ -92,6 +92,13 @@ namespace Curse
         Vector(const U1 x, const U2 y);
 
         /**
+        * @brief Constructor.
+        *        Initializes vector by any other 2 dimensional vector class.
+        */
+        template<typename U>
+        Vector(const Vector<2, U>& vector);
+
+        /**
         * @brief Get the absolute valute vector.
         */
         Vector<2, T> Absolute() const;
@@ -251,6 +258,13 @@ namespace Curse
         */
         template<typename U1, typename U2, typename U3>
         Vector(const U1 x, const U2 y, const U3 z);
+
+        /**
+        * @brief Constructor.
+        *        Initializes vector by any other 3 dimensional vector class.
+        */
+        template<typename U>
+        Vector(const Vector<3, U>& vector);
 
         /**
         * @brief Get the absolute valute vector.
@@ -419,6 +433,13 @@ namespace Curse
         */
         template<typename U1, typename U2, typename U3, typename U4>
         Vector(const U1 x, const U2 y, const U3 z, const U4 w);
+
+        /**
+        * @brief Constructor.
+        *        Initializes vector by any other 4 dimensional vector class.
+        */
+        template<typename U>
+        Vector(const Vector<4, U>& vector);
 
         /**
         * @brief Get the absolute valute vector.

@@ -26,7 +26,7 @@
 #ifndef CURSE_CORE_WINDOW_WINDOWWIN32_HPP
 #define CURSE_CORE_WINDOW_WINDOWWIN32_HPP
 
-#include "Curse/Window/WindowBase.hpp"
+#include "Curse/Window/Window.hpp"
 
 #if CURSE_PLATFORM == CURSE_PLATFORM_WINDOWS
 
@@ -39,7 +39,7 @@ namespace Curse
     /**
     * @brief  Window class of win32 application windows.
     */
-    class CURSE_API WindowWin32 : public WindowBase
+    class CURSE_API WindowWin32 : public Window
     {
 
     public:
@@ -52,7 +52,7 @@ namespace Curse
         /**
         * @brief Constructs and opens window.
         */
-        WindowWin32(const std::string& title, const Vector2ui32 size);
+        WindowWin32(const std::string& title, const Vector2ui32 size, Logger * logger = nullptr);
 
         /**
         * @brief Destructor.
@@ -62,7 +62,7 @@ namespace Curse
         /**
         * @brief Open window.
         */
-        virtual void Open(const std::string& title, const Vector2ui32 size) override;
+        virtual bool Open(const std::string& title, const Vector2ui32 size, Logger* logger = nullptr) override;
 
         /**
         * @brief Close window.
@@ -78,13 +78,16 @@ namespace Curse
         * @brief Show window.
         *
         * @param show Shows window if true, else hides window.
+        * @param signal Signals OnShow if true. OnShow is not being signaled if current status equals to parameter show.
         */
-        virtual void Show(const bool show = true) override;
+        virtual void Show(const bool show = true, const bool signal = false) override;
 
         /**
         * @brief Hide window.
+        *
+        * @param signal Signals OnMaximize if true. OnShow is not being signaled if current status equals to parameter show.
         */
-        virtual void Hide() override;
+        virtual void Hide(const bool signal = false) override;
 
         /**
         * @brief Checks if window has been created and is open.
@@ -93,14 +96,61 @@ namespace Curse
         virtual bool IsOpen() const override;
 
         /**
-        * @brief Get initial size of window.
+        * @brief Checks if window is present and showing on screen.
+        *        A showing window is not the same as "open".
         */
-        virtual Vector2ui32 GetInitialSize() const override;
+        virtual bool IsShowing() const override;
+
+        /**
+        * @brief Checks if window is maximized.
+        */
+        virtual bool IsMaximized() const override;
+
+        /**
+        * @brief Checks if window is minimized.
+        *        Window is now minimized when closed.
+        */
+        virtual bool IsMinimized() const override;
+
+        /**
+        * @brief Maximize window.
+        *
+        * @param signal Signals OnMaximize if true. OnMaximize is not being signaled if window already is maximized.
+        */
+        virtual void Maximize(const bool signal = false) override;
+
+        /**
+        * @brief Minimize window.
+        *
+        * @param signal Signals OnMinimize if true. OnMinimize is not being signaled if window already is minimized.
+        */
+        virtual void Minimize(const bool signal = false) override;
+
+        /**
+        * @brief Change current position of window.
+        *
+        * @param position New position of window.
+        * @param signal Signals OnMove if true. OnMove is not being signaled if new position equals to current position.
+        */
+        virtual void Move(const Vector2i32& position, const bool signal = false) override;
+
+        /**
+        * @brief Change current size of window.
+        *
+        * @param size New size of window.
+        * @param signal Signals OnResize if true. OnResize is not being signaled if new size equals to current size.
+        */
+        virtual void Resize(const Vector2ui32& size, const bool signal = false) override;
 
         /**
         * @brief Get current size of window.
         */
-        virtual Vector2ui32 GetCurrentSize() const override;
+        virtual Vector2ui32 GetSize() const override;
+
+        /**
+        * @brief Get current position of window.
+        */
+        virtual Vector2i32 GetPosition() const override;
 
         /**
         * @brief Get win32 window handle.
@@ -122,14 +172,19 @@ namespace Curse
         static LRESULT WindowProcStatic(HWND window, UINT message, WPARAM wParam, LPARAM lParam);
         LRESULT WindowProc(HWND window, UINT message, WPARAM wParam, LPARAM lParam);
 
+        Logger* m_logger;
         HWND m_window;
         HINSTANCE m_instance;
         HDC m_deviceContext;
         DWORD m_style; //< Win32 style of window.
         DWORD m_extendedStyle; //< Win32 extended style of window.
         std::string m_windowClassName;
-        Vector2ui32 m_initialSize;
-        Vector2ui32 m_currentSize;
+
+        bool m_showing;
+        bool m_maximized;
+        bool m_minimized;
+        Vector2ui32 m_size;
+        Vector2i32 m_position;
         std::string m_title;
 
     };

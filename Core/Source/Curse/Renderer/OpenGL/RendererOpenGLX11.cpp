@@ -30,7 +30,7 @@
 #if CURSE_PLATFORM == CURSE_PLATFORM_LINUX
 
 #include "Curse/Renderer/OpenGL/OpengGLFunctions.hpp"
-#include "Curse/Window/WindowBase.hpp"
+#include "Curse/Window/Window.hpp"
 #include "Curse/System/Exception.hpp"
 
 namespace Curse
@@ -40,7 +40,7 @@ namespace Curse
     {
     }
 
-    RendererOpenGLX11::RendererOpenGLX11(const WindowBase& window, const Version& version, Logger* logger) :
+    RendererOpenGLX11::RendererOpenGLX11(const Window& window, const Version& version, Logger* logger) :
         RendererOpenGLX11()
     {
         Open(window, version, logger);
@@ -51,7 +51,7 @@ namespace Curse
         Close();
     }
 
-    bool RendererOpenGLX11::Open(const WindowBase& /*window*/, const Version& /*version*/, Logger* /*logger*/)
+    bool RendererOpenGLX11::Open(const Window& /*window*/, const Version& /*version*/, Logger* /*logger*/)
     {
         /*HGLRC temporaryContext = NULL;
 

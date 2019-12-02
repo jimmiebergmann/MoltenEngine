@@ -65,6 +65,13 @@ namespace Curse
     }
 
     template<typename T>
+    template<typename U>
+    inline Vector<2, T>::Vector(const Vector<2, U>& vector) :
+        x(static_cast<T>(vector.x)), y(static_cast<T>(vector.y))
+    {
+    }
+
+    template<typename T>
     inline Vector<2, T> Vector<2, T>::Absolute() const
     {
         return Vector2<T>(std::abs(x), std::abs(y));
@@ -269,6 +276,13 @@ namespace Curse
     template<typename U1, typename U2, typename U3>
     inline Vector<3, T>::Vector(const U1 x, const U2 y, const U3 z) :
         x(static_cast<T>(x)), y(static_cast<T>(y)), z(static_cast<T>(z))
+    {
+    }
+
+    template<typename T>
+    template<typename U>
+    inline Vector<3, T>::Vector(const Vector<3, U>& vector) :
+        x(static_cast<T>(vector.x)), y(static_cast<T>(vector.y)), z(static_cast<T>(vector.z))
     {
     }
 
@@ -508,6 +522,13 @@ namespace Curse
     template<typename U1, typename U2, typename U3, typename U4>
     inline Vector<4, T>::Vector(const U1 x, const U2 y, const U3 z, const U4 w) :
         x(static_cast<T>(x)), y(static_cast<T>(y)), z(static_cast<T>(z)), w(static_cast<T>(w))
+    {
+    }
+
+    template<typename T>
+    template<typename U>
+    inline Vector<4, T>::Vector(const Vector<4, U>& vector) :
+        x(static_cast<T>(vector.x)), y(static_cast<T>(vector.y)), z(static_cast<T>(vector.z)), w(static_cast<T>(vector.w))
     {
     }
 

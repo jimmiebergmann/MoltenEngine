@@ -28,35 +28,15 @@
 #if CURSE_PLATFORM == CURSE_PLATFORM_WINDOWS
 
 #include "Curse/System/Exception.hpp"
+#include "Curse/Logger.hpp"
 #include <sstream>
+
+#define CURSE_WINDOW_LOG(severity, message) if(m_logger){ m_logger->Write(severity, message); }
 
 namespace Curse
 {
 
-    WindowWin32::WindowWin32() :
-        m_window(NULL),
-        m_instance(NULL),
-        m_deviceContext(NULL),
-        m_style(0),
-        m_extendedStyle(0),
-        m_windowClassName(""),
-        m_initialSize(0, 0),
-        m_currentSize(0, 0),
-        m_title("")
-    {
-    }
-
-    WindowWin32::WindowWin32(const std::string& title, const Vector2ui32 size) :
-        WindowWin32()
-    {
-        Open(title, size);
-    }
-
-    WindowWin32::~WindowWin32()
-    {
-        Close();
-    }
-
+    // Static helper functions.
     static std::string CreateGuid()
     {
         union GuidStruct
@@ -72,15 +52,47 @@ namespace Curse
 
         uint16_t* ptr = &guid.part;
         std::stringstream ss;
-        ss << std::hex;    
-        ss << ptr[0] << ptr[1] << "-" << ptr[3]  << "-" << ptr[4] << "-" << ptr[5] << ptr[6] << ptr[7];
+        ss << std::hex;
+        ss << ptr[0] << ptr[1] << "-" << ptr[3] << "-" << ptr[4] << "-" << ptr[5] << ptr[6] << ptr[7];
 
         return std::move(ss.str());
     }
 
-    void WindowWin32::Open(const std::string& title, const Vector2ui32 size)
+
+    // Win32 window implementations.
+    WindowWin32::WindowWin32() :
+        m_logger(nullptr),
+        m_window(NULL),
+        m_instance(NULL),
+        m_deviceContext(NULL),
+        m_style(0),
+        m_extendedStyle(0),
+        m_windowClassName(""),
+        m_showing(false),
+        m_maximized(false),
+        m_minimized(false),
+        m_size(0, 0),
+        m_position(0, 0),
+        m_title("")
+    {
+    }
+
+    WindowWin32::WindowWin32(const std::string& title, const Vector2ui32 size, Logger* logger) :
+        WindowWin32()
+    {
+        Open(title, size, logger);
+    }
+
+    WindowWin32::~WindowWin32()
     {
         Close();
+    }
+
+    bool WindowWin32::Open(const std::string& title, const Vector2ui32 size, Logger* logger)
+    {
+        Close();
+
+        m_logger = logger;
 
         m_extendedStyle = WS_EX_APPWINDOW;
         m_style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_SIZEBOX | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_BORDER;
@@ -103,7 +115,8 @@ namespace Curse
 
         if (!::RegisterClass(&winClass))
         {
-            throw Exception("Win32: Failed to register Window class.");
+            CURSE_WINDOW_LOG(Logger::Severity::Error, "Failed to register Window class.");
+            return false;
         }
         m_windowClassName = className;
         m_instance = winInstance;
@@ -115,7 +128,8 @@ namespace Curse
         windowRect.bottom = static_cast<LONG>(size.y);
         if (!::AdjustWindowRectEx(&windowRect, m_style, FALSE, m_extendedStyle))
         {
-            throw Exception("Win32: Failed to adjust window rect.");
+            CURSE_WINDOW_LOG(Logger::Severity::Error, "Failed to adjust window rect.");
+            return false;
         }
 
         m_window = ::CreateWindowEx(
@@ -134,36 +148,54 @@ namespace Curse
 
         if (m_window == NULL)
         {
-            throw Exception("Win32: Failed to create window.");
+            CURSE_WINDOW_LOG(Logger::Severity::Error, "Failed to create window.");
+            return false;
         }
         m_deviceContext = GetDC(m_window);
   
+        if (!(::GetWindowRect(m_window, &windowRect)))
+        {
+            CURSE_WINDOW_LOG(Logger::Severity::Error, "Failed to retreive window rect.");
+            return false;
+        }
+
+        m_size.x = static_cast<int32_t>(windowRect.right - windowRect.left);
+        m_size.y = static_cast<int32_t>(windowRect.bottom - windowRect.top);
+        m_position.x = static_cast<int32_t>(windowRect.left);
+        m_position.y = static_cast<int32_t>(windowRect.top);      
         m_title = title;
-        m_initialSize = m_currentSize = size;
+
+        return true;
     }
 
     void WindowWin32::Close()
     {
         if (m_deviceContext && !::ReleaseDC(m_window, m_deviceContext))
         {
-            throw Exception("Win32: Failed to release device context.");
+            CURSE_WINDOW_LOG(Logger::Severity::Error, "Failed to release window's device context.");
         }
         m_deviceContext = NULL;
 
         if (m_window && !::DestroyWindow(m_window))
         {
-            throw Exception("Win32: Failed to destroy class.");
+            CURSE_WINDOW_LOG(Logger::Severity::Error, "Failed to destroy window class.");
         }
         m_window = NULL;
         
         if (m_windowClassName.size() && !::UnregisterClass(m_windowClassName.c_str(), m_instance))
         {
-            throw Exception("Win32: Failed to unregister class.");
+            CURSE_WINDOW_LOG(Logger::Severity::Error, "Failed to unregister window class.");
         }
         m_instance = NULL;
-
+        
+        m_logger = nullptr;
         m_windowClassName.clear();
         
+        m_showing = false;
+        m_maximized = false;
+        m_minimized = false;
+        m_size = { 0,0 };
+        m_position = { 0,0 };       
     }
 
     void WindowWin32::Update()
@@ -182,15 +214,38 @@ namespace Curse
         }
     }
 
-    void WindowWin32::Show(const bool show)
+    void WindowWin32::Show(const bool show, const bool signal)
     {
-        auto flag = show ? true : SW_HIDE;
+        if (m_showing == show)
+        {
+            return;
+        }
+
+        m_showing = show;
+
+        auto flag = show ? SW_SHOW : SW_HIDE;
         ::ShowWindow(m_window, flag);
+
+        if (signal)
+        {
+            OnShow(m_showing);
+        }
     }
 
-    void WindowWin32::Hide()
+    void WindowWin32::Hide(const bool signal)
     {
+        if (!m_showing)
+        {
+            return;
+        }
+
+        m_showing = false;
         ::ShowWindow(m_window, SW_HIDE);
+
+        if (signal)
+        {
+            OnShow(m_showing);
+        }
     }
 
     bool WindowWin32::IsOpen() const
@@ -198,14 +253,89 @@ namespace Curse
         return m_window != NULL;
     }
 
-    Vector2ui32 WindowWin32::GetInitialSize() const
+    bool WindowWin32::IsShowing() const
     {
-        return m_initialSize;
+        return m_showing;
     }
 
-    Vector2ui32 WindowWin32::GetCurrentSize() const
+    bool WindowWin32::IsMaximized() const
     {
-        return m_currentSize;
+        return m_maximized;
+    }
+
+    bool WindowWin32::IsMinimized() const
+    {
+        return m_minimized;
+    }
+
+    void WindowWin32::Maximize(const bool /*signal*/)
+    {
+        if (!m_window)
+        {
+            return;
+        }
+    }
+
+    void WindowWin32::Minimize(const bool /*signal*/)
+    {
+        if (!m_window)
+        {
+            return;
+        }
+    }
+
+    void WindowWin32::Move(const Vector2i32& position, const bool signal)
+    {
+        if (!m_window || position == m_position)
+        {
+            return;
+        }
+
+        m_position = position;
+
+        const UINT flags = SWP_NOOWNERZORDER | SWP_NOSIZE;
+        if (!(::SetWindowPos(m_window, HWND_NOTOPMOST, m_position.x, m_position.y, 0, 0, flags)))
+        {
+            CURSE_WINDOW_LOG(Logger::Severity::Error, "Failed to move window.");
+            return;
+        }
+
+        if (signal)
+        {
+            OnMove(m_position);
+        }
+    }
+
+    void WindowWin32::Resize(const Vector2ui32& size, const bool signal)
+    {
+        if (!m_window || size == m_size)
+        {
+            return;
+        }
+
+        m_size = size;
+
+        const UINT flags = SWP_NOOWNERZORDER | SWP_NOMOVE;
+        if (!(::SetWindowPos(m_window, HWND_NOTOPMOST, 0, 0, m_size.x, m_size.y, flags)))
+        {
+            CURSE_WINDOW_LOG(Logger::Severity::Error, "Failed to resize window.");
+            return;
+        }
+
+        if (signal)
+        {
+            OnResize(m_size);
+        }
+    }
+
+    Vector2ui32 WindowWin32::GetSize() const
+    {
+        return m_size;
+    }
+
+    Vector2i32 WindowWin32::GetPosition() const
+    {
+        return m_position;
     }
 
     HWND WindowWin32::GetWin32Window() const
@@ -252,22 +382,95 @@ namespace Curse
             return 0;
         }
         break;
+        case WM_SHOWWINDOW:
+        {
+            const bool status = static_cast<bool>(wParam);
+            if (status == m_showing)
+            {
+                break;
+            }
+
+            m_showing = status;
+            OnShow(m_showing);
+        }
+        break;
         case WM_SIZE:
         {
-            Vector2i32 windowSize =
+            const Vector2i32 windowSize =
             {
                 static_cast<int32_t>(LOWORD(lParam)),
                 static_cast<int32_t>(HIWORD(lParam))
             };
-            m_currentSize =
+
+            const auto oldSize = m_size;
+
+            m_size =
             {
                 windowSize.x < 0 ? 0 : windowSize.x,
                 windowSize.y < 0 ? 0 : windowSize.y
             };
 
-            OnResize(m_currentSize);
+            switch (wParam)
+            {
+            case SIZE_RESTORED:
+            {
+                if (oldSize == m_size && !m_maximized && !m_minimized)
+                {
+                    break;
+                }
+
+                m_maximized = false;
+                m_minimized = false;
+
+                OnResize(m_size);
+            }
+            break;
+            case SIZE_MAXIMIZED:
+            {
+                if (m_maximized)
+                {
+                    break;
+                }
+                m_maximized = true;
+                m_minimized = false;
+                OnMaximize(m_size);              
+            }
+            break;
+            case SIZE_MINIMIZED:
+            {
+                if (m_minimized)
+                {
+                    break;
+                }
+                m_maximized = false;
+                m_minimized = true;
+                OnMinimize(m_size);
+            }
+            break;
+            default:
+                break;
+            }
         }
         break;
+        case WM_MOVE:
+        {
+            const Vector2i32 position =
+            {
+                static_cast<int32_t>(LOWORD(lParam)),
+                static_cast<int32_t>(HIWORD(lParam))
+            };
+
+            if (position == m_position)
+            {
+                break;
+            }
+
+            m_position = position;
+            OnMove(m_position);
+        }
+        break;
+        /*case WM_SETTEXT:
+            break;*/
         case WM_ERASEBKGND:
         {
             return 0;

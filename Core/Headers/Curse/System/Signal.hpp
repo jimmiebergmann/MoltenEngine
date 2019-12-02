@@ -73,7 +73,7 @@ namespace Curse
             /**
             * @brief Move constructor.
             */
-            Connection(Connection&& connection);
+            Connection(Connection&& connection) noexcept;
 
             /**
             * @brief Copy assignment operator.
@@ -137,7 +137,7 @@ namespace Curse
         size_t GetConnectionCount() const;
 
         /**
-        * @brief Operator for executing all connected callback functions.
+        * @brief Operator for executing all connected callback functions, with input parameters.
         */
         void operator ()(Args ... args) const;
 

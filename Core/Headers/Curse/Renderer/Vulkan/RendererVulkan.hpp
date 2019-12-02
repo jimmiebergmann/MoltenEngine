@@ -58,7 +58,7 @@ namespace Curse
         *
         * @param window[in] Render target window.
         */
-        RendererVulkan(const WindowBase& window, const Version& version, Logger* logger = nullptr);
+        RendererVulkan(const Window& window, const Version& version, Logger* logger = nullptr);
 
         /**
         * @brief Virtual destructor.
@@ -70,7 +70,7 @@ namespace Curse
         *
         * @param window[in] Render target window.
         */
-        virtual bool Open(const WindowBase& window, const Version& version = Version::None, Logger* logger = nullptr) override;
+        virtual bool Open(const Window& window, const Version& version = Version::None, Logger* logger = nullptr) override;
 
         /**
         * @brief Closing renderer.
@@ -222,7 +222,20 @@ namespace Curse
             uint32_t graphicsQueueIndex;
             uint32_t presentQueueIndex;
             SwapChainSupport swapChainSupport;
-        };  
+        };
+
+        struct ResourceCounter
+        {
+            ResourceCounter();
+            void Clear(Logger* logger);
+
+            uint32_t framebufferCount;
+            uint32_t pipelineCount;
+            uint32_t shaderCount;
+            uint32_t textureCount;
+            uint32_t vertexArrayCount;
+            uint32_t vertexBufferCount;
+        };
 
         PFN_vkVoidFunction GetVulkanFunction(const char* functionName) const;
         bool LoadInstance(const Version& version);
@@ -246,7 +259,7 @@ namespace Curse
 
         Logger* m_logger;
         Version m_version;
-        const WindowBase * m_renderTarget;
+        const Window* m_renderTarget;
         VkInstance m_instance;
         std::vector<const char*> m_validationLayers;
         std::vector<const char*> m_deviceExtensions;
@@ -271,6 +284,7 @@ namespace Curse
         std::vector<VkFence> m_imagesInFlight;
         size_t m_maxFramesInFlight;
         size_t m_currentFrame;
+        ResourceCounter m_resourceCounter;
 
         bool m_resized;
         bool m_beginDraw;

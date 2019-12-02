@@ -34,7 +34,7 @@
 #include "Curse/Renderer/Vulkan/FramebufferVulkan.hpp"
 #include "Curse/Renderer/Vulkan/VertexArrayVulkan.hpp"
 #include "Curse/Renderer/Vulkan/VertexBufferVulkan.hpp"
-#include "Curse/Window/WindowBase.hpp"
+#include "Curse/Window/Window.hpp"
 #include "Curse/Logger.hpp"
 #include "Curse/System/Exception.hpp"
 #include "Curse/System/FileSystem.hpp"
@@ -172,11 +172,11 @@ namespace Curse
         m_beginDraw(false),
         m_currentImageIndex(0),
         m_currentCommandBuffer(nullptr),
-        m_currentFramebuffer(nullptr)  
+        m_currentFramebuffer(nullptr)
     {
     }
 
-    RendererVulkan::RendererVulkan(const WindowBase& window, const Version& version, Logger* logger) :
+    RendererVulkan::RendererVulkan(const Window& window, const Version& version, Logger* logger) :
         RendererVulkan()
     {
         Open(window, version, logger);
@@ -187,7 +187,7 @@ namespace Curse
         Close();
     }
 
-    bool RendererVulkan::Open(const WindowBase& window, const Version& version, Logger* logger)
+    bool RendererVulkan::Open(const Window& window, const Version& version, Logger* logger)
     {
         Close();
 
@@ -269,6 +269,7 @@ namespace Curse
             vkDestroyInstance(m_instance, nullptr);
         }
         
+        m_logger = nullptr;
         m_version = { 0, 0, 0 };
         m_renderTarget = nullptr;
         m_instance = VK_NULL_HANDLE;
@@ -292,6 +293,7 @@ namespace Curse
         m_inFlightFences.clear();
         m_maxFramesInFlight = 0;
         m_currentFrame = 0;
+        m_resourceCounter.Clear(m_logger);
 
         m_resized = false;
         m_beginDraw = false;    
@@ -366,6 +368,8 @@ namespace Curse
 
         FramebufferVulkan* framebufferVulkan = new FramebufferVulkan;
         framebufferVulkan->resource = framebuffer;
+
+        m_resourceCounter.framebufferCount++;
         return framebufferVulkan;
     }
 
@@ -535,6 +539,8 @@ namespace Curse
         PipelineVulkan* pipeline = new PipelineVulkan;
         pipeline->resource = graphicsPipeline;
         pipeline->layout = pipelineLayout;
+
+        m_resourceCounter.pipelineCount++;
         return pipeline;
     }
 
@@ -576,16 +582,20 @@ namespace Curse
         ShaderVulkan* shader = new ShaderVulkan;
         shader->resource = static_cast<Resource>(shaderModule);
         shader->type = descriptor.type;
+
+        m_resourceCounter.shaderCount++;
         return shader;
     }
 
     Texture* RendererVulkan::CreateTexture()
     {
+        m_resourceCounter.textureCount++;
         return new TextureVulkan;
     }
 
     VertexArray* RendererVulkan::CreateVertexArray()
     {
+        m_resourceCounter.vertexArrayCount++;
         return nullptr;
     }
 
@@ -646,6 +656,8 @@ namespace Curse
         VertexBufferVulkan* buffer = new VertexBufferVulkan;
         buffer->resource = vertexBuffer;
         buffer->memory = memory;
+
+        m_resourceCounter.vertexBufferCount++;
         return buffer;
     }
 
@@ -653,6 +665,7 @@ namespace Curse
     {
         FramebufferVulkan* framebufferVulkan = static_cast<FramebufferVulkan*>(framebuffer);
         vkDestroyFramebuffer(m_logicalDevice, framebufferVulkan->resource, nullptr);
+        m_resourceCounter.framebufferCount--;
         delete framebufferVulkan;
     }
 
@@ -670,6 +683,7 @@ namespace Curse
             vkDestroyPipelineLayout(m_logicalDevice, pipelineVulkan->layout, nullptr);
         }
 
+        m_resourceCounter.pipelineCount--;
         delete pipelineVulkan;
     }
 
@@ -677,16 +691,19 @@ namespace Curse
     {
         ShaderVulkan* shaderVulkan = static_cast<ShaderVulkan*>(shader);
         vkDestroyShaderModule(m_logicalDevice, shaderVulkan->resource, nullptr);
+        m_resourceCounter.shaderCount--;
         delete shaderVulkan;
     }
 
     void RendererVulkan::DestroyTexture(Texture* texture)
     {
+        m_resourceCounter.textureCount--;
         delete static_cast<TextureVulkan*>(texture);
     }
 
     void RendererVulkan::DestroyVertexArray(VertexArray* /*vertexArray*/)
     {
+        m_resourceCounter.vertexArrayCount--;
     }
 
     void RendererVulkan::DestroyVertexBuffer(VertexBuffer* vertexBuffer)
@@ -694,6 +711,7 @@ namespace Curse
         VertexBufferVulkan* shaderVulkan = static_cast<VertexBufferVulkan*>(vertexBuffer);
         vkDestroyBuffer(m_logicalDevice, shaderVulkan->resource, nullptr);
         vkFreeMemory(m_logicalDevice, shaderVulkan->memory, nullptr);
+        m_resourceCounter.vertexBufferCount--;
         delete shaderVulkan;
     }
 
@@ -898,6 +916,49 @@ namespace Curse
         presentQueueIndex = 0;
     }
 
+    RendererVulkan::ResourceCounter::ResourceCounter() :
+        framebufferCount(0),
+        pipelineCount(0),
+        shaderCount(0),
+        textureCount(0),
+        vertexArrayCount(0),
+        vertexBufferCount(0)
+    {}
+
+    void RendererVulkan::ResourceCounter::Clear(Logger * m_logger)
+    {
+        if (framebufferCount)
+        {
+            CURSE_RENDERER_LOG(Logger::Severity::Warning, std::to_string(framebufferCount) + " framebuffers are not destroyed.");
+        }
+        if (pipelineCount)
+        {
+            CURSE_RENDERER_LOG(Logger::Severity::Warning, std::to_string(pipelineCount) + " pipelines are not destroyed.");
+        }
+        if (shaderCount)
+        {
+            CURSE_RENDERER_LOG(Logger::Severity::Warning, std::to_string(shaderCount) + " shaders are not destroyed.");
+        }
+        if (textureCount)
+        {
+            CURSE_RENDERER_LOG(Logger::Severity::Warning, std::to_string(textureCount) + " textures are not destroyed.");
+        }
+        if (vertexArrayCount)
+        {
+            CURSE_RENDERER_LOG(Logger::Severity::Warning, std::to_string(vertexArrayCount) + " vertex arrays are not destroyed.");
+        }
+        if (vertexBufferCount)
+        {
+            CURSE_RENDERER_LOG(Logger::Severity::Warning, std::to_string(vertexBufferCount) + " vertex buffers are not destroyed.");
+        }
+        framebufferCount = 0;
+        pipelineCount = 0;
+        shaderCount = 0;
+        textureCount = 0;
+        vertexArrayCount = 0;
+        vertexBufferCount = 0;
+    }
+
     PFN_vkVoidFunction RendererVulkan::GetVulkanFunction(const char* functionName) const
     {
         return vkGetInstanceProcAddr(m_instance, functionName);
@@ -910,7 +971,7 @@ namespace Curse
         {
             newVersion = Version(1, 1);
         }
-        auto curseVersion = CURSE_MAKE_VERSION;
+        const auto curseVersion = CURSE_VERSION;
         auto engineVersion = VK_MAKE_VERSION(curseVersion.Major, curseVersion.Minor, curseVersion.Patch);
         auto vulkanVersion = VK_MAKE_VERSION(newVersion.Major, newVersion.Minor, newVersion.Patch);
 
@@ -1387,7 +1448,7 @@ namespace Curse
         m_swapChainExtent = capabilities.currentExtent;
         if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
         {
-            auto windowSize = m_renderTarget->GetCurrentSize();
+            auto windowSize = m_renderTarget->GetSize();
             m_swapChainExtent = {
                 std::max(capabilities.currentExtent.width, std::min(windowSize.x, capabilities.maxImageExtent.width)),
                 std::max(capabilities.currentExtent.height, std::min(windowSize.x, capabilities.maxImageExtent.height))
