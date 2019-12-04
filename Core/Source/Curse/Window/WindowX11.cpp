@@ -113,7 +113,7 @@ namespace Curse
         XFlush(m_display);
 
         m_title = title;
-        m_size = m_currentSize = size;
+        m_size = size;
         // m_position = ?
         m_open = true;
 

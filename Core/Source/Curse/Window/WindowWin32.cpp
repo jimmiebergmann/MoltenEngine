@@ -384,7 +384,7 @@ namespace Curse
         break;
         case WM_SHOWWINDOW:
         {
-            const bool status = static_cast<bool>(wParam);
+            const bool status = wParam ? true : false;
             if (status == m_showing)
             {
                 break;
