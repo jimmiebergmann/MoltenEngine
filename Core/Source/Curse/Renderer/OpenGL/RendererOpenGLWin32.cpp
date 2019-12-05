@@ -188,6 +188,11 @@ namespace Curse
         return nullptr;
     }
 
+    IndexBuffer* RendererOpenGLWin32::CreateIndexBuffer(const IndexBufferDescriptor& /*descriptor*/)
+    {
+        return nullptr;
+    }
+
     Pipeline* RendererOpenGLWin32::CreatePipeline(const PipelineDescriptor& /*descriptor*/)
     {
         return nullptr;
@@ -203,17 +208,16 @@ namespace Curse
         return nullptr;
     }
 
-    VertexArray* RendererOpenGLWin32::CreateVertexArray()
-    {
-        return nullptr;
-    }
-
     VertexBuffer* RendererOpenGLWin32::CreateVertexBuffer(const VertexBufferDescriptor&)
     {
         return nullptr;
     }
 
     void RendererOpenGLWin32::DestroyFramebuffer(Framebuffer*)
+    {
+    }
+
+    void RendererOpenGLWin32::DestroyIndexBuffer(IndexBuffer* /*indexBuffer*/)
     {
     }
 
@@ -229,10 +233,6 @@ namespace Curse
     {
     }
 
-    void RendererOpenGLWin32::DestroyVertexArray(VertexArray* /*vertexArray*/)
-    {
-    }
-
     void RendererOpenGLWin32::DestroyVertexBuffer(VertexBuffer* /*vertexBuffer*/)
     {
     }
@@ -245,11 +245,15 @@ namespace Curse
     {
     }
 
-    void RendererOpenGLWin32::DrawVertexArray(VertexArray* /*vertexArray*/)
+    void RendererOpenGLWin32::DrawVertexBuffer(VertexBuffer* /*vertexBuffer*/)
     {
     }
 
-    void RendererOpenGLWin32::DrawVertexBuffer(VertexBuffer* /*vertexBuffer*/)
+    void RendererOpenGLWin32::DrawVertexBuffers(VertexBuffer* /*vertexBuffer*/, const size_t /*count*/)
+    {
+    }
+
+    void RendererOpenGLWin32::DrawVertexBuffers(IndexBuffer* /*indexBuffer*/, VertexBuffer* /*vertexBuffer*/, const size_t /*count*/)
     {
     }
 

@@ -84,6 +84,13 @@
 #define CURSE_ANONYMOUS_STRUCTURE_BEGIN
 #define CURSE_ANONYMOUS_STRUCTURE_END
 
+/*
+* Disable unscoped enum warnings,
+* by encapsulating with CURSE_UNSCOPED_ENUM_BEGIN and CURSE_UNSCOPED_ENUM_END.
+*/
+#define CURSE_UNSCOPED_ENUM_BEGIN
+#define CURSE_UNSCOPED_ENUM_END
+
 // Windows
 #if defined( _WIN32 ) || defined( __WIN32__ ) || defined( _WIN64 ) || defined( __WIN64__ )
     #define CURSE_PLATFORM CURSE_PLATFORM_WINDOWS
@@ -136,6 +143,11 @@
 // Visual C++
 #ifdef _MSC_VER
     #pragma warning(disable : 4201) // nonstandard extension used : nameless struct/union
+
+    #undef CURSE_UNSCOPED_ENUM_BEGIN
+    #undef CURSE_UNSCOPED_ENUM_END
+    #define CURSE_UNSCOPED_ENUM_BEGIN __pragma(warning(disable : 26812))
+    #define CURSE_UNSCOPED_ENUM_END __pragma(warning(default : 26812))
 #endif
 
 // Build type

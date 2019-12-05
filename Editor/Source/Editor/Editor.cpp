@@ -44,23 +44,36 @@ static void Run()
 
     struct Vertex
     {
-        Curse::Vector2f32 position;
+        Curse::Vector3f32 position;
         Curse::Vector3f32 color;
     };
 
-    static const size_t vertexCount = 3;
+    static const uint32_t vertexCount = 4;
     static const Vertex vertices[vertexCount] =
     {
-        { { 0.0f, -0.3f }, { 1.0f, 1.0f, 1.0f } },
-        { { 0.3f, 0.3f },  { 0.0f, 1.0f, 0.0f } },
-        { { -0.3f, 0.3f }, { 0.0f, 0.0f, 1.0f } }
+        { { -0.5f, -0.5, 0.0f }, { 1.0f, 1.0f, 1.0f } },
+        { { 0.5f, -0.5, 0.0f },  { 0.0f, 1.0f, 0.0f } },
+        { { 0.5f, 0.5, 0.0f },   { 0.0f, 0.0f, 1.0f } },
+        { { -0.5f, 0.5, 0.0f },  { 1.0f, 0.0f, 1.0f } }
+    };
+
+    static const uint32_t indexCount = 6;
+    static const uint16_t indices[indexCount] =
+    {
+        0, 1, 2, 0, 2, 3
     };
 
     Curse::VertexBufferDescriptor vertexBufferDesc;
-    vertexBufferDesc.size = sizeof(Vertex) * vertexCount;
+    vertexBufferDesc.vertexCount =  vertexCount;
+    vertexBufferDesc.vertexSize = sizeof(Vertex);
     vertexBufferDesc.data = static_cast<const void*>(&vertices[0]);
-
     Curse::VertexBuffer* vertexBuffer = renderer->CreateVertexBuffer(vertexBufferDesc);
+
+    Curse::IndexBufferDescriptor indexBufferDesc;
+    indexBufferDesc.indexCount = indexCount;
+    indexBufferDesc.data = static_cast<const void*>(indices); 
+    indexBufferDesc.dataType = Curse::IndexBuffer::DataType::Uint16;
+    Curse::IndexBuffer* indexBuffer = renderer->CreateIndexBuffer(indexBufferDesc);
 
     Curse::Pipeline::VertexBinding vertexBinding;
     vertexBinding.binding = 0;
@@ -69,7 +82,7 @@ static void Run()
     Curse::Pipeline::VertexAttribute vertexAttrib1;
     vertexAttrib1.location = 0;
     vertexAttrib1.offset = offsetof(Vertex, position);
-    vertexAttrib1.format = Curse::Pipeline::AttributeFormat::R32_G32_Float;
+    vertexAttrib1.format = Curse::Pipeline::AttributeFormat::R32_G32_B32_Float;
     vertexBinding.attributes.push_back(vertexAttrib1);
 
     Curse::Pipeline::VertexAttribute vertexAttrib2;
@@ -90,7 +103,8 @@ static void Run()
         //renderer->DrawVertexArray(nullptr);
 
         renderer->BindPipeline(pipeline2);
-        renderer->DrawVertexBuffer(vertexBuffer);
+        renderer->DrawVertexBuffers(indexBuffer, vertexBuffer, 1);
+        //renderer->DrawVertexBuffer(vertexBuffer);
 
         renderer->EndDraw();
     };
@@ -98,15 +112,12 @@ static void Run()
     //Curse::Clock resizeTimer;
     auto resizeCallback = [&](Curse::Vector2ui32 )
     {
-        /*if (resizeTimer.GetTime() >= Curse::Seconds(0.1f))
+        static Curse::Clock resizeTimer;
+        if (resizeTimer.GetTime() >= Curse::Seconds(0.1f))
         {
             resizeTimer.Reset();
-            
-            //Curse::Clock rendererTimer;
-            //renderFunction();
-            //auto time = rendererTimer.GetTime();
-            //std::cout << "Resize time: " << time.AsSeconds<float>() << std::endl;
-        }*/
+            renderFunction();
+        }
     };
 
     window->OnMaximize.Connect(resizeCallback);
@@ -152,6 +163,7 @@ static void Run()
 
     renderer->WaitForDevice();
     renderer->DestroyVertexBuffer(vertexBuffer);
+    renderer->DestroyIndexBuffer(indexBuffer);
     renderer->DestroyShader(vertexShader1);
     renderer->DestroyShader(fragmentShader1);
     renderer->DestroyShader(vertexShader2);

@@ -28,11 +28,11 @@
 
 #if defined(CURSE_ENABLE_VULKAN)
 
+#include "Curse/Renderer/Vulkan/FramebufferVulkan.hpp"
+#include "Curse/Renderer/Vulkan/IndexBufferVulkan.hpp"
+#include "Curse/Renderer/Vulkan/PipelineVulkan.hpp"
 #include "Curse/Renderer/Vulkan/ShaderVulkan.hpp"
 #include "Curse/Renderer/Vulkan/TextureVulkan.hpp"
-#include "Curse/Renderer/Vulkan/PipelineVulkan.hpp"
-#include "Curse/Renderer/Vulkan/FramebufferVulkan.hpp"
-#include "Curse/Renderer/Vulkan/VertexArrayVulkan.hpp"
 #include "Curse/Renderer/Vulkan/VertexBufferVulkan.hpp"
 #include "Curse/Window/Window.hpp"
 #include "Curse/Logger.hpp"
@@ -51,6 +51,7 @@ namespace Curse
     // Static helper functions.
     static VkShaderStageFlagBits GetShaderStageFlag(const Shader::Type type)
     {
+        CURSE_UNSCOPED_ENUM_BEGIN
         switch (type)
         {
             case Shader::Type::Vertex:   return VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT;
@@ -59,10 +60,12 @@ namespace Curse
         }
 
         throw Exception("Provided shader type is not supported by the Vulkan renderer.");
+        CURSE_UNSCOPED_ENUM_END
     }
 
     static VkPrimitiveTopology GetPrimitiveTopology(const Pipeline::Topology topology)
     {
+        CURSE_UNSCOPED_ENUM_BEGIN
         switch (topology)
         {
             case Pipeline::Topology::PointList:     return VkPrimitiveTopology::VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
@@ -73,10 +76,12 @@ namespace Curse
             default: break;
         }
         throw Exception("Provided primitive topology is not supported by the Vulkan renderer.");
+        CURSE_UNSCOPED_ENUM_END
     }
 
     static VkPolygonMode GetPrimitiveTopology(const Pipeline::PolygonMode polygonMode)
     {
+        CURSE_UNSCOPED_ENUM_BEGIN
         switch (polygonMode)
         {
             case Pipeline::PolygonMode::Point: return VkPolygonMode::VK_POLYGON_MODE_POINT;
@@ -85,10 +90,12 @@ namespace Curse
             default: break;
         }
         throw Exception("Provided polygon mode is not supported by the Vulkan renderer.");
+        CURSE_UNSCOPED_ENUM_END
     }
 
     static VkFrontFace GetFrontFace(const Pipeline::FrontFace frontFace)
     {
+        CURSE_UNSCOPED_ENUM_BEGIN
         switch (frontFace)
         {
             case Pipeline::FrontFace::Clockwise:        return VkFrontFace::VK_FRONT_FACE_CLOCKWISE;
@@ -96,10 +103,12 @@ namespace Curse
             default: break;
         }
         throw Exception("Provided front face is not supported by the Vulkan renderer.");
+        CURSE_UNSCOPED_ENUM_END
     }
 
     static VkCullModeFlagBits GetCullMode(const Pipeline::CullMode cullMode)
     {
+        CURSE_UNSCOPED_ENUM_BEGIN
         switch (cullMode)
         {
             case Pipeline::CullMode::None:         return VkCullModeFlagBits::VK_CULL_MODE_NONE;
@@ -109,10 +118,12 @@ namespace Curse
             default: break;
         }
         throw Exception("Provided cull mode is not supported by the Vulkan renderer.");
+        CURSE_UNSCOPED_ENUM_END
     }
 
     static VkFormat GetVertexAttributeFormat(const Pipeline::AttributeFormat format)
     {
+        CURSE_UNSCOPED_ENUM_BEGIN
         switch (format)
         {
             case Pipeline::AttributeFormat::R32_Float:             return VkFormat::VK_FORMAT_R32_SFLOAT;
@@ -122,10 +133,12 @@ namespace Curse
             default: break;
         }
         throw Exception("Provided attribute format is not supported by the Vulkan renderer.");
+        CURSE_UNSCOPED_ENUM_END
     }
 
     static VkDebugUtilsMessageSeverityFlagsEXT GetVulkanLoggerSeverityFlags(const uint32_t severityFlags)
     {
+        CURSE_UNSCOPED_ENUM_BEGIN
         VkDebugUtilsMessageSeverityFlagsEXT flags = 0;
 
         flags |= (severityFlags & static_cast<uint32_t>(Logger::Severity::Info)) ? VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT : 0;
@@ -133,10 +146,12 @@ namespace Curse
         flags |= (severityFlags & static_cast<uint32_t>(Logger::Severity::Error)) ? VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT : 0;
 
         return flags;
+        CURSE_UNSCOPED_ENUM_END
     }
 
     static Logger::Severity GetCurseLoggerSeverityFlag(const VkDebugUtilsMessageSeverityFlagsEXT severityFlags)
     {
+        CURSE_UNSCOPED_ENUM_BEGIN
         switch (severityFlags)
         {
             case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT: return Logger::Severity::Info;
@@ -146,7 +161,36 @@ namespace Curse
         }
 
         return Logger::Severity::Info;
+        CURSE_UNSCOPED_ENUM_END
     }
+
+    static VkIndexType GetIndexBufferDataType(const IndexBuffer::DataType dataType)
+    {
+        CURSE_UNSCOPED_ENUM_BEGIN
+        switch (dataType)
+        {
+            case IndexBuffer::DataType::Uint16: return VkIndexType::VK_INDEX_TYPE_UINT16;
+            case IndexBuffer::DataType::Uint32: return VkIndexType::VK_INDEX_TYPE_UINT32;
+            default: break;
+        }
+
+        throw Exception("Provided data type is not supported as index buffer data type by the Vulkan renderer.");
+        CURSE_UNSCOPED_ENUM_END
+    }
+
+    static VkDeviceSize GetIndexBufferDataTypeSize(const IndexBuffer::DataType dataType)
+    {
+        switch (dataType)
+        {
+            case IndexBuffer::DataType::Uint16: return sizeof(uint16_t);
+            case IndexBuffer::DataType::Uint32: return sizeof(uint32_t);
+            default: break;
+        }
+
+        throw Exception("Provided data type is not supported as index buffer data type by the Vulkan renderer.");
+    }
+
+    
 
 
     // Vulkan renderer class implementations.
@@ -215,7 +259,7 @@ namespace Curse
         {
             vkDeviceWaitIdle(m_logicalDevice);
           
-            for (auto& semaphore : m_imageAvailableSemaphores)
+            /*for (auto& semaphore : m_imageAvailableSemaphores)
             {
                 vkDestroySemaphore(m_logicalDevice, semaphore, nullptr);
             }
@@ -227,30 +271,32 @@ namespace Curse
             for (auto& fence : m_inFlightFences)
             {
                 vkDestroyFence(m_logicalDevice, fence, nullptr);
-            }
+            }*/
 
             if (m_commandPool)
             {
                 vkDestroyCommandPool(m_logicalDevice, m_commandPool, nullptr);
             }
 
-            for (auto& framebuffer : m_presentFramebuffers)
+            /*for (auto& framebuffer : m_presentFramebuffers)
             {
                 DestroyFramebuffer(framebuffer);
             }
-            m_presentFramebuffers.clear();
+            m_presentFramebuffers.clear();*/
 
             if (m_renderPass)
             {
                 vkDestroyRenderPass(m_logicalDevice, m_renderPass, nullptr);
             }
 
-            for (auto& imageView : m_swapChainImageViews)
+            /*for (auto& imageView : m_swapChainImageViews)
             {
                 vkDestroyImageView(m_logicalDevice, imageView, nullptr);
             }
 
-            vkDestroySwapchainKHR(m_logicalDevice, m_swapChain, nullptr);
+            vkDestroySwapchainKHR(m_logicalDevice, m_swapChain, nullptr);*/
+
+            UnloadSwapchain();
             vkDestroyDevice(m_logicalDevice, nullptr);
         }
         if (m_instance)
@@ -287,10 +333,12 @@ namespace Curse
         m_deviceExtensions.clear();
         m_swapChainImageViews.clear();
         m_renderPass = VK_NULL_HANDLE;
+        m_presentFramebuffers.clear();
         m_commandPool = VK_NULL_HANDLE;
         m_imageAvailableSemaphores.clear();
         m_renderFinishedSemaphores.clear();
         m_inFlightFences.clear();
+        m_imagesInFlight.clear();
         m_maxFramesInFlight = 0;
         m_currentFrame = 0;
         m_resourceCounter.Clear(m_logger);
@@ -371,6 +419,71 @@ namespace Curse
 
         m_resourceCounter.framebufferCount++;
         return framebufferVulkan;
+    }
+
+    IndexBuffer* RendererVulkan::CreateIndexBuffer(const IndexBufferDescriptor& descriptor)
+    {
+        VkBufferCreateInfo bufferInfo = {};
+        bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        bufferInfo.size = static_cast<VkDeviceSize>(descriptor.indexCount) * GetIndexBufferDataTypeSize(descriptor.dataType);
+        bufferInfo.usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+        bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+        VkBuffer indexBuffer;
+        if (vkCreateBuffer(m_logicalDevice, &bufferInfo, nullptr, &indexBuffer) != VK_SUCCESS)
+        {
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to create index buffer.");
+            return nullptr;
+        }
+        
+        VkMemoryRequirements memRequirements;
+        vkGetBufferMemoryRequirements(m_logicalDevice, indexBuffer, &memRequirements);
+
+        
+        uint32_t memoryTypeIndex = 0;
+        if (!FindPhysicalDeviceMemoryType(memoryTypeIndex, memRequirements.memoryTypeBits,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))
+        {
+            vkDestroyBuffer(m_logicalDevice, indexBuffer, nullptr);
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to find matching memory type for index buffer.");
+            return nullptr;
+        }
+        
+        VkMemoryAllocateInfo memoryAllocateInfo = {};
+        memoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        memoryAllocateInfo.allocationSize = memRequirements.size;
+        memoryAllocateInfo.memoryTypeIndex = memoryTypeIndex;
+
+        VkDeviceMemory memory;
+        if (vkAllocateMemory(m_logicalDevice, &memoryAllocateInfo, nullptr, &memory) != VK_SUCCESS)
+        {
+            vkDestroyBuffer(m_logicalDevice, indexBuffer, nullptr);
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to allocate index buffer memory.");
+            return nullptr;
+        }
+
+        if (vkBindBufferMemory(m_logicalDevice, indexBuffer, memory, 0) != VK_SUCCESS)
+        {
+            vkDestroyBuffer(m_logicalDevice, indexBuffer, nullptr);
+            vkFreeMemory(m_logicalDevice, memory, nullptr);
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to bind memory to index buffer.");
+            return nullptr;
+        }
+
+        void* data;
+        vkMapMemory(m_logicalDevice, memory, 0, bufferInfo.size, 0, &data);
+        memcpy(data, descriptor.data, (size_t)bufferInfo.size);
+        vkUnmapMemory(m_logicalDevice, memory);
+
+
+        IndexBufferVulkan* buffer = new IndexBufferVulkan;
+        buffer->resource = indexBuffer;
+        buffer->memory = memory;
+        buffer->indexCount = descriptor.indexCount;
+        buffer->dataType = descriptor.dataType;
+
+        m_resourceCounter.indexBufferCount++;
+        return buffer;
     }
 
     Pipeline* RendererVulkan::CreatePipeline(const PipelineDescriptor& descriptor)
@@ -593,17 +706,11 @@ namespace Curse
         return new TextureVulkan;
     }
 
-    VertexArray* RendererVulkan::CreateVertexArray()
-    {
-        m_resourceCounter.vertexArrayCount++;
-        return nullptr;
-    }
-
     VertexBuffer* RendererVulkan::CreateVertexBuffer(const VertexBufferDescriptor& descriptor)
     {
         VkBufferCreateInfo bufferInfo = {};
         bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-        bufferInfo.size = descriptor.size;
+        bufferInfo.size = static_cast<VkDeviceSize>(descriptor.vertexCount * descriptor.vertexSize);
         bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
         bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
@@ -656,6 +763,8 @@ namespace Curse
         VertexBufferVulkan* buffer = new VertexBufferVulkan;
         buffer->resource = vertexBuffer;
         buffer->memory = memory;
+        buffer->vertexCount = descriptor.vertexCount;
+        buffer->vertexSize = descriptor.vertexSize;
 
         m_resourceCounter.vertexBufferCount++;
         return buffer;
@@ -667,6 +776,15 @@ namespace Curse
         vkDestroyFramebuffer(m_logicalDevice, framebufferVulkan->resource, nullptr);
         m_resourceCounter.framebufferCount--;
         delete framebufferVulkan;
+    }
+
+    void RendererVulkan::DestroyIndexBuffer(IndexBuffer* indexBuffer)
+    {
+        IndexBufferVulkan* indexBufferVulkan = static_cast<IndexBufferVulkan*>(indexBuffer);
+        vkDestroyBuffer(m_logicalDevice, indexBufferVulkan->resource, nullptr);
+        vkFreeMemory(m_logicalDevice, indexBufferVulkan->memory, nullptr);
+        m_resourceCounter.indexBufferCount--;
+        delete indexBufferVulkan;
     }
 
     void RendererVulkan::DestroyPipeline(Pipeline* pipeline)
@@ -701,18 +819,13 @@ namespace Curse
         delete static_cast<TextureVulkan*>(texture);
     }
 
-    void RendererVulkan::DestroyVertexArray(VertexArray* /*vertexArray*/)
-    {
-        m_resourceCounter.vertexArrayCount--;
-    }
-
     void RendererVulkan::DestroyVertexBuffer(VertexBuffer* vertexBuffer)
     {
-        VertexBufferVulkan* shaderVulkan = static_cast<VertexBufferVulkan*>(vertexBuffer);
-        vkDestroyBuffer(m_logicalDevice, shaderVulkan->resource, nullptr);
-        vkFreeMemory(m_logicalDevice, shaderVulkan->memory, nullptr);
+        VertexBufferVulkan* vertexBufferVulkan = static_cast<VertexBufferVulkan*>(vertexBuffer);
+        vkDestroyBuffer(m_logicalDevice, vertexBufferVulkan->resource, nullptr);
+        vkFreeMemory(m_logicalDevice, vertexBufferVulkan->memory, nullptr);
         m_resourceCounter.vertexBufferCount--;
-        delete shaderVulkan;
+        delete vertexBufferVulkan;
     }
 
     void RendererVulkan::BindPipeline(Pipeline* pipeline)
@@ -730,8 +843,11 @@ namespace Curse
         }
       
         vkWaitForFences(m_logicalDevice, 1, &m_inFlightFences[m_currentFrame], VK_TRUE, std::numeric_limits<uint64_t>::max());
+       
+        CURSE_UNSCOPED_ENUM_BEGIN
         VkResult result = vkAcquireNextImageKHR(m_logicalDevice, m_swapChain, std::numeric_limits<uint64_t>::max(), 
             m_imageAvailableSemaphores[m_currentFrame], VK_NULL_HANDLE, &m_currentImageIndex);
+        CURSE_UNSCOPED_ENUM_END
 
         if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || m_resized)
         {    
@@ -802,20 +918,39 @@ namespace Curse
         m_beginDraw = true;
     }
 
-    void RendererVulkan::DrawVertexArray(VertexArray* /*vertexArray*/)
-    {
-        vkCmdDraw(*m_currentCommandBuffer, 3, 1, 0, 0);
-    }
-
     void RendererVulkan::DrawVertexBuffer(VertexBuffer* vertexBuffer)
     {
         VertexBufferVulkan* vertexBufferVulkan = static_cast<VertexBufferVulkan*>(vertexBuffer);
 
         VkBuffer vertexBuffers[] = { vertexBufferVulkan->resource };
-        VkDeviceSize offsets[] = { 0 };
+        const VkDeviceSize offsets[] = { 0 };
         vkCmdBindVertexBuffers(*m_currentCommandBuffer, 0, 1, vertexBuffers, offsets);
 
-        vkCmdDraw(*m_currentCommandBuffer, static_cast<uint32_t>(3), 1, 0, 0);
+        vkCmdDraw(*m_currentCommandBuffer, static_cast<uint32_t>(vertexBufferVulkan->vertexCount), 1, 0, 0);
+    }
+
+    void RendererVulkan::DrawVertexBuffers(VertexBuffer* /*vertexBuffer*/, const size_t /*count*/)
+    {
+    }
+
+    void RendererVulkan::DrawVertexBuffers(IndexBuffer* indexBuffer, VertexBuffer* vertexBuffers, const size_t count)
+    {
+        IndexBufferVulkan* indexBufferVulkan = static_cast<IndexBufferVulkan*>(indexBuffer);
+        VertexBufferVulkan* vertexBuffersVulkan = static_cast<VertexBufferVulkan*>(vertexBuffers);
+
+        const VkDeviceSize offsets[] = { 0 };
+        std::vector<VkBuffer> indexBuffers(count);
+        for (size_t i = 0; i < count; i++)
+        {
+            indexBuffers[i] = vertexBuffersVulkan[i].resource;
+        }
+
+        vkCmdBindVertexBuffers(*m_currentCommandBuffer, 0, static_cast<uint32_t>(count), indexBuffers.data(), offsets);
+
+        vkCmdBindIndexBuffer(*m_currentCommandBuffer, indexBufferVulkan->resource, 0, GetIndexBufferDataType(indexBufferVulkan->dataType));
+
+        vkCmdDrawIndexed(*m_currentCommandBuffer, static_cast<uint32_t>(indexBufferVulkan->indexCount), 1, 0, 0, 0);
+
     }
 
     void RendererVulkan::EndDraw()
@@ -918,10 +1053,10 @@ namespace Curse
 
     RendererVulkan::ResourceCounter::ResourceCounter() :
         framebufferCount(0),
+        indexBufferCount(0),
         pipelineCount(0),
         shaderCount(0),
         textureCount(0),
-        vertexArrayCount(0),
         vertexBufferCount(0)
     {}
 
@@ -935,6 +1070,10 @@ namespace Curse
         {
             CURSE_RENDERER_LOG(Logger::Severity::Warning, std::to_string(pipelineCount) + " pipelines are not destroyed.");
         }
+        if (indexBufferCount)
+        {
+            CURSE_RENDERER_LOG(Logger::Severity::Warning, std::to_string(indexBufferCount) + " index buffers are not destroyed.");
+        }
         if (shaderCount)
         {
             CURSE_RENDERER_LOG(Logger::Severity::Warning, std::to_string(shaderCount) + " shaders are not destroyed.");
@@ -943,19 +1082,15 @@ namespace Curse
         {
             CURSE_RENDERER_LOG(Logger::Severity::Warning, std::to_string(textureCount) + " textures are not destroyed.");
         }
-        if (vertexArrayCount)
-        {
-            CURSE_RENDERER_LOG(Logger::Severity::Warning, std::to_string(vertexArrayCount) + " vertex arrays are not destroyed.");
-        }
         if (vertexBufferCount)
         {
             CURSE_RENDERER_LOG(Logger::Severity::Warning, std::to_string(vertexBufferCount) + " vertex buffers are not destroyed.");
         }
         framebufferCount = 0;
+        indexBufferCount = 0;
         pipelineCount = 0;
         shaderCount = 0;
         textureCount = 0;
-        vertexArrayCount = 0;
         vertexBufferCount = 0;
     }
 
@@ -1147,6 +1282,8 @@ namespace Curse
                                        VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
                                        VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
         debugMessageInfo.pUserData = m_logger;
+
+        CURSE_UNSCOPED_ENUM_BEGIN
         debugMessageInfo.pfnUserCallback = [](VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
                                               VkDebugUtilsMessageTypeFlagsEXT /*messageType*/,
                                               const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
@@ -1156,6 +1293,7 @@ namespace Curse
             logger->Write(GetCurseLoggerSeverityFlag(messageSeverity), pCallbackData->pMessage);
             return VK_FALSE;
         };
+        CURSE_UNSCOPED_ENUM_END
         
         instanceInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&debugMessageInfo;
 
@@ -1432,7 +1570,9 @@ namespace Curse
             return false;
         }
 
+        CURSE_UNSCOPED_ENUM_BEGIN
         VkPresentModeKHR presentMode = VkPresentModeKHR::VK_PRESENT_MODE_FIFO_KHR;
+        CURSE_UNSCOPED_ENUM_END
         for (auto& mode : swapChainSupport.presentModes)
         {
             if (mode == VkPresentModeKHR::VK_PRESENT_MODE_MAILBOX_KHR)
@@ -1683,22 +1823,32 @@ namespace Curse
         bool loaded =
             LoadSwapChain() &&
             LoadImageViews() &&
-            LoadPresentFramebuffer(); //&&
-            //LoadSyncObjects();
+            LoadPresentFramebuffer()&&
+            LoadSyncObjects();
 
         return loaded;
     }
 
     void RendererVulkan::UnloadSwapchain()
     {
-        /*for (auto& semaphore : m_imageAvailableSemaphores)
+        for (auto& semaphore : m_imageAvailableSemaphores)
         {
             vkDestroySemaphore(m_logicalDevice, semaphore, nullptr);
         }
+        m_imageAvailableSemaphores.clear();
+
         for (auto& semaphore : m_renderFinishedSemaphores)
         {
             vkDestroySemaphore(m_logicalDevice, semaphore, nullptr);
-        }*/
+        }
+        m_renderFinishedSemaphores.clear();
+
+        for (auto& fence : m_inFlightFences)
+        {
+            vkDestroyFence(m_logicalDevice, fence, nullptr);
+        }
+        m_inFlightFences.clear();
+        m_imagesInFlight.clear();
 
         for (auto& framebuffer : m_presentFramebuffers)
         {

@@ -37,6 +37,17 @@ namespace Curse
     class CURSE_API VertexBuffer
     {
 
+    public:
+
+        /**
+        * @brief Enumerator of data types.
+        */
+        enum class DataType : uint8_t
+        {
+            Float32,
+            Float64
+        };
+
     protected:
 
         VertexBuffer() = default;
@@ -45,6 +56,8 @@ namespace Curse
         virtual ~VertexBuffer() = default;
 
         Resource resource;
+        uint32_t vertexCount;
+        uint32_t vertexSize;
 
     };
 
@@ -58,7 +71,8 @@ namespace Curse
 
         VertexBufferDescriptor() = default;
 
-        size_t size;
+        uint32_t vertexCount;
+        uint32_t vertexSize;
         const void* data;
 
     };

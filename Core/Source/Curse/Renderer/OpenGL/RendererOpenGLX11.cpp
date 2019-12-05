@@ -185,6 +185,11 @@ namespace Curse
         return nullptr;
     }
 
+    IndexBuffer* RendererOpenGLX11::CreateIndexBuffer(const IndexBufferDescriptor& /*descriptor*/)
+    {
+        return nullptr;
+    }
+
     Pipeline* RendererOpenGLX11::CreatePipeline(const PipelineDescriptor& /*descriptor*/)
     {
         return nullptr;
@@ -200,17 +205,16 @@ namespace Curse
         return nullptr;
     }
 
-    VertexArray* RendererOpenGLX11::CreateVertexArray()
-    {
-        return nullptr;
-    }
-
     VertexBuffer* RendererOpenGLX11::CreateVertexBuffer(const VertexBufferDescriptor&)
     {
         return nullptr;
     }
 
     void RendererOpenGLX11::DestroyFramebuffer(Framebuffer*)
+    {
+    }
+
+    void RendererOpenGLX11::DestroyIndexBuffer(IndexBuffer* /*indexBuffer*/)
     {
     }
 
@@ -226,10 +230,6 @@ namespace Curse
     {
     }
 
-    void RendererOpenGLX11::DestroyVertexArray(VertexArray* /*vertexArray*/)
-    {
-    }
-
     void RendererOpenGLX11::DestroyVertexBuffer(VertexBuffer* /*vertexBuffer*/)
     {
     }
@@ -242,11 +242,15 @@ namespace Curse
     {
     }
 
-    void RendererOpenGLX11::DrawVertexArray(VertexArray* /*vertexArray*/)
+    void RendererOpenGLX11::DrawVertexBuffer(VertexBuffer* /*vertexBuffer*/)
     {
     }
 
-    void RendererOpenGLX11::DrawVertexBuffer(VertexBuffer* /*vertexBuffer*/)
+    void RendererOpenGLX11::DrawVertexBuffers(VertexBuffer* /*vertexBuffers*/, const size_t /*count*/)
+    {
+    }
+
+    void RendererOpenGLX11::DrawVertexBuffers(IndexBuffer* /*indexBuffer*/, VertexBuffer* /*vertexBuffer*/, const size_t /*count*/)
     {
     }
 

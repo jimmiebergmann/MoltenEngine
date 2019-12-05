@@ -42,12 +42,10 @@ namespace Curse
 
     public:
 
-        using FlagType = uint32_t;
-
         /**
         * @brief Enumerator of different vertex structes.
         */
-        enum class Topology
+        enum class Topology : uint8_t
         {
             PointList,
             LineList,
@@ -59,7 +57,7 @@ namespace Curse
         /**
         * @brief Enumerator of different polygon rendering modes.
         */
-        enum class PolygonMode
+        enum class PolygonMode : uint8_t
         {
             Point,
             Line,
@@ -69,7 +67,7 @@ namespace Curse
         /**
         * @brief Enumerator of front faces.
         */
-        enum class FrontFace
+        enum class FrontFace : uint8_t
         {
             Clockwise,
             Counterclockwise
@@ -78,7 +76,7 @@ namespace Curse
         /**
         * @brief Enumerator of culling modes
         */
-        enum class CullMode
+        enum class CullMode : uint8_t
         {
             None,
             Front,
@@ -87,7 +85,7 @@ namespace Curse
         };
 
         /**
-        * @brief Different attribute data formats.
+        * @brief Enumerator of attribute data formats.
         */
         enum class AttributeFormat : uint8_t
         {

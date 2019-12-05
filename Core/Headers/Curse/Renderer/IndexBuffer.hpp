@@ -23,27 +23,57 @@
 *
 */
 
-#ifndef CURSE_CORE_RENDERER_VERTEXARRAYVULKAN_HPP
-#define CURSE_CORE_RENDERER_VERTEXARRAYVULKAN_HPP
+#ifndef CURSE_CORE_RENDERER_INDEXBUFFER_HPP
+#define CURSE_CORE_RENDERER_INDEXBUFFER_HPP
 
-#include "Curse/Renderer/VertexArray.hpp"
+#include "Curse/Renderer/Resource.hpp"
 
 namespace Curse
 {
 
-    class RendererVulkan;
-
-    class CURSE_API VertexArrayVulkan : public VertexArray
+    /**
+    * @brief Index buffer resource object.
+    */
+    class CURSE_API IndexBuffer
     {
 
-    private:
+    public:
 
-        VertexArrayVulkan() = default;
-        VertexArrayVulkan(const VertexArrayVulkan&) = delete;
-        VertexArrayVulkan(VertexArrayVulkan&&) = delete;
-        ~VertexArrayVulkan() = default;
+        /**
+        * @brief Enumerator of data types.
+        */
+        enum class DataType : uint8_t
+        {
+            Uint16, ///< 16 bit unsigned integer data type.
+            Uint32  ///< 32 bit unsigned integer data type.
+        };
 
-        friend class RendererVulkan;
+    protected:
+
+        IndexBuffer() = default;
+        IndexBuffer(const IndexBuffer&) = delete;
+        IndexBuffer(IndexBuffer&&) = delete;
+        virtual ~IndexBuffer() = default;
+
+        Resource resource;
+        size_t indexCount;
+        IndexBuffer::DataType dataType;
+
+    };
+
+    /**
+    * @brief Descriptor class of index buffer class.
+    */
+    class CURSE_API IndexBufferDescriptor
+    {
+
+    public:
+
+        IndexBufferDescriptor() = default;
+
+        uint32_t indexCount;
+        const void* data;   
+        IndexBuffer::DataType dataType;
 
     };
 

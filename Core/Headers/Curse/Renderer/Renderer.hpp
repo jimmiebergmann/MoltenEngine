@@ -32,7 +32,7 @@
 #include "Curse/Renderer/Texture.hpp"
 #include "Curse/Renderer/Pipeline.hpp"
 #include "Curse/Renderer/Framebuffer.hpp"
-#include "Curse/Renderer/VertexArray.hpp"
+#include "Curse/Renderer/IndexBuffer.hpp"
 #include "Curse/Renderer/VertexBuffer.hpp"
 #include <functional>
 
@@ -115,6 +115,11 @@ namespace Curse
         virtual Framebuffer* CreateFramebuffer(const FramebufferDescriptor& descriptor) = 0;
 
         /**
+        * @brief Create index buffer object.
+        */
+        virtual IndexBuffer* CreateIndexBuffer(const IndexBufferDescriptor& descriptor) = 0;
+
+        /**
         * @brief Create pipeline object.
         */
         virtual Pipeline* CreatePipeline(const PipelineDescriptor& descriptor) = 0;
@@ -130,20 +135,19 @@ namespace Curse
         virtual Texture* CreateTexture() = 0;
 
         /**
-        * @brief Create vertex array object.
-        */
-        virtual VertexArray* CreateVertexArray() = 0;
-
-        /**
         * @brief Create vertex buffer object.
         */
         virtual VertexBuffer* CreateVertexBuffer(const VertexBufferDescriptor& descriptor) = 0;
-
 
         /**
         * @brief Destroy framebuffer object.
         */
         virtual void DestroyFramebuffer(Framebuffer* framebuffer) = 0;
+
+        /**
+        * @brief Destroy index buffer object.
+        */
+        virtual void DestroyIndexBuffer(IndexBuffer* indexBuffer) = 0;
 
         /**
         * @brief Destroy pipeline object.
@@ -161,15 +165,9 @@ namespace Curse
         virtual void DestroyTexture(Texture* texture) = 0;
 
         /**
-        * @brief Destroy vertex array object.
-        */
-        virtual void DestroyVertexArray(VertexArray* vertexArray) = 0;
-
-        /**
         * @brief Destroy vertex buffer object.
         */
-        virtual void DestroyVertexBuffer(VertexBuffer* vertexBuffer) = 0;
-      
+        virtual void DestroyVertexBuffer(VertexBuffer* vertexBuffer) = 0;    
 
         /**
         * @brief Bind pipeline to draw queue.
@@ -182,14 +180,19 @@ namespace Curse
         virtual void BeginDraw() = 0;
 
         /**
-        * @brief Draw vertex array, using the current bound pipeline.
-        */
-        virtual void DrawVertexArray(VertexArray * vertexArray) = 0;
-
-        /**
         * @brief Draw vertex buffer, using the current bound pipeline.
         */
         virtual void DrawVertexBuffer(VertexBuffer* vertexBuffer) = 0;
+
+        /**
+        * @brief Draw multiple vertex buffers, using the current bound pipeline.
+        */
+        virtual void DrawVertexBuffers(VertexBuffer* vertexBuffers, const size_t count) = 0;
+
+        /**
+        * @brief Draw multiple indexed vertex buffers, using the current bound pipeline.
+        */
+        virtual void DrawVertexBuffers(IndexBuffer * indexBuffer, VertexBuffer* vertexBuffers, const size_t count) = 0;
 
         /**
         * @brief Finalize and present rendering.

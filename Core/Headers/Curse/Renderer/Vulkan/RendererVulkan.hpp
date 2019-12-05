@@ -34,6 +34,8 @@
 #include "Curse/Renderer/Vulkan/VulkanHeaders.hpp"
 #include <vector>
 
+CURSE_UNSCOPED_ENUM_BEGIN
+
 namespace Curse
 {
 
@@ -106,6 +108,11 @@ namespace Curse
         virtual Framebuffer* CreateFramebuffer(const FramebufferDescriptor& descriptor) override;
 
         /**
+        * @brief Create index buffer object.
+        */
+        virtual IndexBuffer* CreateIndexBuffer(const IndexBufferDescriptor& descriptor) override;
+
+        /**
         * @brief Create pipeline object.
         */
         virtual Pipeline* CreatePipeline(const PipelineDescriptor& descriptor) override;
@@ -121,11 +128,6 @@ namespace Curse
         virtual Texture* CreateTexture() override;
 
         /**
-        * @brief Create vertex array object.
-        */
-        virtual VertexArray* CreateVertexArray() override;
-
-        /**
         * @brief Create vertex buffer object.
         */
         virtual VertexBuffer* CreateVertexBuffer(const VertexBufferDescriptor& descriptor) override;
@@ -135,6 +137,11 @@ namespace Curse
         * @brief Destroy framebuffer object.
         */
         virtual void DestroyFramebuffer(Framebuffer* framebuffer) override;
+        
+        /**
+        * @brief Destroy index buffer object.
+        */
+        virtual void DestroyIndexBuffer(IndexBuffer* indexBuffer) override;
 
         /**
         * @brief Destroy pipeline object.
@@ -150,11 +157,6 @@ namespace Curse
         * @brief Destroy texture object.
         */
         virtual void DestroyTexture(Texture* texture) override;
-
-        /**
-        * @brief Destroy vertex array object.
-        */
-        virtual void DestroyVertexArray(VertexArray* vertexArray) override;
 
         /**
         * @brief Destroy vertex buffer object.
@@ -173,14 +175,19 @@ namespace Curse
         virtual void BeginDraw() override;
 
         /**
-        * @brief Draw vertex array, using the current bound pipeline.
-        */
-        virtual void DrawVertexArray(VertexArray* vertexArray) override;
-
-        /**
         * @brief Draw vertex buffer, using the current bound pipeline.
         */
         virtual void DrawVertexBuffer(VertexBuffer* vertexBuffer) override;
+
+        /**
+        * @brief Draw multiple vertex buffers, using the current bound pipeline.
+        */
+        virtual void DrawVertexBuffers(VertexBuffer* vertexBuffers, const size_t count) override;
+
+        /**
+        * @brief Draw multiple indexed vertex buffers, using the current bound pipeline.
+        */
+        virtual void DrawVertexBuffers(IndexBuffer* indexBuffer, VertexBuffer* vertexBuffers, const size_t count) override;
 
         /**
         * @brief Finalize and present rendering.
@@ -230,10 +237,10 @@ namespace Curse
             void Clear(Logger* logger);
 
             uint32_t framebufferCount;
+            uint32_t indexBufferCount;
             uint32_t pipelineCount;
             uint32_t shaderCount;
             uint32_t textureCount;
-            uint32_t vertexArrayCount;
             uint32_t vertexBufferCount;
         };
 
@@ -256,7 +263,7 @@ namespace Curse
         bool RecreateSwapChain();
         void UnloadSwapchain();
         bool FindPhysicalDeviceMemoryType(uint32_t& index, const uint32_t filter, const VkMemoryPropertyFlags properties);
-
+ 
         Logger* m_logger;
         Version m_version;
         const Window* m_renderTarget;
@@ -292,9 +299,12 @@ namespace Curse
         VkCommandBuffer* m_currentCommandBuffer;
         VkFramebuffer* m_currentFramebuffer;
         
+        
     };
 
 }
+
+CURSE_UNSCOPED_ENUM_END
 
 #endif
 
