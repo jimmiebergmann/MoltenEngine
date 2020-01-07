@@ -1,0 +1,232 @@
+/*
+* MIT License
+*
+* Copyright (c) 2019 Jimmie Bergmann
+*
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files(the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions :
+*
+* The above copyright notice and this permission notice shall be included in all
+* copies or substantial portions of the Software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
+* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+* SOFTWARE.
+*
+*/
+
+
+namespace Curse
+{
+
+    namespace Material
+    {
+
+        // Material output node implementations.
+        template<typename T>
+        inline size_t OutputNode<T>::GetInputPinCount() const
+        {
+            return 1;
+        }
+
+        template<typename T>
+        inline Pin* OutputNode<T>::GetInputPin(const size_t index)
+        {
+            if (index != 0)
+            {
+                return nullptr;
+            }
+            return &m_pin;
+        }
+        template<typename T>
+        inline const Pin* OutputNode<T>::GetInputPin(const size_t index) const
+        {
+            if (index != 0)
+            {
+                return nullptr;
+            }
+            return &m_pin;
+        }
+
+        template<typename T>
+        inline std::vector<Pin*> OutputNode<T>::GetInputPins()
+        {
+            return { &m_pin };
+        }
+        template<typename T>
+        inline std::vector<const Pin*> OutputNode<T>::GetInputPins() const
+        {
+            return { &m_pin };
+        }
+
+        template<typename T>
+        inline NodeType OutputNode<T>::GetType() const
+        {
+            return NodeType::Output;
+        }
+
+        template<typename T>
+        inline OutputNode<T>::OutputNode(Script& script) :
+            Node(script),
+            m_pin(*this)
+        { }
+
+
+        // Material varying node implementations.
+        template<VaryingType T>
+        inline size_t VaryingNode<T>::GetOutputPinCount() const
+        {
+            return 1;
+        }
+
+        template<VaryingType T>
+        inline Pin* VaryingNode<T>::GetOutputPin(const size_t index)
+        {
+            if (index != 0)
+            {
+                return nullptr;
+            }
+            return &m_pin;
+        }
+        template<VaryingType T>
+        inline const Pin* VaryingNode<T>::GetOutputPin(const size_t index) const
+        {
+            if (index != 0)
+            {
+                return nullptr;
+            }
+            return &m_pin;
+        }
+
+        template<VaryingType T>
+        inline std::vector<Pin*> VaryingNode<T>::GetOutputPins()
+        {
+            return { &m_pin };
+        }
+        template<VaryingType T>
+        inline std::vector<const Pin*> VaryingNode<T>::GetOutputPins() const
+        {
+            return { &m_pin };
+        }
+
+        template<VaryingType T>
+        inline NodeType VaryingNode<T>::GetType() const
+        {
+            return NodeType::Varying;
+        }
+
+        template<VaryingType T>
+        inline VaryingNode<T>::VaryingNode(Script& script) :
+            Node(script),
+            m_pin(*this)
+        { }
+
+
+        // Material operator node base implementations.
+        inline NodeType OperatorNodeBase::GetType() const
+        {
+            return NodeType::Operator;
+        }
+
+        inline Operator OperatorNodeBase::GetOperator() const
+        {
+            return m_operator;
+        }
+
+        inline OperatorNodeBase::OperatorNodeBase(Script& script, const Operator op) :
+            Node(script),
+            m_operator(op)
+        { }
+
+
+        // Material operator node implementations.
+        template<typename T>
+        inline size_t OperatorNode<T>::GetInputPinCount() const
+        {
+            return 2;
+        }
+
+        template<typename T>
+        inline size_t OperatorNode<T>::GetOutputPinCount() const
+        {
+            return 1;
+        }
+
+        template<typename T>
+        inline Pin* OperatorNode<T>::GetInputPin(const size_t index)
+        {
+            if (index > 1)
+            {
+                return nullptr;
+            }
+            return &m_inputs[index];
+        }
+        template<typename T>
+        inline const Pin* OperatorNode<T>::GetInputPin(const size_t index) const
+        {
+            if (index > 1)
+            {
+                return nullptr;
+            }
+            return &m_inputs[index];
+        }
+
+        template<typename T>
+        inline std::vector<Pin*> OperatorNode<T>::GetInputPins()
+        {
+            return { &m_inputs[0], &m_inputs[1] };
+        }
+        template<typename T>
+        inline std::vector<const Pin*> OperatorNode<T>::GetInputPins() const
+        {
+            return { &m_inputs[0], &m_inputs[1] };
+        }
+
+        template<typename T>
+        inline Pin* OperatorNode<T>::GetOutputPin(const size_t index)
+        {
+            if (index != 0)
+            {
+                return nullptr;
+            }
+            return &m_output;
+        }
+        template<typename T>
+        inline const Pin* OperatorNode<T>::GetOutputPin(const size_t index) const
+        {
+            if (index != 0)
+            {
+                return nullptr;
+            }
+            return &m_output;
+        }
+
+        template<typename T>
+        inline std::vector<Pin*> OperatorNode<T>::GetOutputPins()
+        {
+            return { &m_output };
+        }
+        template<typename T>
+        inline std::vector<const Pin*> OperatorNode<T>::GetOutputPins() const
+        {
+            return { &m_output };
+        }
+
+        template<typename T>
+        inline OperatorNode<T>::OperatorNode(Script& script, const Operator op) :
+            OperatorNodeBase(script, op),
+            m_inputs{*this, *this},
+            m_output(*this)
+        { }
+
+    }
+
+}
