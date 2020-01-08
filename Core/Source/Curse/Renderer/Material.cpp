@@ -72,6 +72,14 @@ namespace Curse
             return g_emptyString;
         }
 
+        static std::string GetGlslFloatAsString(const float value)
+        {
+            std::string str = std::to_string(value);
+            str.erase(str.find_last_not_of('0') + 1, std::string::npos);
+            str.erase(str.find_last_not_of('.') + 1, std::string::npos);
+            return str;
+        }
+
         static std::string GetGlslInputPinDefaultValue(const Pin& pin)
         {
             if (pin.GetDirection() != PinDirection::In)
@@ -86,21 +94,21 @@ namespace Curse
                 case PinDataType::Int32:
                     return std::to_string(static_cast<const InputPin<int32_t>&>(pin).GetDefaultValue());
                 case PinDataType::Float32:
-                    return std::to_string(static_cast<const InputPin<float>&>(pin).GetDefaultValue());
+                    return GetGlslFloatAsString(static_cast<const InputPin<float>&>(pin).GetDefaultValue());
                 case PinDataType::Vector2f32:
                 {
                     auto vec = static_cast<const InputPin<Vector2f32>&>(pin).GetDefaultValue();
-                    return "vec2(" + std::to_string(vec.x) + "," + std::to_string(vec.y) + ")";
+                    return "vec2(" + GetGlslFloatAsString(vec.x) + ", " + GetGlslFloatAsString(vec.y) + ")";
                 }
                 case PinDataType::Vector3f32:
                 {
                     auto vec = static_cast<const InputPin<Vector3f32>&>(pin).GetDefaultValue();
-                    return "vec3(" + std::to_string(vec.x) + "," + std::to_string(vec.y) + "," + std::to_string(vec.z) + ")";
+                    return "vec3(" + GetGlslFloatAsString(vec.x) + ", " + GetGlslFloatAsString(vec.y) + ", " + GetGlslFloatAsString(vec.z) + ")";
                 }
                 case PinDataType::Vector4f32:
                 {
                     auto vec = static_cast<const InputPin<Vector4f32>&>(pin).GetDefaultValue();
-                    return "vec4(" + std::to_string(vec.x) + "," + std::to_string(vec.y) + "," + std::to_string(vec.z) + "," + std::to_string(vec.w) + ")";
+                    return "vec4(" + GetGlslFloatAsString(vec.x) + ", " + GetGlslFloatAsString(vec.y) + ", " + GetGlslFloatAsString(vec.z) + ", " + GetGlslFloatAsString(vec.w) + ")";
                 }
                 default: break;
             }
@@ -113,25 +121,25 @@ namespace Curse
             switch (constant.GetDataType())
             {
                 case PinDataType::Bool:
-                    return std::to_string(static_cast<const ConstantNode<bool>&>(constant).GetValue());
+                    return static_cast<const ConstantNode<bool>&>(constant).GetValue() ? "true" : "false";
                 case PinDataType::Int32:
                     return std::to_string(static_cast<const ConstantNode<int32_t>&>(constant).GetValue());
                 case PinDataType::Float32:
-                    return std::to_string(static_cast<const ConstantNode<float>&>(constant).GetValue());
+                    return GetGlslFloatAsString(static_cast<const ConstantNode<float>&>(constant).GetValue());
                 case PinDataType::Vector2f32:
                 {
                     auto vec = static_cast<const ConstantNode<Vector2f32>&>(constant).GetValue();
-                    return "vec2(" + std::to_string(vec.x) + "," + std::to_string(vec.y) + ")";
+                    return "vec2(" + GetGlslFloatAsString(vec.x) + ", " + GetGlslFloatAsString(vec.y) + ")";
                 }
                 case PinDataType::Vector3f32:
                 {
                     auto vec = static_cast<const ConstantNode<Vector3f32>&>(constant).GetValue();
-                    return "vec3(" + std::to_string(vec.x) + "," + std::to_string(vec.y) + "," + std::to_string(vec.z) + ")";
+                    return "vec3(" + GetGlslFloatAsString(vec.x) + ", " + GetGlslFloatAsString(vec.y) + "," + GetGlslFloatAsString(vec.z) + ")";
                 }
                 case PinDataType::Vector4f32:
                 {
                     auto vec = static_cast<const ConstantNode<Vector4f32>&>(constant).GetValue();
-                    return "vec4(" + std::to_string(vec.x) + "," + std::to_string(vec.y) + "," + std::to_string(vec.z) + "," + std::to_string(vec.w) + ")";
+                    return "vec4(" + GetGlslFloatAsString(vec.x) + ", " + GetGlslFloatAsString(vec.y) + ", " + GetGlslFloatAsString(vec.z) + ", " + GetGlslFloatAsString(vec.w) + ")";
                 }
                 default: break;
             }

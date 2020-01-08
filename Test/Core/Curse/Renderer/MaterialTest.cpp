@@ -37,14 +37,18 @@ namespace Curse
 
             auto output = script.CreateOutputNode<Curse::Vector4f32>();
             auto color = script.CreateVaryingNode<Curse::Material::VaryingType::Color>();
-            auto mult1 = script.CreateOperatorNode<Curse::Vector4f32>(Curse::Material::Operator::Multiplication);
-            auto mult2 = script.CreateOperatorNode<Curse::Vector4f32>(Curse::Material::Operator::Subtraction);
+            auto mult = script.CreateOperatorNode<Curse::Vector4f32>(Curse::Material::Operator::Multiplication);
+            auto add = script.CreateOperatorNode<Curse::Vector4f32>(Curse::Material::Operator::Addition);
+            auto const1 = script.CreateConstantNode<Curse::Vector4f32>({ 0.0f, 0.0f, 0.3f, 0.0f });
+            auto const2 = script.CreateConstantNode<Curse::Vector4f32>({ 1.0f, 0.5f, 0.0f, 1.0f });
 
-            mult1->GetInputPin(0)->Connect(*color->GetOutputPin());
-            mult1->GetInputPin(1)->Connect(*mult2->GetOutputPin());
-            mult1->GetOutputPin()->Connect(*output->GetInputPin());
-            mult2->GetInputPin(0)->Connect(*color->GetOutputPin());
-            mult2->GetInputPin(1)->Connect(*color->GetOutputPin());
+            output->GetInputPin()->Connect(*add->GetOutputPin());
+
+            add->GetInputPin(0)->Connect(*mult->GetOutputPin());
+            add->GetInputPin(1)->Connect(*const1->GetOutputPin());
+
+            mult->GetInputPin(0)->Connect(*color->GetOutputPin());
+            mult->GetInputPin(1)->Connect(*const2->GetOutputPin());
 
             auto source = script.GenerateGlsl();
 
@@ -54,9 +58,11 @@ namespace Curse
                 "layout(location = 0) in vec4 v_var_0;\n"
                 "layout(location = 0) out vec4 o_var_0;\n"
                 "void main(){\n"
-                "vec4 l_var_1 = v_var_0 - v_var_0;\n"
-                "vec4 l_var_0 = v_var_0 * l_var_1;\n"
-                "o_var_0 = l_var_0;\n"
+                "vec4 l_var_0 = vec4(1, 0.5, 0, 1);\n"
+                "vec4 l_var_1 = v_var_0 * l_var_0;\n"
+                "vec4 l_var_2 = vec4(0, 0, 0.3, 0);\n"
+                "vec4 l_var_3 = l_var_1 + l_var_2;\n"
+                "o_var_0 = l_var_3;\n"
                 "}\n";
 
             EXPECT_STREQ(source.c_str(), expectedSource.c_str());
