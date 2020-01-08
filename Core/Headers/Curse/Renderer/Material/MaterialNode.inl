@@ -167,7 +167,7 @@ namespace Curse
             {
                 return nullptr;
             }
-            return &m_inputs[index];
+            return std::vector<Pin*>{&m_inputA, &m_inputB}[index];
         }
         template<typename T>
         inline const Pin* OperatorNode<T>::GetInputPin(const size_t index) const
@@ -176,18 +176,18 @@ namespace Curse
             {
                 return nullptr;
             }
-            return &m_inputs[index];
+            return std::vector<const Pin*>{&m_inputA, &m_inputB}[index];
         }
 
         template<typename T>
         inline std::vector<Pin*> OperatorNode<T>::GetInputPins()
         {
-            return { &m_inputs[0], &m_inputs[1] };
+            return { &m_inputA, &m_inputB };
         }
         template<typename T>
         inline std::vector<const Pin*> OperatorNode<T>::GetInputPins() const
         {
-            return { &m_inputs[0], &m_inputs[1] };
+            return { &m_inputA, &m_inputB };
         }
 
         template<typename T>
@@ -223,7 +223,8 @@ namespace Curse
         template<typename T>
         inline OperatorNode<T>::OperatorNode(Script& script, const Operator op) :
             OperatorNodeBase(script, op),
-            m_inputs{*this, *this},
+            m_inputA(*this),
+            m_inputB(*this),
             m_output(*this)
         { }
 

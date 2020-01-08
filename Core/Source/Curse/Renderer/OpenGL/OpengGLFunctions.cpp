@@ -31,6 +31,7 @@
 #if CURSE_PLATFORM == CURSE_PLATFORM_WINDOWS
     #define GetProcAddress(ext) ::wglGetProcAddress(ext)
 #elif CURSE_PLATFORM == CURSE_PLATFORM_LINUX
+    #define Bool bool
     #define GetProcAddress(ext) glXGetProcAddress((const GLubyte *)ext)
 #endif
 

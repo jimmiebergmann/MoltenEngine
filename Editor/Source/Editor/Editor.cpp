@@ -156,15 +156,15 @@ static void Run()
 
     window->Show();
 
-    Curse::Vector2f32 windowPos = window->GetPosition();
+    //Curse::Vector2f32 windowPos = window->GetPosition();
 
     //size_t ticks = 0;
     Curse::Clock deltaClock;
     Curse::Clock runClock;
-    float deltaTime = 0.0f;
+    //float deltaTime = 0.0f;
     while (window->IsOpen())
     {
-        deltaTime = deltaClock.GetTime().AsSeconds<float>();
+        //deltaTime = deltaClock.GetTime().AsSeconds<float>();
         deltaClock.Reset();
             
         /*const float resizeSpeed = 2.0f;

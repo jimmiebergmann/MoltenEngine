@@ -32,10 +32,15 @@
 
 #include <X11/Xlib.h>
 
-// Getting rid of conflicting Win32 definitions.
+// Getting rid of conflicting X11 definitions.
 #ifdef None
     #undef None
 #endif
+
+#ifdef Bool
+    #undef Bool
+#endif
+
 
 #endif
 

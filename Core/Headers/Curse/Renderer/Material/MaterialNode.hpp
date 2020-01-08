@@ -59,9 +59,9 @@ namespace Curse
         */
         enum class VaryingType : uint8_t
         {
-            Color,       ///< Vertex color.
+            Color,      ///< Vertex color.
             Normal,     ///< Normal direction.
-            Position   ///< Vertex position. 
+            Position    ///< Vertex position. 
         };
 
         /**
@@ -128,8 +128,6 @@ namespace Curse
         {
             using DataType = Vector3f32;
         };
-
-
 
 
         /**
@@ -350,7 +348,7 @@ namespace Curse
 
         private:
 
-            using DataType = VaryingTypeTrait<T>::template DataType;
+            using DataType = typename VaryingTypeTrait<T>::DataType;
 
             OutputPin<DataType> m_pin;
 
@@ -464,7 +462,9 @@ namespace Curse
 
         private:
 
-            InputPin<T> m_inputs[2];
+            InputPin<T> m_inputA;
+            InputPin<T> m_inputB;
+            InputPin<T> * m_inputs[2];
             OutputPin<T> m_output;
 
             friend class Script;

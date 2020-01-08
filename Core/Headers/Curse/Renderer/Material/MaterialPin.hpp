@@ -31,6 +31,7 @@
 #include <vector>
 #include <string>
 #include <typeindex>
+#include <algorithm>
 
 namespace Curse
 {

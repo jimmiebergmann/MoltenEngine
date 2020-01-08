@@ -244,49 +244,51 @@ namespace Curse
             }
             {
                 InputPin<float> in(node);
-                OutputPin<float> out[2] = { node, node };
+                OutputPin<float> outA(node);
+                OutputPin<float> outB(node);
 
-                EXPECT_TRUE(in.Connect(out[0]));
-                EXPECT_TRUE(in.Connect(out[1]));
+                EXPECT_TRUE(in.Connect(outA));
+                EXPECT_TRUE(in.Connect(outB));
                 EXPECT_EQ(in.GetConnections().size(), size_t(1));
-                EXPECT_EQ(out[0].GetConnections().size(), size_t(0));
-                EXPECT_EQ(out[1].GetConnections().size(), size_t(1));
-                EXPECT_EQ(in.GetConnections()[0], &out[1]);
+                EXPECT_EQ(outA.GetConnections().size(), size_t(0));
+                EXPECT_EQ(outB.GetConnections().size(), size_t(1));
+                EXPECT_EQ(in.GetConnections()[0], &outB);
 
                 EXPECT_FALSE(in.Disconnect(1));
                 EXPECT_EQ(in.GetConnections().size(), size_t(1));
-                EXPECT_EQ(out[0].GetConnections().size(), size_t(0));
-                EXPECT_EQ(out[1].GetConnections().size(), size_t(1));
-                EXPECT_EQ(in.GetConnections()[0], &out[1]);
+                EXPECT_EQ(outA.GetConnections().size(), size_t(0));
+                EXPECT_EQ(outB.GetConnections().size(), size_t(1));
+                EXPECT_EQ(in.GetConnections()[0], &outB);
 
                 EXPECT_TRUE(in.Disconnect(0));
                 EXPECT_EQ(in.GetConnections().size(), size_t(0));
-                EXPECT_EQ(out[0].GetConnections().size(), size_t(0));
-                EXPECT_EQ(out[1].GetConnections().size(), size_t(0));;
+                EXPECT_EQ(outA.GetConnections().size(), size_t(0));
+                EXPECT_EQ(outB.GetConnections().size(), size_t(0));;
             }
             {
                 InputPin<float> in(node);
-                OutputPin<float> out[2] = { node, node };
+                OutputPin<float> outA(node);
+                OutputPin<float> outB(node);
 
-                EXPECT_TRUE(in.Connect(out[0]));
+                EXPECT_TRUE(in.Connect(outA));
 
                 EXPECT_EQ(in.GetConnections().size(), size_t(1));
-                EXPECT_EQ(in.GetConnections()[0], &out[0]);
-                EXPECT_EQ(out[0].GetConnections().size(), size_t(1));
-                EXPECT_EQ(out[0].GetConnections()[0], &in);
-                EXPECT_EQ(out[1].GetConnections().size(), size_t(0));
+                EXPECT_EQ(in.GetConnections()[0], &outA);
+                EXPECT_EQ(outA.GetConnections().size(), size_t(1));
+                EXPECT_EQ(outA.GetConnections()[0], &in);
+                EXPECT_EQ(outB.GetConnections().size(), size_t(0));
 
-                EXPECT_FALSE(in.Disconnect(out[1]));
+                EXPECT_FALSE(in.Disconnect(outB));
                 EXPECT_EQ(in.GetConnections().size(), size_t(1));
-                EXPECT_EQ(in.GetConnections()[0], &out[0]);
-                EXPECT_EQ(out[0].GetConnections().size(), size_t(1));
-                EXPECT_EQ(out[0].GetConnections()[0], &in);
-                EXPECT_EQ(out[1].GetConnections().size(), size_t(0));
+                EXPECT_EQ(in.GetConnections()[0], &outA);
+                EXPECT_EQ(outA.GetConnections().size(), size_t(1));
+                EXPECT_EQ(outA.GetConnections()[0], &in);
+                EXPECT_EQ(outB.GetConnections().size(), size_t(0));
 
-                EXPECT_TRUE(in.Disconnect(out[0]));
+                EXPECT_TRUE(in.Disconnect(outA));
                 EXPECT_EQ(in.GetConnections().size(), size_t(0));
-                EXPECT_EQ(out[0].GetConnections().size(), size_t(0));
-                EXPECT_EQ(out[1].GetConnections().size(), size_t(0));
+                EXPECT_EQ(outA.GetConnections().size(), size_t(0));
+                EXPECT_EQ(outB.GetConnections().size(), size_t(0));
             }
         }
 
@@ -479,99 +481,103 @@ namespace Curse
                 }
             }
             {
-                InputPin<float> in[3] = { node, node, node };
+                InputPin<float> inA(node);
+                InputPin<float> inB(node);
+                InputPin<float> inC(node);
                 OutputPin<float> out(node);
 
-                EXPECT_TRUE(out.Connect(in[0]));
-                EXPECT_TRUE(out.Connect(in[1]));
-                EXPECT_TRUE(out.Connect(in[2]));
-                EXPECT_EQ(in[0].GetConnections().size(), size_t(1));
-                EXPECT_EQ(in[1].GetConnections().size(), size_t(1));
-                EXPECT_EQ(in[2].GetConnections().size(), size_t(1));
+                EXPECT_TRUE(out.Connect(inA));
+                EXPECT_TRUE(out.Connect(inB));
+                EXPECT_TRUE(out.Connect(inC));
+                EXPECT_EQ(inA.GetConnections().size(), size_t(1));
+                EXPECT_EQ(inB.GetConnections().size(), size_t(1));
+                EXPECT_EQ(inC.GetConnections().size(), size_t(1));
                 EXPECT_EQ(out.GetConnections().size(), size_t(3));
-                EXPECT_EQ(out.GetConnections()[0], &in[0]);
-                EXPECT_EQ(out.GetConnections()[1], &in[1]);
-                EXPECT_EQ(out.GetConnections()[2], &in[2]);
+                EXPECT_EQ(out.GetConnections()[0], &inA);
+                EXPECT_EQ(out.GetConnections()[1], &inB);
+                EXPECT_EQ(out.GetConnections()[2], &inC);
 
                 EXPECT_FALSE(out.Disconnect(4));
-                EXPECT_EQ(in[0].GetConnections().size(), size_t(1));
-                EXPECT_EQ(in[1].GetConnections().size(), size_t(1));
-                EXPECT_EQ(in[2].GetConnections().size(), size_t(1));
+                EXPECT_EQ(inA.GetConnections().size(), size_t(1));
+                EXPECT_EQ(inB.GetConnections().size(), size_t(1));
+                EXPECT_EQ(inC.GetConnections().size(), size_t(1));
                 EXPECT_EQ(out.GetConnections().size(), size_t(3));
-                EXPECT_EQ(out.GetConnections()[0], &in[0]);
-                EXPECT_EQ(out.GetConnections()[1], &in[1]);
-                EXPECT_EQ(out.GetConnections()[2], &in[2]);
+                EXPECT_EQ(out.GetConnections()[0], &inA);
+                EXPECT_EQ(out.GetConnections()[1], &inB);
+                EXPECT_EQ(out.GetConnections()[2], &inC);
 
                 EXPECT_TRUE(out.Disconnect(1));
-                EXPECT_EQ(in[0].GetConnections().size(), size_t(1));
-                EXPECT_EQ(in[1].GetConnections().size(), size_t(0));
-                EXPECT_EQ(in[2].GetConnections().size(), size_t(1));
+                EXPECT_EQ(inA.GetConnections().size(), size_t(1));
+                EXPECT_EQ(inB.GetConnections().size(), size_t(0));
+                EXPECT_EQ(inC.GetConnections().size(), size_t(1));
                 EXPECT_EQ(out.GetConnections().size(), size_t(2));
-                EXPECT_EQ(out.GetConnections()[0], &in[0]);
-                EXPECT_EQ(out.GetConnections()[1], &in[2]);
+                EXPECT_EQ(out.GetConnections()[0], &inA);
+                EXPECT_EQ(out.GetConnections()[1], &inC);
 
                 EXPECT_FALSE(out.Disconnect(2));
-                EXPECT_EQ(in[0].GetConnections().size(), size_t(1));
-                EXPECT_EQ(in[1].GetConnections().size(), size_t(0));
-                EXPECT_EQ(in[2].GetConnections().size(), size_t(1));
+                EXPECT_EQ(inA.GetConnections().size(), size_t(1));
+                EXPECT_EQ(inB.GetConnections().size(), size_t(0));
+                EXPECT_EQ(inC.GetConnections().size(), size_t(1));
                 EXPECT_EQ(out.GetConnections().size(), size_t(2));
-                EXPECT_EQ(out.GetConnections()[0], &in[0]);
-                EXPECT_EQ(out.GetConnections()[1], &in[2]);
+                EXPECT_EQ(out.GetConnections()[0], &inA);
+                EXPECT_EQ(out.GetConnections()[1], &inC);
 
                 EXPECT_TRUE(out.Disconnect(1));
-                EXPECT_EQ(in[0].GetConnections().size(), size_t(1));
-                EXPECT_EQ(in[1].GetConnections().size(), size_t(0));
-                EXPECT_EQ(in[2].GetConnections().size(), size_t(0));
+                EXPECT_EQ(inA.GetConnections().size(), size_t(1));
+                EXPECT_EQ(inB.GetConnections().size(), size_t(0));
+                EXPECT_EQ(inC.GetConnections().size(), size_t(0));
                 EXPECT_EQ(out.GetConnections().size(), size_t(1));
-                EXPECT_EQ(out.GetConnections()[0], &in[0]);
+                EXPECT_EQ(out.GetConnections()[0], &inA);
 
                 EXPECT_FALSE(out.Disconnect(1));
-                EXPECT_EQ(in[0].GetConnections().size(), size_t(1));
-                EXPECT_EQ(in[1].GetConnections().size(), size_t(0));
-                EXPECT_EQ(in[2].GetConnections().size(), size_t(0));
+                EXPECT_EQ(inA.GetConnections().size(), size_t(1));
+                EXPECT_EQ(inB.GetConnections().size(), size_t(0));
+                EXPECT_EQ(inC.GetConnections().size(), size_t(0));
                 EXPECT_EQ(out.GetConnections().size(), size_t(1));
-                EXPECT_EQ(out.GetConnections()[0], &in[0]);
+                EXPECT_EQ(out.GetConnections()[0], &inA);
 
                 EXPECT_TRUE(out.Disconnect(0));
-                EXPECT_EQ(in[0].GetConnections().size(), size_t(0));
-                EXPECT_EQ(in[1].GetConnections().size(), size_t(0));
-                EXPECT_EQ(in[2].GetConnections().size(), size_t(0));
+                EXPECT_EQ(inA.GetConnections().size(), size_t(0));
+                EXPECT_EQ(inB.GetConnections().size(), size_t(0));
+                EXPECT_EQ(inC.GetConnections().size(), size_t(0));
                 EXPECT_EQ(out.GetConnections().size(), size_t(0));
             }
             {
-                InputPin<float> in[3] = { node, node, node };
+                InputPin<float> inA(node);
+                InputPin<float> inB(node);
+                InputPin<float> inC(node);
                 OutputPin<float> out(node);
 
-                EXPECT_TRUE(out.Connect(in[0]));
-                EXPECT_TRUE(out.Connect(in[1]));
-                EXPECT_TRUE(out.Connect(in[2]));
-                EXPECT_EQ(in[0].GetConnections().size(), size_t(1));
-                EXPECT_EQ(in[1].GetConnections().size(), size_t(1));
-                EXPECT_EQ(in[2].GetConnections().size(), size_t(1));
+                EXPECT_TRUE(out.Connect(inA));
+                EXPECT_TRUE(out.Connect(inB));
+                EXPECT_TRUE(out.Connect(inC));
+                EXPECT_EQ(inA.GetConnections().size(), size_t(1));
+                EXPECT_EQ(inB.GetConnections().size(), size_t(1));
+                EXPECT_EQ(inC.GetConnections().size(), size_t(1));
                 EXPECT_EQ(out.GetConnections().size(), size_t(3));
-                EXPECT_EQ(out.GetConnections()[0], &in[0]);
-                EXPECT_EQ(out.GetConnections()[1], &in[1]);
-                EXPECT_EQ(out.GetConnections()[2], &in[2]);
+                EXPECT_EQ(out.GetConnections()[0], &inA);
+                EXPECT_EQ(out.GetConnections()[1], &inB);
+                EXPECT_EQ(out.GetConnections()[2], &inC);
 
-                EXPECT_TRUE(out.Disconnect(in[1]));
-                EXPECT_EQ(in[0].GetConnections().size(), size_t(1));
-                EXPECT_EQ(in[1].GetConnections().size(), size_t(0));
-                EXPECT_EQ(in[2].GetConnections().size(), size_t(1));
+                EXPECT_TRUE(out.Disconnect(inB));
+                EXPECT_EQ(inA.GetConnections().size(), size_t(1));
+                EXPECT_EQ(inB.GetConnections().size(), size_t(0));
+                EXPECT_EQ(inC.GetConnections().size(), size_t(1));
                 EXPECT_EQ(out.GetConnections().size(), size_t(2));
-                EXPECT_EQ(out.GetConnections()[0], &in[0]);
-                EXPECT_EQ(out.GetConnections()[1], &in[2]);
+                EXPECT_EQ(out.GetConnections()[0], &inA);
+                EXPECT_EQ(out.GetConnections()[1], &inC);
 
-                EXPECT_TRUE(out.Disconnect(in[2]));
-                EXPECT_EQ(in[0].GetConnections().size(), size_t(1));
-                EXPECT_EQ(in[1].GetConnections().size(), size_t(0));
-                EXPECT_EQ(in[2].GetConnections().size(), size_t(0));
+                EXPECT_TRUE(out.Disconnect(inC));
+                EXPECT_EQ(inA.GetConnections().size(), size_t(1));
+                EXPECT_EQ(inB.GetConnections().size(), size_t(0));
+                EXPECT_EQ(inC.GetConnections().size(), size_t(0));
                 EXPECT_EQ(out.GetConnections().size(), size_t(1));
-                EXPECT_EQ(out.GetConnections()[0], &in[0]);
+                EXPECT_EQ(out.GetConnections()[0], &inA);
 
-                EXPECT_TRUE(out.Disconnect(in[0]));
-                EXPECT_EQ(in[0].GetConnections().size(), size_t(0));
-                EXPECT_EQ(in[1].GetConnections().size(), size_t(0));
-                EXPECT_EQ(in[2].GetConnections().size(), size_t(0));
+                EXPECT_TRUE(out.Disconnect(inA));
+                EXPECT_EQ(inA.GetConnections().size(), size_t(0));
+                EXPECT_EQ(inB.GetConnections().size(), size_t(0));
+                EXPECT_EQ(inC.GetConnections().size(), size_t(0));
                 EXPECT_EQ(out.GetConnections().size(), size_t(0));
             }
             {
