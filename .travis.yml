@@ -7,8 +7,8 @@ addons:
     sources:
       - ubuntu-toolchain-r-test
     packages:
-      - g++-4.9
-      - clang-3.9
+      - g++-8
+      - clang-8
       - lcov
       - valgrind
       - mesa-utils

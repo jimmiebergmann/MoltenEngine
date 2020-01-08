@@ -47,7 +47,7 @@ namespace Curse
         */
         enum class NodeType : uint8_t
         {
-            Local,      ///< Local note, only present in fragment shader.
+            Constant,   ///< Local constant, only present in fragment shader.
             Operator,   ///< Operator node in local space.
             Output,     ///< Output node, resulting in fragment colors.
             Uniform,    ///< Uniform node, single object being sent runtime from client.
@@ -356,6 +356,119 @@ namespace Curse
 
         };
 
+
+        /**
+        * @brief Base clas of constant node, of material.
+        */
+        class ConstantNodeBase : public Node
+        {
+
+        public:
+
+            /**
+            * @brief Get data type of constant.
+            */
+            virtual PinDataType GetDataType() const = 0;
+
+            /**
+            * @brief Get type index of constant data type.
+            */
+            virtual std::type_index GetDataTypeIndex() const = 0;
+
+            /**
+            * @brief Get type of node.
+            */
+            virtual NodeType GetType() const override;
+
+        protected:
+
+            /**
+            * @brief Constructor.
+            */
+            ConstantNodeBase(Script& script);
+
+        };
+
+        /**
+        * @brief Constant node of material.
+        *        The stored value is not constant and can be changed at any time,
+        *        but it's used as a constant in the generated shader code.
+        */
+        template<typename T>
+        class ConstantNode : public ConstantNodeBase
+        {
+
+        public:
+
+            /**
+            * @brief Get data type of constant.
+            */
+            virtual PinDataType GetDataType() const override;
+
+            /**
+            * @brief Get type index of constant data type.
+            */
+            virtual std::type_index GetDataTypeIndex() const override;
+
+            /**
+            * @brief Get number of input pins.
+            */
+            virtual size_t GetOutputPinCount() const override;
+
+            /**
+            * @brief Get input pin by index.
+            *
+            * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
+            */
+            virtual Pin* GetOutputPin(const size_t index = 0) override;
+
+            /**
+            * @brief Get connected pin by index.
+            *
+            * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
+            */
+            virtual const Pin* GetOutputPin(const size_t index = 0) const override;
+
+            /**
+            * @brief Get all input pins, wrapped in a vector.
+            */
+            virtual std::vector<Pin*> GetOutputPins() override;
+
+            /**
+            * @brief  Get all input pins, wrapped in a vector.
+            */
+            virtual std::vector<const Pin*> GetOutputPins() const override;
+
+            /**
+            * @brief Get value of constant node.
+            */
+            const T& GetValue() const;
+
+            /**
+            * @brief Set value of constant node.
+            */
+            void SetValue(const T & value) const;
+
+        protected:
+
+            /**
+            * @brief Constructor.
+            */
+            ConstantNode(Script& script, const T & value);
+
+        private:
+
+            OutputPin<T> m_output;
+            T m_value;
+
+            friend class Script;
+
+        };
+
+
+        /**
+        * @brief Base clas of operator node, of material.
+        */
         class OperatorNodeBase : public Node
         {
 
@@ -381,8 +494,6 @@ namespace Curse
         private:
 
             const Operator m_operator;
-
-            friend class Script;
 
         };
 

@@ -108,6 +108,36 @@ namespace Curse
             return "";
         }
 
+        static std::string GetGlslConstantValue(const ConstantNodeBase& constant)
+        {
+            switch (constant.GetDataType())
+            {
+                case PinDataType::Bool:
+                    return std::to_string(static_cast<const ConstantNode<bool>&>(constant).GetValue());
+                case PinDataType::Int32:
+                    return std::to_string(static_cast<const ConstantNode<int32_t>&>(constant).GetValue());
+                case PinDataType::Float32:
+                    return std::to_string(static_cast<const ConstantNode<float>&>(constant).GetValue());
+                case PinDataType::Vector2f32:
+                {
+                    auto vec = static_cast<const ConstantNode<Vector2f32>&>(constant).GetValue();
+                    return "vec2(" + std::to_string(vec.x) + "," + std::to_string(vec.y) + ")";
+                }
+                case PinDataType::Vector3f32:
+                {
+                    auto vec = static_cast<const ConstantNode<Vector3f32>&>(constant).GetValue();
+                    return "vec3(" + std::to_string(vec.x) + "," + std::to_string(vec.y) + "," + std::to_string(vec.z) + ")";
+                }
+                case PinDataType::Vector4f32:
+                {
+                    auto vec = static_cast<const ConstantNode<Vector4f32>&>(constant).GetValue();
+                    return "vec4(" + std::to_string(vec.x) + "," + std::to_string(vec.y) + "," + std::to_string(vec.z) + "," + std::to_string(vec.w) + ")";
+                }
+                default: break;
+            }
+            return "";
+        }
+
 
         // Material implementations.
         Script::~Script()
@@ -168,14 +198,12 @@ namespace Curse
         {
             struct Variable
             {
-                Variable(size_t index, const std::string& name, const Node* node, const Pin* pin) :
-                    index(index),
+                Variable(const std::string& name, const Node* node, const Pin* pin) :
                     name(name),
                     node(node),
                     pin(pin)
                 { }
 
-                size_t index;
                 std::string name;
                 const Node* node;
                 const Pin* pin;
@@ -194,7 +222,7 @@ namespace Curse
                 for (auto* pin : node->GetInputPins())
                 {
                     const std::string name = "o_var_" + std::to_string(index);
-                    VariablePtr var = std::make_shared<Variable>(index, name, node, pin);
+                    VariablePtr var = std::make_shared<Variable>(name, node, pin);
                     outputVars.push_back({ var });
                     index++;
                 }
@@ -207,7 +235,7 @@ namespace Curse
                 for (auto* pin : node->GetOutputPins())
                 {
                     const std::string name = "v_var_" + std::to_string(index);
-                    VariablePtr var = std::make_shared<Variable>(index, name, node, pin);
+                    VariablePtr var = std::make_shared<Variable>(name, node, pin);
                     varyingVars.push_back(var);
                     visitedInputPins.insert({ pin, var });
                     index++;
@@ -220,17 +248,21 @@ namespace Curse
             source += "#extension GL_ARB_separate_shader_objects : enable\n";
 
             // Varying input variables.
+            index = 0;
             for (auto& var : varyingVars)
             {
-                source += "layout(location = " + std::to_string(var->index) + ") in " +
+                source += "layout(location = " + std::to_string(index) + ") in " +
                     GetGlslPinTypeString(var->pin->GetDataType()) + " " + var->name + ";\n";
+                index++;
             }
 
             // Output variables.
+            index = 0;
             for (auto& var : outputVars)
             {
-                source += "layout(location = " + std::to_string(var->index) + ") out " +
+                source += "layout(location = " + std::to_string(index) + ") out " +
                     GetGlslPinTypeString(var->pin->GetDataType()) + " " + var->name + ";\n";
+                index++;
             }
 
             // Uniform variables.
@@ -239,7 +271,13 @@ namespace Curse
             // Main program.
             source += "void main(){\n";
 
-            index = 0;
+            // Node iteration.
+            size_t localVarIndex = 0;
+            auto nextLocalName = [&localVarIndex]()
+            {
+                return std::string("l_var_" + std::to_string(localVarIndex++));
+            };
+            
             for (auto& outputVar : outputVars)
             {
                 class NodeStackObject
@@ -263,15 +301,14 @@ namespace Curse
                         return inputPinsLeft;
                     }
 
-                    bool MoveToNextInputPin()
+                    void MoveToNextInputPin()
                     {
                         if (!inputPinsLeft)
                         {
-                            return false;
+                            return;
                         }
                         currentInputPinIndex++;
                         inputPinsLeft--;
-                        return currentInputPinIndex < node->GetInputPinCount();
                     }
 
                     void AddInputVariable(VariablePtr& variable)
@@ -307,12 +344,12 @@ namespace Curse
                         // Default value pin.
                         if (!connection)
                         {
-                            VariablePtr defaultVar = std::make_shared<Variable>(99999, GetGlslInputPinDefaultValue(*inputPin), node, inputPin);
+                            VariablePtr defaultVar = std::make_shared<Variable>(GetGlslInputPinDefaultValue(*inputPin), node, inputPin);
                             stackObject.AddInputVariable(defaultVar);
                             stackObject.MoveToNextInputPin();
                             continue;
                         }
-
+                      
                         // Already created variable.
                         auto visitedIt = visitedInputPins.find(connection);
                         if (visitedIt != visitedInputPins.end())
@@ -321,33 +358,27 @@ namespace Curse
                             stackObject.MoveToNextInputPin();
                             continue;
                         }
-
+                
                         // Create child node.
-                        const std::string connectionName = "l_var_" + std::to_string(index);
                         const Node* connectionNode = &connection->GetNode();
-                        VariablePtr childVar = std::make_shared<Variable>(index, connectionName, connectionNode, connection);
-                        stackObject.AddInputVariable(childVar);                      
+                        VariablePtr childVar = std::make_shared<Variable>("", connectionNode, connection);
+                        stackObject.AddInputVariable(childVar);
                         nodeStack.push({ childVar });
                         visitedInputPins.insert({ connection, childVar });
-                        index++;
-                        
-                        if (!stackObject.MoveToNextInputPin())
-                        {
-                            continue;
-                        }
+                        stackObject.MoveToNextInputPin();
+                        continue;
                     }
                     
                     // All input pins of current node is travered, let's create the nodes output variable.
                     switch (node->GetType())
-                    {
-                        case NodeType::Output:
+                    {    
+                        case NodeType::Constant:
                         {
-                            if (stackObject.inputVars.size() != 1)
-                            {
-                                throw Exception("Number of variables for output variable is " + std::to_string(stackObject.inputVars.size()) + ", expected 1.");
-                            }
+                            stackObject.outputVar->name = nextLocalName();
+                            const ConstantNodeBase* constNode = static_cast<const ConstantNodeBase*>(stackObject.node);
 
-                            source += stackObject.outputVar->name + " = " + stackObject.inputVars[0]->name + ";\n";
+                            source += GetGlslPinTypeString(constNode->GetDataType()) + " " + stackObject.outputVar->name + " = " +
+                                GetGlslConstantValue(*constNode) + ";\n";
                         }
                         break;
                         case NodeType::Operator:
@@ -357,10 +388,20 @@ namespace Curse
                                 throw Exception("Number of variables for operator variable is " + std::to_string(stackObject.inputVars.size()) + ", expected 2.");
                             }
 
+                            stackObject.outputVar->name = nextLocalName();
                             const OperatorNodeBase* opNode = static_cast<const OperatorNodeBase*>(stackObject.node);
-
                             source += GetGlslPinTypeString(stackObject.outputVar->pin->GetDataType()) + " " + stackObject.outputVar->name + " = " +
                                 stackObject.inputVars[0]->name + GetGlslOperatorString(opNode->GetOperator()) + stackObject.inputVars[1]->name + ";\n";
+                        }
+                        break;
+                        case NodeType::Output:
+                        {
+                            if (stackObject.inputVars.size() != 1)
+                            {
+                                throw Exception("Number of variables for output variable is " + std::to_string(stackObject.inputVars.size()) + ", expected 1.");
+                            }
+
+                            source += stackObject.outputVar->name + " = " + stackObject.inputVars[0]->name + ";\n";
                         }
                         break;
                         default: break;

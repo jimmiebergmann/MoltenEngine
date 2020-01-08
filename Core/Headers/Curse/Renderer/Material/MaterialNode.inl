@@ -130,6 +130,85 @@ namespace Curse
         { }
 
 
+        // Material constant node implementations.
+        template<typename T>
+        PinDataType ConstantNode<T>::GetDataType() const
+        {
+            return m_output.GetDataType();
+        }
+
+        template<typename T>
+        std::type_index ConstantNode<T>::GetDataTypeIndex() const
+        {
+            return m_output.GetDataTypeIndex();
+        }
+
+        template<typename T>
+        inline size_t ConstantNode<T>::GetOutputPinCount() const
+        {
+            return 1;
+        }
+
+        template<typename T>
+        inline Pin* ConstantNode<T>::GetOutputPin(const size_t index)
+        {
+            if (index != 0)
+            {
+                return nullptr;
+            }
+            return &m_output;
+        }
+        template<typename T>
+        inline const Pin* ConstantNode<T>::GetOutputPin(const size_t index) const
+        {
+            if (index != 0)
+            {
+                return nullptr;
+            }
+            return &m_output;
+        }
+
+        template<typename T>
+        inline std::vector<Pin*> ConstantNode<T>::GetOutputPins()
+        {
+            return { &m_output };
+        }
+        template<typename T>
+        inline std::vector<const Pin*> ConstantNode<T>::GetOutputPins() const
+        {
+            return { &m_output };
+        }
+
+        template<typename T>
+        const T& ConstantNode<T>::GetValue() const
+        {
+            return m_value;
+        }
+
+        template<typename T>
+        void ConstantNode<T>::SetValue(const T& value) const
+        {
+            m_value = value
+        }
+
+        template<typename T>
+        inline ConstantNode<T>::ConstantNode(Script& script, const T& value) :
+            ConstantNodeBase(script),
+            m_output(*this),
+            m_value(value)
+        { }
+
+        // Material constant node base implementations.
+        inline NodeType ConstantNodeBase::GetType() const
+        {
+            return NodeType::Constant;
+        }
+
+        inline ConstantNodeBase::ConstantNodeBase(Script& script) :
+            Node(script)
+        { }
+
+
         // Material operator node base implementations.
         inline NodeType OperatorNodeBase::GetType() const
         {

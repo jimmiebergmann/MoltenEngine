@@ -16,18 +16,18 @@ static void LoadMaterial(Curse::Material::Script& script)
 {
     auto output = script.CreateOutputNode<Curse::Vector4f32>();
     auto color = script.CreateVaryingNode<Curse::Material::VaryingType::Color>();
-    auto mult1 = script.CreateOperatorNode<Curse::Vector4f32>(Curse::Material::Operator::Multiplication);
-    auto mult2 = script.CreateOperatorNode<Curse::Vector4f32>(Curse::Material::Operator::Subtraction);
+    auto mult = script.CreateOperatorNode<Curse::Vector4f32>(Curse::Material::Operator::Multiplication);
+    auto add = script.CreateOperatorNode<Curse::Vector4f32>(Curse::Material::Operator::Addition);
+    auto const1 = script.CreateConstantNode<Curse::Vector4f32>({ 0.0f, 0.0f, 0.3f, 0.0f });
+    auto const2 = script.CreateConstantNode<Curse::Vector4f32>({ 1.0f, 0.5f, 0.0f, 1.0f });
 
-    //color->GetOutputPin()->Connect(*output->GetInputPin());
+    output->GetInputPin()->Connect(*add->GetOutputPin());
 
-    mult1->GetInputPin(0)->Connect(*color->GetOutputPin());
-    mult1->GetInputPin(1)->Connect(*mult2->GetOutputPin());
-    mult1->GetOutputPin()->Connect(*output->GetInputPin());
+    add->GetInputPin(0)->Connect(*mult->GetOutputPin());
+    add->GetInputPin(1)->Connect(*const1->GetOutputPin());
 
-    mult2->GetInputPin(0)->Connect(*color->GetOutputPin());
-    mult2->GetInputPin(1)->Connect(*color->GetOutputPin());
-
+    mult->GetInputPin(0)->Connect(*color->GetOutputPin());
+    mult->GetInputPin(1)->Connect(*const2->GetOutputPin());
 }
 
 static void Run()

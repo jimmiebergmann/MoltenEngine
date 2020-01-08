@@ -66,6 +66,40 @@ namespace Curse
             Out
         };
 
+
+        /**
+        * @brief Type trait for checking if data type of material node is supported.
+        */
+        template<typename T>
+        struct PinDefault
+        {
+        };
+        template<> struct PinDefault<bool>
+        {
+            inline static const bool Value = false;
+        }; 
+        template<> struct PinDefault<int32_t>
+        {
+            inline static const int32_t Value = 0;
+        };
+        template<> struct PinDefault<float>
+        {
+            inline static const float Value = 0.0f;
+        };
+        template<> struct PinDefault<Vector2f32>
+        {
+            inline static const Vector2f32 Value = { 0.0f };
+        };
+        template<> struct PinDefault<Vector3f32>
+        {
+            inline static const Vector3f32 Value = { 0.0f };
+        };
+        template<> struct PinDefault<Vector4f32>
+        {
+            inline static const Vector4f32 Value = { 0.0f };
+        };
+
+
         /**
         * @brief Base class of visual script pin.
         */
@@ -113,7 +147,7 @@ namespace Curse
             virtual bool Disconnect(Pin& target) = 0;
   
             /**
-            * @brief Get data type of pin
+            * @brief Get data type of pin.
             */
             virtual PinDataType GetDataType() const = 0;
 

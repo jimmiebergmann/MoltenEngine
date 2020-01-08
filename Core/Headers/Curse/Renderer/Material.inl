@@ -30,6 +30,17 @@ namespace Curse
     {
 
         template<typename T>
+        inline ConstantNode<T>* Script::CreateConstantNode(const T& value)
+        {
+            static_assert(DataTypeTrait<T>::Supported,
+                "Specified data type of constant node is not supported.");
+
+            auto constant = new ConstantNode<T>(*this, value);
+            m_allNodes.insert(constant);
+            return constant;
+        }
+
+        template<typename T>
         inline OperatorNode<T>* Script::CreateOperatorNode(const Operator op)
         {
             auto opNode = new OperatorNode<T>(*this, op);
