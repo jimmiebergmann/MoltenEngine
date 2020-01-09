@@ -2,6 +2,9 @@ language: cpp
 
 dist: xenial
 
+services:
+  - xvfb
+  
 addons:
   apt:
     sources:
@@ -49,7 +52,7 @@ matrix:
         - CONFIG=Debug OUTPUT_NAME_POSTFIX=Debug
         
 before_script:
-  - export DISPLAY=:99.0; sh -e /etc/init.d/xvfb start
+  - export DISPLAY=:99.0
   #- mkdir VulkanSDK_latest
   #- cd VulkanSDK_latest
   #- wget -O VulkanSDK_latest.run https://vulkan.lunarg.com/sdk/download/1.0.51.0/linux/vulkansdk-linux-x86_64-1.0.51.0.run?Human=true
