@@ -188,7 +188,7 @@ namespace Curse
         template<typename T>
         void ConstantNode<T>::SetValue(const T& value) const
         {
-            m_value = value
+            m_value = value;
         }
 
         template<typename T>

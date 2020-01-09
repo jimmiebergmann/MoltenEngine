@@ -56,7 +56,7 @@ namespace Curse
             * @tparam T Constant node object to create.
             */
             template<typename T>
-            ConstantNode<T>* CreateConstantNode(const T& value = typename PinDefault<T>::Value);
+            ConstantNode<T>* CreateConstantNode(const T& value = PinDefault<T>::Value);
 
             /**
             * @brief Create new operator node and append it to the material.
