@@ -32,23 +32,27 @@ matrix:
     - os: linux
       compiler: gcc
       env:
+        - CC=gcc-8 CXX=g++-8
         - CONFIG=Release
         - CODECOV_UPLOAD=Yes
         
     - os: linux
       compiler: gcc
       env:
+        - CC=gcc-8 CXX=g++-8
         - CONFIG=Debug OUTPUT_NAME_POSTFIX=Debug
         - CODECOV_UPLOAD=Yes
         
     - os: linux
       compiler: clang
       env:
+        - CC=clang-8 && CXX=clang++8
         - CONFIG=Release
         
     - os: linux
       compiler: clang
       env:
+        - CC=clang-8 && CXX=clang++8
         - CONFIG=Debug OUTPUT_NAME_POSTFIX=Debug
         
 before_script:
