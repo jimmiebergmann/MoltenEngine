@@ -23,7 +23,7 @@
 *
 */
 
-#include "Curse/Renderer/Material.hpp"
+#include "Curse/Renderer/Material/MaterialScript.hpp"
 #include "Curse/System/Exception.hpp"
 #include <stack>
 #include <map>

@@ -1,6 +1,6 @@
 #include "Curse/Window/Window.hpp"
 #include "Curse/Renderer/Renderer.hpp"
-#include "Curse/Renderer/Material.hpp"
+#include "Curse/Renderer/Material/MaterialScript.hpp"
 #include "Curse/System/Exception.hpp"
 #include "Curse/System/FileSystem.hpp"
 #include "Curse/Memory/Pointer.hpp"
@@ -14,6 +14,10 @@ static Curse::Window* window = nullptr;
 
 static void LoadMaterial(Curse::Material::Script& script)
 {
+
+    auto func = script.CreateFunctionNode<Curse::Material::Function::Minf32>();
+    func = nullptr;
+
     auto output = script.CreateOutputNode<Curse::Vector4f32>();
     auto color = script.CreateVaryingNode<Curse::Material::VaryingType::Color>();
     auto mult = script.CreateOperatorNode<Curse::Vector4f32>(Curse::Material::Operator::Multiplication);

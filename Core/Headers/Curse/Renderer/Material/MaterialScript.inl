@@ -23,6 +23,8 @@
 *
 */
 
+#include "MaterialFunctions.hpp"
+
 namespace Curse
 {
 
@@ -38,6 +40,16 @@ namespace Curse
             auto constant = new ConstantNode<T>(*this, value);
             m_allNodes.insert(constant);
             return constant;
+        }
+
+        template<typename Func>
+        inline auto Script::CreateFunctionNode()
+        {
+            static_assert(std::is_base_of<FunctionNodeBase, Func>::value,
+                "Specified template parameter is not base of FunctionNode.");
+
+            auto func = new Func(*this);
+            return func;
         }
 
         template<typename T>

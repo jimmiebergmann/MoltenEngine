@@ -24,7 +24,7 @@
 */
 
 #include "Test.hpp"
-#include "Curse/Renderer/Material.hpp"
+#include "Curse/Renderer/Material/MaterialScript.hpp"
 
 namespace Curse
 {

@@ -29,6 +29,8 @@
 #include "Curse/Types.hpp"
 #include "Curse/Math/Vector.hpp"
 #include "Curse/Renderer/Material/MaterialPin.hpp"
+#include <memory>
+#include <array>
 
 namespace Curse
 {
@@ -48,9 +50,10 @@ namespace Curse
         enum class NodeType : uint8_t
         {
             Constant,   ///< Local constant, only present in fragment shader.
+            Function,   ///< Built-in shader function.
             Operator,   ///< Operator node in local space.
             Output,     ///< Output node, resulting in fragment colors.
-            Uniform,    ///< Uniform node, single object being sent runtime from client.
+            //Uniform,  ///< Uniform node, single object being sent runtime from client.
             Varying,    ///< Varying node, sent from the vertex or geometry shader.    
         };
 
@@ -73,6 +76,20 @@ namespace Curse
             Subtraction,
             Multiplication,
             Division
+        };
+
+        /**
+        * @brief Enumerator of functions.
+        */
+        enum class FunctionType : uint16_t
+        {
+            // Mathematics.
+            Max,
+            Min,
+
+            // Vector.
+            Cross,
+            Dot
         };
 
 
@@ -582,6 +599,156 @@ namespace Curse
 
         };
 
+
+        /**
+        * @brief Function node base class of material.
+        */
+        class FunctionNodeBase : public Node
+        {
+
+        public:
+
+            /**
+            * @brief Get function type.
+            */
+            virtual FunctionType GetFunctionType() = 0;
+
+            /**
+            * @brief Get type of node.
+            */
+            virtual NodeType GetType() const override;
+
+        protected:
+
+            /**
+            * @brief Constructor.
+            */
+            FunctionNodeBase(Script& script);
+
+        };
+
+        /**
+        * @brief Function node of material.
+        */
+        template<FunctionType _FunctionType, typename OutputType, typename ... InputTypes>
+        class FunctionNode : public FunctionNodeBase
+        {
+
+        public:
+
+            /**
+            * @brief Get function type.
+            */
+            virtual FunctionType GetFunctionType() override;
+
+            /**
+            * @brief Get number of input pins.
+            */
+            virtual size_t GetInputPinCount() const override;
+
+            /**
+            * @brief Get number of input pins.
+            */
+            virtual size_t GetOutputPinCount() const override;
+
+            /**
+            * @brief Get input pin by index.
+            *
+            * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
+            */
+            virtual Pin* GetInputPin(const size_t index = 0) override;
+
+            /**
+            * @brief Get connected pin by index.
+            *
+            * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
+            */
+            virtual const Pin* GetInputPin(const size_t index = 0) const override;
+
+            /**
+            * @brief Get all input pins, wrapped in a vector.
+            */
+            virtual std::vector<Pin*> GetInputPins() override;
+
+            /**
+            * @brief  Get all input pins, wrapped in a vector.
+            */
+            virtual std::vector<const Pin*> GetInputPins() const override;
+
+            /**
+            * @brief Get input pin by index.
+            *
+            * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
+            */
+            virtual Pin* GetOutputPin(const size_t index = 0) override;
+
+            /**
+            * @brief Get connected pin by index.
+            *
+            * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
+            */
+            virtual const Pin* GetOutputPin(const size_t index = 0) const override;
+
+            /**
+            * @brief Get all input pins, wrapped in a vector.
+            */
+            virtual std::vector<Pin*> GetOutputPins() override;
+
+            /**
+            * @brief  Get all input pins, wrapped in a vector.
+            */
+            virtual std::vector<const Pin*> GetOutputPins() const override;
+
+        protected:
+
+            /**
+            * @brief Constructor.
+            */
+            FunctionNode(Script& script);
+
+        private:
+
+            
+            template<typename OT> struct OutputPinCountTraits
+            {
+                static constexpr size_t Value = 1;
+            };
+            template<> struct OutputPinCountTraits<void>
+            {
+                static constexpr size_t Value = 0;
+            };
+
+            template<typename OT>
+            struct OutputPinCreator
+            {
+                static std::unique_ptr<Pin> Create(Node& node)
+                {
+                    return std::make_unique<OutputPin<OT> >(node);
+                }
+            };
+            template<>
+            struct OutputPinCreator<void>
+            {
+                static std::unique_ptr<Pin> CreateOutputType(Node&)
+                {
+                    return nullptr;
+                }
+            };
+
+            static constexpr size_t OutputPinCount = OutputPinCountTraits<OutputType>::Value;
+            static constexpr size_t InputPinCount = sizeof...(InputTypes);
+
+            template<typename CurrentType, typename ...>
+            void InitInputPin(const size_t index = 0);
+
+            void InitOutputPin();
+
+            std::array<std::unique_ptr<Pin>, InputPinCount> m_inputs;
+            std::unique_ptr<Pin> m_output;
+
+            friend class Script;
+
+        };
     }
 }
 

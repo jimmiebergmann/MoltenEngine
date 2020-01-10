@@ -59,6 +59,14 @@ namespace Curse
             ConstantNode<T>* CreateConstantNode(const T& value = PinDefault<T>::Value);
 
             /**
+            * @brief Create new function node and append it to the material.
+            *
+            * @tparam T Function node object to create and data types for parameters.
+            */
+            template<typename Func>
+            auto CreateFunctionNode();
+
+            /**
             * @brief Create new operator node and append it to the material.
             *
             * @tparam T Operator node object to create.
@@ -126,6 +134,6 @@ namespace Curse
 
 }
 
-#include "Material.inl"
+#include "MaterialScript.inl"
 
 #endif

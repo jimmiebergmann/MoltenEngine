@@ -132,13 +132,13 @@ namespace Curse
 
         // Material constant node implementations.
         template<typename T>
-        PinDataType ConstantNode<T>::GetDataType() const
+        inline PinDataType ConstantNode<T>::GetDataType() const
         {
             return m_output.GetDataType();
         }
 
         template<typename T>
-        std::type_index ConstantNode<T>::GetDataTypeIndex() const
+        inline std::type_index ConstantNode<T>::GetDataTypeIndex() const
         {
             return m_output.GetDataTypeIndex();
         }
@@ -180,13 +180,13 @@ namespace Curse
         }
 
         template<typename T>
-        const T& ConstantNode<T>::GetValue() const
+        inline const T& ConstantNode<T>::GetValue() const
         {
             return m_value;
         }
 
         template<typename T>
-        void ConstantNode<T>::SetValue(const T& value) const
+        inline void ConstantNode<T>::SetValue(const T& value) const
         {
             m_value = value;
         }
@@ -304,8 +304,150 @@ namespace Curse
             OperatorNodeBase(script, op),
             m_inputA(*this),
             m_inputB(*this),
+            m_inputs{ nullptr, nullptr },
             m_output(*this)
         { }
+
+        // Material function node base implementations.
+        inline NodeType FunctionNodeBase::GetType() const
+        {
+            return NodeType::Function;
+        }
+
+        inline FunctionNodeBase::FunctionNodeBase(Script& script) :
+            Node(script)
+        { }
+
+        // Material function node implementations.
+        template<FunctionType _FunctionType, typename OutputType, typename ... InputTypes>
+        FunctionType FunctionNode<_FunctionType, OutputType, InputTypes...>::GetFunctionType()
+        {
+            return _FunctionType;
+        }
+
+        template<FunctionType _FunctionType, typename OutputType, typename ... InputTypes>
+        inline size_t FunctionNode<_FunctionType, OutputType, InputTypes...>::GetInputPinCount() const
+        {
+            return InputPinCount;
+        }
+
+        template<FunctionType _FunctionType, typename OutputType, typename ... InputTypes>
+        inline size_t FunctionNode<_FunctionType, OutputType, InputTypes...>::GetOutputPinCount() const
+        {
+            return OutputPinCount;
+        }
+
+        template<FunctionType _FunctionType, typename OutputType, typename ... InputTypes>
+        inline Pin* FunctionNode<_FunctionType, OutputType, InputTypes...>::GetInputPin(const size_t index)
+        {
+            if (index > m_inputs.size())
+            {
+                return nullptr;
+            }
+            return m_inputs[index].get();
+        }
+        template<FunctionType _FunctionType, typename OutputType, typename ... InputTypes>
+        inline const Pin* FunctionNode<_FunctionType, OutputType, InputTypes...>::GetInputPin(const size_t index) const
+        {
+            if (index > m_inputs.size())
+            {
+                return nullptr;
+            }
+            return m_inputs[index].get();
+        }
+
+        template<FunctionType _FunctionType, typename OutputType, typename ... InputTypes>
+        inline std::vector<Pin*> FunctionNode<_FunctionType, OutputType, InputTypes...>::GetInputPins()
+        {
+            std::vector<Pin*> pins;
+            for (const auto& pin : m_inputs)
+            {
+                pins.push_back(pin.get());
+            }
+
+            return pins;
+        }
+        template<FunctionType _FunctionType, typename OutputType, typename ... InputTypes>
+        inline std::vector<const Pin*> FunctionNode<_FunctionType, OutputType, InputTypes...>::GetInputPins() const
+        {
+            std::vector<const Pin*> pins;
+            for (const auto& pin : m_inputs)
+            {
+                pins.push_back(pin.get());
+            }
+
+            return pins;
+        }
+
+        template<FunctionType _FunctionType, typename OutputType, typename ... InputTypes>
+        inline Pin* FunctionNode<_FunctionType, OutputType, InputTypes...>::GetOutputPin(const size_t index)
+        {
+            if (index != 0)
+            {
+                return nullptr;
+            }
+            return m_output.get();
+        }
+        template<FunctionType _FunctionType, typename OutputType, typename ... InputTypes>
+        inline const Pin* FunctionNode<_FunctionType, OutputType, InputTypes...>::GetOutputPin(const size_t index) const
+        {
+            if (index != 0)
+            {
+                return nullptr;
+            }
+            return m_output.get();
+        }
+
+        template<FunctionType _FunctionType, typename OutputType, typename ... InputTypes>
+        inline std::vector<Pin*> FunctionNode<_FunctionType, OutputType, InputTypes...>::GetOutputPins()
+        {
+            auto output = m_output.get();
+            if (!output)
+            {
+                return {};
+            }
+            return { output };
+        }
+        template<FunctionType _FunctionType, typename OutputType, typename ... InputTypes>
+        inline std::vector<const Pin*> FunctionNode<_FunctionType, OutputType, InputTypes...>::GetOutputPins() const
+        {
+            auto output = m_output.get();
+            if (!output)
+            {
+                return {};
+            }
+            return { output };
+        }
+
+        template<FunctionType _FunctionType, typename OutputType, typename ... InputTypes>
+        inline FunctionNode<_FunctionType, OutputType, InputTypes...>::FunctionNode(Script& script) :
+            FunctionNodeBase(script),
+            m_output(nullptr)
+        {
+            InitInputPin<InputTypes...>();
+            InitOutputPin();
+        }
+
+        template<FunctionType _FunctionType, typename OutputType, typename ... InputTypes>
+        template<typename CurrentType, typename ...>
+        inline void FunctionNode<_FunctionType, OutputType, InputTypes...>::InitInputPin(const size_t index)
+        {
+            if (index == InputPinCount)
+            {
+                return;
+            }
+
+            auto inputPin = std::make_unique<InputPin<CurrentType> >(*this);
+            m_inputs[index] = std::move(inputPin);
+
+            InitInputPin<CurrentType>(index + 1);
+        }
+
+        template<FunctionType _FunctionType, typename OutputType, typename ... InputTypes>
+        inline void FunctionNode<_FunctionType, OutputType, InputTypes...>::InitOutputPin()
+        {
+            m_output = OutputPinCreator<OutputType>::Create(*this);
+        }
 
     }
 
