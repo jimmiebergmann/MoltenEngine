@@ -422,10 +422,9 @@ namespace Curse
         template<FunctionType _FunctionType, typename OutputType, typename ... InputTypes>
         inline FunctionNode<_FunctionType, OutputType, InputTypes...>::FunctionNode(Script& script) :
             FunctionNodeBase(script),
-            m_output(nullptr)
+            m_output(std::make_unique<OutputPin<OutputType> >(*this))
         {
             InitInputPin<InputTypes...>();
-            InitOutputPin();
         }
 
         template<FunctionType _FunctionType, typename OutputType, typename ... InputTypes>
@@ -441,12 +440,6 @@ namespace Curse
             m_inputs[index] = std::move(inputPin);
 
             InitInputPin<CurrentType>(index + 1);
-        }
-
-        template<FunctionType _FunctionType, typename OutputType, typename ... InputTypes>
-        inline void FunctionNode<_FunctionType, OutputType, InputTypes...>::InitOutputPin()
-        {
-            m_output = OutputPinCreator<OutputType>::Create(*this);
         }
 
     }

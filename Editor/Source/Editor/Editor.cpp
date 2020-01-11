@@ -15,8 +15,8 @@ static Curse::Window* window = nullptr;
 static void LoadMaterial(Curse::Material::Script& script)
 {
 
-    auto func = script.CreateFunctionNode<Curse::Material::Function::Minf32>();
-    func = nullptr;
+    /*auto func = */script.CreateFunctionNode<Curse::Material::Function::Minf32>();
+    //func = nullptr;
 
     auto output = script.CreateOutputNode<Curse::Vector4f32>();
     auto color = script.CreateVaryingNode<Curse::Material::VaryingType::Color>();

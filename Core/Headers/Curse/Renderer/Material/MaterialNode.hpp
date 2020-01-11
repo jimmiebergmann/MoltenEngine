@@ -708,40 +708,11 @@ namespace Curse
 
         private:
 
-            
-            template<typename OT> struct OutputPinCountTraits
-            {
-                static constexpr size_t Value = 1;
-            };
-            template<> struct OutputPinCountTraits<void>
-            {
-                static constexpr size_t Value = 0;
-            };
-
-            template<typename OT>
-            struct OutputPinCreator
-            {
-                static std::unique_ptr<Pin> Create(Node& node)
-                {
-                    return std::make_unique<OutputPin<OT> >(node);
-                }
-            };
-            template<>
-            struct OutputPinCreator<void>
-            {
-                static std::unique_ptr<Pin> CreateOutputType(Node&)
-                {
-                    return nullptr;
-                }
-            };
-
-            static constexpr size_t OutputPinCount = OutputPinCountTraits<OutputType>::Value;
+            static constexpr size_t OutputPinCount = 1;
             static constexpr size_t InputPinCount = sizeof...(InputTypes);
 
             template<typename CurrentType, typename ...>
             void InitInputPin(const size_t index = 0);
-
-            void InitOutputPin();
 
             std::array<std::unique_ptr<Pin>, InputPinCount> m_inputs;
             std::unique_ptr<Pin> m_output;
