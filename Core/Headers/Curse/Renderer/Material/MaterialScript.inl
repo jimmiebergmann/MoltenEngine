@@ -49,6 +49,7 @@ namespace Curse
                 "Specified template parameter is not base of FunctionNode.");
 
             auto func = new Func(*this);
+            m_allNodes.insert(func);
             return func;
         }
 
