@@ -44,6 +44,14 @@ namespace Curse
         static const std::string g_glslDataTypeVec3 = "vec3";
         static const std::string g_glslDataTypeVec4 = "vec4";
 
+        static const std::string g_glslFunctionCos = "cos";
+        static const std::string g_glslFunctionSin = "sin";
+        static const std::string g_glslFunctionTan = "tan";
+        static const std::string g_glslFunctionMax = "max";
+        static const std::string g_glslFunctionMin = "min";
+        static const std::string g_glslFunctionCross = "cross";
+        static const std::string g_glslFunctionDot = "dot";
+
         static const std::string& GetGlslPinTypeString(const PinDataType dataType)
         {
             switch (dataType)
@@ -134,7 +142,7 @@ namespace Curse
                 case PinDataType::Vector3f32:
                 {
                     auto vec = static_cast<const ConstantNode<Vector3f32>&>(constant).GetValue();
-                    return "vec3(" + GetGlslFloatAsString(vec.x) + ", " + GetGlslFloatAsString(vec.y) + "," + GetGlslFloatAsString(vec.z) + ")";
+                    return "vec3(" + GetGlslFloatAsString(vec.x) + ", " + GetGlslFloatAsString(vec.y) + ", " + GetGlslFloatAsString(vec.z) + ")";
                 }
                 case PinDataType::Vector4f32:
                 {
@@ -144,6 +152,26 @@ namespace Curse
                 default: break;
             }
             return "";
+        }
+
+        static const std::string& GetGlslFunctionName(const FunctionType functionType)
+        {
+            switch (functionType)
+            {
+                // Trigonometry
+                case FunctionType::Cos: return g_glslFunctionCos;
+                case FunctionType::Sin: return g_glslFunctionSin;
+                case FunctionType::Tan: return g_glslFunctionTan;
+                // Mathematics.
+                case FunctionType::Max: return g_glslFunctionMax;
+                case FunctionType::Min: return g_glslFunctionMin;
+                // Vector.
+                case FunctionType::Cross: return g_glslFunctionCross;
+                case FunctionType::Dot: return g_glslFunctionDot;
+                default: break;
+            }
+
+            return g_emptyString;
         }
 
 
@@ -387,6 +415,27 @@ namespace Curse
 
                             source += GetGlslPinTypeString(constNode->GetDataType()) + " " + stackObject.outputVar->name + " = " +
                                 GetGlslConstantValue(*constNode) + ";\n";
+                        }
+                        break;
+                        case NodeType::Function:
+                        {
+                            stackObject.outputVar->name = nextLocalName();
+                            const FunctionNodeBase* funcNode = static_cast<const FunctionNodeBase*>(stackObject.node);
+
+                            source += GetGlslPinTypeString(funcNode->GetOutputPin()->GetDataType()) + " " + stackObject.outputVar->name + " = " +
+                                GetGlslFunctionName(funcNode->GetFunctionType()) + "(";
+
+                            const size_t inputCount = stackObject.inputVars.size();
+                            if (inputCount)
+                            {
+                                for (size_t i = 0; i < inputCount - 1; i++)
+                                {
+                                    source += stackObject.inputVars[i]->name + ", ";
+                                }
+                                source += stackObject.inputVars[inputCount-1]->name;
+                            }
+
+                            source += ");\n";
                         }
                         break;
                         case NodeType::Operator:

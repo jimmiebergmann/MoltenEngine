@@ -320,7 +320,7 @@ namespace Curse
 
         // Material function node implementations.
         template<FunctionType _FunctionType, typename OutputType, typename ... InputTypes>
-        FunctionType FunctionNode<_FunctionType, OutputType, InputTypes...>::GetFunctionType()
+        FunctionType FunctionNode<_FunctionType, OutputType, InputTypes...>::GetFunctionType() const
         {
             return _FunctionType;
         }

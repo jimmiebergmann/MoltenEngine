@@ -68,6 +68,108 @@ namespace Curse
             EXPECT_STREQ(source.c_str(), expectedSource.c_str());
         }
 
+        TEST(Material, Script_DefaultPinValue)
+        {
+            // Cos
+            {
+                Script script;
+                auto output = script.CreateOutputNode<Curse::Vector4f32>();
+                auto cos = script.CreateFunctionNode<Curse::Material::Function::CosVec4f32>();
+
+                output->GetInputPin()->Connect(*cos->GetOutputPin());
+                static_cast<Curse::Material::InputPin<Curse::Vector4f32>*>(cos->GetInputPin())->SetDefaultValue({2.1f, 3.5f, 4.7f, 5.2f});
+
+                auto source = script.GenerateGlsl();
+
+                static const std::string expectedSource =
+                    "#version 450\n"
+                    "#extension GL_ARB_separate_shader_objects : enable\n"
+                    "layout(location = 0) out vec4 o_var_0;\n"
+                    "void main(){\n"
+                    "vec4 l_var_0 = cos(vec4(2.1, 3.5, 4.7, 5.2));\n"
+                    "o_var_0 = l_var_0;\n"
+                    "}\n";
+
+                EXPECT_STREQ(source.c_str(), expectedSource.c_str());
+            }
+        }
+
+        TEST(Material, Script_Functions)
+        {
+            // Cos
+            {
+                Script script;
+                auto output = script.CreateOutputNode<Curse::Vector4f32>();
+                auto const1 = script.CreateConstantNode<Curse::Vector4f32>({ 1.0f, 2.0f, 3.0f, 4.0f });
+                auto cos = script.CreateFunctionNode<Curse::Material::Function::CosVec4f32>();
+
+                output->GetInputPin()->Connect(*cos->GetOutputPin());
+                cos->GetInputPin()->Connect(*const1->GetOutputPin());
+
+                auto source = script.GenerateGlsl();
+
+                static const std::string expectedSource =
+                    "#version 450\n"
+                    "#extension GL_ARB_separate_shader_objects : enable\n"
+                    "layout(location = 0) out vec4 o_var_0;\n"
+                    "void main(){\n"
+                    "vec4 l_var_0 = vec4(1, 2, 3, 4);\n"
+                    "vec4 l_var_1 = cos(l_var_0);\n"
+                    "o_var_0 = l_var_1;\n"
+                    "}\n";
+
+                EXPECT_STREQ(source.c_str(), expectedSource.c_str());
+            }
+            // Sin
+            {
+                Script script;
+                auto output = script.CreateOutputNode<Curse::Vector3f32>();
+                auto const1 = script.CreateConstantNode<Curse::Vector3f32>({ 1.0f, 2.0f, 3.0f });
+                auto cos = script.CreateFunctionNode<Curse::Material::Function::SinVec3f32>();
+
+                output->GetInputPin()->Connect(*cos->GetOutputPin());
+                cos->GetInputPin()->Connect(*const1->GetOutputPin());
+
+                auto source = script.GenerateGlsl();
+
+                static const std::string expectedSource =
+                    "#version 450\n"
+                    "#extension GL_ARB_separate_shader_objects : enable\n"
+                    "layout(location = 0) out vec3 o_var_0;\n"
+                    "void main(){\n"
+                    "vec3 l_var_0 = vec3(1, 2, 3);\n"
+                    "vec3 l_var_1 = sin(l_var_0);\n"
+                    "o_var_0 = l_var_1;\n"
+                    "}\n";
+
+                EXPECT_STREQ(source.c_str(), expectedSource.c_str());
+            }
+            // Tan
+            {
+                Script script;
+                auto output = script.CreateOutputNode<Curse::Vector2f32>();
+                auto const1 = script.CreateConstantNode<Curse::Vector2f32>({ 1.0f, 2.0f });
+                auto cos = script.CreateFunctionNode<Curse::Material::Function::TanVec2f32>();
+
+                output->GetInputPin()->Connect(*cos->GetOutputPin());
+                cos->GetInputPin()->Connect(*const1->GetOutputPin());
+
+                auto source = script.GenerateGlsl();
+
+                static const std::string expectedSource =
+                    "#version 450\n"
+                    "#extension GL_ARB_separate_shader_objects : enable\n"
+                    "layout(location = 0) out vec2 o_var_0;\n"
+                    "void main(){\n"
+                    "vec2 l_var_0 = vec2(1, 2);\n"
+                    "vec2 l_var_1 = tan(l_var_0);\n"
+                    "o_var_0 = l_var_1;\n"
+                    "}\n";
+
+                EXPECT_STREQ(source.c_str(), expectedSource.c_str());
+            }
+        }
+
     }
 
 }

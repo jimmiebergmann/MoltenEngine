@@ -106,6 +106,7 @@ namespace Curse
         template<typename T>
         inline InputPin<T>::InputPin(Node& node, const std::string& name) :
             Pin(node, name),
+            m_defaultValue(PinDefault<T>::Value),
             m_connection(nullptr)
         { }
 

@@ -14,16 +14,13 @@ static Curse::Window* window = nullptr;
 
 static void LoadMaterial(Curse::Material::Script& script)
 {
-
-    /*auto func = */script.CreateFunctionNode<Curse::Material::Function::Minf32>();
-    //func = nullptr;
-
     auto output = script.CreateOutputNode<Curse::Vector4f32>();
     auto color = script.CreateVaryingNode<Curse::Material::VaryingType::Color>();
     auto mult = script.CreateOperatorNode<Curse::Vector4f32>(Curse::Material::Operator::Multiplication);
     auto add = script.CreateOperatorNode<Curse::Vector4f32>(Curse::Material::Operator::Addition);
     auto const1 = script.CreateConstantNode<Curse::Vector4f32>({ 0.0f, 0.0f, 0.3f, 0.0f });
     auto const2 = script.CreateConstantNode<Curse::Vector4f32>({ 1.0f, 0.5f, 0.0f, 1.0f });
+    auto cos = script.CreateFunctionNode<Curse::Material::Function::CosVec4f32>();
 
     output->GetInputPin()->Connect(*add->GetOutputPin());
 
@@ -31,7 +28,9 @@ static void LoadMaterial(Curse::Material::Script& script)
     add->GetInputPin(1)->Connect(*const1->GetOutputPin());
 
     mult->GetInputPin(0)->Connect(*color->GetOutputPin());
-    mult->GetInputPin(1)->Connect(*const2->GetOutputPin());
+    mult->GetInputPin(1)->Connect(*cos->GetOutputPin());
+
+    cos->GetInputPin()->Connect(*const2->GetOutputPin());
 }
 
 static void Run()

@@ -83,6 +83,11 @@ namespace Curse
         */
         enum class FunctionType : uint16_t
         {
+            // Trigonometry
+            Cos,
+            Sin,
+            Tan,
+
             // Mathematics.
             Max,
             Min,
@@ -611,7 +616,7 @@ namespace Curse
             /**
             * @brief Get function type.
             */
-            virtual FunctionType GetFunctionType() = 0;
+            virtual FunctionType GetFunctionType() const = 0;
 
             /**
             * @brief Get type of node.
@@ -639,7 +644,7 @@ namespace Curse
             /**
             * @brief Get function type.
             */
-            virtual FunctionType GetFunctionType() override;
+            virtual FunctionType GetFunctionType() const override;
 
             /**
             * @brief Get number of input pins.
