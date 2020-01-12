@@ -56,6 +56,7 @@ matrix:
         - CONFIG=Debug OUTPUT_NAME_POSTFIX=Debug
         
 before_script:
+  - update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-8 90
   - export DISPLAY=:99.0
   #- mkdir VulkanSDK_latest
   #- cd VulkanSDK_latest
