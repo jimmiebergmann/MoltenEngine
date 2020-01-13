@@ -31,7 +31,7 @@ matrix:
   include:
   
     - os: linux
-      compiler: gcc-8
+      compiler: gcc
       env:
         - CC=gcc-8 CXX=g++-8
         - CONFIG=Release
@@ -39,7 +39,7 @@ matrix:
         - GCOV_EXE=/usr/bin/gcov-8
         
     - os: linux
-      compiler: gcc-8
+      compiler: gcc
       env:
         - CC=gcc-8 CXX=g++-8
         - CONFIG=Debug OUTPUT_NAME_POSTFIX=Debug
@@ -47,19 +47,24 @@ matrix:
         - GCOV_EXE=/usr/bin/gcov-8
         
     - os: linux
-      compiler: clang-8
+      compiler: clang
       env:
         - CC=clang-8 && CXX=clang++-8
         - CONFIG=Release
         
     - os: linux
-      compiler: clang-8
+      compiler: clang
       env:
         - CC=clang-8 && CXX=clang++-8
         - CONFIG=Debug OUTPUT_NAME_POSTFIX=Debug
         
 before_script:
-  #- update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-8 90
+  - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 90
+  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 90
+  - sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-8 90
+  - sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-8 90
+  - sudo update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-8 90
+  
   - export DISPLAY=:99.0
   #- mkdir VulkanSDK_latest
   #- cd VulkanSDK_latest
@@ -74,7 +79,7 @@ script:
   - g++ --version
   - gcc --version
   - gcov --version
-  - if [ ${CODECOV_UPLOAD} ]; then ${GCOV_EXE} --version fi
+  - if [ ${CODECOV_UPLOAD} ]; then ${GCOV_EXE} --version; fi
   - python --version
   # Build
   - mkdir Build
@@ -90,7 +95,7 @@ after_success:
   - lcov --directory ./Core --capture --output-file coverage.info
   - lcov -e coverage.info '*/Core/Headers/*' '*/Core/Source/*' --output-file coverage.info
   - lcov --list coverage.info
-  - if [ ${CODECOV_UPLOAD} ]; then bash <(curl -s https://codecov.io/bash) -x ${GCOV_EXE} fi
+  - if [ ${CODECOV_UPLOAD} ]; then bash <(curl -s https://codecov.io/bash) -x ${GCOV_EXE}; fi
   #- if [ ${CODECOV_UPLOAD} ]; then coveralls --root . -E "/Test/*" -E ".*gtest.*" -E ".*CMakeFiles.*"; fi
 
 notifications:
