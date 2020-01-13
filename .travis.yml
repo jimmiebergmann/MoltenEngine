@@ -36,7 +36,6 @@ matrix:
         - CC=gcc-8 CXX=g++-8
         - CONFIG=Release
         - CODECOV_UPLOAD=Yes
-        - GCOV_EXE=/usr/bin/gcov-8
         
     - os: linux
       compiler: gcc
@@ -44,7 +43,6 @@ matrix:
         - CC=gcc-8 CXX=g++-8
         - CONFIG=Debug OUTPUT_NAME_POSTFIX=Debug
         - CODECOV_UPLOAD=Yes
-        - GCOV_EXE=/usr/bin/gcov-8
         
     - os: linux
       compiler: clang
@@ -79,7 +77,6 @@ script:
   - g++ --version
   - gcc --version
   - gcov --version
-  - if [ ${CODECOV_UPLOAD} ]; then ${GCOV_EXE} --version; fi
   - python --version
   # Build
   - mkdir Build
@@ -95,8 +92,8 @@ after_success:
   - lcov --directory ./Core --capture --output-file coverage.info
   - lcov -e coverage.info '*/Core/Headers/*' '*/Core/Source/*' --output-file coverage.info
   - lcov --list coverage.info
-  - if [ ${CODECOV_UPLOAD} ]; then bash <(curl -s https://codecov.io/bash) -x ${GCOV_EXE}; fi
-  #- if [ ${CODECOV_UPLOAD} ]; then coveralls --root . -E "/Test/*" -E ".*gtest.*" -E ".*CMakeFiles.*"; fi
+  - if [ ${CODECOV_UPLOAD} ]; then bash <(curl -s https://codecov.io/bash); fi
+  - if [ ${CODECOV_UPLOAD} ]; then coveralls --root . -E "/Test/*" -E ".*gtest.*" -E ".*CMakeFiles.*"; fi
 
 notifications:
   email: false
