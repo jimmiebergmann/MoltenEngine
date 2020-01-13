@@ -35,6 +35,7 @@ matrix:
         - CC=gcc-8 CXX=g++-8
         - CONFIG=Release
         - CODECOV_UPLOAD=Yes
+        - GCOV_EXE=/usr/bin/gcov-8
         
     - os: linux
       compiler: gcc
@@ -42,6 +43,7 @@ matrix:
         - CC=gcc-8 CXX=g++-8
         - CONFIG=Debug OUTPUT_NAME_POSTFIX=Debug
         - CODECOV_UPLOAD=Yes
+        - GCOV_EXE=/usr/bin/gcov-8
         
     - os: linux
       compiler: clang
@@ -56,7 +58,7 @@ matrix:
         - CONFIG=Debug OUTPUT_NAME_POSTFIX=Debug
         
 before_script:
-  - update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-8 90
+  #- update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-8 90
   - export DISPLAY=:99.0
   #- mkdir VulkanSDK_latest
   #- cd VulkanSDK_latest
@@ -70,7 +72,7 @@ script:
   - cmake --version
   - g++ --version
   - gcc --version
-  - gcov --version
+  - ${GCOV_EXE} --version
   - python --version
   # Build
   - mkdir Build
@@ -86,8 +88,8 @@ after_success:
   - lcov --directory ./Core --capture --output-file coverage.info
   - lcov -e coverage.info '*/Core/Headers/*' '*/Core/Source/*' --output-file coverage.info
   - lcov --list coverage.info
-  - if [ ${CODECOV_UPLOAD} ]; then bash <(curl -s https://codecov.io/bash); fi
-  - if [ ${CODECOV_UPLOAD} ]; then coveralls --root . -E "/Test/*" -E ".*gtest.*" -E ".*CMakeFiles.*"; fi
+  - if [ ${CODECOV_UPLOAD} ]; then bash <(curl -s https://codecov.io/bash) -x ${GCOV_EXE}; fi
+  #- if [ ${CODECOV_UPLOAD} ]; then coveralls --root . -E "/Test/*" -E ".*gtest.*" -E ".*CMakeFiles.*"; fi
 
 notifications:
   email: false
