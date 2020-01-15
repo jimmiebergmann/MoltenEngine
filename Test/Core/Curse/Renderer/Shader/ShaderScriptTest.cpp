@@ -31,9 +31,9 @@ namespace Curse
 
     namespace Shader
     {
-        TEST(Material, Script_GenerateGlsl)
+        TEST(Shader, Script_GenerateGlsl)
         {
-            Script script;
+            FragmentScript script;
 
             auto output = script.CreateOutputNode<Curse::Vector4f32>();
             auto color = script.CreateVaryingNode<Curse::Shader::VaryingType::Color>();
@@ -51,6 +51,7 @@ namespace Curse
             mult->GetInputPin(1)->Connect(*const2->GetOutputPin());
 
             auto source = script.GenerateGlsl();
+            const std::string sourceStr(source.begin(), source.end());
 
             static const std::string expectedSource =
                 "#version 450\n"
@@ -65,14 +66,14 @@ namespace Curse
                 "o_var_0 = l_var_3;\n"
                 "}\n";
 
-            EXPECT_STREQ(source.c_str(), expectedSource.c_str());
+            EXPECT_STREQ(sourceStr.c_str(), expectedSource.c_str());
         }
 
-        TEST(Material, Script_DefaultPinValue)
+        TEST(Shader, Script_DefaultPinValue)
         {
             // Cos
             {
-                Script script;
+                FragmentScript script;
                 auto output = script.CreateOutputNode<Curse::Vector4f32>();
                 auto cos = script.CreateFunctionNode<Curse::Shader::Function::CosVec4f32>();
 
@@ -80,6 +81,7 @@ namespace Curse
                 static_cast<Curse::Shader::InputPin<Curse::Vector4f32>*>(cos->GetInputPin())->SetDefaultValue({2.1f, 3.5f, 4.7f, 5.2f});
 
                 auto source = script.GenerateGlsl();
+                const std::string sourceStr(source.begin(), source.end());
 
                 static const std::string expectedSource =
                     "#version 450\n"
@@ -90,15 +92,15 @@ namespace Curse
                     "o_var_0 = l_var_0;\n"
                     "}\n";
 
-                EXPECT_STREQ(source.c_str(), expectedSource.c_str());
+                EXPECT_STREQ(sourceStr.c_str(), expectedSource.c_str());
             }
         }
 
-        TEST(Material, Script_Functions)
+        TEST(Shader, Script_Functions)
         {
             // Cos
             {
-                Script script;
+                FragmentScript script;
                 auto output = script.CreateOutputNode<Curse::Vector4f32>();
                 auto const1 = script.CreateConstantNode<Curse::Vector4f32>({ 1.0f, 2.0f, 3.0f, 4.0f });
                 auto cos = script.CreateFunctionNode<Curse::Shader::Function::CosVec4f32>();
@@ -107,6 +109,7 @@ namespace Curse
                 cos->GetInputPin()->Connect(*const1->GetOutputPin());
 
                 auto source = script.GenerateGlsl();
+                const std::string sourceStr(source.begin(), source.end());
 
                 static const std::string expectedSource =
                     "#version 450\n"
@@ -118,11 +121,11 @@ namespace Curse
                     "o_var_0 = l_var_1;\n"
                     "}\n";
 
-                EXPECT_STREQ(source.c_str(), expectedSource.c_str());
+                EXPECT_STREQ(sourceStr.c_str(), expectedSource.c_str());
             }
             // Sin
             {
-                Script script;
+                FragmentScript script;
                 auto output = script.CreateOutputNode<Curse::Vector3f32>();
                 auto const1 = script.CreateConstantNode<Curse::Vector3f32>({ 1.0f, 2.0f, 3.0f });
                 auto cos = script.CreateFunctionNode<Curse::Shader::Function::SinVec3f32>();
@@ -131,6 +134,7 @@ namespace Curse
                 cos->GetInputPin()->Connect(*const1->GetOutputPin());
 
                 auto source = script.GenerateGlsl();
+                const std::string sourceStr(source.begin(), source.end());
 
                 static const std::string expectedSource =
                     "#version 450\n"
@@ -142,11 +146,11 @@ namespace Curse
                     "o_var_0 = l_var_1;\n"
                     "}\n";
 
-                EXPECT_STREQ(source.c_str(), expectedSource.c_str());
+                EXPECT_STREQ(sourceStr.c_str(), expectedSource.c_str());
             }
             // Tan
             {
-                Script script;
+                FragmentScript script;
                 auto output = script.CreateOutputNode<Curse::Vector2f32>();
                 auto const1 = script.CreateConstantNode<Curse::Vector2f32>({ 1.0f, 2.0f });
                 auto cos = script.CreateFunctionNode<Curse::Shader::Function::TanVec2f32>();
@@ -155,6 +159,7 @@ namespace Curse
                 cos->GetInputPin()->Connect(*const1->GetOutputPin());
 
                 auto source = script.GenerateGlsl();
+                const std::string sourceStr(source.begin(), source.end());
 
                 static const std::string expectedSource =
                     "#version 450\n"
@@ -166,7 +171,7 @@ namespace Curse
                     "o_var_0 = l_var_1;\n"
                     "}\n";
 
-                EXPECT_STREQ(source.c_str(), expectedSource.c_str());
+                EXPECT_STREQ(sourceStr.c_str(), expectedSource.c_str());
             }
         }
 

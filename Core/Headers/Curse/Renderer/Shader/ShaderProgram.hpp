@@ -27,6 +27,7 @@
 #define CURSE_CORE_RENDERER_SHADER_SHADERPROGRAM_HPP
 
 #include "Curse/Renderer/Resource.hpp"
+#include "Curse/Renderer/Shader.hpp"
 #include <string>
 #include <vector>
 
@@ -45,36 +46,17 @@ namespace Curse
         public:
 
             /**
-            * @brief Enumerator of shader types.
-            */
-            enum class Type : uint8_t
-            {
-                Vertex,
-                Fragment
-            };
-
-            /**
-            * @brief Enumerator of shader formats.
-            */
-            enum class Format : uint8_t
-            {
-                Glsl,
-                Hlsl,
-                SpirV
-            };
-
-            /**
             * @brief Compile shader program.
             *        Compilation of shaders makes it possible to convert from GLSL to SPIR-V.
             */
-            static std::vector<uint8_t> Compile(const Format inputFormat, const Type inputType,
-                const std::vector<uint8_t>& inputData, const Format outputFormat,
+            static std::vector<uint8_t> Compile(const ShaderFormat inputFormat, const ShaderType inputType,
+                const std::vector<uint8_t>& inputData, const ShaderFormat outputFormat,
                 std::string& errorMessage);
 
             /**
             * @brief Get the type of shader.
             */
-            Type GetType() const;
+            ShaderType GetType() const;
 
         protected:
 
@@ -84,7 +66,7 @@ namespace Curse
             virtual ~Program() = default;
 
             Resource resource;
-            Type type;
+            ShaderType type;
 
         };
 
@@ -98,13 +80,13 @@ namespace Curse
         public:
 
             ProgramDescriptor();
-            ProgramDescriptor(const Program::Type type, const char* filename);
-            ProgramDescriptor(const Program::Type type, const uint8_t* data, const size_t dataSize);
+            ProgramDescriptor(const ShaderType type, const char* filename);
+            ProgramDescriptor(const ShaderType type, const uint8_t* data, const size_t dataSize);
 
-            const Program::Type type;   ///< Type of shader.
-            const char* filename;       ///< Full path + filename of shader file.
-            const uint8_t* data;        ///< Raw pointer of data buffer.
-            const size_t dataSize;      ///< Size of data buffer.
+            const ShaderType type;  ///< Type of shader.
+            const char* filename;   ///< Full path + filename of shader file.
+            const uint8_t* data;    ///< Raw pointer of data buffer.
+            const size_t dataSize;  ///< Size of data buffer.
         };
 
     }

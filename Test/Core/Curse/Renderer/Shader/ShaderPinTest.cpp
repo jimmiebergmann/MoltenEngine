@@ -34,9 +34,9 @@ namespace Curse
     namespace Shader
     {
 
-        TEST(MaterialPin, Input)
+        TEST(Shader, InputPin)
         {
-            Script script;
+            FragmentScript script;
             Node* nodePtr = script.CreateOutputNode<bool>();
             Node& node = *nodePtr;
 
@@ -50,9 +50,9 @@ namespace Curse
             EXPECT_EQ(pin.GetConnections().size(), size_t(0));
         }
 
-        TEST(MaterialPin, Input_DefaultValue)
+        TEST(Shader, InputPin_DefaultValue)
         {
-            Script script;
+            FragmentScript script;
             Node* nodePtr = script.CreateOutputNode<bool>();
             Node& node = *nodePtr;
 
@@ -70,9 +70,9 @@ namespace Curse
             EXPECT_EQ(pin.GetDefaultValue(), int32_t(5432));
         }
 
-        TEST(MaterialPin, Input_DataType)
+        TEST(Shader, InputPin_DataType)
         {
-            Script script;
+            FragmentScript script;
             Node* nodePtr = script.CreateOutputNode<bool>();
             Node& node = *nodePtr;
 
@@ -148,9 +148,9 @@ namespace Curse
             }
         }
 
-        TEST(MaterialPin, Input_Connection)
+        TEST(Shader, InputPin_Connection)
         {
-            Script script;
+            FragmentScript script;
             Node* nodePtr = script.CreateOutputNode<bool>();
             Node& node = *nodePtr;
 
@@ -292,9 +292,9 @@ namespace Curse
             }
         }
 
-        TEST(MaterialPin, Output)
+        TEST(Shader, OutputPin)
         {
-            Script script;
+            FragmentScript script;
             Node* nodePtr = script.CreateOutputNode<bool>();
             Node& node = *nodePtr;
 
@@ -308,9 +308,9 @@ namespace Curse
             EXPECT_EQ(pin.GetConnections().size(), size_t(0));
         }
 
-        TEST(MaterialPin, Output_DataType)
+        TEST(Shader, OutputPin_DataType)
         {
-            Script script;
+            FragmentScript script;
             Node* nodePtr = script.CreateOutputNode<bool>();
             Node& node = *nodePtr;
 
@@ -386,9 +386,9 @@ namespace Curse
             }
         }
 
-        TEST(MaterialPin, Output_Connection)
+        TEST(Shader, OutputPin_Connection)
         {
-            Script script;
+            FragmentScript script;
             Node* nodePtr = script.CreateOutputNode<bool>();
             Node& node = *nodePtr;
 

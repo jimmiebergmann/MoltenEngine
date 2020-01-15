@@ -12,15 +12,19 @@
 static Curse::Logger logger;
 static Curse::Window* window = nullptr;
 
-static void LoadShader(Curse::Shader::Script& script)
+static void LoadShaders(Curse::Shader::VertexScript& /*vScript*/, Curse::Shader::FragmentScript& fScript)
 {
-    auto output = script.CreateOutputNode<Curse::Vector4f32>();
-    auto color = script.CreateVaryingNode<Curse::Shader::VaryingType::Color>();
-    auto mult = script.CreateOperatorNode<Curse::Vector4f32>(Curse::Shader::Operator::Multiplication);
-    auto add = script.CreateOperatorNode<Curse::Vector4f32>(Curse::Shader::Operator::Addition);
-    auto const1 = script.CreateConstantNode<Curse::Vector4f32>({ 0.0f, 0.0f, 0.3f, 0.0f });
-    auto const2 = script.CreateConstantNode<Curse::Vector4f32>({ 1.0f, 0.5f, 0.0f, 1.0f });
-    auto cos = script.CreateFunctionNode<Curse::Shader::Function::CosVec4f32>();
+    // Vertex shader.
+    // ...
+
+    // Fragment shader.
+    auto output = fScript.CreateOutputNode<Curse::Vector4f32>();
+    auto color = fScript.CreateVaryingNode<Curse::Shader::VaryingType::Color>();
+    auto mult = fScript.CreateOperatorNode<Curse::Vector4f32>(Curse::Shader::Operator::Multiplication);
+    auto add = fScript.CreateOperatorNode<Curse::Vector4f32>(Curse::Shader::Operator::Addition);
+    auto const1 = fScript.CreateConstantNode<Curse::Vector4f32>({ 0.0f, 0.0f, 0.3f, 0.0f });
+    auto const2 = fScript.CreateConstantNode<Curse::Vector4f32>({ 1.0f, 0.5f, 0.0f, 1.0f });
+    auto cos = fScript.CreateFunctionNode<Curse::Shader::Function::CosVec4f32>();
 
     output->GetInputPin()->Connect(*add->GetOutputPin());
 
@@ -44,23 +48,23 @@ static void Run()
     auto renderer = Curse::Renderer::Create(Curse::Renderer::BackendApi::Vulkan);
     renderer->Open(*window, Curse::Version(1, 1), &logger);
 
-    Curse::Shader::Script shaderScript;
-    LoadShader(shaderScript);
+    Curse::Shader::VertexScript vertexScript;
+    Curse::Shader::FragmentScript fragmentScript;
+    LoadShaders(vertexScript, fragmentScript);
 
-    auto fragSource = shaderScript.GenerateGlsl();
-    std::vector<uint8_t> fragSourceVec(fragSource.begin(), fragSource.end());
+    auto fragSource = fragmentScript.GenerateGlsl();
 
     //auto fragSpirvSrc = Curse::FileSystem::ReadFile("shader.frag");
-    auto fragSpirv = renderer->CompileShaderProgram(Curse::Shader::Program::Format::Glsl, Curse::Shader::Program::Type::Fragment, fragSourceVec, Curse::Shader::Program::Format::SpirV);
+    auto fragSpirv = renderer->CompileShaderProgram(Curse::ShaderFormat::Glsl, Curse::ShaderType::Fragment, fragSource, Curse::ShaderFormat::SpirV);
 
     auto verSpirvSrc = Curse::FileSystem::ReadFile("shader.vert");
-    auto verSpirv = renderer->CompileShaderProgram(Curse::Shader::Program::Format::Glsl, Curse::Shader::Program::Type::Vertex, verSpirvSrc, Curse::Shader::Program::Format::SpirV);
+    auto verSpirv = renderer->CompileShaderProgram(Curse::ShaderFormat::Glsl, Curse::ShaderType::Vertex, verSpirvSrc, Curse::ShaderFormat::SpirV);
 
-    Curse::Shader::Program* vertexShader1 = renderer->CreateShaderProgram({ Curse::Shader::Program::Type::Vertex, verSpirv.data(), verSpirv.size()/*"vert1.spv"*/ });
+    Curse::Shader::Program* vertexShader1 = renderer->CreateShaderProgram({ Curse::ShaderType::Vertex, verSpirv.data(), verSpirv.size()/*"vert1.spv"*/ });
     //Curse::Shader* fragmentShader1 = renderer->CreateShader({ Curse::Shader::Type::Fragment, fragSpirv.data(), fragSpirv.size() });
-    Curse::Shader::Program* fragmentShader1 = renderer->CreateShaderProgram({ Curse::Shader::Program::Type::Fragment, fragSpirv.data(), fragSpirv.size() });
-    Curse::Shader::Program* vertexShader2 = renderer->CreateShaderProgram({ Curse::Shader::Program::Type::Vertex, verSpirv.data(), verSpirv.size() });
-    Curse::Shader::Program* fragmentShader2 = renderer->CreateShaderProgram({ Curse::Shader::Program::Type::Fragment, "frag2.spv" });
+    Curse::Shader::Program* fragmentShader1 = renderer->CreateShaderProgram({ Curse::ShaderType::Fragment, fragSpirv.data(), fragSpirv.size() });
+    Curse::Shader::Program* vertexShader2 = renderer->CreateShaderProgram({ Curse::ShaderType::Vertex, verSpirv.data(), verSpirv.size() });
+    Curse::Shader::Program* fragmentShader2 = renderer->CreateShaderProgram({ Curse::ShaderType::Fragment, "frag2.spv" });
 
     Curse::PipelineDescriptor pipelineDesc; 
     pipelineDesc.topology = Curse::Pipeline::Topology::TriangleList;

@@ -174,8 +174,8 @@ namespace Curse
         return m_version;
     }
 
-    std::vector<uint8_t> RendererOpenGLX11::CompileShader(const Shader::Program::Format /*inputFormat*/, const Shader::Program::Type /*inputType*/,
-                                                          const std::vector<uint8_t>& /*inputData*/, const Shader::Program::Format /*outputFormat*/)
+    std::vector<uint8_t> RendererOpenGLX11::CompileShader(const ShaderFormat /*inputFormat*/, const ShaderType /*inputType*/,
+                                                          const std::vector<uint8_t>& /*inputData*/, const ShaderFormat /*outputFormat*/)
     {
         return {};
     }

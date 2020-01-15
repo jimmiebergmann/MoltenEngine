@@ -27,6 +27,7 @@
 #define CURSE_CORE_RENDERER_SHADER_SHADERSCRIPT_HPP
 
 #include "Curse/Renderer/Shader/ShaderNode.hpp"
+#include "Curse/Renderer/Shader.hpp"
 #include <vector>
 #include <set>
 #include <string>
@@ -48,7 +49,7 @@ namespace Curse
             /**
             * @brief Destructor.
             */
-            ~Script();
+            virtual ~Script();
 
             /**
             * @brief Create new constant node and append it to the shader script.
@@ -120,13 +121,60 @@ namespace Curse
             /**
             * @brief Generate GLSL code from shader script.
             */
-            std::string GenerateGlsl() const;
+            std::vector<uint8_t> GenerateGlsl() const;
 
-        private:
+            /**
+            * @brief Get type of shader script.
+            */
+            virtual ShaderType GetType() const = 0;
+
+        protected:
 
             std::set<Node*> m_allNodes; ///< Set of all nodes of any type.
             std::vector<Node*> m_varyingNodes;
             std::vector<Node*> m_outputNodes;
+
+        };
+
+
+        /**
+        * @brief Vertex shader script.
+        */
+        class CURSE_API VertexScript : public Script
+        {
+
+        public:
+
+            /**
+            * @brief Destructor.
+            */
+            virtual ~VertexScript();
+
+            /**
+            * @brief Get type of shader script.
+            */
+            virtual ShaderType GetType() const override;
+
+        };
+
+
+        /**
+        * @brief Fragment shader script.
+        */
+        class CURSE_API FragmentScript : public Script
+        {
+
+        public:
+
+            /**
+            * @brief Destructor.
+            */
+            virtual ~FragmentScript();
+
+            /**
+            * @brief Get type of shader script.
+            */
+            virtual ShaderType GetType() const override;
 
         };
 

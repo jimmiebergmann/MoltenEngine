@@ -94,8 +94,8 @@ namespace Curse
         * @brief Compile shader.
         *        Compilation of shaders makes it possible to convert from GLSL to SPIR-V.
         */
-        virtual std::vector<uint8_t> CompileShaderProgram(const Shader::Program::Format inputFormat, const Shader::Program::Type inputType,
-                                                          const std::vector<uint8_t>& inputData, const Shader::Program::Format outputFormat) override;
+        virtual std::vector<uint8_t> CompileShaderProgram(const ShaderFormat inputFormat, const ShaderType inputType,
+                                                          const std::vector<uint8_t>& inputData, const ShaderFormat outputFormat) override;
 
 
         /**

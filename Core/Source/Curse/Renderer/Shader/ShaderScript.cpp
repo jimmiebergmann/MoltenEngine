@@ -28,6 +28,7 @@
 #include <stack>
 #include <map>
 #include <memory>
+#include <algorithm>
 
 namespace Curse
 {
@@ -174,6 +175,11 @@ namespace Curse
             return g_emptyString;
         }
 
+        static void AppendToVector(std::vector<uint8_t>& vector, const std::string& str)
+        {
+            std::copy(str.begin(), str.end(), std::back_inserter(vector));
+        }
+
 
         // Shader script implementations.
         Script::~Script()
@@ -229,8 +235,7 @@ namespace Curse
             return { m_outputNodes.begin(), m_outputNodes.end() };
         }
 
-
-        std::string Script::GenerateGlsl() const
+        std::vector<uint8_t> Script::GenerateGlsl() const
         {
             struct Variable
             {
@@ -279,16 +284,17 @@ namespace Curse
             }
 
             // Set version and extensions.
-            std::string source = "";
-            source += "#version 450\n";
-            source += "#extension GL_ARB_separate_shader_objects : enable\n";
+            std::vector<uint8_t> source;
+            AppendToVector(source, "#version 450\n");
+            AppendToVector(source, "#extension GL_ARB_separate_shader_objects : enable\n");
 
             // Varying input variables.
             index = 0;
             for (auto& var : varyingVars)
             {
-                source += "layout(location = " + std::to_string(index) + ") in " +
-                    GetGlslPinTypeString(var->pin->GetDataType()) + " " + var->name + ";\n";
+                AppendToVector(source,
+                    "layout(location = " + std::to_string(index) + ") in " +
+                    GetGlslPinTypeString(var->pin->GetDataType()) + " " + var->name + ";\n");
                 index++;
             }
 
@@ -296,8 +302,9 @@ namespace Curse
             index = 0;
             for (auto& var : outputVars)
             {
-                source += "layout(location = " + std::to_string(index) + ") out " +
-                    GetGlslPinTypeString(var->pin->GetDataType()) + " " + var->name + ";\n";
+                AppendToVector(source,
+                    "layout(location = " + std::to_string(index) + ") out " +
+                    GetGlslPinTypeString(var->pin->GetDataType()) + " " + var->name + ";\n");
                 index++;
             }
 
@@ -305,7 +312,7 @@ namespace Curse
             // ..
 
             // Main program.
-            source += "void main(){\n";
+            AppendToVector(source, "void main(){\n");
 
             // Node iteration.
             size_t localVarIndex = 0;
@@ -413,8 +420,9 @@ namespace Curse
                             stackObject.outputVar->name = nextLocalName();
                             const ConstantNodeBase* constNode = static_cast<const ConstantNodeBase*>(stackObject.node);
 
-                            source += GetGlslPinTypeString(constNode->GetDataType()) + " " + stackObject.outputVar->name + " = " +
-                                GetGlslConstantValue(*constNode) + ";\n";
+                            AppendToVector(source,
+                                GetGlslPinTypeString(constNode->GetDataType()) + " " + stackObject.outputVar->name + " = " +
+                                GetGlslConstantValue(*constNode) + ";\n");
                         }
                         break;
                         case NodeType::Function:
@@ -422,20 +430,21 @@ namespace Curse
                             stackObject.outputVar->name = nextLocalName();
                             const FunctionNodeBase* funcNode = static_cast<const FunctionNodeBase*>(stackObject.node);
 
-                            source += GetGlslPinTypeString(funcNode->GetOutputPin()->GetDataType()) + " " + stackObject.outputVar->name + " = " +
-                                GetGlslFunctionName(funcNode->GetFunctionType()) + "(";
+                            AppendToVector(source, 
+                                GetGlslPinTypeString(funcNode->GetOutputPin()->GetDataType()) + " " + stackObject.outputVar->name + " = " +
+                                GetGlslFunctionName(funcNode->GetFunctionType()) + "(");
 
                             const size_t inputCount = stackObject.inputVars.size();
                             if (inputCount)
                             {
                                 for (size_t i = 0; i < inputCount - 1; i++)
                                 {
-                                    source += stackObject.inputVars[i]->name + ", ";
+                                    AppendToVector(source, stackObject.inputVars[i]->name + ", ");
                                 }
-                                source += stackObject.inputVars[inputCount-1]->name;
+                                AppendToVector(source, stackObject.inputVars[inputCount - 1]->name);
                             }
 
-                            source += ");\n";
+                            AppendToVector(source, ");\n");
                         }
                         break;
                         case NodeType::Operator:
@@ -447,8 +456,10 @@ namespace Curse
 
                             stackObject.outputVar->name = nextLocalName();
                             const OperatorNodeBase* opNode = static_cast<const OperatorNodeBase*>(stackObject.node);
-                            source += GetGlslPinTypeString(stackObject.outputVar->pin->GetDataType()) + " " + stackObject.outputVar->name + " = " +
-                                stackObject.inputVars[0]->name + GetGlslOperatorString(opNode->GetOperator()) + stackObject.inputVars[1]->name + ";\n";
+
+                            AppendToVector(source, 
+                                GetGlslPinTypeString(stackObject.outputVar->pin->GetDataType()) + " " + stackObject.outputVar->name + " = " +
+                                stackObject.inputVars[0]->name + GetGlslOperatorString(opNode->GetOperator()) + stackObject.inputVars[1]->name + ";\n");
                         }
                         break;
                         case NodeType::Output:
@@ -458,7 +469,7 @@ namespace Curse
                                 throw Exception("Number of variables for output variable is " + std::to_string(stackObject.inputVars.size()) + ", expected 1.");
                             }
 
-                            source += stackObject.outputVar->name + " = " + stackObject.inputVars[0]->name + ";\n";
+                            AppendToVector(source, stackObject.outputVar->name + " = " + stackObject.inputVars[0]->name + ";\n");
                         }
                         break;
                         default: break;
@@ -468,9 +479,29 @@ namespace Curse
                 }
             }
 
-            source += "}\n";
+            AppendToVector(source, "}\n");
 
             return std::move(source);
+        }
+
+
+        // Fragment shader script implementations.
+        VertexScript::~VertexScript()
+        { }
+
+        ShaderType VertexScript::GetType() const
+        {
+            return ShaderType::Vertex;
+        }
+
+
+        // Fragment shader script implementations.
+        FragmentScript::~FragmentScript()
+        { }
+
+        ShaderType FragmentScript::GetType() const
+        {
+            return ShaderType::Fragment;
         }
 
     }

@@ -31,12 +31,12 @@ namespace Curse
 
     namespace Shader
     {
-        TEST(MaterialNode, CreateOutputNode)
+        TEST(Shader, Script_CreateOutputNode)
         {
-            Script mat;
+            FragmentScript script;
 
             {
-                OutputNode<bool>* out = mat.CreateOutputNode<bool>();
+                OutputNode<bool>* out = script.CreateOutputNode<bool>();
                 EXPECT_EQ(out->GetInputPinCount(), size_t(1));
                 EXPECT_NE(out->GetInputPin(), nullptr);
                 EXPECT_NE(out->GetInputPin(0), nullptr);
@@ -50,7 +50,7 @@ namespace Curse
                 EXPECT_EQ(out->GetInputPin()->GetDataTypeIndex(), typeid(bool));
             }
             {
-                OutputNode<int32_t>* out = mat.CreateOutputNode<int32_t>();
+                OutputNode<int32_t>* out = script.CreateOutputNode<int32_t>();
                 EXPECT_EQ(out->GetInputPinCount(), size_t(1));
                 EXPECT_NE(out->GetInputPin(), nullptr);
                 EXPECT_NE(out->GetInputPin(0), nullptr);
@@ -64,7 +64,7 @@ namespace Curse
                 EXPECT_EQ(out->GetInputPin()->GetDataTypeIndex(), typeid(int32_t));
             }
             {
-                OutputNode<Vector2f32>* out = mat.CreateOutputNode<Vector2f32>();
+                OutputNode<Vector2f32>* out = script.CreateOutputNode<Vector2f32>();
                 EXPECT_EQ(out->GetInputPinCount(), size_t(1));
                 EXPECT_NE(out->GetInputPin(), nullptr);
                 EXPECT_NE(out->GetInputPin(0), nullptr);
@@ -78,7 +78,7 @@ namespace Curse
                 EXPECT_EQ(out->GetInputPin()->GetDataTypeIndex(), typeid(Vector2f32));
             }
             {
-                OutputNode<Vector3f32>* out = mat.CreateOutputNode<Vector3f32>();
+                OutputNode<Vector3f32>* out = script.CreateOutputNode<Vector3f32>();
                 EXPECT_EQ(out->GetInputPinCount(), size_t(1));
                 EXPECT_NE(out->GetInputPin(), nullptr);
                 EXPECT_NE(out->GetInputPin(0), nullptr);
@@ -92,7 +92,7 @@ namespace Curse
                 EXPECT_EQ(out->GetInputPin()->GetDataTypeIndex(), typeid(Vector3f32));
             }
             {
-                OutputNode<Vector4f32>* out = mat.CreateOutputNode<Vector4f32>();
+                OutputNode<Vector4f32>* out = script.CreateOutputNode<Vector4f32>();
                 EXPECT_EQ(out->GetInputPinCount(), size_t(1));
                 EXPECT_NE(out->GetInputPin(), nullptr);
                 EXPECT_NE(out->GetInputPin(0), nullptr);

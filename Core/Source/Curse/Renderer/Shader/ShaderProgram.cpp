@@ -41,12 +41,12 @@ namespace Curse
     {
 
 #if defined(CURSE_ENABLE_GLSLANG)
-        static EShLanguage GetShaderType(const Program::Type type)
+        static EShLanguage GetShaderType(const ShaderType type)
         {
             switch (type)
             {
-                case Program::Type::Vertex:   return EShLanguage::EShLangVertex;
-                case Program::Type::Fragment: return EShLanguage::EShLangFragment;
+                case ShaderType::Vertex:   return EShLanguage::EShLangVertex;
+                case ShaderType::Fragment: return EShLanguage::EShLangFragment;
                 default: break;
             }
 
@@ -162,17 +162,17 @@ namespace Curse
             return std::move(resource);
         }
 
-        std::vector<uint8_t> Program::Compile(const Program::Format inputFormat, const Program::Type inputType,
-            const std::vector<uint8_t>& inputData, const Program::Format outputFormat, std::string& errorMessage)
+        std::vector<uint8_t> Program::Compile(const ShaderFormat inputFormat, const ShaderType inputType,
+            const std::vector<uint8_t>& inputData, const ShaderFormat outputFormat, std::string& errorMessage)
         {
             errorMessage = "";
 
-            if (inputFormat != Format::Glsl)
+            if (inputFormat != ShaderFormat::Glsl)
             {
                 errorMessage = "Only GLSL is supported as input format for shader compiler.";
                 return {};
             }
-            if (outputFormat != Format::SpirV)
+            if (outputFormat != ShaderFormat::SpirV)
             {
                 errorMessage = "Only SPRI-V is supported as output format for shader compiler.";
                 return {};
@@ -255,8 +255,8 @@ namespace Curse
 
 #else
 
-        std::vector<uint8_t> Program::Compile(const Program::Format, const Program::Type,
-                                              const std::vector<uint8_t>&, const Program::Format, std::string& errorMessage)
+        std::vector<uint8_t> Program::Compile(const ShaderFormat, const ShaderType,
+                                              const std::vector<uint8_t>&, const ShaderFormat, std::string& errorMessage)
         {
             errorMessage = "Shader compilation is not enabled in this Curse build. Enable it by adding CURSE_ENABLE_GLSLANG flag in cmake generator.";
             return {};
@@ -264,7 +264,7 @@ namespace Curse
 
 #endif
 
-        Program::Type Program::GetType() const
+        ShaderType Program::GetType() const
         {
             return type;
         }
@@ -272,20 +272,20 @@ namespace Curse
 
         // Shader descriptor implementations.
         ProgramDescriptor::ProgramDescriptor() :
-            type(Program::Type::Vertex),
+            type(ShaderType::Vertex),
             filename(nullptr),
             data(nullptr),
             dataSize(0)
         { }
 
-        ProgramDescriptor::ProgramDescriptor(const Program::Type type, const char* filename) :
+        ProgramDescriptor::ProgramDescriptor(const ShaderType type, const char* filename) :
             type(type),
             filename(filename),
             data(nullptr),
             dataSize(0)
         { }
 
-        ProgramDescriptor::ProgramDescriptor(const Program::Type type, const uint8_t* data, const size_t dataSize) :
+        ProgramDescriptor::ProgramDescriptor(const ShaderType type, const uint8_t* data, const size_t dataSize) :
             type(type),
             filename(nullptr),
             data(data),

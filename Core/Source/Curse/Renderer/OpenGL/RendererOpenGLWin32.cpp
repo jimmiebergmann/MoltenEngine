@@ -177,8 +177,8 @@ namespace Curse
         return m_version;
     }
 
-    std::vector<uint8_t> RendererOpenGLWin32::CompileShaderProgram(const Shader::Program::Format /*inputFormat*/, const Shader::Program::Type /*inputType*/,
-                                                                  const std::vector<uint8_t>& /*inputData*/, const Shader::Program::Format /*outputFormat*/)
+    std::vector<uint8_t> RendererOpenGLWin32::CompileShaderProgram(const ShaderFormat /*inputFormat*/, const ShaderType /*inputType*/,
+                                                                  const std::vector<uint8_t>& /*inputData*/, const ShaderFormat /*outputFormat*/)
     {
         return {};
     }

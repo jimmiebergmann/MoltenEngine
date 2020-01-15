@@ -49,13 +49,13 @@ namespace Curse
 {
 
     // Static helper functions.
-    static VkShaderStageFlagBits GetShaderProgramStageFlag(const Shader::Program::Type type)
+    static VkShaderStageFlagBits GetShaderProgramStageFlag(const ShaderType type)
     {
         CURSE_UNSCOPED_ENUM_BEGIN
         switch (type)
         {
-            case Shader::Program::Type::Vertex:   return VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT;
-            case Shader::Program::Type::Fragment: return VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT;
+            case ShaderType::Vertex:   return VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT;
+            case ShaderType::Fragment: return VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT;
             default: break;
         }
 
@@ -378,8 +378,8 @@ namespace Curse
         return m_version;
     }
 
-    std::vector<uint8_t> RendererVulkan::CompileShaderProgram(const Shader::Program::Format inputFormat, const Shader::Program::Type inputType,
-                                                              const std::vector<uint8_t>& inputData, const Shader::Program::Format outputFormat)
+    std::vector<uint8_t> RendererVulkan::CompileShaderProgram(const ShaderFormat inputFormat, const ShaderType inputType,
+                                                              const std::vector<uint8_t>& inputData, const ShaderFormat outputFormat)
     {
         std::string errorMessage;
         auto output = Shader::Program::Compile(inputFormat, inputType, inputData, outputFormat, errorMessage);
