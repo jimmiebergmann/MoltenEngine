@@ -31,8 +31,13 @@
 
 namespace Curse
 {
+    // Forward declarations.
+    namespace Shader
+    {
+        class Program;
+    }
 
-    class Shader;
+    
 
     /**
     * @brief Pipeline base class.
@@ -140,7 +145,7 @@ namespace Curse
         Pipeline::PolygonMode polygonMode;
         Pipeline::FrontFace frontFace;
         Pipeline::CullMode cullMode;
-        std::vector<Shader*> shaders;
+        std::vector<Shader::Program*> shaderPrograms;
         std::vector<Pipeline::VertexBinding> vertexBindings;
     };
 

@@ -174,8 +174,8 @@ namespace Curse
         return m_version;
     }
 
-    std::vector<uint8_t> RendererOpenGLX11::CompileShader(const Shader::Format /*inputFormat*/, const Shader::Type /*inputType*/,
-                                                          const std::vector<uint8_t>& /*inputData*/, const Shader::Format /*outputFormat*/)
+    std::vector<uint8_t> RendererOpenGLX11::CompileShader(const Shader::Program::Format /*inputFormat*/, const Shader::Program::Type /*inputType*/,
+                                                          const std::vector<uint8_t>& /*inputData*/, const Shader::Program::Format /*outputFormat*/)
     {
         return {};
     }
@@ -195,7 +195,7 @@ namespace Curse
         return nullptr;
     }
 
-    Shader* RendererOpenGLX11::CreateShader(const ShaderDescriptor&)
+    Shader::Program* RendererOpenGLX11::CreateShaderProgram(const Shader::ProgramDescriptor&)
     {
         return nullptr;
     }
@@ -222,7 +222,7 @@ namespace Curse
     {
     }
 
-    void RendererOpenGLX11::DestroyShader(Shader*)
+    void RendererOpenGLX11::DestroyShaderProgram(Shader::Program*)
     {
     }
 

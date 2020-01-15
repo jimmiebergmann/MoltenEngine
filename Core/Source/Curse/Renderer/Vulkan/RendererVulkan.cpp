@@ -31,7 +31,7 @@
 #include "Curse/Renderer/Vulkan/FramebufferVulkan.hpp"
 #include "Curse/Renderer/Vulkan/IndexBufferVulkan.hpp"
 #include "Curse/Renderer/Vulkan/PipelineVulkan.hpp"
-#include "Curse/Renderer/Vulkan/ShaderVulkan.hpp"
+#include "Curse/Renderer/Vulkan/ShaderProgramVulkan.hpp"
 #include "Curse/Renderer/Vulkan/TextureVulkan.hpp"
 #include "Curse/Renderer/Vulkan/VertexBufferVulkan.hpp"
 #include "Curse/Window/Window.hpp"
@@ -49,13 +49,13 @@ namespace Curse
 {
 
     // Static helper functions.
-    static VkShaderStageFlagBits GetShaderStageFlag(const Shader::Type type)
+    static VkShaderStageFlagBits GetShaderProgramStageFlag(const Shader::Program::Type type)
     {
         CURSE_UNSCOPED_ENUM_BEGIN
         switch (type)
         {
-            case Shader::Type::Vertex:   return VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT;
-            case Shader::Type::Fragment: return VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT;
+            case Shader::Program::Type::Vertex:   return VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT;
+            case Shader::Program::Type::Fragment: return VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT;
             default: break;
         }
 
@@ -378,11 +378,11 @@ namespace Curse
         return m_version;
     }
 
-    std::vector<uint8_t> RendererVulkan::CompileShader(const Shader::Format inputFormat, const Shader::Type inputType,
-                                                       const std::vector<uint8_t>& inputData, const Shader::Format outputFormat)
+    std::vector<uint8_t> RendererVulkan::CompileShaderProgram(const Shader::Program::Format inputFormat, const Shader::Program::Type inputType,
+                                                              const std::vector<uint8_t>& inputData, const Shader::Program::Format outputFormat)
     {
         std::string errorMessage;
-        auto output = Shader::Compile(inputFormat, inputType, inputData, outputFormat, errorMessage);
+        auto output = Shader::Program::Compile(inputFormat, inputType, inputData, outputFormat, errorMessage);
         if (errorMessage.size())
         {
             CURSE_RENDERER_LOG(Logger::Severity::Error, errorMessage);
@@ -488,14 +488,14 @@ namespace Curse
 
     Pipeline* RendererVulkan::CreatePipeline(const PipelineDescriptor& descriptor)
     {
-        std::vector<VkPipelineShaderStageCreateInfo> shaderStageInfos(descriptor.shaders.size(), VkPipelineShaderStageCreateInfo{});
-        for (size_t i = 0; i < descriptor.shaders.size(); i++)
+        std::vector<VkPipelineShaderStageCreateInfo> shaderStageInfos(descriptor.shaderPrograms.size(), VkPipelineShaderStageCreateInfo{});
+        for (size_t i = 0; i < descriptor.shaderPrograms.size(); i++)
         {
-            const ShaderVulkan* shader = static_cast<ShaderVulkan*>(descriptor.shaders[i]);
+            const ShaderProgramVulkan* shaderProgram = static_cast<ShaderProgramVulkan*>(descriptor.shaderPrograms[i]);
             VkPipelineShaderStageCreateInfo& createInfo = shaderStageInfos[i];
             createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-            createInfo.stage = GetShaderStageFlag(shader->type);
-            createInfo.module = shader->resource;
+            createInfo.stage = GetShaderProgramStageFlag(shaderProgram->type);
+            createInfo.module = shaderProgram->resource;
             createInfo.pName = "main";
         }
 
@@ -657,7 +657,7 @@ namespace Curse
         return pipeline;
     }
 
-    Shader* RendererVulkan::CreateShader(const ShaderDescriptor& descriptor)
+    Shader::Program* RendererVulkan::CreateShaderProgram(const Shader::ProgramDescriptor& descriptor)
     {
         const uint8_t* rawData = descriptor.data;
         size_t dataSize = descriptor.dataSize;
@@ -692,12 +692,12 @@ namespace Curse
             return nullptr;
         }
 
-        ShaderVulkan* shader = new ShaderVulkan;
-        shader->resource = static_cast<Resource>(shaderModule);
-        shader->type = descriptor.type;
+        ShaderProgramVulkan* shaderProgram = new ShaderProgramVulkan;
+        shaderProgram->resource = static_cast<Resource>(shaderModule);
+        shaderProgram->type = descriptor.type;
 
         m_resourceCounter.shaderCount++;
-        return shader;
+        return shaderProgram;
     }
 
     Texture* RendererVulkan::CreateTexture()
@@ -806,12 +806,12 @@ namespace Curse
         delete pipelineVulkan;
     }
 
-    void RendererVulkan::DestroyShader(Shader* shader)
+    void RendererVulkan::DestroyShaderProgram(Shader::Program* shader)
     {
-        ShaderVulkan* shaderVulkan = static_cast<ShaderVulkan*>(shader);
-        vkDestroyShaderModule(m_logicalDevice, shaderVulkan->resource, nullptr);
+        ShaderProgramVulkan* shaderProgramVulkan = static_cast<ShaderProgramVulkan*>(shader);
+        vkDestroyShaderModule(m_logicalDevice, shaderProgramVulkan->resource, nullptr);
         m_resourceCounter.shaderCount--;
-        delete shaderVulkan;
+        delete shaderProgramVulkan;
     }
 
     void RendererVulkan::DestroyTexture(Texture* texture)

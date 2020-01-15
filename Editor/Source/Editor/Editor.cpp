@@ -1,6 +1,6 @@
 #include "Curse/Window/Window.hpp"
 #include "Curse/Renderer/Renderer.hpp"
-#include "Curse/Renderer/Material/MaterialScript.hpp"
+#include "Curse/Renderer/Shader/ShaderScript.hpp"
 #include "Curse/System/Exception.hpp"
 #include "Curse/System/FileSystem.hpp"
 #include "Curse/Memory/Pointer.hpp"
@@ -12,15 +12,15 @@
 static Curse::Logger logger;
 static Curse::Window* window = nullptr;
 
-static void LoadMaterial(Curse::Material::Script& script)
+static void LoadShader(Curse::Shader::Script& script)
 {
     auto output = script.CreateOutputNode<Curse::Vector4f32>();
-    auto color = script.CreateVaryingNode<Curse::Material::VaryingType::Color>();
-    auto mult = script.CreateOperatorNode<Curse::Vector4f32>(Curse::Material::Operator::Multiplication);
-    auto add = script.CreateOperatorNode<Curse::Vector4f32>(Curse::Material::Operator::Addition);
+    auto color = script.CreateVaryingNode<Curse::Shader::VaryingType::Color>();
+    auto mult = script.CreateOperatorNode<Curse::Vector4f32>(Curse::Shader::Operator::Multiplication);
+    auto add = script.CreateOperatorNode<Curse::Vector4f32>(Curse::Shader::Operator::Addition);
     auto const1 = script.CreateConstantNode<Curse::Vector4f32>({ 0.0f, 0.0f, 0.3f, 0.0f });
     auto const2 = script.CreateConstantNode<Curse::Vector4f32>({ 1.0f, 0.5f, 0.0f, 1.0f });
-    auto cos = script.CreateFunctionNode<Curse::Material::Function::CosVec4f32>();
+    auto cos = script.CreateFunctionNode<Curse::Shader::Function::CosVec4f32>();
 
     output->GetInputPin()->Connect(*add->GetOutputPin());
 
@@ -44,23 +44,23 @@ static void Run()
     auto renderer = Curse::Renderer::Create(Curse::Renderer::BackendApi::Vulkan);
     renderer->Open(*window, Curse::Version(1, 1), &logger);
 
-    Curse::Material::Script material;
-    LoadMaterial(material);
+    Curse::Shader::Script shaderScript;
+    LoadShader(shaderScript);
 
-    auto fragSource = material.GenerateGlsl();
+    auto fragSource = shaderScript.GenerateGlsl();
     std::vector<uint8_t> fragSourceVec(fragSource.begin(), fragSource.end());
 
     //auto fragSpirvSrc = Curse::FileSystem::ReadFile("shader.frag");
-    auto fragSpirv = renderer->CompileShader(Curse::Shader::Format::Glsl, Curse::Shader::Type::Fragment, fragSourceVec, Curse::Shader::Format::SpirV);
+    auto fragSpirv = renderer->CompileShaderProgram(Curse::Shader::Program::Format::Glsl, Curse::Shader::Program::Type::Fragment, fragSourceVec, Curse::Shader::Program::Format::SpirV);
 
     auto verSpirvSrc = Curse::FileSystem::ReadFile("shader.vert");
-    auto verSpirv = renderer->CompileShader(Curse::Shader::Format::Glsl, Curse::Shader::Type::Vertex, verSpirvSrc, Curse::Shader::Format::SpirV);
+    auto verSpirv = renderer->CompileShaderProgram(Curse::Shader::Program::Format::Glsl, Curse::Shader::Program::Type::Vertex, verSpirvSrc, Curse::Shader::Program::Format::SpirV);
 
-    Curse::Shader* vertexShader1 = renderer->CreateShader({ Curse::Shader::Type::Vertex, verSpirv.data(), verSpirv.size()/*"vert1.spv"*/ });
+    Curse::Shader::Program* vertexShader1 = renderer->CreateShaderProgram({ Curse::Shader::Program::Type::Vertex, verSpirv.data(), verSpirv.size()/*"vert1.spv"*/ });
     //Curse::Shader* fragmentShader1 = renderer->CreateShader({ Curse::Shader::Type::Fragment, fragSpirv.data(), fragSpirv.size() });
-    Curse::Shader* fragmentShader1 = renderer->CreateShader({ Curse::Shader::Type::Fragment, fragSpirv.data(), fragSpirv.size() });
-    Curse::Shader* vertexShader2 = renderer->CreateShader({ Curse::Shader::Type::Vertex, verSpirv.data(), verSpirv.size() });
-    Curse::Shader* fragmentShader2 = renderer->CreateShader({ Curse::Shader::Type::Fragment, "frag2.spv" });
+    Curse::Shader::Program* fragmentShader1 = renderer->CreateShaderProgram({ Curse::Shader::Program::Type::Fragment, fragSpirv.data(), fragSpirv.size() });
+    Curse::Shader::Program* vertexShader2 = renderer->CreateShaderProgram({ Curse::Shader::Program::Type::Vertex, verSpirv.data(), verSpirv.size() });
+    Curse::Shader::Program* fragmentShader2 = renderer->CreateShaderProgram({ Curse::Shader::Program::Type::Fragment, "frag2.spv" });
 
     Curse::PipelineDescriptor pipelineDesc; 
     pipelineDesc.topology = Curse::Pipeline::Topology::TriangleList;
@@ -68,11 +68,11 @@ static void Run()
     pipelineDesc.frontFace = Curse::Pipeline::FrontFace::Clockwise;
     pipelineDesc.cullMode = Curse::Pipeline::CullMode::Back;
 
-    pipelineDesc.shaders = { vertexShader1 , fragmentShader1 };
+    pipelineDesc.shaderPrograms = { vertexShader1 , fragmentShader1 };
     Curse::Pipeline* pipeline1 = renderer->CreatePipeline(pipelineDesc);
 
     pipelineDesc.polygonMode = Curse::Pipeline::PolygonMode::Fill;
-    pipelineDesc.shaders = { vertexShader2 , fragmentShader1 };
+    pipelineDesc.shaderPrograms = { vertexShader2 , fragmentShader1 };
 
     struct Vertex
     {
@@ -196,10 +196,10 @@ static void Run()
     renderer->WaitForDevice();
     renderer->DestroyVertexBuffer(vertexBuffer);
     renderer->DestroyIndexBuffer(indexBuffer);
-    renderer->DestroyShader(vertexShader1);
-    renderer->DestroyShader(fragmentShader1);
-    renderer->DestroyShader(vertexShader2);
-    renderer->DestroyShader(fragmentShader2);
+    renderer->DestroyShaderProgram(vertexShader1);
+    renderer->DestroyShaderProgram(fragmentShader1);
+    renderer->DestroyShaderProgram(vertexShader2);
+    renderer->DestroyShaderProgram(fragmentShader2);
     renderer->DestroyPipeline(pipeline1);
     renderer->DestroyPipeline(pipeline2);
     delete renderer;

@@ -23,12 +23,12 @@
 *
 */
 
-#include "MaterialFunctions.hpp"
+#include "ShaderFunctions.hpp"
 
 namespace Curse
 {
 
-    namespace Material
+    namespace Shader
     {
 
         template<typename T>

@@ -24,12 +24,12 @@
 */
 
 #include "Test.hpp"
-#include "Curse/Renderer/Material/MaterialScript.hpp"
+#include "Curse/Renderer/Shader/ShaderScript.hpp"
 
 namespace Curse
 {
 
-    namespace Material
+    namespace Shader
     {
         TEST(MaterialNode, CreateOutputNode)
         {

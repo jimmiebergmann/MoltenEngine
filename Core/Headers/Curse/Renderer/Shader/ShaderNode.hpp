@@ -23,19 +23,19 @@
 *
 */
 
-#ifndef CURSE_CORE_RENDERER_MATERIAL_MATERIALNODE_HPP
-#define CURSE_CORE_RENDERER_MATERIAL_MATERIALNODE_HPP
+#ifndef CURSE_CORE_RENDERER_SHADER_SHADERNODE_HPP
+#define CURSE_CORE_RENDERER_SHADER_SHADERNODE_HPP
 
 #include "Curse/Types.hpp"
 #include "Curse/Math/Vector.hpp"
-#include "Curse/Renderer/Material/MaterialPin.hpp"
+#include "Curse/Renderer/Shader/ShaderPin.hpp"
 #include <memory>
 #include <array>
 
 namespace Curse
 {
 
-    namespace Material
+    namespace Shader
     {
 
         /**
@@ -99,7 +99,7 @@ namespace Curse
 
 
         /**
-        * @brief Type trait for checking if data type of material node is supported.
+        * @brief Type trait for checking if data type of shader script node is supported.
         */
         template<typename T>
         struct DataTypeTrait
@@ -153,7 +153,7 @@ namespace Curse
 
 
         /**
-        * @brief Material node base class.
+        * @brief shader script node base class.
         */
         class CURSE_API Node
         {
@@ -166,12 +166,12 @@ namespace Curse
             virtual ~Node();
 
             /**
-            * @brief Get parent material script.
+            * @brief Get parent shader script.
             */
             Script& GetScript();
 
             /**
-            * @brief Get material script.
+            * @brief Get shader script.
             */
             const Script& GetScript() const;
 
@@ -250,15 +250,15 @@ namespace Curse
 
         private:
 
-            Script& m_script; ///< Parent material script.
+            Script& m_script; ///< Parent shader script.
 
-            friend class Material;
+            friend class Script;
 
         };
 
 
         /**
-        * @brief Output node of material.
+        * @brief Output node of shader script.
         */
         template<typename T>
         class OutputNode : public Node
@@ -319,7 +319,7 @@ namespace Curse
 
 
         /**
-        * @brief Varying node of material.
+        * @brief Varying node of shader script.
         */
         template<VaryingType T>
         class VaryingNode : public Node
@@ -380,7 +380,7 @@ namespace Curse
 
 
         /**
-        * @brief Base clas of constant node, of material.
+        * @brief Base clas of constant node, of shader script.
         */
         class ConstantNodeBase : public Node
         {
@@ -412,7 +412,7 @@ namespace Curse
         };
 
         /**
-        * @brief Constant node of material.
+        * @brief Constant node of shader script.
         *        The stored value is not constant and can be changed at any time,
         *        but it's used as a constant in the generated shader code.
         */
@@ -489,7 +489,7 @@ namespace Curse
 
 
         /**
-        * @brief Base clas of operator node, of material.
+        * @brief Base clas of operator node, of shader script.
         */
         class OperatorNodeBase : public Node
         {
@@ -520,7 +520,7 @@ namespace Curse
         };
 
         /**
-        * @brief Operator node of material.
+        * @brief Operator node of shader script.
         */
         template<typename T>
         class OperatorNode : public OperatorNodeBase
@@ -606,7 +606,7 @@ namespace Curse
 
 
         /**
-        * @brief Function node base class of material.
+        * @brief Function node base class of shader script.
         */
         class FunctionNodeBase : public Node
         {
@@ -633,7 +633,7 @@ namespace Curse
         };
 
         /**
-        * @brief Function node of material.
+        * @brief Function node of shader script.
         */
         template<FunctionType _FunctionType, typename OutputType, typename ... InputTypes>
         class FunctionNode : public FunctionNodeBase
@@ -728,6 +728,6 @@ namespace Curse
     }
 }
 
-#include "MaterialNode.inl"
+#include "ShaderNode.inl"
 
 #endif

@@ -23,10 +23,10 @@
 *
 */
 
-#ifndef CURSE_CORE_RENDERER_MATERIAL_HPP
-#define CURSE_CORE_RENDERER_MATERIAL_HPP
+#ifndef CURSE_CORE_RENDERER_SHADER_SHADERSCRIPT_HPP
+#define CURSE_CORE_RENDERER_SHADER_SHADERSCRIPT_HPP
 
-#include "Curse/Renderer/Material/MaterialNode.hpp"
+#include "Curse/Renderer/Shader/ShaderNode.hpp"
 #include <vector>
 #include <set>
 #include <string>
@@ -34,11 +34,11 @@
 namespace Curse
 {
 
-    namespace Material
+    namespace Shader
     {
 
         /**
-        * @brief Material script class, used for generating shaders via virtual script.
+        * @brief Shader script class, used for generating shaders via virtual script.
         */
         class CURSE_API Script
         {
@@ -51,7 +51,7 @@ namespace Curse
             ~Script();
 
             /**
-            * @brief Create new constant node and append it to the material.
+            * @brief Create new constant node and append it to the shader script.
             *
             * @tparam T Constant node object to create.
             */
@@ -59,7 +59,7 @@ namespace Curse
             ConstantNode<T>* CreateConstantNode(const T& value = PinDefault<T>::Value);
 
             /**
-            * @brief Create new function node and append it to the material.
+            * @brief Create new function node and append it to the shader script.
             *
             * @tparam T Function node object to create and data types for parameters.
             */
@@ -67,7 +67,7 @@ namespace Curse
             auto CreateFunctionNode();
 
             /**
-            * @brief Create new operator node and append it to the material.
+            * @brief Create new operator node and append it to the shader script.
             *
             * @tparam T Operator node object to create.
             */
@@ -75,7 +75,7 @@ namespace Curse
             OperatorNode<T>* CreateOperatorNode(const Operator op);
 
             /**
-            * @brief Create new output node and append it to the material.
+            * @brief Create new output node and append it to the shader script.
             *
             * @tparam T Output node object to create.
             */
@@ -83,7 +83,7 @@ namespace Curse
             OutputNode<T>* CreateOutputNode();
 
             /**
-            * @brief Create new varying node and append it to the material.
+            * @brief Create new varying node and append it to the shader script.
             *        Varying data is sent from the vertex or geometry shader.
             *
             * @tparam T Varying node object to create.
@@ -98,27 +98,27 @@ namespace Curse
             void DestroyNode(Node & node);
 
             /**
-            * @brief Get all nodes of material.
+            * @brief Get all nodes of shader script.
             */
             std::vector<Node*> GetNodes();
 
             /**
-            * @brief Get all nodes of material.
+            * @brief Get all nodes of shader script.
             */
             std::vector<const Node*> GetNodes() const;
 
             /**
-            * @brief Get output nodes of material.
+            * @brief Get output nodes of shader script.
             */
             std::vector<Node*> GetOutputNodes();
 
             /**
-            * @brief Get output nodes of material.
+            * @brief Get output nodes of shader script.
             */
             std::vector<const Node*> GetOutputNodes() const;
 
             /**
-            * @brief Generate GLSL code from material.
+            * @brief Generate GLSL code from shader script.
             */
             std::string GenerateGlsl() const;
 
@@ -134,6 +134,6 @@ namespace Curse
 
 }
 
-#include "MaterialScript.inl"
+#include "ShaderScript.inl"
 
 #endif

@@ -99,8 +99,8 @@ namespace Curse
         * @brief Compile shader.
         *        Compilation of shaders makes it possible to convert from GLSL to SPIR-V.
         */
-        virtual std::vector<uint8_t> CompileShader(const Shader::Format inputFormat, const Shader::Type inputType,
-                                                   const std::vector<uint8_t>& inputData, const Shader::Format outputFormat) override;
+        virtual std::vector<uint8_t> CompileShaderProgram(const Shader::Program::Format inputFormat, const Shader::Program::Type inputType,
+                                                          const std::vector<uint8_t>& inputData, const Shader::Program::Format outputFormat) override;
 
         /**
         * @brief Create framebuffer object.
@@ -120,7 +120,7 @@ namespace Curse
         /**
         * @brief Create shader object.
         */
-        virtual Shader* CreateShader(const ShaderDescriptor& descriptor) override;
+        virtual Shader::Program* CreateShaderProgram(const Shader::ProgramDescriptor& descriptor) override;
 
         /**
         * @brief Create texture object.
@@ -151,7 +151,7 @@ namespace Curse
         /**
         * @brief Destroy shader object.
         */
-        virtual void DestroyShader(Shader* shader) override;
+        virtual void DestroyShaderProgram(Shader::Program* shader) override;
 
         /**
         * @brief Destroy texture object.

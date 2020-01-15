@@ -28,7 +28,7 @@
 
 #include "Curse/Memory/Reference.hpp"
 #include "Curse/System/Version.hpp"
-#include "Curse/Renderer/Shader.hpp"
+#include "Curse/Renderer/Shader/ShaderProgram.hpp"
 #include "Curse/Renderer/Texture.hpp"
 #include "Curse/Renderer/Pipeline.hpp"
 #include "Curse/Renderer/Framebuffer.hpp"
@@ -105,8 +105,8 @@ namespace Curse
         * @brief Compile shader.
         *        Compilation of shaders makes it possible to convert from GLSL to SPIR-V.
         */
-        virtual std::vector<uint8_t> CompileShader(const Shader::Format inputFormat, const Shader::Type inputType,
-                                                   const std::vector<uint8_t>& inputData, const Shader::Format outputFormat) = 0;
+        virtual std::vector<uint8_t> CompileShaderProgram(const Shader::Program::Format inputFormat, const Shader::Program::Type inputType,
+                                                   const std::vector<uint8_t>& inputData, const Shader::Program::Format outputFormat) = 0;
 
 
         /**
@@ -127,7 +127,7 @@ namespace Curse
         /**
         * @brief Create shader object.
         */
-        virtual Shader* CreateShader(const ShaderDescriptor& descriptor) = 0;
+        virtual Shader::Program* CreateShaderProgram(const Shader::ProgramDescriptor& descriptor) = 0;
 
         /**
         * @brief Create texture object.
@@ -157,7 +157,7 @@ namespace Curse
         /**
         * @brief Destroy shader object.
         */
-        virtual void DestroyShader(Shader* shader) = 0;
+        virtual void DestroyShaderProgram(Shader::Program* shader) = 0;
 
         /**
         * @brief Destroy texture object.

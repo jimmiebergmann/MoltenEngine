@@ -24,14 +24,14 @@
 */
 
 #include "Test.hpp"
-#include "Curse/Renderer/Material/MaterialScript.hpp"
-#include "Curse/Renderer/Material/MaterialNode.hpp"
-#include "Curse/Renderer/Material/MaterialPin.hpp"
+#include "Curse/Renderer/Shader/ShaderScript.hpp"
+#include "Curse/Renderer/Shader/ShaderNode.hpp"
+#include "Curse/Renderer/Shader/ShaderPin.hpp"
 
 namespace Curse
 {
 
-    namespace Material
+    namespace Shader
     {
 
         TEST(MaterialPin, Input)

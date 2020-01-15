@@ -23,25 +23,25 @@
 *
 */
 
-#ifndef CURSE_CORE_RENDERER_SHADERVULKAN_HPP
-#define CURSE_CORE_RENDERER_SHADERVULKAN_HPP
+#ifndef CURSE_CORE_RENDERER_SHADERPROGRAMVULKAN_HPP
+#define CURSE_CORE_RENDERER_SHADERPROGRAMVULKAN_HPP
 
-#include "Curse/Renderer/Shader.hpp"
+#include "Curse/Renderer/Shader/ShaderProgram.hpp"
 
 namespace Curse
 {
 
     class RendererVulkan;
 
-    class CURSE_API ShaderVulkan : public Shader
+    class CURSE_API ShaderProgramVulkan : public Shader::Program
     {
 
     private:
 
-        ShaderVulkan() = default;
-        ShaderVulkan(const ShaderVulkan&) = delete;
-        ShaderVulkan(ShaderVulkan&&) = delete;
-        ~ShaderVulkan() = default;
+        ShaderProgramVulkan() = default;
+        ShaderProgramVulkan(const ShaderProgramVulkan&) = delete;
+        ShaderProgramVulkan(ShaderProgramVulkan&&) = delete;
+        ~ShaderProgramVulkan() = default;
 
         friend class RendererVulkan;
 

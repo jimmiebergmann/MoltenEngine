@@ -27,10 +27,10 @@
 namespace Curse
 {
 
-    namespace Material
+    namespace Shader
     {
 
-        // Material output node implementations.
+        // Shader script output node implementations.
         template<typename T>
         inline size_t OutputNode<T>::GetInputPinCount() const
         {
@@ -80,7 +80,7 @@ namespace Curse
         { }
 
 
-        // Material varying node implementations.
+        // Shader script varying node implementations.
         template<VaryingType T>
         inline size_t VaryingNode<T>::GetOutputPinCount() const
         {
@@ -130,7 +130,7 @@ namespace Curse
         { }
 
 
-        // Material constant node implementations.
+        // Shader script constant node implementations.
         template<typename T>
         inline PinDataType ConstantNode<T>::GetDataType() const
         {
@@ -198,7 +198,7 @@ namespace Curse
             m_value(value)
         { }
 
-        // Material constant node base implementations.
+        // Shader script constant node base implementations.
         inline NodeType ConstantNodeBase::GetType() const
         {
             return NodeType::Constant;
@@ -209,7 +209,7 @@ namespace Curse
         { }
 
 
-        // Material operator node base implementations.
+        // Shader script operator node base implementations.
         inline NodeType OperatorNodeBase::GetType() const
         {
             return NodeType::Operator;
@@ -226,7 +226,7 @@ namespace Curse
         { }
 
 
-        // Material operator node implementations.
+        // Shader script operator node implementations.
         template<typename T>
         inline size_t OperatorNode<T>::GetInputPinCount() const
         {
@@ -308,7 +308,7 @@ namespace Curse
             m_output(*this)
         { }
 
-        // Material function node base implementations.
+        // Shader script function node base implementations.
         inline NodeType FunctionNodeBase::GetType() const
         {
             return NodeType::Function;
@@ -318,7 +318,7 @@ namespace Curse
             Node(script)
         { }
 
-        // Material function node implementations.
+        // Shader script function node implementations.
         template<FunctionType _FunctionType, typename OutputType, typename ... InputTypes>
         FunctionType FunctionNode<_FunctionType, OutputType, InputTypes...>::GetFunctionType() const
         {

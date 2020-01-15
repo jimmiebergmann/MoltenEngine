@@ -23,7 +23,7 @@
 *
 */
 
-#include "Curse/Renderer/Material/MaterialScript.hpp"
+#include "Curse/Renderer/Shader/ShaderScript.hpp"
 #include "Curse/System/Exception.hpp"
 #include <stack>
 #include <map>
@@ -32,7 +32,7 @@
 namespace Curse
 {
 
-    namespace Material
+    namespace Shader
     {
 
         // Helper functions.
@@ -175,7 +175,7 @@ namespace Curse
         }
 
 
-        // Material implementations.
+        // Shader script implementations.
         Script::~Script()
         {
             for (auto* node : m_allNodes)

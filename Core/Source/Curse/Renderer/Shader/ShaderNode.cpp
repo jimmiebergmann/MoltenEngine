@@ -23,15 +23,15 @@
 *
 */
 
-#include "Curse/Renderer/Material/MaterialNode.hpp"
+#include "Curse/Renderer/Shader/ShaderNode.hpp"
 
 namespace Curse
 {
 
-    namespace Material
+    namespace Shader
     {
 
-        // Material node implementations.
+        // Shader script node implementations.
         Node::~Node()
         {
             auto inputs = GetInputPins();

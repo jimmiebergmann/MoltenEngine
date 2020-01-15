@@ -23,8 +23,8 @@
 *
 */
 
-#ifndef CURSE_CORE_RENDERER_MATERIAL_MATERIALPIN_HPP
-#define CURSE_CORE_RENDERER_MATERIAL_MATERIALPIN_HPP
+#ifndef CURSE_CORE_RENDERER_SHADER_SHADERPIN_HPP
+#define CURSE_CORE_RENDERER_SHADER_SHADERPIN_HPP
 
 #include "Curse/Types.hpp"
 #include "Curse/Math/Vector.hpp"
@@ -36,7 +36,7 @@
 namespace Curse
 {
 
-    namespace Material
+    namespace Shader
     {
 
         class Node;
@@ -68,7 +68,7 @@ namespace Curse
 
 
         /**
-        * @brief Type trait for checking if data type of material node is supported.
+        * @brief Type trait for checking if data type of shader node is supported.
         */
         template<typename T>
         struct PinDefault
@@ -467,6 +467,6 @@ namespace Curse
 
 }
 
-#include "MaterialPin.inl"
+#include "ShaderPin.inl"
 
 #endif

@@ -28,7 +28,7 @@
 namespace Curse
 {
 
-    namespace Material
+    namespace Shader
     {
 
         // Helper structs

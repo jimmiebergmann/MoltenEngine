@@ -177,8 +177,8 @@ namespace Curse
         return m_version;
     }
 
-    std::vector<uint8_t> RendererOpenGLWin32::CompileShader(const Shader::Format /*inputFormat*/, const Shader::Type /*inputType*/,
-                                                            const std::vector<uint8_t>& /*inputData*/, const Shader::Format /*outputFormat*/)
+    std::vector<uint8_t> RendererOpenGLWin32::CompileShaderProgram(const Shader::Program::Format /*inputFormat*/, const Shader::Program::Type /*inputType*/,
+                                                                  const std::vector<uint8_t>& /*inputData*/, const Shader::Program::Format /*outputFormat*/)
     {
         return {};
     }
@@ -198,7 +198,7 @@ namespace Curse
         return nullptr;
     }
 
-    Shader* RendererOpenGLWin32::CreateShader(const ShaderDescriptor& )
+    Shader::Program* RendererOpenGLWin32::CreateShaderProgram(const Shader::ProgramDescriptor& )
     {
         return nullptr;
     }
@@ -225,7 +225,7 @@ namespace Curse
     {
     }
 
-    void RendererOpenGLWin32::DestroyShader(Shader* )
+    void RendererOpenGLWin32::DestroyShaderProgram(Shader::Program* )
     {
     }
 

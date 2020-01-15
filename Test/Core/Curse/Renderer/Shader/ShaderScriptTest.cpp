@@ -24,21 +24,21 @@
 */
 
 #include "Test.hpp"
-#include "Curse/Renderer/Material/MaterialScript.hpp"
+#include "Curse/Renderer/Shader/ShaderScript.hpp"
 
 namespace Curse
 {
 
-    namespace Material
+    namespace Shader
     {
         TEST(Material, Script_GenerateGlsl)
         {
             Script script;
 
             auto output = script.CreateOutputNode<Curse::Vector4f32>();
-            auto color = script.CreateVaryingNode<Curse::Material::VaryingType::Color>();
-            auto mult = script.CreateOperatorNode<Curse::Vector4f32>(Curse::Material::Operator::Multiplication);
-            auto add = script.CreateOperatorNode<Curse::Vector4f32>(Curse::Material::Operator::Addition);
+            auto color = script.CreateVaryingNode<Curse::Shader::VaryingType::Color>();
+            auto mult = script.CreateOperatorNode<Curse::Vector4f32>(Curse::Shader::Operator::Multiplication);
+            auto add = script.CreateOperatorNode<Curse::Vector4f32>(Curse::Shader::Operator::Addition);
             auto const1 = script.CreateConstantNode<Curse::Vector4f32>({ 0.0f, 0.0f, 0.3f, 0.0f });
             auto const2 = script.CreateConstantNode<Curse::Vector4f32>({ 1.0f, 0.5f, 0.0f, 1.0f });
 
@@ -74,10 +74,10 @@ namespace Curse
             {
                 Script script;
                 auto output = script.CreateOutputNode<Curse::Vector4f32>();
-                auto cos = script.CreateFunctionNode<Curse::Material::Function::CosVec4f32>();
+                auto cos = script.CreateFunctionNode<Curse::Shader::Function::CosVec4f32>();
 
                 output->GetInputPin()->Connect(*cos->GetOutputPin());
-                static_cast<Curse::Material::InputPin<Curse::Vector4f32>*>(cos->GetInputPin())->SetDefaultValue({2.1f, 3.5f, 4.7f, 5.2f});
+                static_cast<Curse::Shader::InputPin<Curse::Vector4f32>*>(cos->GetInputPin())->SetDefaultValue({2.1f, 3.5f, 4.7f, 5.2f});
 
                 auto source = script.GenerateGlsl();
 
@@ -101,7 +101,7 @@ namespace Curse
                 Script script;
                 auto output = script.CreateOutputNode<Curse::Vector4f32>();
                 auto const1 = script.CreateConstantNode<Curse::Vector4f32>({ 1.0f, 2.0f, 3.0f, 4.0f });
-                auto cos = script.CreateFunctionNode<Curse::Material::Function::CosVec4f32>();
+                auto cos = script.CreateFunctionNode<Curse::Shader::Function::CosVec4f32>();
 
                 output->GetInputPin()->Connect(*cos->GetOutputPin());
                 cos->GetInputPin()->Connect(*const1->GetOutputPin());
@@ -125,7 +125,7 @@ namespace Curse
                 Script script;
                 auto output = script.CreateOutputNode<Curse::Vector3f32>();
                 auto const1 = script.CreateConstantNode<Curse::Vector3f32>({ 1.0f, 2.0f, 3.0f });
-                auto cos = script.CreateFunctionNode<Curse::Material::Function::SinVec3f32>();
+                auto cos = script.CreateFunctionNode<Curse::Shader::Function::SinVec3f32>();
 
                 output->GetInputPin()->Connect(*cos->GetOutputPin());
                 cos->GetInputPin()->Connect(*const1->GetOutputPin());
@@ -149,7 +149,7 @@ namespace Curse
                 Script script;
                 auto output = script.CreateOutputNode<Curse::Vector2f32>();
                 auto const1 = script.CreateConstantNode<Curse::Vector2f32>({ 1.0f, 2.0f });
-                auto cos = script.CreateFunctionNode<Curse::Material::Function::TanVec2f32>();
+                auto cos = script.CreateFunctionNode<Curse::Shader::Function::TanVec2f32>();
 
                 output->GetInputPin()->Connect(*cos->GetOutputPin());
                 cos->GetInputPin()->Connect(*const1->GetOutputPin());

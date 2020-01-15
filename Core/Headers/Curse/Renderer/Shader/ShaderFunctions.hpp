@@ -23,10 +23,10 @@
 *
 */
 
-#ifndef CURSE_CORE_RENDERER_MATERIAL_FUNCTIONS_HPP
-#define CURSE_CORE_RENDERER_MATERIAL_FUNCTIONS_HPP
+#ifndef CURSE_CORE_RENDERER_SHADER_SHADERFUNCTIONS_HPP
+#define CURSE_CORE_RENDERER_SHADER_SHADERFUNCTIONS_HPP
 
-#include "Curse/Renderer/Material/MaterialNode.hpp"
+#include "Curse/Renderer/Shader/ShaderNode.hpp"
 #include <vector>
 #include <set>
 #include <string>
@@ -34,7 +34,7 @@
 namespace Curse
 {
 
-    namespace Material
+    namespace Shader
     {
 
         namespace Function
