@@ -255,8 +255,8 @@ namespace Curse
 
 #else
 
-        std::vector<uint8_t> Shader::Compile(const Shader::Format, const Shader::Type,
-            const std::vector<uint8_t>&, const Shader::Format, std::string&)
+        std::vector<uint8_t> Program::Compile(const Program::Format, const Program::Type,
+                                              const std::vector<uint8_t>&, const Program::Format, std::string& errorMessage)
         {
             errorMessage = "Shader compilation is not enabled in this Curse build. Enable it by adding CURSE_ENABLE_GLSLANG flag in cmake generator.";
             return {};
