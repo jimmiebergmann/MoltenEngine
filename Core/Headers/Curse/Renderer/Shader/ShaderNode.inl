@@ -442,6 +442,50 @@ namespace Curse
             InitInputPin<CurrentType>(index + 1);
         }
 
+
+        // Shader script output node implementations.
+        inline size_t VertexOutputNode::GetInputPinCount() const
+        {
+            return 1;
+        }
+
+        inline Pin* VertexOutputNode::GetInputPin(const size_t index)
+        {
+            if (index != 0)
+            {
+                return nullptr;
+            }
+            return &m_pin;
+        }
+        
+        inline const Pin* VertexOutputNode::GetInputPin(const size_t index) const
+        {
+            if (index != 0)
+            {
+                return nullptr;
+            }
+            return &m_pin;
+        }
+
+        inline std::vector<Pin*> VertexOutputNode::GetInputPins()
+        {
+            return { &m_pin };
+        }
+        inline std::vector<const Pin*> VertexOutputNode::GetInputPins() const
+        {
+            return { &m_pin };
+        }
+
+        inline NodeType VertexOutputNode::GetType() const
+        {
+            return NodeType::VertexOutput;
+        }
+
+        inline VertexOutputNode::VertexOutputNode(Script& script) :
+            Node(script),
+            m_pin(*this)
+        { }
+
     }
 
 }

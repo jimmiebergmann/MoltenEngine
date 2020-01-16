@@ -28,6 +28,7 @@
 
 #include "Curse/Renderer/Shader/ShaderNode.hpp"
 #include "Curse/Renderer/Shader.hpp"
+#include "Curse/Logger.hpp"
 #include <vector>
 #include <set>
 #include <string>
@@ -121,7 +122,7 @@ namespace Curse
             /**
             * @brief Generate GLSL code from shader script.
             */
-            std::vector<uint8_t> GenerateGlsl() const;
+            std::vector<uint8_t> GenerateGlsl(Logger * logger = nullptr) const;
 
             /**
             * @brief Get type of shader script.
@@ -129,6 +130,20 @@ namespace Curse
             virtual ShaderType GetType() const = 0;
 
         protected:
+
+            /**
+            * @brief Get vertex output node.
+            *
+            * @return pointer to vertex output node, nullptr if GetType != ShaderType::Vertex.
+            */
+            virtual VertexOutputNode* GetVertexOutputNode();
+
+            /**
+            * @brief Get vertex output node.
+            *
+            * @return pointer to vertex output node, nullptr if GetType != ShaderType::Vertex.
+            */
+            virtual const VertexOutputNode* GetVertexOutputNode() const;
 
             std::set<Node*> m_allNodes; ///< Set of all nodes of any type.
             std::vector<Node*> m_varyingNodes;
@@ -146,6 +161,11 @@ namespace Curse
         public:
 
             /**
+            * @brief Constructor.
+            */
+            VertexScript();
+
+            /**
             * @brief Destructor.
             */
             virtual ~VertexScript();
@@ -154,6 +174,20 @@ namespace Curse
             * @brief Get type of shader script.
             */
             virtual ShaderType GetType() const override;
+
+            /**
+            * @brief Get vertex output node.
+            */
+            virtual VertexOutputNode* GetVertexOutputNode() override;
+
+            /**
+            * @brief Get vertex output node.
+            */
+            virtual const VertexOutputNode* GetVertexOutputNode() const override;
+
+        private:
+
+            VertexOutputNode m_vertexOutputNode;
 
         };
 

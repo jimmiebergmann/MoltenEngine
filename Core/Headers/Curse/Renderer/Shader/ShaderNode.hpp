@@ -42,6 +42,7 @@ namespace Curse
         * @brief Forward declarations.
         */
         class Script;
+        class VertexScript;
 
 
         /**
@@ -49,12 +50,13 @@ namespace Curse
         */
         enum class NodeType : uint8_t
         {
-            Constant,   ///< Local constant, only present in fragment shader.
-            Function,   ///< Built-in shader function.
-            Operator,   ///< Operator node in local space.
-            Output,     ///< Output node, resulting in fragment colors.
-            //Uniform,  ///< Uniform node, single object being sent runtime from client.
-            Varying,    ///< Varying node, sent from the vertex or geometry shader.    
+            Constant,       ///< Local constant, only present in fragment shader.
+            Function,       ///< Built-in shader function.
+            Operator,       ///< Operator node in local space.
+            Output,         ///< Output node, resulting in fragment colors.
+            //Uniform,      ///< Uniform node, single object being sent runtime from client.
+            Varying,        ///< Varying node, sent from the vertex or geometry shader.
+            VertexOutput    ///< Vertex output node, result of vertex position in vertex shader script.   
         };
 
         /**
@@ -725,6 +727,66 @@ namespace Curse
             friend class Script;
 
         };
+
+
+        /**
+        * @brief Shader script vertex output node.
+        */
+        class VertexOutputNode : public Node
+        {
+
+        public:
+
+            /**
+            * @brief Get number of input pins.
+            */
+            virtual size_t GetInputPinCount() const override;
+
+            /**
+            * @brief Get input pin by index.
+            *
+            * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
+            */
+            virtual Pin* GetInputPin(const size_t index = 0) override;
+
+            /**
+            * @brief Get connected pin by index.
+            *
+            * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
+            */
+            virtual const Pin* GetInputPin(const size_t index = 0) const override;
+
+            /**
+            * @brief Get all input pins, wrapped in a vector.
+            */
+            virtual std::vector<Pin*> GetInputPins() override;
+
+            /**
+            * @brief  Get all input pins, wrapped in a vector.
+            */
+            virtual std::vector<const Pin*> GetInputPins() const override;
+
+            /**
+            * @brief Get type of node.
+            */
+            virtual NodeType GetType() const override;
+
+        protected:
+
+            /**
+            * @brief Constructor.
+            */
+            VertexOutputNode(Script& script);
+
+        private:
+
+            InputPin<Vector3f32> m_pin;
+
+            friend class Script;
+            friend class VertexScript;
+
+        };
+
     }
 }
 

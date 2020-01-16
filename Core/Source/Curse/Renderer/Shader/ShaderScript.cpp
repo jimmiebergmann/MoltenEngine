@@ -30,6 +30,8 @@
 #include <memory>
 #include <algorithm>
 
+#define CURSE_SHADERSCRIPT_LOG(severity, message) if(logger){ logger->Write(severity, message); }
+
 namespace Curse
 {
 
@@ -235,7 +237,7 @@ namespace Curse
             return { m_outputNodes.begin(), m_outputNodes.end() };
         }
 
-        std::vector<uint8_t> Script::GenerateGlsl() const
+        std::vector<uint8_t> Script::GenerateGlsl(Logger* /*logger*/) const
         {
             struct Variable
             {
@@ -312,6 +314,14 @@ namespace Curse
             // ..
 
             // Main program.
+            if (GetType() == ShaderType::Vertex)
+            {
+                auto vertexOutputNode = GetVertexOutputNode();
+                const std::string name = "gl_Position";
+                VariablePtr var = std::make_shared<Variable>(name, vertexOutputNode, vertexOutputNode->GetInputPin());
+                outputVars.push_back({ var });
+            }
+
             AppendToVector(source, "void main(){\n");
 
             // Node iteration.
@@ -387,7 +397,7 @@ namespace Curse
                         // Default value pin.
                         if (!connection)
                         {
-                            VariablePtr defaultVar = std::make_shared<Variable>(GetGlslInputPinDefaultValue(*inputPin), node, inputPin);
+                            VariablePtr defaultVar = std::make_shared<Variable>(GetGlslInputPinDefaultValue(*inputPin), nullptr, nullptr);
                             stackObject.AddInputVariable(defaultVar);
                             stackObject.MoveToNextInputPin();
                             continue;
@@ -472,6 +482,16 @@ namespace Curse
                             AppendToVector(source, stackObject.outputVar->name + " = " + stackObject.inputVars[0]->name + ";\n");
                         }
                         break;
+                        case NodeType::VertexOutput:
+                        {
+                            if (stackObject.inputVars.size() != 1)
+                            {
+                                throw Exception("Number of variables for vertex output variable is " + std::to_string(stackObject.inputVars.size()) + ", expected 1.");
+                            }
+
+                            AppendToVector(source, stackObject.outputVar->name + " = vec4(" + stackObject.inputVars[0]->name + ", 1);\n");
+                        }
+                        break;
                         default: break;
                     }
 
@@ -484,14 +504,36 @@ namespace Curse
             return std::move(source);
         }
 
+        VertexOutputNode* Script::GetVertexOutputNode()
+        {
+            return nullptr;
+        }
+        const VertexOutputNode* Script::GetVertexOutputNode() const
+        {
+            return nullptr;
+        }
+
 
         // Fragment shader script implementations.
+        VertexScript::VertexScript() :
+            m_vertexOutputNode(*this)
+        { }
+
         VertexScript::~VertexScript()
         { }
 
         ShaderType VertexScript::GetType() const
         {
             return ShaderType::Vertex;
+        }
+
+        VertexOutputNode* VertexScript::GetVertexOutputNode()
+        {
+            return &m_vertexOutputNode;
+        }
+        const VertexOutputNode* VertexScript::GetVertexOutputNode() const
+        {
+            return &m_vertexOutputNode;
         }
 
 
