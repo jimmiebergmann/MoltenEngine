@@ -17,9 +17,9 @@ static void LoadShaders(Curse::Shader::VertexScript& vScript, Curse::Shader::Fra
     // Vertex shader.
     {
         auto outPos = vScript.GetVertexOutputNode();
-        auto outColor = vScript.CreateOutputNode<Curse::Vector4f32>();
-        auto pos = vScript.CreateVaryingNode<Curse::Shader::VaryingType::Position>();
-        auto color = vScript.CreateVaryingNode<Curse::Shader::VaryingType::Color>();
+        auto outColor = vScript.CreateVaryingOutNode<Curse::Vector4f32>();
+        auto pos = vScript.CreateVaryingInNode<Curse::Vector3f32>();
+        auto color = vScript.CreateVaryingInNode<Curse::Vector4f32>();
 
         outPos->GetInputPin()->Connect(*pos->GetOutputPin());
         outColor->GetInputPin()->Connect(*color->GetOutputPin());
@@ -27,8 +27,8 @@ static void LoadShaders(Curse::Shader::VertexScript& vScript, Curse::Shader::Fra
 
     // Fragment shader.
     {
-        auto output = fScript.CreateOutputNode<Curse::Vector4f32>();
-        auto color = fScript.CreateVaryingNode<Curse::Shader::VaryingType::Color>();
+        auto output = fScript.CreateVaryingOutNode<Curse::Vector4f32>();
+        auto color = fScript.CreateVaryingInNode<Curse::Vector4f32>();
         auto mult = fScript.CreateOperatorNode<Curse::Vector4f32>(Curse::Shader::Operator::Multiplication);
         auto add = fScript.CreateOperatorNode<Curse::Vector4f32>(Curse::Shader::Operator::Addition);
         auto const1 = fScript.CreateConstantNode<Curse::Vector4f32>({ 0.0f, 0.0f, 0.3f, 0.0f });
@@ -68,13 +68,6 @@ static void Run()
     Curse::Shader::Program* vertexShader = renderer->CreateShaderProgram({ Curse::ShaderType::Vertex, verSpirv.data(), verSpirv.size() });
     Curse::Shader::Program* fragmentShader = renderer->CreateShaderProgram({ Curse::ShaderType::Fragment, fragSpirv.data(), fragSpirv.size() });
 
-    Curse::PipelineDescriptor pipelineDesc; 
-    pipelineDesc.topology = Curse::Pipeline::Topology::TriangleList;
-    pipelineDesc.polygonMode = Curse::Pipeline::PolygonMode::Fill;
-    pipelineDesc.frontFace = Curse::Pipeline::FrontFace::Clockwise;
-    pipelineDesc.cullMode = Curse::Pipeline::CullMode::Back;
-    pipelineDesc.shaderPrograms = { vertexShader, fragmentShader };
-
     struct Vertex
     {
         Curse::Vector3f32 position;
@@ -108,23 +101,30 @@ static void Run()
     indexBufferDesc.dataType = Curse::IndexBuffer::DataType::Uint16;
     Curse::IndexBuffer* indexBuffer = renderer->CreateIndexBuffer(indexBufferDesc);
 
-    Curse::Pipeline::VertexBinding vertexBinding;
-    vertexBinding.binding = 0;
-    vertexBinding.stride = sizeof(Vertex);
-
     Curse::Pipeline::VertexAttribute vertexAttrib1;
     vertexAttrib1.location = 0;
     vertexAttrib1.offset = offsetof(Vertex, position);
-    vertexAttrib1.format = Curse::Pipeline::AttributeFormat::R32_G32_B32_Float;
-    vertexBinding.attributes.push_back(vertexAttrib1);
+    vertexAttrib1.format = Curse::Pipeline::AttributeFormat::R32_G32_B32_Float;   
 
     Curse::Pipeline::VertexAttribute vertexAttrib2;
     vertexAttrib2.location = 1;
     vertexAttrib2.offset = offsetof(Vertex, color);
-    vertexAttrib2.format = Curse::Pipeline::AttributeFormat::R32_G32_B32_A32_Float;
+    vertexAttrib2.format = Curse::Pipeline::AttributeFormat::R32_G32_B32_A32_Float;  
+
+    Curse::Pipeline::VertexBinding vertexBinding;
+    vertexBinding.binding = 0;
+    vertexBinding.stride = sizeof(Vertex);
+    vertexBinding.attributes.push_back(vertexAttrib1);
     vertexBinding.attributes.push_back(vertexAttrib2);
 
+    Curse::PipelineDescriptor pipelineDesc;
+    pipelineDesc.topology = Curse::Pipeline::Topology::TriangleList;
+    pipelineDesc.polygonMode = Curse::Pipeline::PolygonMode::Fill;
+    pipelineDesc.frontFace = Curse::Pipeline::FrontFace::Clockwise;
+    pipelineDesc.cullMode = Curse::Pipeline::CullMode::Back;
+    pipelineDesc.shaderPrograms = { vertexShader, fragmentShader };
     pipelineDesc.vertexBindings = { vertexBinding };
+
     Curse::Pipeline* pipeline = renderer->CreatePipeline(pipelineDesc);
     
     auto renderFunction = [&]()

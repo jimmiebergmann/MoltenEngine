@@ -36,7 +36,7 @@ namespace Curse
             FragmentScript script;
 
             {
-                OutputNode<bool>* out = script.CreateOutputNode<bool>();
+                VaryingOutNode<bool>* out = script.CreateVaryingOutNode<bool>();
                 EXPECT_EQ(out->GetInputPinCount(), size_t(1));
                 EXPECT_NE(out->GetInputPin(), nullptr);
                 EXPECT_NE(out->GetInputPin(0), nullptr);
@@ -50,7 +50,7 @@ namespace Curse
                 EXPECT_EQ(out->GetInputPin()->GetDataTypeIndex(), typeid(bool));
             }
             {
-                OutputNode<int32_t>* out = script.CreateOutputNode<int32_t>();
+                VaryingOutNode<int32_t>* out = script.CreateVaryingOutNode<int32_t>();
                 EXPECT_EQ(out->GetInputPinCount(), size_t(1));
                 EXPECT_NE(out->GetInputPin(), nullptr);
                 EXPECT_NE(out->GetInputPin(0), nullptr);
@@ -64,7 +64,7 @@ namespace Curse
                 EXPECT_EQ(out->GetInputPin()->GetDataTypeIndex(), typeid(int32_t));
             }
             {
-                OutputNode<Vector2f32>* out = script.CreateOutputNode<Vector2f32>();
+                VaryingOutNode<Vector2f32>* out = script.CreateVaryingOutNode<Vector2f32>();
                 EXPECT_EQ(out->GetInputPinCount(), size_t(1));
                 EXPECT_NE(out->GetInputPin(), nullptr);
                 EXPECT_NE(out->GetInputPin(0), nullptr);
@@ -78,7 +78,7 @@ namespace Curse
                 EXPECT_EQ(out->GetInputPin()->GetDataTypeIndex(), typeid(Vector2f32));
             }
             {
-                OutputNode<Vector3f32>* out = script.CreateOutputNode<Vector3f32>();
+                VaryingOutNode<Vector3f32>* out = script.CreateVaryingOutNode<Vector3f32>();
                 EXPECT_EQ(out->GetInputPinCount(), size_t(1));
                 EXPECT_NE(out->GetInputPin(), nullptr);
                 EXPECT_NE(out->GetInputPin(0), nullptr);
@@ -92,7 +92,7 @@ namespace Curse
                 EXPECT_EQ(out->GetInputPin()->GetDataTypeIndex(), typeid(Vector3f32));
             }
             {
-                OutputNode<Vector4f32>* out = script.CreateOutputNode<Vector4f32>();
+                VaryingOutNode<Vector4f32>* out = script.CreateVaryingOutNode<Vector4f32>();
                 EXPECT_EQ(out->GetInputPinCount(), size_t(1));
                 EXPECT_NE(out->GetInputPin(), nullptr);
                 EXPECT_NE(out->GetInputPin(0), nullptr);

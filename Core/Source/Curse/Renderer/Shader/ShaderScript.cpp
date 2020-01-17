@@ -197,22 +197,26 @@ namespace Curse
             Node* ptr = &node;
 
             auto itAll = m_allNodes.find(ptr);
-            if (itAll != m_allNodes.end())
+            if (itAll == m_allNodes.end())
             {
-                m_allNodes.erase(itAll);
+                return;
             }
 
-            auto itVary = std::find(m_varyingNodes.begin(), m_varyingNodes.end(), ptr);
-            if (itVary != m_varyingNodes.end())
-            {
-                m_varyingNodes.erase(itVary);
-            }
+            m_allNodes.erase(itAll);
 
-            auto itOut = std::find(m_outputNodes.begin(), m_outputNodes.end(), ptr);
-            if (itOut != m_outputNodes.end())
+            auto itVary = std::find(m_varyingInNodes.begin(), m_varyingInNodes.end(), ptr);
+            if (itVary != m_varyingInNodes.end())
             {
-                m_outputNodes.erase(itOut);
+                m_varyingInNodes.erase(itVary);
             }
+            else
+            {
+                auto itOut = std::find(m_varyingOutNodes.begin(), m_varyingOutNodes.end(), ptr);
+                if (itOut != m_varyingOutNodes.end())
+                {
+                    m_varyingOutNodes.erase(itOut);
+                }
+            }  
 
             delete ptr;
         }
@@ -227,14 +231,22 @@ namespace Curse
             return { m_allNodes.begin(), m_allNodes.end() };
         }
 
-        std::vector<Node*> Script::GetOutputNodes()
+        std::vector<Node*> Script::GetVaryingInNodes()
         {
-            return { m_outputNodes.begin(), m_outputNodes.end() };
+            return m_varyingOutNodes;
+        }
+        std::vector<const Node*> Script::GetVaryingInNodes() const
+        {
+            return { m_varyingOutNodes.begin(), m_varyingOutNodes.end() };
         }
 
-        std::vector<const Node*> Script::GetOutputNodes() const
+        std::vector<Node*> Script::GetVaryingOutNodes()
         {
-            return { m_outputNodes.begin(), m_outputNodes.end() };
+            return m_varyingOutNodes;
+        }
+        std::vector<const Node*> Script::GetVaryingOutNodes() const
+        {
+            return { m_varyingOutNodes.begin(), m_varyingOutNodes.end() };
         }
 
         std::vector<uint8_t> Script::GenerateGlsl(Logger* /*logger*/) const
@@ -258,22 +270,9 @@ namespace Curse
             std::vector<VariablePtr> varyingVars;
             std::map<const Pin*, VariablePtr> visitedInputPins;
 
-            // Get output variables.        
+            // Get varying in variables.        
             size_t index = 0;
-            for (auto* node : m_outputNodes)
-            {
-                for (auto* pin : node->GetInputPins())
-                {
-                    const std::string name = "o_var_" + std::to_string(index);
-                    VariablePtr var = std::make_shared<Variable>(name, node, pin);
-                    outputVars.push_back({ var });
-                    index++;
-                }
-            }
-
-            // Get varying variables. 
-            index = 0;
-            for (auto* node : m_varyingNodes)
+            for (auto* node : m_varyingInNodes)
             {
                 for (auto* pin : node->GetOutputPins())
                 {
@@ -284,6 +283,19 @@ namespace Curse
                     index++;
                 }
             }
+
+            // Get varying out variables. 
+            index = 0;
+            for (auto* node : m_varyingOutNodes)
+            {
+                for (auto* pin : node->GetInputPins())
+                {
+                    const std::string name = "o_var_" + std::to_string(index);
+                    VariablePtr var = std::make_shared<Variable>(name, node, pin);
+                    outputVars.push_back({ var });
+                    index++;
+                }
+            }           
 
             // Set version and extensions.
             std::vector<uint8_t> source;
@@ -472,11 +484,11 @@ namespace Curse
                                 stackObject.inputVars[0]->name + GetGlslOperatorString(opNode->GetOperator()) + stackObject.inputVars[1]->name + ";\n");
                         }
                         break;
-                        case NodeType::Output:
+                        case NodeType::VaryingOut:
                         {
                             if (stackObject.inputVars.size() != 1)
                             {
-                                throw Exception("Number of variables for output variable is " + std::to_string(stackObject.inputVars.size()) + ", expected 1.");
+                                throw Exception("Number of variables for varying out variable is " + std::to_string(stackObject.inputVars.size()) + ", expected 1.");
                             }
 
                             AppendToVector(source, stackObject.outputVar->name + " = " + stackObject.inputVars[0]->name + ";\n");

@@ -62,23 +62,20 @@ namespace Curse
         }
 
         template<typename T>
-        inline OutputNode<T>* Script::CreateOutputNode()
+        inline VaryingInNode<T>* Script::CreateVaryingInNode()
         {
-            static_assert(DataTypeTrait<T>::Supported,
-                "Specified data type of output node is not supported.");
-
-            auto output = new OutputNode<T>(*this);
-            m_allNodes.insert(output);
-            m_outputNodes.push_back(output);
-            return output;
+            auto varying = new VaryingInNode<T>(*this);
+            m_allNodes.insert(varying);
+            m_varyingInNodes.push_back(varying);
+            return varying;
         }
 
-        template<VaryingType T>
-        inline VaryingNode<T>* Script::CreateVaryingNode()
+        template<typename T>
+        inline VaryingOutNode<T>* Script::CreateVaryingOutNode()
         {
-            auto varying = new VaryingNode<T>(*this);
+            auto varying = new VaryingOutNode<T>(*this);
             m_allNodes.insert(varying);
-            m_varyingNodes.push_back(varying);
+            m_varyingOutNodes.push_back(varying);
             return varying;
         }
 

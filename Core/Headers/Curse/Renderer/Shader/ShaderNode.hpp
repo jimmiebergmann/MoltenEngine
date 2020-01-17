@@ -53,21 +53,21 @@ namespace Curse
             Constant,       ///< Local constant, only present in fragment shader.
             Function,       ///< Built-in shader function.
             Operator,       ///< Operator node in local space.
-            Output,         ///< Output node, resulting in fragment colors.
             //Uniform,      ///< Uniform node, single object being sent runtime from client.
-            Varying,        ///< Varying node, sent from the vertex or geometry shader.
+            VaryingIn,      ///< Varying in node. Varying data is received by the vertex, geometry or fragment shader.
+            VaryingOut,     ///< Varying out node. Varying data is sent from the vertex buffer or vertex, geometry or fragment shader.
             VertexOutput    ///< Vertex output node, result of vertex position in vertex shader script.   
         };
 
         /**
         * @brief Enumerator of varying node type.
         */
-        enum class VaryingType : uint8_t
-        {
-            Color,      ///< Vertex color.
-            Normal,     ///< Normal direction.
-            Position    ///< Vertex position. 
-        };
+        //enum class VaryingType : uint8_t
+        //{
+        //    Color,      ///< Vertex color.
+        //    Normal,     ///< Normal direction.
+        //    Position    ///< Vertex position. 
+        //};
 
         /**
         * @brief Enumerator of arithmetic operators.
@@ -137,7 +137,7 @@ namespace Curse
         /**
         * @brief Type trait for retreiving data type of varying node types.
         */
-        template<VaryingType T>
+        /*template<VaryingType T>
         struct VaryingTypeTrait
         { };
         template<> struct VaryingTypeTrait<VaryingType::Color>
@@ -151,7 +151,7 @@ namespace Curse
         template<> struct VaryingTypeTrait<VaryingType::Position>
         {
             using DataType = Vector3f32;
-        };
+        };*/
 
 
         /**
@@ -253,128 +253,6 @@ namespace Curse
         private:
 
             Script& m_script; ///< Parent shader script.
-
-            friend class Script;
-
-        };
-
-
-        /**
-        * @brief Output node of shader script.
-        */
-        template<typename T>
-        class OutputNode : public Node
-        {
-
-            static_assert(DataTypeTrait<T>::Supported, "Data type of output node is not supported.");
-
-        public:
-
-            /**
-            * @brief Get number of input pins.
-            */
-            virtual size_t GetInputPinCount() const override;
-
-            /**
-            * @brief Get input pin by index.
-            *
-            * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
-            */
-            virtual Pin* GetInputPin(const size_t index = 0) override;
-
-            /**
-            * @brief Get connected pin by index.
-            *
-            * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
-            */
-            virtual const Pin* GetInputPin(const size_t index = 0) const override;
-
-            /**
-            * @brief Get all input pins, wrapped in a vector.
-            */
-            virtual std::vector<Pin*> GetInputPins() override;
-
-            /**
-            * @brief  Get all input pins, wrapped in a vector.
-            */
-            virtual std::vector<const Pin*> GetInputPins() const override;
-
-            /**
-            * @brief Get type of node.
-            */
-            virtual NodeType GetType() const override;
-
-        protected:
-
-            /**
-            * @brief Constructor.
-            */
-            OutputNode(Script& script);
-
-        private:
-
-            InputPin<T> m_pin;
-
-            friend class Script;
-
-        };
-
-
-        /**
-        * @brief Varying node of shader script.
-        */
-        template<VaryingType T>
-        class VaryingNode : public Node
-        {
-
-        public:
-
-            /**
-            * @brief Get number of input pins.
-            */
-            virtual size_t GetOutputPinCount() const override;
-
-            /**
-            * @brief Get input pin by index.
-            *
-            * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
-            */
-            virtual Pin* GetOutputPin(const size_t index = 0) override;
-
-            /**
-            * @brief Get connected pin by index.
-            *
-            * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
-            */
-            virtual const Pin* GetOutputPin(const size_t index = 0) const override;
-
-            /**
-            * @brief Get all input pins, wrapped in a vector.
-            */
-            virtual std::vector<Pin*> GetOutputPins() override;
-
-            /**
-            * @brief  Get all input pins, wrapped in a vector.
-            */
-            virtual std::vector<const Pin*> GetOutputPins() const override;
-
-            /**
-            * @brief Get type of node.
-            */
-            virtual NodeType GetType() const override;
-
-        protected:
-
-            /**
-            * @brief Constructor.
-            */
-            VaryingNode(Script& script);
-
-        private:
-
-            using DataType = typename VaryingTypeTrait<T>::DataType;
-
-            OutputPin<DataType> m_pin;
 
             friend class Script;
 
@@ -484,6 +362,128 @@ namespace Curse
 
             OutputPin<T> m_output;
             T m_value;
+
+            friend class Script;
+
+        };
+
+
+        /**
+        * @brief Function node base class of shader script.
+        */
+        class FunctionNodeBase : public Node
+        {
+
+        public:
+
+            /**
+            * @brief Get function type.
+            */
+            virtual FunctionType GetFunctionType() const = 0;
+
+            /**
+            * @brief Get type of node.
+            */
+            virtual NodeType GetType() const override;
+
+        protected:
+
+            /**
+            * @brief Constructor.
+            */
+            FunctionNodeBase(Script& script);
+
+        };
+
+        /**
+        * @brief Function node of shader script.
+        */
+        template<FunctionType _FunctionType, typename OutputType, typename ... InputTypes>
+        class FunctionNode : public FunctionNodeBase
+        {
+
+        public:
+
+            /**
+            * @brief Get function type.
+            */
+            virtual FunctionType GetFunctionType() const override;
+
+            /**
+            * @brief Get number of input pins.
+            */
+            virtual size_t GetInputPinCount() const override;
+
+            /**
+            * @brief Get number of input pins.
+            */
+            virtual size_t GetOutputPinCount() const override;
+
+            /**
+            * @brief Get input pin by index.
+            *
+            * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
+            */
+            virtual Pin* GetInputPin(const size_t index = 0) override;
+
+            /**
+            * @brief Get connected pin by index.
+            *
+            * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
+            */
+            virtual const Pin* GetInputPin(const size_t index = 0) const override;
+
+            /**
+            * @brief Get all input pins, wrapped in a vector.
+            */
+            virtual std::vector<Pin*> GetInputPins() override;
+
+            /**
+            * @brief  Get all input pins, wrapped in a vector.
+            */
+            virtual std::vector<const Pin*> GetInputPins() const override;
+
+            /**
+            * @brief Get input pin by index.
+            *
+            * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
+            */
+            virtual Pin* GetOutputPin(const size_t index = 0) override;
+
+            /**
+            * @brief Get connected pin by index.
+            *
+            * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
+            */
+            virtual const Pin* GetOutputPin(const size_t index = 0) const override;
+
+            /**
+            * @brief Get all input pins, wrapped in a vector.
+            */
+            virtual std::vector<Pin*> GetOutputPins() override;
+
+            /**
+            * @brief  Get all input pins, wrapped in a vector.
+            */
+            virtual std::vector<const Pin*> GetOutputPins() const override;
+
+        protected:
+
+            /**
+            * @brief Constructor.
+            */
+            FunctionNode(Script& script);
+
+        private:
+
+            static constexpr size_t OutputPinCount = 1;
+            static constexpr size_t InputPinCount = sizeof...(InputTypes);
+
+            template<typename CurrentType, typename ...>
+            void InitInputPin(const size_t index = 0);
+
+            std::array<std::unique_ptr<Pin>, InputPinCount> m_inputs;
+            std::unique_ptr<Pin> m_output;
 
             friend class Script;
 
@@ -608,17 +608,44 @@ namespace Curse
 
 
         /**
-        * @brief Function node base class of shader script.
+        * @brief Varying in node of shader script.
         */
-        class FunctionNodeBase : public Node
+        template<typename T>
+        class VaryingInNode : public Node
         {
+
+            static_assert(DataTypeTrait<T>::Supported, "Data type of varying in node is not supported.");
 
         public:
 
             /**
-            * @brief Get function type.
+            * @brief Get number of input pins.
             */
-            virtual FunctionType GetFunctionType() const = 0;
+            virtual size_t GetOutputPinCount() const override;
+
+            /**
+            * @brief Get input pin by index.
+            *
+            * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
+            */
+            virtual Pin* GetOutputPin(const size_t index = 0) override;
+
+            /**
+            * @brief Get connected pin by index.
+            *
+            * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
+            */
+            virtual const Pin* GetOutputPin(const size_t index = 0) const override;
+
+            /**
+            * @brief Get all input pins, wrapped in a vector.
+            */
+            virtual std::vector<Pin*> GetOutputPins() override;
+
+            /**
+            * @brief  Get all input pins, wrapped in a vector.
+            */
+            virtual std::vector<const Pin*> GetOutputPins() const override;
 
             /**
             * @brief Get type of node.
@@ -630,33 +657,32 @@ namespace Curse
             /**
             * @brief Constructor.
             */
-            FunctionNodeBase(Script& script);
+            VaryingInNode(Script& script);
+
+        private:
+
+            OutputPin<T> m_pin;
+
+            friend class Script;
 
         };
 
+
         /**
-        * @brief Function node of shader script.
+        * @brief Varying out node of shader script.
         */
-        template<FunctionType _FunctionType, typename OutputType, typename ... InputTypes>
-        class FunctionNode : public FunctionNodeBase
+        template<typename T>
+        class VaryingOutNode : public Node
         {
 
-        public:
+            static_assert(DataTypeTrait<T>::Supported, "Data type of varying out node is not supported.");
 
-            /**
-            * @brief Get function type.
-            */
-            virtual FunctionType GetFunctionType() const override;
+        public:
 
             /**
             * @brief Get number of input pins.
             */
             virtual size_t GetInputPinCount() const override;
-
-            /**
-            * @brief Get number of input pins.
-            */
-            virtual size_t GetOutputPinCount() const override;
 
             /**
             * @brief Get input pin by index.
@@ -683,46 +709,20 @@ namespace Curse
             virtual std::vector<const Pin*> GetInputPins() const override;
 
             /**
-            * @brief Get input pin by index.
-            *
-            * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
+            * @brief Get type of node.
             */
-            virtual Pin* GetOutputPin(const size_t index = 0) override;
-
-            /**
-            * @brief Get connected pin by index.
-            *
-            * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
-            */
-            virtual const Pin* GetOutputPin(const size_t index = 0) const override;
-
-            /**
-            * @brief Get all input pins, wrapped in a vector.
-            */
-            virtual std::vector<Pin*> GetOutputPins() override;
-
-            /**
-            * @brief  Get all input pins, wrapped in a vector.
-            */
-            virtual std::vector<const Pin*> GetOutputPins() const override;
+            virtual NodeType GetType() const override;
 
         protected:
 
             /**
             * @brief Constructor.
             */
-            FunctionNode(Script& script);
+            VaryingOutNode(Script& script);
 
         private:
 
-            static constexpr size_t OutputPinCount = 1;
-            static constexpr size_t InputPinCount = sizeof...(InputTypes);
-
-            template<typename CurrentType, typename ...>
-            void InitInputPin(const size_t index = 0);
-
-            std::array<std::unique_ptr<Pin>, InputPinCount> m_inputs;
-            std::unique_ptr<Pin> m_output;
+            InputPin<T> m_pin;
 
             friend class Script;
 

@@ -30,103 +30,14 @@ namespace Curse
     namespace Shader
     {
 
-        // Shader script output node implementations.
-        template<typename T>
-        inline size_t OutputNode<T>::GetInputPinCount() const
+        // Shader script constant node base implementations.
+        inline NodeType ConstantNodeBase::GetType() const
         {
-            return 1;
+            return NodeType::Constant;
         }
 
-        template<typename T>
-        inline Pin* OutputNode<T>::GetInputPin(const size_t index)
-        {
-            if (index != 0)
-            {
-                return nullptr;
-            }
-            return &m_pin;
-        }
-        template<typename T>
-        inline const Pin* OutputNode<T>::GetInputPin(const size_t index) const
-        {
-            if (index != 0)
-            {
-                return nullptr;
-            }
-            return &m_pin;
-        }
-
-        template<typename T>
-        inline std::vector<Pin*> OutputNode<T>::GetInputPins()
-        {
-            return { &m_pin };
-        }
-        template<typename T>
-        inline std::vector<const Pin*> OutputNode<T>::GetInputPins() const
-        {
-            return { &m_pin };
-        }
-
-        template<typename T>
-        inline NodeType OutputNode<T>::GetType() const
-        {
-            return NodeType::Output;
-        }
-
-        template<typename T>
-        inline OutputNode<T>::OutputNode(Script& script) :
-            Node(script),
-            m_pin(*this)
-        { }
-
-
-        // Shader script varying node implementations.
-        template<VaryingType T>
-        inline size_t VaryingNode<T>::GetOutputPinCount() const
-        {
-            return 1;
-        }
-
-        template<VaryingType T>
-        inline Pin* VaryingNode<T>::GetOutputPin(const size_t index)
-        {
-            if (index != 0)
-            {
-                return nullptr;
-            }
-            return &m_pin;
-        }
-        template<VaryingType T>
-        inline const Pin* VaryingNode<T>::GetOutputPin(const size_t index) const
-        {
-            if (index != 0)
-            {
-                return nullptr;
-            }
-            return &m_pin;
-        }
-
-        template<VaryingType T>
-        inline std::vector<Pin*> VaryingNode<T>::GetOutputPins()
-        {
-            return { &m_pin };
-        }
-        template<VaryingType T>
-        inline std::vector<const Pin*> VaryingNode<T>::GetOutputPins() const
-        {
-            return { &m_pin };
-        }
-
-        template<VaryingType T>
-        inline NodeType VaryingNode<T>::GetType() const
-        {
-            return NodeType::Varying;
-        }
-
-        template<VaryingType T>
-        inline VaryingNode<T>::VaryingNode(Script& script) :
-            Node(script),
-            m_pin(*this)
+        inline ConstantNodeBase::ConstantNodeBase(Script& script) :
+            Node(script)
         { }
 
 
@@ -198,115 +109,6 @@ namespace Curse
             m_value(value)
         { }
 
-        // Shader script constant node base implementations.
-        inline NodeType ConstantNodeBase::GetType() const
-        {
-            return NodeType::Constant;
-        }
-
-        inline ConstantNodeBase::ConstantNodeBase(Script& script) :
-            Node(script)
-        { }
-
-
-        // Shader script operator node base implementations.
-        inline NodeType OperatorNodeBase::GetType() const
-        {
-            return NodeType::Operator;
-        }
-
-        inline Operator OperatorNodeBase::GetOperator() const
-        {
-            return m_operator;
-        }
-
-        inline OperatorNodeBase::OperatorNodeBase(Script& script, const Operator op) :
-            Node(script),
-            m_operator(op)
-        { }
-
-
-        // Shader script operator node implementations.
-        template<typename T>
-        inline size_t OperatorNode<T>::GetInputPinCount() const
-        {
-            return 2;
-        }
-
-        template<typename T>
-        inline size_t OperatorNode<T>::GetOutputPinCount() const
-        {
-            return 1;
-        }
-
-        template<typename T>
-        inline Pin* OperatorNode<T>::GetInputPin(const size_t index)
-        {
-            if (index > 1)
-            {
-                return nullptr;
-            }
-            return std::vector<Pin*>{&m_inputA, &m_inputB}[index];
-        }
-        template<typename T>
-        inline const Pin* OperatorNode<T>::GetInputPin(const size_t index) const
-        {
-            if (index > 1)
-            {
-                return nullptr;
-            }
-            return std::vector<const Pin*>{&m_inputA, &m_inputB}[index];
-        }
-
-        template<typename T>
-        inline std::vector<Pin*> OperatorNode<T>::GetInputPins()
-        {
-            return { &m_inputA, &m_inputB };
-        }
-        template<typename T>
-        inline std::vector<const Pin*> OperatorNode<T>::GetInputPins() const
-        {
-            return { &m_inputA, &m_inputB };
-        }
-
-        template<typename T>
-        inline Pin* OperatorNode<T>::GetOutputPin(const size_t index)
-        {
-            if (index != 0)
-            {
-                return nullptr;
-            }
-            return &m_output;
-        }
-        template<typename T>
-        inline const Pin* OperatorNode<T>::GetOutputPin(const size_t index) const
-        {
-            if (index != 0)
-            {
-                return nullptr;
-            }
-            return &m_output;
-        }
-
-        template<typename T>
-        inline std::vector<Pin*> OperatorNode<T>::GetOutputPins()
-        {
-            return { &m_output };
-        }
-        template<typename T>
-        inline std::vector<const Pin*> OperatorNode<T>::GetOutputPins() const
-        {
-            return { &m_output };
-        }
-
-        template<typename T>
-        inline OperatorNode<T>::OperatorNode(Script& script, const Operator op) :
-            OperatorNodeBase(script, op),
-            m_inputA(*this),
-            m_inputB(*this),
-            m_inputs{ nullptr, nullptr },
-            m_output(*this)
-        { }
 
         // Shader script function node base implementations.
         inline NodeType FunctionNodeBase::GetType() const
@@ -317,6 +119,7 @@ namespace Curse
         inline FunctionNodeBase::FunctionNodeBase(Script& script) :
             Node(script)
         { }
+
 
         // Shader script function node implementations.
         template<FunctionType _FunctionType, typename OutputType, typename ... InputTypes>
@@ -443,7 +246,207 @@ namespace Curse
         }
 
 
-        // Shader script output node implementations.
+        // Shader script operator node base implementations.
+        inline NodeType OperatorNodeBase::GetType() const
+        {
+            return NodeType::Operator;
+        }
+
+        inline Operator OperatorNodeBase::GetOperator() const
+        {
+            return m_operator;
+        }
+
+        inline OperatorNodeBase::OperatorNodeBase(Script& script, const Operator op) :
+            Node(script),
+            m_operator(op)
+        { }
+
+
+        // Shader script operator node implementations.
+        template<typename T>
+        inline size_t OperatorNode<T>::GetInputPinCount() const
+        {
+            return 2;
+        }
+
+        template<typename T>
+        inline size_t OperatorNode<T>::GetOutputPinCount() const
+        {
+            return 1;
+        }
+
+        template<typename T>
+        inline Pin* OperatorNode<T>::GetInputPin(const size_t index)
+        {
+            if (index > 1)
+            {
+                return nullptr;
+            }
+            return std::vector<Pin*>{&m_inputA, &m_inputB}[index];
+        }
+        template<typename T>
+        inline const Pin* OperatorNode<T>::GetInputPin(const size_t index) const
+        {
+            if (index > 1)
+            {
+                return nullptr;
+            }
+            return std::vector<const Pin*>{&m_inputA, &m_inputB}[index];
+        }
+
+        template<typename T>
+        inline std::vector<Pin*> OperatorNode<T>::GetInputPins()
+        {
+            return { &m_inputA, &m_inputB };
+        }
+        template<typename T>
+        inline std::vector<const Pin*> OperatorNode<T>::GetInputPins() const
+        {
+            return { &m_inputA, &m_inputB };
+        }
+
+        template<typename T>
+        inline Pin* OperatorNode<T>::GetOutputPin(const size_t index)
+        {
+            if (index != 0)
+            {
+                return nullptr;
+            }
+            return &m_output;
+        }
+        template<typename T>
+        inline const Pin* OperatorNode<T>::GetOutputPin(const size_t index) const
+        {
+            if (index != 0)
+            {
+                return nullptr;
+            }
+            return &m_output;
+        }
+
+        template<typename T>
+        inline std::vector<Pin*> OperatorNode<T>::GetOutputPins()
+        {
+            return { &m_output };
+        }
+        template<typename T>
+        inline std::vector<const Pin*> OperatorNode<T>::GetOutputPins() const
+        {
+            return { &m_output };
+        }
+
+        template<typename T>
+        inline OperatorNode<T>::OperatorNode(Script& script, const Operator op) :
+            OperatorNodeBase(script, op),
+            m_inputA(*this),
+            m_inputB(*this),
+            m_inputs{ nullptr, nullptr },
+            m_output(*this)
+        { }
+
+
+        // Shader script varying in node implementations.
+        template<typename T>
+        inline size_t VaryingInNode<T>::GetOutputPinCount() const
+        {
+            return 1;
+        }
+
+        template<typename T>
+        inline Pin* VaryingInNode<T>::GetOutputPin(const size_t index)
+        {
+            if (index != 0)
+            {
+                return nullptr;
+            }
+            return &m_pin;
+        }
+        template<typename T>
+        inline const Pin* VaryingInNode<T>::GetOutputPin(const size_t index) const
+        {
+            if (index != 0)
+            {
+                return nullptr;
+            }
+            return &m_pin;
+        }
+
+        template<typename T>
+        inline std::vector<Pin*> VaryingInNode<T>::GetOutputPins()
+        {
+            return { &m_pin };
+        }
+        template<typename T>
+        inline std::vector<const Pin*> VaryingInNode<T>::GetOutputPins() const
+        {
+            return { &m_pin };
+        }
+
+        template<typename T>
+        inline NodeType VaryingInNode<T>::GetType() const
+        {
+            return NodeType::VaryingIn;
+        }
+
+        template<typename T>
+        inline VaryingInNode<T>::VaryingInNode(Script& script) :
+            Node(script),
+            m_pin(*this)
+        { }
+
+
+        // Shader script varying out node implementations.
+        template<typename T>
+        inline size_t VaryingOutNode<T>::GetInputPinCount() const
+        {
+            return 1;
+        }
+
+        template<typename T>
+        inline Pin* VaryingOutNode<T>::GetInputPin(const size_t index)
+        {
+            if (index != 0)
+            {
+                return nullptr;
+            }
+            return &m_pin;
+        }
+        template<typename T>
+        inline const Pin* VaryingOutNode<T>::GetInputPin(const size_t index) const
+        {
+            if (index != 0)
+            {
+                return nullptr;
+            }
+            return &m_pin;
+        }
+
+        template<typename T>
+        inline std::vector<Pin*> VaryingOutNode<T>::GetInputPins()
+        {
+            return { &m_pin };
+        }
+        template<typename T>
+        inline std::vector<const Pin*> VaryingOutNode<T>::GetInputPins() const
+        {
+            return { &m_pin };
+        }
+
+        template<typename T>
+        inline NodeType VaryingOutNode<T>::GetType() const
+        {
+            return NodeType::VaryingOut;
+        }
+
+        template<typename T>
+        inline VaryingOutNode<T>::VaryingOutNode(Script& script) :
+            Node(script),
+            m_pin(*this)
+        { }
+
+
+        // Shader script vertex output node implementations.
         inline size_t VertexOutputNode::GetInputPinCount() const
         {
             return 1;

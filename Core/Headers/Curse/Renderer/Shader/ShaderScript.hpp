@@ -77,21 +77,22 @@ namespace Curse
             OperatorNode<T>* CreateOperatorNode(const Operator op);
 
             /**
-            * @brief Create new output node and append it to the shader script.
+            * @brief Create new varying in node and append it to the shader script.
+            *        Varying data is sent from the vertex buffer, vertex or geometry shader.
             *
-            * @tparam T Output node object to create.
+            * @tparam T Varying in node object to create.
             */
             template<typename T>
-            OutputNode<T>* CreateOutputNode();
+            VaryingInNode<T>* CreateVaryingInNode();
 
             /**
-            * @brief Create new varying node and append it to the shader script.
-            *        Varying data is sent from the vertex or geometry shader.
+            * @brief Create new varying out node and append it to the shader script.
+            *        Varying data is sent from the vertex buffer or vertex, geometry or fragment shader.
             *
-            * @tparam T Varying node object to create.
+            * @tparam T Varying out node object to create.
             */
-            template<VaryingType T>
-            VaryingNode<T>* CreateVaryingNode();
+            template<typename T>
+            VaryingOutNode<T>* CreateVaryingOutNode();
 
             /**
             * @brief Removes the node from the script, disconnects all connections of node
@@ -110,14 +111,24 @@ namespace Curse
             std::vector<const Node*> GetNodes() const;
 
             /**
-            * @brief Get output nodes of shader script.
+            * @brief Get varying in nodes of shader script.
             */
-            std::vector<Node*> GetOutputNodes();
+            std::vector<Node*> GetVaryingInNodes();
 
             /**
-            * @brief Get output nodes of shader script.
+            * @brief Get varying in nodes of shader script.
             */
-            std::vector<const Node*> GetOutputNodes() const;
+            std::vector<const Node*> GetVaryingInNodes() const;
+
+            /**
+            * @brief Get varying out nodes of shader script.
+            */
+            std::vector<Node*> GetVaryingOutNodes();
+
+            /**
+            * @brief Get varying out nodes of shader script.
+            */
+            std::vector<const Node*> GetVaryingOutNodes() const;
 
             /**
             * @brief Generate GLSL code from shader script.
@@ -146,8 +157,8 @@ namespace Curse
             virtual const VertexOutputNode* GetVertexOutputNode() const;
 
             std::set<Node*> m_allNodes; ///< Set of all nodes of any type.
-            std::vector<Node*> m_varyingNodes;
-            std::vector<Node*> m_outputNodes;
+            std::vector<Node*> m_varyingInNodes;
+            std::vector<Node*> m_varyingOutNodes;
 
         };
 

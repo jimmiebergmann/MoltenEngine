@@ -37,7 +37,7 @@ namespace Curse
         TEST(Shader, InputPin)
         {
             FragmentScript script;
-            Node* nodePtr = script.CreateOutputNode<bool>();
+            Node* nodePtr = script.CreateVaryingOutNode<bool>();
             Node& node = *nodePtr;
 
             InputPin<float> pin(node, "test name");
@@ -53,7 +53,7 @@ namespace Curse
         TEST(Shader, InputPin_DefaultValue)
         {
             FragmentScript script;
-            Node* nodePtr = script.CreateOutputNode<bool>();
+            Node* nodePtr = script.CreateVaryingOutNode<bool>();
             Node& node = *nodePtr;
 
             InputPin<int32_t> pin(node, 1234, "test name");
@@ -73,7 +73,7 @@ namespace Curse
         TEST(Shader, InputPin_DataType)
         {
             FragmentScript script;
-            Node* nodePtr = script.CreateOutputNode<bool>();
+            Node* nodePtr = script.CreateVaryingOutNode<bool>();
             Node& node = *nodePtr;
 
             {
@@ -151,7 +151,7 @@ namespace Curse
         TEST(Shader, InputPin_Connection)
         {
             FragmentScript script;
-            Node* nodePtr = script.CreateOutputNode<bool>();
+            Node* nodePtr = script.CreateVaryingOutNode<bool>();
             Node& node = *nodePtr;
 
             {
@@ -295,7 +295,7 @@ namespace Curse
         TEST(Shader, OutputPin)
         {
             FragmentScript script;
-            Node* nodePtr = script.CreateOutputNode<bool>();
+            Node* nodePtr = script.CreateVaryingOutNode<bool>();
             Node& node = *nodePtr;
 
             OutputPin<float> pin(node, "test name");
@@ -311,7 +311,7 @@ namespace Curse
         TEST(Shader, OutputPin_DataType)
         {
             FragmentScript script;
-            Node* nodePtr = script.CreateOutputNode<bool>();
+            Node* nodePtr = script.CreateVaryingOutNode<bool>();
             Node& node = *nodePtr;
 
             {
@@ -389,7 +389,7 @@ namespace Curse
         TEST(Shader, OutputPin_Connection)
         {
             FragmentScript script;
-            Node* nodePtr = script.CreateOutputNode<bool>();
+            Node* nodePtr = script.CreateVaryingOutNode<bool>();
             Node& node = *nodePtr;
 
             {
