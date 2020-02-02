@@ -155,7 +155,7 @@ namespace Curse
         }
         // ??
 
-        m_userInput.Update();
+        //m_userInput.Begin();
 
         XEvent event;
         while(XPending(m_display) > 0)
