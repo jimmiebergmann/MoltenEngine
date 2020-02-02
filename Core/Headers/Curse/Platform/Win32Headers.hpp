@@ -31,8 +31,9 @@
 #if CURSE_PLATFORM == CURSE_PLATFORM_WINDOWS
 
 #include <Windows.h>
+#include <Windowsx.h>
 
-// Getting rid of conflicting Win32 definitions.
+// Getting rid of conflicting Windows macros.
 #ifdef GetMessage
     #undef GetMessage
 #endif
@@ -45,6 +46,15 @@
 #ifdef DeleteFile
     #undef DeleteFile
 #endif
+
+// Getting rid of conflicting Windows X macros.
+#ifdef IsMinimized
+    #undef IsMinimized
+#endif
+#ifdef IsMaximized
+    #undef IsMaximized
+#endif
+
 
 #endif
 

@@ -23,18 +23,54 @@
 *
 */
 
-#include "Test.hpp"
-#include "Curse/System/Mouse.hpp"
+#ifndef CURSE_CORE_GUI_GUICANVAS_HPP
+#define CURSE_CORE_GUI_GUICANVAS_HPP
+
+#include "Curse/Types.hpp"
 
 namespace Curse
 {
-    TEST(System, Mouse)
+
+    namespace Gui
     {
-        EXPECT_NO_THROW(Mouse::IsDown(Mouse::Button::Left));
-        EXPECT_NO_THROW(Mouse::IsDown(Mouse::Button::Middle));
-        EXPECT_NO_THROW(Mouse::IsDown(Mouse::Button::Right));
-        EXPECT_NO_THROW(Mouse::IsDown(Mouse::Button::Forward));
-        EXPECT_NO_THROW(Mouse::IsDown(Mouse::Button::Backward));
+
+        /**
+        * @brief GUI canvas class.
+        *        Managing root controlers and device inputs.
+        */
+        class CURSE_API Canvas
+        {
+
+        public:
+
+            /**
+            * @brief Constructor.
+            */
+            Canvas();
+
+            /**
+            * @brief Destructor.
+            */
+            ~Canvas();
+
+            /**
+            * @brief Update the canvas.
+            */
+            void Update();
+
+            /**
+            * @brief Render the canvas.
+            */
+            void Render();
+
+        private:
+
+
+
+        };
+
     }
 
 }
+
+#endif

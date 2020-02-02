@@ -23,38 +23,30 @@
 *
 */
 
-#ifndef CURSE_CORE_SYSTEM_MOUSE_HPP
-#define CURSE_CORE_SYSTEM_MOUSE_HPP
-
-#include "Curse/Types.hpp"
+#include "Curse/Gui/GuiCanvas.hpp"
 
 namespace Curse
 {
 
-    /**
-    * @brief Mouse class.
-    */
-    class CURSE_API Mouse
+    namespace Gui
     {
 
-    public:
+        Canvas::Canvas()
+        { }
 
-        enum class Button : uint8_t
+        Canvas::~Canvas()
+        { }
+
+        void Canvas::Update()
         {
-            Left,
-            Middle,
-            Right,
-            Forward,
-            Backward
-        };
 
-        /**
-        * @brief Checks if mouse button is currently pressed down.
-        */
-        static bool IsDown(const Button button);
+        }
 
-    };
+        void Canvas::Render()
+        {
+
+        }
+
+    }
 
 }
-
-#endif

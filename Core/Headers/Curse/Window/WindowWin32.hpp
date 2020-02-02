@@ -153,6 +153,18 @@ namespace Curse
         virtual Vector2i32 GetPosition() const override;
 
         /**
+        * @brief Get user input of window.
+        *        The method Update is being called and managed by the window.
+        */
+        virtual UserInput& GetUserInput() override;
+
+        /**
+        * @brief Get user input of window.
+        *        The method Update is being called and managed by the window.
+        */
+        virtual const UserInput& GetUserInput() const override;
+
+        /**
         * @brief Get win32 window handle.
         */
         virtual HWND GetWin32Window() const override;
@@ -171,6 +183,7 @@ namespace Curse
 
         static LRESULT WindowProcStatic(HWND window, UINT message, WPARAM wParam, LPARAM lParam);
         LRESULT WindowProc(HWND window, UINT message, WPARAM wParam, LPARAM lParam);
+        //void PreprocessEvents();
 
         Logger* m_logger;
         HWND m_window;
@@ -186,6 +199,8 @@ namespace Curse
         Vector2ui32 m_size;
         Vector2i32 m_position;
         std::string m_title;
+
+        UserInput m_userInput;
 
     };
 

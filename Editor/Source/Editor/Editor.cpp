@@ -4,7 +4,6 @@
 #include "Curse/System/Exception.hpp"
 #include "Curse/System/FileSystem.hpp"
 #include "Curse/Memory/Pointer.hpp"
-#include "Curse/System/Mouse.hpp"
 #include "Curse/System/Clock.hpp"
 #include "Curse/Logger.hpp"
 #include <iostream>

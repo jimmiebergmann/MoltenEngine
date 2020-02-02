@@ -26,16 +26,18 @@
 #ifndef CURSE_CORE_WINDOW_WINDOW_HPP
 #define CURSE_CORE_WINDOW_WINDOW_HPP
 
-#include "Curse/Math/Vector.hpp"
 #include "Curse/Platform/Win32Headers.hpp"
 #include "Curse/Platform/X11Headers.hpp"
 #include "Curse/System/Signal.hpp"
+#include "Curse/System/UserInput.hpp"
+#include "Curse/Math/Vector.hpp"
 #include <string>
 
 namespace Curse
 {
 
     class Logger;
+    class UserInput;
 
     /**
     * @brief Base class of application windows.
@@ -175,6 +177,18 @@ namespace Curse
         * @brief Get current position of window.
         */
         virtual Vector2i32 GetPosition() const = 0;
+
+        /**
+        * @brief Get user input of window.
+        *        The method Update is being called and managed by the window.
+        */
+        virtual UserInput& GetUserInput() = 0;
+
+        /**
+        * @brief Get user input of window.
+        *        The method Update is being called and managed by the window.
+        */
+        virtual const UserInput& GetUserInput() const = 0;
 
     #if CURSE_PLATFORM == CURSE_PLATFORM_WINDOWS
        

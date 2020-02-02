@@ -58,6 +58,28 @@ namespace Curse
         return std::move(ss.str());
     }
 
+    static bool IsExtendedKey(const LPARAM lParam)
+    {
+        return lParam & 0x1000000ULL;
+    }
+
+    static void ConvertExtendedWin32Key(Keyboard::Key& key, const LPARAM lParam)
+    {
+        switch(key)
+        {
+        case Keyboard::Key::ControlLeft:
+        {
+            if (IsExtendedKey(lParam))
+            {
+                key = Keyboard::Key::ControlRight;
+            }
+        }
+        break;
+        default:
+            break;
+        }
+    }
+
 
     // Win32 window implementations.
     WindowWin32::WindowWin32() :
@@ -199,7 +221,9 @@ namespace Curse
     }
 
     void WindowWin32::Update()
-    {
+    {       
+        m_userInput.Begin();
+
         MSG message;
         while (::PeekMessage(&message, NULL, 0, 0, PM_REMOVE))
         {
@@ -212,6 +236,8 @@ namespace Curse
             ::TranslateMessage(&message);
             ::DispatchMessage(&message);
         }
+
+        m_userInput.End();
     }
 
     void WindowWin32::Show(const bool show, const bool signal)
@@ -338,6 +364,15 @@ namespace Curse
         return m_position;
     }
 
+    UserInput& WindowWin32::GetUserInput()
+    {
+        return m_userInput;
+    }
+    const UserInput& WindowWin32::GetUserInput() const
+    {
+        return m_userInput;
+    }
+
     HWND WindowWin32::GetWin32Window() const
     {
         return m_window;
@@ -376,6 +411,8 @@ namespace Curse
     {
         switch (message)
         {
+
+        // Window events.
         case WM_CLOSE:
         {
             Close();
@@ -469,13 +506,111 @@ namespace Curse
             OnMove(m_position);
         }
         break;
-        /*case WM_SETTEXT:
-            break;*/
         case WM_ERASEBKGND:
         {
             return 0;
         }
         break;
+
+        // Keyboard events.
+        case WM_KEYDOWN:
+        {
+            // AltGr breaks this... Control + Alt is being pressed, but only alt is being released.
+
+            uint32_t win32Key = static_cast<uint32_t>(wParam);
+            Keyboard::Key key;
+            if (m_userInput.ConvertFromWin32Key(win32Key, key))
+            {
+                ConvertExtendedWin32Key(key, lParam);
+                m_userInput.PressKey(key);
+                return 0;
+            }
+        }
+        case WM_KEYUP:
+        {
+            uint32_t win32Key = static_cast<uint32_t>(wParam);
+            Keyboard::Key key;
+            if (m_userInput.ConvertFromWin32Key(win32Key, key))
+            {
+                ConvertExtendedWin32Key(key, lParam);
+                m_userInput.ReleaseKey(key);
+                return 0;
+            }
+        }
+
+        // Mouse events.
+        case WM_MOUSEMOVE:
+        {
+            auto position = Vector2i32(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+            m_userInput.MoveMouse(position);
+            return 0;
+        }
+        case WM_LBUTTONDOWN:
+        {
+            auto position = Vector2i32(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+            m_userInput.PressMouseButton(Mouse::Button::Left, position);
+            return 0;
+        }
+        case WM_MBUTTONDOWN:
+        {
+            auto position = Vector2i32(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+            m_userInput.PressMouseButton(Mouse::Button::Middle, position);
+            return 0;
+        }
+        case WM_RBUTTONDOWN:
+        {
+            auto position = Vector2i32(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+            m_userInput.PressMouseButton(Mouse::Button::Right, position);
+            return 0;
+        }
+        case WM_XBUTTONDOWN:
+        {
+            auto position = Vector2i32(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+            const auto button = HIWORD(wParam);
+            switch (button)
+            {
+            case XBUTTON1:
+                m_userInput.PressMouseButton(Mouse::Button::Backward, position); return 0;
+            case XBUTTON2:
+                m_userInput.PressMouseButton(Mouse::Button::Forward, position); return 0;
+            default:
+                break;
+            }
+        }
+
+        case WM_LBUTTONUP:
+        {
+            auto position = Vector2i32(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+            m_userInput.ReleaseMouseButton(Mouse::Button::Left, position);
+            return 0;
+        }
+        case WM_MBUTTONUP:
+        {
+            auto position = Vector2i32(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+            m_userInput.ReleaseMouseButton(Mouse::Button::Middle, position);
+            return 0;
+        }
+        case WM_RBUTTONUP:
+        {
+            auto position = Vector2i32(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+            m_userInput.ReleaseMouseButton(Mouse::Button::Right, position);
+            return 0;
+        }
+        case WM_XBUTTONUP:
+        {
+            auto position = Vector2i32(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+            const auto button = HIWORD(wParam);
+            switch (button)
+            {
+            case XBUTTON1:
+                m_userInput.ReleaseMouseButton(Mouse::Button::Backward, position); return 0;
+            case XBUTTON2:
+                m_userInput.ReleaseMouseButton(Mouse::Button::Forward, position); return 0;
+            default:
+                break;
+            }
+        }
+
         default: break;
         }
 

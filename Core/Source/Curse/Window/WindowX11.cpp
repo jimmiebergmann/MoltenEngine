@@ -148,11 +148,14 @@ namespace Curse
 
     void WindowX11::Update()
     {
+        // ??
         if(!m_open)
         {
             return;
         }
+        // ??
 
+        m_userInput.Update();
 
         XEvent event;
         while(XPending(m_display) > 0)
@@ -229,6 +232,15 @@ namespace Curse
     Vector2i32 WindowX11::GetPosition() const
     {
         return m_position;
+    }
+
+    UserInput& WindowX11::GetUserInput()
+    {
+        return m_userInput;
+    }
+    const UserInput& WindowX11::GetUserInput() const
+    {
+        return m_userInput;
     }
 
     ::Display * WindowX11::GetX11DisplayDevice() const
