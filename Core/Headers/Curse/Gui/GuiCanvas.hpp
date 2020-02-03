@@ -27,9 +27,14 @@
 #define CURSE_CORE_GUI_GUICANVAS_HPP
 
 #include "Curse/Types.hpp"
+#include "Curse/Gui/Control/GuiPlaneControl.hpp"
 
 namespace Curse
 {
+
+    // Forward declarations.
+    class Renderer;
+
 
     namespace Gui
     {
@@ -46,7 +51,7 @@ namespace Curse
             /**
             * @brief Constructor.
             */
-            Canvas();
+            Canvas(Renderer& renderer, const Vector2f32& size, const Vector2f32& position = {0.0f, 0.0f});
 
             /**
             * @brief Destructor.
@@ -61,11 +66,44 @@ namespace Curse
             /**
             * @brief Render the canvas.
             */
-            void Render();
+            void Draw();
+
+            /**
+            * @brief Get relative position to origin.
+            */
+            Vector2f32 GetPosiion() const;
+
+            /**
+            * @brief Get canvas size.
+            */
+            Vector2f32 GetSize() const;
+
+            /**
+            * @brief Get underlying plane control.
+            */
+            Plane& GetPlane();
+
+            /**
+            * @brief Get underlying plane control.
+            */
+            const Plane& GetPlane() const;
+
+            /**
+            * @brief Set relative position to origin.
+            */
+            void GetPosiion(const Vector2f32& position);
+
+            /**
+            * @brief Set canvas size.
+            */
+            void SetSize(const Vector2f32& size);
 
         private:
 
-
+            Renderer * m_renderer;
+            Vector2f32 m_position;
+            Vector2f32 m_size;
+            Plane m_plane;
 
         };
 

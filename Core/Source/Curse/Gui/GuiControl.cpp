@@ -30,22 +30,9 @@ namespace Curse
 
     namespace Gui
     {
-        // Control implementations.
-        Control::Control() :
-            m_parent(nullptr)
-        { }
-        
+        // Control implementations.       
         Control::~Control()
         { }
-
-        Control* Control::GetParent()
-        {
-            return m_parent;
-        }
-        const Control* Control::GetParent() const
-        {
-            return m_parent;
-        }
 
         bool Control::Add(Control&)
         {
@@ -70,6 +57,59 @@ namespace Curse
             m_parent = nullptr;
         }
 
+        Control* Control::GetParent()
+        {
+            return m_parent;
+        }
+        const Control* Control::GetParent() const
+        {
+            return m_parent;
+        }
+
+        Canvas* Control::GetCanvas()
+        {
+            return m_canvas;
+        }
+        const Canvas* Control::GetCanvas() const
+        {
+            return m_canvas;
+        }
+
+        Vector2f32 Control::GetPosiion() const
+        {
+            return m_position;
+        }
+
+        Vector2f32 Control::GetSize() const
+        {
+            return m_size;
+        }
+
+        Vector2f32 Control::GetDrawPosiion() const
+        {
+            return m_drawPosition;
+        }
+
+        Vector2f32 Control::GetDrawSize() const
+        {
+            return m_drawSize;
+        }
+
+        void Control::SetPosiion(const Vector2f32& position)
+        {
+            m_position = position;
+        }
+        void Control::SetSize(const Vector2f32& size)
+        {
+            m_size = size;
+        }
+
+        Control::Control() :
+            m_parent(nullptr),
+            m_canvas(nullptr)
+        { }
+
+
         void Control::ReleaseInternal(Control& child)
         {
             child.ReleaseInternal();
@@ -77,6 +117,7 @@ namespace Curse
         void Control::ReleaseInternal()
         {
             m_parent = nullptr;
+            m_canvas = nullptr;
         }
 
         bool Control::RemoveInternal(Control& parent, Control& child)
@@ -95,11 +136,52 @@ namespace Curse
         void Control::SetParentInternal(Control& parent)
         {
             m_parent = &parent;
+            if (m_parent)
+            {
+                SetCanvasInternal(m_parent->GetCanvas());
+            }
+        }
+
+        void Control::SetCanvasInternal(Control& control, Canvas* canvas)
+        {
+            control.SetCanvasInternal(canvas);
+        }
+        void Control::SetCanvasInternal(Canvas* canvas)
+        {
+            auto oldCanvas = m_canvas;
+            m_canvas = canvas;
+            if (m_canvas != oldCanvas)
+            {
+                // Trigger canvas change.
+                // Reload graphics...
+                // ...
+                // HERE.
+            }
+        }
+
+        void Control::UpdateInternal(Control& control)
+        {
+            control.Update();
+        }
+
+        void Control::DrawInternal(Control& control) const
+        {
+            control.Draw();
+        }
+
+        void Control::SetDrawPositionInternal(Control& control, const Vector2f32& position)
+        {
+            control.m_drawPosition = position;
+        }
+
+        void Control::SetDrawSizeInternal(Control& control, const Vector2f32& size)
+        {
+            control.m_drawSize = size;
         }
 
 
         // Parent control array 1D implementations.
-        ParentControlArray1D::~ParentControlArray1D()
+        ParentControlList::~ParentControlList()
         {
             for (auto* child : m_childs)
             {
@@ -107,7 +189,7 @@ namespace Curse
             }
         }
 
-        bool ParentControlArray1D::Add(Control& control)
+        bool ParentControlList::Add(Control& control)
         {
             Control* controlPtr = &control;
 
@@ -120,11 +202,12 @@ namespace Curse
             }
 
             Control::SetParentInternal(control, *this);
+            Control::SetCanvasInternal(control, GetCanvas());
             m_childs.push_back(controlPtr);
             return true;
         }
 
-        bool ParentControlArray1D::Remove(Control& control)
+        bool ParentControlList::Remove(Control& control)
         {
             if (RemoveInternal(control))
             {
@@ -134,7 +217,11 @@ namespace Curse
             return false;
         }
 
-        bool ParentControlArray1D::RemoveInternal(Control& control)
+        ParentControlList::ParentControlList()
+        {
+        }
+
+        bool ParentControlList::RemoveInternal(Control& control)
         {
             Control* controlPtr = &control;
 
@@ -150,7 +237,21 @@ namespace Curse
             return false;
         }
 
-        const std::list<Control*>& ParentControlArray1D::GetChilds() const
+        void ParentControlList::SetCanvasInternal(Canvas* canvas)
+        {
+            Control::SetCanvasInternal(canvas);
+
+            for (auto* child : m_childs)
+            {
+                Control::SetCanvasInternal(*child, canvas);
+            }
+        }
+
+        std::list<Control*>& ParentControlList::GetChilds()
+        {
+            return m_childs;
+        }
+        const std::list<Control*>& ParentControlList::GetChilds() const
         {
             return m_childs;
         }

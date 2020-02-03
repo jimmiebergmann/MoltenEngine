@@ -23,7 +23,7 @@
 *
 */
 
-#include "Curse/Gui/GuiCanvas.hpp"
+#include "Curse/Gui/Control/GuiPlaneControl.hpp"
 
 namespace Curse
 {
@@ -31,54 +31,28 @@ namespace Curse
     namespace Gui
     {
 
-        Canvas::Canvas(Renderer& renderer, const Vector2f32& size, const Vector2f32& position) :
-            m_renderer(&renderer),
-            m_size(size),
-            m_position(position)
-        {
-            static_cast<Control&>(m_plane).SetCanvasInternal(this);
-        }
-
-        Canvas::~Canvas()
+        Plane::Plane()
         { }
 
-        void Canvas::Update()
+        Plane::~Plane()
+        { }
+
+        void Plane::Update()
         {
-            static_cast<Control&>(m_plane).Update();
+            for (auto* child : GetChilds())
+            {
+                SetDrawPositionInternal(*child, child->GetPosiion());
+                SetDrawSizeInternal(*child, child->GetSize());
+                UpdateInternal(*child);
+            }
         }
 
-        void Canvas::Draw()
+        void Plane::Draw() const
         {
-            static_cast<Control&>(m_plane).Draw();
-        }
-
-        Vector2f32 Canvas::GetPosiion() const
-        {
-            return m_position;
-        }
-    
-        Vector2f32 Canvas::GetSize() const
-        {
-            return m_size;
-        }
-
-        Plane& Canvas::GetPlane()
-        {
-            return m_plane;
-        }
-        const Plane& Canvas::GetPlane() const
-        {
-            return m_plane;
-        }
-
-        void Canvas::GetPosiion(const Vector2f32& position)
-        {
-            m_position = position;
-        }
-
-        void Canvas::SetSize(const Vector2f32& size)
-        {
-            m_size = size;
+            for (auto* child : GetChilds())
+            {
+                DrawInternal(*child);
+            }
         }
 
     }

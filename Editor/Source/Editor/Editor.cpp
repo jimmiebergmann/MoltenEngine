@@ -1,4 +1,8 @@
 #include "Curse/Window/Window.hpp"
+
+#include "Curse/Gui/GuiCanvas.hpp"
+#include "Curse/Gui/Control/GuiButtonControl.hpp"
+
 #include "Curse/Renderer/Renderer.hpp"
 #include "Curse/Renderer/Shader/ShaderScript.hpp"
 #include "Curse/System/Exception.hpp"
@@ -43,16 +47,31 @@ static void LoadShaders(Curse::Shader::VertexScript& vScript, Curse::Shader::Fra
     }
 }
 
+void LoadGui(Curse::Gui::Canvas& canvas)
+{
+    auto& plane = canvas.GetPlane();
+
+    auto button = new Curse::Gui::Button;
+    button->SetPosiion({100.0f, 200.0f});
+    button->SetSize({ 30.0f, 50.0f });
+
+    plane.Add(*button);
+}
+
 static void Run()
 {
     window = Curse::Window::Create();
-    if (!window->Open("Curse Editor", { 800, 600 }, &logger))
+    Curse::Vector2ui32 windowSize = { 800, 600 };
+    if (!window->Open("Curse Editor", windowSize, &logger))
     {
         return;
     }
 
     auto renderer = Curse::Renderer::Create(Curse::Renderer::BackendApi::Vulkan);
     renderer->Open(*window, Curse::Version(1, 1), &logger);
+
+    Curse::Gui::Canvas canvas(*renderer, windowSize);
+    LoadGui(canvas);
 
     Curse::Shader::VertexScript vertexScript;
     Curse::Shader::FragmentScript fragmentScript;
@@ -134,6 +153,8 @@ static void Run()
         renderer->BindPipeline(pipeline);
         renderer->DrawVertexBuffers(indexBuffer, vertexBuffer, 1);
 
+        canvas.Draw();
+
         renderer->EndDraw();
     };
 
@@ -183,6 +204,43 @@ static void Run()
         if (!window->IsOpen())
         {
             break;
+        }
+
+        Curse::UserInput userInput = window->GetUserInput();
+
+        Curse::UserInput::Event event;
+        while (userInput.PollEvent(event))
+        {
+            switch (event.type)
+            {
+            case Curse::UserInput::Event::Type::MouseButtonPressed: logger.Write(Curse::Logger::Severity::Info,
+                "Button pressed: " + std::to_string(static_cast<size_t>(event.mouseButtonEvent.button)) +
+                " pos: " + std::to_string(event.mouseButtonEvent.position.x) + " " + std::to_string(event.mouseButtonEvent.position.y));
+                break;
+            case Curse::UserInput::Event::Type::MouseButtonDown: logger.Write(Curse::Logger::Severity::Info,
+                "Button down: " + std::to_string(static_cast<size_t>(event.mouseButtonEvent.button)) +
+                " pos: " + std::to_string(event.mouseButtonEvent.position.x) + " " + std::to_string(event.mouseButtonEvent.position.y));
+                break;
+            case Curse::UserInput::Event::Type::MouseButtonReleased: logger.Write(Curse::Logger::Severity::Info,
+                "Button released: " + std::to_string(static_cast<size_t>(event.mouseButtonEvent.button)) +
+                " pos: " + std::to_string(event.mouseButtonEvent.position.x) + " " + std::to_string(event.mouseButtonEvent.position.y));
+                break;
+            case Curse::UserInput::Event::Type::MouseMove : logger.Write(Curse::Logger::Severity::Info,
+                "Mouse move: " + std::to_string(event.mouseMoveEvent.position.x) + " " + std::to_string(event.mouseMoveEvent.position.y));
+                break;
+            case Curse::UserInput::Event::Type::KeyPressed: logger.Write(Curse::Logger::Severity::Info,
+                "Key pressed: " + std::to_string((int)event.keyboardEvent.key));
+                break;
+            case Curse::UserInput::Event::Type::KeyDown: logger.Write(Curse::Logger::Severity::Info,
+                "Key down: " + std::to_string((int)event.keyboardEvent.key));
+                break;
+            case Curse::UserInput::Event::Type::KeyReleased: logger.Write(Curse::Logger::Severity::Info,
+                "Key released: " + std::to_string((int)event.keyboardEvent.key));
+                break;
+            default:
+                logger.Write(Curse::Logger::Severity::Info, "Unkown event.");
+                break;
+            }
         }
 
         renderFunction();

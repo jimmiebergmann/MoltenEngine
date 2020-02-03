@@ -23,7 +23,10 @@
 *
 */
 
-#include "Curse/Gui/GuiCanvas.hpp"
+#ifndef CURSE_CORE_GUI_GUIBUTTONCONTROL_HPP
+#define CURSE_CORE_GUI_GUIBUTTONCONTROL_HPP
+
+#include "Curse/Gui/GuiControl.hpp"
 
 namespace Curse
 {
@@ -31,56 +34,40 @@ namespace Curse
     namespace Gui
     {
 
-        Canvas::Canvas(Renderer& renderer, const Vector2f32& size, const Vector2f32& position) :
-            m_renderer(&renderer),
-            m_size(size),
-            m_position(position)
+        /**
+        * @brief 
+        */
+        class CURSE_API Button : public Control
         {
-            static_cast<Control&>(m_plane).SetCanvasInternal(this);
-        }
 
-        Canvas::~Canvas()
-        { }
+        public:
 
-        void Canvas::Update()
-        {
-            static_cast<Control&>(m_plane).Update();
-        }
+            /**
+            * @brief Constructor.
+            */
+            Button();
 
-        void Canvas::Draw()
-        {
-            static_cast<Control&>(m_plane).Draw();
-        }
+            /**
+            * @brief 
+            */
+            virtual ~Button();
 
-        Vector2f32 Canvas::GetPosiion() const
-        {
-            return m_position;
-        }
-    
-        Vector2f32 Canvas::GetSize() const
-        {
-            return m_size;
-        }
+        protected:
 
-        Plane& Canvas::GetPlane()
-        {
-            return m_plane;
-        }
-        const Plane& Canvas::GetPlane() const
-        {
-            return m_plane;
-        }
+            /**
+            * @brief 
+            */
+            virtual void Update() override;
 
-        void Canvas::GetPosiion(const Vector2f32& position)
-        {
-            m_position = position;
-        }
+            /**
+            * @brief 
+            */
+            virtual void Draw() const override;
 
-        void Canvas::SetSize(const Vector2f32& size)
-        {
-            m_size = size;
-        }
+        };
 
     }
 
 }
+
+#endif

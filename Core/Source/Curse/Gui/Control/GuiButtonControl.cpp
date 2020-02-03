@@ -23,7 +23,7 @@
 *
 */
 
-#include "Curse/Gui/GuiCanvas.hpp"
+#include "Curse/Gui/Control/GuiButtonControl.hpp"
 
 namespace Curse
 {
@@ -31,54 +31,20 @@ namespace Curse
     namespace Gui
     {
 
-        Canvas::Canvas(Renderer& renderer, const Vector2f32& size, const Vector2f32& position) :
-            m_renderer(&renderer),
-            m_size(size),
-            m_position(position)
-        {
-            static_cast<Control&>(m_plane).SetCanvasInternal(this);
-        }
-
-        Canvas::~Canvas()
+        Button::Button()
         { }
 
-        void Canvas::Update()
+        Button::~Button()
+        { }
+
+        void Button::Update()
         {
-            static_cast<Control&>(m_plane).Update();
+
         }
 
-        void Canvas::Draw()
+        void Button::Draw() const
         {
-            static_cast<Control&>(m_plane).Draw();
-        }
 
-        Vector2f32 Canvas::GetPosiion() const
-        {
-            return m_position;
-        }
-    
-        Vector2f32 Canvas::GetSize() const
-        {
-            return m_size;
-        }
-
-        Plane& Canvas::GetPlane()
-        {
-            return m_plane;
-        }
-        const Plane& Canvas::GetPlane() const
-        {
-            return m_plane;
-        }
-
-        void Canvas::GetPosiion(const Vector2f32& position)
-        {
-            m_position = position;
-        }
-
-        void Canvas::SetSize(const Vector2f32& size)
-        {
-            m_size = size;
         }
 
     }
