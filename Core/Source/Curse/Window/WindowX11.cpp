@@ -224,6 +224,10 @@ namespace Curse
     {
     }
 
+    void WindowX11::SetTitle(const std::string& /*title*/)
+    {
+    }
+
     Vector2ui32 WindowX11::GetSize() const
     {
         return m_size;
@@ -232,6 +236,11 @@ namespace Curse
     Vector2i32 WindowX11::GetPosition() const
     {
         return m_position;
+    }
+
+    std::string WindowX11::GetTitle() const
+    {
+        return m_title;
     }
 
     UserInput& WindowX11::GetUserInput()

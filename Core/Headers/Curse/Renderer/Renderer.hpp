@@ -29,6 +29,7 @@
 #include "Curse/Memory/Reference.hpp"
 #include "Curse/System/Version.hpp"
 #include "Curse/Renderer/Shader/ShaderProgram.hpp"
+#include "Curse/Renderer/Shader/ShaderScript.hpp"
 #include "Curse/Renderer/Texture.hpp"
 #include "Curse/Renderer/Pipeline.hpp"
 #include "Curse/Renderer/Framebuffer.hpp"
@@ -130,6 +131,11 @@ namespace Curse
         virtual Shader::Program* CreateShaderProgram(const Shader::ProgramDescriptor& descriptor) = 0;
 
         /**
+        * @brief Create shader object out of shader script.
+        */
+        virtual Shader::Program* CreateShaderProgram(const Shader::Script& script) = 0;
+
+        /**
         * @brief Create texture object.
         */
         virtual Texture* CreateTexture() = 0;
@@ -185,14 +191,9 @@ namespace Curse
         virtual void DrawVertexBuffer(VertexBuffer* vertexBuffer) = 0;
 
         /**
-        * @brief Draw multiple vertex buffers, using the current bound pipeline.
+        * @brief * @brief Draw indexed vertex buffer, using the current bound pipeline.
         */
-        virtual void DrawVertexBuffers(VertexBuffer* vertexBuffers, const size_t count) = 0;
-
-        /**
-        * @brief Draw multiple indexed vertex buffers, using the current bound pipeline.
-        */
-        virtual void DrawVertexBuffers(IndexBuffer * indexBuffer, VertexBuffer* vertexBuffers, const size_t count) = 0;
+        virtual void DrawVertexBuffer(IndexBuffer* indexBuffer, VertexBuffer* vertexBuffer) = 0;
 
         /**
         * @brief Finalize and present rendering.

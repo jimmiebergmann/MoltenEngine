@@ -62,7 +62,8 @@ static void Run()
 {
     window = Curse::Window::Create();
     Curse::Vector2ui32 windowSize = { 800, 600 };
-    if (!window->Open("Curse Editor", windowSize, &logger))
+    std::string windowTitle = "Curse Editor";
+    if (!window->Open(windowTitle, windowSize, &logger))
     {
         return;
     }
@@ -77,14 +78,8 @@ static void Run()
     Curse::Shader::FragmentScript fragmentScript;
     LoadShaders(vertexScript, fragmentScript);
 
-    auto vertSource = vertexScript.GenerateGlsl();
-    auto fragSource = fragmentScript.GenerateGlsl();
-
-    auto verSpirv = renderer->CompileShaderProgram(Curse::ShaderFormat::Glsl, Curse::ShaderType::Vertex, vertSource, Curse::ShaderFormat::SpirV);
-    auto fragSpirv = renderer->CompileShaderProgram(Curse::ShaderFormat::Glsl, Curse::ShaderType::Fragment, fragSource, Curse::ShaderFormat::SpirV);
-    
-    Curse::Shader::Program* vertexShader = renderer->CreateShaderProgram({ Curse::ShaderType::Vertex, verSpirv.data(), verSpirv.size() });
-    Curse::Shader::Program* fragmentShader = renderer->CreateShaderProgram({ Curse::ShaderType::Fragment, fragSpirv.data(), fragSpirv.size() });
+    Curse::Shader::Program* vertexShader = renderer->CreateShaderProgram(vertexScript);
+    Curse::Shader::Program* fragmentShader = renderer->CreateShaderProgram(fragmentScript);
 
     struct Vertex
     {
@@ -147,18 +142,28 @@ static void Run()
     
     auto renderFunction = [&]()
     {      
+        static Curse::Clock fpsTimer;
+        static uint32_t fps = 0;
+        fps++;
+        if (fpsTimer.GetTime() >= Curse::Seconds(1.0f))
+        {
+            fpsTimer.Reset();
+            window->SetTitle(windowTitle + " - " + std::to_string(fps) + "FPS");
+            fps = 0;
+        }
+
+        
         renderer->Resize(window->GetSize());
         renderer->BeginDraw();
 
         renderer->BindPipeline(pipeline);
-        renderer->DrawVertexBuffers(indexBuffer, vertexBuffer, 1);
+        renderer->DrawVertexBuffer(indexBuffer, vertexBuffer);
 
         canvas.Draw();
 
         renderer->EndDraw();
     };
 
-    //Curse::Clock resizeTimer;
     auto resizeCallback = [&](Curse::Vector2ui32 )
     {
         renderFunction();
@@ -170,31 +175,8 @@ static void Run()
    
     window->Show();
 
-    //Curse::Vector2f32 windowPos = window->GetPosition();
-
-    //size_t ticks = 0;
-    Curse::Clock deltaClock;
-    Curse::Clock runClock;
-    //float deltaTime = 0.0f;
     while (window->IsOpen())
     {
-        //deltaTime = deltaClock.GetTime().AsSeconds<float>();
-        deltaClock.Reset();
-            
-        /*const float resizeSpeed = 2.0f;
-        const float resizeMagniture = 200.0f;
-        float resize = (std::sin(runClock.GetTime().AsSeconds<float>() * resizeSpeed) + 1.0f) / 2.0f * resizeMagniture;
-        auto newSize = Curse::Vector2f32{ 400.0f + resize, 400.0f + resize };
-        auto newPos = Curse::Vector2f32{ 400.0f - (resize / 2.0f), 400.0f - (resize/2.0f) };
-        window->Move(newPos);*/
-        //window->Resize(newSize);
-
-
-        //logger.Write(Curse::Logger::Severity::Debug, std::to_string(resize));
-
-        //window->Move(windowPos);
-        //window->Resize({300, 300});
-
         window->Update();
         if (!window->IsOpen())
         {

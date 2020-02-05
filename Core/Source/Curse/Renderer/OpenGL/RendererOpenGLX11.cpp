@@ -200,6 +200,11 @@ namespace Curse
         return nullptr;
     }
 
+    Shader::Program* RendererOpenGLX11::CreateShaderProgram(const Shader::Script&)
+    {
+        return nullptr;
+    }
+
     Texture* RendererOpenGLX11::CreateTexture()
     {
         return nullptr;
@@ -246,11 +251,7 @@ namespace Curse
     {
     }
 
-    void RendererOpenGLX11::DrawVertexBuffers(VertexBuffer* /*vertexBuffers*/, const size_t /*count*/)
-    {
-    }
-
-    void RendererOpenGLX11::DrawVertexBuffers(IndexBuffer* /*indexBuffer*/, VertexBuffer* /*vertexBuffer*/, const size_t /*count*/)
+    void RendererOpenGLX11::DrawVertexBuffer(IndexBuffer* /*indexBuffer*/, VertexBuffer* /*vertexBuffer*/)
     {
     }
 

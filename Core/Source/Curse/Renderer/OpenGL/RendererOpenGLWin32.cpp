@@ -203,6 +203,11 @@ namespace Curse
         return nullptr;
     }
 
+    Shader::Program* RendererOpenGLWin32::CreateShaderProgram(const Shader::Script& )
+    {
+        return nullptr;
+    }
+
     Texture* RendererOpenGLWin32::CreateTexture()
     {
         return nullptr;
@@ -249,11 +254,7 @@ namespace Curse
     {
     }
 
-    void RendererOpenGLWin32::DrawVertexBuffers(VertexBuffer* /*vertexBuffer*/, const size_t /*count*/)
-    {
-    }
-
-    void RendererOpenGLWin32::DrawVertexBuffers(IndexBuffer* /*indexBuffer*/, VertexBuffer* /*vertexBuffer*/, const size_t /*count*/)
+    void RendererOpenGLWin32::DrawVertexBuffer(IndexBuffer* /*indexBuffer*/, VertexBuffer* /*vertexBuffer*/)
     {
     }
 

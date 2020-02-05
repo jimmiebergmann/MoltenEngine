@@ -143,6 +143,11 @@ namespace Curse
         virtual void Resize(const Vector2ui32& size, const bool signal = false) override;
 
         /**
+        * @brief Set current title of window.
+        */
+        virtual void SetTitle(const std::string& title) override;
+
+        /**
         * @brief Get current size of window.
         */
         virtual Vector2ui32 GetSize() const override;
@@ -151,6 +156,11 @@ namespace Curse
         * @brief Get current position of window.
         */
         virtual Vector2i32 GetPosition() const override;
+
+        /**
+        * @brief Get title of window, being rendered in client area.
+        */
+        virtual std::string GetTitle() const override;
 
         /**
         * @brief Get user input of window.

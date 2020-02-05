@@ -157,7 +157,7 @@ namespace Curse
         m_window = ::CreateWindowEx(
             m_extendedStyle,
             className.c_str(),
-            m_title.c_str(), //stringToWideString(m_title).c_str(),
+            title.c_str(), //stringToWideString(m_title).c_str(),
             WS_CLIPSIBLINGS | WS_CLIPCHILDREN | m_style,
             CW_USEDEFAULT,
             CW_USEDEFAULT,
@@ -354,6 +354,12 @@ namespace Curse
         }
     }
 
+    void WindowWin32::SetTitle(const std::string& title)
+    {
+        ::SetWindowText(m_window, title.c_str());
+        m_title = title;
+    }
+
     Vector2ui32 WindowWin32::GetSize() const
     {
         return m_size;
@@ -362,6 +368,11 @@ namespace Curse
     Vector2i32 WindowWin32::GetPosition() const
     {
         return m_position;
+    }
+
+    std::string WindowWin32::GetTitle() const
+    {
+        return m_title;
     }
 
     UserInput& WindowWin32::GetUserInput()

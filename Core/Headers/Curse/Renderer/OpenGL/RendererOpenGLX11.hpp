@@ -119,6 +119,11 @@ namespace Curse
         virtual Shader::Program* CreateShaderProgram(const Shader::ProgramDescriptor& descriptor) override;
 
         /**
+        * @brief Create shader object out of shader script.
+        */
+        virtual Shader::Program* CreateShaderProgram(const Shader::Script& script) override;
+
+        /**
         * @brief Create texture object.
         */
         virtual Texture* CreateTexture() override;
@@ -176,14 +181,9 @@ namespace Curse
         virtual void DrawVertexBuffer(VertexBuffer* vertexBuffer) override;
 
         /**
-        * @brief Draw multiple vertex buffers, using the current bound pipeline.
+        * @brief * @brief Draw indexed vertex buffer, using the current bound pipeline.
         */
-        virtual void DrawVertexBuffers(VertexBuffer* vertexBuffers, const size_t count) override;
-
-        /**
-        * @brief Draw multiple indexed vertex buffers, using the current bound pipeline.
-        */
-        virtual void DrawVertexBuffers(IndexBuffer* indexBuffer, VertexBuffer* vertexBuffers, const size_t count) override;
+        virtual void DrawVertexBuffer(IndexBuffer* indexBuffer, VertexBuffer* vertexBuffer) override;
 
         /**
         * @brief Finalize and present rendering.

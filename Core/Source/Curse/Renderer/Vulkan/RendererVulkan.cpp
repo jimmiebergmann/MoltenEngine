@@ -679,6 +679,43 @@ namespace Curse
         return shaderProgram;
     }
 
+    Shader::Program* RendererVulkan::CreateShaderProgram(const Shader::Script & script)
+    {
+        ShaderType shaderType = script.GetType();
+
+        auto source = script.GenerateGlsl();
+        if (!source.size())
+        {
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to generate shader glsl code.");
+            return nullptr;
+        }
+
+        auto spirv = CompileShaderProgram(Curse::ShaderFormat::Glsl, shaderType, source, Curse::ShaderFormat::SpirV);
+        if (!spirv.size())
+        {
+            return nullptr;
+        }
+
+        VkShaderModuleCreateInfo shaderModuleInfo = {};
+        shaderModuleInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+        shaderModuleInfo.codeSize = spirv.size();
+        shaderModuleInfo.pCode = reinterpret_cast<const uint32_t*>(spirv.data());
+
+        VkShaderModule shaderModule;
+        if (vkCreateShaderModule(m_logicalDevice, &shaderModuleInfo, nullptr, &shaderModule) != VK_SUCCESS)
+        {
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to create shader module.");
+            return nullptr;
+        }
+
+        ShaderProgramVulkan* shaderProgram = new ShaderProgramVulkan;
+        shaderProgram->resource = static_cast<Resource>(shaderModule);
+        shaderProgram->type = shaderType;
+
+        m_resourceCounter.shaderCount++;
+        return shaderProgram;
+    }
+
     Texture* RendererVulkan::CreateTexture()
     {
         m_resourceCounter.textureCount++;
@@ -909,28 +946,19 @@ namespace Curse
         vkCmdDraw(*m_currentCommandBuffer, static_cast<uint32_t>(vertexBufferVulkan->vertexCount), 1, 0, 0);
     }
 
-    void RendererVulkan::DrawVertexBuffers(VertexBuffer* /*vertexBuffer*/, const size_t /*count*/)
-    {
-    }
-
-    void RendererVulkan::DrawVertexBuffers(IndexBuffer* indexBuffer, VertexBuffer* vertexBuffers, const size_t count)
+    void RendererVulkan::DrawVertexBuffer(IndexBuffer* indexBuffer, VertexBuffer* vertexBuffer)
     {
         IndexBufferVulkan* indexBufferVulkan = static_cast<IndexBufferVulkan*>(indexBuffer);
-        VertexBufferVulkan* vertexBuffersVulkan = static_cast<VertexBufferVulkan*>(vertexBuffers);
+        VertexBufferVulkan* vertexBufferVulkan = static_cast<VertexBufferVulkan*>(vertexBuffer);
 
         const VkDeviceSize offsets[] = { 0 };
-        std::vector<VkBuffer> indexBuffers(count);
-        for (size_t i = 0; i < count; i++)
-        {
-            indexBuffers[i] = vertexBuffersVulkan[i].resource;
-        }
+        VkBuffer vertexBuffers[] = { vertexBufferVulkan->resource };
 
-        vkCmdBindVertexBuffers(*m_currentCommandBuffer, 0, static_cast<uint32_t>(count), indexBuffers.data(), offsets);
+        vkCmdBindVertexBuffers(*m_currentCommandBuffer, 0, 1, vertexBuffers, offsets);
 
         vkCmdBindIndexBuffer(*m_currentCommandBuffer, indexBufferVulkan->resource, 0, GetIndexBufferDataType(indexBufferVulkan->dataType));
 
         vkCmdDrawIndexed(*m_currentCommandBuffer, static_cast<uint32_t>(indexBufferVulkan->indexCount), 1, 0, 0, 0);
-
     }
 
     void RendererVulkan::EndDraw()
