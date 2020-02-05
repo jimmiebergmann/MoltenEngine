@@ -161,12 +161,7 @@ static void Run()
     //Curse::Clock resizeTimer;
     auto resizeCallback = [&](Curse::Vector2ui32 )
     {
-        static Curse::Clock resizeTimer;
-        if (resizeTimer.GetTime() >= Curse::Seconds(0.1f))
-        {
-            resizeTimer.Reset();
-            renderFunction();
-        }
+        renderFunction();
     };
 
     window->OnMaximize.Connect(resizeCallback);
@@ -208,7 +203,7 @@ static void Run()
 
         Curse::UserInput userInput = window->GetUserInput();
 
-        Curse::UserInput::Event event;
+        /*Curse::UserInput::Event event;
         while (userInput.PollEvent(event))
         {
             switch (event.type)
@@ -241,7 +236,7 @@ static void Run()
                 logger.Write(Curse::Logger::Severity::Info, "Unkown event.");
                 break;
             }
-        }
+        }*/
 
         renderFunction();
     }

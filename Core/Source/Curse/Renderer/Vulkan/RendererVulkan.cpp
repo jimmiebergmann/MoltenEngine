@@ -45,6 +45,11 @@
 
 #define CURSE_RENDERER_LOG(severity, message) if(m_logger){ m_logger->Write(severity, message); }
 
+#define LOG_ERROR_RETURN(ret, message) if(m_logger){ m_logger->Write(Curse::Logger::Severity::Error, message); return ret; }
+#define LOG_WARNING(message) if(m_logger){ m_logger->Write(Curse::Logger::Severity::Warning, message); }
+#define LOG_INFO(message) if(m_logger){ m_logger->Write(Curse::Logger::Severity::Info, message); }
+#define LOG_DEBUG(message) if(m_logger){ m_logger->Write(Curse::Logger::Severity::Debug, message); }
+
 namespace Curse
 {
 
@@ -243,6 +248,7 @@ namespace Curse
             LoadSurface() &&
             LoadPhysicalDevice() &&
             LoadLogicalDevice() &&
+            FetchSwapChainSupport(m_physicalDevice) &&
             LoadSwapChain() &&
             LoadImageViews() &&
             LoadRenderPass() &&
@@ -257,44 +263,17 @@ namespace Curse
     {   
         if (m_logicalDevice)
         {
-            vkDeviceWaitIdle(m_logicalDevice);
-          
-            /*for (auto& semaphore : m_imageAvailableSemaphores)
-            {
-                vkDestroySemaphore(m_logicalDevice, semaphore, nullptr);
-            }
-            for (auto& semaphore : m_renderFinishedSemaphores)
-            {
-                vkDestroySemaphore(m_logicalDevice, semaphore, nullptr);
-            }
-
-            for (auto& fence : m_inFlightFences)
-            {
-                vkDestroyFence(m_logicalDevice, fence, nullptr);
-            }*/
+            vkDeviceWaitIdle(m_logicalDevice);  
 
             if (m_commandPool)
             {
                 vkDestroyCommandPool(m_logicalDevice, m_commandPool, nullptr);
             }
-
-            /*for (auto& framebuffer : m_presentFramebuffers)
-            {
-                DestroyFramebuffer(framebuffer);
-            }
-            m_presentFramebuffers.clear();*/
-
+  
             if (m_renderPass)
             {
                 vkDestroyRenderPass(m_logicalDevice, m_renderPass, nullptr);
             }
-
-            /*for (auto& imageView : m_swapChainImageViews)
-            {
-                vkDestroyImageView(m_logicalDevice, imageView, nullptr);
-            }
-
-            vkDestroySwapchainKHR(m_logicalDevice, m_swapChain, nullptr);*/
 
             UnloadSwapchain();
             vkDestroyDevice(m_logicalDevice, nullptr);
@@ -1498,7 +1477,7 @@ namespace Curse
         
         support.presentModes.resize(presentModeCount);
         vkGetPhysicalDeviceSurfacePresentModesKHR(device, m_surface, &presentModeCount, support.presentModes.data());
-
+        
         return true;
     }
 
@@ -1550,11 +1529,9 @@ namespace Curse
 
     bool RendererVulkan::LoadSwapChain()
     {
-        SwapChainSupport& swapChainSupport = m_physicalDevice.swapChainSupport;
-
         VkSurfaceFormatKHR surfaceFormat = {};
         bool foundSurfaceFormat = false;
-        for (auto& format : swapChainSupport.formats)
+        for (auto& format : m_physicalDevice.swapChainSupport.formats)
         {
             if (format.format == VkFormat::VK_FORMAT_B8G8R8A8_UNORM &&
                 format.colorSpace == VkColorSpaceKHR::VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
@@ -1574,7 +1551,7 @@ namespace Curse
         CURSE_UNSCOPED_ENUM_BEGIN
         VkPresentModeKHR presentMode = VkPresentModeKHR::VK_PRESENT_MODE_FIFO_KHR;
         CURSE_UNSCOPED_ENUM_END
-        for (auto& mode : swapChainSupport.presentModes)
+        for (auto& mode : m_physicalDevice.swapChainSupport.presentModes)
         {
             if (mode == VkPresentModeKHR::VK_PRESENT_MODE_MAILBOX_KHR)
             {  
@@ -1583,72 +1560,38 @@ namespace Curse
             }
         }
 
-        FetchSwapChainSupport(m_physicalDevice);
-
-        VkSurfaceCapabilitiesKHR& capabilities = swapChainSupport.capabilities;
-        m_swapChainExtent = capabilities.currentExtent;
+        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_physicalDevice.device, m_surface, &m_physicalDevice.swapChainSupport.capabilities);
+        VkSurfaceCapabilitiesKHR& capabilities = m_physicalDevice.swapChainSupport.capabilities;
+        
         if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
         {
             auto windowSize = m_renderTarget->GetSize();
-            m_swapChainExtent = {
+            capabilities.currentExtent = {
                 std::max(capabilities.currentExtent.width, std::min(windowSize.x, capabilities.maxImageExtent.width)),
-                std::max(capabilities.currentExtent.height, std::min(windowSize.x, capabilities.maxImageExtent.height))
+                std::max(capabilities.currentExtent.height, std::min(windowSize.y, capabilities.maxImageExtent.height))
             };
         }
+        m_swapChainExtent = capabilities.currentExtent;
 
-        uint32_t imageCount = std::min(capabilities.minImageCount + 1, capabilities.maxImageCount);
-        if (!imageCount)
-        {
-            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to get correct image count: " + std::to_string(imageCount) + ".");
-            return false;
-        }
+        const uint32_t imageCount = std::min(capabilities.minImageCount + 1, capabilities.maxImageCount);
 
-        VkSwapchainCreateInfoKHR swapchainInfo = {};
-        swapchainInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-        swapchainInfo.oldSwapchain = VK_NULL_HANDLE;
-        swapchainInfo.surface = m_surface;
-        swapchainInfo.presentMode = presentMode;
-        swapchainInfo.clipped = VK_TRUE;
-        swapchainInfo.minImageCount = imageCount;
-        swapchainInfo.imageFormat = surfaceFormat.format;
-        swapchainInfo.imageColorSpace = surfaceFormat.colorSpace;
-        swapchainInfo.imageExtent = m_swapChainExtent;
-        swapchainInfo.imageArrayLayers = 1;
-        swapchainInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-        swapchainInfo.preTransform = capabilities.currentTransform;
-        swapchainInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+        m_swapChain = Vulkan::CreateSwapchain(
+            m_physicalDevice.device, m_logicalDevice, m_surface, surfaceFormat,
+            presentMode, capabilities, imageCount, m_physicalDevice.graphicsQueueIndex, m_physicalDevice.presentQueueIndex, m_swapChain);
 
-        const uint32_t queueFamilies[2] = { m_physicalDevice.graphicsQueueIndex, m_physicalDevice.presentQueueIndex };
-        if (queueFamilies[0] != queueFamilies[1])
-        {
-            swapchainInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-            swapchainInfo.queueFamilyIndexCount = 2;
-            swapchainInfo.pQueueFamilyIndices = queueFamilies;
-        }
-        else
-        {
-            swapchainInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-            swapchainInfo.queueFamilyIndexCount = 0;
-            swapchainInfo.pQueueFamilyIndices = nullptr;
-        }
-
-        if (vkCreateSwapchainKHR(m_logicalDevice, &swapchainInfo, nullptr, &m_swapChain) != VK_SUCCESS)
+        if(m_swapChain == VK_NULL_HANDLE)
         {
             CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed create swap chain.");
             return false;
         }
 
-        uint32_t createdImageCount;
-        vkGetSwapchainImagesKHR(m_logicalDevice, m_swapChain, &createdImageCount, nullptr);
-        if (createdImageCount != imageCount)
+        Vulkan::GetSwapchainImages(m_logicalDevice, m_swapChain, m_swapChainImages);
+        if(m_swapChainImages.size() != imageCount)
         {
             vkDestroySwapchainKHR(m_logicalDevice, m_swapChain, nullptr);
             CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to create the requested number of swap chain images.");
             return false;
         }
-
-        m_swapChainImages.resize(imageCount);
-        vkGetSwapchainImagesKHR(m_logicalDevice, m_swapChain, &createdImageCount, m_swapChainImages.data());
 
         return true;
     }
@@ -1816,10 +1759,24 @@ namespace Curse
     bool RendererVulkan::RecreateSwapChain()
     {
         vkDeviceWaitIdle(m_logicalDevice);
-        //vkQueueWaitIdle(m_graphicsQueue);
-        //vkQueueWaitIdle(m_presentQueue);       
 
-        UnloadSwapchain();
+        if (m_swapChain)
+        {
+            Vulkan::DestroySemaphores(m_logicalDevice, m_imageAvailableSemaphores);
+            Vulkan::DestroySemaphores(m_logicalDevice, m_renderFinishedSemaphores);
+            Vulkan::DestroyFences(m_logicalDevice, m_inFlightFences);
+
+            m_imagesInFlight.clear();
+
+            for (auto& framebuffer : m_presentFramebuffers)
+            {
+                DestroyFramebuffer(framebuffer);
+            }
+            m_presentFramebuffers.clear();
+
+            Vulkan::DestroyImageViews(m_logicalDevice, m_swapChainImageViews);
+        }
+
 
         bool loaded =
             LoadSwapChain() &&
@@ -1832,23 +1789,10 @@ namespace Curse
 
     void RendererVulkan::UnloadSwapchain()
     {
-        for (auto& semaphore : m_imageAvailableSemaphores)
-        {
-            vkDestroySemaphore(m_logicalDevice, semaphore, nullptr);
-        }
-        m_imageAvailableSemaphores.clear();
+        Vulkan::DestroySemaphores(m_logicalDevice, m_imageAvailableSemaphores);
+        Vulkan::DestroySemaphores(m_logicalDevice, m_renderFinishedSemaphores);
+        Vulkan::DestroyFences(m_logicalDevice, m_inFlightFences);
 
-        for (auto& semaphore : m_renderFinishedSemaphores)
-        {
-            vkDestroySemaphore(m_logicalDevice, semaphore, nullptr);
-        }
-        m_renderFinishedSemaphores.clear();
-
-        for (auto& fence : m_inFlightFences)
-        {
-            vkDestroyFence(m_logicalDevice, fence, nullptr);
-        }
-        m_inFlightFences.clear();
         m_imagesInFlight.clear();
 
         for (auto& framebuffer : m_presentFramebuffers)
@@ -1857,11 +1801,7 @@ namespace Curse
         }
         m_presentFramebuffers.clear();
 
-        for (auto& imageView : m_swapChainImageViews)
-        {
-            vkDestroyImageView(m_logicalDevice, imageView, nullptr);
-        }
-        m_swapChainImageViews.clear();
+        Vulkan::DestroyImageViews(m_logicalDevice, m_swapChainImageViews);
 
         if (m_swapChain)
         {
@@ -1888,6 +1828,7 @@ namespace Curse
 
         return false;
     }
+
 }
 
 #endif

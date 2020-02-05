@@ -31,7 +31,7 @@
 #if defined(CURSE_ENABLE_VULKAN)
 
 #include "Curse/Renderer/Renderer.hpp"
-#include "Curse/Renderer/Vulkan/VulkanHeaders.hpp"
+#include "Curse/Renderer/Vulkan/Vulkan.hpp"
 #include <vector>
 
 CURSE_UNSCOPED_ENUM_BEGIN
@@ -263,7 +263,7 @@ namespace Curse
         bool RecreateSwapChain();
         void UnloadSwapchain();
         bool FindPhysicalDeviceMemoryType(uint32_t& index, const uint32_t filter, const VkMemoryPropertyFlags properties);
- 
+
         Logger* m_logger;
         Version m_version;
         const Window* m_renderTarget;

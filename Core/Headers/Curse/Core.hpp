@@ -162,8 +162,8 @@
 // Export API
 #if !defined(CURSE_STATIC)
     #ifdef _MSC_VER
-        // Turn off microsoft STL vsc warning
         #pragma warning(disable : 4251) // identifier' : class 'type' needs to have dll-interface to be used by clients of class 'type2'
+        #pragma warning(disable : 4100) // identifier' : unreferenced formal parameter
     #endif
 
     // Define as export or import, if FLARE_EXPORTS is defined.

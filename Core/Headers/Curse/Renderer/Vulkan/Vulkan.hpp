@@ -41,6 +41,33 @@
 #include "vulkan/vulkan_xlib.h"
 #endif
 
+#include <vector>
+
+namespace Curse
+{
+
+    namespace Vulkan
+    {
+
+       VkSwapchainKHR CURSE_API CreateSwapchain(VkPhysicalDevice physicalDevice, VkDevice logicalDevice,
+                                               VkSurfaceKHR surface, VkSurfaceFormatKHR surfaceFormat, VkPresentModeKHR presentMode,
+                                               const VkSurfaceCapabilitiesKHR & capabilities, uint32_t imageCount,
+                                               uint32_t graphicsQueueIndex, uint32_t presentQueueIndex,
+                                               VkSwapchainKHR oldSwapchain = VK_NULL_HANDLE);
+
+
+         void CURSE_API DestroySemaphores(VkDevice logicalDevice, std::vector<VkSemaphore>& semaphores);
+
+         void CURSE_API DestroyFences(VkDevice logicalDevice, std::vector<VkFence>& fences);
+
+         void CURSE_API DestroyImageViews(VkDevice logicalDevice, std::vector<VkImageView>& imageViews);
+
+         void CURSE_API GetSwapchainImages(VkDevice logicalDevice, VkSwapchainKHR swapchain, std::vector<VkImage>& images);
+
+    }
+
+}
+
 #endif
 
 #endif
