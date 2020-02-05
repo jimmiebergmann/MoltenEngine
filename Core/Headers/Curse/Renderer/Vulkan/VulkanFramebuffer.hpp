@@ -23,27 +23,27 @@
 *
 */
 
-#ifndef CURSE_CORE_RENDERER_FRAMEBUFFERVULKAN_HPP
-#define CURSE_CORE_RENDERER_FRAMEBUFFERVULKAN_HPP
+#ifndef CURSE_CORE_RENDERER_VULKANFRAMEBUFFER_HPP
+#define CURSE_CORE_RENDERER_VULKANFRAMEBUFFER_HPP
 
 #include "Curse/Renderer/Framebuffer.hpp"
 
 namespace Curse
 {
 
-    class RendererVulkan;
+    class VulkanRenderer;
 
-    class CURSE_API FramebufferVulkan : public Framebuffer
+    class CURSE_API VulkanFramebuffer : public Framebuffer
     {
 
     private:
 
-        FramebufferVulkan() = default;
-        FramebufferVulkan(const FramebufferVulkan&) = delete;
-        FramebufferVulkan(FramebufferVulkan&&) = delete;
-        ~FramebufferVulkan() = default;
+        VulkanFramebuffer() = default;
+        VulkanFramebuffer(const VulkanFramebuffer&) = delete;
+        VulkanFramebuffer(VulkanFramebuffer&&) = delete;
+        ~VulkanFramebuffer() = default;
 
-        friend class RendererVulkan;
+        friend class VulkanRenderer;
 
     };
 

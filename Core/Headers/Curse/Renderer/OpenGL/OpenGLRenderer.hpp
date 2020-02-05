@@ -23,30 +23,30 @@
 *
 */
 
-#ifndef CURSE_CORE_RENDERER_SHADERPROGRAMVULKAN_HPP
-#define CURSE_CORE_RENDERER_SHADERPROGRAMVULKAN_HPP
+#ifndef CURSE_CORE_RENDERER_OPENGLRENDERER_HPP
+#define CURSE_CORE_RENDERER_OPENGLRENDERER_HPP
 
-#include "Curse/Renderer/Shader/ShaderProgram.hpp"
+#include "Curse/Types.hpp"
+
+#if defined(CURSE_ENABLE_OPENGL)
+
+#if CURSE_PLATFORM == CURSE_PLATFORM_WINDOWS
+    #include "Curse/Renderer/OpenGL/OpenGLWin32Renderer.hpp"
+#elif CURSE_PLATFORM == CURSE_PLATFORM_LINUX
+    #include "Curse/Renderer/OpenGL/OpenGLX11Renderer.hpp"
+#endif
 
 namespace Curse
 {
 
-    class RendererVulkan;
-
-    class CURSE_API ShaderProgramVulkan : public Shader::Program
-    {
-
-    private:
-
-        ShaderProgramVulkan() = default;
-        ShaderProgramVulkan(const ShaderProgramVulkan&) = delete;
-        ShaderProgramVulkan(ShaderProgramVulkan&&) = delete;
-        ~ShaderProgramVulkan() = default;
-
-        friend class RendererVulkan;
-
-    };
+#if CURSE_PLATFORM == CURSE_PLATFORM_WINDOWS
+    using OpenGLRenderer = OpenGLWin32Renderer;
+#elif CURSE_PLATFORM == CURSE_PLATFORM_LINUX
+    using OpenGLRenderer = OpenGLX11Renderer;
+#endif
 
 }
+
+#endif
 
 #endif

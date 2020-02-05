@@ -24,8 +24,8 @@
 */
 
 #include "Curse/Renderer/Renderer.hpp"
-#include "Curse/Renderer/OpenGL/RendererOpenGL.hpp"
-#include "Curse/Renderer/Vulkan/RendererVulkan.hpp"
+#include "Curse/Renderer/OpenGL/OpenGLRenderer.hpp"
+#include "Curse/Renderer/Vulkan/VulkanRenderer.hpp"
 
 namespace Curse
 {
@@ -36,12 +36,12 @@ namespace Curse
         {
         case BackendApi::OpenGL:
             #if CURSE_ENABLE_OPENGL
-                return new RendererOpenGL;
+                return new OpenGLRenderer;
             #endif
             break;
         case BackendApi::Vulkan:
             #if CURSE_ENABLE_VULKAN
-                return new RendererVulkan;
+                return new VulkanRenderer;
             #endif
             break;
         default:

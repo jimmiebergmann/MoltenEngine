@@ -23,29 +23,27 @@
 *
 */
 
-#ifndef CURSE_CORE_RENDERER_VERTEXBUFFERVULKAN_HPP
-#define CURSE_CORE_RENDERER_VERTEXBUFFERVULKAN_HPP
+#ifndef CURSE_CORE_RENDERER_VULKANTEXTURE_HPP
+#define CURSE_CORE_RENDERER_VULKANTEXTURE_HPP
 
-#include "Curse/Renderer/VertexBuffer.hpp"
+#include "Curse/Renderer/Texture.hpp"
 
 namespace Curse
 {
 
-    class RendererVulkan;
+    class VulkanRenderer;
 
-    class CURSE_API VertexBufferVulkan : public VertexBuffer
+    class CURSE_API VulkanTexture : public Texture
     {
 
     private:
 
-        VertexBufferVulkan() = default;
-        VertexBufferVulkan(const VertexBufferVulkan&) = delete;
-        VertexBufferVulkan(VertexBufferVulkan&&) = delete;
-        ~VertexBufferVulkan() = default;
+        VulkanTexture() = default;
+        VulkanTexture(const VulkanTexture&) = delete;
+        VulkanTexture(VulkanTexture&&) = delete;
+        ~VulkanTexture() = default;
 
-        VkDeviceMemory memory;
-
-        friend class RendererVulkan;
+        friend class VulkanRenderer;
 
     };
 

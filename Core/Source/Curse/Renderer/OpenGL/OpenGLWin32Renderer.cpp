@@ -24,7 +24,7 @@
 */
 
 
-#include "Curse/Renderer/OpenGL/RendererOpenGLWin32.hpp"
+#include "Curse/Renderer/OpenGL/OpenGLWin32Renderer.hpp"
 
 #if defined(CURSE_ENABLE_OPENGL)
 #if CURSE_PLATFORM == CURSE_PLATFORM_WINDOWS
@@ -37,31 +37,31 @@
 namespace Curse
 {
 
-    RendererOpenGLWin32::RendererOpenGLWin32() :
+    OpenGLWin32Renderer::OpenGLWin32Renderer() :
         m_deviceContext(NULL),
         m_context(NULL)
     {
     }
 
-    RendererOpenGLWin32::RendererOpenGLWin32(const Window& window, const Version& version, Logger* logger) :
-        RendererOpenGLWin32()
+    OpenGLWin32Renderer::OpenGLWin32Renderer(const Window& window, const Version& version, Logger* logger) :
+        OpenGLWin32Renderer()
     {
         Open(window, version, logger);
     }
 
-    RendererOpenGLWin32::~RendererOpenGLWin32()
+    OpenGLWin32Renderer::~OpenGLWin32Renderer()
     {
         Close();
     }
 
-    bool RendererOpenGLWin32::Open(const Window& window, const Version& version, Logger* /*logger*/)
+    bool OpenGLWin32Renderer::Open(const Window& window, const Version& version, Logger* /*logger*/)
     {
         HGLRC temporaryContext = NULL;
 
         auto deviceContext = window.GetWin32DeviceContext();
         if (deviceContext == NULL)
         {
-            throw Exception("RendererOpenGLWin32: Device context of parameter \"window\" is null.");
+            throw Exception("OpenGLWin32Renderer: Device context of parameter \"window\" is null.");
         }
 
         try
@@ -93,17 +93,17 @@ namespace Curse
 
             if ((pixelFormat = ChoosePixelFormat(deviceContext, &pixelFormatDescriptor)) == 0)
             {
-                throw Exception("RendererOpenGLWin32: Failed to choose pixel format for Win32 device context.");
+                throw Exception("OpenGLWin32Renderer: Failed to choose pixel format for Win32 device context.");
             }
             if ((SetPixelFormat(deviceContext, pixelFormat, &pixelFormatDescriptor)) == false)
             {
-                throw Exception("RendererOpenGLWin32: Failed to set pixel format for Win32 device context.");
+                throw Exception("OpenGLWin32Renderer: Failed to set pixel format for Win32 device context.");
             }
 
             temporaryContext = ::wglCreateContext(deviceContext);
             if (temporaryContext == NULL)
             {
-                throw Exception("RendererOpenGLWin32: Failed to create primitive Win32 OpenGL context.");
+                throw Exception("OpenGLWin32Renderer: Failed to create primitive Win32 OpenGL context.");
             }
 
             ::wglMakeCurrent(NULL, NULL);
@@ -143,130 +143,130 @@ namespace Curse
         return false;
     }
 
-    void RendererOpenGLWin32::Close()
+    void OpenGLWin32Renderer::Close()
     {
         if (m_context)
         {
             // Release the context from the current thread
             if (!wglMakeCurrent(NULL, NULL))
             {
-                throw Exception("RendererOpenGLWin32: Failed to set current context to null.");
+                throw Exception("OpenGLWin32Renderer: Failed to set current context to null.");
             }
 
             // Delete the context
             if (!wglDeleteContext(m_context))
             {
-                throw Exception("RendererOpenGLWin32: Failed to delete context.");
+                throw Exception("OpenGLWin32Renderer: Failed to delete context.");
             }
 
             m_context = NULL;
         }
     }
 
-    void RendererOpenGLWin32::Resize(const Vector2ui32& /*size*/)
+    void OpenGLWin32Renderer::Resize(const Vector2ui32& /*size*/)
     {
     }
 
-    Renderer::BackendApi RendererOpenGLWin32::GetBackendApi() const
+    Renderer::BackendApi OpenGLWin32Renderer::GetBackendApi() const
     {
         return Renderer::BackendApi::OpenGL;
     }
 
-    Version RendererOpenGLWin32::GetVersion() const
+    Version OpenGLWin32Renderer::GetVersion() const
     {
         return m_version;
     }
 
-    std::vector<uint8_t> RendererOpenGLWin32::CompileShaderProgram(const ShaderFormat /*inputFormat*/, const ShaderType /*inputType*/,
+    std::vector<uint8_t> OpenGLWin32Renderer::CompileShaderProgram(const ShaderFormat /*inputFormat*/, const ShaderType /*inputType*/,
                                                                   const std::vector<uint8_t>& /*inputData*/, const ShaderFormat /*outputFormat*/)
     {
         return {};
     }
 
-    Framebuffer* RendererOpenGLWin32::CreateFramebuffer(const FramebufferDescriptor&)
+    Framebuffer* OpenGLWin32Renderer::CreateFramebuffer(const FramebufferDescriptor&)
     {
         return nullptr;
     }
 
-    IndexBuffer* RendererOpenGLWin32::CreateIndexBuffer(const IndexBufferDescriptor& /*descriptor*/)
+    IndexBuffer* OpenGLWin32Renderer::CreateIndexBuffer(const IndexBufferDescriptor& /*descriptor*/)
     {
         return nullptr;
     }
 
-    Pipeline* RendererOpenGLWin32::CreatePipeline(const PipelineDescriptor& /*descriptor*/)
+    Pipeline* OpenGLWin32Renderer::CreatePipeline(const PipelineDescriptor& /*descriptor*/)
     {
         return nullptr;
     }
 
-    Shader::Program* RendererOpenGLWin32::CreateShaderProgram(const Shader::ProgramDescriptor& )
+    Shader::Program* OpenGLWin32Renderer::CreateShaderProgram(const Shader::ProgramDescriptor& )
     {
         return nullptr;
     }
 
-    Shader::Program* RendererOpenGLWin32::CreateShaderProgram(const Shader::Script& )
+    Shader::Program* OpenGLWin32Renderer::CreateShaderProgram(const Shader::Script& )
     {
         return nullptr;
     }
 
-    Texture* RendererOpenGLWin32::CreateTexture()
+    Texture* OpenGLWin32Renderer::CreateTexture()
     {
         return nullptr;
     }
 
-    VertexBuffer* RendererOpenGLWin32::CreateVertexBuffer(const VertexBufferDescriptor&)
+    VertexBuffer* OpenGLWin32Renderer::CreateVertexBuffer(const VertexBufferDescriptor&)
     {
         return nullptr;
     }
 
-    void RendererOpenGLWin32::DestroyFramebuffer(Framebuffer*)
+    void OpenGLWin32Renderer::DestroyFramebuffer(Framebuffer*)
     {
     }
 
-    void RendererOpenGLWin32::DestroyIndexBuffer(IndexBuffer* /*indexBuffer*/)
+    void OpenGLWin32Renderer::DestroyIndexBuffer(IndexBuffer* /*indexBuffer*/)
     {
     }
 
-    void RendererOpenGLWin32::DestroyPipeline(Pipeline* /*shader*/)
+    void OpenGLWin32Renderer::DestroyPipeline(Pipeline* /*shader*/)
     {
     }
 
-    void RendererOpenGLWin32::DestroyShaderProgram(Shader::Program* )
+    void OpenGLWin32Renderer::DestroyShaderProgram(Shader::Program* )
     {
     }
 
-    void RendererOpenGLWin32::DestroyTexture(Texture* )
+    void OpenGLWin32Renderer::DestroyTexture(Texture* )
     {
     }
 
-    void RendererOpenGLWin32::DestroyVertexBuffer(VertexBuffer* /*vertexBuffer*/)
+    void OpenGLWin32Renderer::DestroyVertexBuffer(VertexBuffer* /*vertexBuffer*/)
     {
     }
 
-    void RendererOpenGLWin32::BindPipeline(Pipeline* /*pipeline*/)
+    void OpenGLWin32Renderer::BindPipeline(Pipeline* /*pipeline*/)
     {
     }
 
-    void RendererOpenGLWin32::BeginDraw()
+    void OpenGLWin32Renderer::BeginDraw()
     {
     }
 
-    void RendererOpenGLWin32::DrawVertexBuffer(VertexBuffer* /*vertexBuffer*/)
+    void OpenGLWin32Renderer::DrawVertexBuffer(VertexBuffer* /*vertexBuffer*/)
     {
     }
 
-    void RendererOpenGLWin32::DrawVertexBuffer(IndexBuffer* /*indexBuffer*/, VertexBuffer* /*vertexBuffer*/)
+    void OpenGLWin32Renderer::DrawVertexBuffer(IndexBuffer* /*indexBuffer*/, VertexBuffer* /*vertexBuffer*/)
     {
     }
 
-    void RendererOpenGLWin32::EndDraw()
+    void OpenGLWin32Renderer::EndDraw()
     {
     }
 
-    void RendererOpenGLWin32::WaitForDevice()
+    void OpenGLWin32Renderer::WaitForDevice()
     {
     }
 
-    bool RendererOpenGLWin32::OpenVersion(HDC deviceContext, const Version& version)
+    bool OpenGLWin32Renderer::OpenVersion(HDC deviceContext, const Version& version)
     {
         PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB = NULL;
         if ((wglCreateContextAttribsARB = (PFNWGLCREATECONTEXTATTRIBSARBPROC)wglGetProcAddress("wglCreateContextAttribsARB")) == NULL)
@@ -289,7 +289,7 @@ namespace Curse
         return true;
     }
 
-    void RendererOpenGLWin32::OpenBestVersion(HDC deviceContext, Version& version)
+    void OpenGLWin32Renderer::OpenBestVersion(HDC deviceContext, Version& version)
     {
         static const std::vector<Version> versions =
         {
@@ -327,7 +327,7 @@ namespace Curse
                 {
                     continue;
                 }
-                throw Exception("RendererOpenGLWin32: Failed to create best OpenGL context, last error: " + e.GetMessage());
+                throw Exception("OpenGLWin32Renderer: Failed to create best OpenGL context, last error: " + e.GetMessage());
             }
         }
     }

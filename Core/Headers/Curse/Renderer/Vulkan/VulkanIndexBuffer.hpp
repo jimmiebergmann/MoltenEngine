@@ -23,29 +23,29 @@
 *
 */
 
-#ifndef CURSE_CORE_RENDERER_PIPELINEVULKAN_HPP
-#define CURSE_CORE_RENDERER_PIPELINEVULKAN_HPP
+#ifndef CURSE_CORE_RENDERER_VULKANINDEXBUFFER_HPP
+#define CURSE_CORE_RENDERER_VULKANINDEXBUFFER_HPP
 
-#include "Curse/Renderer/Pipeline.hpp"
+#include "Curse/Renderer/IndexBuffer.hpp"
 
 namespace Curse
 {
 
-    class RendererVulkan;
+    class VulkanRenderer;
 
-    class CURSE_API PipelineVulkan : public Pipeline
+    class CURSE_API VulkanIndexBuffer : public IndexBuffer
     {
 
     private:
 
-        PipelineVulkan() = default;
-        PipelineVulkan(const PipelineVulkan&) = delete;
-        PipelineVulkan(PipelineVulkan&&) = delete;
-        ~PipelineVulkan() = default;
+        VulkanIndexBuffer() = default;
+        VulkanIndexBuffer(const VulkanIndexBuffer&) = delete;
+        VulkanIndexBuffer(VulkanIndexBuffer&&) = delete;
+        ~VulkanIndexBuffer() = default;
 
-        friend class RendererVulkan;
+        VkDeviceMemory memory;
 
-        VkPipelineLayout layout;
+        friend class VulkanRenderer;
 
     };
 

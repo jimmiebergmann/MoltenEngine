@@ -24,7 +24,7 @@
 */
 
 
-#include "Curse/Renderer/OpenGL/RendererOpenGLX11.hpp"
+#include "Curse/Renderer/OpenGL/OpenGLX11Renderer.hpp"
 
 #if defined(CURSE_ENABLE_OPENGL)
 #if CURSE_PLATFORM == CURSE_PLATFORM_LINUX
@@ -36,22 +36,22 @@
 namespace Curse
 {
 
-    RendererOpenGLX11::RendererOpenGLX11()
+    OpenGLX11Renderer::OpenGLX11Renderer()
     {
     }
 
-    RendererOpenGLX11::RendererOpenGLX11(const Window& window, const Version& version, Logger* logger) :
-        RendererOpenGLX11()
+    OpenGLX11Renderer::OpenGLX11Renderer(const Window& window, const Version& version, Logger* logger) :
+        OpenGLX11Renderer()
     {
         Open(window, version, logger);
     }
 
-    RendererOpenGLX11::~RendererOpenGLX11()
+    OpenGLX11Renderer::~OpenGLX11Renderer()
     {
         Close();
     }
 
-    bool RendererOpenGLX11::Open(const Window& /*window*/, const Version& /*version*/, Logger* /*logger*/)
+    bool OpenGLX11Renderer::Open(const Window& /*window*/, const Version& /*version*/, Logger* /*logger*/)
     {
         /*HGLRC temporaryContext = NULL;
 
@@ -140,7 +140,7 @@ namespace Curse
         return false;
     }
 
-    void RendererOpenGLX11::Close()
+    void OpenGLX11Renderer::Close()
     {
         /*if (m_context)
         {
@@ -160,106 +160,106 @@ namespace Curse
         }*/
     }
 
-    void RendererOpenGLX11::Resize(const Vector2ui32& /*size*/)
+    void OpenGLX11Renderer::Resize(const Vector2ui32& /*size*/)
     {
     }
 
-    Renderer::BackendApi RendererOpenGLX11::GetBackendApi() const
+    Renderer::BackendApi OpenGLX11Renderer::GetBackendApi() const
     {
         return Renderer::BackendApi::OpenGL;
     }
 
-    Version RendererOpenGLX11::GetVersion() const
+    Version OpenGLX11Renderer::GetVersion() const
     {
         return m_version;
     }
 
-    std::vector<uint8_t> RendererOpenGLX11::CompileShader(const ShaderFormat /*inputFormat*/, const ShaderType /*inputType*/,
+    std::vector<uint8_t> OpenGLX11Renderer::CompileShader(const ShaderFormat /*inputFormat*/, const ShaderType /*inputType*/,
                                                           const std::vector<uint8_t>& /*inputData*/, const ShaderFormat /*outputFormat*/)
     {
         return {};
     }
 
-    Framebuffer* RendererOpenGLX11::CreateFramebuffer(const FramebufferDescriptor&)
+    Framebuffer* OpenGLX11Renderer::CreateFramebuffer(const FramebufferDescriptor&)
     {
         return nullptr;
     }
 
-    IndexBuffer* RendererOpenGLX11::CreateIndexBuffer(const IndexBufferDescriptor& /*descriptor*/)
+    IndexBuffer* OpenGLX11Renderer::CreateIndexBuffer(const IndexBufferDescriptor& /*descriptor*/)
     {
         return nullptr;
     }
 
-    Pipeline* RendererOpenGLX11::CreatePipeline(const PipelineDescriptor& /*descriptor*/)
+    Pipeline* OpenGLX11Renderer::CreatePipeline(const PipelineDescriptor& /*descriptor*/)
     {
         return nullptr;
     }
 
-    Shader::Program* RendererOpenGLX11::CreateShaderProgram(const Shader::ProgramDescriptor&)
+    Shader::Program* OpenGLX11Renderer::CreateShaderProgram(const Shader::ProgramDescriptor&)
     {
         return nullptr;
     }
 
-    Shader::Program* RendererOpenGLX11::CreateShaderProgram(const Shader::Script&)
+    Shader::Program* OpenGLX11Renderer::CreateShaderProgram(const Shader::Script&)
     {
         return nullptr;
     }
 
-    Texture* RendererOpenGLX11::CreateTexture()
+    Texture* OpenGLX11Renderer::CreateTexture()
     {
         return nullptr;
     }
 
-    VertexBuffer* RendererOpenGLX11::CreateVertexBuffer(const VertexBufferDescriptor&)
+    VertexBuffer* OpenGLX11Renderer::CreateVertexBuffer(const VertexBufferDescriptor&)
     {
         return nullptr;
     }
 
-    void RendererOpenGLX11::DestroyFramebuffer(Framebuffer*)
+    void OpenGLX11Renderer::DestroyFramebuffer(Framebuffer*)
     {
     }
 
-    void RendererOpenGLX11::DestroyIndexBuffer(IndexBuffer* /*indexBuffer*/)
+    void OpenGLX11Renderer::DestroyIndexBuffer(IndexBuffer* /*indexBuffer*/)
     {
     }
 
-    void RendererOpenGLX11::DestroyPipeline(Pipeline* /*shader*/)
+    void OpenGLX11Renderer::DestroyPipeline(Pipeline* /*shader*/)
     {
     }
 
-    void RendererOpenGLX11::DestroyShaderProgram(Shader::Program*)
+    void OpenGLX11Renderer::DestroyShaderProgram(Shader::Program*)
     {
     }
 
-    void RendererOpenGLX11::DestroyTexture(Texture*)
+    void OpenGLX11Renderer::DestroyTexture(Texture*)
     {
     }
 
-    void RendererOpenGLX11::DestroyVertexBuffer(VertexBuffer* /*vertexBuffer*/)
+    void OpenGLX11Renderer::DestroyVertexBuffer(VertexBuffer* /*vertexBuffer*/)
     {
     }
 
-    void RendererOpenGLX11::BindPipeline(Pipeline* /*pipeline*/)
+    void OpenGLX11Renderer::BindPipeline(Pipeline* /*pipeline*/)
     {
     }
 
-    void RendererOpenGLX11::BeginDraw()
+    void OpenGLX11Renderer::BeginDraw()
     {
     }
 
-    void RendererOpenGLX11::DrawVertexBuffer(VertexBuffer* /*vertexBuffer*/)
+    void OpenGLX11Renderer::DrawVertexBuffer(VertexBuffer* /*vertexBuffer*/)
     {
     }
 
-    void RendererOpenGLX11::DrawVertexBuffer(IndexBuffer* /*indexBuffer*/, VertexBuffer* /*vertexBuffer*/)
+    void OpenGLX11Renderer::DrawVertexBuffer(IndexBuffer* /*indexBuffer*/, VertexBuffer* /*vertexBuffer*/)
     {
     }
 
-    void RendererOpenGLX11::EndDraw()
+    void OpenGLX11Renderer::EndDraw()
     {
     }
 
-    void RendererOpenGLX11::WaitForDevice()
+    void OpenGLX11Renderer::WaitForDevice()
     {
     }
 

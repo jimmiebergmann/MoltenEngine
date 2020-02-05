@@ -23,27 +23,27 @@
 *
 */
 
-#ifndef CURSE_CORE_RENDERER_TEXTUREVULKAN_HPP
-#define CURSE_CORE_RENDERER_TEXTUREVULKAN_HPP
+#ifndef CURSE_CORE_RENDERER_VULKANSHADERPROGRAM_HPP
+#define CURSE_CORE_RENDERER_VULKANSHADERPROGRAM_HPP
 
-#include "Curse/Renderer/Texture.hpp"
+#include "Curse/Renderer/Shader/ShaderProgram.hpp"
 
 namespace Curse
 {
 
-    class RendererVulkan;
+    class VulkanRenderer;
 
-    class CURSE_API TextureVulkan : public Texture
+    class CURSE_API VulkanShaderProgram : public Shader::Program
     {
 
     private:
 
-        TextureVulkan() = default;
-        TextureVulkan(const Texture&) = delete;
-        TextureVulkan(Texture&&) = delete;
-        ~TextureVulkan() = default;
+        VulkanShaderProgram() = default;
+        VulkanShaderProgram(const VulkanShaderProgram&) = delete;
+        VulkanShaderProgram(VulkanShaderProgram&&) = delete;
+        ~VulkanShaderProgram() = default;
 
-        friend class RendererVulkan;
+        friend class VulkanRenderer;
 
     };
 

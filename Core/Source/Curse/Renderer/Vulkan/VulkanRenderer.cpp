@@ -24,16 +24,16 @@
 */
 
 
-#include "Curse/Renderer/Vulkan/RendererVulkan.hpp"
+#include "Curse/Renderer/Vulkan/VulkanRenderer.hpp"
 
 #if defined(CURSE_ENABLE_VULKAN)
 
-#include "Curse/Renderer/Vulkan/FramebufferVulkan.hpp"
-#include "Curse/Renderer/Vulkan/IndexBufferVulkan.hpp"
-#include "Curse/Renderer/Vulkan/PipelineVulkan.hpp"
-#include "Curse/Renderer/Vulkan/ShaderProgramVulkan.hpp"
-#include "Curse/Renderer/Vulkan/TextureVulkan.hpp"
-#include "Curse/Renderer/Vulkan/VertexBufferVulkan.hpp"
+#include "Curse/Renderer/Vulkan/VulkanFramebuffer.hpp"
+#include "Curse/Renderer/Vulkan/VulkanIndexBuffer.hpp"
+#include "Curse/Renderer/Vulkan/VulkanPipeline.hpp"
+#include "Curse/Renderer/Vulkan/VulkanShaderProgram.hpp"
+#include "Curse/Renderer/Vulkan/VulkanTexture.hpp"
+#include "Curse/Renderer/Vulkan/VulkanVertexBuffer.hpp"
 #include "Curse/Window/Window.hpp"
 #include "Curse/Logger.hpp"
 #include "Curse/System/Exception.hpp"
@@ -199,7 +199,7 @@ namespace Curse
 
 
     // Vulkan renderer class implementations.
-    RendererVulkan::RendererVulkan() :
+    VulkanRenderer::VulkanRenderer() :
         m_logger(nullptr),
         m_version(0, 0, 0),
         m_renderTarget(nullptr),
@@ -225,18 +225,18 @@ namespace Curse
     {
     }
 
-    RendererVulkan::RendererVulkan(const Window& window, const Version& version, Logger* logger) :
-        RendererVulkan()
+    VulkanRenderer::VulkanRenderer(const Window& window, const Version& version, Logger* logger) :
+        VulkanRenderer()
     {
         Open(window, version, logger);
     }
 
-    RendererVulkan::~RendererVulkan()
+    VulkanRenderer::~VulkanRenderer()
     {
         Close();
     }
 
-    bool RendererVulkan::Open(const Window& window, const Version& version, Logger* logger)
+    bool VulkanRenderer::Open(const Window& window, const Version& version, Logger* logger)
     {
         Close();
 
@@ -259,7 +259,7 @@ namespace Curse
         return loaded;   
     }
 
-    void RendererVulkan::Close()
+    void VulkanRenderer::Close()
     {   
         if (m_logicalDevice)
         {
@@ -328,7 +328,7 @@ namespace Curse
         m_currentFramebuffer = nullptr;
     }
 
-    void RendererVulkan::Resize(const Vector2ui32& size)
+    void VulkanRenderer::Resize(const Vector2ui32& size)
     {
         if (m_beginDraw)
         {
@@ -347,17 +347,17 @@ namespace Curse
         m_resized = true;
     }
 
-    Renderer::BackendApi RendererVulkan::GetBackendApi() const
+    Renderer::BackendApi VulkanRenderer::GetBackendApi() const
     {
         return Renderer::BackendApi::Vulkan;
     }
 
-    Version RendererVulkan::GetVersion() const
+    Version VulkanRenderer::GetVersion() const
     {
         return m_version;
     }
 
-    std::vector<uint8_t> RendererVulkan::CompileShaderProgram(const ShaderFormat inputFormat, const ShaderType inputType,
+    std::vector<uint8_t> VulkanRenderer::CompileShaderProgram(const ShaderFormat inputFormat, const ShaderType inputType,
                                                               const std::vector<uint8_t>& inputData, const ShaderFormat outputFormat)
     {
         std::string errorMessage;
@@ -370,7 +370,7 @@ namespace Curse
         return std::move(output);
     }
 
-    Framebuffer* RendererVulkan::CreateFramebuffer(const FramebufferDescriptor& descriptor)
+    Framebuffer* VulkanRenderer::CreateFramebuffer(const FramebufferDescriptor& descriptor)
     {
         VkImageView attachments[] =
         {
@@ -393,14 +393,14 @@ namespace Curse
             return nullptr;
         }
 
-        FramebufferVulkan* framebufferVulkan = new FramebufferVulkan;
-        framebufferVulkan->resource = framebuffer;
+        VulkanFramebuffer* vulkanFramebuffer = new VulkanFramebuffer;
+        vulkanFramebuffer->resource = framebuffer;
 
         m_resourceCounter.framebufferCount++;
-        return framebufferVulkan;
+        return vulkanFramebuffer;
     }
 
-    IndexBuffer* RendererVulkan::CreateIndexBuffer(const IndexBufferDescriptor& descriptor)
+    IndexBuffer* VulkanRenderer::CreateIndexBuffer(const IndexBufferDescriptor& descriptor)
     {
         VkBufferCreateInfo bufferInfo = {};
         bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -455,7 +455,7 @@ namespace Curse
         vkUnmapMemory(m_logicalDevice, memory);
 
 
-        IndexBufferVulkan* buffer = new IndexBufferVulkan;
+        VulkanIndexBuffer* buffer = new VulkanIndexBuffer;
         buffer->resource = indexBuffer;
         buffer->memory = memory;
         buffer->indexCount = descriptor.indexCount;
@@ -465,12 +465,12 @@ namespace Curse
         return buffer;
     }
 
-    Pipeline* RendererVulkan::CreatePipeline(const PipelineDescriptor& descriptor)
+    Pipeline* VulkanRenderer::CreatePipeline(const PipelineDescriptor& descriptor)
     {
         std::vector<VkPipelineShaderStageCreateInfo> shaderStageInfos(descriptor.shaderPrograms.size(), VkPipelineShaderStageCreateInfo{});
         for (size_t i = 0; i < descriptor.shaderPrograms.size(); i++)
         {
-            const ShaderProgramVulkan* shaderProgram = static_cast<ShaderProgramVulkan*>(descriptor.shaderPrograms[i]);
+            const VulkanShaderProgram* shaderProgram = static_cast<VulkanShaderProgram*>(descriptor.shaderPrograms[i]);
             VkPipelineShaderStageCreateInfo& createInfo = shaderStageInfos[i];
             createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
             createInfo.stage = GetShaderProgramStageFlag(shaderProgram->type);
@@ -628,7 +628,7 @@ namespace Curse
             return nullptr;
         }
 
-        PipelineVulkan* pipeline = new PipelineVulkan;
+        VulkanPipeline* pipeline = new VulkanPipeline;
         pipeline->resource = graphicsPipeline;
         pipeline->layout = pipelineLayout;
 
@@ -636,7 +636,7 @@ namespace Curse
         return pipeline;
     }
 
-    Shader::Program* RendererVulkan::CreateShaderProgram(const Shader::ProgramDescriptor& descriptor)
+    Shader::Program* VulkanRenderer::CreateShaderProgram(const Shader::ProgramDescriptor& descriptor)
     {
         const uint8_t* rawData = descriptor.data;
         size_t dataSize = descriptor.dataSize;
@@ -671,7 +671,7 @@ namespace Curse
             return nullptr;
         }
 
-        ShaderProgramVulkan* shaderProgram = new ShaderProgramVulkan;
+        VulkanShaderProgram* shaderProgram = new VulkanShaderProgram;
         shaderProgram->resource = static_cast<Resource>(shaderModule);
         shaderProgram->type = descriptor.type;
 
@@ -679,7 +679,7 @@ namespace Curse
         return shaderProgram;
     }
 
-    Shader::Program* RendererVulkan::CreateShaderProgram(const Shader::Script & script)
+    Shader::Program* VulkanRenderer::CreateShaderProgram(const Shader::Script & script)
     {
         ShaderType shaderType = script.GetType();
 
@@ -708,7 +708,7 @@ namespace Curse
             return nullptr;
         }
 
-        ShaderProgramVulkan* shaderProgram = new ShaderProgramVulkan;
+        VulkanShaderProgram* shaderProgram = new VulkanShaderProgram;
         shaderProgram->resource = static_cast<Resource>(shaderModule);
         shaderProgram->type = shaderType;
 
@@ -716,13 +716,13 @@ namespace Curse
         return shaderProgram;
     }
 
-    Texture* RendererVulkan::CreateTexture()
+    Texture* VulkanRenderer::CreateTexture()
     {
         m_resourceCounter.textureCount++;
-        return new TextureVulkan;
+        return new VulkanTexture;
     }
 
-    VertexBuffer* RendererVulkan::CreateVertexBuffer(const VertexBufferDescriptor& descriptor)
+    VertexBuffer* VulkanRenderer::CreateVertexBuffer(const VertexBufferDescriptor& descriptor)
     {
         VkBufferCreateInfo bufferInfo = {};
         bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -777,7 +777,7 @@ namespace Curse
         vkUnmapMemory(m_logicalDevice, memory);
 
 
-        VertexBufferVulkan* buffer = new VertexBufferVulkan;
+        VulkanVertexBuffer* buffer = new VulkanVertexBuffer;
         buffer->resource = vertexBuffer;
         buffer->memory = memory;
         buffer->vertexCount = descriptor.vertexCount;
@@ -787,71 +787,71 @@ namespace Curse
         return buffer;
     }
 
-    void RendererVulkan::DestroyFramebuffer(Framebuffer* framebuffer)
+    void VulkanRenderer::DestroyFramebuffer(Framebuffer* framebuffer)
     {
-        FramebufferVulkan* framebufferVulkan = static_cast<FramebufferVulkan*>(framebuffer);
-        vkDestroyFramebuffer(m_logicalDevice, framebufferVulkan->resource, nullptr);
+        VulkanFramebuffer* vulkanFramebuffer = static_cast<VulkanFramebuffer*>(framebuffer);
+        vkDestroyFramebuffer(m_logicalDevice, vulkanFramebuffer->resource, nullptr);
         m_resourceCounter.framebufferCount--;
-        delete framebufferVulkan;
+        delete vulkanFramebuffer;
     }
 
-    void RendererVulkan::DestroyIndexBuffer(IndexBuffer* indexBuffer)
+    void VulkanRenderer::DestroyIndexBuffer(IndexBuffer* indexBuffer)
     {
-        IndexBufferVulkan* indexBufferVulkan = static_cast<IndexBufferVulkan*>(indexBuffer);
-        vkDestroyBuffer(m_logicalDevice, indexBufferVulkan->resource, nullptr);
-        vkFreeMemory(m_logicalDevice, indexBufferVulkan->memory, nullptr);
+        VulkanIndexBuffer* vulkanIndexBuffer = static_cast<VulkanIndexBuffer*>(indexBuffer);
+        vkDestroyBuffer(m_logicalDevice, vulkanIndexBuffer->resource, nullptr);
+        vkFreeMemory(m_logicalDevice, vulkanIndexBuffer->memory, nullptr);
         m_resourceCounter.indexBufferCount--;
-        delete indexBufferVulkan;
+        delete vulkanIndexBuffer;
     }
 
-    void RendererVulkan::DestroyPipeline(Pipeline* pipeline)
+    void VulkanRenderer::DestroyPipeline(Pipeline* pipeline)
     {
-        PipelineVulkan* pipelineVulkan = static_cast<PipelineVulkan*>(pipeline);
+        VulkanPipeline* vulkanPipeline = static_cast<VulkanPipeline*>(pipeline);
 
-        if (pipelineVulkan->resource)
+        if (vulkanPipeline->resource)
         {
             vkDeviceWaitIdle(m_logicalDevice);
-            vkDestroyPipeline(m_logicalDevice, pipelineVulkan->resource, nullptr);
+            vkDestroyPipeline(m_logicalDevice, vulkanPipeline->resource, nullptr);
         }
-        if (pipelineVulkan->layout)
+        if (vulkanPipeline->layout)
         {
-            vkDestroyPipelineLayout(m_logicalDevice, pipelineVulkan->layout, nullptr);
+            vkDestroyPipelineLayout(m_logicalDevice, vulkanPipeline->layout, nullptr);
         }
 
         m_resourceCounter.pipelineCount--;
-        delete pipelineVulkan;
+        delete vulkanPipeline;
     }
 
-    void RendererVulkan::DestroyShaderProgram(Shader::Program* shader)
+    void VulkanRenderer::DestroyShaderProgram(Shader::Program* shader)
     {
-        ShaderProgramVulkan* shaderProgramVulkan = static_cast<ShaderProgramVulkan*>(shader);
-        vkDestroyShaderModule(m_logicalDevice, shaderProgramVulkan->resource, nullptr);
+        VulkanShaderProgram* vulkanShaderProgram = static_cast<VulkanShaderProgram*>(shader);
+        vkDestroyShaderModule(m_logicalDevice, vulkanShaderProgram->resource, nullptr);
         m_resourceCounter.shaderCount--;
-        delete shaderProgramVulkan;
+        delete vulkanShaderProgram;
     }
 
-    void RendererVulkan::DestroyTexture(Texture* texture)
+    void VulkanRenderer::DestroyTexture(Texture* texture)
     {
         m_resourceCounter.textureCount--;
-        delete static_cast<TextureVulkan*>(texture);
+        delete static_cast<VulkanTexture*>(texture);
     }
 
-    void RendererVulkan::DestroyVertexBuffer(VertexBuffer* vertexBuffer)
+    void VulkanRenderer::DestroyVertexBuffer(VertexBuffer* vertexBuffer)
     {
-        VertexBufferVulkan* vertexBufferVulkan = static_cast<VertexBufferVulkan*>(vertexBuffer);
-        vkDestroyBuffer(m_logicalDevice, vertexBufferVulkan->resource, nullptr);
-        vkFreeMemory(m_logicalDevice, vertexBufferVulkan->memory, nullptr);
+        VulkanVertexBuffer* vulkanVertexBuffer = static_cast<VulkanVertexBuffer*>(vertexBuffer);
+        vkDestroyBuffer(m_logicalDevice, vulkanVertexBuffer->resource, nullptr);
+        vkFreeMemory(m_logicalDevice, vulkanVertexBuffer->memory, nullptr);
         m_resourceCounter.vertexBufferCount--;
-        delete vertexBufferVulkan;
+        delete vulkanVertexBuffer;
     }
 
-    void RendererVulkan::BindPipeline(Pipeline* pipeline)
+    void VulkanRenderer::BindPipeline(Pipeline* pipeline)
     {
-        PipelineVulkan* pipelineVulkan = static_cast<PipelineVulkan*>(pipeline);
-        vkCmdBindPipeline(*m_currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineVulkan->resource);
+        VulkanPipeline* vulkanPipeline = static_cast<VulkanPipeline*>(pipeline);
+        vkCmdBindPipeline(*m_currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkanPipeline->resource);
     }
 
-    void RendererVulkan::BeginDraw()
+    void VulkanRenderer::BeginDraw()
     {
         if (m_beginDraw)
         {
@@ -935,33 +935,32 @@ namespace Curse
         m_beginDraw = true;
     }
 
-    void RendererVulkan::DrawVertexBuffer(VertexBuffer* vertexBuffer)
+    void VulkanRenderer::DrawVertexBuffer(VertexBuffer* vertexBuffer)
     {
-        VertexBufferVulkan* vertexBufferVulkan = static_cast<VertexBufferVulkan*>(vertexBuffer);
-
-        VkBuffer vertexBuffers[] = { vertexBufferVulkan->resource };
+        VulkanVertexBuffer* vulkanVertexBuffer = static_cast<VulkanVertexBuffer*>(vertexBuffer);
+        VkBuffer vertexBuffers[] = { vulkanVertexBuffer->resource };
         const VkDeviceSize offsets[] = { 0 };
         vkCmdBindVertexBuffers(*m_currentCommandBuffer, 0, 1, vertexBuffers, offsets);
 
-        vkCmdDraw(*m_currentCommandBuffer, static_cast<uint32_t>(vertexBufferVulkan->vertexCount), 1, 0, 0);
+        vkCmdDraw(*m_currentCommandBuffer, static_cast<uint32_t>(vulkanVertexBuffer->vertexCount), 1, 0, 0);
     }
 
-    void RendererVulkan::DrawVertexBuffer(IndexBuffer* indexBuffer, VertexBuffer* vertexBuffer)
+    void VulkanRenderer::DrawVertexBuffer(IndexBuffer* indexBuffer, VertexBuffer* vertexBuffer)
     {
-        IndexBufferVulkan* indexBufferVulkan = static_cast<IndexBufferVulkan*>(indexBuffer);
-        VertexBufferVulkan* vertexBufferVulkan = static_cast<VertexBufferVulkan*>(vertexBuffer);
+        VulkanIndexBuffer* vulkanIndexBuffer = static_cast<VulkanIndexBuffer*>(indexBuffer);
+        VulkanVertexBuffer* vulkanVertexBuffer = static_cast<VulkanVertexBuffer*>(vertexBuffer);
 
         const VkDeviceSize offsets[] = { 0 };
-        VkBuffer vertexBuffers[] = { vertexBufferVulkan->resource };
+        VkBuffer vertexBuffers[] = { vulkanVertexBuffer->resource };
 
         vkCmdBindVertexBuffers(*m_currentCommandBuffer, 0, 1, vertexBuffers, offsets);
 
-        vkCmdBindIndexBuffer(*m_currentCommandBuffer, indexBufferVulkan->resource, 0, GetIndexBufferDataType(indexBufferVulkan->dataType));
+        vkCmdBindIndexBuffer(*m_currentCommandBuffer, vulkanIndexBuffer->resource, 0, GetIndexBufferDataType(vulkanIndexBuffer->dataType));
 
-        vkCmdDrawIndexed(*m_currentCommandBuffer, static_cast<uint32_t>(indexBufferVulkan->indexCount), 1, 0, 0, 0);
+        vkCmdDrawIndexed(*m_currentCommandBuffer, static_cast<uint32_t>(vulkanIndexBuffer->indexCount), 1, 0, 0, 0);
     }
 
-    void RendererVulkan::EndDraw()
+    void VulkanRenderer::EndDraw()
     {
         if (!m_beginDraw)
         {
@@ -1014,52 +1013,52 @@ namespace Curse
         m_beginDraw = false;
     }
 
-    void RendererVulkan::WaitForDevice()
+    void VulkanRenderer::WaitForDevice()
     {
         vkDeviceWaitIdle(m_logicalDevice);
     }
 
 
     // DebugMessenger implementations.
-    RendererVulkan::DebugMessenger::DebugMessenger() :
+    VulkanRenderer::DebugMessenger::DebugMessenger() :
         messenger(VK_NULL_HANDLE),
         CreateDebugUtilsMessengerEXT(nullptr),
         DestroyDebugUtilsMessengerEXT(nullptr)
     { }
 
-    void RendererVulkan::DebugMessenger::Clear()
+    void VulkanRenderer::DebugMessenger::Clear()
     {
         messenger = VK_NULL_HANDLE;
         CreateDebugUtilsMessengerEXT = nullptr;
         DestroyDebugUtilsMessengerEXT = nullptr;      
     }
 
-    RendererVulkan::PhysicalDevice::PhysicalDevice() :
+    VulkanRenderer::PhysicalDevice::PhysicalDevice() :
         device(VK_NULL_HANDLE),
         graphicsQueueIndex(0),
         presentQueueIndex(0)
     { }
 
-    RendererVulkan::PhysicalDevice::PhysicalDevice(VkPhysicalDevice device) :
+    VulkanRenderer::PhysicalDevice::PhysicalDevice(VkPhysicalDevice device) :
         device(device),
         graphicsQueueIndex(0),
         presentQueueIndex(0)
     { }
 
-    RendererVulkan::PhysicalDevice::PhysicalDevice(VkPhysicalDevice device, uint32_t graphicsQueueIndex, uint32_t presentQueueIndex) :
+    VulkanRenderer::PhysicalDevice::PhysicalDevice(VkPhysicalDevice device, uint32_t graphicsQueueIndex, uint32_t presentQueueIndex) :
         device(device),
         graphicsQueueIndex(graphicsQueueIndex),
         presentQueueIndex(presentQueueIndex)
     { }
 
-    void RendererVulkan::PhysicalDevice::Clear()
+    void VulkanRenderer::PhysicalDevice::Clear()
     {
         device = VK_NULL_HANDLE;
         graphicsQueueIndex = 0;
         presentQueueIndex = 0;
     }
 
-    RendererVulkan::ResourceCounter::ResourceCounter() :
+    VulkanRenderer::ResourceCounter::ResourceCounter() :
         framebufferCount(0),
         indexBufferCount(0),
         pipelineCount(0),
@@ -1068,7 +1067,7 @@ namespace Curse
         vertexBufferCount(0)
     {}
 
-    void RendererVulkan::ResourceCounter::Clear(Logger * m_logger)
+    void VulkanRenderer::ResourceCounter::Clear(Logger * m_logger)
     {
         if (framebufferCount)
         {
@@ -1102,12 +1101,12 @@ namespace Curse
         vertexBufferCount = 0;
     }
 
-    PFN_vkVoidFunction RendererVulkan::GetVulkanFunction(const char* functionName) const
+    PFN_vkVoidFunction VulkanRenderer::GetVulkanFunction(const char* functionName) const
     {
         return vkGetInstanceProcAddr(m_instance, functionName);
     }
 
-    bool RendererVulkan::LoadInstance(const Version& version)
+    bool VulkanRenderer::LoadInstance(const Version& version)
     {
         auto newVersion = version;
         if (newVersion == Version::None)
@@ -1159,7 +1158,7 @@ namespace Curse
             {
                 case VK_ERROR_INCOMPATIBLE_DRIVER:
                 {
-                    CURSE_RENDERER_LOG(Logger::Severity::Error, "RendererVulkan: Driver for version " + version.AsString() + " of Vulkan is unavailable.");
+                    CURSE_RENDERER_LOG(Logger::Severity::Error, "VulkanRenderer: Driver for version " + version.AsString() + " of Vulkan is unavailable.");
                     return false;
                 }
                 break;
@@ -1197,7 +1196,7 @@ namespace Curse
         return true;
     }
 
-    bool RendererVulkan::GetRequiredExtensions(std::vector<std::string>& out, const bool requestDebugger) const
+    bool VulkanRenderer::GetRequiredExtensions(std::vector<std::string>& out, const bool requestDebugger) const
     {
         uint32_t extensionCount = 0;
         vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
@@ -1235,7 +1234,7 @@ namespace Curse
         return missingExtensions.size() == 0;
     }
 
-    bool RendererVulkan::LoadDebugger(VkInstanceCreateInfo& instanceInfo, VkDebugUtilsMessengerCreateInfoEXT& debugMessageInfo)
+    bool VulkanRenderer::LoadDebugger(VkInstanceCreateInfo& instanceInfo, VkDebugUtilsMessengerCreateInfoEXT& debugMessageInfo)
     {
         if (!m_logger)
         {
@@ -1308,7 +1307,7 @@ namespace Curse
         return true;
     }
 
-    bool RendererVulkan::LoadSurface()
+    bool VulkanRenderer::LoadSurface()
     {       
     #if CURSE_PLATFORM == CURSE_PLATFORM_WINDOWS
         
@@ -1332,7 +1331,7 @@ namespace Curse
     #endif
     }
 
-    bool RendererVulkan::LoadPhysicalDevice()
+    bool VulkanRenderer::LoadPhysicalDevice()
     {
         uint32_t deviceCount = 0;
         vkEnumeratePhysicalDevices(m_instance, &deviceCount, nullptr);
@@ -1368,7 +1367,7 @@ namespace Curse
         return true;
     }
 
-    bool RendererVulkan::ScorePhysicalDevice(PhysicalDevice& physicalDevice, uint32_t& score)
+    bool VulkanRenderer::ScorePhysicalDevice(PhysicalDevice& physicalDevice, uint32_t& score)
     {
         score = 0;
         VkPhysicalDevice device = physicalDevice.device;
@@ -1449,7 +1448,7 @@ namespace Curse
         return true;
     }
 
-    bool RendererVulkan::CheckDeviceExtensionSupport(PhysicalDevice& physicalDevice)
+    bool VulkanRenderer::CheckDeviceExtensionSupport(PhysicalDevice& physicalDevice)
     {
         if (!m_deviceExtensions.size())
         {
@@ -1479,7 +1478,7 @@ namespace Curse
         return missingExtensions.size() == 0;
     }
 
-    bool RendererVulkan::FetchSwapChainSupport(PhysicalDevice& physicalDevice)
+    bool VulkanRenderer::FetchSwapChainSupport(PhysicalDevice& physicalDevice)
     {
         VkPhysicalDevice device = physicalDevice.device;
         SwapChainSupport& support = physicalDevice.swapChainSupport;
@@ -1509,7 +1508,7 @@ namespace Curse
         return true;
     }
 
-    bool RendererVulkan::LoadLogicalDevice()
+    bool VulkanRenderer::LoadLogicalDevice()
     {
         std::vector<VkDeviceQueueCreateInfo> queueInfos;
 
@@ -1555,7 +1554,7 @@ namespace Curse
         return true;
     }
 
-    bool RendererVulkan::LoadSwapChain()
+    bool VulkanRenderer::LoadSwapChain()
     {
         VkSurfaceFormatKHR surfaceFormat = {};
         bool foundSurfaceFormat = false;
@@ -1624,7 +1623,7 @@ namespace Curse
         return true;
     }
 
-    bool RendererVulkan::LoadImageViews()
+    bool VulkanRenderer::LoadImageViews()
     {
         m_swapChainImageViews.resize(m_swapChainImages.size(), VK_NULL_HANDLE);
 
@@ -1655,7 +1654,7 @@ namespace Curse
         return true;
     }
 
-    bool RendererVulkan::LoadRenderPass()
+    bool VulkanRenderer::LoadRenderPass()
     {
         VkAttachmentDescription colorAttachment = {};
         colorAttachment.format = m_swapChainImageFormat;
@@ -1702,7 +1701,7 @@ namespace Curse
         return true;
     }
 
-    bool RendererVulkan::LoadPresentFramebuffer()
+    bool VulkanRenderer::LoadPresentFramebuffer()
     {
         for (auto& imageView : m_swapChainImageViews)
         {
@@ -1710,7 +1709,7 @@ namespace Curse
             descriptor.size.x = m_swapChainExtent.width;
             descriptor.size.y = m_swapChainExtent.height;
             descriptor.image = imageView;
-            FramebufferVulkan* framebuffer = static_cast<FramebufferVulkan*>(CreateFramebuffer(descriptor));
+            VulkanFramebuffer* framebuffer = static_cast<VulkanFramebuffer*>(CreateFramebuffer(descriptor));
             m_presentFramebuffers.push_back(framebuffer);
         }
 
@@ -1725,7 +1724,7 @@ namespace Curse
         return true;
     }
 
-    bool RendererVulkan::LoadCommandPool()
+    bool VulkanRenderer::LoadCommandPool()
     {
         VkCommandPoolCreateInfo commandPoolInfo = {};
         commandPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -1756,7 +1755,7 @@ namespace Curse
         return true;
     }
 
-    bool RendererVulkan::LoadSyncObjects()
+    bool VulkanRenderer::LoadSyncObjects()
     {
         m_imageAvailableSemaphores.resize(m_maxFramesInFlight);
         m_renderFinishedSemaphores.resize(m_maxFramesInFlight);
@@ -1784,7 +1783,7 @@ namespace Curse
         return true;
     }
 
-    bool RendererVulkan::RecreateSwapChain()
+    bool VulkanRenderer::RecreateSwapChain()
     {
         vkDeviceWaitIdle(m_logicalDevice);
 
@@ -1815,7 +1814,7 @@ namespace Curse
         return loaded;
     }
 
-    void RendererVulkan::UnloadSwapchain()
+    void VulkanRenderer::UnloadSwapchain()
     {
         Vulkan::DestroySemaphores(m_logicalDevice, m_imageAvailableSemaphores);
         Vulkan::DestroySemaphores(m_logicalDevice, m_renderFinishedSemaphores);
@@ -1838,7 +1837,7 @@ namespace Curse
         }      
     }
 
-    bool RendererVulkan::FindPhysicalDeviceMemoryType(uint32_t& index, const uint32_t filter, const VkMemoryPropertyFlags properties)
+    bool VulkanRenderer::FindPhysicalDeviceMemoryType(uint32_t& index, const uint32_t filter, const VkMemoryPropertyFlags properties)
     {
         /// < MOVE THIS CODE TO ScorePhysicalDevice....
         VkPhysicalDeviceMemoryProperties memProperties;

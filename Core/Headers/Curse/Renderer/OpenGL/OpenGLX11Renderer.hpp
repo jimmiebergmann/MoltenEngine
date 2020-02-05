@@ -23,29 +23,24 @@
 *
 */
 
-#ifndef CURSE_CORE_RENDERER_VULKAN_RENDERERVULKAN_HPP
-#define CURSE_CORE_RENDERER_VULKAN_RENDERERVULKAN_HPP
+#ifndef CURSE_CORE_RENDERER_OPENGL_OPENGLX11RENDERER_HPP
+#define CURSE_CORE_RENDERER_OPENGL_OPENGLX11RENDERER_HPP
 
 #include "Curse/Core.hpp"
 
-#if defined(CURSE_ENABLE_VULKAN)
+#if defined(CURSE_ENABLE_OPENGL)
+#if CURSE_PLATFORM == CURSE_PLATFORM_LINUX
 
 #include "Curse/Renderer/Renderer.hpp"
-#include "Curse/Renderer/Vulkan/Vulkan.hpp"
-#include <vector>
 
-CURSE_UNSCOPED_ENUM_BEGIN
 
 namespace Curse
 {
 
-    class PipelineVulkan;
-    class FramebufferVulkan;
-
     /**
-    * @brief Vulkan renderer class.
+    * @brief OpenGL renderer class for Win32.
     */
-    class CURSE_API RendererVulkan : public Renderer
+    class CURSE_API OpenGLX11Renderer : public Renderer
     {
 
     public:
@@ -53,19 +48,19 @@ namespace Curse
         /**
         * @brief Constructor.
         */
-        RendererVulkan();
+        OpenGLX11Renderer();
 
         /**
         * @brief Constructs and creates renderer.
         *
         * @param window[in] Render target window.
         */
-        RendererVulkan(const Window& window, const Version& version, Logger* logger = nullptr);
+        OpenGLX11Renderer(const Window& window, const Version& version, Logger* logger = nullptr);
 
         /**
         * @brief Virtual destructor.
         */
-        ~RendererVulkan();
+        ~OpenGLX11Renderer();
 
         /**
         * @brief Opens renderer.
@@ -102,6 +97,7 @@ namespace Curse
         virtual std::vector<uint8_t> CompileShaderProgram(const ShaderFormat inputFormat, const ShaderType inputType,
                                                           const std::vector<uint8_t>& inputData, const ShaderFormat outputFormat) override;
 
+
         /**
         * @brief Create framebuffer object.
         */
@@ -125,7 +121,7 @@ namespace Curse
         /**
         * @brief Create shader object out of shader script.
         */
-        virtual Shader::Program* CreateShaderProgram(const Shader::Script & script) override;
+        virtual Shader::Program* CreateShaderProgram(const Shader::Script& script) override;
 
         /**
         * @brief Create texture object.
@@ -142,7 +138,7 @@ namespace Curse
         * @brief Destroy framebuffer object.
         */
         virtual void DestroyFramebuffer(Framebuffer* framebuffer) override;
-        
+
         /**
         * @brief Destroy index buffer object.
         */
@@ -193,7 +189,7 @@ namespace Curse
         * @brief Finalize and present rendering.
         */
         virtual void EndDraw() override;
-        
+
         /**
         * @brief Sleep until the graphical device is ready.
         */
@@ -201,110 +197,31 @@ namespace Curse
 
     private:
 
-        struct DebugMessenger
-        {
-            DebugMessenger();
-            void Clear();
+        /**
+        * @brief Open opengl context by provided version.
+        *
+        * @param version[in] Opened version.
+        *
+        * @throw Exception If failed to open provided version.
+        */
+       // bool OpenVersion(HDC deviceContext, const Version& version);
 
-            VkDebugUtilsMessengerEXT messenger;
-            PFN_vkCreateDebugUtilsMessengerEXT CreateDebugUtilsMessengerEXT;
-            PFN_vkDestroyDebugUtilsMessengerEXT DestroyDebugUtilsMessengerEXT;
-        };
+        /**
+        * @brief Open the best available opengl context.
+        *
+        * @param version[out] Opened version.
+        *
+        * @throw Exception If failed to open any opengl context.
+        */
+        //void OpenBestVersion(HDC deviceContext, Version& version);
 
-        struct SwapChainSupport
-        {
-            VkSurfaceCapabilitiesKHR capabilities;
-            std::vector<VkSurfaceFormatKHR> formats;
-            std::vector<VkPresentModeKHR> presentModes;
-        };
-
-        struct PhysicalDevice
-        {
-            PhysicalDevice();
-            PhysicalDevice(VkPhysicalDevice device);
-            PhysicalDevice(VkPhysicalDevice device, uint32_t graphicsQueueIndex, uint32_t presentQueueIndex);
-            void Clear();
-
-            VkPhysicalDevice device;
-            uint32_t graphicsQueueIndex;
-            uint32_t presentQueueIndex;
-            SwapChainSupport swapChainSupport;
-        };
-
-        struct ResourceCounter
-        {
-            ResourceCounter();
-            void Clear(Logger* logger);
-
-            uint32_t framebufferCount;
-            uint32_t indexBufferCount;
-            uint32_t pipelineCount;
-            uint32_t shaderCount;
-            uint32_t textureCount;
-            uint32_t vertexBufferCount;
-        };
-
-        PFN_vkVoidFunction GetVulkanFunction(const char* functionName) const;
-        bool LoadInstance(const Version& version);
-        bool GetRequiredExtensions(std::vector<std::string>& extensions, const bool requestDebugger) const;
-        bool LoadDebugger(VkInstanceCreateInfo& instanceInfo, VkDebugUtilsMessengerCreateInfoEXT& debugMessageInfo);
-        bool LoadSurface();
-        bool LoadPhysicalDevice();
-        bool ScorePhysicalDevice(PhysicalDevice& physicalDevice, uint32_t & score);
-        bool CheckDeviceExtensionSupport(PhysicalDevice & physicalDevice);
-        bool FetchSwapChainSupport(PhysicalDevice& physicalDevice);
-        bool LoadLogicalDevice();
-        bool LoadSwapChain();
-        bool LoadImageViews();
-        bool LoadRenderPass();
-        bool LoadPresentFramebuffer();
-        bool LoadCommandPool();
-        bool LoadSyncObjects();
-        bool RecreateSwapChain();
-        void UnloadSwapchain();
-        bool FindPhysicalDeviceMemoryType(uint32_t& index, const uint32_t filter, const VkMemoryPropertyFlags properties);
-
-        Logger* m_logger;
         Version m_version;
-        const Window* m_renderTarget;
-        VkInstance m_instance;
-        std::vector<const char*> m_validationLayers;
-        std::vector<const char*> m_deviceExtensions;
-        DebugMessenger m_debugMessenger;
-        VkSurfaceKHR m_surface;
-        PhysicalDevice m_physicalDevice;
-        VkDevice m_logicalDevice;
-        VkQueue m_graphicsQueue;
-        VkQueue m_presentQueue;       
-        VkSwapchainKHR m_swapChain;
-        VkFormat m_swapChainImageFormat;
-        VkExtent2D m_swapChainExtent;
-        std::vector<VkImage> m_swapChainImages;
-        std::vector<VkImageView> m_swapChainImageViews;
-        VkRenderPass m_renderPass;
-        std::vector<FramebufferVulkan*> m_presentFramebuffers;
-        VkCommandPool m_commandPool;
-        std::vector<VkCommandBuffer> m_commandBuffers;
-        std::vector<VkSemaphore> m_imageAvailableSemaphores;
-        std::vector<VkSemaphore> m_renderFinishedSemaphores;
-        std::vector<VkFence> m_inFlightFences;
-        std::vector<VkFence> m_imagesInFlight;
-        size_t m_maxFramesInFlight;
-        size_t m_currentFrame;
-        ResourceCounter m_resourceCounter;
 
-        bool m_resized;
-        bool m_beginDraw;
-        uint32_t m_currentImageIndex;
-        VkCommandBuffer* m_currentCommandBuffer;
-        VkFramebuffer* m_currentFramebuffer;
-        
-        
     };
 
 }
 
-CURSE_UNSCOPED_ENUM_END
+#endif
 
 #endif
 

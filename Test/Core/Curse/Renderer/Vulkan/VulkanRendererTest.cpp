@@ -24,7 +24,7 @@
 */
 
 #include "Test.hpp"
-#include "Curse/Renderer/Vulkan/RendererVulkan.hpp"
+#include "Curse/Renderer/Vulkan/VulkanRenderer.hpp"
 #include "Curse/Window/Window.hpp"
 #include <thread>
 

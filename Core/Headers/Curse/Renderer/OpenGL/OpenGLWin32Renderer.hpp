@@ -23,8 +23,8 @@
 *
 */
 
-#ifndef CURSE_CORE_RENDERER_OPENGL_RENDEREROPENGLWIN32_HPP
-#define CURSE_CORE_RENDERER_OPENGL_RENDEREROPENGLWIN32_HPP
+#ifndef CURSE_CORE_RENDERER_OPENGL_OPENGLWIN32RENDERER_HPP
+#define CURSE_CORE_RENDERER_OPENGL_OPENGLWIN32RENDERER_HPP
 
 #include "Curse/Core.hpp"
 
@@ -40,7 +40,7 @@ namespace Curse
     /**
     * @brief OpenGL renderer class for Win32.
     */
-    class CURSE_API RendererOpenGLWin32 : public Renderer
+    class CURSE_API OpenGLWin32Renderer : public Renderer
     {
 
     public:
@@ -48,19 +48,19 @@ namespace Curse
         /**
         * @brief Constructor.
         */
-        RendererOpenGLWin32();
+        OpenGLWin32Renderer();
 
         /**
         * @brief Constructs and creates renderer.
         *
         * @param window[in] Render target window.
         */
-        RendererOpenGLWin32(const Window& window, const Version& version, Logger* logger = nullptr);
+        OpenGLWin32Renderer(const Window& window, const Version& version, Logger* logger = nullptr);
 
         /**
         * @brief Virtual destructor.
         */
-        ~RendererOpenGLWin32();
+        ~OpenGLWin32Renderer();
 
         /**
         * @brief Opens renderer.

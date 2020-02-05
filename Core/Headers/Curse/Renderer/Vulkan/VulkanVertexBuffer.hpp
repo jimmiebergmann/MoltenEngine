@@ -23,30 +23,32 @@
 *
 */
 
-#ifndef CURSE_CORE_RENDERER_RENDEREROPENGL_HPP
-#define CURSE_CORE_RENDERER_RENDEREROPENGL_HPP
+#ifndef CURSE_CORE_RENDERER_VULKANVERTEXBUFFER_HPP
+#define CURSE_CORE_RENDERER_VULKANVERTEXBUFFER_HPP
 
-#include "Curse/Types.hpp"
-
-#if defined(CURSE_ENABLE_OPENGL)
-
-#if CURSE_PLATFORM == CURSE_PLATFORM_WINDOWS
-    #include "Curse/Renderer/OpenGL/RendererOpenGLWin32.hpp"
-#elif CURSE_PLATFORM == CURSE_PLATFORM_LINUX
-    #include "Curse/Renderer/OpenGL/RendererOpenGLX11.hpp"
-#endif
+#include "Curse/Renderer/VertexBuffer.hpp"
 
 namespace Curse
 {
 
-#if CURSE_PLATFORM == CURSE_PLATFORM_WINDOWS
-    using RendererOpenGL = RendererOpenGLWin32;
-#elif CURSE_PLATFORM == CURSE_PLATFORM_LINUX
-    using RendererOpenGL = RendererOpenGLX11;
-#endif
+    class VulkanRenderer;
+
+    class CURSE_API VulkanVertexBuffer : public VertexBuffer
+    {
+
+    private:
+
+        VulkanVertexBuffer() = default;
+        VulkanVertexBuffer(const VulkanVertexBuffer&) = delete;
+        VulkanVertexBuffer(VulkanVertexBuffer&&) = delete;
+        ~VulkanVertexBuffer() = default;
+
+        VkDeviceMemory memory;
+
+        friend class VulkanRenderer;
+
+    };
 
 }
-
-#endif
 
 #endif
