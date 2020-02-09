@@ -346,6 +346,92 @@ namespace Curse
         { }
 
 
+        // Shader script uniform base implementations.
+        inline NodeType UniformNodeBase::GetType() const
+        {
+            return NodeType::Uniform;
+        }
+
+        inline UniformNodeBase::UniformNodeBase(Script& script) :
+            Node(script)
+        { }
+
+        // Shader script uniform base implementations.
+        template<typename T>
+        inline size_t UniformNode<T>::GetOutputPinCount() const
+        {
+            return 1;
+        }
+
+        template<typename T>
+        inline Pin* UniformNode<T>::GetOutputPin(const size_t index)
+        {
+            if (index != 0)
+            {
+                return nullptr;
+            }
+            return &m_output;
+        }
+        template<typename T>
+        inline const Pin* UniformNode<T>::GetOutputPin(const size_t index) const
+        {
+            if (index != 0)
+            {
+                return nullptr;
+            }
+            return &m_output;
+        }
+
+        template<typename T>
+        inline std::vector<Pin*> UniformNode<T>::GetOutputPins()
+        {
+            return { &m_output };
+        }
+        template<typename T>
+        inline std::vector<const Pin*> UniformNode<T>::GetOutputPins() const
+        {
+            return { &m_output };
+        }
+
+        template<typename T>
+        inline UniformNode<T>::UniformNode(Script& script) :
+            UniformNodeBase(script),
+            m_output(*this)
+        { }
+
+        // Uniform block implementations.
+        inline UniformBlock::~UniformBlock()
+        {
+            for (auto* uniform : m_uniformNodes)
+            {
+                delete uniform;
+            }
+        }
+
+        template<typename T>
+        inline UniformNode<T>* UniformBlock::CreateUniformNode()
+        {
+            auto uniformNode = new UniformNode<T>(m_script);
+            m_uniformNodes.push_back(uniformNode);
+            return uniformNode;
+        }
+
+        inline std::vector<UniformNodeBase*> UniformBlock::GetUniformNodes()
+        {
+            return m_uniformNodes;
+        }
+
+        inline std::vector<const UniformNodeBase*> UniformBlock::GetUniformNodes() const
+        {
+            return { m_uniformNodes.begin(), m_uniformNodes.end() };
+        }
+
+
+        inline UniformBlock::UniformBlock(Script& script) :
+            m_script(script)
+        { }
+
+
         // Shader script varying in node implementations.
         template<typename T>
         inline size_t VaryingInNode<T>::GetOutputPinCount() const

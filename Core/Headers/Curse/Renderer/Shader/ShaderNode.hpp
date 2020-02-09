@@ -43,6 +43,7 @@ namespace Curse
         */
         class Script;
         class VertexScript;
+        class UniformBlock;
 
 
         /**
@@ -53,7 +54,7 @@ namespace Curse
             Constant,       ///< Local constant, only present in fragment shader.
             Function,       ///< Built-in shader function.
             Operator,       ///< Operator node in local space.
-            //Uniform,      ///< Uniform node, single object being sent runtime from client.
+            Uniform,        ///< Uniform node, single object being sent runtime from client.
             VaryingIn,      ///< Varying in node. Varying data is received by the vertex, geometry or fragment shader.
             VaryingOut,     ///< Varying out node. Varying data is sent from the vertex buffer or vertex, geometry or fragment shader.
             VertexOutput    ///< Vertex output node, result of vertex position in vertex shader script.   
@@ -601,6 +602,127 @@ namespace Curse
             InputPin<T> m_inputB;
             InputPin<T> * m_inputs[2];
             OutputPin<T> m_output;
+
+            friend class Script;
+
+        };
+
+
+        /**
+        * @brief Base clas of uniform node, of shader script.
+        */
+        class UniformNodeBase : public Node
+        {
+
+        public:
+
+            /**
+            * @brief Get type of node.
+            */
+            virtual NodeType GetType() const override;
+
+        protected:
+
+            /**
+            * @brief Constructor.
+            */
+            UniformNodeBase(Script& script);
+
+        };
+
+        /**
+        * @brief Uniform node of shader script.
+        */
+        template<typename T>
+        class UniformNode : public UniformNodeBase
+        {
+
+        public:
+
+            /**
+            * @brief Get number of input pins.
+            */
+            virtual size_t GetOutputPinCount() const override;
+
+            /**
+            * @brief Get input pin by index.
+            *
+            * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
+            */
+            virtual Pin* GetOutputPin(const size_t index = 0) override;
+
+            /**
+            * @brief Get connected pin by index.
+            *
+            * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
+            */
+            virtual const Pin* GetOutputPin(const size_t index = 0) const override;
+
+            /**
+            * @brief Get all input pins, wrapped in a vector.
+            */
+            virtual std::vector<Pin*> GetOutputPins() override;
+
+            /**
+            * @brief  Get all input pins, wrapped in a vector.
+            */
+            virtual std::vector<const Pin*> GetOutputPins() const override;
+
+        protected:
+
+            /**
+            * @brief Constructor.
+            */
+            UniformNode(Script& script);
+
+        private:
+
+            OutputPin<T> m_output;
+
+            friend class UniformBlock;
+
+        };
+
+        /**
+        * @brief Uniform block container.
+        */
+        class UniformBlock
+        {
+
+        public:
+
+            /*
+            * @brief Destructor.
+            */
+            ~UniformBlock();
+
+            /**
+            * @brief Create uniform node and append it to the block.
+            */
+            template<typename T>
+            UniformNode<T>* CreateUniformNode();
+
+            /**
+            * @brief Get all uniform nodes.
+            */
+            std::vector<UniformNodeBase*> GetUniformNodes();
+
+            /**
+            * @brief Get all uniform nodes.
+            */
+            std::vector<const UniformNodeBase*> GetUniformNodes() const;
+
+        protected:
+
+            /**
+            * @brief Constructor.
+            */
+            UniformBlock(Script& script);
+
+        private:
+
+            Script& m_script;
+            std::vector<UniformNodeBase*> m_uniformNodes;
 
             friend class Script;
 

@@ -34,6 +34,8 @@
 #include "Curse/Renderer/Pipeline.hpp"
 #include "Curse/Renderer/Framebuffer.hpp"
 #include "Curse/Renderer/IndexBuffer.hpp"
+#include "Curse/Renderer/UniformBlock.hpp"
+#include "Curse/Renderer/UniformBuffer.hpp"
 #include "Curse/Renderer/VertexBuffer.hpp"
 #include <functional>
 
@@ -141,6 +143,16 @@ namespace Curse
         virtual Texture* CreateTexture() = 0;
 
         /**
+        * @brief Create uniform buffer object.
+        */
+        virtual UniformBlock* CreateUniformBlock(const UniformBlockDescriptor& descriptor) { return nullptr; }
+
+        /**
+        * @brief Create uniform buffer object.
+        */
+        virtual UniformBuffer* CreateUniformBuffer(const UniformBufferDescriptor& descriptor) { return nullptr; }
+
+        /**
         * @brief Create vertex buffer object.
         */
         virtual VertexBuffer* CreateVertexBuffer(const VertexBufferDescriptor& descriptor) = 0;
@@ -171,6 +183,16 @@ namespace Curse
         virtual void DestroyTexture(Texture* texture) = 0;
 
         /**
+        * @brief Destroy uniform block object.
+        */
+        virtual void DestroyUniformBlock(UniformBlock* uniformBlock) {}
+
+        /**
+        * @brief Destroy uniform buffer object.
+        */
+        virtual void DestroyUniformBuffer(UniformBuffer* uniformBuffer) {}
+
+        /**
         * @brief Destroy vertex buffer object.
         */
         virtual void DestroyVertexBuffer(VertexBuffer* vertexBuffer) = 0;    
@@ -179,6 +201,11 @@ namespace Curse
         * @brief Bind pipeline to draw queue.
         */
         virtual void BindPipeline(Pipeline* pipeline) = 0;
+
+        /**
+        * @brief Bind pipeline to draw queue.
+        */
+        virtual void BindUniformBlock(UniformBlock* uniformBlock, const uint32_t offset = 0) {}
 
         /**
         * @brief Begin and initialize rendering to framebuffers.
@@ -204,6 +231,11 @@ namespace Curse
         * @brief Sleep until the graphical device is ready.
         */
         virtual void WaitForDevice() = 0;
+
+        /**
+        * @brief Update uniform buffer data.
+        */
+        virtual void UpdateUniformBuffer(UniformBuffer * uniformBuffer, const size_t offset, const size_t size, const void * data) {}
 
     };
 

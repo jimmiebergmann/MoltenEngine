@@ -31,6 +31,7 @@
 #include "Curse/Logger.hpp"
 #include <vector>
 #include <set>
+#include <map>
 #include <string>
 
 namespace Curse
@@ -69,6 +70,11 @@ namespace Curse
             auto CreateFunctionNode();
 
             /**
+            * @brief Create new uniform block and append it to the shader script.
+            */
+            UniformBlock * CreateUniformBlock(const size_t binding);
+
+            /**
             * @brief Create new operator node and append it to the shader script.
             *
             * @tparam T Operator node object to create.
@@ -98,7 +104,7 @@ namespace Curse
             * @brief Removes the node from the script, disconnects all connections of node
             *        and deallocates the pointer.
             */
-            void DestroyNode(Node & node);
+            void DestroyNode(Node * node);
 
             /**
             * @brief Get all nodes of shader script.
@@ -159,6 +165,8 @@ namespace Curse
             std::set<Node*> m_allNodes; ///< Set of all nodes of any type.
             std::vector<Node*> m_varyingInNodes;
             std::vector<Node*> m_varyingOutNodes;
+            //std::map<size_t, UniformNodeBase*> m_uniformNodes;
+            std::map<size_t, UniformBlock*> m_uniformBlocks;
 
         };
 

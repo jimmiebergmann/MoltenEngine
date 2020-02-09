@@ -33,6 +33,8 @@
 #include "Curse/Renderer/Vulkan/VulkanPipeline.hpp"
 #include "Curse/Renderer/Vulkan/VulkanShaderProgram.hpp"
 #include "Curse/Renderer/Vulkan/VulkanTexture.hpp"
+#include "Curse/Renderer/Vulkan/VulkanUniformBlock.hpp"
+#include "Curse/Renderer/Vulkan/VulkanUniformBuffer.hpp"
 #include "Curse/Renderer/Vulkan/VulkanVertexBuffer.hpp"
 #include "Curse/Window/Window.hpp"
 #include "Curse/Logger.hpp"
@@ -402,62 +404,41 @@ namespace Curse
 
     IndexBuffer* VulkanRenderer::CreateIndexBuffer(const IndexBufferDescriptor& descriptor)
     {
-        VkBufferCreateInfo bufferInfo = {};
-        bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-        bufferInfo.size = static_cast<VkDeviceSize>(descriptor.indexCount) * GetIndexBufferDataTypeSize(descriptor.dataType);
-        bufferInfo.usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
-        bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        const size_t bufferSize = static_cast<VkDeviceSize>(descriptor.indexCount)* GetIndexBufferDataTypeSize(descriptor.dataType);
 
-        VkBuffer indexBuffer;
-        if (vkCreateBuffer(m_logicalDevice, &bufferInfo, nullptr, &indexBuffer) != VK_SUCCESS)
-        {
-            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to create index buffer.");
-            return nullptr;
-        }
-        
-        VkMemoryRequirements memRequirements;
-        vkGetBufferMemoryRequirements(m_logicalDevice, indexBuffer, &memRequirements);
+        VkBuffer stagingBuffer;
+        VkDeviceMemory stagingMemory;
 
-        
-        uint32_t memoryTypeIndex = 0;
-        if (!FindPhysicalDeviceMemoryType(memoryTypeIndex, memRequirements.memoryTypeBits,
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))
+        auto destroyStagingData = [&]()
         {
-            vkDestroyBuffer(m_logicalDevice, indexBuffer, nullptr);
-            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to find matching memory type for index buffer.");
-            return nullptr;
-        }
-        
-        VkMemoryAllocateInfo memoryAllocateInfo = {};
-        memoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        memoryAllocateInfo.allocationSize = memRequirements.size;
-        memoryAllocateInfo.memoryTypeIndex = memoryTypeIndex;
+            vkDestroyBuffer(m_logicalDevice, stagingBuffer, nullptr);
+            vkFreeMemory(m_logicalDevice, stagingMemory, nullptr);
+        };
 
-        VkDeviceMemory memory;
-        if (vkAllocateMemory(m_logicalDevice, &memoryAllocateInfo, nullptr, &memory) != VK_SUCCESS)
+        if (!CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingMemory))
         {
-            vkDestroyBuffer(m_logicalDevice, indexBuffer, nullptr);
-            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to allocate index buffer memory.");
-            return nullptr;
-        }
-
-        if (vkBindBufferMemory(m_logicalDevice, indexBuffer, memory, 0) != VK_SUCCESS)
-        {
-            vkDestroyBuffer(m_logicalDevice, indexBuffer, nullptr);
-            vkFreeMemory(m_logicalDevice, memory, nullptr);
-            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to bind memory to index buffer.");
             return nullptr;
         }
 
         void* data;
-        vkMapMemory(m_logicalDevice, memory, 0, bufferInfo.size, 0, &data);
-        memcpy(data, descriptor.data, (size_t)bufferInfo.size);
-        vkUnmapMemory(m_logicalDevice, memory);
+        vkMapMemory(m_logicalDevice, stagingMemory, 0, bufferSize, 0, &data);
+        memcpy(data, descriptor.data, (size_t)bufferSize);
+        vkUnmapMemory(m_logicalDevice, stagingMemory);
 
+        VkBuffer indexBuffer;
+        VkDeviceMemory indexMemory;
+        if (!CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffer, indexMemory))
+        {
+            destroyStagingData();
+            return nullptr;
+        }
+
+        CopyBuffer(stagingBuffer, indexBuffer, bufferSize);
+        destroyStagingData();
 
         VulkanIndexBuffer* buffer = new VulkanIndexBuffer;
         buffer->resource = indexBuffer;
-        buffer->memory = memory;
+        buffer->memory = indexMemory;
         buffer->indexCount = descriptor.indexCount;
         buffer->dataType = descriptor.dataType;
 
@@ -586,10 +567,33 @@ namespace Curse
         dynamicStateInfo.dynamicStateCount = 2;
         dynamicStateInfo.flags = 0;
 
+        std::vector<VkDescriptorSetLayoutBinding > uniformBindings(descriptor.uniformBindings.size());
+        for (size_t i = 0; i < descriptor.uniformBindings.size(); i++)
+        {
+            auto& binding = uniformBindings[i];
+            binding.binding = descriptor.uniformBindings[i].binding;
+            binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+            binding.descriptorCount = 1;
+            binding.stageFlags = GetShaderProgramStageFlag(descriptor.uniformBindings[i].shaderType);
+            binding.pImmutableSamplers = nullptr;
+        }
+
+        VkDescriptorSetLayoutCreateInfo descriptorSetLayoutInfo = {};
+        descriptorSetLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        descriptorSetLayoutInfo.bindingCount = static_cast<uint32_t>(uniformBindings.size());
+        descriptorSetLayoutInfo.pBindings = uniformBindings.data();
+
+        VkDescriptorSetLayout descriptorSetLayout;
+        if (vkCreateDescriptorSetLayout(m_logicalDevice, &descriptorSetLayoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS)
+        {
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to create descriptor set layout.");
+            return nullptr;
+        }
+
         VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        pipelineLayoutInfo.setLayoutCount = 0;
-        pipelineLayoutInfo.pSetLayouts = nullptr;
+        pipelineLayoutInfo.setLayoutCount = 1;
+        pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
         pipelineLayoutInfo.pushConstantRangeCount = 0;
         pipelineLayoutInfo.pPushConstantRanges = nullptr;
 
@@ -630,7 +634,8 @@ namespace Curse
 
         VulkanPipeline* pipeline = new VulkanPipeline;
         pipeline->resource = graphicsPipeline;
-        pipeline->layout = pipelineLayout;
+        pipeline->pipelineLayout = pipelineLayout;
+        pipeline->descriptionSetLayout = descriptorSetLayout;
 
         m_resourceCounter.pipelineCount++;
         return pipeline;
@@ -722,64 +727,145 @@ namespace Curse
         return new VulkanTexture;
     }
 
+    UniformBlock* VulkanRenderer::CreateUniformBlock(const UniformBlockDescriptor& descriptor)
+    {
+        VulkanPipeline* vulkanPipeline = static_cast<VulkanPipeline*>(descriptor.pipeline);
+        VulkanUniformBuffer* vulkanUniformBuffer = static_cast<VulkanUniformBuffer*>(descriptor.buffer);      
+
+        std::unique_ptr<VulkanUniformBlock, std::function<void(VulkanUniformBlock*)> > uniformBlock(new VulkanUniformBlock,
+            [&](VulkanUniformBlock* uniformBlock)
+        {
+            DestroyUniformBlock(uniformBlock);
+        });
+
+        VkDescriptorPoolSize poolSize = {};
+        poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+        poolSize.descriptorCount = static_cast<uint32_t>(m_swapChainImages.size());
+
+        VkDescriptorPoolCreateInfo poolInfo = {};
+        poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        poolInfo.poolSizeCount = 1;
+        poolInfo.pPoolSizes = &poolSize;
+        poolInfo.maxSets = static_cast<uint32_t>(m_swapChainImages.size());
+        poolInfo.flags = 0;
+
+        if (vkCreateDescriptorPool(m_logicalDevice, &poolInfo, nullptr, &uniformBlock->descriptorPool) != VK_SUCCESS)
+        {
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to create descriptor pool.");
+            return nullptr;
+        }
+      
+        std::vector<VkDescriptorSetLayout> layouts(m_swapChainImages.size(), vulkanPipeline->descriptionSetLayout);
+        VkDescriptorSetAllocateInfo allocInfo = {};
+        allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        allocInfo.descriptorPool = uniformBlock->descriptorPool;
+        allocInfo.descriptorSetCount = static_cast<uint32_t>(m_swapChainImages.size());
+        allocInfo.pSetLayouts = layouts.data();
+
+        uniformBlock->descriptorSets.resize(m_swapChainImages.size());
+        if (vkAllocateDescriptorSets(m_logicalDevice, &allocInfo, uniformBlock->descriptorSets.data()) != VK_SUCCESS)
+        {
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to create descriptor sets.");
+            return nullptr;
+        }
+
+        for (size_t i = 0; i < m_swapChainImages.size(); i++)
+        {
+            VkDescriptorBufferInfo bufferInfo = {};
+            bufferInfo.buffer = vulkanUniformBuffer->frames[i].buffer;
+            bufferInfo.offset = descriptor.offset;
+            bufferInfo.range = descriptor.size;
+
+            VkWriteDescriptorSet descWrite = {};
+            descWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            descWrite.dstSet = uniformBlock->descriptorSets[i];
+            descWrite.dstBinding = descriptor.binding;
+            descWrite.dstArrayElement = 0;
+            descWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+            descWrite.descriptorCount = 1;
+            descWrite.pBufferInfo = &bufferInfo;
+
+            vkUpdateDescriptorSets(m_logicalDevice, 1, &descWrite, 0, nullptr);
+        }
+
+        uniformBlock->pipelineLayout = vulkanPipeline->pipelineLayout;
+
+        return uniformBlock.release();
+    }
+
+    UniformBuffer* VulkanRenderer::CreateUniformBuffer(const UniformBufferDescriptor& descriptor)
+    {
+        std::vector<VulkanUniformBuffer::Frame> frames;
+        frames.resize(m_swapChainImages.size());
+
+        auto destroyBuffers = [&]()
+        {
+            for (auto& frame : frames)
+            {
+                if (frame.buffer != VK_NULL_HANDLE)
+                {
+                    vkDestroyBuffer(m_logicalDevice, frame.buffer, nullptr);
+                }
+                if ( frame.memory != VK_NULL_HANDLE)
+                {
+                    vkFreeMemory(m_logicalDevice, frame.memory, nullptr);
+                }
+            }    
+        };
+
+        for (auto& frame : frames)
+        {
+            if (!CreateBuffer(descriptor.size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, frame.buffer, frame.memory))
+            {
+                destroyBuffers();
+                return nullptr;
+            }             
+        }
+
+        auto vulkanUniformBuffer = new VulkanUniformBuffer;
+        vulkanUniformBuffer->frames = frames;
+        return vulkanUniformBuffer;
+    }
+
     VertexBuffer* VulkanRenderer::CreateVertexBuffer(const VertexBufferDescriptor& descriptor)
     {
-        VkBufferCreateInfo bufferInfo = {};
-        bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-        bufferInfo.size = static_cast<VkDeviceSize>(static_cast<VkDeviceSize>(descriptor.vertexCount) *
-                                                    static_cast<VkDeviceSize>(descriptor.vertexSize));
-        bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-        bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        const size_t bufferSize = 
+            static_cast<VkDeviceSize>(static_cast<VkDeviceSize>(descriptor.vertexCount) *
+            static_cast<VkDeviceSize>(descriptor.vertexSize));
 
-        VkBuffer vertexBuffer;
-        if (vkCreateBuffer(m_logicalDevice, &bufferInfo, nullptr, &vertexBuffer) != VK_SUCCESS)
+        VkBuffer stagingBuffer;
+        VkDeviceMemory stagingMemory;
+
+        auto destroyStagingData = [&]()
         {
-            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to create vertex buffer.");
-            return nullptr;
-        }
+            vkDestroyBuffer(m_logicalDevice, stagingBuffer, nullptr);
+            vkFreeMemory(m_logicalDevice, stagingMemory, nullptr);
+        };
 
-        VkMemoryRequirements memRequirements;
-        vkGetBufferMemoryRequirements(m_logicalDevice, vertexBuffer, &memRequirements);
-
-        uint32_t memoryTypeIndex = 0;
-        if (!FindPhysicalDeviceMemoryType(memoryTypeIndex, memRequirements.memoryTypeBits,
-                                          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))
+        if (!CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingMemory))
         {
-            vkDestroyBuffer(m_logicalDevice, vertexBuffer, nullptr);
-            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to find matching memory type for vertex buffer.");
-            return nullptr;
-        }
-
-        VkMemoryAllocateInfo memoryAllocateInfo = {};
-        memoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        memoryAllocateInfo.allocationSize = memRequirements.size;
-        memoryAllocateInfo.memoryTypeIndex = memoryTypeIndex;
-
-        VkDeviceMemory memory;
-        if (vkAllocateMemory(m_logicalDevice, &memoryAllocateInfo, nullptr, &memory) != VK_SUCCESS)
-        {
-            vkDestroyBuffer(m_logicalDevice, vertexBuffer, nullptr);
-            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to allocate vertex buffer memory.");
-            return nullptr;
-        }
-
-        if (vkBindBufferMemory(m_logicalDevice, vertexBuffer, memory, 0) != VK_SUCCESS)
-        {
-            vkDestroyBuffer(m_logicalDevice, vertexBuffer, nullptr);
-            vkFreeMemory(m_logicalDevice, memory, nullptr);
-            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to bind memory to vertex buffer.");
             return nullptr;
         }
 
         void* data;
-        vkMapMemory(m_logicalDevice, memory, 0, bufferInfo.size, 0, &data);
-        memcpy(data, descriptor.data, (size_t)bufferInfo.size);
-        vkUnmapMemory(m_logicalDevice, memory);
+        vkMapMemory(m_logicalDevice, stagingMemory, 0, bufferSize, 0, &data);
+        memcpy(data, descriptor.data, (size_t)bufferSize);
+        vkUnmapMemory(m_logicalDevice, stagingMemory);
 
+        VkBuffer vertexBuffer;
+        VkDeviceMemory vertexMemory;
+        if (!CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer, vertexMemory))
+        {
+            destroyStagingData();
+            return nullptr;
+        }
+
+        CopyBuffer(stagingBuffer, vertexBuffer, bufferSize);
+        destroyStagingData();
 
         VulkanVertexBuffer* buffer = new VulkanVertexBuffer;
         buffer->resource = vertexBuffer;
-        buffer->memory = memory;
+        buffer->memory = vertexMemory;
         buffer->vertexCount = descriptor.vertexCount;
         buffer->vertexSize = descriptor.vertexSize;
 
@@ -813,10 +899,15 @@ namespace Curse
             vkDeviceWaitIdle(m_logicalDevice);
             vkDestroyPipeline(m_logicalDevice, vulkanPipeline->resource, nullptr);
         }
-        if (vulkanPipeline->layout)
+        if (vulkanPipeline->pipelineLayout)
         {
-            vkDestroyPipelineLayout(m_logicalDevice, vulkanPipeline->layout, nullptr);
+            vkDestroyPipelineLayout(m_logicalDevice, vulkanPipeline->pipelineLayout, nullptr);
         }
+        if (vulkanPipeline->descriptionSetLayout)
+        {
+            vkDestroyDescriptorSetLayout(m_logicalDevice, vulkanPipeline->descriptionSetLayout, nullptr);
+        }
+
 
         m_resourceCounter.pipelineCount--;
         delete vulkanPipeline;
@@ -836,6 +927,29 @@ namespace Curse
         delete static_cast<VulkanTexture*>(texture);
     }
 
+    void VulkanRenderer::DestroyUniformBlock(UniformBlock* uniformBlock)
+    {
+        VulkanUniformBlock* vulkanUniformBlock = static_cast<VulkanUniformBlock*>(uniformBlock);
+        if(vulkanUniformBlock->descriptorPool != VK_NULL_HANDLE)
+        {
+            vkDestroyDescriptorPool(m_logicalDevice, vulkanUniformBlock->descriptorPool, nullptr);
+        }
+        delete vulkanUniformBlock;
+    }
+
+    void VulkanRenderer::DestroyUniformBuffer(UniformBuffer* uniformBuffer)
+    {
+        VulkanUniformBuffer* vulkanUniformBuffer = static_cast<VulkanUniformBuffer*>(uniformBuffer);
+
+        for (auto& frame : vulkanUniformBuffer->frames)
+        {
+            vkDestroyBuffer(m_logicalDevice, frame.buffer, nullptr);
+            vkFreeMemory(m_logicalDevice, frame.memory, nullptr);
+        }
+
+        delete vulkanUniformBuffer;
+    }
+
     void VulkanRenderer::DestroyVertexBuffer(VertexBuffer* vertexBuffer)
     {
         VulkanVertexBuffer* vulkanVertexBuffer = static_cast<VulkanVertexBuffer*>(vertexBuffer);
@@ -849,6 +963,12 @@ namespace Curse
     {
         VulkanPipeline* vulkanPipeline = static_cast<VulkanPipeline*>(pipeline);
         vkCmdBindPipeline(*m_currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkanPipeline->resource);
+    }
+
+    void VulkanRenderer::BindUniformBlock(UniformBlock* uniformBlock, const uint32_t offset)
+    {
+        VulkanUniformBlock* vulkanUniformBlock = static_cast<VulkanUniformBlock*>(uniformBlock);
+        vkCmdBindDescriptorSets(*m_currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkanUniformBlock->pipelineLayout, 0, 1, &vulkanUniformBlock->descriptorSets[m_currentImageIndex], 1, &offset);
     }
 
     void VulkanRenderer::BeginDraw()
@@ -1016,6 +1136,18 @@ namespace Curse
     void VulkanRenderer::WaitForDevice()
     {
         vkDeviceWaitIdle(m_logicalDevice);
+    }
+
+    void VulkanRenderer::UpdateUniformBuffer(UniformBuffer* uniformBuffer, const size_t offset, const size_t size, const void* data)
+    {
+        VulkanUniformBuffer* vulkanUniformBuffer = static_cast<VulkanUniformBuffer*>(uniformBuffer);
+
+        auto& frame = vulkanUniformBuffer->frames[m_currentImageIndex];
+
+        void* dataMap;
+        vkMapMemory(m_logicalDevice, frame.memory, offset, size, 0, &dataMap);
+        memcpy(dataMap, data, size);
+        vkUnmapMemory(m_logicalDevice, frame.memory);
     }
 
 
@@ -1854,6 +1986,88 @@ namespace Curse
         }
 
         return false;
+    }
+
+    bool VulkanRenderer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& memory)
+    {
+        VkBufferCreateInfo bufferInfo = {};
+        bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        bufferInfo.size = size;
+        bufferInfo.usage = usage;
+        bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+        if (vkCreateBuffer(m_logicalDevice, &bufferInfo, nullptr, &buffer) != VK_SUCCESS)
+        {
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to create vertex buffer.");
+            return false;
+        }
+
+        VkMemoryRequirements memoryReq;
+        vkGetBufferMemoryRequirements(m_logicalDevice, buffer, &memoryReq);
+
+        uint32_t memoryTypeIndex = 0;
+        if (!FindPhysicalDeviceMemoryType(memoryTypeIndex, memoryReq.memoryTypeBits, properties))
+        {
+            vkDestroyBuffer(m_logicalDevice, buffer, nullptr);
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to find matching memory type for vertex buffer.");
+            return false;
+        }
+
+        VkMemoryAllocateInfo memoryAllocateInfo = {};
+        memoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        memoryAllocateInfo.allocationSize = memoryReq.size;
+        memoryAllocateInfo.memoryTypeIndex = memoryTypeIndex;
+
+        if (vkAllocateMemory(m_logicalDevice, &memoryAllocateInfo, nullptr, &memory) != VK_SUCCESS)
+        {
+            vkDestroyBuffer(m_logicalDevice, buffer, nullptr);
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to allocate vertex buffer memory.");
+            return false;
+        }
+
+        if (vkBindBufferMemory(m_logicalDevice, buffer, memory, 0) != VK_SUCCESS)
+        {
+            vkDestroyBuffer(m_logicalDevice, buffer, nullptr);
+            vkFreeMemory(m_logicalDevice, memory, nullptr);
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to bind memory to vertex buffer.");
+            return false;
+        }
+
+        return true;
+    }
+
+    void VulkanRenderer::CopyBuffer(VkBuffer source, VkBuffer destination, VkDeviceSize size)
+    {
+        VkCommandBufferAllocateInfo commandBufferInfo = {};
+        commandBufferInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        commandBufferInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        commandBufferInfo.commandPool = m_commandPool;
+        commandBufferInfo.commandBufferCount = 1;
+
+        VkCommandBuffer commandBuffer;
+        vkAllocateCommandBuffers(m_logicalDevice, &commandBufferInfo, &commandBuffer);
+
+        VkCommandBufferBeginInfo beginInfo = {};
+        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+        vkBeginCommandBuffer(commandBuffer, &beginInfo);
+        VkBufferCopy copy = {};
+        copy.srcOffset = 0;
+        copy.dstOffset = 0;
+        copy.size = size;
+        vkCmdCopyBuffer(commandBuffer, source, destination, 1, &copy);
+        vkEndCommandBuffer(commandBuffer);
+
+        VkSubmitInfo submitInfo = {};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submitInfo.commandBufferCount = 1;
+        submitInfo.pCommandBuffers = &commandBuffer;
+        // USE FENCE?
+        vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
+        vkQueueWaitIdle(m_graphicsQueue);
+
+        vkFreeCommandBuffers(m_logicalDevice, m_commandPool, 1, &commandBuffer);
     }
 
 }

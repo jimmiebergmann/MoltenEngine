@@ -53,6 +53,32 @@ namespace Curse
             return func;
         }
 
+        inline UniformBlock* Script::CreateUniformBlock(const size_t binding)
+        {
+            if (m_uniformBlocks.find(binding) != m_uniformBlocks.end())
+            {
+                return nullptr;
+            }
+            
+            auto block = new UniformBlock(*this);
+            m_uniformBlocks.insert({ binding, block });
+            return block;
+        }
+
+        /*template<typename T>
+        inline UniformNode<T>* Script::CreateUniformNode(const size_t location)
+        {
+            if (m_uniformNodes.find(location) != m_uniformNodes.end())
+            {
+                return nullptr;
+            }
+
+            auto uniformNode = new UniformNode<T>(*this, location);
+            m_allNodes.insert(uniformNode);
+            m_uniformNodes.insert({ location, uniformNode });
+            return uniformNode;
+        }*/
+
         template<typename T>
         inline OperatorNode<T>* Script::CreateOperatorNode(const Operator op)
         {

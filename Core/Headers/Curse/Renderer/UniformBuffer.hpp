@@ -23,30 +23,40 @@
 *
 */
 
-#ifndef CURSE_CORE_RENDERER_VULKANPIPELINE_HPP
-#define CURSE_CORE_RENDERER_VULKANPIPELINE_HPP
+#ifndef CURSE_CORE_RENDERER_UNIFORMBUFFER_HPP
+#define CURSE_CORE_RENDERER_UNIFORMBUFFER_HPP
 
-#include "Curse/Renderer/Pipeline.hpp"
+#include "Curse/Renderer/Resource.hpp"
 
 namespace Curse
 {
 
-    class VulkanRenderer;
-
-    class CURSE_API VulkanPipeline : public Pipeline
+    /**
+    * @brief Uniform buffer resource object.
+    */
+    class CURSE_API UniformBuffer
     {
 
-    private:
+    protected:
 
-        VulkanPipeline() = default;
-        VulkanPipeline(const VulkanPipeline&) = delete;
-        VulkanPipeline(VulkanPipeline&&) = delete;
-        ~VulkanPipeline() = default;
+        UniformBuffer() = default;
+        UniformBuffer(const UniformBuffer&) = delete;
+        UniformBuffer(UniformBuffer&&) = delete;
+        virtual ~UniformBuffer() = default;
 
-        friend class VulkanRenderer;
+    };
 
-        VkDescriptorSetLayout descriptionSetLayout;
-        VkPipelineLayout pipelineLayout;
+    /**
+    * @brief Descriptor class of uniform buffer class.
+    */
+    class CURSE_API UniformBufferDescriptor
+    {
+
+    public:
+
+        UniformBufferDescriptor() = default;
+
+        uint32_t size;
 
     };
 

@@ -132,6 +132,16 @@ namespace Curse
         virtual Texture* CreateTexture() override;
 
         /**
+        * @brief Create uniform buffer object.
+        */
+        virtual UniformBlock* CreateUniformBlock(const UniformBlockDescriptor& descriptor) override;
+
+        /**
+        * @brief Create uniform buffer object.
+        */
+        virtual UniformBuffer* CreateUniformBuffer(const UniformBufferDescriptor& descriptor) override;
+
+        /**
         * @brief Create vertex buffer object.
         */
         virtual VertexBuffer* CreateVertexBuffer(const VertexBufferDescriptor& descriptor) override;
@@ -163,15 +173,29 @@ namespace Curse
         virtual void DestroyTexture(Texture* texture) override;
 
         /**
+        * @brief Destroy uniform block object.
+        */
+        virtual void DestroyUniformBlock(UniformBlock* uniformBlock) override;
+
+        /**
+        * @brief Destroy uniform buffer object.
+        */
+        virtual void DestroyUniformBuffer(UniformBuffer* uniformBuffer) override;
+
+        /**
         * @brief Destroy vertex buffer object.
         */
         virtual void DestroyVertexBuffer(VertexBuffer* vertexBuffer) override;
-
 
         /**
         * @brief Bind pipeline to draw queue.
         */
         virtual void BindPipeline(Pipeline* pipeline) override;
+
+        /**
+        * @brief Bind pipeline to draw queue.
+        */
+        virtual void BindUniformBlock(UniformBlock* uniformBlock, const uint32_t offset = 0) override;
 
         /**
         * @brief Begin and initialize rendering to framebuffers.
@@ -197,6 +221,11 @@ namespace Curse
         * @brief Sleep until the graphical device is ready.
         */
         virtual void WaitForDevice() override;
+
+        /**
+        * @brief Update uniform buffer data.
+        */
+        virtual void UpdateUniformBuffer(UniformBuffer* uniformBuffer, const size_t offset, const size_t size, const void* data) override;
 
     private:
 
@@ -262,6 +291,8 @@ namespace Curse
         bool RecreateSwapChain();
         void UnloadSwapchain();
         bool FindPhysicalDeviceMemoryType(uint32_t& index, const uint32_t filter, const VkMemoryPropertyFlags properties);
+        bool CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& memory);
+        void CopyBuffer(VkBuffer source, VkBuffer destination, VkDeviceSize size);
 
         Logger* m_logger;
         Version m_version;

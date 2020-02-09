@@ -97,7 +97,6 @@ namespace Curse
         */
         virtual uint32_t GetSeverityFlags() const;
 
-
         /**
         * @brief Write log message function.
         */

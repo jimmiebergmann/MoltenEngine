@@ -192,11 +192,9 @@ namespace Curse
             }
         }
 
-        void Script::DestroyNode(Node& node)
+        void Script::DestroyNode(Node* node)
         {
-            Node* ptr = &node;
-
-            auto itAll = m_allNodes.find(ptr);
+            auto itAll = m_allNodes.find(node);
             if (itAll == m_allNodes.end())
             {
                 return;
@@ -204,21 +202,40 @@ namespace Curse
 
             m_allNodes.erase(itAll);
 
-            auto itVary = std::find(m_varyingInNodes.begin(), m_varyingInNodes.end(), ptr);
-            if (itVary != m_varyingInNodes.end())
+            switch (node->GetType())
             {
-                m_varyingInNodes.erase(itVary);
-            }
-            else
+            case NodeType::VaryingIn:
             {
-                auto itOut = std::find(m_varyingOutNodes.begin(), m_varyingOutNodes.end(), ptr);
-                if (itOut != m_varyingOutNodes.end())
+                auto it = std::find(m_varyingInNodes.begin(), m_varyingInNodes.end(), node);
+                if (it != m_varyingInNodes.end())
                 {
-                    m_varyingOutNodes.erase(itOut);
+                    m_varyingInNodes.erase(it);
                 }
-            }  
+            }
+            break;
+            case NodeType::VaryingOut:
+            {
+                auto it = std::find(m_varyingOutNodes.begin(), m_varyingOutNodes.end(), node);
+                if (it != m_varyingOutNodes.end())
+                {
+                    m_varyingOutNodes.erase(it);
+                }
+            }
+            break;
+            /*case NodeType::Uniform:
+            {
+                UniformNodeBase* uniform = static_cast<UniformNodeBase*>(node);
+                auto it = m_uniformNodes.find(uniform->GetLocation());
+                if (it != m_uniformNodes.end())
+                {
+                    m_uniformNodes.erase(it);
+                }
+            }
+            break;*/
+            default: break;
+            }
 
-            delete ptr;
+            delete node;
         }
 
         std::vector<Node*> Script::GetNodes()
@@ -284,6 +301,10 @@ namespace Curse
                 }
             }
 
+            // Get uniform variables.
+            // ????
+
+
             // Get varying out variables. 
             index = 0;
             for (auto* node : m_varyingOutNodes)
@@ -312,6 +333,38 @@ namespace Curse
                 index++;
             }
 
+            // Uniform blocks.
+            index = 0;
+            for (auto& pair : m_uniformBlocks)
+            {
+                size_t binding = pair.first;
+                auto block = pair.second;
+
+                std::string blockName = "ubo_" + std::to_string(index);
+
+                AppendToVector(source, "layout(binding = " + std::to_string(binding) + ") uniform s_" + blockName + "\n{\n");
+
+                size_t uniformIndex = 0;
+                for (auto& uniform : block->GetUniformNodes())
+                {
+
+                    std::string name = "var_" + std::to_string(uniformIndex);
+                    std::string fullName = blockName + "." + name;
+                    auto outputPin = uniform->GetOutputPin();
+                    VariablePtr var = std::make_shared<Variable>(fullName, uniform, outputPin);
+                    visitedInputPins.insert({ outputPin, var });
+
+                    AppendToVector(source,
+                        GetGlslPinTypeString(var->pin->GetDataType()) + " " + name + ";\n");
+
+                    uniformIndex++;
+                }
+
+                AppendToVector(source, "} " + blockName + ";\n");
+
+                index++;
+            }
+
             // Output variables.
             index = 0;
             for (auto& var : outputVars)
@@ -323,7 +376,20 @@ namespace Curse
             }
 
             // Uniform variables.
-            // ..
+            /*for (auto& pair : m_uniformNodes)
+            {
+                auto* node = pair.second;
+                auto outputPin = node->GetOutputPin();
+                size_t location = node->GetLocation();
+
+                const std::string name = "u_var_l" + std::to_string(location);
+                VariablePtr var = std::make_shared<Variable>(name, node, outputPin);
+     
+                AppendToVector(source,
+                    "layout(location = " + std::to_string(location) + ") uniform " +
+                    GetGlslPinTypeString(var->pin->GetDataType()) + " " + name + ";\n");
+
+            }*/
 
             // Main program.
             if (GetType() == ShaderType::Vertex)

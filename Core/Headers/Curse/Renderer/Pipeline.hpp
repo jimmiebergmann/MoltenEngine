@@ -120,6 +120,15 @@ namespace Curse
             std::vector<VertexAttribute> attributes;
         };
 
+        /**
+        * @brief Shader uniform data binding information.
+        */
+        struct UniformBinding
+        {
+            uint32_t binding;
+            ShaderType shaderType;
+        };
+
     protected:
 
         Pipeline() = default;
@@ -147,6 +156,7 @@ namespace Curse
         Pipeline::CullMode cullMode;
         std::vector<Shader::Program*> shaderPrograms;
         std::vector<Pipeline::VertexBinding> vertexBindings;
+        std::vector<Pipeline::UniformBinding> uniformBindings;
     };
 
 }

@@ -23,30 +23,32 @@
 *
 */
 
-#ifndef CURSE_CORE_RENDERER_VULKANPIPELINE_HPP
-#define CURSE_CORE_RENDERER_VULKANPIPELINE_HPP
+#ifndef CURSE_CORE_RENDERER_VULKANUNIFORMBLOCK_HPP
+#define CURSE_CORE_RENDERER_VULKANUNIFORMBLOCK_HPP
 
-#include "Curse/Renderer/Pipeline.hpp"
+#include "Curse/Renderer/UniformBlock.hpp"
+#include <vector>
 
 namespace Curse
 {
 
     class VulkanRenderer;
 
-    class CURSE_API VulkanPipeline : public Pipeline
+    class CURSE_API VulkanUniformBlock : public UniformBlock
     {
 
     private:
 
-        VulkanPipeline() = default;
-        VulkanPipeline(const VulkanPipeline&) = delete;
-        VulkanPipeline(VulkanPipeline&&) = delete;
-        ~VulkanPipeline() = default;
+        VulkanUniformBlock() = default;
+        VulkanUniformBlock(const VulkanUniformBlock&) = delete;
+        VulkanUniformBlock(VulkanUniformBlock&&) = delete;
+        ~VulkanUniformBlock() = default;
+
+        VkPipelineLayout pipelineLayout;
+        VkDescriptorPool descriptorPool;
+        std::vector<VkDescriptorSet> descriptorSets;
 
         friend class VulkanRenderer;
-
-        VkDescriptorSetLayout descriptionSetLayout;
-        VkPipelineLayout pipelineLayout;
 
     };
 

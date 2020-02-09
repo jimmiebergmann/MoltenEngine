@@ -15,16 +15,28 @@
 static Curse::Logger logger;
 static Curse::Window* window = nullptr;
 
+struct UniformBuffer
+{
+    Curse::Vector3f32 position;
+};
+
 static void LoadShaders(Curse::Shader::VertexScript& vScript, Curse::Shader::FragmentScript& fScript)
 {
     // Vertex shader.
     {
         auto outPos = vScript.GetVertexOutputNode();
         auto outColor = vScript.CreateVaryingOutNode<Curse::Vector4f32>();
-        auto pos = vScript.CreateVaryingInNode<Curse::Vector3f32>();
+        auto vPos = vScript.CreateVaryingInNode<Curse::Vector3f32>();
         auto color = vScript.CreateVaryingInNode<Curse::Vector4f32>();
 
-        outPos->GetInputPin()->Connect(*pos->GetOutputPin());
+        auto uniforms = vScript.CreateUniformBlock(0);
+        auto pos = uniforms->CreateUniformNode<Curse::Vector3f32>();
+        
+        auto addPos = vScript.CreateOperatorNode<Curse::Vector3f32>(Curse::Shader::Operator::Addition);
+        addPos->GetInputPin(0)->Connect(*vPos->GetOutputPin());
+        addPos->GetInputPin(1)->Connect(*pos->GetOutputPin());
+
+        outPos->GetInputPin()->Connect(*addPos->GetOutputPin());
         outColor->GetInputPin()->Connect(*color->GetOutputPin());
     }
 
@@ -78,6 +90,9 @@ static void Run()
     Curse::Shader::FragmentScript fragmentScript;
     LoadShaders(vertexScript, fragmentScript);
 
+    auto shaderSourceVec = vertexScript.GenerateGlsl();
+    std::string shaderSource(shaderSourceVec.begin(), shaderSourceVec.end());
+
     Curse::Shader::Program* vertexShader = renderer->CreateShaderProgram(vertexScript);
     Curse::Shader::Program* fragmentShader = renderer->CreateShaderProgram(fragmentScript);
 
@@ -114,6 +129,10 @@ static void Run()
     indexBufferDesc.dataType = Curse::IndexBuffer::DataType::Uint16;
     Curse::IndexBuffer* indexBuffer = renderer->CreateIndexBuffer(indexBufferDesc);
 
+    Curse::UniformBufferDescriptor uniformBufferDesc;
+    uniformBufferDesc.size = 512;//sizeof(UniformBuffer) * 2;
+    Curse::UniformBuffer* uniformBuffer = renderer->CreateUniformBuffer(uniformBufferDesc);
+
     Curse::Pipeline::VertexAttribute vertexAttrib1;
     vertexAttrib1.location = 0;
     vertexAttrib1.offset = offsetof(Vertex, position);
@@ -130,6 +149,10 @@ static void Run()
     vertexBinding.attributes.push_back(vertexAttrib1);
     vertexBinding.attributes.push_back(vertexAttrib2);
 
+    Curse::Pipeline::UniformBinding uniformBinding;
+    uniformBinding.binding = 0;
+    uniformBinding.shaderType = Curse::ShaderType::Vertex;
+
     Curse::PipelineDescriptor pipelineDesc;
     pipelineDesc.topology = Curse::Pipeline::Topology::TriangleList;
     pipelineDesc.polygonMode = Curse::Pipeline::PolygonMode::Fill;
@@ -137,11 +160,23 @@ static void Run()
     pipelineDesc.cullMode = Curse::Pipeline::CullMode::Back;
     pipelineDesc.shaderPrograms = { vertexShader, fragmentShader };
     pipelineDesc.vertexBindings = { vertexBinding };
+    pipelineDesc.uniformBindings = { uniformBinding };
 
     Curse::Pipeline* pipeline = renderer->CreatePipeline(pipelineDesc);
     
+    Curse::UniformBlockDescriptor uniformBlockDesc;
+    uniformBlockDesc.offset = 0;
+    uniformBlockDesc.size = sizeof(UniformBuffer);
+    uniformBlockDesc.binding = 0;
+    uniformBlockDesc.buffer = uniformBuffer;
+    uniformBlockDesc.pipeline = pipeline;
+    Curse::UniformBlock* uniformBlock = renderer->CreateUniformBlock(uniformBlockDesc);
+
     auto renderFunction = [&]()
-    {      
+    {     
+        static Curse::Clock runTimer;
+        float runTime = runTimer.GetTime().AsSeconds<float>();
+
         static Curse::Clock fpsTimer;
         static uint32_t fps = 0;
         fps++;
@@ -151,12 +186,24 @@ static void Run()
             window->SetTitle(windowTitle + " - " + std::to_string(fps) + "FPS");
             fps = 0;
         }
-
         
         renderer->Resize(window->GetSize());
         renderer->BeginDraw();
 
         renderer->BindPipeline(pipeline);
+
+        UniformBuffer bufferData1;
+        bufferData1.position = { std::sin(runTime * 3.0f) * 0.25f, 0.0f, 0.0f };
+        UniformBuffer bufferData2;
+        bufferData2.position = { 0.0f, std::cos(runTime * 3.0f) * 0.25f, 0.0f };
+
+        renderer->UpdateUniformBuffer(uniformBuffer, 0, sizeof(UniformBuffer), &bufferData1);
+        renderer->UpdateUniformBuffer(uniformBuffer, 256, sizeof(UniformBuffer), &bufferData2);
+
+        renderer->BindUniformBlock(uniformBlock, 256);
+        renderer->DrawVertexBuffer(indexBuffer, vertexBuffer);
+
+        renderer->BindUniformBlock(uniformBlock, 0);
         renderer->DrawVertexBuffer(indexBuffer, vertexBuffer);
 
         canvas.Draw();
@@ -224,6 +271,8 @@ static void Run()
     }
 
     renderer->WaitForDevice();
+    renderer->DestroyUniformBlock(uniformBlock);
+    renderer->DestroyUniformBuffer(uniformBuffer);
     renderer->DestroyVertexBuffer(vertexBuffer);
     renderer->DestroyIndexBuffer(indexBuffer);
     renderer->DestroyShaderProgram(vertexShader);
