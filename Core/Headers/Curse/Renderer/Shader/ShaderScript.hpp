@@ -72,7 +72,7 @@ namespace Curse
             /**
             * @brief Create new uniform block and append it to the shader script.
             */
-            UniformBlock * CreateUniformBlock(const size_t binding);
+            UniformBlock * CreateUniformBlock(const uint32_t id);
 
             /**
             * @brief Create new operator node and append it to the shader script.
@@ -115,6 +115,16 @@ namespace Curse
             * @brief Get all nodes of shader script.
             */
             std::vector<const Node*> GetNodes() const;
+
+            /**
+            * @brief Get uniform blocks of shader script.
+            */
+            std::vector<const UniformBlock*> GetUniformBlocks() const;
+
+            /**
+            * @brief Get uniform blocks of shader script.
+            */
+            std::vector<UniformBlock*> GetUniformBlocks();
 
             /**
             * @brief Get varying in nodes of shader script.
@@ -166,7 +176,7 @@ namespace Curse
             std::vector<Node*> m_varyingInNodes;
             std::vector<Node*> m_varyingOutNodes;
             //std::map<size_t, UniformNodeBase*> m_uniformNodes;
-            std::map<size_t, UniformBlock*> m_uniformBlocks;
+            std::map<uint32_t, UniformBlock*> m_uniformBlocks;
 
         };
 

@@ -47,6 +47,7 @@ namespace Curse
         VkPipelineLayout pipelineLayout;
         VkDescriptorPool descriptorPool;
         std::vector<VkDescriptorSet> descriptorSets;
+        uint32_t set;
 
         friend class VulkanRenderer;
 

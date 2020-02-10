@@ -37,6 +37,8 @@ namespace Curse
     namespace Shader
     {
 
+        class Script;
+
         /**
         * @brief Shader program base class.
         */
@@ -67,6 +69,7 @@ namespace Curse
 
             Resource resource;
             ShaderType type;
+            const Script* script;
 
         };
 
@@ -74,7 +77,7 @@ namespace Curse
         * @brief Descriptor class of shader program class.
         *        It's possible to load shaders via files or raw data.
         */
-        class CURSE_API ProgramDescriptor
+        /*class CURSE_API ProgramDescriptor
         {
 
         public:
@@ -87,7 +90,7 @@ namespace Curse
             const char* filename;   ///< Full path + filename of shader file.
             const uint8_t* data;    ///< Raw pointer of data buffer.
             const size_t dataSize;  ///< Size of data buffer.
-        };
+        };*/
 
     }
 

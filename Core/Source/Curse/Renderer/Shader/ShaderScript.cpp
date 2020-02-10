@@ -248,6 +248,26 @@ namespace Curse
             return { m_allNodes.begin(), m_allNodes.end() };
         }
 
+        std::vector<const UniformBlock*> Script::GetUniformBlocks() const
+        {
+            std::vector<const UniformBlock*> uniformBlocks;
+            for (auto& pair : m_uniformBlocks)
+            {
+                uniformBlocks.push_back(pair.second);
+            }
+            return uniformBlocks;
+        }
+
+        std::vector<UniformBlock*> Script::GetUniformBlocks()
+        {
+            std::vector<UniformBlock*> uniformBlocks;
+            for (auto& pair : m_uniformBlocks)
+            {
+                uniformBlocks.push_back(pair.second);
+            }
+            return uniformBlocks;
+        }
+
         std::vector<Node*> Script::GetVaryingInNodes()
         {
             return m_varyingOutNodes;
@@ -337,12 +357,12 @@ namespace Curse
             index = 0;
             for (auto& pair : m_uniformBlocks)
             {
-                size_t binding = pair.first;
+                size_t set = pair.first;
                 auto block = pair.second;
 
                 std::string blockName = "ubo_" + std::to_string(index);
 
-                AppendToVector(source, "layout(binding = " + std::to_string(binding) + ") uniform s_" + blockName + "\n{\n");
+                AppendToVector(source, "layout(binding= 0, set = " + std::to_string(set) + ") uniform s_" + blockName + "\n{\n");
 
                 size_t uniformIndex = 0;
                 for (auto& uniform : block->GetUniformNodes())

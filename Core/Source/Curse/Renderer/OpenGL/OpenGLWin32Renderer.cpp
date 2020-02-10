@@ -198,10 +198,10 @@ namespace Curse
         return nullptr;
     }
 
-    Shader::Program* OpenGLWin32Renderer::CreateShaderProgram(const Shader::ProgramDescriptor& )
+    /*Shader::Program* OpenGLWin32Renderer::CreateShaderProgram(const Shader::ProgramDescriptor& )
     {
         return nullptr;
-    }
+    }*/
 
     Shader::Program* OpenGLWin32Renderer::CreateShaderProgram(const Shader::Script& )
     {

@@ -31,6 +31,9 @@ static void LoadShaders(Curse::Shader::VertexScript& vScript, Curse::Shader::Fra
 
         auto uniforms = vScript.CreateUniformBlock(0);
         auto pos = uniforms->CreateUniformNode<Curse::Vector3f32>();
+
+        auto uniforms2 = vScript.CreateUniformBlock(1);
+        uniforms2->CreateUniformNode<Curse::Vector3f32>();
         
         auto addPos = vScript.CreateOperatorNode<Curse::Vector3f32>(Curse::Shader::Operator::Addition);
         addPos->GetInputPin(0)->Connect(*vPos->GetOutputPin());
@@ -129,10 +132,6 @@ static void Run()
     indexBufferDesc.dataType = Curse::IndexBuffer::DataType::Uint16;
     Curse::IndexBuffer* indexBuffer = renderer->CreateIndexBuffer(indexBufferDesc);
 
-    Curse::UniformBufferDescriptor uniformBufferDesc;
-    uniformBufferDesc.size = 512;//sizeof(UniformBuffer) * 2;
-    Curse::UniformBuffer* uniformBuffer = renderer->CreateUniformBuffer(uniformBufferDesc);
-
     Curse::Pipeline::VertexAttribute vertexAttrib1;
     vertexAttrib1.location = 0;
     vertexAttrib1.offset = offsetof(Vertex, position);
@@ -149,28 +148,33 @@ static void Run()
     vertexBinding.attributes.push_back(vertexAttrib1);
     vertexBinding.attributes.push_back(vertexAttrib2);
 
-    Curse::Pipeline::UniformBinding uniformBinding;
-    uniformBinding.binding = 0;
-    uniformBinding.shaderType = Curse::ShaderType::Vertex;
-
     Curse::PipelineDescriptor pipelineDesc;
     pipelineDesc.topology = Curse::Pipeline::Topology::TriangleList;
     pipelineDesc.polygonMode = Curse::Pipeline::PolygonMode::Fill;
     pipelineDesc.frontFace = Curse::Pipeline::FrontFace::Clockwise;
     pipelineDesc.cullMode = Curse::Pipeline::CullMode::Back;
-    pipelineDesc.shaderPrograms = { vertexShader, fragmentShader };
+    pipelineDesc.vertexProgram = vertexShader;
+    pipelineDesc.fragmentProgram = fragmentShader;
     pipelineDesc.vertexBindings = { vertexBinding };
-    pipelineDesc.uniformBindings = { uniformBinding };
 
     Curse::Pipeline* pipeline = renderer->CreatePipeline(pipelineDesc);
     
+    Curse::UniformBufferDescriptor uniformBufferDesc;
+    uniformBufferDesc.size = 512;
+    Curse::UniformBuffer* uniformBuffer = renderer->CreateUniformBuffer(uniformBufferDesc);
+
     Curse::UniformBlockDescriptor uniformBlockDesc;
-    uniformBlockDesc.offset = 0;
-    uniformBlockDesc.size = sizeof(UniformBuffer);
-    uniformBlockDesc.binding = 0;
+    uniformBlockDesc.id = 0;
     uniformBlockDesc.buffer = uniformBuffer;
     uniformBlockDesc.pipeline = pipeline;
     Curse::UniformBlock* uniformBlock = renderer->CreateUniformBlock(uniformBlockDesc);
+
+    Curse::UniformBlockDescriptor uniformBlockDesc2;
+    uniformBlockDesc2.id = 1;
+    uniformBlockDesc2.buffer = uniformBuffer;
+    uniformBlockDesc2.pipeline = pipeline;
+    Curse::UniformBlock* uniformBlock2 = renderer->CreateUniformBlock(uniformBlockDesc2);
+
 
     auto renderFunction = [&]()
     {     
@@ -200,10 +204,10 @@ static void Run()
         renderer->UpdateUniformBuffer(uniformBuffer, 0, sizeof(UniformBuffer), &bufferData1);
         renderer->UpdateUniformBuffer(uniformBuffer, 256, sizeof(UniformBuffer), &bufferData2);
 
-        renderer->BindUniformBlock(uniformBlock, 256);
+        renderer->BindUniformBlock(uniformBlock, 0);
         renderer->DrawVertexBuffer(indexBuffer, vertexBuffer);
 
-        renderer->BindUniformBlock(uniformBlock, 0);
+        renderer->BindUniformBlock(uniformBlock, 256);
         renderer->DrawVertexBuffer(indexBuffer, vertexBuffer);
 
         canvas.Draw();
@@ -272,6 +276,7 @@ static void Run()
 
     renderer->WaitForDevice();
     renderer->DestroyUniformBlock(uniformBlock);
+    renderer->DestroyUniformBlock(uniformBlock2);
     renderer->DestroyUniformBuffer(uniformBuffer);
     renderer->DestroyVertexBuffer(vertexBuffer);
     renderer->DestroyIndexBuffer(indexBuffer);

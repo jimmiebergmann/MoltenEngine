@@ -45,7 +45,8 @@ namespace Curse
 
         friend class VulkanRenderer;
 
-        VkDescriptorSetLayout descriptionSetLayout;
+        //VkDescriptorSetLayout descriptionSetLayout;
+        std::vector<VkDescriptorSetLayout> descriptionSetLayouts;
         VkPipelineLayout pipelineLayout;
 
     };

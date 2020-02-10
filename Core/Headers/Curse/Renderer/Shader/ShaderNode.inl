@@ -426,9 +426,14 @@ namespace Curse
             return { m_uniformNodes.begin(), m_uniformNodes.end() };
         }
 
+        inline uint32_t UniformBlock::GetId() const
+        {
+            return m_id;
+        }
 
-        inline UniformBlock::UniformBlock(Script& script) :
-            m_script(script)
+        inline UniformBlock::UniformBlock(Script& script, const uint32_t id) :
+            m_script(script),
+            m_id(id)
         { }
 
 

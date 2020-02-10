@@ -61,9 +61,7 @@ namespace Curse
 
         Pipeline* pipeline;
         UniformBuffer* buffer;
-        uint32_t binding;
-        uint32_t offset;
-        uint32_t size;
+        uint32_t id;
 
     };
 

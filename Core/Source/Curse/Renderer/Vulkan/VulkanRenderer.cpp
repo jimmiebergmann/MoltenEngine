@@ -28,6 +28,7 @@
 
 #if defined(CURSE_ENABLE_VULKAN)
 
+#include "Curse/Renderer/Shader/ShaderScript.hpp"
 #include "Curse/Renderer/Vulkan/VulkanFramebuffer.hpp"
 #include "Curse/Renderer/Vulkan/VulkanIndexBuffer.hpp"
 #include "Curse/Renderer/Vulkan/VulkanPipeline.hpp"
@@ -44,6 +45,7 @@
 #include <set>
 #include <algorithm>
 #include <limits>
+#include <memory>
 
 #define CURSE_RENDERER_LOG(severity, message) if(m_logger){ m_logger->Write(severity, message); }
 
@@ -448,10 +450,22 @@ namespace Curse
 
     Pipeline* VulkanRenderer::CreatePipeline(const PipelineDescriptor& descriptor)
     {
-        std::vector<VkPipelineShaderStageCreateInfo> shaderStageInfos(descriptor.shaderPrograms.size(), VkPipelineShaderStageCreateInfo{});
-        for (size_t i = 0; i < descriptor.shaderPrograms.size(); i++)
+        if (descriptor.vertexProgram == nullptr)
         {
-            const VulkanShaderProgram* shaderProgram = static_cast<VulkanShaderProgram*>(descriptor.shaderPrograms[i]);
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Vertex program is missing for pipeline. (vertexProgram == nullptr).");
+            return nullptr;
+        }
+        if (descriptor.fragmentProgram == nullptr)
+        {
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Fragment program is missing for pipeline. (fragmentProgram == nullptr).");
+            return nullptr;
+        }
+
+        std::vector<VkPipelineShaderStageCreateInfo> shaderStageInfos(2, VkPipelineShaderStageCreateInfo{});
+        VulkanShaderProgram* shaderPrograms[2] = { static_cast<VulkanShaderProgram * >(descriptor.vertexProgram), static_cast<VulkanShaderProgram*>(descriptor.fragmentProgram) };
+        for (size_t i = 0; i < 2; i++)
+        {
+            auto * shaderProgram = shaderPrograms[i];
             VkPipelineShaderStageCreateInfo& createInfo = shaderStageInfos[i];
             createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
             createInfo.stage = GetShaderProgramStageFlag(shaderProgram->type);
@@ -567,7 +581,8 @@ namespace Curse
         dynamicStateInfo.dynamicStateCount = 2;
         dynamicStateInfo.flags = 0;
 
-        std::vector<VkDescriptorSetLayoutBinding > uniformBindings(descriptor.uniformBindings.size());
+        // OLD CODE!
+        /*std::vector<VkDescriptorSetLayoutBinding > uniformBindings(descriptor.uniformBindings.size());
         for (size_t i = 0; i < descriptor.uniformBindings.size(); i++)
         {
             auto& binding = uniformBindings[i];
@@ -595,7 +610,93 @@ namespace Curse
         pipelineLayoutInfo.setLayoutCount = 1;
         pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
         pipelineLayoutInfo.pushConstantRangeCount = 0;
-        pipelineLayoutInfo.pPushConstantRanges = nullptr;
+        pipelineLayoutInfo.pPushConstantRanges = nullptr;*/
+        // OLD CODE!
+
+
+        /*std::vector<VkShaderStageFlags> setStageFlags;
+        uint32_t highestSetId = 0;
+
+        struct UniformBlockData
+        {
+            U
+        };*/
+
+        std::map<uint32_t, VkShaderStageFlags> uniformShaderStageFlags;
+        uint32_t highestSetId = 0;
+
+
+        for (auto* shaderProgram : shaderPrograms)
+        {
+            auto* script = shaderProgram->script;
+            auto uniformBlocks = script->GetUniformBlocks();
+
+            for (auto& uniformBlock : uniformBlocks)
+            {
+                auto setId = uniformBlock->GetId();
+                highestSetId = setId > highestSetId ? setId : highestSetId;
+
+                auto it = uniformShaderStageFlags.find(setId);
+                if (it != uniformShaderStageFlags.end())
+                {
+                    it->second |= GetShaderProgramStageFlag(script->GetType());
+                    continue;
+                }
+
+                uniformShaderStageFlags.insert({ setId , GetShaderProgramStageFlag(script->GetType()) });
+            }
+        }
+
+        if (highestSetId > static_cast<uint32_t>(uniformShaderStageFlags.size()))
+        {
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Uniform block id is out of bound, expected " + std::to_string(uniformShaderStageFlags.size() - 1) + " to be the highest.");
+            return nullptr;
+        }
+
+        std::vector<VkDescriptorSetLayout> setLayouts;
+        for (auto& pair : uniformShaderStageFlags)
+        {
+            auto stageFlags = pair.second;
+
+            VkDescriptorSetLayoutBinding binding; 
+            binding.binding = 0;
+            binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+            binding.descriptorCount = 1;
+            binding.stageFlags = stageFlags;
+            binding.pImmutableSamplers = nullptr;
+            
+            VkDescriptorSetLayoutCreateInfo descriptorSetLayoutInfo = {};
+            descriptorSetLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+            descriptorSetLayoutInfo.bindingCount = 1;
+            descriptorSetLayoutInfo.pBindings = &binding;
+
+            VkDescriptorSetLayout descriptorSetLayout;
+            if (vkCreateDescriptorSetLayout(m_logicalDevice, &descriptorSetLayoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS)
+            {
+                CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to create descriptor set layout.");
+                return nullptr;
+            }
+
+            setLayouts.push_back(descriptorSetLayout);
+        }
+
+        /*
+        std::vector<sets> setLayouts;
+        for(auto shader : shaders)
+        {
+            for(auto set : shader.sets)
+            {
+                if(set.id in 
+            }
+        }
+        */
+
+        VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
+        pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+        pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(setLayouts.size());
+        pipelineLayoutInfo.pSetLayouts = setLayouts.data();
+        pipelineLayoutInfo.pushConstantRangeCount = 0;
+        pipelineLayoutInfo.pPushConstantRanges = nullptr; 
 
         VkPipelineLayout pipelineLayout;
         if (vkCreatePipelineLayout(m_logicalDevice, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
@@ -635,13 +736,16 @@ namespace Curse
         VulkanPipeline* pipeline = new VulkanPipeline;
         pipeline->resource = graphicsPipeline;
         pipeline->pipelineLayout = pipelineLayout;
-        pipeline->descriptionSetLayout = descriptorSetLayout;
+
+        // FIX THIS, STORE AS ARRAY!
+        ///pipeline->descriptionSetLayout = descriptorSetLayout;
+        pipeline->descriptionSetLayouts = setLayouts;
 
         m_resourceCounter.pipelineCount++;
         return pipeline;
     }
 
-    Shader::Program* VulkanRenderer::CreateShaderProgram(const Shader::ProgramDescriptor& descriptor)
+    /*Shader::Program* VulkanRenderer::CreateShaderProgram(const Shader::ProgramDescriptor& descriptor)
     {
         const uint8_t* rawData = descriptor.data;
         size_t dataSize = descriptor.dataSize;
@@ -682,7 +786,7 @@ namespace Curse
 
         m_resourceCounter.shaderCount++;
         return shaderProgram;
-    }
+    }*/
 
     Shader::Program* VulkanRenderer::CreateShaderProgram(const Shader::Script & script)
     {
@@ -716,6 +820,7 @@ namespace Curse
         VulkanShaderProgram* shaderProgram = new VulkanShaderProgram;
         shaderProgram->resource = static_cast<Resource>(shaderModule);
         shaderProgram->type = shaderType;
+        shaderProgram->script = &script;
 
         m_resourceCounter.shaderCount++;
         return shaderProgram;
@@ -732,7 +837,7 @@ namespace Curse
         VulkanPipeline* vulkanPipeline = static_cast<VulkanPipeline*>(descriptor.pipeline);
         VulkanUniformBuffer* vulkanUniformBuffer = static_cast<VulkanUniformBuffer*>(descriptor.buffer);      
 
-        std::unique_ptr<VulkanUniformBlock, std::function<void(VulkanUniformBlock*)> > uniformBlock(new VulkanUniformBlock,
+        std::unique_ptr<VulkanUniformBlock, std::function<void(VulkanUniformBlock*)> > vulkanUniformBlock(new VulkanUniformBlock,
             [&](VulkanUniformBlock* uniformBlock)
         {
             DestroyUniformBlock(uniformBlock);
@@ -749,21 +854,21 @@ namespace Curse
         poolInfo.maxSets = static_cast<uint32_t>(m_swapChainImages.size());
         poolInfo.flags = 0;
 
-        if (vkCreateDescriptorPool(m_logicalDevice, &poolInfo, nullptr, &uniformBlock->descriptorPool) != VK_SUCCESS)
+        if (vkCreateDescriptorPool(m_logicalDevice, &poolInfo, nullptr, &vulkanUniformBlock->descriptorPool) != VK_SUCCESS)
         {
             CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to create descriptor pool.");
             return nullptr;
         }
       
-        std::vector<VkDescriptorSetLayout> layouts(m_swapChainImages.size(), vulkanPipeline->descriptionSetLayout);
+        std::vector<VkDescriptorSetLayout> layouts(m_swapChainImages.size(), vulkanPipeline->descriptionSetLayouts[descriptor.id]);
         VkDescriptorSetAllocateInfo allocInfo = {};
         allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-        allocInfo.descriptorPool = uniformBlock->descriptorPool;
+        allocInfo.descriptorPool = vulkanUniformBlock->descriptorPool;
         allocInfo.descriptorSetCount = static_cast<uint32_t>(m_swapChainImages.size());
         allocInfo.pSetLayouts = layouts.data();
 
-        uniformBlock->descriptorSets.resize(m_swapChainImages.size());
-        if (vkAllocateDescriptorSets(m_logicalDevice, &allocInfo, uniformBlock->descriptorSets.data()) != VK_SUCCESS)
+        vulkanUniformBlock->descriptorSets.resize(m_swapChainImages.size());
+        if (vkAllocateDescriptorSets(m_logicalDevice, &allocInfo, vulkanUniformBlock->descriptorSets.data()) != VK_SUCCESS)
         {
             CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to create descriptor sets.");
             return nullptr;
@@ -773,13 +878,13 @@ namespace Curse
         {
             VkDescriptorBufferInfo bufferInfo = {};
             bufferInfo.buffer = vulkanUniformBuffer->frames[i].buffer;
-            bufferInfo.offset = descriptor.offset;
-            bufferInfo.range = descriptor.size;
+            bufferInfo.offset = 0;
+            bufferInfo.range = VK_WHOLE_SIZE;
 
             VkWriteDescriptorSet descWrite = {};
             descWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            descWrite.dstSet = uniformBlock->descriptorSets[i];
-            descWrite.dstBinding = descriptor.binding;
+            descWrite.dstSet = vulkanUniformBlock->descriptorSets[i];
+            descWrite.dstBinding = 0;//descriptor.binding;
             descWrite.dstArrayElement = 0;
             descWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
             descWrite.descriptorCount = 1;
@@ -788,9 +893,10 @@ namespace Curse
             vkUpdateDescriptorSets(m_logicalDevice, 1, &descWrite, 0, nullptr);
         }
 
-        uniformBlock->pipelineLayout = vulkanPipeline->pipelineLayout;
+        vulkanUniformBlock->pipelineLayout = vulkanPipeline->pipelineLayout;
+        vulkanUniformBlock->set = descriptor.id;
 
-        return uniformBlock.release();
+        return vulkanUniformBlock.release();
     }
 
     UniformBuffer* VulkanRenderer::CreateUniformBuffer(const UniformBufferDescriptor& descriptor)
@@ -903,10 +1009,14 @@ namespace Curse
         {
             vkDestroyPipelineLayout(m_logicalDevice, vulkanPipeline->pipelineLayout, nullptr);
         }
-        if (vulkanPipeline->descriptionSetLayout)
+        for (auto& setLayout : vulkanPipeline->descriptionSetLayouts)
+        {
+            vkDestroyDescriptorSetLayout(m_logicalDevice, setLayout, nullptr);
+        }
+        /*if (vulkanPipeline->descriptionSetLayout)
         {
             vkDestroyDescriptorSetLayout(m_logicalDevice, vulkanPipeline->descriptionSetLayout, nullptr);
-        }
+        }*/
 
 
         m_resourceCounter.pipelineCount--;
@@ -968,7 +1078,8 @@ namespace Curse
     void VulkanRenderer::BindUniformBlock(UniformBlock* uniformBlock, const uint32_t offset)
     {
         VulkanUniformBlock* vulkanUniformBlock = static_cast<VulkanUniformBlock*>(uniformBlock);
-        vkCmdBindDescriptorSets(*m_currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkanUniformBlock->pipelineLayout, 0, 1, &vulkanUniformBlock->descriptorSets[m_currentImageIndex], 1, &offset);
+        vkCmdBindDescriptorSets(*m_currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkanUniformBlock->pipelineLayout, vulkanUniformBlock->set, 1,
+            &vulkanUniformBlock->descriptorSets[m_currentImageIndex], 1, &offset);
     }
 
     void VulkanRenderer::BeginDraw()

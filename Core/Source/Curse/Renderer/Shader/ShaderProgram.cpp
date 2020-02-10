@@ -271,7 +271,7 @@ namespace Curse
 
 
         // Shader descriptor implementations.
-        ProgramDescriptor::ProgramDescriptor() :
+       /* ProgramDescriptor::ProgramDescriptor() :
             type(ShaderType::Vertex),
             filename(nullptr),
             data(nullptr),
@@ -290,7 +290,7 @@ namespace Curse
             filename(nullptr),
             data(data),
             dataSize(dataSize)
-        { }
+        { }*/
 
     }
 

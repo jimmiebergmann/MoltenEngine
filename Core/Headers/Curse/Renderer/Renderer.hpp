@@ -27,16 +27,16 @@
 #define CURSE_CORE_RENDERER_RENDERER_HPP
 
 #include "Curse/Memory/Reference.hpp"
-#include "Curse/System/Version.hpp"
+#include "Curse/Renderer/Framebuffer.hpp"
+#include "Curse/Renderer/IndexBuffer.hpp"
+#include "Curse/Renderer/Pipeline.hpp"
 #include "Curse/Renderer/Shader/ShaderProgram.hpp"
 #include "Curse/Renderer/Shader/ShaderScript.hpp"
 #include "Curse/Renderer/Texture.hpp"
-#include "Curse/Renderer/Pipeline.hpp"
-#include "Curse/Renderer/Framebuffer.hpp"
-#include "Curse/Renderer/IndexBuffer.hpp"
 #include "Curse/Renderer/UniformBlock.hpp"
 #include "Curse/Renderer/UniformBuffer.hpp"
 #include "Curse/Renderer/VertexBuffer.hpp"
+#include "Curse/System/Version.hpp"
 #include <functional>
 
 namespace Curse
@@ -130,7 +130,7 @@ namespace Curse
         /**
         * @brief Create shader object.
         */
-        virtual Shader::Program* CreateShaderProgram(const Shader::ProgramDescriptor& descriptor) = 0;
+       // virtual Shader::Program* CreateShaderProgram(const Shader::ProgramDescriptor& descriptor) = 0;
 
         /**
         * @brief Create shader object out of shader script.

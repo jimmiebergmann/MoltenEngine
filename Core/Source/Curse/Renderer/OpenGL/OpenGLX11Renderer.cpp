@@ -195,10 +195,10 @@ namespace Curse
         return nullptr;
     }
 
-    Shader::Program* OpenGLX11Renderer::CreateShaderProgram(const Shader::ProgramDescriptor&)
+  /*  Shader::Program* OpenGLX11Renderer::CreateShaderProgram(const Shader::ProgramDescriptor&)
     {
         return nullptr;
-    }
+    }*/
 
     Shader::Program* OpenGLX11Renderer::CreateShaderProgram(const Shader::Script&)
     {

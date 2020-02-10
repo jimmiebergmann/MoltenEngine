@@ -712,16 +712,20 @@ namespace Curse
             */
             std::vector<const UniformNodeBase*> GetUniformNodes() const;
 
+            uint32_t GetId() const;
+
         protected:
 
             /**
             * @brief Constructor.
             */
-            UniformBlock(Script& script);
+            UniformBlock(Script& script, const uint32_t id);
 
         private:
 
             Script& m_script;
+            uint32_t m_id;
+
             std::vector<UniformNodeBase*> m_uniformNodes;
 
             friend class Script;

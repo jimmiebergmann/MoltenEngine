@@ -53,15 +53,15 @@ namespace Curse
             return func;
         }
 
-        inline UniformBlock* Script::CreateUniformBlock(const size_t binding)
+        inline UniformBlock* Script::CreateUniformBlock(const uint32_t id)
         {
-            if (m_uniformBlocks.find(binding) != m_uniformBlocks.end())
+            if (m_uniformBlocks.find(id) != m_uniformBlocks.end())
             {
                 return nullptr;
             }
             
-            auto block = new UniformBlock(*this);
-            m_uniformBlocks.insert({ binding, block });
+            auto block = new UniformBlock(*this, id);
+            m_uniformBlocks.insert({ id, block });
             return block;
         }
 

@@ -27,6 +27,7 @@
 #define CURSE_CORE_RENDERER_PIPELINE_HPP
 
 #include "Curse/Renderer/Resource.hpp"
+#include "Curse/Renderer/Shader.hpp"
 #include <vector>
 
 namespace Curse
@@ -120,15 +121,6 @@ namespace Curse
             std::vector<VertexAttribute> attributes;
         };
 
-        /**
-        * @brief Shader uniform data binding information.
-        */
-        struct UniformBinding
-        {
-            uint32_t binding;
-            ShaderType shaderType;
-        };
-
     protected:
 
         Pipeline() = default;
@@ -154,9 +146,10 @@ namespace Curse
         Pipeline::PolygonMode polygonMode;
         Pipeline::FrontFace frontFace;
         Pipeline::CullMode cullMode;
-        std::vector<Shader::Program*> shaderPrograms;
+        Shader::Program* vertexProgram;
+        Shader::Program* fragmentProgram;
         std::vector<Pipeline::VertexBinding> vertexBindings;
-        std::vector<Pipeline::UniformBinding> uniformBindings;
+
     };
 
 }

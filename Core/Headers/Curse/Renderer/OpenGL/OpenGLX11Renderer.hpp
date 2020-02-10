@@ -116,7 +116,7 @@ namespace Curse
         /**
         * @brief Create shader object.
         */
-        virtual Shader::Program* CreateShaderProgram(const Shader::ProgramDescriptor& descriptor) override;
+        //virtual Shader::Program* CreateShaderProgram(const Shader::ProgramDescriptor& descriptor) override;
 
         /**
         * @brief Create shader object out of shader script.
