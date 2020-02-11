@@ -136,26 +136,6 @@ namespace Curse
 
 
         /**
-        * @brief Type trait for retreiving data type of varying node types.
-        */
-        /*template<VaryingType T>
-        struct VaryingTypeTrait
-        { };
-        template<> struct VaryingTypeTrait<VaryingType::Color>
-        {
-            using DataType = Vector4f32;
-        };
-        template<> struct VaryingTypeTrait<VaryingType::Normal>
-        {
-            using DataType = Vector3f32;
-        };
-        template<> struct VaryingTypeTrait<VaryingType::Position>
-        {
-            using DataType = Vector3f32;
-        };*/
-
-
-        /**
         * @brief shader script node base class.
         */
         class CURSE_API Node
@@ -279,6 +259,11 @@ namespace Curse
             virtual std::type_index GetDataTypeIndex() const = 0;
 
             /**
+            * @brief Virtual destructor.
+            */
+            virtual ~ConstantNodeBase();
+
+            /**
             * @brief Get type of node.
             */
             virtual NodeType GetType() const override;
@@ -381,6 +366,11 @@ namespace Curse
             * @brief Get function type.
             */
             virtual FunctionType GetFunctionType() const = 0;
+
+            /**
+            * @brief Virtual destructor.
+            */
+            virtual ~FunctionNodeBase();
 
             /**
             * @brief Get type of node.
@@ -500,6 +490,11 @@ namespace Curse
         public:
 
             /**
+            * @brief Virtual destructor.
+            */
+            virtual ~OperatorNodeBase();
+
+            /**
             * @brief Get type of node.
             */
             virtual NodeType GetType() const override;
@@ -615,6 +610,11 @@ namespace Curse
         {
 
         public:
+
+            /**
+            * @brief Virtual destructor.
+            */
+            virtual ~UniformNodeBase();
 
             /**
             * @brief Get type of node.

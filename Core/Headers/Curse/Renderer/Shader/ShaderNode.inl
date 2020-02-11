@@ -31,6 +31,9 @@ namespace Curse
     {
 
         // Shader script constant node base implementations.
+        inline ConstantNodeBase::~ConstantNodeBase()
+        { }
+
         inline NodeType ConstantNodeBase::GetType() const
         {
             return NodeType::Constant;
@@ -111,6 +114,9 @@ namespace Curse
 
 
         // Shader script function node base implementations.
+        inline FunctionNodeBase::~FunctionNodeBase()
+        { }
+
         inline NodeType FunctionNodeBase::GetType() const
         {
             return NodeType::Function;
@@ -247,6 +253,9 @@ namespace Curse
 
 
         // Shader script operator node base implementations.
+        inline OperatorNodeBase::~OperatorNodeBase()
+        { }
+
         inline NodeType OperatorNodeBase::GetType() const
         {
             return NodeType::Operator;
@@ -347,6 +356,9 @@ namespace Curse
 
 
         // Shader script uniform base implementations.
+        inline UniformNodeBase::~UniformNodeBase()
+        { }
+
         inline NodeType UniformNodeBase::GetType() const
         {
             return NodeType::Uniform;

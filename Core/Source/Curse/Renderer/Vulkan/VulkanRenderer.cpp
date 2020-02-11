@@ -581,51 +581,8 @@ namespace Curse
         dynamicStateInfo.dynamicStateCount = 2;
         dynamicStateInfo.flags = 0;
 
-        // OLD CODE!
-        /*std::vector<VkDescriptorSetLayoutBinding > uniformBindings(descriptor.uniformBindings.size());
-        for (size_t i = 0; i < descriptor.uniformBindings.size(); i++)
-        {
-            auto& binding = uniformBindings[i];
-            binding.binding = descriptor.uniformBindings[i].binding;
-            binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-            binding.descriptorCount = 1;
-            binding.stageFlags = GetShaderProgramStageFlag(descriptor.uniformBindings[i].shaderType);
-            binding.pImmutableSamplers = nullptr;
-        }
-
-        VkDescriptorSetLayoutCreateInfo descriptorSetLayoutInfo = {};
-        descriptorSetLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        descriptorSetLayoutInfo.bindingCount = static_cast<uint32_t>(uniformBindings.size());
-        descriptorSetLayoutInfo.pBindings = uniformBindings.data();
-
-        VkDescriptorSetLayout descriptorSetLayout;
-        if (vkCreateDescriptorSetLayout(m_logicalDevice, &descriptorSetLayoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS)
-        {
-            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to create descriptor set layout.");
-            return nullptr;
-        }
-
-        VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
-        pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        pipelineLayoutInfo.setLayoutCount = 1;
-        pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
-        pipelineLayoutInfo.pushConstantRangeCount = 0;
-        pipelineLayoutInfo.pPushConstantRanges = nullptr;*/
-        // OLD CODE!
-
-
-        /*std::vector<VkShaderStageFlags> setStageFlags;
-        uint32_t highestSetId = 0;
-
-        struct UniformBlockData
-        {
-            U
-        };*/
-
         std::map<uint32_t, VkShaderStageFlags> uniformShaderStageFlags;
         uint32_t highestSetId = 0;
-
-
         for (auto* shaderProgram : shaderPrograms)
         {
             auto* script = shaderProgram->script;
@@ -680,17 +637,6 @@ namespace Curse
             setLayouts.push_back(descriptorSetLayout);
         }
 
-        /*
-        std::vector<sets> setLayouts;
-        for(auto shader : shaders)
-        {
-            for(auto set : shader.sets)
-            {
-                if(set.id in 
-            }
-        }
-        */
-
         VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(setLayouts.size());
@@ -736,9 +682,6 @@ namespace Curse
         VulkanPipeline* pipeline = new VulkanPipeline;
         pipeline->resource = graphicsPipeline;
         pipeline->pipelineLayout = pipelineLayout;
-
-        // FIX THIS, STORE AS ARRAY!
-        ///pipeline->descriptionSetLayout = descriptorSetLayout;
         pipeline->descriptionSetLayouts = setLayouts;
 
         m_resourceCounter.pipelineCount++;
