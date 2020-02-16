@@ -90,13 +90,6 @@ namespace Curse
         */
         virtual Version GetVersion() const override;
 
-        /**
-        * @brief Compile shader.
-        *        Compilation of shaders makes it possible to convert from GLSL to SPIR-V.
-        */
-        virtual std::vector<uint8_t> CompileShaderProgram(const ShaderFormat inputFormat, const ShaderType inputType,
-                                                          const std::vector<uint8_t>& inputData, const ShaderFormat outputFormat) override;
-
 
         /**
         * @brief Create framebuffer object.
@@ -114,19 +107,29 @@ namespace Curse
         virtual Pipeline* CreatePipeline(const PipelineDescriptor& descriptor) override;
 
         /**
-        * @brief Create shader object.
+        * @brief Create vertex shader stage object out of vertex script.
         */
-        //virtual Shader::Program* CreateShaderProgram(const Shader::ProgramDescriptor& descriptor) override;
+        virtual Shader::VertexStage* CreateVertexShaderStage(const Shader::VertexScript& script) override;
 
         /**
-        * @brief Create shader object out of shader script.
+        * @brief Create fragment shader stage object out of fragment script.
         */
-        virtual Shader::Program* CreateShaderProgram(const Shader::Script& script) override;
+        virtual Shader::FragmentStage* CreateFragmentShaderStage(const Shader::FragmentScript& script) override;
 
         /**
         * @brief Create texture object.
         */
         virtual Texture* CreateTexture() override;
+
+        /**
+        * @brief Create uniform buffer object.
+        */
+        virtual UniformBlock* CreateUniformBlock(const UniformBlockDescriptor& descriptor) override;
+
+        /**
+        * @brief Create uniform buffer object.
+        */
+        virtual UniformBuffer* CreateUniformBuffer(const UniformBufferDescriptor& descriptor) override;
 
         /**
         * @brief Create vertex buffer object.
@@ -150,14 +153,29 @@ namespace Curse
         virtual void DestroyPipeline(Pipeline* pipeline) override;
 
         /**
-        * @brief Destroy shader object.
+        * @brief Destroy vertex shader stage object.
         */
-        virtual void DestroyShaderProgram(Shader::Program* shader) override;
+        virtual void DestroyVertexShaderStage(Shader::VertexStage* shader) override;
+
+        /**
+        * @brief Destroy fragment shader stage object.
+        */
+        virtual void DestroyFragmentShaderStage(Shader::FragmentStage* shader) override;
 
         /**
         * @brief Destroy texture object.
         */
         virtual void DestroyTexture(Texture* texture) override;
+
+        /**
+        * @brief Destroy uniform block object.
+        */
+        virtual void DestroyUniformBlock(UniformBlock* uniformBlock) override;
+
+        /**
+        * @brief Destroy uniform buffer object.
+        */
+        virtual void DestroyUniformBuffer(UniformBuffer* uniformBuffer) override;
 
         /**
         * @brief Destroy vertex buffer object.
@@ -169,6 +187,12 @@ namespace Curse
         * @brief Bind pipeline to draw queue.
         */
         virtual void BindPipeline(Pipeline* pipeline) override;
+
+        /**
+        * @brief Bind pipeline to draw queue.
+        */
+        virtual void BindUniformBlock(UniformBlock* uniformBlock, const uint32_t offset = 0) override;
+
 
         /**
         * @brief Begin and initialize rendering to framebuffers.
@@ -190,10 +214,16 @@ namespace Curse
         */
         virtual void EndDraw() override;
 
+
         /**
         * @brief Sleep until the graphical device is ready.
         */
         virtual void WaitForDevice() override;
+
+        /**
+        * @brief Update uniform buffer data.
+        */
+        virtual void UpdateUniformBuffer(UniformBuffer* uniformBuffer, const size_t offset, const size_t size, const void* data) override;
 
     private:
 

@@ -25,6 +25,7 @@
 
 #include "Test.hpp"
 #include "Curse/Renderer/Shader/ShaderScript.hpp"
+#include "Curse/Renderer/Shader/Generator/VulkanShaderGenerator.hpp"
 
 namespace Curse
 {
@@ -35,10 +36,10 @@ namespace Curse
         {
             FragmentScript script;
 
-            auto output = script.CreateVaryingOutNode<Curse::Vector4f32>();
-            auto color = script.CreateVaryingInNode<Curse::Vector4f32>();
-            auto mult = script.CreateOperatorNode<Curse::Vector4f32>(Curse::Shader::Operator::Multiplication);
-            auto add = script.CreateOperatorNode<Curse::Vector4f32>(Curse::Shader::Operator::Addition);
+            auto output = script.GetOutputBlock().AppendNode<Curse::Vector4f32>();
+            auto color = script.GetInputBlock().AppendNode<Curse::Vector4f32>();
+            auto mult = script.CreateOperatorNode<Curse::Shader::Operator::MultVec4f32>();
+            auto add = script.CreateOperatorNode<Curse::Shader::Operator::AddVec4f32>();
             auto const1 = script.CreateConstantNode<Curse::Vector4f32>({ 0.0f, 0.0f, 0.3f, 0.0f });
             auto const2 = script.CreateConstantNode<Curse::Vector4f32>({ 1.0f, 0.5f, 0.0f, 1.0f });
 
@@ -50,17 +51,18 @@ namespace Curse
             mult->GetInputPin(0)->Connect(*color->GetOutputPin());
             mult->GetInputPin(1)->Connect(*const2->GetOutputPin());
 
-            auto source = script.GenerateGlsl();
+            auto source = VulkanGenerator::GenerateGlsl(script);
+            EXPECT_GT(source.size(), size_t(0));
             const std::string sourceStr(source.begin(), source.end());
 
             static const std::string expectedSource =
                 "#version 450\n"
                 "#extension GL_ARB_separate_shader_objects : enable\n"
-                "layout(location = 0) in vec4 v_var_0;\n"
+                "layout(location = 0) in vec4 i_var_0;\n"
                 "layout(location = 0) out vec4 o_var_0;\n"
                 "void main(){\n"
                 "vec4 l_var_0 = vec4(1, 0.5, 0, 1);\n"
-                "vec4 l_var_1 = v_var_0 * l_var_0;\n"
+                "vec4 l_var_1 = i_var_0 * l_var_0;\n"
                 "vec4 l_var_2 = vec4(0, 0, 0.3, 0);\n"
                 "vec4 l_var_3 = l_var_1 + l_var_2;\n"
                 "o_var_0 = l_var_3;\n"
@@ -74,13 +76,14 @@ namespace Curse
             // Cos
             {
                 FragmentScript script;
-                auto output = script.CreateVaryingOutNode<Curse::Vector4f32>();
+                auto output = script.GetOutputBlock().AppendNode<Curse::Vector4f32>();
                 auto cos = script.CreateFunctionNode<Curse::Shader::Function::CosVec4f32>();
 
                 output->GetInputPin()->Connect(*cos->GetOutputPin());
                 static_cast<Curse::Shader::InputPin<Curse::Vector4f32>*>(cos->GetInputPin())->SetDefaultValue({2.1f, 3.5f, 4.7f, 5.2f});
 
-                auto source = script.GenerateGlsl();
+                auto source = VulkanGenerator::GenerateGlsl(script);
+                EXPECT_GT(source.size(), size_t(0));
                 const std::string sourceStr(source.begin(), source.end());
 
                 static const std::string expectedSource =
@@ -101,14 +104,14 @@ namespace Curse
             // Cos
             {
                 FragmentScript script;
-                auto output = script.CreateVaryingOutNode<Curse::Vector4f32>();
+                auto output = script.GetOutputBlock().AppendNode<Curse::Vector4f32>();
                 auto const1 = script.CreateConstantNode<Curse::Vector4f32>({ 1.0f, 2.0f, 3.0f, 4.0f });
                 auto cos = script.CreateFunctionNode<Curse::Shader::Function::CosVec4f32>();
 
                 output->GetInputPin()->Connect(*cos->GetOutputPin());
                 cos->GetInputPin()->Connect(*const1->GetOutputPin());
 
-                auto source = script.GenerateGlsl();
+                auto source = VulkanGenerator::GenerateGlsl(script);
                 const std::string sourceStr(source.begin(), source.end());
 
                 static const std::string expectedSource =
@@ -126,14 +129,14 @@ namespace Curse
             // Sin
             {
                 FragmentScript script;
-                auto output = script.CreateVaryingOutNode<Curse::Vector3f32>();
+                auto output = script.GetOutputBlock().AppendNode<Curse::Vector3f32>();
                 auto const1 = script.CreateConstantNode<Curse::Vector3f32>({ 1.0f, 2.0f, 3.0f });
                 auto cos = script.CreateFunctionNode<Curse::Shader::Function::SinVec3f32>();
 
                 output->GetInputPin()->Connect(*cos->GetOutputPin());
                 cos->GetInputPin()->Connect(*const1->GetOutputPin());
 
-                auto source = script.GenerateGlsl();
+                auto source = VulkanGenerator::GenerateGlsl(script);
                 const std::string sourceStr(source.begin(), source.end());
 
                 static const std::string expectedSource =
@@ -151,14 +154,14 @@ namespace Curse
             // Tan
             {
                 FragmentScript script;
-                auto output = script.CreateVaryingOutNode<Curse::Vector2f32>();
+                auto output = script.GetOutputBlock().AppendNode<Curse::Vector2f32>();
                 auto const1 = script.CreateConstantNode<Curse::Vector2f32>({ 1.0f, 2.0f });
                 auto cos = script.CreateFunctionNode<Curse::Shader::Function::TanVec2f32>();
 
                 output->GetInputPin()->Connect(*cos->GetOutputPin());
                 cos->GetInputPin()->Connect(*const1->GetOutputPin());
 
-                auto source = script.GenerateGlsl();
+                auto source = VulkanGenerator::GenerateGlsl(script);
                 const std::string sourceStr(source.begin(), source.end());
 
                 static const std::string expectedSource =

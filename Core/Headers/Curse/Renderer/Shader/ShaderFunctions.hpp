@@ -27,9 +27,6 @@
 #define CURSE_CORE_RENDERER_SHADER_SHADERFUNCTIONS_HPP
 
 #include "Curse/Renderer/Shader/ShaderNode.hpp"
-#include <vector>
-#include <set>
-#include <string>
 
 namespace Curse
 {
@@ -41,37 +38,41 @@ namespace Curse
         {
             // Trigonometry
             using Cosf32     = FunctionNode<FunctionType::Cos, float, float>;
-            using CosVec2f32 = FunctionNode<FunctionType::Cos, Vector2f32, Vector2f32>;
-            using CosVec3f32 = FunctionNode<FunctionType::Cos, Vector3f32, Vector3f32>;
-            using CosVec4f32 = FunctionNode<FunctionType::Cos, Vector4f32, Vector4f32>;
+            using CosVec2f32 = FunctionNode<FunctionType::Cos, Curse::Vector2f32, Curse::Vector2f32>;
+            using CosVec3f32 = FunctionNode<FunctionType::Cos, Curse::Vector3f32, Curse::Vector3f32>;
+            using CosVec4f32 = FunctionNode<FunctionType::Cos, Curse::Vector4f32, Curse::Vector4f32>;
 
             using Sinf32     = FunctionNode<FunctionType::Sin, float, float>;
-            using SinVec2f32 = FunctionNode<FunctionType::Sin, Vector2f32, Vector2f32>;
-            using SinVec3f32 = FunctionNode<FunctionType::Sin, Vector3f32, Vector3f32>;
-            using SinVec4f32 = FunctionNode<FunctionType::Sin, Vector4f32, Vector4f32>;
+            using SinVec2f32 = FunctionNode<FunctionType::Sin, Curse::Vector2f32, Curse::Vector2f32>;
+            using SinVec3f32 = FunctionNode<FunctionType::Sin, Curse::Vector3f32, Curse::Vector3f32>;
+            using SinVec4f32 = FunctionNode<FunctionType::Sin, Curse::Vector4f32, Curse::Vector4f32>;
 
             using Tanf32     = FunctionNode<FunctionType::Tan, float, float>;
-            using TanVec2f32 = FunctionNode<FunctionType::Tan, Vector2f32, Vector2f32>;
-            using TanVec3f32 = FunctionNode<FunctionType::Tan, Vector3f32, Vector3f32>;
-            using TanVec4f32 = FunctionNode<FunctionType::Tan, Vector4f32, Vector4f32>;
+            using TanVec2f32 = FunctionNode<FunctionType::Tan, Curse::Vector2f32, Curse::Vector2f32>;
+            using TanVec3f32 = FunctionNode<FunctionType::Tan, Curse::Vector3f32, Curse::Vector3f32>;
+            using TanVec4f32 = FunctionNode<FunctionType::Tan, Curse::Vector4f32, Curse::Vector4f32>;
 
             // Mathematics.
             using Maxf32     = FunctionNode<FunctionType::Max, float, float, float>;
-            using MaxVec2f32 = FunctionNode<FunctionType::Max, Vector2f32, Vector2f32, Vector2f32>;
-            using MaxVec3f32 = FunctionNode<FunctionType::Max, Vector3f32, Vector3f32, Vector3f32>;
-            using MaxVec4f32 = FunctionNode<FunctionType::Max, Vector4f32, Vector4f32, Vector4f32>;
+            using MaxVec2f32 = FunctionNode<FunctionType::Max, Curse::Vector2f32, Curse::Vector2f32, Curse::Vector2f32>;
+            using MaxVec3f32 = FunctionNode<FunctionType::Max, Curse::Vector3f32, Curse::Vector3f32, Curse::Vector3f32>;
+            using MaxVec4f32 = FunctionNode<FunctionType::Max, Curse::Vector4f32, Curse::Vector4f32, Curse::Vector4f32>;
 
             using Minf32     = FunctionNode<FunctionType::Min, float, float, float>;
-            using MinVec2f32 = FunctionNode<FunctionType::Min, Vector2f32, Vector2f32, Vector2f32>;
-            using MinVec3f32 = FunctionNode<FunctionType::Min, Vector3f32, Vector3f32, Vector3f32>;
-            using MinVec4f32 = FunctionNode<FunctionType::Min, Vector4f32, Vector4f32, Vector4f32>;
+            using MinVec2f32 = FunctionNode<FunctionType::Min, Curse::Vector2f32, Curse::Vector2f32, Curse::Vector2f32>;
+            using MinVec3f32 = FunctionNode<FunctionType::Min, Curse::Vector3f32, Curse::Vector3f32, Curse::Vector3f32>;
+            using MinVec4f32 = FunctionNode<FunctionType::Min, Curse::Vector4f32, Curse::Vector4f32, Curse::Vector4f32>;
 
             // Vector.
-            using CrossVec3f32 = FunctionNode<FunctionType::Cross, Vector3f32, Vector3f32, Vector3f32>;
+            using CrossVec3f32 = FunctionNode<FunctionType::Cross, Curse::Vector3f32, Curse::Vector3f32, Curse::Vector3f32>;
 
-            using DotVec2f32 = FunctionNode<FunctionType::Dot, float, Vector2f32, Vector2f32>;
-            using DotVec3f32 = FunctionNode<FunctionType::Dot, float, Vector3f32, Vector3f32>;
-            using DotVec4f32 = FunctionNode<FunctionType::Dot, float, Vector4f32, Vector4f32>;
+            using DotVec2f32 = FunctionNode<FunctionType::Dot, float, Curse::Vector2f32, Curse::Vector2f32>;
+            using DotVec3f32 = FunctionNode<FunctionType::Dot, float, Curse::Vector3f32, Curse::Vector3f32>;
+            using DotVec4f32 = FunctionNode<FunctionType::Dot, float, Curse::Vector4f32, Curse::Vector4f32>;
+
+            // Sampler
+            using Texture2D = FunctionNode<FunctionType::Texture2D, Curse::Vector4f32, Sampler2D, Curse::Vector2f32>;
+            using Texture3D = FunctionNode<FunctionType::Texture3D, Curse::Vector4f32, Sampler3D, Curse::Vector3f32>;
         }
 
     }

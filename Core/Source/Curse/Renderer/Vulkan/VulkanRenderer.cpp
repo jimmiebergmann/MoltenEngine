@@ -29,10 +29,11 @@
 #if defined(CURSE_ENABLE_VULKAN)
 
 #include "Curse/Renderer/Shader/ShaderScript.hpp"
+#include "Curse/Renderer/Shader/Generator/VulkanShaderGenerator.hpp"
 #include "Curse/Renderer/Vulkan/VulkanFramebuffer.hpp"
 #include "Curse/Renderer/Vulkan/VulkanIndexBuffer.hpp"
 #include "Curse/Renderer/Vulkan/VulkanPipeline.hpp"
-#include "Curse/Renderer/Vulkan/VulkanShaderProgram.hpp"
+#include "Curse/Renderer/Vulkan/VulkanShaderStage.hpp"
 #include "Curse/Renderer/Vulkan/VulkanTexture.hpp"
 #include "Curse/Renderer/Vulkan/VulkanUniformBlock.hpp"
 #include "Curse/Renderer/Vulkan/VulkanUniformBuffer.hpp"
@@ -58,13 +59,13 @@ namespace Curse
 {
 
     // Static helper functions.
-    static VkShaderStageFlagBits GetShaderProgramStageFlag(const ShaderType type)
+    static VkShaderStageFlagBits GetShaderProgramStageFlag(const Shader::Type type)
     {
         CURSE_UNSCOPED_ENUM_BEGIN
         switch (type)
         {
-            case ShaderType::Vertex:   return VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT;
-            case ShaderType::Fragment: return VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT;
+            case Shader::Type::Vertex:   return VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT;
+            case Shader::Type::Fragment: return VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT;
             default: break;
         }
 
@@ -130,18 +131,50 @@ namespace Curse
         CURSE_UNSCOPED_ENUM_END
     }
 
-    static VkFormat GetVertexAttributeFormat(const Pipeline::AttributeFormat format)
+    static bool GetVertexAttributeFormatAndSize(const Shader::VariableDataType format, VkFormat & vulkanFormat, uint32_t & formatSize)
     {
         CURSE_UNSCOPED_ENUM_BEGIN
         switch (format)
         {
-            case Pipeline::AttributeFormat::R32_Float:             return VkFormat::VK_FORMAT_R32_SFLOAT;
-            case Pipeline::AttributeFormat::R32_G32_Float:         return VkFormat::VK_FORMAT_R32G32_SFLOAT;
-            case Pipeline::AttributeFormat::R32_G32_B32_Float:     return VkFormat::VK_FORMAT_R32G32B32_SFLOAT;
-            case Pipeline::AttributeFormat::R32_G32_B32_A32_Float: return VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT;
+            case Shader::VariableDataType::Bool:
+            {
+                vulkanFormat = VkFormat::VK_FORMAT_R8_UINT;
+                formatSize = 1;
+                return true;
+            }
+            case Shader::VariableDataType::Int32:
+            {
+                vulkanFormat = VkFormat::VK_FORMAT_R32_SINT;
+                formatSize = 4;
+                return true;
+            }
+            case Shader::VariableDataType::Float32:
+            {
+                vulkanFormat = VkFormat::VK_FORMAT_R32_SFLOAT;
+                formatSize = 4;
+                return true;
+            }
+            case Shader::VariableDataType::Vector2f32:
+            {
+                vulkanFormat = VkFormat::VK_FORMAT_R32G32_SFLOAT;
+                formatSize = 8;
+                return true;
+            }
+            case Shader::VariableDataType::Vector3f32:
+            {
+                vulkanFormat = VkFormat::VK_FORMAT_R32G32B32_SFLOAT;
+                formatSize = 12;
+                return true;
+            }
+            case Shader::VariableDataType::Vector4f32:
+            {
+                vulkanFormat = VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT;
+                formatSize = 16;
+                return true;
+            }
             default: break;
         }
-        throw Exception("Provided attribute format is not supported by the Vulkan renderer.");
+        return false;
         CURSE_UNSCOPED_ENUM_END
     }
 
@@ -361,19 +394,6 @@ namespace Curse
         return m_version;
     }
 
-    std::vector<uint8_t> VulkanRenderer::CompileShaderProgram(const ShaderFormat inputFormat, const ShaderType inputType,
-                                                              const std::vector<uint8_t>& inputData, const ShaderFormat outputFormat)
-    {
-        std::string errorMessage;
-        auto output = Shader::Program::Compile(inputFormat, inputType, inputData, outputFormat, errorMessage);
-        if (errorMessage.size())
-        {
-            CURSE_RENDERER_LOG(Logger::Severity::Error, errorMessage);
-        }
-
-        return std::move(output);
-    }
-
     Framebuffer* VulkanRenderer::CreateFramebuffer(const FramebufferDescriptor& descriptor)
     {
         VkImageView attachments[] =
@@ -450,67 +470,68 @@ namespace Curse
 
     Pipeline* VulkanRenderer::CreatePipeline(const PipelineDescriptor& descriptor)
     {
-        if (descriptor.vertexProgram == nullptr)
+        if (descriptor.vertexStage == nullptr)
         {
             CURSE_RENDERER_LOG(Logger::Severity::Error, "Vertex program is missing for pipeline. (vertexProgram == nullptr).");
             return nullptr;
         }
-        if (descriptor.fragmentProgram == nullptr)
+        if (descriptor.fragmentStage == nullptr)
         {
             CURSE_RENDERER_LOG(Logger::Severity::Error, "Fragment program is missing for pipeline. (fragmentProgram == nullptr).");
             return nullptr;
         }
 
         std::vector<VkPipelineShaderStageCreateInfo> shaderStageInfos(2, VkPipelineShaderStageCreateInfo{});
-        VulkanShaderProgram* shaderPrograms[2] = { static_cast<VulkanShaderProgram * >(descriptor.vertexProgram), static_cast<VulkanShaderProgram*>(descriptor.fragmentProgram) };
+        VulkanVertexShaderStage* vulkanVertexShaderStage = static_cast<VulkanVertexShaderStage*>(descriptor.vertexStage);
+        VulkanFragmentShaderStage* vulkanFragmentShaderStage = static_cast<VulkanFragmentShaderStage*>(descriptor.fragmentStage);
+        
         for (size_t i = 0; i < 2; i++)
         {
-            auto * shaderProgram = shaderPrograms[i];
-            VkPipelineShaderStageCreateInfo& createInfo = shaderStageInfos[i];
+            auto& createInfo = shaderStageInfos[i];
             createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-            createInfo.stage = GetShaderProgramStageFlag(shaderProgram->type);
-            createInfo.module = shaderProgram->resource;
             createInfo.pName = "main";
         }
+        shaderStageInfos[0].module = vulkanVertexShaderStage->module;
+        shaderStageInfos[0].stage = GetShaderProgramStageFlag(vulkanVertexShaderStage->GetType());
+        shaderStageInfos[1].module = vulkanFragmentShaderStage->module;
+        shaderStageInfos[1].stage = GetShaderProgramStageFlag(vulkanFragmentShaderStage->GetType());
 
-        std::vector<VkVertexInputBindingDescription> bindings(descriptor.vertexBindings.size());
-        size_t vertexAttributeCount = 0;
-        for(size_t i = 0; i < descriptor.vertexBindings.size(); i++)
+        auto& vertexScript = vulkanVertexShaderStage->script;
+        auto& fragmentScript = vulkanFragmentShaderStage->script;
+        const Shader::Script* shaderScripts[2] =
         {
-            auto& binding = bindings[i];
-            auto& descBinding = descriptor.vertexBindings[i];
-            binding.binding = descBinding.binding;
-            binding.stride = descBinding.stride;
-            binding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-            vertexAttributeCount += descBinding.attributes.size();
+            static_cast<const Shader::Script*>(&vertexScript),
+            static_cast<const Shader::Script*>(&fragmentScript)
+        };
+
+        auto& vertexOutputBlock = vertexScript.GetOutputBlock();
+        auto& fragmentInputBlock = fragmentScript.GetInputBlock();
+        
+        if (!fragmentInputBlock.CheckCompability(vertexOutputBlock))
+        {
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Vertex output block is not compatible with fragment input block.");
+            return nullptr;
         }
 
-        std::vector<VkVertexInputAttributeDescription> vertexInputAttribute(vertexAttributeCount);
-        size_t vertexAttributeIndex = 0;
-        for (size_t i = 0; i < descriptor.vertexBindings.size(); i++)
+        auto& vertexInputBlock = vertexScript.GetInputBlock();
+        std::vector<VkVertexInputAttributeDescription> vertexInputAttributes;
+        uint32_t vertexBindingStride = 0;       
+        if (!CreateVertexInputAttributes(vertexInputBlock, vertexInputAttributes, vertexBindingStride))
         {
-            auto& descBinding = descriptor.vertexBindings[i];
-            uint32_t bindingId = descBinding.binding;
+            return nullptr;
+        }
 
-            for (size_t attIndex = 0; attIndex < descBinding.attributes.size(); attIndex++)
-            {
-                auto& attribute = vertexInputAttribute[vertexAttributeIndex];
-                auto& attributeDesc = descBinding.attributes[attIndex];
-                
-                attribute.binding = bindingId;
-                attribute.location = attributeDesc.location;
-                attribute.offset = attributeDesc.offset;
-                attribute.format = GetVertexAttributeFormat(attributeDesc.format);
-                vertexAttributeIndex++;
-            }           
-        }      
+        VkVertexInputBindingDescription vertexBinding;
+        vertexBinding.binding = 0;
+        vertexBinding.stride = vertexBindingStride;
+        vertexBinding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
         VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
         vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-        vertexInputInfo.vertexBindingDescriptionCount = static_cast<uint32_t>(bindings.size());
-        vertexInputInfo.pVertexBindingDescriptions = bindings.data();
-        vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(vertexInputAttribute.size());
-        vertexInputInfo.pVertexAttributeDescriptions = vertexInputAttribute.data();
+        vertexInputInfo.vertexBindingDescriptionCount = 1;
+        vertexInputInfo.pVertexBindingDescriptions = &vertexBinding;
+        vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(vertexInputAttributes.size());
+        vertexInputInfo.pVertexAttributeDescriptions = vertexInputAttributes.data();        
 
         VkPipelineInputAssemblyStateCreateInfo inputAssemblyStateInfo = {};
         inputAssemblyStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -583,14 +604,13 @@ namespace Curse
 
         std::map<uint32_t, VkShaderStageFlags> uniformShaderStageFlags;
         uint32_t highestSetId = 0;
-        for (auto* shaderProgram : shaderPrograms)
+        for (auto script : shaderScripts)
         {
-            auto* script = shaderProgram->script;
             auto uniformBlocks = script->GetUniformBlocks();
 
-            for (auto& uniformBlock : uniformBlocks)
+            for (auto uniformBlock : uniformBlocks)
             {
-                auto setId = uniformBlock->GetId();
+                uint32_t setId = uniformBlock->GetId();
                 highestSetId = setId > highestSetId ? setId : highestSetId;
 
                 auto it = uniformShaderStageFlags.find(setId);
@@ -688,33 +708,26 @@ namespace Curse
         return pipeline;
     }
 
-    /*Shader::Program* VulkanRenderer::CreateShaderProgram(const Shader::ProgramDescriptor& descriptor)
+    Shader::VertexStage* VulkanRenderer::CreateVertexShaderStage(const Shader::VertexScript& script)
     {
-        const uint8_t* rawData = descriptor.data;
-        size_t dataSize = descriptor.dataSize;
-
-        std::vector<uint8_t> data;
-        if (!rawData)
+        auto glslCode = Shader::VulkanGenerator::GenerateGlsl(script, m_logger);
+        if (!glslCode.size())
         {
-            if (!descriptor.filename)
-            {
-                return nullptr;
-            }
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to generate GLSL code.");
+            return nullptr;
+        }
 
-            data = FileSystem::ReadFile(descriptor.filename);
-            if (!data.size())
-            {
-                return nullptr;
-            }
-
-            rawData = data.data();
-            dataSize = data.size();
+        auto sprivCode = Shader::VulkanGenerator::ConvertGlslToSpriV(glslCode, Shader::Type::Vertex, m_logger);
+        if (!sprivCode.size())
+        {
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to convert GLSL to SPIR-V.");
+            return nullptr;
         }
 
         VkShaderModuleCreateInfo shaderModuleInfo = {};
         shaderModuleInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-        shaderModuleInfo.codeSize = dataSize;
-        shaderModuleInfo.pCode = reinterpret_cast<const uint32_t*>(rawData);
+        shaderModuleInfo.codeSize = sprivCode.size();
+        shaderModuleInfo.pCode = reinterpret_cast<const uint32_t*>(sprivCode.data());
 
         VkShaderModule shaderModule;
         if (vkCreateShaderModule(m_logicalDevice, &shaderModuleInfo, nullptr, &shaderModule) != VK_SUCCESS)
@@ -723,35 +736,30 @@ namespace Curse
             return nullptr;
         }
 
-        VulkanShaderProgram* shaderProgram = new VulkanShaderProgram;
-        shaderProgram->resource = static_cast<Resource>(shaderModule);
-        shaderProgram->type = descriptor.type;
+        auto shaderStage = new VulkanVertexShaderStage(shaderModule, script);
+        return shaderStage;
+    }
 
-        m_resourceCounter.shaderCount++;
-        return shaderProgram;
-    }*/
-
-    Shader::Program* VulkanRenderer::CreateShaderProgram(const Shader::Script & script)
+    Shader::FragmentStage* VulkanRenderer::CreateFragmentShaderStage(const Shader::FragmentScript& script)
     {
-        ShaderType shaderType = script.GetType();
-
-        auto source = script.GenerateGlsl();
-        if (!source.size())
+        auto glslCode = Shader::VulkanGenerator::GenerateGlsl(script, m_logger);
+        if (!glslCode.size())
         {
-            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to generate shader glsl code.");
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to generate GLSL code.");
             return nullptr;
         }
 
-        auto spirv = CompileShaderProgram(Curse::ShaderFormat::Glsl, shaderType, source, Curse::ShaderFormat::SpirV);
-        if (!spirv.size())
+        auto sprivCode = Shader::VulkanGenerator::ConvertGlslToSpriV(glslCode, Shader::Type::Fragment, m_logger);
+        if (!sprivCode.size())
         {
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to convert GLSL to SPIR-V.");
             return nullptr;
         }
 
         VkShaderModuleCreateInfo shaderModuleInfo = {};
         shaderModuleInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-        shaderModuleInfo.codeSize = spirv.size();
-        shaderModuleInfo.pCode = reinterpret_cast<const uint32_t*>(spirv.data());
+        shaderModuleInfo.codeSize = sprivCode.size();
+        shaderModuleInfo.pCode = reinterpret_cast<const uint32_t*>(sprivCode.data());
 
         VkShaderModule shaderModule;
         if (vkCreateShaderModule(m_logicalDevice, &shaderModuleInfo, nullptr, &shaderModule) != VK_SUCCESS)
@@ -760,13 +768,8 @@ namespace Curse
             return nullptr;
         }
 
-        VulkanShaderProgram* shaderProgram = new VulkanShaderProgram;
-        shaderProgram->resource = static_cast<Resource>(shaderModule);
-        shaderProgram->type = shaderType;
-        shaderProgram->script = &script;
-
-        m_resourceCounter.shaderCount++;
-        return shaderProgram;
+        auto shaderStage = new VulkanFragmentShaderStage(shaderModule, script);
+        return shaderStage;
     }
 
     Texture* VulkanRenderer::CreateTexture()
@@ -779,6 +782,12 @@ namespace Curse
     {
         VulkanPipeline* vulkanPipeline = static_cast<VulkanPipeline*>(descriptor.pipeline);
         VulkanUniformBuffer* vulkanUniformBuffer = static_cast<VulkanUniformBuffer*>(descriptor.buffer);      
+
+        if (descriptor.id >= vulkanPipeline->descriptionSetLayouts.size())
+        {
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Id of uniform descriptor block is too large.");
+            return nullptr;
+        }
 
         std::unique_ptr<VulkanUniformBlock, std::function<void(VulkanUniformBlock*)> > vulkanUniformBlock(new VulkanUniformBlock,
             [&](VulkanUniformBlock* uniformBlock)
@@ -808,7 +817,7 @@ namespace Curse
         allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         allocInfo.descriptorPool = vulkanUniformBlock->descriptorPool;
         allocInfo.descriptorSetCount = static_cast<uint32_t>(m_swapChainImages.size());
-        allocInfo.pSetLayouts = layouts.data();
+        allocInfo.pSetLayouts = layouts.data(); 
 
         vulkanUniformBlock->descriptorSets.resize(m_swapChainImages.size());
         if (vkAllocateDescriptorSets(m_logicalDevice, &allocInfo, vulkanUniformBlock->descriptorSets.data()) != VK_SUCCESS)
@@ -956,22 +965,23 @@ namespace Curse
         {
             vkDestroyDescriptorSetLayout(m_logicalDevice, setLayout, nullptr);
         }
-        /*if (vulkanPipeline->descriptionSetLayout)
-        {
-            vkDestroyDescriptorSetLayout(m_logicalDevice, vulkanPipeline->descriptionSetLayout, nullptr);
-        }*/
-
 
         m_resourceCounter.pipelineCount--;
         delete vulkanPipeline;
     }
 
-    void VulkanRenderer::DestroyShaderProgram(Shader::Program* shader)
+    void VulkanRenderer::DestroyVertexShaderStage(Shader::VertexStage* stage)
     {
-        VulkanShaderProgram* vulkanShaderProgram = static_cast<VulkanShaderProgram*>(shader);
-        vkDestroyShaderModule(m_logicalDevice, vulkanShaderProgram->resource, nullptr);
-        m_resourceCounter.shaderCount--;
-        delete vulkanShaderProgram;
+        VulkanVertexShaderStage* vulkanVertexShaderStage = static_cast<VulkanVertexShaderStage*>(stage);
+        vkDestroyShaderModule(m_logicalDevice, vulkanVertexShaderStage->module, nullptr);
+        delete vulkanVertexShaderStage;
+    }
+
+    void VulkanRenderer::DestroyFragmentShaderStage(Shader::FragmentStage* stage)
+    {
+        VulkanFragmentShaderStage* vulkanFragmentShaderStage = static_cast<VulkanFragmentShaderStage*>(stage);
+        vkDestroyShaderModule(m_logicalDevice, vulkanFragmentShaderStage->module, nullptr);
+        delete vulkanFragmentShaderStage;
     }
 
     void VulkanRenderer::DestroyTexture(Texture* texture)
@@ -1086,7 +1096,7 @@ namespace Curse
         renderPassBeginInfo.renderArea.offset = { 0, 0 };
         renderPassBeginInfo.renderArea.extent = m_swapChainExtent;
 
-        const VkClearValue clearColor = { 0.3f, 0.0f, 0.0f, 1.0f };
+        const VkClearValue clearColor = { 0.3f, 0.0f, 0.0f, 0.0f };
         renderPassBeginInfo.clearValueCount = 1;
         renderPassBeginInfo.pClearValues = &clearColor;
 
@@ -2122,6 +2132,37 @@ namespace Curse
         vkQueueWaitIdle(m_graphicsQueue);
 
         vkFreeCommandBuffers(m_logicalDevice, m_commandPool, 1, &commandBuffer);
+    }
+
+    bool VulkanRenderer::CreateVertexInputAttributes(const Shader::InputBlock& inputBlock, std::vector<VkVertexInputAttributeDescription>& attributes, uint32_t& stride)
+    {
+        attributes.resize(inputBlock.GetOutputPinCount());
+        size_t index = 0;
+        uint32_t location = 0;
+
+        for (auto* inputNode : inputBlock.GetNodes())
+        {
+            for (auto* outputPin : inputNode->GetOutputPins())
+            {
+                VkFormat format;
+                uint32_t formatSize;
+                if (!GetVertexAttributeFormatAndSize(outputPin->GetDataType(), format, formatSize))
+                {
+                    CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to find attribute format.");
+                    return false;
+                }
+
+                auto& attribute = attributes[index++];
+                attribute.binding = 0;
+                attribute.location = location;
+                attribute.offset = stride;
+                attribute.format = format;
+
+                location++;
+                stride += formatSize;
+            }
+        }
+        return true;
     }
 
 }

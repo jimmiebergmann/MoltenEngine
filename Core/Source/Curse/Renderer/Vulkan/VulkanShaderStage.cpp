@@ -23,29 +23,23 @@
 *
 */
 
-#ifndef CURSE_CORE_RENDERER_VULKANSHADERPROGRAM_HPP
-#define CURSE_CORE_RENDERER_VULKANSHADERPROGRAM_HPP
 
-#include "Curse/Renderer/Shader/ShaderProgram.hpp"
+#include "Curse/Renderer/Vulkan/VulkanShaderStage.hpp"
+
+#if defined(CURSE_ENABLE_VULKAN)
 
 namespace Curse
 {
 
-    class VulkanRenderer;
+    VulkanVertexShaderStage::VulkanVertexShaderStage(VkShaderModule module, const Shader::VertexScript& script) :
+        module(module),
+        script(script)
+    { }
 
-    class CURSE_API VulkanShaderProgram : public Shader::Program
-    {
-
-    private:
-
-        VulkanShaderProgram() = default;
-        VulkanShaderProgram(const VulkanShaderProgram&) = delete;
-        VulkanShaderProgram(VulkanShaderProgram&&) = delete;
-        ~VulkanShaderProgram() = default;
-
-        friend class VulkanRenderer;
-
-    };
+    VulkanFragmentShaderStage::VulkanFragmentShaderStage(VkShaderModule module, const Shader::FragmentScript& script) :
+        module(module),
+        script(script)
+    { }
 
 }
 

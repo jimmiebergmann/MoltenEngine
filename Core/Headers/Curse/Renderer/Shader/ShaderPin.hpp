@@ -26,8 +26,9 @@
 #ifndef CURSE_CORE_RENDERER_SHADER_SHADERPIN_HPP
 #define CURSE_CORE_RENDERER_SHADER_SHADERPIN_HPP
 
-#include "Curse/Types.hpp"
+#include "Curse/Renderer/Shader.hpp"
 #include "Curse/Math/Vector.hpp"
+#include "Curse/Math/Matrix.hpp"
 #include <vector>
 #include <string>
 #include <typeindex>
@@ -39,23 +40,11 @@ namespace Curse
     namespace Shader
     {
 
+        // Forward declarations.
         class Node;
         template<typename T> class InputPin;
         template<typename T> class OutputPin;
         
-
-        /**
-        * @brief Enumerator of available data types.
-        */
-        enum class PinDataType : uint8_t
-        {
-            Bool,
-            Int32,
-            Float32,
-            Vector2f32,
-            Vector3f32,
-            Vector4f32
-        };
 
         /**
         * @brief Enumerator of pin directions.
@@ -68,40 +57,7 @@ namespace Curse
 
 
         /**
-        * @brief Type trait for checking if data type of shader node is supported.
-        */
-        template<typename T>
-        struct PinDefault
-        {
-        };
-        template<> struct PinDefault<bool>
-        {
-            inline static const bool Value = false;
-        }; 
-        template<> struct PinDefault<int32_t>
-        {
-            inline static const int32_t Value = 0;
-        };
-        template<> struct PinDefault<float>
-        {
-            inline static const float Value = 0.0f;
-        };
-        template<> struct PinDefault<Vector2f32>
-        {
-            inline static const Vector2f32 Value = { 0.0f };
-        };
-        template<> struct PinDefault<Vector3f32>
-        {
-            inline static const Vector3f32 Value = { 0.0f };
-        };
-        template<> struct PinDefault<Vector4f32>
-        {
-            inline static const Vector4f32 Value = { 0.0f };
-        };
-
-
-        /**
-        * @brief Base class of visual script pin.
+        * @brief Base class of shader script pin.
         */
         class Pin
         {
@@ -149,12 +105,7 @@ namespace Curse
             /**
             * @brief Get data type of pin.
             */
-            virtual PinDataType GetDataType() const = 0;
-
-            /**
-            * @brief Get type index of pin data type.
-            */
-            virtual std::type_index GetDataTypeIndex() const = 0;
+            virtual VariableDataType GetDataType() const = 0;
 
             /**
             * @brief Get direction of pin, in or out.
@@ -170,36 +121,28 @@ namespace Curse
             /**
             * @brief Get connected pin by index.
             *
-            * @return Pointer of connected pin, nullptr if index is >= GetConnectionCount(), or if no pin is connected.
+            * @return Pointer of connected pin, nullptr if index is >= GetConnectionCount() or pin isn't connected.
             */
+            /**@{*/
             virtual Pin* GetConnection(const size_t index = 0) = 0;
-
-            /**
-            * @brief Get connected pin by index.
-            *
-            * @return Pointer of pin, nullptr if index is >= GetConnectionCount().
-            */
             virtual const Pin* GetConnection(const size_t index = 0) const = 0;
+            /**@}*/
 
             /**
             * @brief Get all connections, wrapped in a vector.
             */
+            /**@{*/
             virtual std::vector<Pin*> GetConnections() = 0;
-
-            /**
-            * @brief Get all connections, wrapped in a vector.
-            */
             virtual std::vector<const Pin*> GetConnections() const = 0;
+            /**@}*/
 
             /**
             * @brief Get parent node object.
             */
+            /**@{*/
             Node& GetNode();
-
-            /**
-            * @brief Get parent node object.
-            */
             const Node& GetNode() const;   
+            /**@}*/
 
             /**
             * @brief Get name of pin.
@@ -226,13 +169,15 @@ namespace Curse
 
 
         /**
-        * @brief Visual script input pin class.
+        * @brief Shader script input pin class.
         *
         * @tparam T Data type of pin.
         */
         template<typename T>
         class InputPin : public Pin
         {
+
+            static_assert(VariableTrait<T>::Supported, "Input pin of data type T is not supported.");
 
         public:
 
@@ -283,12 +228,7 @@ namespace Curse
             /**
             * @brief Get data type of pin
             */
-            virtual PinDataType GetDataType() const override;
-
-            /**
-            * @brief Get type index of pin data type.
-            */
-            virtual std::type_index GetDataTypeIndex() const override;
+            virtual VariableDataType GetDataType() const override;
 
             /**
             * @brief Get direction of pin, in or out.
@@ -315,26 +255,20 @@ namespace Curse
             /**
             * @brief Get connected pin by index.
             *
-            * @return Pointer of pin, nullptr if index is >= GetConnectionCount().
+            * @return Pointer of pin, nullptr if index is >= GetConnectionCount() or pin isn't connected.
             */
+            /**@{*/
             virtual Pin* GetConnection(const size_t index = 0) override;
-
-            /**
-            * @brief Get connected pin by index.
-            *
-            * @return Pointer of pin, nullptr if index is >= GetConnectionCount().
-            */
             virtual const Pin* GetConnection(const size_t index = 0) const override;
+            /**@}*/
 
             /**
             * @brief Get all connections, wrapped in a vector.
             */
+            /**@{*/
             virtual std::vector<Pin*> GetConnections() override;
-
-            /**
-            * @brief Get all connections, wrapped in a vector.
-            */
             virtual std::vector<const Pin*> GetConnections() const override;           
+            /**@}*/
 
         protected:
 
@@ -355,13 +289,14 @@ namespace Curse
 
 
         /**
-        * @brief Visual script output pin class.
+        * @brief Shader script output pin class.
         *
         * @tparam T Data type of pin.
         */
         template<typename T>
         class OutputPin : public Pin
         {
+            static_assert(VariableTrait<T>::Supported, "Input pin of data type T is not supported.");
 
         public:
 
@@ -406,12 +341,7 @@ namespace Curse
             /**
             * @brief Get data type of pin
             */
-            virtual PinDataType GetDataType() const override;
-
-            /**
-            * @brief Get type index of pin data type.
-            */
-            virtual std::type_index GetDataTypeIndex() const override;
+            virtual VariableDataType GetDataType() const override;
 
             /**
             * @brief Get direction of pin, in or out.
@@ -426,26 +356,20 @@ namespace Curse
             /**
             * @brief Get connected pin by index.
             *
-            * @return Pointer of pin, nullptr if index is >= GetConnectionCount().
+            * @return Pointer of pin, nullptr if index is >= GetConnectionCount() or pin isn't connected.
             */
+            /**@{*/
             virtual Pin* GetConnection(const size_t index = 0) override;
-
-            /**
-            * @brief Get connected pin by index.
-            *
-            * @return Pointer of pin, nullptr if index is >= GetConnectionCount().
-            */
             virtual const Pin* GetConnection(const size_t index = 0) const override;
+            /**@}*/
 
             /**
             * @brief Get all connections, wrapped in a vector.
             */
+            /**@{*/
             virtual std::vector<Pin*> GetConnections() override;
-
-            /**
-            * @brief Get all connections, wrapped in a vector.
-            */
             virtual std::vector<const Pin*> GetConnections() const override;
+            /**@}*/
 
         protected:
 

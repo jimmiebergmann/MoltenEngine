@@ -23,28 +23,70 @@
 *
 */
 
-#include "ShaderFunctions.hpp"
-
 namespace Curse
 {
 
     namespace Shader
     {
 
-        template<typename T>
-        inline ConstantNode<T>* Script::CreateConstantNode(const T& value)
-        {
-            static_assert(DataTypeTrait<T>::Supported,
-                "Specified data type of constant node is not supported.");
+        
 
+        //inline UniformBlock* Script::CreateUniformBlock(const uint32_t id)
+        //{
+        //    if (m_uniformBlocks.find(id) != m_uniformBlocks.end())
+        //    {
+        //        return nullptr;
+        //    }
+        //    
+        //    auto block = new UniformBlock(*this, id);
+        //    m_uniformBlocks.insert({ id, block });
+        //    return block;
+        //}
+
+        
+
+        //template<typename T>
+        //inline VaryingInNode<T>* Script::CreateVaryingInNode(const uint32_t id)
+        //{
+        //    if (m_varyingInNodes.find(id) != m_varyingInNodes.end())
+        //    {
+        //        return nullptr;
+        //    }
+
+        //    auto varying = new VaryingInNode<T>(*this, id);
+        //    m_allNodes.insert(varying);
+        //    m_varyingInNodes.insert({ id, varying });
+        //    return varying;
+        //}
+
+        //template<typename T>
+        //inline VaryingOutNode<T>* Script::CreateVaryingOutNode(const uint32_t id)
+        //{
+        //    if (m_varyingOutNodes.find(id) != m_varyingOutNodes.end())
+        //    {
+        //        return nullptr;
+        //    }
+
+        //    auto varying = new VaryingOutNode<T>(*this, id);
+        //    m_allNodes.insert(varying);
+        //    m_varyingOutNodes.insert({ id, varying });
+        //    return varying;
+        //}
+
+        // Vertex shader script implementations.
+        template<typename T>
+        inline ConstantNode<T>* VertexScript::CreateConstantNode(const T& value)
+        {
+            // CHECK TYPE.
             auto constant = new ConstantNode<T>(*this, value);
             m_allNodes.insert(constant);
             return constant;
         }
 
         template<typename Func>
-        inline auto Script::CreateFunctionNode()
+        inline Func* VertexScript::CreateFunctionNode()
         {
+            // CHECK FUNCTION TYPE.
             static_assert(std::is_base_of<FunctionNodeBase, Func>::value,
                 "Specified template parameter is not base of FunctionNode.");
 
@@ -53,56 +95,51 @@ namespace Curse
             return func;
         }
 
-        inline UniformBlock* Script::CreateUniformBlock(const uint32_t id)
+        template<typename Op>
+        inline Op* VertexScript::CreateOperatorNode()
         {
-            if (m_uniformBlocks.find(id) != m_uniformBlocks.end())
-            {
-                return nullptr;
-            }
-            
-            auto block = new UniformBlock(*this, id);
-            m_uniformBlocks.insert({ id, block });
-            return block;
+            // CHECK OPERATOR TYPE.
+            static_assert(std::is_base_of<OperatorNodeBase, Op>::value,
+                "Specified template parameter is not base of OperatorNodeBase.");
+
+            auto op = new Op(*this);
+            m_allNodes.insert(op);
+            return op;
         }
 
-        /*template<typename T>
-        inline UniformNode<T>* Script::CreateUniformNode(const size_t location)
-        {
-            if (m_uniformNodes.find(location) != m_uniformNodes.end())
-            {
-                return nullptr;
-            }
 
-            auto uniformNode = new UniformNode<T>(*this, location);
-            m_allNodes.insert(uniformNode);
-            m_uniformNodes.insert({ location, uniformNode });
-            return uniformNode;
-        }*/
-
+        // Fragment shader script implementations.
         template<typename T>
-        inline OperatorNode<T>* Script::CreateOperatorNode(const Operator op)
+        inline ConstantNode<T>* FragmentScript::CreateConstantNode(const T& value)
         {
-            auto opNode = new OperatorNode<T>(*this, op);
-            m_allNodes.insert(opNode);
-            return opNode;
+            // CHECK TYPE.
+            auto constant = new ConstantNode<T>(*this, value);
+            m_allNodes.insert(constant);
+            return constant;
         }
 
-        template<typename T>
-        inline VaryingInNode<T>* Script::CreateVaryingInNode()
+        template<typename Func>
+        inline Func* FragmentScript::CreateFunctionNode()
         {
-            auto varying = new VaryingInNode<T>(*this);
-            m_allNodes.insert(varying);
-            m_varyingInNodes.push_back(varying);
-            return varying;
+            // CHECK FUNCTION TYPE.
+            static_assert(std::is_base_of<FunctionNodeBase, Func>::value,
+                "Specified template parameter is not base of FunctionNode.");
+
+            auto func = new Func(*this);
+            m_allNodes.insert(func);
+            return func;
         }
 
-        template<typename T>
-        inline VaryingOutNode<T>* Script::CreateVaryingOutNode()
+        template<typename Op>
+        inline Op* FragmentScript::CreateOperatorNode()
         {
-            auto varying = new VaryingOutNode<T>(*this);
-            m_allNodes.insert(varying);
-            m_varyingOutNodes.push_back(varying);
-            return varying;
+            // CHECK OPERATOR TYPE.
+            static_assert(std::is_base_of<OperatorNodeBase, Op>::value,
+                "Specified template parameter is not base of OperatorNodeBase.");
+
+            auto op = new Op(*this);
+            m_allNodes.insert(op);
+            return op;
         }
 
     }

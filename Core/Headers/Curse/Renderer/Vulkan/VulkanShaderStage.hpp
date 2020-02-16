@@ -23,42 +23,55 @@
 *
 */
 
-#ifndef CURSE_CORE_RENDERER_VULKANUNIFORMBUFFER_HPP
-#define CURSE_CORE_RENDERER_VULKANUNIFORMBUFFER_HPP
+#ifndef CURSE_CORE_RENDERER_VULKANSHADERPROGRAM_HPP
+#define CURSE_CORE_RENDERER_VULKANSHADERPROGRAM_HPP
 
-#include "Curse/Renderer/UniformBuffer.hpp"
+#include "Curse/Renderer/Shader/ShaderStage.hpp"
 
 #if defined(CURSE_ENABLE_VULKAN)
 #include "Curse/Renderer/Vulkan/Vulkan.hpp"
-#include <vector>
 
 namespace Curse
 {
 
+    // Forward declarations.
     class VulkanRenderer;
+    namespace Shader
+    {
+        class VertexScript;
+        class FragmentScript;
+    }
 
-    class CURSE_API VulkanUniformBuffer : public UniformBuffer
+
+    class CURSE_API VulkanVertexShaderStage : public Shader::VertexStage
     {
 
     private:
 
-        VulkanUniformBuffer() = default;
-        VulkanUniformBuffer(const VulkanUniformBuffer&) = delete;
-        VulkanUniformBuffer(VulkanUniformBuffer&&) = delete;
-        ~VulkanUniformBuffer() = default;
+        VulkanVertexShaderStage(VkShaderModule module, const Shader::VertexScript& script);
+        VulkanVertexShaderStage(const VulkanVertexShaderStage&) = delete;
+        VulkanVertexShaderStage(VulkanVertexShaderStage&&) = delete;
+        ~VulkanVertexShaderStage() = default;
 
-        struct Frame
-        {
-            Frame() :
-                buffer(VK_NULL_HANDLE),
-                memory(VK_NULL_HANDLE)
-            { }
+        VkShaderModule module;
+        const Shader::VertexScript& script;
 
-            VkBuffer buffer;
-            VkDeviceMemory memory;
-        };
+        friend class VulkanRenderer;
 
-        std::vector<Frame> frames;
+    };
+
+    class CURSE_API VulkanFragmentShaderStage : public Shader::FragmentStage
+    {
+
+    private:
+
+        VulkanFragmentShaderStage(VkShaderModule module, const Shader::FragmentScript& script);
+        VulkanFragmentShaderStage(const VulkanFragmentShaderStage&) = delete;
+        VulkanFragmentShaderStage(VulkanFragmentShaderStage&&) = delete;
+        ~VulkanFragmentShaderStage() = default;
+
+        VkShaderModule module;
+        const Shader::FragmentScript& script;
 
         friend class VulkanRenderer;
 

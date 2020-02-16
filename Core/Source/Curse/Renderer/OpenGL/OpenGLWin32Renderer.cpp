@@ -177,11 +177,11 @@ namespace Curse
         return m_version;
     }
 
-    std::vector<uint8_t> OpenGLWin32Renderer::CompileShaderProgram(const ShaderFormat /*inputFormat*/, const ShaderType /*inputType*/,
-                                                                  const std::vector<uint8_t>& /*inputData*/, const ShaderFormat /*outputFormat*/)
-    {
-        return {};
-    }
+    //std::vector<uint8_t> OpenGLWin32Renderer::CompileShaderProgram(const ShaderFormat /*inputFormat*/, const ShaderType /*inputType*/,
+    //                                                              const std::vector<uint8_t>& /*inputData*/, const ShaderFormat /*outputFormat*/)
+    //{
+    //    return {};
+    //}
 
     Framebuffer* OpenGLWin32Renderer::CreateFramebuffer(const FramebufferDescriptor&)
     {
@@ -198,17 +198,27 @@ namespace Curse
         return nullptr;
     }
 
-    /*Shader::Program* OpenGLWin32Renderer::CreateShaderProgram(const Shader::ProgramDescriptor& )
+    Shader::VertexStage* OpenGLWin32Renderer::CreateVertexShaderStage(const Shader::VertexScript&)
     {
         return nullptr;
-    }*/
+    }
 
-    Shader::Program* OpenGLWin32Renderer::CreateShaderProgram(const Shader::Script& )
+    Shader::FragmentStage* OpenGLWin32Renderer::CreateFragmentShaderStage(const Shader::FragmentScript&)
     {
         return nullptr;
     }
 
     Texture* OpenGLWin32Renderer::CreateTexture()
+    {
+        return nullptr;
+    }
+
+    UniformBlock* OpenGLWin32Renderer::CreateUniformBlock(const UniformBlockDescriptor&)
+    {
+        return nullptr;
+    }
+
+    UniformBuffer* OpenGLWin32Renderer::CreateUniformBuffer(const UniformBufferDescriptor&)
     {
         return nullptr;
     }
@@ -230,11 +240,23 @@ namespace Curse
     {
     }
 
-    void OpenGLWin32Renderer::DestroyShaderProgram(Shader::Program* )
+    void OpenGLWin32Renderer::DestroyVertexShaderStage(Shader::VertexStage*)
+    {
+    }
+
+    void OpenGLWin32Renderer::DestroyFragmentShaderStage(Shader::FragmentStage*)
     {
     }
 
     void OpenGLWin32Renderer::DestroyTexture(Texture* )
+    {
+    }
+
+    void OpenGLWin32Renderer::DestroyUniformBlock(UniformBlock* uniformBlock)
+    {
+    }
+
+    void OpenGLWin32Renderer::DestroyUniformBuffer(UniformBuffer* uniformBuffer)
     {
     }
 
@@ -243,6 +265,10 @@ namespace Curse
     }
 
     void OpenGLWin32Renderer::BindPipeline(Pipeline* /*pipeline*/)
+    {
+    }
+
+    void OpenGLWin32Renderer::BindUniformBlock(UniformBlock* /*uniformBlock*/, const uint32_t /*offset*/)
     {
     }
 
@@ -263,6 +289,10 @@ namespace Curse
     }
 
     void OpenGLWin32Renderer::WaitForDevice()
+    {
+    }
+
+    void OpenGLWin32Renderer::UpdateUniformBuffer(UniformBuffer* /*uniformBuffer*/, const size_t /*offset*/, const size_t /*size*/, const void* /*data*/)
     {
     }
 

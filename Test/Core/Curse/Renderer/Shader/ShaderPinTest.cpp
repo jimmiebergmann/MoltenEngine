@@ -37,7 +37,7 @@ namespace Curse
         TEST(Shader, InputPin)
         {
             FragmentScript script;
-            Node* nodePtr = script.CreateVaryingOutNode<bool>();
+            Node* nodePtr = script.GetOutputBlock().AppendNode<bool>();
             Node& node = *nodePtr;
 
             InputPin<float> pin(node, "test name");
@@ -53,7 +53,7 @@ namespace Curse
         TEST(Shader, InputPin_DefaultValue)
         {
             FragmentScript script;
-            Node* nodePtr = script.CreateVaryingOutNode<bool>();
+            Node* nodePtr = script.GetOutputBlock().AppendNode<bool>();
             Node& node = *nodePtr;
 
             InputPin<int32_t> pin(node, 1234, "test name");
@@ -73,85 +73,45 @@ namespace Curse
         TEST(Shader, InputPin_DataType)
         {
             FragmentScript script;
-            Node* nodePtr = script.CreateVaryingOutNode<bool>();
+            Node* nodePtr = script.GetOutputBlock().AppendNode<bool>();
             Node& node = *nodePtr;
 
             {
                 InputPin<bool> pin(node);
                 EXPECT_EQ(pin.GetDirection(), PinDirection::In);
-                EXPECT_EQ(pin.GetDataTypeIndex(), typeid(bool));
+                EXPECT_EQ(pin.GetDataType(), VariableDataType::Bool);
             }
-            /* {
-                 InputPin<int8_t> pin;
-                 EXPECT_EQ(pin.GetDirection(), PinDirection::In);
-                 EXPECT_EQ(pin.GetDataTypeIndex(), typeid(int8_t));
-             }
-             {
-                 InputPin<int16_t> pin;
-                 EXPECT_EQ(pin.GetDirection(), PinDirection::In);
-                 EXPECT_EQ(pin.GetDataTypeIndex(), typeid(int16_t));
-             }*/
             {
                 InputPin<int32_t> pin(node);
                 EXPECT_EQ(pin.GetDirection(), PinDirection::In);
-                EXPECT_EQ(pin.GetDataTypeIndex(), typeid(int32_t));
-            }
-            /* {
-                 InputPin<int64_t> pin;
-                 EXPECT_EQ(pin.GetDirection(), PinDirection::In);
-                 EXPECT_EQ(pin.GetDataTypeIndex(), typeid(int64_t));
-             }
-             {
-                 InputPin<uint8_t> pin;
-                 EXPECT_EQ(pin.GetDirection(), PinDirection::In);
-                 EXPECT_EQ(pin.GetDataTypeIndex(), typeid(uint8_t));
-             }
-             {
-                 InputPin<uint16_t> pin;
-                 EXPECT_EQ(pin.GetDirection(), PinDirection::In);
-                 EXPECT_EQ(pin.GetDataTypeIndex(), typeid(uint16_t));
-             }
-             {
-                 InputPin<uint32_t> pin;
-                 EXPECT_EQ(pin.GetDirection(), PinDirection::In);
-                 EXPECT_EQ(pin.GetDataTypeIndex(), typeid(uint32_t));
-             }
-             {
-                 InputPin<uint64_t> pin;
-                 EXPECT_EQ(pin.GetDirection(), PinDirection::In);
-                 EXPECT_EQ(pin.GetDataTypeIndex(), typeid(uint64_t));
-             }*/
+                EXPECT_EQ(pin.GetDataType(), VariableDataType::Int32);
+            }      
             {
                 InputPin<float> pin(node);
                 EXPECT_EQ(pin.GetDirection(), PinDirection::In);
-                EXPECT_EQ(pin.GetDataTypeIndex(), typeid(float));
-            }
-            /*{
-                InputPin<double> pin;
-                EXPECT_EQ(pin.GetDirection(), PinDirection::In);
-                EXPECT_EQ(pin.GetDataTypeIndex(), typeid(double));
-            }  */
+                EXPECT_EQ(pin.GetDataType(), VariableDataType::Float32);
+            }          
             {
                 InputPin<Curse::Vector2f32> pin(node);
                 EXPECT_EQ(pin.GetDirection(), PinDirection::In);
-                EXPECT_EQ(pin.GetDataTypeIndex(), typeid(Curse::Vector2f32));
+                EXPECT_EQ(pin.GetDataType(), VariableDataType::Vector2f32);
             }
             {
                 InputPin<Curse::Vector3f32> pin(node);
                 EXPECT_EQ(pin.GetDirection(), PinDirection::In);
-                EXPECT_EQ(pin.GetDataTypeIndex(), typeid(Curse::Vector3f32));
+                EXPECT_EQ(pin.GetDataType(), VariableDataType::Vector3f32);
             }
             {
                 InputPin<Curse::Vector4f32> pin(node);
                 EXPECT_EQ(pin.GetDirection(), PinDirection::In);
-                EXPECT_EQ(pin.GetDataTypeIndex(), typeid(Curse::Vector4f32));
+                EXPECT_EQ(pin.GetDataType(), VariableDataType::Vector4f32);
             }
         }
 
         TEST(Shader, InputPin_Connection)
         {
             FragmentScript script;
-            Node* nodePtr = script.CreateVaryingOutNode<bool>();
+            Node* nodePtr = script.GetOutputBlock().AppendNode<bool>();
             Node& node = *nodePtr;
 
             {
@@ -295,7 +255,7 @@ namespace Curse
         TEST(Shader, OutputPin)
         {
             FragmentScript script;
-            Node* nodePtr = script.CreateVaryingOutNode<bool>();
+            Node* nodePtr = script.GetOutputBlock().AppendNode<bool>();
             Node& node = *nodePtr;
 
             OutputPin<float> pin(node, "test name");
@@ -311,85 +271,45 @@ namespace Curse
         TEST(Shader, OutputPin_DataType)
         {
             FragmentScript script;
-            Node* nodePtr = script.CreateVaryingOutNode<bool>();
+            Node* nodePtr = script.GetOutputBlock().AppendNode<bool>();
             Node& node = *nodePtr;
 
             {
                 OutputPin<bool> pin(node);
                 EXPECT_EQ(pin.GetDirection(), PinDirection::Out);
-                EXPECT_EQ(pin.GetDataTypeIndex(), typeid(bool));
+                EXPECT_EQ(pin.GetDataType(), VariableDataType::Bool);
             }
-            /*{
-                OutputPin<int8_t> pin;
-                EXPECT_EQ(pin.GetDirection(), PinDirection::Out);
-                EXPECT_EQ(pin.GetDataTypeIndex(), typeid(int8_t));
-            }
-            {
-                OutputPin<int16_t> pin;
-                EXPECT_EQ(pin.GetDirection(), PinDirection::Out);
-                EXPECT_EQ(pin.GetDataTypeIndex(), typeid(int16_t));
-            }*/
             {
                 OutputPin<int32_t> pin(node);
                 EXPECT_EQ(pin.GetDirection(), PinDirection::Out);
-                EXPECT_EQ(pin.GetDataTypeIndex(), typeid(int32_t));
+                EXPECT_EQ(pin.GetDataType(), VariableDataType::Int32);
             }
-            /*{
-                OutputPin<int64_t> pin;
-                EXPECT_EQ(pin.GetDirection(), PinDirection::Out);
-                EXPECT_EQ(pin.GetDataTypeIndex(), typeid(int64_t));
-            }
-            {
-                OutputPin<uint8_t> pin;
-                EXPECT_EQ(pin.GetDirection(), PinDirection::Out);
-                EXPECT_EQ(pin.GetDataTypeIndex(), typeid(uint8_t));
-            }
-            {
-                OutputPin<uint16_t> pin;
-                EXPECT_EQ(pin.GetDirection(), PinDirection::Out);
-                EXPECT_EQ(pin.GetDataTypeIndex(), typeid(uint16_t));
-            }
-            {
-                OutputPin<uint32_t> pin;
-                EXPECT_EQ(pin.GetDirection(), PinDirection::Out);
-                EXPECT_EQ(pin.GetDataTypeIndex(), typeid(uint32_t));
-            }
-            {
-                OutputPin<uint64_t> pin;
-                EXPECT_EQ(pin.GetDirection(), PinDirection::Out);
-                EXPECT_EQ(pin.GetDataTypeIndex(), typeid(uint64_t));
-            }*/
             {
                 OutputPin<float> pin(node);
                 EXPECT_EQ(pin.GetDirection(), PinDirection::Out);
-                EXPECT_EQ(pin.GetDataTypeIndex(), typeid(float));
+                EXPECT_EQ(pin.GetDataType(), VariableDataType::Float32);
             }
-            /*{
-                OutputPin<double> pin;
-                EXPECT_EQ(pin.GetDirection(), PinDirection::Out);
-                EXPECT_EQ(pin.GetDataTypeIndex(), typeid(double));
-            }*/
             {
                 OutputPin<Curse::Vector2f32> pin(node);
                 EXPECT_EQ(pin.GetDirection(), PinDirection::Out);
-                EXPECT_EQ(pin.GetDataTypeIndex(), typeid(Curse::Vector2f32));
+                EXPECT_EQ(pin.GetDataType(), VariableDataType::Vector2f32);
             }
             {
                 OutputPin<Curse::Vector3f32> pin(node);
                 EXPECT_EQ(pin.GetDirection(), PinDirection::Out);
-                EXPECT_EQ(pin.GetDataTypeIndex(), typeid(Curse::Vector3f32));
+                EXPECT_EQ(pin.GetDataType(), VariableDataType::Vector3f32);
             }
             {
                 OutputPin<Curse::Vector4f32> pin(node);
                 EXPECT_EQ(pin.GetDirection(), PinDirection::Out);
-                EXPECT_EQ(pin.GetDataTypeIndex(), typeid(Curse::Vector4f32));
+                EXPECT_EQ(pin.GetDataType(), VariableDataType::Vector4f32);
             }
         }
 
         TEST(Shader, OutputPin_Connection)
         {
             FragmentScript script;
-            Node* nodePtr = script.CreateVaryingOutNode<bool>();
+            Node* nodePtr = script.GetOutputBlock().AppendNode<bool>();
             Node& node = *nodePtr;
 
             {

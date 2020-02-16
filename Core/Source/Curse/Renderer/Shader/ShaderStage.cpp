@@ -23,49 +23,34 @@
 *
 */
 
-#ifndef CURSE_CORE_RENDERER_VULKANUNIFORMBUFFER_HPP
-#define CURSE_CORE_RENDERER_VULKANUNIFORMBUFFER_HPP
-
-#include "Curse/Renderer/UniformBuffer.hpp"
-
-#if defined(CURSE_ENABLE_VULKAN)
-#include "Curse/Renderer/Vulkan/Vulkan.hpp"
-#include <vector>
+#include "Curse/Renderer/Shader/ShaderStage.hpp"
+#include "Curse/System/Exception.hpp"
+#include "Curse/System/FileSystem.hpp"
 
 namespace Curse
 {
 
-    class VulkanRenderer;
-
-    class CURSE_API VulkanUniformBuffer : public UniformBuffer
+    namespace Shader
     {
 
-    private:
+        // Stage base class implementations.
+        Stage::~Stage()
+        { }
 
-        VulkanUniformBuffer() = default;
-        VulkanUniformBuffer(const VulkanUniformBuffer&) = delete;
-        VulkanUniformBuffer(VulkanUniformBuffer&&) = delete;
-        ~VulkanUniformBuffer() = default;
 
-        struct Frame
+        // Vertex shader stage implementations.
+        Type VertexStage::GetType() const
         {
-            Frame() :
-                buffer(VK_NULL_HANDLE),
-                memory(VK_NULL_HANDLE)
-            { }
+            return Type::Vertex;
+        }
 
-            VkBuffer buffer;
-            VkDeviceMemory memory;
-        };
 
-        std::vector<Frame> frames;
+        // Fragment shader stage implementations.
+        Type FragmentStage::GetType() const
+        {
+            return Type::Fragment;
+        }
 
-        friend class VulkanRenderer;
-
-    };
+    }
 
 }
-
-#endif
-
-#endif

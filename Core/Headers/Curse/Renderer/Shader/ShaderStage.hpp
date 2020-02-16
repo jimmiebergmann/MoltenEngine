@@ -37,60 +37,81 @@ namespace Curse
     namespace Shader
     {
 
-        class Script;
-
         /**
-        * @brief Shader program base class.
+        * @brief Shader stage base class.
         */
-        class CURSE_API Program
+        class CURSE_API Stage
         {
 
         public:
-
-            /**
-            * @brief Compile shader program.
-            *        Compilation of shaders makes it possible to convert from GLSL to SPIR-V.
-            */
-            static std::vector<uint8_t> Compile(const ShaderFormat inputFormat, const ShaderType inputType,
-                const std::vector<uint8_t>& inputData, const ShaderFormat outputFormat,
-                std::string& errorMessage);
 
             /**
             * @brief Get the type of shader.
             */
-            ShaderType GetType() const;
+            virtual Type GetType() const = 0;
+
 
         protected:
 
-            Program() = default;
-            Program(const Program&) = delete;
-            Program(Program&&) = delete;
-            virtual ~Program() = default;
-
-            Resource resource;
-            ShaderType type;
-            const Script* script;
+            /**
+            * @brief Virtual destructor.
+            */
+            virtual ~Stage();
 
         };
 
+
         /**
-        * @brief Descriptor class of shader program class.
-        *        It's possible to load shaders via files or raw data.
+        * @brief Vertex shader stage class.
         */
-        /*class CURSE_API ProgramDescriptor
+        class CURSE_API VertexStage : public Stage
         {
 
         public:
 
-            ProgramDescriptor();
-            ProgramDescriptor(const ShaderType type, const char* filename);
-            ProgramDescriptor(const ShaderType type, const uint8_t* data, const size_t dataSize);
+            /**
+            * @brief Get the type of shader.
+            */
+            virtual Type GetType() const override;
 
-            const ShaderType type;  ///< Type of shader.
-            const char* filename;   ///< Full path + filename of shader file.
-            const uint8_t* data;    ///< Raw pointer of data buffer.
-            const size_t dataSize;  ///< Size of data buffer.
-        };*/
+
+        protected:
+
+            VertexStage() = default;
+            virtual ~VertexStage() = default;
+
+        private:
+
+            VertexStage(const VertexStage&) = delete;
+            VertexStage(VertexStage&&) = delete;
+            
+        };
+
+
+        /**
+        * @brief Fragment shader stage class.
+        */
+        class CURSE_API FragmentStage : public Stage
+        {
+
+        public:
+
+            /**
+            * @brief Get the type of shader.
+            */
+            virtual Type GetType() const override;
+
+        protected:
+
+            FragmentStage() = default;
+            virtual ~FragmentStage() = default;
+
+        private:
+
+            FragmentStage(const FragmentStage&) = delete;
+            FragmentStage(FragmentStage&&) = delete;    
+
+        };
 
     }
 

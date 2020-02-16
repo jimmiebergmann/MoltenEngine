@@ -174,11 +174,11 @@ namespace Curse
         return m_version;
     }
 
-    std::vector<uint8_t> OpenGLX11Renderer::CompileShader(const ShaderFormat /*inputFormat*/, const ShaderType /*inputType*/,
-                                                          const std::vector<uint8_t>& /*inputData*/, const ShaderFormat /*outputFormat*/)
-    {
-        return {};
-    }
+    //std::vector<uint8_t> OpenGLX11Renderer::CompileShader(const ShaderFormat /*inputFormat*/, const ShaderType /*inputType*/,
+    //                                                      const std::vector<uint8_t>& /*inputData*/, const ShaderFormat /*outputFormat*/)
+    //{
+    //    return {};
+    //}
 
     Framebuffer* OpenGLX11Renderer::CreateFramebuffer(const FramebufferDescriptor&)
     {
@@ -195,17 +195,27 @@ namespace Curse
         return nullptr;
     }
 
-  /*  Shader::Program* OpenGLX11Renderer::CreateShaderProgram(const Shader::ProgramDescriptor&)
+    Shader::VertexStage* OpenGLX11Renderer::CreateVertexShaderStage(const Shader::VertexScript&)
     {
         return nullptr;
-    }*/
+    }
 
-    Shader::Program* OpenGLX11Renderer::CreateShaderProgram(const Shader::Script&)
+    Shader::FragmentStage* OpenGLX11Renderer::CreateFragmentShaderStage(const Shader::FragmentScript&)
     {
         return nullptr;
     }
 
     Texture* OpenGLX11Renderer::CreateTexture()
+    {
+        return nullptr;
+    }
+
+    UniformBlock* OpenGLX11Renderer::CreateUniformBlock(const UniformBlockDescriptor&)
+    {
+        return nullptr;
+    }
+
+    UniformBuffer* OpenGLX11Renderer::CreateUniformBuffer(const UniformBufferDescriptor&)
     {
         return nullptr;
     }
@@ -227,11 +237,23 @@ namespace Curse
     {
     }
 
-    void OpenGLX11Renderer::DestroyShaderProgram(Shader::Program*)
+    void OpenGLX11Renderer::DestroyVertexShaderStage(Shader::VertexStage*)
+    {
+    }
+
+    void OpenGLX11Renderer::DestroyFragmentShaderStage(Shader::FragmentStage*)
     {
     }
 
     void OpenGLX11Renderer::DestroyTexture(Texture*)
+    {
+    }
+
+    void OpenGLX11Renderer::DestroyUniformBlock(UniformBlock* /*uniformBlock*/)
+    {
+    }
+
+    void OpenGLX11Renderer::DestroyUniformBuffer(UniformBuffer* /*uniformBuffer*/)
     {
     }
 
@@ -240,6 +262,10 @@ namespace Curse
     }
 
     void OpenGLX11Renderer::BindPipeline(Pipeline* /*pipeline*/)
+    {
+    }
+
+    void OpenGLX11Renderer::BindUniformBlock(UniformBlock* /*uniformBlock*/, const uint32_t /*offset*/)
     {
     }
 
@@ -260,6 +286,10 @@ namespace Curse
     }
 
     void OpenGLX11Renderer::WaitForDevice()
+    {
+    }
+
+    void OpenGLX11Renderer::UpdateUniformBuffer(UniformBuffer* /*uniformBuffer*/, const size_t /*offset*/, const size_t /*size*/, const void* /*data*/)
     {
     }
 

@@ -23,49 +23,50 @@
 *
 */
 
-#ifndef CURSE_CORE_RENDERER_VULKANUNIFORMBUFFER_HPP
-#define CURSE_CORE_RENDERER_VULKANUNIFORMBUFFER_HPP
+#ifndef CURSE_CORE_RENDERER_SHADER_VULKANSHADERGENERATOR_HPP
+#define CURSE_CORE_RENDERER_SHADER_VULKANSHADERGENERATOR_HPP
 
-#include "Curse/Renderer/UniformBuffer.hpp"
-
-#if defined(CURSE_ENABLE_VULKAN)
-#include "Curse/Renderer/Vulkan/Vulkan.hpp"
+#include "Curse/Renderer/Shader.hpp"
 #include <vector>
 
 namespace Curse
 {
 
-    class VulkanRenderer;
+    // Forward declaration.
+    class Logger;
 
-    class CURSE_API VulkanUniformBuffer : public UniformBuffer
+    namespace Shader
     {
 
-    private:
+        // Forward declaration.
+        class Script;
 
-        VulkanUniformBuffer() = default;
-        VulkanUniformBuffer(const VulkanUniformBuffer&) = delete;
-        VulkanUniformBuffer(VulkanUniformBuffer&&) = delete;
-        ~VulkanUniformBuffer() = default;
-
-        struct Frame
+        /**
+        * @brief Vulkan shader code generator.
+        *
+        *        Generation is performed in two steps:
+        *           1. Generate GLSL code, compatible with Spri-V.
+        *           2. Converting the GLSL code into SPIR-V.
+        */
+        class CURSE_API VulkanGenerator
         {
-            Frame() :
-                buffer(VK_NULL_HANDLE),
-                memory(VK_NULL_HANDLE)
-            { }
 
-            VkBuffer buffer;
-            VkDeviceMemory memory;
+        public:
+
+            /**
+            * @brief Generate GLSL code, compatible with Spri-V, from a shader script.
+            */
+            static std::vector<uint8_t> GenerateGlsl(const Script& script, Logger* logger = nullptr);
+
+            /**
+            * @brief Converting GLSL code into SPIR-V code.
+            */
+            static std::vector<uint8_t> ConvertGlslToSpriV(const std::vector<uint8_t> & code, Type shaderType, Logger* logger = nullptr);
+
         };
 
-        std::vector<Frame> frames;
-
-        friend class VulkanRenderer;
-
-    };
+    }
 
 }
-
-#endif
 
 #endif

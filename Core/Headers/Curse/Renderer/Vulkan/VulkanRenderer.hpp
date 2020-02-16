@@ -26,11 +26,9 @@
 #ifndef CURSE_CORE_RENDERER_VULKAN_VULKANRENDERER_HPP
 #define CURSE_CORE_RENDERER_VULKAN_VULKANRENDERER_HPP
 
-#include "Curse/Core.hpp"
+#include "Curse/Renderer/Renderer.hpp"
 
 #if defined(CURSE_ENABLE_VULKAN)
-
-#include "Curse/Renderer/Renderer.hpp"
 #include "Curse/Renderer/Vulkan/Vulkan.hpp"
 #include <vector>
 
@@ -94,12 +92,6 @@ namespace Curse
         */
         virtual Version GetVersion() const override;
 
-        /**
-        * @brief Compile shader.
-        *        Compilation of shaders makes it possible to convert from GLSL to SPIR-V.
-        */
-        virtual std::vector<uint8_t> CompileShaderProgram(const ShaderFormat inputFormat, const ShaderType inputType,
-                                                          const std::vector<uint8_t>& inputData, const ShaderFormat outputFormat) override;
 
         /**
         * @brief Create framebuffer object.
@@ -117,14 +109,14 @@ namespace Curse
         virtual Pipeline* CreatePipeline(const PipelineDescriptor& descriptor) override;
 
         /**
-        * @brief Create shader object.
+        * @brief Create vertex shader stage object out of vertex script.
         */
-      /*  virtual Shader::Program* CreateShaderProgram(const Shader::ProgramDescriptor& descriptor) override;*/
+        virtual Shader::VertexStage* CreateVertexShaderStage(const Shader::VertexScript& script) override;
 
         /**
-        * @brief Create shader object out of shader script.
+        * @brief Create fragment shader stage object out of fragment script.
         */
-        virtual Shader::Program* CreateShaderProgram(const Shader::Script & script) override;
+        virtual Shader::FragmentStage* CreateFragmentShaderStage(const Shader::FragmentScript& script) override;
 
         /**
         * @brief Create texture object.
@@ -163,9 +155,14 @@ namespace Curse
         virtual void DestroyPipeline(Pipeline* pipeline) override;
 
         /**
-        * @brief Destroy shader object.
+        * @brief Destroy vertex shader stage object.
         */
-        virtual void DestroyShaderProgram(Shader::Program* shader) override;
+        virtual void DestroyVertexShaderStage(Shader::VertexStage* shader) override;
+
+        /**
+        * @brief Destroy fragment shader stage object.
+        */
+        virtual void DestroyFragmentShaderStage(Shader::FragmentStage* shader) override;
 
         /**
         * @brief Destroy texture object.
@@ -187,6 +184,7 @@ namespace Curse
         */
         virtual void DestroyVertexBuffer(VertexBuffer* vertexBuffer) override;
 
+
         /**
         * @brief Bind pipeline to draw queue.
         */
@@ -196,6 +194,7 @@ namespace Curse
         * @brief Bind pipeline to draw queue.
         */
         virtual void BindUniformBlock(UniformBlock* uniformBlock, const uint32_t offset = 0) override;
+
 
         /**
         * @brief Begin and initialize rendering to framebuffers.
@@ -217,6 +216,7 @@ namespace Curse
         */
         virtual void EndDraw() override;
         
+
         /**
         * @brief Sleep until the graphical device is ready.
         */
@@ -293,6 +293,7 @@ namespace Curse
         bool FindPhysicalDeviceMemoryType(uint32_t& index, const uint32_t filter, const VkMemoryPropertyFlags properties);
         bool CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& memory);
         void CopyBuffer(VkBuffer source, VkBuffer destination, VkDeviceSize size);
+        bool CreateVertexInputAttributes(const Shader::InputBlock& inputBlock, std::vector<VkVertexInputAttributeDescription>& attributes, uint32_t& stride);
 
         Logger* m_logger;
         Version m_version;

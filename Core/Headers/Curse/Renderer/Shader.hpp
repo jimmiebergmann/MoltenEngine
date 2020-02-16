@@ -27,29 +27,74 @@
 #define CURSE_CORE_RENDERER_SHADER_HPP
 
 #include "Curse/Core.hpp"
+#include "Curse/Math/Vector.hpp"
 
 namespace Curse
 {
 
-    /**
-    * @brief Enumerator of shader types.
-    */
-    enum class ShaderType : uint8_t
+    namespace Shader
     {
-        Vertex,
-        Fragment
-    };
 
-    /**
-    * @brief Enumerator of shader formats.
-    */
-    enum class ShaderFormat : uint8_t
-    {
-        Glsl,
-        Hlsl,
-        SpirV
-    };
+        /**
+        * @brief Enumerator of shader types.
+        */
+        enum class Type : uint8_t
+        {
+            Vertex,
+            Fragment
+        };
+
+        /**
+        * @brief Enumerator of shader source formats.
+        */
+        enum class SourceFormat : uint8_t
+        {
+            Glsl,
+            Hlsl,
+            SpirV
+        };
+
+        /**
+       * @brief Data type for 2D sampler.
+       */
+        struct Sampler2D { };
+
+        /**
+        * @brief Data type for 3D sampler.
+        */
+        struct Sampler3D { };
+
+
+        /**
+        * @brief Enumerator of available variable data types.
+        */
+        enum class VariableDataType : uint8_t
+        {
+            Bool,
+            Int32,
+            Float32,
+            Vector2f32,
+            Vector3f32,
+            Vector4f32,
+            Sampler2D,
+            Sampler3D
+        };
+
+        /**
+        * @brief Type trait for statically checking pin information of a certain data type.
+        */
+        template<typename T>
+        struct VariableTrait
+        {
+            inline static const bool Supported = false; ///< Set to true if T is accepted as a data type of pin.
+            inline static const T DefaultValue = { };   ///< Set to the default value of pin data type T.
+            inline static const VariableDataType DataType = VariableDataType::Bool; ///< Dummy value.
+        };
+
+    }
 
 }
+ 
+#include "Shader.inl"
 
 #endif

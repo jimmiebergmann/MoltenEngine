@@ -26,8 +26,8 @@
 #ifndef CURSE_CORE_RENDERER_SHADER_SHADERSCRIPT_HPP
 #define CURSE_CORE_RENDERER_SHADER_SHADERSCRIPT_HPP
 
-#include "Curse/Renderer/Shader/ShaderNode.hpp"
-#include "Curse/Renderer/Shader.hpp"
+#include "Curse/Renderer/Shader/ShaderFunctions.hpp"
+#include "Curse/Renderer/Shader/ShaderOperators.hpp"
 #include "Curse/Logger.hpp"
 #include <vector>
 #include <set>
@@ -54,129 +54,67 @@ namespace Curse
             virtual ~Script();
 
             /**
-            * @brief Create new constant node and append it to the shader script.
-            *
-            * @tparam T Constant node object to create.
+            * @brief Get type of shader script.
             */
-            template<typename T>
-            ConstantNode<T>* CreateConstantNode(const T& value = PinDefault<T>::Value);
-
-            /**
-            * @brief Create new function node and append it to the shader script.
-            *
-            * @tparam T Function node object to create and data types for parameters.
-            */
-            template<typename Func>
-            auto CreateFunctionNode();
-
-            /**
-            * @brief Create new uniform block and append it to the shader script.
-            */
-            UniformBlock * CreateUniformBlock(const uint32_t id);
-
-            /**
-            * @brief Create new operator node and append it to the shader script.
-            *
-            * @tparam T Operator node object to create.
-            */
-            template<typename T>
-            OperatorNode<T>* CreateOperatorNode(const Operator op);
-
-            /**
-            * @brief Create new varying in node and append it to the shader script.
-            *        Varying data is sent from the vertex buffer, vertex or geometry shader.
-            *
-            * @tparam T Varying in node object to create.
-            */
-            template<typename T>
-            VaryingInNode<T>* CreateVaryingInNode();
-
-            /**
-            * @brief Create new varying out node and append it to the shader script.
-            *        Varying data is sent from the vertex buffer or vertex, geometry or fragment shader.
-            *
-            * @tparam T Varying out node object to create.
-            */
-            template<typename T>
-            VaryingOutNode<T>* CreateVaryingOutNode();
+            virtual Type GetType() const = 0;
 
             /**
             * @brief Removes the node from the script, disconnects all connections of node
             *        and deallocates the pointer.
             */
-            void DestroyNode(Node * node);
+            virtual void DestroyNode(Node * node) = 0;
+
+            /**
+            * @brief Get number of nodes in script.
+            */
+            virtual size_t GetNodeCount() const = 0;
 
             /**
             * @brief Get all nodes of shader script.
             */
-            std::vector<Node*> GetNodes();
+            /**@{*/
+            virtual std::vector<Node*> GetNodes() = 0;
+            virtual std::vector<const Node*> GetNodes() const = 0;
+            /**@}*/
 
             /**
-            * @brief Get all nodes of shader script.
+            * @brief Get output block.
             */
-            std::vector<const Node*> GetNodes() const;
+            /**@{*/
+            virtual InputBlock& GetInputBlock() = 0;
+            virtual const InputBlock& GetInputBlock() const = 0;
+            /**@}*/
 
             /**
-            * @brief Get uniform blocks of shader script.
+            * @brief Get output block.
             */
-            std::vector<const UniformBlock*> GetUniformBlocks() const;
+            /**@{*/
+            virtual OutputBlock& GetOutputBlock() = 0;
+            virtual const OutputBlock& GetOutputBlock() const = 0;
+            /**@}*/
 
             /**
-            * @brief Get uniform blocks of shader script.
+            * @brief Get number of uniform blocks.
             */
-            std::vector<UniformBlock*> GetUniformBlocks();
+            virtual const size_t GetUniformBlockCount() const = 0;
 
             /**
-            * @brief Get varying in nodes of shader script.
+            * @brief Get all uniform blocks in this script.
             */
-            std::vector<Node*> GetVaryingInNodes();
-
-            /**
-            * @brief Get varying in nodes of shader script.
-            */
-            std::vector<const Node*> GetVaryingInNodes() const;
-
-            /**
-            * @brief Get varying out nodes of shader script.
-            */
-            std::vector<Node*> GetVaryingOutNodes();
-
-            /**
-            * @brief Get varying out nodes of shader script.
-            */
-            std::vector<const Node*> GetVaryingOutNodes() const;
-
-            /**
-            * @brief Generate GLSL code from shader script.
-            */
-            std::vector<uint8_t> GenerateGlsl(Logger * logger = nullptr) const;
-
-            /**
-            * @brief Get type of shader script.
-            */
-            virtual ShaderType GetType() const = 0;
+            /**@{*/
+            virtual std::vector<UniformBlock*> GetUniformBlocks() = 0;
+            virtual std::vector<const UniformBlock*> GetUniformBlocks() const = 0;
+            /**@}*/ 
 
         protected:
 
             /**
             * @brief Get vertex output node.
-            *
-            * @return pointer to vertex output node, nullptr if GetType != ShaderType::Vertex.
             */
+            /**@{*/
             virtual VertexOutputNode* GetVertexOutputNode();
-
-            /**
-            * @brief Get vertex output node.
-            *
-            * @return pointer to vertex output node, nullptr if GetType != ShaderType::Vertex.
-            */
             virtual const VertexOutputNode* GetVertexOutputNode() const;
-
-            std::set<Node*> m_allNodes; ///< Set of all nodes of any type.
-            std::vector<Node*> m_varyingInNodes;
-            std::vector<Node*> m_varyingOutNodes;
-            //std::map<size_t, UniformNodeBase*> m_uniformNodes;
-            std::map<uint32_t, UniformBlock*> m_uniformBlocks;
+            /**@}*/
 
         };
 
@@ -197,26 +135,109 @@ namespace Curse
             /**
             * @brief Destructor.
             */
-            virtual ~VertexScript();
+            ~VertexScript();
+
+            /**
+            * @brief Create new constant node and append it to the shader script.
+            *
+            * @tparam T Constant node object to create.
+            */
+            template<typename T>
+            ConstantNode<T>* CreateConstantNode(const T& value = VariableTrait<T>::DefaultValue);
+
+            /**
+            * @brief Create new function node and append it to the shader script.
+            *
+            * @tparam T Function node object to create and data types for parameters.
+            */
+            template<typename Func>
+            Func* CreateFunctionNode();
+
+            /**
+            * @brief Create new operator node and append it to the shader script.
+            *
+            * @tparam T Operator node object to create.
+            */
+            template<typename Op>
+            Op* CreateOperatorNode();
+
+            /**
+            * @brief Create a new uniform block.
+            *
+            * @param id Id of the block. The id is used for sharing uniform data between shader stages.
+            *
+            * @return Pointer to the new block.
+            */
+            UniformBlock* CreateUniformBlock(const uint32_t id);
 
             /**
             * @brief Get type of shader script.
             */
-            virtual ShaderType GetType() const override;
+            virtual Type GetType() const override;
 
+            /**
+            * @brief Removes the node from the script, disconnects all connections of node
+            *        and deallocates the pointer.
+            */
+            virtual void DestroyNode(Node* node) override;
+
+            /**
+            * @brief Get number of nodes in script.
+            */
+            virtual size_t GetNodeCount() const override;
+
+            /**
+            * @brief Get all nodes of shader script.
+            */
+            /**@{*/
+            virtual std::vector<Node*> GetNodes() override;
+            virtual std::vector<const Node*> GetNodes() const override;
+            /**@}*/
+
+            /**
+            * @brief Get output block.
+            */
+            /**@{*/
+            virtual InputBlock& GetInputBlock() override;
+            virtual const InputBlock& GetInputBlock() const override;
+            /**@}*/
+
+            /**
+            * @brief Get output block.
+            */
+            /**@{*/
+            virtual OutputBlock& GetOutputBlock() override;
+            virtual const OutputBlock& GetOutputBlock() const override;
+            /**@}*/
+            
             /**
             * @brief Get vertex output node.
             */
+            /**@{*/
             virtual VertexOutputNode* GetVertexOutputNode() override;
+            virtual const VertexOutputNode* GetVertexOutputNode() const override;
+            /**@}*/
 
             /**
-            * @brief Get vertex output node.
+            * @brief Get number of uniform blocks.
             */
-            virtual const VertexOutputNode* GetVertexOutputNode() const override;
+            virtual const size_t GetUniformBlockCount() const override;
+
+            /**
+            * @brief Get all uniform blocks in this script.
+            */
+            /**@{*/
+            virtual std::vector<UniformBlock*> GetUniformBlocks() override;
+            virtual std::vector<const UniformBlock*> GetUniformBlocks() const override;
+            /**@}*/     
 
         private:
 
+            std::set<Node*> m_allNodes;
+            InputBlock m_inputBlock;
+            OutputBlock m_outputBlock;
             VertexOutputNode m_vertexOutputNode;
+            std::map<uint32_t, UniformBlock*> m_uniformBlocks;
 
         };
 
@@ -230,14 +251,107 @@ namespace Curse
         public:
 
             /**
+            * @brief Constructor.
+            */
+            FragmentScript();
+
+            /**
             * @brief Destructor.
             */
-            virtual ~FragmentScript();
+            ~FragmentScript();
+
+            /**
+            * @brief Create new constant node and append it to the shader script.
+            *
+            * @tparam T Constant node object to create.
+            */
+            template<typename T>
+            ConstantNode<T>* CreateConstantNode(const T& value = VariableTrait<T>::DefaultValue);
+
+            /**
+            * @brief Create new function node and append it to the shader script.
+            *
+            * @tparam T Function node object to create and data types for parameters.
+            */
+            template<typename Func>
+            Func* CreateFunctionNode();
+
+            /**
+            * @brief Create new operator node and append it to the shader script.
+            *
+            * @tparam T Operator node object to create.
+            */
+            template<typename Op>
+            Op* CreateOperatorNode();
+
+            /**
+            * @brief Create a new uniform block.
+            *
+            * @param id Id of the block. The id is used for sharing uniform data between shader stages.
+            *
+            * @return Pointer to the new block.
+            */
+            UniformBlock* CreateUniformBlock(const uint32_t id);
 
             /**
             * @brief Get type of shader script.
             */
-            virtual ShaderType GetType() const override;
+            virtual Type GetType() const override;
+
+            /**
+            * @brief Removes the node from the script, disconnects all connections of node
+            *        and deallocates the pointer.
+            */
+            virtual void DestroyNode(Node* node) override;
+
+            /**
+            * @brief Get number of nodes in script.
+            */
+            virtual size_t GetNodeCount() const override;
+
+            /**
+            * @brief Get all nodes of shader script.
+            */
+            /**@{*/
+            virtual std::vector<Node*> GetNodes() override;
+            virtual std::vector<const Node*> GetNodes() const override;
+            /**@}*/
+
+            /**
+            * @brief Get output block.
+            */
+            /**@{*/
+            virtual InputBlock& GetInputBlock() override;
+            virtual const InputBlock& GetInputBlock() const override;
+            /**@}*/
+
+            /**
+            * @brief Get output block.
+            */
+            /**@{*/
+            virtual OutputBlock& GetOutputBlock() override;
+            virtual const OutputBlock& GetOutputBlock() const override;
+            /**@}*/
+
+            /**
+            * @brief Get number of uniform blocks.
+            */
+            virtual const size_t GetUniformBlockCount() const override;
+
+            /**
+            * @brief Get all uniform blocks in this script.
+            */
+            /**@{*/
+            virtual std::vector<UniformBlock*> GetUniformBlocks() override;
+            virtual std::vector<const UniformBlock*> GetUniformBlocks() const override;
+            /**@}*/
+
+        private:
+
+            std::set<Node*> m_allNodes;
+            InputBlock m_inputBlock;
+            OutputBlock m_outputBlock;
+            std::map<uint32_t, UniformBlock*> m_uniformBlocks;
 
         };
 

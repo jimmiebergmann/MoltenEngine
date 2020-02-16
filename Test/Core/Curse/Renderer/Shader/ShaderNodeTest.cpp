@@ -36,7 +36,7 @@ namespace Curse
             FragmentScript script;
 
             {
-                VaryingOutNode<bool>* out = script.CreateVaryingOutNode<bool>();
+                OutputNode<bool>* out = script.GetOutputBlock().AppendNode<bool>();
                 EXPECT_EQ(out->GetInputPinCount(), size_t(1));
                 EXPECT_NE(out->GetInputPin(), nullptr);
                 EXPECT_NE(out->GetInputPin(0), nullptr);
@@ -47,10 +47,10 @@ namespace Curse
                 {
                     EXPECT_EQ(out->GetInputPins()[0], out->GetInputPin());
                 }
-                EXPECT_EQ(out->GetInputPin()->GetDataTypeIndex(), typeid(bool));
+                EXPECT_EQ(out->GetInputPin()->GetDataType(), VariableDataType::Bool);
             }
             {
-                VaryingOutNode<int32_t>* out = script.CreateVaryingOutNode<int32_t>();
+                OutputNode<int32_t>* out = script.GetOutputBlock().AppendNode<int32_t>();
                 EXPECT_EQ(out->GetInputPinCount(), size_t(1));
                 EXPECT_NE(out->GetInputPin(), nullptr);
                 EXPECT_NE(out->GetInputPin(0), nullptr);
@@ -61,10 +61,10 @@ namespace Curse
                 {
                     EXPECT_EQ(out->GetInputPins()[0], out->GetInputPin());
                 }
-                EXPECT_EQ(out->GetInputPin()->GetDataTypeIndex(), typeid(int32_t));
+                EXPECT_EQ(out->GetInputPin()->GetDataType(), VariableDataType::Int32);
             }
             {
-                VaryingOutNode<Vector2f32>* out = script.CreateVaryingOutNode<Vector2f32>();
+                OutputNode<Vector2f32>* out = script.GetOutputBlock().AppendNode<Vector2f32>();
                 EXPECT_EQ(out->GetInputPinCount(), size_t(1));
                 EXPECT_NE(out->GetInputPin(), nullptr);
                 EXPECT_NE(out->GetInputPin(0), nullptr);
@@ -75,10 +75,10 @@ namespace Curse
                 {
                     EXPECT_EQ(out->GetInputPins()[0], out->GetInputPin());
                 }
-                EXPECT_EQ(out->GetInputPin()->GetDataTypeIndex(), typeid(Vector2f32));
+                EXPECT_EQ(out->GetInputPin()->GetDataType(), VariableDataType::Vector2f32);
             }
             {
-                VaryingOutNode<Vector3f32>* out = script.CreateVaryingOutNode<Vector3f32>();
+                OutputNode<Vector3f32>* out = script.GetOutputBlock().AppendNode<Vector3f32>();
                 EXPECT_EQ(out->GetInputPinCount(), size_t(1));
                 EXPECT_NE(out->GetInputPin(), nullptr);
                 EXPECT_NE(out->GetInputPin(0), nullptr);
@@ -89,10 +89,10 @@ namespace Curse
                 {
                     EXPECT_EQ(out->GetInputPins()[0], out->GetInputPin());
                 }
-                EXPECT_EQ(out->GetInputPin()->GetDataTypeIndex(), typeid(Vector3f32));
+                EXPECT_EQ(out->GetInputPin()->GetDataType(), VariableDataType::Vector3f32);
             }
             {
-                VaryingOutNode<Vector4f32>* out = script.CreateVaryingOutNode<Vector4f32>();
+                OutputNode<Vector4f32>* out = script.GetOutputBlock().AppendNode<Vector4f32>();
                 EXPECT_EQ(out->GetInputPinCount(), size_t(1));
                 EXPECT_NE(out->GetInputPin(), nullptr);
                 EXPECT_NE(out->GetInputPin(0), nullptr);
@@ -103,7 +103,7 @@ namespace Curse
                 {
                     EXPECT_EQ(out->GetInputPins()[0], out->GetInputPin());
                 }
-                EXPECT_EQ(out->GetInputPin()->GetDataTypeIndex(), typeid(Vector4f32));
+                EXPECT_EQ(out->GetInputPin()->GetDataType(), VariableDataType::Vector4f32);
             }
         
         }

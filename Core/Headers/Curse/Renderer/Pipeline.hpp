@@ -35,11 +35,11 @@ namespace Curse
     // Forward declarations.
     namespace Shader
     {
-        class Program;
+        class VertexStage;
+        class FragmentStage;
     }
 
     
-
     /**
     * @brief Pipeline base class.
     */
@@ -90,37 +90,6 @@ namespace Curse
             FrontAndBack
         };
 
-        /**
-        * @brief Enumerator of attribute data formats.
-        */
-        enum class AttributeFormat : uint8_t
-        {
-            R32_Float,
-            R32_G32_Float,
-            R32_G32_B32_Float,
-            R32_G32_B32_A32_Float,
-        };
-
-        /**
-        * @brief Vertex attribute information.
-        */
-        struct VertexAttribute
-        {
-            uint32_t location;
-            uint32_t offset;
-            AttributeFormat format;
-        };
-
-        /**
-        * @brief Vertex binding information.
-        */
-        struct VertexBinding
-        {
-            uint32_t binding;
-            uint32_t stride;
-            std::vector<VertexAttribute> attributes;
-        };
-
     protected:
 
         Pipeline() = default;
@@ -146,9 +115,8 @@ namespace Curse
         Pipeline::PolygonMode polygonMode;
         Pipeline::FrontFace frontFace;
         Pipeline::CullMode cullMode;
-        Shader::Program* vertexProgram;
-        Shader::Program* fragmentProgram;
-        std::vector<Pipeline::VertexBinding> vertexBindings;
+        Shader::VertexStage* vertexStage;
+        Shader::FragmentStage* fragmentStage;
 
     };
 

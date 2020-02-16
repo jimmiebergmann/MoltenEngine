@@ -22,41 +22,48 @@ struct UniformBuffer
 
 static void LoadShaders(Curse::Shader::VertexScript& vScript, Curse::Shader::FragmentScript& fScript)
 {
-    // Vertex shader.
+    // Vertex script.
     {
-        auto outPos = vScript.GetVertexOutputNode();
-        auto outColor = vScript.CreateVaryingOutNode<Curse::Vector4f32>();
-        auto vPos = vScript.CreateVaryingInNode<Curse::Vector3f32>();
-        auto color = vScript.CreateVaryingInNode<Curse::Vector4f32>();
+        auto& script = vScript;
 
-        auto uniforms = vScript.CreateUniformBlock(0);
-        auto pos = uniforms->CreateUniformNode<Curse::Vector3f32>();
+        auto& inBlock = script.GetInputBlock();
+        auto inPos   = inBlock.AppendNode<Curse::Vector3f32>();
+        auto inColor = inBlock.AppendNode<Curse::Vector4f32>();
 
-        auto uniforms2 = vScript.CreateUniformBlock(1);
-        uniforms2->CreateUniformNode<Curse::Vector3f32>();
-        
-        auto addPos = vScript.CreateOperatorNode<Curse::Vector3f32>(Curse::Shader::Operator::Addition);
-        addPos->GetInputPin(0)->Connect(*vPos->GetOutputPin());
-        addPos->GetInputPin(1)->Connect(*pos->GetOutputPin());
+        auto& outBlock = script.GetOutputBlock();
+        auto outColor = outBlock.AppendNode<Curse::Vector4f32>();
+        auto outPos   = script.GetVertexOutputNode();
+
+        auto uBlock0 = script.CreateUniformBlock(0);
+        auto uPos = uBlock0->AppendNode<Curse::Vector3f32>();
+
+        auto addPos = script.CreateOperatorNode<Curse::Shader::Operator::AddVec3f32>();
+        addPos->GetInputPin(0)->Connect(*inPos->GetOutputPin());
+        addPos->GetInputPin(1)->Connect(*uPos->GetOutputPin());
 
         outPos->GetInputPin()->Connect(*addPos->GetOutputPin());
-        outColor->GetInputPin()->Connect(*color->GetOutputPin());
+        outColor->GetInputPin()->Connect(*inColor->GetOutputPin());
     }
-
-    // Fragment shader.
+    // Fragment script
     {
-        auto output = fScript.CreateVaryingOutNode<Curse::Vector4f32>();
-        auto color = fScript.CreateVaryingInNode<Curse::Vector4f32>();
-        auto mult = fScript.CreateOperatorNode<Curse::Vector4f32>(Curse::Shader::Operator::Multiplication);
-        auto add = fScript.CreateOperatorNode<Curse::Vector4f32>(Curse::Shader::Operator::Addition);
-        auto const1 = fScript.CreateConstantNode<Curse::Vector4f32>({ 0.0f, 0.0f, 0.3f, 0.0f });
-        auto const2 = fScript.CreateConstantNode<Curse::Vector4f32>({ 1.0f, 0.5f, 0.0f, 1.0f });
-        auto cos = fScript.CreateFunctionNode<Curse::Shader::Function::CosVec4f32>();
+        auto& script = fScript;
 
-        output->GetInputPin()->Connect(*add->GetOutputPin());
+        auto& inBlock = script.GetInputBlock();
+        auto inColor = inBlock.AppendNode<Curse::Vector4f32>();
+
+        auto& outBlock = script.GetOutputBlock();
+        auto outColor = outBlock.AppendNode<Curse::Vector4f32>();
+
+        auto mult = script.CreateOperatorNode<Curse::Shader::Operator::MultVec4f32>();
+        auto add = script.CreateOperatorNode<Curse::Shader::Operator::AddVec4f32>();
+        auto const1 = script.CreateConstantNode<Curse::Vector4f32>({ 0.0f, 0.0f, 0.3f, 0.0f });
+        auto const2 = script.CreateConstantNode<Curse::Vector4f32>({ 1.0f, 0.5f, 0.0f, 1.0f });
+        auto cos = script.CreateFunctionNode<Curse::Shader::Function::CosVec4f32>();
+
+        outColor->GetInputPin()->Connect(*add->GetOutputPin());
         add->GetInputPin(0)->Connect(*mult->GetOutputPin());
         add->GetInputPin(1)->Connect(*const1->GetOutputPin());
-        mult->GetInputPin(0)->Connect(*color->GetOutputPin());
+        mult->GetInputPin(0)->Connect(*inColor->GetOutputPin());
         mult->GetInputPin(1)->Connect(*cos->GetOutputPin());
         cos->GetInputPin()->Connect(*const2->GetOutputPin());
     }
@@ -93,11 +100,8 @@ static void Run()
     Curse::Shader::FragmentScript fragmentScript;
     LoadShaders(vertexScript, fragmentScript);
 
-    auto shaderSourceVec = vertexScript.GenerateGlsl();
-    std::string shaderSource(shaderSourceVec.begin(), shaderSourceVec.end());
-
-    Curse::Shader::Program* vertexShader = renderer->CreateShaderProgram(vertexScript);
-    Curse::Shader::Program* fragmentShader = renderer->CreateShaderProgram(fragmentScript);
+    Curse::Shader::VertexStage* vertexStage = renderer->CreateVertexShaderStage(vertexScript);
+    Curse::Shader::FragmentStage* fragmentStage = renderer->CreateFragmentShaderStage(fragmentScript);
 
     struct Vertex
     {
@@ -132,30 +136,13 @@ static void Run()
     indexBufferDesc.dataType = Curse::IndexBuffer::DataType::Uint16;
     Curse::IndexBuffer* indexBuffer = renderer->CreateIndexBuffer(indexBufferDesc);
 
-    Curse::Pipeline::VertexAttribute vertexAttrib1;
-    vertexAttrib1.location = 0;
-    vertexAttrib1.offset = offsetof(Vertex, position);
-    vertexAttrib1.format = Curse::Pipeline::AttributeFormat::R32_G32_B32_Float;   
-
-    Curse::Pipeline::VertexAttribute vertexAttrib2;
-    vertexAttrib2.location = 1;
-    vertexAttrib2.offset = offsetof(Vertex, color);
-    vertexAttrib2.format = Curse::Pipeline::AttributeFormat::R32_G32_B32_A32_Float;  
-
-    Curse::Pipeline::VertexBinding vertexBinding;
-    vertexBinding.binding = 0;
-    vertexBinding.stride = sizeof(Vertex);
-    vertexBinding.attributes.push_back(vertexAttrib1);
-    vertexBinding.attributes.push_back(vertexAttrib2);
-
     Curse::PipelineDescriptor pipelineDesc;
     pipelineDesc.topology = Curse::Pipeline::Topology::TriangleList;
     pipelineDesc.polygonMode = Curse::Pipeline::PolygonMode::Fill;
     pipelineDesc.frontFace = Curse::Pipeline::FrontFace::Clockwise;
     pipelineDesc.cullMode = Curse::Pipeline::CullMode::Back;
-    pipelineDesc.vertexProgram = vertexShader;
-    pipelineDesc.fragmentProgram = fragmentShader;
-    pipelineDesc.vertexBindings = { vertexBinding };
+    pipelineDesc.vertexStage = vertexStage;
+    pipelineDesc.fragmentStage = fragmentStage;
 
     Curse::Pipeline* pipeline = renderer->CreatePipeline(pipelineDesc);
     
@@ -169,11 +156,11 @@ static void Run()
     uniformBlockDesc.pipeline = pipeline;
     Curse::UniformBlock* uniformBlock = renderer->CreateUniformBlock(uniformBlockDesc);
 
-    Curse::UniformBlockDescriptor uniformBlockDesc2;
+    /*Curse::UniformBlockDescriptor uniformBlockDesc2;
     uniformBlockDesc2.id = 1;
     uniformBlockDesc2.buffer = uniformBuffer;
     uniformBlockDesc2.pipeline = pipeline;
-    Curse::UniformBlock* uniformBlock2 = renderer->CreateUniformBlock(uniformBlockDesc2);
+    Curse::UniformBlock* uniformBlock2 = renderer->CreateUniformBlock(uniformBlockDesc2);*/
 
 
     auto renderFunction = [&]()
@@ -276,12 +263,12 @@ static void Run()
 
     renderer->WaitForDevice();
     renderer->DestroyUniformBlock(uniformBlock);
-    renderer->DestroyUniformBlock(uniformBlock2);
+    //renderer->DestroyUniformBlock(uniformBlock2);
     renderer->DestroyUniformBuffer(uniformBuffer);
     renderer->DestroyVertexBuffer(vertexBuffer);
     renderer->DestroyIndexBuffer(indexBuffer);
-    renderer->DestroyShaderProgram(vertexShader);
-    renderer->DestroyShaderProgram(fragmentShader);
+    renderer->DestroyVertexShaderStage(vertexStage);
+    renderer->DestroyFragmentShaderStage(fragmentStage);
     renderer->DestroyPipeline(pipeline);
     delete renderer;
     delete window;

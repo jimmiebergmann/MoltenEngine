@@ -27,6 +27,9 @@
 #define CURSE_CORE_RENDERER_VULKANUNIFORMBLOCK_HPP
 
 #include "Curse/Renderer/UniformBlock.hpp"
+
+#if defined(CURSE_ENABLE_VULKAN)
+#include "Curse/Renderer/Vulkan/Vulkan.hpp"
 #include <vector>
 
 namespace Curse
@@ -54,5 +57,7 @@ namespace Curse
     };
 
 }
+
+#endif
 
 #endif

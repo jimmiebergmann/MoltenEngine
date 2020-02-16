@@ -30,7 +30,7 @@
 #include "Curse/Renderer/Framebuffer.hpp"
 #include "Curse/Renderer/IndexBuffer.hpp"
 #include "Curse/Renderer/Pipeline.hpp"
-#include "Curse/Renderer/Shader/ShaderProgram.hpp"
+#include "Curse/Renderer/Shader/ShaderStage.hpp"
 #include "Curse/Renderer/Shader/ShaderScript.hpp"
 #include "Curse/Renderer/Texture.hpp"
 #include "Curse/Renderer/UniformBlock.hpp"
@@ -104,13 +104,6 @@ namespace Curse
         */
         virtual Version GetVersion() const = 0;
 
-        /**
-        * @brief Compile shader.
-        *        Compilation of shaders makes it possible to convert from GLSL to SPIR-V.
-        */
-        virtual std::vector<uint8_t> CompileShaderProgram(const ShaderFormat inputFormat, const ShaderType inputType,
-                                                          const std::vector<uint8_t>& inputData, const ShaderFormat outputFormat) = 0;
-
 
         /**
         * @brief Create framebuffer object.
@@ -128,14 +121,14 @@ namespace Curse
         virtual Pipeline* CreatePipeline(const PipelineDescriptor& descriptor) = 0;
 
         /**
-        * @brief Create shader object.
+        * @brief Create vertex shader stage object out of vertex script.
         */
-       // virtual Shader::Program* CreateShaderProgram(const Shader::ProgramDescriptor& descriptor) = 0;
+        virtual Shader::VertexStage* CreateVertexShaderStage(const Shader::VertexScript& script) = 0;
 
         /**
-        * @brief Create shader object out of shader script.
+        * @brief Create fragment shader stage object out of fragment script.
         */
-        virtual Shader::Program* CreateShaderProgram(const Shader::Script& script) = 0;
+        virtual Shader::FragmentStage* CreateFragmentShaderStage(const Shader::FragmentScript& script) = 0;
 
         /**
         * @brief Create texture object.
@@ -145,17 +138,18 @@ namespace Curse
         /**
         * @brief Create uniform buffer object.
         */
-        virtual UniformBlock* CreateUniformBlock(const UniformBlockDescriptor& descriptor) { return nullptr; }
+        virtual UniformBlock* CreateUniformBlock(const UniformBlockDescriptor& descriptor) = 0;
 
         /**
         * @brief Create uniform buffer object.
         */
-        virtual UniformBuffer* CreateUniformBuffer(const UniformBufferDescriptor& descriptor) { return nullptr; }
+        virtual UniformBuffer* CreateUniformBuffer(const UniformBufferDescriptor& descriptor) = 0;
 
         /**
         * @brief Create vertex buffer object.
         */
         virtual VertexBuffer* CreateVertexBuffer(const VertexBufferDescriptor& descriptor) = 0;
+
 
         /**
         * @brief Destroy framebuffer object.
@@ -173,9 +167,14 @@ namespace Curse
         virtual void DestroyPipeline(Pipeline* pipeline) = 0;
 
         /**
-        * @brief Destroy shader object.
+        * @brief Destroy vertex shader stage object.
         */
-        virtual void DestroyShaderProgram(Shader::Program* shader) = 0;
+        virtual void DestroyVertexShaderStage(Shader::VertexStage* shader) = 0;
+
+        /**
+        * @brief Destroy fragment shader stage object.
+        */
+        virtual void DestroyFragmentShaderStage(Shader::FragmentStage* shader) = 0;
 
         /**
         * @brief Destroy texture object.
@@ -185,17 +184,18 @@ namespace Curse
         /**
         * @brief Destroy uniform block object.
         */
-        virtual void DestroyUniformBlock(UniformBlock* uniformBlock) {}
+        virtual void DestroyUniformBlock(UniformBlock* uniformBlock) = 0;
 
         /**
         * @brief Destroy uniform buffer object.
         */
-        virtual void DestroyUniformBuffer(UniformBuffer* uniformBuffer) {}
+        virtual void DestroyUniformBuffer(UniformBuffer* uniformBuffer) = 0;
 
         /**
         * @brief Destroy vertex buffer object.
         */
         virtual void DestroyVertexBuffer(VertexBuffer* vertexBuffer) = 0;    
+
 
         /**
         * @brief Bind pipeline to draw queue.
@@ -205,7 +205,8 @@ namespace Curse
         /**
         * @brief Bind pipeline to draw queue.
         */
-        virtual void BindUniformBlock(UniformBlock* uniformBlock, const uint32_t offset = 0) {}
+        virtual void BindUniformBlock(UniformBlock* uniformBlock, const uint32_t offset = 0) = 0;
+
 
         /**
         * @brief Begin and initialize rendering to framebuffers.
@@ -227,6 +228,7 @@ namespace Curse
         */
         virtual void EndDraw() = 0;
 
+
         /**
         * @brief Sleep until the graphical device is ready.
         */
@@ -235,7 +237,7 @@ namespace Curse
         /**
         * @brief Update uniform buffer data.
         */
-        virtual void UpdateUniformBuffer(UniformBuffer * uniformBuffer, const size_t offset, const size_t size, const void * data) {}
+        virtual void UpdateUniformBuffer(UniformBuffer* uniformBuffer, const size_t offset, const size_t size, const void* data) = 0;
 
     };
 

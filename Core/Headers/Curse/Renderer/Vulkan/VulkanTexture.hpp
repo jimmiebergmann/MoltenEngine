@@ -28,6 +28,9 @@
 
 #include "Curse/Renderer/Texture.hpp"
 
+#if defined(CURSE_ENABLE_VULKAN)
+#include "Curse/Renderer/Vulkan/Vulkan.hpp"
+
 namespace Curse
 {
 
@@ -48,5 +51,7 @@ namespace Curse
     };
 
 }
+
+#endif
 
 #endif

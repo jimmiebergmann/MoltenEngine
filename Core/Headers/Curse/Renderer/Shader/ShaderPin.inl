@@ -31,41 +31,6 @@ namespace Curse
     namespace Shader
     {
 
-        // Helper structs
-        template<typename T>
-        struct PinDataTypeTrait
-        {
-        };
-        template<>
-        struct PinDataTypeTrait<bool>
-        {
-            static const PinDataType Value = PinDataType::Bool;
-        };
-        template<>
-        struct PinDataTypeTrait<int32_t>
-        {
-            static const PinDataType Value = PinDataType::Int32;
-        };
-        template<>
-        struct PinDataTypeTrait<float>
-        {
-            static const PinDataType Value = PinDataType::Float32;
-        };
-        template<>
-        struct PinDataTypeTrait<Vector2f32>
-        {
-            static const PinDataType Value = PinDataType::Vector2f32;
-        };
-        template<>
-        struct PinDataTypeTrait<Vector3f32>
-        {
-            static const PinDataType Value = PinDataType::Vector3f32;
-        };
-        template<>
-        struct PinDataTypeTrait<Vector4f32>
-        {
-            static const PinDataType Value = PinDataType::Vector4f32;
-        };
 
         // Pin implementations.
         inline Pin::Pin(Node& node, const std::string& name) :
@@ -106,7 +71,7 @@ namespace Curse
         template<typename T>
         inline InputPin<T>::InputPin(Node& node, const std::string& name) :
             Pin(node, name),
-            m_defaultValue(PinDefault<T>::Value),
+            m_defaultValue(VariableTrait<T>::DefaultValue),
             m_connection(nullptr)
         { }
 
@@ -126,7 +91,9 @@ namespace Curse
         template<typename T>
         inline bool InputPin<T>::Connect(Pin& target)
         {
-            if (target.GetDataTypeIndex() != GetDataTypeIndex() || target.GetDirection() != PinDirection::Out)
+            if (target.GetDataType() != GetDataType() ||
+                //&(target.GetNode().GetScript()) != &(GetNode().GetScript()) ||
+                target.GetDirection() != PinDirection::Out)
             {
                 return false;
             }
@@ -189,16 +156,10 @@ namespace Curse
         }
 
         template<typename T>
-        PinDataType InputPin<T>::GetDataType() const
+        VariableDataType InputPin<T>::GetDataType() const
         {
-            return PinDataTypeTrait<T>::Value;
+            return VariableTrait<T>::DataType;
         }    
-
-        template<typename T>
-        inline std::type_index InputPin<T>::GetDataTypeIndex() const
-        {
-            return std::type_index(typeid(T));
-        }
 
         template<typename T>
         inline PinDirection InputPin<T>::GetDirection() const
@@ -292,7 +253,9 @@ namespace Curse
         template<typename T>
         inline bool OutputPin<T>::Connect(Pin& target)
         {
-            if (target.GetDataTypeIndex() != GetDataTypeIndex() || target.GetDirection() != PinDirection::In)
+            if (target.GetDataType() != GetDataType() || 
+                //&(target.GetNode().GetScript()) != &(GetNode().GetScript()) ||
+                target.GetDirection() != PinDirection::In)
             {
                 return false;
             }
@@ -355,15 +318,9 @@ namespace Curse
         }
 
         template<typename T>
-        inline PinDataType OutputPin<T>::GetDataType() const
+        inline VariableDataType OutputPin<T>::GetDataType() const
         {
-            return PinDataTypeTrait<T>::Value;
-        }
-
-        template<typename T>
-        inline std::type_index OutputPin<T>::GetDataTypeIndex() const
-        {
-            return std::type_index(typeid(T));
+            return VariableTrait<T>::DataType;
         }
 
         template<typename T>

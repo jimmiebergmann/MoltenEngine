@@ -26,8 +26,6 @@
 #ifndef CURSE_CORE_RENDERER_SHADER_SHADERNODE_HPP
 #define CURSE_CORE_RENDERER_SHADER_SHADERNODE_HPP
 
-#include "Curse/Types.hpp"
-#include "Curse/Math/Vector.hpp"
 #include "Curse/Renderer/Shader/ShaderPin.hpp"
 #include <memory>
 #include <array>
@@ -43,7 +41,11 @@ namespace Curse
         */
         class Script;
         class VertexScript;
+        class FragmentScript;
+        class InputBlock;
+        class OutputBlock;
         class UniformBlock;
+        
 
 
         /**
@@ -53,32 +55,30 @@ namespace Curse
         {
             Constant,       ///< Local constant, only present in fragment shader.
             Function,       ///< Built-in shader function.
+            Input,          ///< Input data from previous shader stage, or data from vertex buffer.
             Operator,       ///< Operator node in local space.
+            Output,         ///< Output data for next shader stage, or data for framebuffer.
             Uniform,        ///< Uniform node, single object being sent runtime from client.
-            VaryingIn,      ///< Varying in node. Varying data is received by the vertex, geometry or fragment shader.
-            VaryingOut,     ///< Varying out node. Varying data is sent from the vertex buffer or vertex, geometry or fragment shader.
-            VertexOutput    ///< Vertex output node, result of vertex position in vertex shader script.   
+            VertexOutput    ///< Output data of vertex position, being outputted in the vertex shader stage.
         };
 
         /**
-        * @brief Enumerator of varying node type.
+        * @brief Enumerator of operator types.
         */
-        //enum class VaryingType : uint8_t
-        //{
-        //    Color,      ///< Vertex color.
-        //    Normal,     ///< Normal direction.
-        //    Position    ///< Vertex position. 
-        //};
+        enum class OperatorType : uint8_t
+        {
+            Arithmetic
+        };
 
         /**
-        * @brief Enumerator of arithmetic operators.
+        * @brief Enumerator of arithmetic operator types.
         */
-        enum class Operator : uint8_t
+        enum class ArithmeticOperatorType : uint8_t
         {
             Addition,
-            Subtraction,
+            Division,
             Multiplication,
-            Division
+            Subtraction
         };
 
         /**
@@ -97,41 +97,11 @@ namespace Curse
 
             // Vector.
             Cross,
-            Dot
-        };
+            Dot,
 
-
-        /**
-        * @brief Type trait for checking if data type of shader script node is supported.
-        */
-        template<typename T>
-        struct DataTypeTrait
-        {
-            static const bool Supported = false;
-        };
-        template<> struct DataTypeTrait<bool>
-        {
-            static const bool Supported = true;
-        };
-        template<> struct DataTypeTrait<int32_t>
-        {
-            static const bool Supported = true;
-        };
-        template<> struct DataTypeTrait<float>
-        {
-            static const bool Supported = true;
-        };
-        template<> struct DataTypeTrait<Vector2f32>
-        {
-            static const bool Supported = true;
-        };
-        template<> struct DataTypeTrait<Vector3f32>
-        {
-            static const bool Supported = true;
-        };
-        template<> struct DataTypeTrait<Vector4f32>
-        {
-            static const bool Supported = true;
+            // Sampler
+            Texture2D,
+            Texture3D
         };
 
 
@@ -144,19 +114,12 @@ namespace Curse
         public:
 
             /**
-            * @brief Virtual destructor.
-            */
-            virtual ~Node();
-
-            /**
             * @brief Get parent shader script.
             */
+            /**@{*/
             Script& GetScript();
-
-            /**
-            * @brief Get shader script.
-            */
             const Script& GetScript() const;
+            /**@}*/
 
             /**
             * @brief Get number of input pins.
@@ -164,60 +127,45 @@ namespace Curse
             virtual size_t GetInputPinCount() const;
 
             /**
-            * @brief Get number of input pins.
+            * @brief Get number of output pins.
             */
             virtual size_t GetOutputPinCount() const;
-
 
             /**
             * @brief Get input pin by index.
             *
             * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
             */
+            /**@{*/
             virtual Pin* GetInputPin(const size_t index = 0);
-
-            /**
-            * @brief Get connected pin by index.
-            *
-            * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
-            */
             virtual const Pin* GetInputPin(const size_t index = 0) const;
+            /**@}*/
 
             /**
             * @brief Get all input pins, wrapped in a vector.
             */
+            /**@{*/
             virtual std::vector<Pin*> GetInputPins();
-
-            /**
-            * @brief  Get all input pins, wrapped in a vector.
-            */
             virtual std::vector<const Pin*> GetInputPins() const;
-
+            /**@}*/
 
             /**
             * @brief Get output pin by index.
             *
             * @return Pointer of output pin at given index, nullptr if index is >= GetOutputPinCount().
             */
+            /**@{*/
             virtual Pin* GetOutputPin(const size_t index = 0);
-
-            /**
-            * @brief Get output pin by index.
-            *
-            * @return Pointer of output pin at given index, nullptr if index is >= GetOutputPinCount().
-            */
             virtual const Pin* GetOutputPin(const size_t index = 0) const;
+            /**@}*/
 
             /**
             * @brief Get all output pins, wrapped in a vector.
             */
+            /**@{*/
             virtual std::vector<Pin*> GetOutputPins();
-
-            /**
-            * @brief  Get all output pins, wrapped in a vector.
-            */
             virtual std::vector<const Pin*> GetOutputPins() const;
-
+            /**@}*/
 
             /**
             * @brief Get type of node.
@@ -226,16 +174,17 @@ namespace Curse
 
         protected:
 
-            /**
-            * @brief Constructor.
-            */
             Node(Script& script);
+            Node(const Node&) = delete;
+            Node(Node&&) = delete;
+            virtual ~Node();
 
         private:
 
             Script& m_script; ///< Parent shader script.
 
-            friend class Script;
+            friend class VertexScript;
+            friend class FragmentScript;
 
         };
 
@@ -243,39 +192,30 @@ namespace Curse
         /**
         * @brief Base clas of constant node, of shader script.
         */
-        class ConstantNodeBase : public Node
+        class CURSE_API ConstantNodeBase : public Node
         {
 
-        public:
-
-            /**
-            * @brief Get data type of constant.
-            */
-            virtual PinDataType GetDataType() const = 0;
-
-            /**
-            * @brief Get type index of constant data type.
-            */
-            virtual std::type_index GetDataTypeIndex() const = 0;
-
-            /**
-            * @brief Virtual destructor.
-            */
-            virtual ~ConstantNodeBase();
+        public:            
 
             /**
             * @brief Get type of node.
             */
             virtual NodeType GetType() const override;
 
+            /**
+            * @brief Get data type of constant.
+            */
+            virtual VariableDataType GetDataType() const = 0;
+
         protected:
 
-            /**
-            * @brief Constructor.
-            */
             ConstantNodeBase(Script& script);
+            ConstantNodeBase(const ConstantNodeBase&) = delete;
+            ConstantNodeBase(ConstantNodeBase&&) = delete;
+            virtual ~ConstantNodeBase();
 
         };
+
 
         /**
         * @brief Constant node of shader script.
@@ -289,45 +229,6 @@ namespace Curse
         public:
 
             /**
-            * @brief Get data type of constant.
-            */
-            virtual PinDataType GetDataType() const override;
-
-            /**
-            * @brief Get type index of constant data type.
-            */
-            virtual std::type_index GetDataTypeIndex() const override;
-
-            /**
-            * @brief Get number of input pins.
-            */
-            virtual size_t GetOutputPinCount() const override;
-
-            /**
-            * @brief Get input pin by index.
-            *
-            * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
-            */
-            virtual Pin* GetOutputPin(const size_t index = 0) override;
-
-            /**
-            * @brief Get connected pin by index.
-            *
-            * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
-            */
-            virtual const Pin* GetOutputPin(const size_t index = 0) const override;
-
-            /**
-            * @brief Get all input pins, wrapped in a vector.
-            */
-            virtual std::vector<Pin*> GetOutputPins() override;
-
-            /**
-            * @brief  Get all input pins, wrapped in a vector.
-            */
-            virtual std::vector<const Pin*> GetOutputPins() const override;
-
-            /**
             * @brief Get value of constant node.
             */
             const T& GetValue() const;
@@ -335,21 +236,50 @@ namespace Curse
             /**
             * @brief Set value of constant node.
             */
-            void SetValue(const T & value) const;
+            void SetValue(const T& value);
+
+            /**
+            * @brief Get data type of constant.
+            */
+            virtual VariableDataType GetDataType() const override;
+
+            /**
+            * @brief Get number of output pins.
+            */
+            virtual size_t GetOutputPinCount() const override;
+
+            /**
+            * @brief Get output pin by index.
+            *
+            * @return Pointer of output pin at given index, nullptr if index is >= GetOutputPinCount().
+            */
+            /**@{*/
+            virtual Pin* GetOutputPin(const size_t index = 0) override;
+            virtual const Pin* GetOutputPin(const size_t index = 0) const override;
+            /**@}*/
+
+            /**
+            * @brief Get all output pins, wrapped in a vector.
+            */
+            /**@{*/
+            virtual std::vector<Pin*> GetOutputPins() override;
+            virtual std::vector<const Pin*> GetOutputPins() const override;
+            /**@}*/
 
         protected:
 
-            /**
-            * @brief Constructor.
-            */
             ConstantNode(Script& script, const T & value);
+            ConstantNode(const ConstantNode&) = delete;
+            ConstantNode(ConstantNode&&) = delete;
+            ~ConstantNode();
 
         private:
 
             OutputPin<T> m_output;
             T m_value;
 
-            friend class Script;
+            friend class VertexScript;
+            friend class FragmentScript;
 
         };
 
@@ -357,34 +287,30 @@ namespace Curse
         /**
         * @brief Function node base class of shader script.
         */
-        class FunctionNodeBase : public Node
+        class CURSE_API FunctionNodeBase : public Node
         {
 
-        public:
-
-            /**
-            * @brief Get function type.
-            */
-            virtual FunctionType GetFunctionType() const = 0;
-
-            /**
-            * @brief Virtual destructor.
-            */
-            virtual ~FunctionNodeBase();
+        public:           
 
             /**
             * @brief Get type of node.
             */
             virtual NodeType GetType() const override;
 
-        protected:
-
             /**
-            * @brief Constructor.
+            * @brief Get function type.
             */
+            virtual FunctionType GetFunctionType() const = 0;            
+
+        protected:
+          
             FunctionNodeBase(Script& script);
+            FunctionNodeBase(const FunctionNodeBase&) = delete;
+            FunctionNodeBase(FunctionNodeBase&&) = delete;
+            virtual ~FunctionNodeBase();
 
         };
+
 
         /**
         * @brief Function node of shader script.
@@ -406,7 +332,7 @@ namespace Curse
             virtual size_t GetInputPinCount() const override;
 
             /**
-            * @brief Get number of input pins.
+            * @brief Get number of output pins.
             */
             virtual size_t GetOutputPinCount() const override;
 
@@ -415,55 +341,43 @@ namespace Curse
             *
             * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
             */
+            /**@{*/
             virtual Pin* GetInputPin(const size_t index = 0) override;
-
-            /**
-            * @brief Get connected pin by index.
-            *
-            * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
-            */
             virtual const Pin* GetInputPin(const size_t index = 0) const override;
+            /**@}*/
 
             /**
             * @brief Get all input pins, wrapped in a vector.
             */
+            /**@{*/
             virtual std::vector<Pin*> GetInputPins() override;
-
-            /**
-            * @brief  Get all input pins, wrapped in a vector.
-            */
             virtual std::vector<const Pin*> GetInputPins() const override;
+            /**@}*/
 
             /**
-            * @brief Get input pin by index.
+            * @brief Get output pin by index.
             *
-            * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
+            * @return Pointer of output pin at given index, nullptr if index is >= GetOutputPinCount().
             */
+            /**@{*/
             virtual Pin* GetOutputPin(const size_t index = 0) override;
-
-            /**
-            * @brief Get connected pin by index.
-            *
-            * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
-            */
             virtual const Pin* GetOutputPin(const size_t index = 0) const override;
+            /**@}*/
 
             /**
-            * @brief Get all input pins, wrapped in a vector.
+            * @brief Get all output pins, wrapped in a vector.
             */
+            /**@{*/
             virtual std::vector<Pin*> GetOutputPins() override;
-
-            /**
-            * @brief  Get all input pins, wrapped in a vector.
-            */
             virtual std::vector<const Pin*> GetOutputPins() const override;
+            /**@}*/
 
         protected:
 
-            /**
-            * @brief Constructor.
-            */
             FunctionNode(Script& script);
+            FunctionNode(const FunctionNode&) = delete;
+            FunctionNode(FunctionNode&&) = delete;
+            ~FunctionNode();
 
         private:
 
@@ -476,23 +390,19 @@ namespace Curse
             std::array<std::unique_ptr<Pin>, InputPinCount> m_inputs;
             std::unique_ptr<Pin> m_output;
 
-            friend class Script;
+            friend class VertexScript;
+            friend class FragmentScript;
 
         };
 
 
         /**
-        * @brief Base clas of operator node, of shader script.
+        * @brief Operator node base class of shader script.
         */
-        class OperatorNodeBase : public Node
+        class CURSE_API OperatorNodeBase : public Node
         {
 
-        public:
-
-            /**
-            * @brief Virtual destructor.
-            */
-            virtual ~OperatorNodeBase();
+        public:          
 
             /**
             * @brief Get type of node.
@@ -502,250 +412,67 @@ namespace Curse
             /*
             * @brief Get operator type.
             */
-            Operator GetOperator() const;
+            virtual OperatorType GetOperatorType() const = 0;
 
         protected:
 
-            /**
-            * @brief Constructor.
-            */
-            OperatorNodeBase(Script& script, const Operator op);
-
-        private:
-
-            const Operator m_operator;
-
-        };
-
-        /**
-        * @brief Operator node of shader script.
-        */
-        template<typename T>
-        class OperatorNode : public OperatorNodeBase
-        {
-
-        public:
-
-            /**
-            * @brief Get number of input pins.
-            */
-            virtual size_t GetInputPinCount() const override;
-
-            /**
-            * @brief Get number of input pins.
-            */
-            virtual size_t GetOutputPinCount() const override;
-
-            /**
-            * @brief Get input pin by index.
-            *
-            * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
-            */
-            virtual Pin* GetInputPin(const size_t index = 0) override;
-
-            /**
-            * @brief Get connected pin by index.
-            *
-            * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
-            */
-            virtual const Pin* GetInputPin(const size_t index = 0) const override;
-
-            /**
-            * @brief Get all input pins, wrapped in a vector.
-            */
-            virtual std::vector<Pin*> GetInputPins() override;
-
-            /**
-            * @brief  Get all input pins, wrapped in a vector.
-            */
-            virtual std::vector<const Pin*> GetInputPins() const override;
-
-            /**
-            * @brief Get input pin by index.
-            *
-            * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
-            */
-            virtual Pin* GetOutputPin(const size_t index = 0) override;
-
-            /**
-            * @brief Get connected pin by index.
-            *
-            * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
-            */
-            virtual const Pin* GetOutputPin(const size_t index = 0) const override;
-
-            /**
-            * @brief Get all input pins, wrapped in a vector.
-            */
-            virtual std::vector<Pin*> GetOutputPins() override;
-
-            /**
-            * @brief  Get all input pins, wrapped in a vector.
-            */
-            virtual std::vector<const Pin*> GetOutputPins() const override;
-
-        protected:
-
-            /**
-            * @brief Constructor.
-            */
-            OperatorNode(Script& script, const Operator op);
-
-        private:
-
-            InputPin<T> m_inputA;
-            InputPin<T> m_inputB;
-            InputPin<T> * m_inputs[2];
-            OutputPin<T> m_output;
-
-            friend class Script;
+            OperatorNodeBase(Script& script);
+            OperatorNodeBase(const OperatorNodeBase&) = delete;
+            OperatorNodeBase(OperatorNodeBase&&) = delete;
+            virtual ~OperatorNodeBase();
 
         };
 
 
         /**
-        * @brief Base clas of uniform node, of shader script.
+        * @brief Arithmetic operator node base class of shader script.
         */
-        class UniformNodeBase : public Node
-        {
-
-        public:
-
-            /**
-            * @brief Virtual destructor.
-            */
-            virtual ~UniformNodeBase();
-
-            /**
-            * @brief Get type of node.
-            */
-            virtual NodeType GetType() const override;
-
-        protected:
-
-            /**
-            * @brief Constructor.
-            */
-            UniformNodeBase(Script& script);
-
-        };
-
-        /**
-        * @brief Uniform node of shader script.
-        */
-        template<typename T>
-        class UniformNode : public UniformNodeBase
-        {
-
-        public:
-
-            /**
-            * @brief Get number of input pins.
-            */
-            virtual size_t GetOutputPinCount() const override;
-
-            /**
-            * @brief Get input pin by index.
-            *
-            * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
-            */
-            virtual Pin* GetOutputPin(const size_t index = 0) override;
-
-            /**
-            * @brief Get connected pin by index.
-            *
-            * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
-            */
-            virtual const Pin* GetOutputPin(const size_t index = 0) const override;
-
-            /**
-            * @brief Get all input pins, wrapped in a vector.
-            */
-            virtual std::vector<Pin*> GetOutputPins() override;
-
-            /**
-            * @brief  Get all input pins, wrapped in a vector.
-            */
-            virtual std::vector<const Pin*> GetOutputPins() const override;
-
-        protected:
-
-            /**
-            * @brief Constructor.
-            */
-            UniformNode(Script& script);
-
-        private:
-
-            OutputPin<T> m_output;
-
-            friend class UniformBlock;
-
-        };
-
-        /**
-        * @brief Uniform block container.
-        */
-        class UniformBlock
+        class CURSE_API ArithmeticOperatorNodeBase : public OperatorNodeBase
         {
 
         public:
 
             /*
-            * @brief Destructor.
+            * @brief Get operator type.
             */
-            ~UniformBlock();
+            virtual OperatorType GetOperatorType() const override;
 
-            /**
-            * @brief Create uniform node and append it to the block.
+            /*
+            * @brief Get arithmetic operator type.
             */
-            template<typename T>
-            UniformNode<T>* CreateUniformNode();
-
-            /**
-            * @brief Get all uniform nodes.
-            */
-            std::vector<UniformNodeBase*> GetUniformNodes();
-
-            /**
-            * @brief Get all uniform nodes.
-            */
-            std::vector<const UniformNodeBase*> GetUniformNodes() const;
-
-            uint32_t GetId() const;
+            virtual ArithmeticOperatorType GetArithmeticOperatorType() const = 0;
 
         protected:
 
-            /**
-            * @brief Constructor.
-            */
-            UniformBlock(Script& script, const uint32_t id);
-
-        private:
-
-            Script& m_script;
-            uint32_t m_id;
-
-            std::vector<UniformNodeBase*> m_uniformNodes;
-
-            friend class Script;
+            ArithmeticOperatorNodeBase(Script& script);
+            ArithmeticOperatorNodeBase(const ArithmeticOperatorNodeBase&) = delete;
+            ArithmeticOperatorNodeBase(ArithmeticOperatorNodeBase&&) = delete;
+            virtual ~ArithmeticOperatorNodeBase();
 
         };
 
 
         /**
-        * @brief Varying in node of shader script.
+        * @brief Operator node of shader script.
         */
-        template<typename T>
-        class VaryingInNode : public Node
+        template<ArithmeticOperatorType Operator, typename OutputType, typename LeftType, typename RightType>
+        class ArithmeticOperatorNode : public ArithmeticOperatorNodeBase
         {
-
-            static_assert(DataTypeTrait<T>::Supported, "Data type of varying in node is not supported.");
 
         public:
 
+            /*
+            * @brief Get arithmetic operator type.
+            */
+            virtual ArithmeticOperatorType GetArithmeticOperatorType() const override;
+
             /**
             * @brief Get number of input pins.
+            */
+            virtual size_t GetInputPinCount() const override;
+
+            /**
+            * @brief Get number of output pins.
             */
             virtual size_t GetOutputPinCount() const override;
 
@@ -754,24 +481,63 @@ namespace Curse
             *
             * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
             */
-            virtual Pin* GetOutputPin(const size_t index = 0) override;
-
-            /**
-            * @brief Get connected pin by index.
-            *
-            * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
-            */
-            virtual const Pin* GetOutputPin(const size_t index = 0) const override;
+            /**@{*/
+            virtual Pin* GetInputPin(const size_t index = 0) override;
+            virtual const Pin* GetInputPin(const size_t index = 0) const override;
+            /**@}*/
 
             /**
             * @brief Get all input pins, wrapped in a vector.
             */
-            virtual std::vector<Pin*> GetOutputPins() override;
+            /**@{*/
+            virtual std::vector<Pin*> GetInputPins() override;
+            virtual std::vector<const Pin*> GetInputPins() const override;
+            /**@}*/
 
             /**
-            * @brief  Get all input pins, wrapped in a vector.
+            * @brief Get output pin by index.
+            *
+            * @return Pointer of output pin at given index, nullptr if index is >= GetOutputPinCount().
             */
+            /**@{*/
+            virtual Pin* GetOutputPin(const size_t index = 0) override;
+            virtual const Pin* GetOutputPin(const size_t index = 0) const override;
+            /**@}*/
+
+            /**
+            * @brief Get all output pins, wrapped in a vector.
+            */
+            /**@{*/
+            virtual std::vector<Pin*> GetOutputPins() override;
             virtual std::vector<const Pin*> GetOutputPins() const override;
+            /**@}*/
+
+        protected:
+
+            ArithmeticOperatorNode(Script& script);
+            ArithmeticOperatorNode(const ArithmeticOperatorNode&) = delete;
+            ArithmeticOperatorNode(ArithmeticOperatorNode&&) = delete;
+            ~ArithmeticOperatorNode();
+
+        private:
+
+            InputPin<LeftType> m_inputLeft;
+            InputPin<RightType> m_inputRight;
+            OutputPin<OutputType> m_output;
+
+            friend class VertexScript;
+            friend class FragmentScript;
+
+        };
+
+
+        /**
+        * @brief Base clas of input node, of shader script.
+        */
+        class CURSE_API InputNodeBase : public Node
+        {
+
+        public:
 
             /**
             * @brief Get type of node.
@@ -780,28 +546,155 @@ namespace Curse
 
         protected:
 
-            /**
-            * @brief Constructor.
-            */
-            VaryingInNode(Script& script);
+            InputNodeBase(Script& script);
+            InputNodeBase(const InputNodeBase&) = delete;
+            InputNodeBase(InputNodeBase&&) = delete;
+            virtual ~InputNodeBase();
 
-        private:
-
-            OutputPin<T> m_pin;
-
-            friend class Script;
+            friend class InputBlock;
 
         };
 
 
         /**
-        * @brief Varying out node of shader script.
+        * @brief Output node of shader script.
         */
         template<typename T>
-        class VaryingOutNode : public Node
+        class InputNode : public InputNodeBase
         {
 
-            static_assert(DataTypeTrait<T>::Supported, "Data type of varying out node is not supported.");
+        public:
+
+            /**
+            * @brief Get number of output pins.
+            */
+            virtual size_t GetOutputPinCount() const override;
+
+            /**
+            * @brief Get input pin by index.
+            *
+            * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
+            */
+            /**@{*/
+            virtual Pin* GetOutputPin(const size_t index = 0) override;
+            virtual const Pin* GetOutputPin(const size_t index = 0) const override;
+            /**@}*/
+
+            /**
+            * @brief Get all input pins, wrapped in a vector.
+            */
+            /**@{*/
+            virtual std::vector<Pin*> GetOutputPins() override;
+            virtual std::vector<const Pin*> GetOutputPins() const override;
+            /**@}*/
+
+        private:
+
+            InputNode(Script& script);
+            InputNode(const InputNode&) = delete;
+            InputNode(InputNode&&) = delete;
+            ~InputNode();
+
+            OutputPin<T> m_output;
+
+            friend class InputBlock;
+
+        };
+
+
+        /**
+        * @brief Input node block node.
+        */
+        class CURSE_API InputBlock
+        {
+
+        public:
+
+            /**
+            * @brief Append new input node to this block.
+            */
+            template<typename T>
+            InputNode<T>* AppendNode();
+
+            /**
+            * @brief Removes the node from the block, disconnects all connections of node
+            *        and deallocates the pointer.
+            */
+            void DestroyNode(InputNodeBase* inputNode);
+
+            /**
+            * @brief Get number of nodes in this block.
+            */
+            size_t GetNodeCount() const;
+
+            /**
+            * @brief Get number of output pins in this block.
+            */
+            size_t GetOutputPinCount() const;
+
+            /**
+            * @brief Get all output nodes.
+            */
+            /**@{*/
+            std::vector<InputNodeBase*> GetNodes();
+            std::vector<const InputNodeBase*> GetNodes() const;
+            /**@}*/
+
+            /**
+            * @brief Compare and check the layout compability between this and target output block.
+            *
+            * @return True if layouts are compatible, else false.
+            */
+            bool CheckCompability(const OutputBlock& block) const;
+
+        private:
+
+            InputBlock(Script& script);
+            InputBlock(const InputBlock&) = delete;
+            InputBlock(InputBlock&&) = delete;
+            ~InputBlock();
+
+            Script& m_script;
+            std::vector<InputNodeBase*> m_nodes;
+            size_t m_pinCount;
+
+            friend class VertexScript;
+            friend class FragmentScript;
+
+        };
+
+
+        /**
+        * @brief Base clas of output node, of shader script.
+        */
+        class CURSE_API OutputNodeBase : public Node
+        {
+
+        public:
+
+            /**
+            * @brief Get type of node.
+            */
+            virtual NodeType GetType() const override;
+
+        protected:
+
+            OutputNodeBase(Script& script);
+            OutputNodeBase(const OutputNodeBase&) = delete;
+            OutputNodeBase(OutputNodeBase&&) = delete;
+            virtual ~OutputNodeBase();
+
+            friend class OutputBlock;
+
+        };
+
+
+        /**
+        * @brief Output node of shader script.
+        */
+        template<typename T>
+        class OutputNode : public OutputNodeBase
+        {
 
         public:
 
@@ -815,48 +708,90 @@ namespace Curse
             *
             * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
             */
+            /**@{*/
             virtual Pin* GetInputPin(const size_t index = 0) override;
-
-            /**
-            * @brief Get connected pin by index.
-            *
-            * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
-            */
             virtual const Pin* GetInputPin(const size_t index = 0) const override;
+            /**@}*/
 
             /**
             * @brief Get all input pins, wrapped in a vector.
             */
+            /**@{*/
             virtual std::vector<Pin*> GetInputPins() override;
-
-            /**
-            * @brief  Get all input pins, wrapped in a vector.
-            */
             virtual std::vector<const Pin*> GetInputPins() const override;
-
-            /**
-            * @brief Get type of node.
-            */
-            virtual NodeType GetType() const override;
-
-        protected:
-
-            /**
-            * @brief Constructor.
-            */
-            VaryingOutNode(Script& script);
+            /**@}*/
 
         private:
 
-            InputPin<T> m_pin;
+            OutputNode(Script& script);
+            OutputNode(const OutputNode&) = delete;
+            OutputNode(OutputNode&&) = delete;
+            ~OutputNode();
 
-            friend class Script;
+            InputPin<T> m_input;
+
+            friend class OutputBlock;
 
         };
 
 
         /**
-        * @brief Shader script vertex output node.
+        * @brief Output node block node.
+        */
+        class CURSE_API OutputBlock
+        {
+
+        public:
+
+            /**
+            * @brief Append new output node to this block.
+            */
+            template<typename T>
+            OutputNode<T>* AppendNode();
+
+            /**
+            * @brief Removes the node from the block, disconnects all connections of node
+            *        and deallocates the pointer.
+            */
+            void DestroyNode(OutputNodeBase* outputNode);
+
+            /**
+            * @brief Get number of nodes in this block.
+            */
+            size_t GetNodeCount() const;
+
+            /**
+            * @brief Get number of input pins in this block.
+            */
+            size_t GetInputPinCount() const;
+
+            /**
+            * @brief Get all output nodes.
+            */
+            /**@{*/
+            std::vector<OutputNodeBase*> GetNodes();
+            std::vector<const OutputNodeBase*> GetNodes() const;
+            /**@}*/
+
+        private:
+
+            OutputBlock(Script& script);           
+            OutputBlock(const OutputBlock&) = delete;
+            OutputBlock(OutputBlock&&) = delete;
+            ~OutputBlock();
+
+            Script& m_script;
+            std::vector<OutputNodeBase*> m_nodes;
+            size_t m_pinCount;
+
+            friend class VertexScript;
+            friend class FragmentScript;
+
+        };
+
+
+        /**
+        * @brief Output node of shader script.
         */
         class VertexOutputNode : public Node
         {
@@ -864,6 +799,11 @@ namespace Curse
         public:
 
             /**
+            * @brief Get type of node.
+            */
+            virtual NodeType GetType() const override;
+
+            /**
             * @brief Get number of input pins.
             */
             virtual size_t GetInputPinCount() const override;
@@ -873,24 +813,40 @@ namespace Curse
             *
             * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
             */
+            /**@{*/
             virtual Pin* GetInputPin(const size_t index = 0) override;
-
-            /**
-            * @brief Get connected pin by index.
-            *
-            * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
-            */
             virtual const Pin* GetInputPin(const size_t index = 0) const override;
+            /**@}*/
 
             /**
             * @brief Get all input pins, wrapped in a vector.
             */
+            /**@{*/
             virtual std::vector<Pin*> GetInputPins() override;
-
-            /**
-            * @brief  Get all input pins, wrapped in a vector.
-            */
             virtual std::vector<const Pin*> GetInputPins() const override;
+            /**@}*/
+
+        private:
+
+            VertexOutputNode(Script& script);
+            VertexOutputNode(const VertexOutputNode&) = delete;
+            VertexOutputNode(VertexOutputNode&&) = delete;
+            ~VertexOutputNode();
+
+            InputPin<Curse::Vector3f32> m_input;
+
+            friend class VertexScript;
+
+        };
+
+
+        /**
+        * @brief Base clas of uniform node, of shader script.
+        */
+        class CURSE_API UniformNodeBase : public Node
+        {
+
+        public:
 
             /**
             * @brief Get type of node.
@@ -899,17 +855,126 @@ namespace Curse
 
         protected:
 
+            UniformNodeBase(Script& script);
+            UniformNodeBase(const UniformNodeBase&) = delete;
+            UniformNodeBase(UniformNodeBase&&) = delete;
+            virtual ~UniformNodeBase();
+
+            friend class UniformBlock;
+
+        };
+
+
+        /**
+       * @brief Output node of shader script.
+       */
+        template<typename T>
+        class UniformNode : public UniformNodeBase
+        {
+
+        public:
+
             /**
-            * @brief Constructor.
+            * @brief Get number of output pins.
             */
-            VertexOutputNode(Script& script);
+            virtual size_t GetOutputPinCount() const override;
+
+            /**
+            * @brief Get input pin by index.
+            *
+            * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
+            */
+            /**@{*/
+            virtual Pin* GetOutputPin(const size_t index = 0) override;
+            virtual const Pin* GetOutputPin(const size_t index = 0) const override;
+            /**@}*/
+
+            /**
+            * @brief Get all input pins, wrapped in a vector.
+            */
+            /**@{*/
+            virtual std::vector<Pin*> GetOutputPins() override;
+            virtual std::vector<const Pin*> GetOutputPins() const override;
+            /**@}*/
 
         private:
 
-            InputPin<Vector3f32> m_pin;
+            UniformNode(Script& script);
+            UniformNode(const UniformNode&) = delete;
+            UniformNode(UniformNode&&) = delete;
+            ~UniformNode();
 
-            friend class Script;
+            OutputPin<T> m_output;
+
+            friend class UniformBlock;
+
+        };
+
+
+        /**
+        * @brief Uniform node block node.
+        */
+        class CURSE_API UniformBlock
+        {
+
+        public:
+
+            /**
+            * @brief Append new input node to this block.
+            */
+            template<typename T>
+            UniformNode<T>* AppendNode();
+
+            /**
+            * @brief Removes the node from the block, disconnects all connections of node
+            *        and deallocates the pointer.
+            */
+            void DestroyNode(UniformNodeBase* uniformNode);
+
+            /**
+            * @brief Get number of nodes in this block.
+            */
+            size_t GetNodeCount() const;
+
+            /**
+            * @brief Get number of output pins in this block.
+            */
+            size_t GetOutputPinCount() const;
+
+            /**
+            * @brief Get all output nodes.
+            */
+            /**@{*/
+            std::vector<UniformNodeBase*> GetNodes();
+            std::vector<const UniformNodeBase*> GetNodes() const;
+            /**@}*/
+
+            /**
+            * @brief Get id of this block.
+            */
+            uint32_t GetId() const;
+
+            /**
+            * @brief Compare and check the layout compability between this and target uniform block.
+            *
+            * @return True if layouts are compatible, else false.
+            */
+            bool CheckCompability(const UniformBlock& block) const;
+
+        private:
+
+            UniformBlock(Script& script, const uint32_t id);
+            UniformBlock(const UniformBlock&) = delete;
+            UniformBlock(UniformBlock&&) = delete;
+            ~UniformBlock();
+
+            Script& m_script;
+            uint32_t m_id;
+            std::vector<UniformNodeBase*> m_nodes;
+            size_t m_pinCount;
+
             friend class VertexScript;
+            friend class FragmentScript;
 
         };
 
