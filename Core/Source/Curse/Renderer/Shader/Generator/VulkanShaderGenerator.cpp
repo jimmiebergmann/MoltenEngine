@@ -684,7 +684,7 @@ namespace Curse
 
             return std::move(output);
         }
-    #elif
+    #else
         std::vector<uint8_t> VulkanGenerator::ConvertGlslToSpriV(const std::vector<uint8_t>&, Type, Logger* logger)
         {
             CURSE_GENERATOR_LOG(Logger::Severity::Error, "Failed to convert GLSL code to SPIR-V. CURSE_ENABLE_GLSLANG is not enabled.");
