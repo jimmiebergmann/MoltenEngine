@@ -99,7 +99,13 @@ namespace Curse
         Matrix();
 
         /**
-        * @brief Constructing and initializing all elements.
+        * @brief Constructor.
+        *        Constructing and initializing all elements by a single value.
+        */
+        Matrix(const T value);
+
+        /**
+        * @brief Constructing and initializing all elements individually.
         */
         Matrix(const T e1,  const T e2,  const T e3,  const T e4,
                const T e5,  const T e6,  const T e7,  const T e8,

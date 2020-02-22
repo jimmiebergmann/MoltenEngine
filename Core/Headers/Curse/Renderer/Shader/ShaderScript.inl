@@ -29,50 +29,6 @@ namespace Curse
     namespace Shader
     {
 
-        
-
-        //inline UniformBlock* Script::CreateUniformBlock(const uint32_t id)
-        //{
-        //    if (m_uniformBlocks.find(id) != m_uniformBlocks.end())
-        //    {
-        //        return nullptr;
-        //    }
-        //    
-        //    auto block = new UniformBlock(*this, id);
-        //    m_uniformBlocks.insert({ id, block });
-        //    return block;
-        //}
-
-        
-
-        //template<typename T>
-        //inline VaryingInNode<T>* Script::CreateVaryingInNode(const uint32_t id)
-        //{
-        //    if (m_varyingInNodes.find(id) != m_varyingInNodes.end())
-        //    {
-        //        return nullptr;
-        //    }
-
-        //    auto varying = new VaryingInNode<T>(*this, id);
-        //    m_allNodes.insert(varying);
-        //    m_varyingInNodes.insert({ id, varying });
-        //    return varying;
-        //}
-
-        //template<typename T>
-        //inline VaryingOutNode<T>* Script::CreateVaryingOutNode(const uint32_t id)
-        //{
-        //    if (m_varyingOutNodes.find(id) != m_varyingOutNodes.end())
-        //    {
-        //        return nullptr;
-        //    }
-
-        //    auto varying = new VaryingOutNode<T>(*this, id);
-        //    m_allNodes.insert(varying);
-        //    m_varyingOutNodes.insert({ id, varying });
-        //    return varying;
-        //}
-
         // Vertex shader script implementations.
         template<typename T>
         inline ConstantNode<T>* VertexScript::CreateConstantNode(const T& value)
@@ -98,9 +54,7 @@ namespace Curse
         template<typename Op>
         inline Op* VertexScript::CreateOperatorNode()
         {
-            // CHECK OPERATOR TYPE.
-            static_assert(std::is_base_of<OperatorNodeBase, Op>::value,
-                "Specified template parameter is not base of OperatorNodeBase.");
+            static_assert(OperatorTrait<Op>::Supported, "Passed operator node is not supported.");
 
             auto op = new Op(*this);
             m_allNodes.insert(op);

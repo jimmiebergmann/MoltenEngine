@@ -26,7 +26,7 @@
 #ifndef CURSE_CORE_RENDERER_SHADER_SHADEROPERATORS_HPP
 #define CURSE_CORE_RENDERER_SHADER_SHADEROPERATORS_HPP
 
-#include "Curse/Renderer/Shader/ShaderNode.hpp"
+#include "Curse/Renderer/Shader/Node/ShaderOperatorNode.hpp"
 
 namespace Curse
 {
@@ -36,6 +36,7 @@ namespace Curse
 
         namespace Operator
         {
+
             // Addition
             using AddInt32   = ArithmeticOperatorNode<ArithmeticOperatorType::Addition, int32_t, int32_t, int32_t>;
             using AddFloat32 = ArithmeticOperatorNode<ArithmeticOperatorType::Addition, float, float, float>;           
@@ -43,29 +44,41 @@ namespace Curse
             using AddVec3f32 = ArithmeticOperatorNode<ArithmeticOperatorType::Addition, Curse::Vector3f32, Curse::Vector3f32, Curse::Vector3f32>;
             using AddVec4f32 = ArithmeticOperatorNode<ArithmeticOperatorType::Addition, Curse::Vector4f32, Curse::Vector4f32, Curse::Vector4f32>;
 
-            //Division
+            // Division
             using DivInt32   = ArithmeticOperatorNode<ArithmeticOperatorType::Division, int32_t, int32_t, int32_t>;
             using DivFloat32 = ArithmeticOperatorNode<ArithmeticOperatorType::Division, float, float, float>;
 
-            //Multiplication
+            // Multiplication
             using MultInt32       = ArithmeticOperatorNode<ArithmeticOperatorType::Multiplication, int32_t, int32_t, int32_t>;
             using MultFloat32     = ArithmeticOperatorNode<ArithmeticOperatorType::Multiplication, float, float, float>;
             using MultVec2f32     = ArithmeticOperatorNode<ArithmeticOperatorType::Multiplication, Curse::Vector2f32, Curse::Vector2f32, Curse::Vector2f32>;
             using MultVec3f32     = ArithmeticOperatorNode<ArithmeticOperatorType::Multiplication, Curse::Vector3f32, Curse::Vector3f32, Curse::Vector3f32>;
             using MultVec4f32     = ArithmeticOperatorNode<ArithmeticOperatorType::Multiplication, Curse::Vector4f32, Curse::Vector4f32, Curse::Vector4f32>;
-            using MultMat4f32     = ArithmeticOperatorNode<ArithmeticOperatorType::Multiplication, Curse::Vector4f32, Curse::Matrix4x4f32, Curse::Vector4f32>;
+            using MultMat4f32     = ArithmeticOperatorNode<ArithmeticOperatorType::Multiplication, Curse::Matrix4x4f32, Curse::Matrix4x4f32, Curse::Matrix4x4f32>;
             using MultMat4Vec4f32 = ArithmeticOperatorNode<ArithmeticOperatorType::Multiplication, Curse::Vector4f32, Curse::Matrix4x4f32, Curse::Vector4f32>;          
 
-            //Subtraction
+            // Subtraction
             using SubInt32   = ArithmeticOperatorNode<ArithmeticOperatorType::Subtraction, int32_t, int32_t, int32_t>;
             using SubFloat32 = ArithmeticOperatorNode<ArithmeticOperatorType::Subtraction, float, float, float>;
             using SubVec2f32 = ArithmeticOperatorNode<ArithmeticOperatorType::Subtraction, Curse::Vector2f32, Curse::Vector2f32, Curse::Vector2f32>;
             using SubVec3f32 = ArithmeticOperatorNode<ArithmeticOperatorType::Subtraction, Curse::Vector3f32, Curse::Vector3f32, Curse::Vector3f32>;
             using SubVec4f32 = ArithmeticOperatorNode<ArithmeticOperatorType::Subtraction, Curse::Vector4f32, Curse::Vector4f32, Curse::Vector4f32>;
+
         }
+
+        /**
+        * @brief Type trait for statically checking information of a certain operator type.
+        */
+        template<typename Op>
+        struct OperatorTrait
+        {
+            inline static const bool Supported = false; ///< Set to true if Op is an accepted operator node.
+        };
 
     }
 
 }
+
+#include "ShaderOperators.inl"
 
 #endif

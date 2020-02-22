@@ -26,7 +26,7 @@
 #ifndef CURSE_CORE_RENDERER_SHADER_SHADERFUNCTIONS_HPP
 #define CURSE_CORE_RENDERER_SHADER_SHADERFUNCTIONS_HPP
 
-#include "Curse/Renderer/Shader/ShaderNode.hpp"
+#include "Curse/Renderer/Shader/Node/ShaderFunctionNode.hpp"
 
 namespace Curse
 {
@@ -36,6 +36,20 @@ namespace Curse
 
         namespace Function
         {
+            // Constructors
+            using CompsToVec2f32 = FunctionNode<FunctionType::CreateVec2, Curse::Vector2f32, float, float>;
+            using CompsToVec3f32 = FunctionNode<FunctionType::CreateVec3, Curse::Vector3f32, float, float, float>;
+            using CompsToVec4f32 = FunctionNode<FunctionType::CreateVec4, Curse::Vector4f32, float, float, float, float>;
+
+            using Vec2ToVec3f32 = FunctionNode<FunctionType::CreateVec3, Curse::Vector3f32, Curse::Vector2f32, float>;
+            using Vec2ToVec4f32 = FunctionNode<FunctionType::CreateVec4, Curse::Vector4f32, Curse::Vector2f32, float, float>;
+            using Vec3ToVec4f32 = FunctionNode<FunctionType::CreateVec4, Curse::Vector4f32, Curse::Vector3f32, float>;
+            using Vec3ToVec2f32 = FunctionNode<FunctionType::CreateVec2, Curse::Vector2f32, Curse::Vector3f32>;
+            using Vec4ToVec2f32 = FunctionNode<FunctionType::CreateVec2, Curse::Vector2f32, Curse::Vector4f32>;
+            using Vec4ToVec3f32 = FunctionNode<FunctionType::CreateVec3, Curse::Vector3f32, Curse::Vector4f32>;
+
+            /*using Mat4x4ToMat3x3f32 = FunctionNode<FunctionType::CreateMat3x3, Curse::Matrix3x3f32, Curse::Matrix4x4f32>;*/
+
             // Trigonometry
             using Cosf32     = FunctionNode<FunctionType::Cos, float, float>;
             using CosVec2f32 = FunctionNode<FunctionType::Cos, Curse::Vector2f32, Curse::Vector2f32>;

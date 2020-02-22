@@ -85,6 +85,13 @@
 #define CURSE_ANONYMOUS_STRUCTURE_END
 
 /*
+* Disable padded structure warnings,
+* by encapsulating with CURSE_PADDED_STRUCT_BEGIN and CURSE_PADDED_STRUCT_END.
+*/
+#define CURSE_PADDED_STRUCT_BEGIN
+#define CURSE_PADDED_STRUCT_END
+
+/*
 * Disable unscoped enum warnings,
 * by encapsulating with CURSE_UNSCOPED_ENUM_BEGIN and CURSE_UNSCOPED_ENUM_END.
 */
@@ -148,6 +155,12 @@
     #undef CURSE_UNSCOPED_ENUM_END
     #define CURSE_UNSCOPED_ENUM_BEGIN __pragma(warning(disable : 26812))
     #define CURSE_UNSCOPED_ENUM_END __pragma(warning(default : 26812))
+
+    #undef CURSE_PADDED_STRUCT_BEGIN
+    #undef CURSE_PADDED_STRUCT_END
+    #define CURSE_PADDED_STRUCT_BEGIN __pragma(warning(disable : 4324))
+    #define CURSE_PADDED_STRUCT_END __pragma(warning(default : 4324))
+
 #endif
 
 // Build type

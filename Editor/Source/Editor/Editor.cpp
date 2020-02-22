@@ -12,12 +12,15 @@
 #include "Curse/Logger.hpp"
 #include <iostream>
 
+#include <Curse/Renderer/Shader/Generator/VulkanShaderGenerator.hpp>
+
 static Curse::Logger logger;
 static Curse::Window* window = nullptr;
 
 struct UniformBuffer
 {
-    Curse::Vector3f32 position;
+    Curse::Shader::PaddedType<Curse::Vector3f32> position[3];
+    Curse::Shader::PaddedType<Curse::Matrix4x4f32> mat[3];
 };
 
 static void LoadShaders(Curse::Shader::VertexScript& vScript, Curse::Shader::FragmentScript& fScript)
@@ -35,13 +38,27 @@ static void LoadShaders(Curse::Shader::VertexScript& vScript, Curse::Shader::Fra
         auto outPos   = script.GetVertexOutputNode();
 
         auto uBlock0 = script.CreateUniformBlock(0);
-        auto uPos = uBlock0->AppendNode<Curse::Vector3f32>();
+        auto uPos = uBlock0->AppendNode<Curse::Vector3f32, 3>();
+        uBlock0->AppendNode<Curse::Matrix4x4f32, 3>();
 
         auto addPos = script.CreateOperatorNode<Curse::Shader::Operator::AddVec3f32>();
         addPos->GetInputPin(0)->Connect(*inPos->GetOutputPin());
-        addPos->GetInputPin(1)->Connect(*uPos->GetOutputPin());
+        addPos->GetInputPin(1)->Connect(*uPos->GetOutputPin(0));
 
-        outPos->GetInputPin()->Connect(*addPos->GetOutputPin());
+        auto addPos2 = script.CreateOperatorNode<Curse::Shader::Operator::AddVec3f32>();
+        addPos2->GetInputPin(0)->Connect(*addPos->GetOutputPin());
+        addPos2->GetInputPin(1)->Connect(*uPos->GetOutputPin(1));
+
+        auto compsToVec3 = script.CreateFunctionNode<Curse::Shader::Function::CompsToVec3f32>();
+        static_cast<Curse::Shader::InputPin<float>*>(compsToVec3->GetInputPin(0))->SetDefaultValue(-0.5f);
+        static_cast<Curse::Shader::InputPin<float>*>(compsToVec3->GetInputPin(1))->SetDefaultValue(0.0f);
+        static_cast<Curse::Shader::InputPin<float>*>(compsToVec3->GetInputPin(2))->SetDefaultValue(0.0f);
+
+        auto addPos3 = script.CreateOperatorNode<Curse::Shader::Operator::AddVec3f32>();
+        addPos3->GetInputPin(0)->Connect(*addPos2->GetOutputPin());
+        addPos3->GetInputPin(1)->Connect(*compsToVec3->GetOutputPin());
+
+        outPos->GetInputPin()->Connect(*addPos3->GetOutputPin());
         outColor->GetInputPin()->Connect(*inColor->GetOutputPin());
     }
     // Fragment script
@@ -99,6 +116,9 @@ static void Run()
     Curse::Shader::VertexScript vertexScript;
     Curse::Shader::FragmentScript fragmentScript;
     LoadShaders(vertexScript, fragmentScript);
+
+    auto vertexVec = Curse::Shader::VulkanGenerator::GenerateGlsl(vertexScript);
+    std::string vertexStr(vertexVec.begin(), vertexVec.end());
 
     Curse::Shader::VertexStage* vertexStage = renderer->CreateVertexShaderStage(vertexScript);
     Curse::Shader::FragmentStage* fragmentStage = renderer->CreateFragmentShaderStage(fragmentScript);
@@ -184,9 +204,11 @@ static void Run()
         renderer->BindPipeline(pipeline);
 
         UniformBuffer bufferData1;
-        bufferData1.position = { std::sin(runTime * 3.0f) * 0.25f, 0.0f, 0.0f };
+        bufferData1.position[0] = Curse::Vector3f32{ std::sin(runTime * 3.0f) * 0.25f, 0.0f, 0.0f };
+        bufferData1.position[1] = Curse::Vector3f32{ 0.0f, 0.5f, 0.0f };
         UniformBuffer bufferData2;
-        bufferData2.position = { 0.0f, std::cos(runTime * 3.0f) * 0.25f, 0.0f };
+        bufferData2.position[0] = Curse::Vector3f32{ 0.0f, std::cos(runTime * 3.0f) * 0.25f, 0.0f };
+        bufferData2.position[1] = Curse::Vector3f32{ 0.5f, 0.0f, 0.0f };
 
         renderer->UpdateUniformBuffer(uniformBuffer, 0, sizeof(UniformBuffer), &bufferData1);
         renderer->UpdateUniformBuffer(uniformBuffer, 256, sizeof(UniformBuffer), &bufferData2);

@@ -44,13 +44,17 @@ namespace Curse
     {
 
         static const std::string g_emptyString = "";
+
+        // Data type names
         static const std::string g_glslDataTypeBool = "bool";
         static const std::string g_glslDataTypeInt = "int";
         static const std::string g_glslDataTypeFloat = "float";
         static const std::string g_glslDataTypeVec2 = "vec2";
         static const std::string g_glslDataTypeVec3 = "vec3";
         static const std::string g_glslDataTypeVec4 = "vec4";
+        static const std::string g_glslDataTypeMat4 = "mat4";
 
+        // Function names.
         static const std::string g_glslFunctionCos = "cos";
         static const std::string g_glslFunctionSin = "sin";
         static const std::string g_glslFunctionTan = "tan";
@@ -59,32 +63,58 @@ namespace Curse
         static const std::string g_glslFunctionCross = "cross";
         static const std::string g_glslFunctionDot = "dot";
 
+        // Arithmetic operator signs.
+        static const std::string g_glslArithOpAdd = " + ";
+        static const std::string g_glslArithOpDiv = " / ";
+        static const std::string g_glslArithOpMul = " * ";
+        static const std::string g_glslArithOpSub = " - ";
+
+        // Arithmetic operator names.
+        static const std::string g_glslArithOpNameAdd = "add";
+        static const std::string g_glslArithOpNameDiv = "div";
+        static const std::string g_glslArithOpNameMul = "mul";
+        static const std::string g_glslArithOpNameSub = "sub";
+
         static const std::string& GetGlslVariableDataType(const VariableDataType dataType)
         {
             switch (dataType)
             {
-                case VariableDataType::Bool:       return g_glslDataTypeBool;
-                case VariableDataType::Int32:      return g_glslDataTypeInt;
-                case VariableDataType::Float32:    return g_glslDataTypeFloat;
-                case VariableDataType::Vector2f32: return g_glslDataTypeVec2;
-                case VariableDataType::Vector3f32: return g_glslDataTypeVec3;
-                case VariableDataType::Vector4f32: return g_glslDataTypeVec4;
+                case VariableDataType::Bool:         return g_glslDataTypeBool;
+                case VariableDataType::Int32:        return g_glslDataTypeInt;
+                case VariableDataType::Float32:      return g_glslDataTypeFloat;
+                case VariableDataType::Vector2f32:   return g_glslDataTypeVec2;
+                case VariableDataType::Vector3f32:   return g_glslDataTypeVec3;
+                case VariableDataType::Vector4f32:   return g_glslDataTypeVec4;
+                case VariableDataType::Matrix4x4f32: return g_glslDataTypeMat4;
                 default: break;
             }
-            return g_emptyString;
+            throw Exception("GetGlslVariableDataType is missing return value for dataType = " + std::to_string(static_cast<size_t>(dataType)) + ".");
         }
 
-        static std::string GetGlslArithmeticOperator(const ArithmeticOperatorType op)
+        static const std::string& GetGlslArithmeticOperator(const ArithmeticOperatorType op)
         {
             switch (op)
             {
-                case ArithmeticOperatorType::Addition:        return " + ";
-                case ArithmeticOperatorType::Subtraction:     return " - ";
-                case ArithmeticOperatorType::Multiplication:  return " * ";
-                case ArithmeticOperatorType::Division:        return " / ";
+                case ArithmeticOperatorType::Addition:          return g_glslArithOpAdd;
+                case ArithmeticOperatorType::Division:          return g_glslArithOpDiv;
+                case ArithmeticOperatorType::Multiplication:    return g_glslArithOpMul;
+                case ArithmeticOperatorType::Subtraction:       return g_glslArithOpSub;
                 default: break;
             }
-            return g_emptyString;
+            throw Exception("GetGlslArithmeticOperator is missing return value for op = " + std::to_string(static_cast<size_t>(op)) + ".");
+        }
+
+        static const std::string& GetGlslArithmeticOperatorName(const ArithmeticOperatorType op)
+        {
+            switch (op)
+            {
+                case ArithmeticOperatorType::Addition:          return g_glslArithOpNameAdd;
+                case ArithmeticOperatorType::Division:          return g_glslArithOpNameDiv;
+                case ArithmeticOperatorType::Multiplication:    return g_glslArithOpNameMul;
+                case ArithmeticOperatorType::Subtraction:       return g_glslArithOpNameSub;
+                default: break;
+            }
+            throw Exception("GetGlslArithmeticOperatorName is missing return value for op = " + std::to_string(static_cast<size_t>(op)) + ".");
         }
 
         static std::string GetGlslFloatString(const float value)
@@ -99,7 +129,7 @@ namespace Curse
         {
             if (pin.GetDirection() != PinDirection::In)
             {
-                return "";
+                throw Exception("Direction of pin passed to GetGlslDefaultValue is " + std::to_string(static_cast<size_t>(pin.GetDirection())) + ", expecting an input pin.");
             }
 
             switch (pin.GetDataType())
@@ -125,10 +155,18 @@ namespace Curse
                     auto vec = static_cast<const InputPin<Vector4f32>&>(pin).GetDefaultValue();
                     return "vec4(" + GetGlslFloatString(vec.x) + ", " + GetGlslFloatString(vec.y) + ", " + GetGlslFloatString(vec.z) + ", " + GetGlslFloatString(vec.w) + ")";
                 }
+                case VariableDataType::Matrix4x4f32:
+                {
+                    auto mat = static_cast<const InputPin<Matrix4x4f32>&>(pin).GetDefaultValue();
+                    return "mat4(" + GetGlslFloatString(mat.e[0]) + ", " +  GetGlslFloatString(mat.e[1]) + ", " +  GetGlslFloatString(mat.e[2]) + ", " +  GetGlslFloatString(mat.e[3]) + ", " +
+                                     GetGlslFloatString(mat.e[4]) + ", " +  GetGlslFloatString(mat.e[5]) + ", " +  GetGlslFloatString(mat.e[6]) + ", " +  GetGlslFloatString(mat.e[7]) + ", " +
+                                     GetGlslFloatString(mat.e[8]) + ", " +  GetGlslFloatString(mat.e[9]) + ", " +  GetGlslFloatString(mat.e[10]) + ", " + GetGlslFloatString(mat.e[11]) + ", " +
+                                     GetGlslFloatString(mat.e[12]) + ", " + GetGlslFloatString(mat.e[13]) + ", " + GetGlslFloatString(mat.e[14]) + ", " + GetGlslFloatString(mat.e[15]) + ")";
+                }
                 default: break;
             }
 
-            return "";
+            throw Exception("GetGlslDefaultValue is missing return value for pin.GetDataType() = " + std::to_string(static_cast<size_t>(pin.GetDataType())) + ".");
         }
 
         static std::string GetGlslConstantValue(const ConstantNodeBase& constant)
@@ -156,15 +194,27 @@ namespace Curse
                     auto vec = static_cast<const ConstantNode<Vector4f32>&>(constant).GetValue();
                     return "vec4(" + GetGlslFloatString(vec.x) + ", " + GetGlslFloatString(vec.y) + ", " + GetGlslFloatString(vec.z) + ", " + GetGlslFloatString(vec.w) + ")";
                 }
+                case VariableDataType::Matrix4x4f32:
+                {
+                    auto mat = static_cast<const ConstantNode<Matrix4x4f32>&>(constant).GetValue();
+                    return "mat4(" + GetGlslFloatString(mat.e[0]) + ", " +  GetGlslFloatString(mat.e[1]) + ", " +  GetGlslFloatString(mat.e[2]) + ", " +  GetGlslFloatString(mat.e[3]) + ", " +
+                                     GetGlslFloatString(mat.e[4]) + ", " +  GetGlslFloatString(mat.e[5]) + ", " +  GetGlslFloatString(mat.e[6]) + ", " +  GetGlslFloatString(mat.e[7]) + ", " +
+                                     GetGlslFloatString(mat.e[8]) + ", " +  GetGlslFloatString(mat.e[9]) + ", " +  GetGlslFloatString(mat.e[10]) + ", " + GetGlslFloatString(mat.e[11]) + ", " +
+                                     GetGlslFloatString(mat.e[12]) + ", " + GetGlslFloatString(mat.e[13]) + ", " + GetGlslFloatString(mat.e[14]) + ", " + GetGlslFloatString(mat.e[15]) + ")";
+                }
                 default: break;
             }
-            return "";
+            throw Exception("GetGlslConstantValue is missing return value for constant.GetDataType() = " + std::to_string(static_cast<size_t>(constant.GetDataType())) + ".");
         }
 
         static const std::string& GetGlslFunctionName(const FunctionType functionType)
         {
             switch (functionType)
             {
+                // Constructors
+                case FunctionType::CreateVec2: return g_glslDataTypeVec2;
+                case FunctionType::CreateVec3: return g_glslDataTypeVec3;
+                case FunctionType::CreateVec4: return g_glslDataTypeVec4;
                 // Trigonometry
                 case FunctionType::Cos: return g_glslFunctionCos;
                 case FunctionType::Sin: return g_glslFunctionSin;
@@ -174,11 +224,11 @@ namespace Curse
                 case FunctionType::Min: return g_glslFunctionMin;
                 // Vector.
                 case FunctionType::Cross: return g_glslFunctionCross;
-                case FunctionType::Dot: return g_glslFunctionDot;
+                case FunctionType::Dot:   return g_glslFunctionDot;
                 default: break;
             }
 
-            return g_emptyString;
+            throw Exception("GetGlslFunctionName is missing return value for functionType = " + std::to_string(static_cast<size_t>(functionType)) + ".");
         }
 
         static void AppendToVector(std::vector<uint8_t>& vector, const std::string& str)
@@ -282,7 +332,7 @@ namespace Curse
             {
                 for (auto* pin : node->GetOutputPins())
                 {
-                    const std::string name = "i_var_" + std::to_string(index);
+                    const std::string name = "in_" + std::to_string(index);
                     AppendToVector(source,
                         "layout(location = " + std::to_string(index) + ") in " +
                         GetGlslVariableDataType(pin->GetDataType()) + " " + name + ";\n");
@@ -297,22 +347,48 @@ namespace Curse
             for (auto block : uniformBlocks)
             {
                 const std::string blockName = "ubo_" + std::to_string(index);
-                AppendToVector(source, "layout(binding= 0, set = " + std::to_string(index) + ") uniform s_" + blockName + "\n{\n");
+                AppendToVector(source, "layout(std140, binding= 0, set = " + std::to_string(index) + ") uniform s_" + blockName + "\n{\n");
                 index++;
 
                 size_t varIndex = 0;
                 for (auto* node : block->GetNodes())
                 {
-                    for (auto* pin : node->GetOutputPins())
+                    auto pins = node->GetOutputPins();
+                    if (!pins.size())
+                    {
+                        throw Exception("Uniform array node size of 0.");
+                    }
+
+                    if (node->IsArray())
                     {
                         const std::string name = "var_" + std::to_string(varIndex);
-                        const std::string fullName = blockName + "." + name;
+                        AppendToVector(source, GetGlslVariableDataType(pins[0]->GetDataType()) + " " + name + "[" + std::to_string(pins.size()) + "];\n");              
+                        std::string fullName = blockName + "." + name;
+                        
+                        size_t arrayIndex = 0;
+                        for (auto* pin : pins)
+                        {
+                            const std::string fullIndexName = fullName + "[" + std::to_string(arrayIndex) + "]";
+                            visitedOutputPins.insert({ pin, std::make_shared<Variable>(fullIndexName, node, pin) });
+                            arrayIndex++;
+                        }
 
-                        AppendToVector(source, GetGlslVariableDataType(pin->GetDataType()) + " " + name + ";\n");
-
-                        visitedOutputPins.insert({ pin, std::make_shared<Variable>(fullName, node, pin) });
                         varIndex++;
                     }
+                    else
+                    {
+                        for (auto* pin : pins)
+                        {
+                            const std::string name = "var_" + std::to_string(varIndex);
+                            const std::string fullName = blockName + "." + name;
+
+                            AppendToVector(source, GetGlslVariableDataType(pin->GetDataType()) + " " + name + ";\n");
+
+                            visitedOutputPins.insert({ pin, std::make_shared<Variable>(fullName, node, pin) });
+                            varIndex++;
+                        }
+                    }
+                    
                 }
                 AppendToVector(source, "} " + blockName + ";\n");
             }
@@ -324,7 +400,7 @@ namespace Curse
             {
                 for (auto* pin : node->GetInputPins())
                 {
-                    const std::string name = "o_var_" + std::to_string(index);
+                    const std::string name = "out_" + std::to_string(index);
                     AppendToVector(source,
                         "layout(location = " + std::to_string(index) + ") out " +
                         GetGlslVariableDataType(pin->GetDataType()) + " " + name + ";\n");
@@ -340,9 +416,9 @@ namespace Curse
             AppendToVector(source, "void main(){\n");
 
             size_t localVariableIndex = 0;
-            auto GetNextLocalName = [&localVariableIndex]()
+            auto GetNextIndexPostfix = [&localVariableIndex]()
             {
-                return std::string("l_var_" + std::to_string(localVariableIndex++));
+                return std::move("_" + std::to_string(localVariableIndex++));
             };
 
             for (auto& outputVar : outputVars)
@@ -395,83 +471,87 @@ namespace Curse
                     // All input pins of current node is travered, let's create the nodes output variable.
                     switch (node->GetType())
                     {
-                    case NodeType::Constant:
-                    {
-                        stackObject.outputVar->name = GetNextLocalName();
-                        const ConstantNodeBase* constNode = static_cast<const ConstantNodeBase*>(stackObject.node);
-
-                        AppendToVector(source,
-                            GetGlslVariableDataType(constNode->GetDataType()) + " " + stackObject.outputVar->name + " = " +
-                            GetGlslConstantValue(*constNode) + ";\n");
-                    }
-                    break;
-                    case NodeType::Function:
-                    {
-                        stackObject.outputVar->name = GetNextLocalName();
-                        const FunctionNodeBase* funcNode = static_cast<const FunctionNodeBase*>(stackObject.node);
-
-                        AppendToVector(source,
-                            GetGlslVariableDataType(funcNode->GetOutputPin()->GetDataType()) + " " + stackObject.outputVar->name + " = " +
-                            GetGlslFunctionName(funcNode->GetFunctionType()) + "(");
-
-                        const size_t inputCount = stackObject.inputVars.size();
-                        if (inputCount)
+                        case NodeType::Constant:
                         {
-                            for (size_t i = 0; i < inputCount - 1; i++)
-                            {
-                                AppendToVector(source, stackObject.inputVars[i]->name + ", ");
-                            }
-                            AppendToVector(source, stackObject.inputVars[inputCount - 1]->name);
-                        }
+                            const ConstantNodeBase* constNode = static_cast<const ConstantNodeBase*>(stackObject.node);
+                            auto dataType = constNode->GetDataType();
+                            auto& dataTypeName = GetGlslVariableDataType(dataType);
+                            stackObject.outputVar->name = dataTypeName + GetNextIndexPostfix();
 
-                        AppendToVector(source, ");\n");
-                    }
-                    break;
-                    case NodeType::Operator:
-                    {
-                        auto opNode = static_cast<const OperatorNodeBase*>(stackObject.node);
-
-                        switch (opNode->GetOperatorType())
-                        {
-                        case OperatorType::Arithmetic:
-                        {
-                            auto arithOpNode = static_cast<const ArithmeticOperatorNodeBase*>(opNode);
-                            if (stackObject.inputVars.size() != 2)
-                            {
-                                throw Exception("Number of variables for operator variable is " + std::to_string(stackObject.inputVars.size()) + ", expected 2.");
-                            }
-
-                            stackObject.outputVar->name = GetNextLocalName();
                             AppendToVector(source,
-                                GetGlslVariableDataType(stackObject.outputVar->pin->GetDataType()) + " " + stackObject.outputVar->name + " = " +
-                                stackObject.inputVars[0]->name + GetGlslArithmeticOperator(arithOpNode->GetArithmeticOperatorType()) + stackObject.inputVars[1]->name + ";\n");
+                                dataTypeName + " " + stackObject.outputVar->name + " = " +
+                                GetGlslConstantValue(*constNode) + ";\n");
+                        }
+                        break;
+                        case NodeType::Function:
+                        {
+                            const FunctionNodeBase* funcNode = static_cast<const FunctionNodeBase*>(stackObject.node);
+                            const std::string funcName = GetGlslFunctionName(funcNode->GetFunctionType());
+                            stackObject.outputVar->name = funcName + GetNextIndexPostfix();
+
+                            AppendToVector(source,
+                                GetGlslVariableDataType(funcNode->GetOutputPin()->GetDataType()) + " " + stackObject.outputVar->name + " = " +
+                                GetGlslFunctionName(funcNode->GetFunctionType()) + "(");
+
+                            const size_t inputCount = stackObject.inputVars.size();
+                            if (inputCount)
+                            {
+                                for (size_t i = 0; i < inputCount - 1; i++)
+                                {
+                                    AppendToVector(source, stackObject.inputVars[i]->name + ", ");
+                                }
+                                AppendToVector(source, stackObject.inputVars[inputCount - 1]->name);
+                            }
+
+                            AppendToVector(source, ");\n");
+                        }
+                        break;
+                        case NodeType::Operator:
+                        {
+                            auto opNode = static_cast<const OperatorNodeBase*>(stackObject.node);
+
+                            switch (opNode->GetOperatorType())
+                            {
+                                case OperatorType::Arithmetic:
+                                {
+                                    auto arithOpNode = static_cast<const ArithmeticOperatorNodeBase*>(opNode);
+                                    if (stackObject.inputVars.size() != 2)
+                                    {
+                                        throw Exception("Number of variables for operator variable is " + std::to_string(stackObject.inputVars.size()) + ", expected 2.");
+                                    }
+
+                                    auto arithOperatorType = arithOpNode->GetArithmeticOperatorType();
+                                    stackObject.outputVar->name = GetGlslArithmeticOperatorName(arithOperatorType) + GetNextIndexPostfix();
+                                    AppendToVector(source,
+                                        GetGlslVariableDataType(stackObject.outputVar->pin->GetDataType()) + " " + stackObject.outputVar->name + " = " +
+                                        stackObject.inputVars[0]->name + GetGlslArithmeticOperator(arithOperatorType) + stackObject.inputVars[1]->name + ";\n");
+                                }
+                                break;
+                                default: break;
+                            }
+                        }
+                        break;
+                        case NodeType::Output:
+                        {
+                            if (stackObject.inputVars.size() != 1)
+                            {
+                                throw Exception("Number of variables for varying out variable is " + std::to_string(stackObject.inputVars.size()) + ", expected 1.");
+                            }
+
+                            AppendToVector(source, stackObject.outputVar->name + " = " + stackObject.inputVars[0]->name + ";\n");
+                        }
+                        break;
+                        case NodeType::VertexOutput:
+                        {
+                            if (stackObject.inputVars.size() != 1)
+                            {
+                                throw Exception("Number of variables for vertex output variable is " + std::to_string(stackObject.inputVars.size()) + ", expected 1.");
+                            }
+
+                            AppendToVector(source, stackObject.outputVar->name + " = vec4(" + stackObject.inputVars[0]->name + ", 1);\n");
                         }
                         break;
                         default: break;
-                        }
-                    }
-                    break;
-                    case NodeType::Output:
-                    {
-                        if (stackObject.inputVars.size() != 1)
-                        {
-                            throw Exception("Number of variables for varying out variable is " + std::to_string(stackObject.inputVars.size()) + ", expected 1.");
-                        }
-
-                        AppendToVector(source, stackObject.outputVar->name + " = " + stackObject.inputVars[0]->name + ";\n");
-                    }
-                    break;
-                    case NodeType::VertexOutput:
-                    {
-                        if (stackObject.inputVars.size() != 1)
-                        {
-                            throw Exception("Number of variables for vertex output variable is " + std::to_string(stackObject.inputVars.size()) + ", expected 1.");
-                        }
-
-                        AppendToVector(source, stackObject.outputVar->name + " = vec4(" + stackObject.inputVars[0]->name + ", 1);\n");
-                    }
-                    break;
-                    default: break;
                     }
 
                     nodeStack.pop();

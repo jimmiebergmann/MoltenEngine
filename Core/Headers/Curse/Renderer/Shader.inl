@@ -30,6 +30,20 @@ namespace Curse
     namespace Shader
     {
 
+
+        // Data type padded implementations.
+        template<typename T>
+        inline PaddedType<T>::PaddedType() :
+            T()
+        { }
+
+        template<typename T>
+        inline PaddedType<T>::PaddedType(const T& type) :
+            T(type)
+        { }
+
+
+        // VariableTrait implementations.
         template<> struct VariableTrait<bool>
         {
             inline static const bool Supported = true;
@@ -65,6 +79,12 @@ namespace Curse
             inline static const bool Supported = true;
             inline static const Curse::Vector4f32 DefaultValue = { 0.0f };
             inline static const VariableDataType DataType = VariableDataType::Vector4f32;
+        };
+        template<> struct VariableTrait<Curse::Matrix4x4f32>
+        {
+            inline static const bool Supported = true;
+            inline static const Curse::Matrix4x4f32 DefaultValue = { 0.0f };
+            inline static const VariableDataType DataType = VariableDataType::Matrix4x4f32;
         };
         template<> struct VariableTrait<Sampler2D>
         {

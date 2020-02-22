@@ -112,6 +112,15 @@ namespace Curse
     }
 
     template<typename T>
+    inline Matrix<4, 4, T>::Matrix(const T value) :
+        e{ value,  value,  value,  value,
+           value,  value,  value,  value,
+           value,  value,  value,  value,
+           value,  value,  value,  value }
+    {
+    }
+
+    template<typename T>
     inline Matrix<4, 4, T>::Matrix(
             const T e1,  const T e2,  const T e3,  const T e4,
             const T e5,  const T e6,  const T e7,  const T e8,

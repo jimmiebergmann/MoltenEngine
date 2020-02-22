@@ -26,6 +26,13 @@
 #ifndef CURSE_CORE_RENDERER_SHADER_SHADERSCRIPT_HPP
 #define CURSE_CORE_RENDERER_SHADER_SHADERSCRIPT_HPP
 
+#include "Curse/Renderer/Shader/Node/ShaderConstantNode.hpp"
+#include "Curse/Renderer/Shader/Node/ShaderFunctionNode.hpp"
+#include "Curse/Renderer/Shader/Node/ShaderInputNode.hpp"
+#include "Curse/Renderer/Shader/Node/ShaderOperatorNode.hpp"
+#include "Curse/Renderer/Shader/Node/ShaderOutputNode.hpp"
+#include "Curse/Renderer/Shader/Node/ShaderUniformNode.hpp"
+#include "Curse/Renderer/Shader/Node/ShaderVertexOutputNode.hpp"
 #include "Curse/Renderer/Shader/ShaderFunctions.hpp"
 #include "Curse/Renderer/Shader/ShaderOperators.hpp"
 #include "Curse/Logger.hpp"

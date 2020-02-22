@@ -28,6 +28,7 @@
 
 #include "Curse/Core.hpp"
 #include "Curse/Math/Vector.hpp"
+#include "Curse/Math/Matrix.hpp"
 
 namespace Curse
 {
@@ -44,6 +45,7 @@ namespace Curse
             Fragment
         };
 
+
         /**
         * @brief Enumerator of shader source formats.
         */
@@ -54,9 +56,10 @@ namespace Curse
             SpirV
         };
 
+
         /**
-       * @brief Data type for 2D sampler.
-       */
+        * @brief Data type for 2D sampler.
+        */
         struct Sampler2D { };
 
         /**
@@ -76,9 +79,28 @@ namespace Curse
             Vector2f32,
             Vector3f32,
             Vector4f32,
+            Matrix4x4f32,
             Sampler2D,
             Sampler3D
         };
+
+
+        /**
+        * @brief Helper wrapper class for aligning any data type by 16 bytes.
+        */
+        CURSE_PADDED_STRUCT_BEGIN;
+        template<typename T>
+        class alignas(16) PaddedType : public T
+        {
+
+        public:
+
+            PaddedType();
+            PaddedType(const T& type);
+
+        };
+        CURSE_PADDED_STRUCT_END;
+
 
         /**
         * @brief Type trait for statically checking pin information of a certain data type.
@@ -87,8 +109,8 @@ namespace Curse
         struct VariableTrait
         {
             inline static const bool Supported = false; ///< Set to true if T is accepted as a data type of pin.
-            inline static const T DefaultValue = { };   ///< Set to the default value of pin data type T.
-            inline static const VariableDataType DataType = VariableDataType::Bool; ///< Dummy value.
+            inline static const T DefaultValue = { }; ///< Set to the default value of pin data type T.
+            inline static const VariableDataType DataType = VariableDataType::Bool; ///< Set to the corresponding VariableDataType of T.
         };
 
     }

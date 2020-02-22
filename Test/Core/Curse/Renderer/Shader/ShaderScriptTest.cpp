@@ -58,14 +58,14 @@ namespace Curse
             static const std::string expectedSource =
                 "#version 450\n"
                 "#extension GL_ARB_separate_shader_objects : enable\n"
-                "layout(location = 0) in vec4 i_var_0;\n"
-                "layout(location = 0) out vec4 o_var_0;\n"
+                "layout(location = 0) in vec4 in_0;\n"
+                "layout(location = 0) out vec4 out_0;\n"
                 "void main(){\n"
-                "vec4 l_var_0 = vec4(1, 0.5, 0, 1);\n"
-                "vec4 l_var_1 = i_var_0 * l_var_0;\n"
-                "vec4 l_var_2 = vec4(0, 0, 0.3, 0);\n"
-                "vec4 l_var_3 = l_var_1 + l_var_2;\n"
-                "o_var_0 = l_var_3;\n"
+                "vec4 vec4_0 = vec4(1, 0.5, 0, 1);\n"
+                "vec4 mul_1 = in_0 * vec4_0;\n"
+                "vec4 vec4_2 = vec4(0, 0, 0.3, 0);\n"
+                "vec4 add_3 = mul_1 + vec4_2;\n"
+                "out_0 = add_3;\n"
                 "}\n";
 
             EXPECT_STREQ(sourceStr.c_str(), expectedSource.c_str());
@@ -89,10 +89,10 @@ namespace Curse
                 static const std::string expectedSource =
                     "#version 450\n"
                     "#extension GL_ARB_separate_shader_objects : enable\n"
-                    "layout(location = 0) out vec4 o_var_0;\n"
+                    "layout(location = 0) out vec4 out_0;\n"
                     "void main(){\n"
-                    "vec4 l_var_0 = cos(vec4(2.1, 3.5, 4.7, 5.2));\n"
-                    "o_var_0 = l_var_0;\n"
+                    "vec4 cos_0 = cos(vec4(2.1, 3.5, 4.7, 5.2));\n"
+                    "out_0 = cos_0;\n"
                     "}\n";
 
                 EXPECT_STREQ(sourceStr.c_str(), expectedSource.c_str());
@@ -117,11 +117,11 @@ namespace Curse
                 static const std::string expectedSource =
                     "#version 450\n"
                     "#extension GL_ARB_separate_shader_objects : enable\n"
-                    "layout(location = 0) out vec4 o_var_0;\n"
+                    "layout(location = 0) out vec4 out_0;\n"
                     "void main(){\n"
-                    "vec4 l_var_0 = vec4(1, 2, 3, 4);\n"
-                    "vec4 l_var_1 = cos(l_var_0);\n"
-                    "o_var_0 = l_var_1;\n"
+                    "vec4 vec4_0 = vec4(1, 2, 3, 4);\n"
+                    "vec4 cos_1 = cos(vec4_0);\n"
+                    "out_0 = cos_1;\n"
                     "}\n";
 
                 EXPECT_STREQ(sourceStr.c_str(), expectedSource.c_str());
@@ -142,11 +142,11 @@ namespace Curse
                 static const std::string expectedSource =
                     "#version 450\n"
                     "#extension GL_ARB_separate_shader_objects : enable\n"
-                    "layout(location = 0) out vec3 o_var_0;\n"
+                    "layout(location = 0) out vec3 out_0;\n"
                     "void main(){\n"
-                    "vec3 l_var_0 = vec3(1, 2, 3);\n"
-                    "vec3 l_var_1 = sin(l_var_0);\n"
-                    "o_var_0 = l_var_1;\n"
+                    "vec3 vec3_0 = vec3(1, 2, 3);\n"
+                    "vec3 sin_1 = sin(vec3_0);\n"
+                    "out_0 = sin_1;\n"
                     "}\n";
 
                 EXPECT_STREQ(sourceStr.c_str(), expectedSource.c_str());
@@ -167,11 +167,11 @@ namespace Curse
                 static const std::string expectedSource =
                     "#version 450\n"
                     "#extension GL_ARB_separate_shader_objects : enable\n"
-                    "layout(location = 0) out vec2 o_var_0;\n"
+                    "layout(location = 0) out vec2 out_0;\n"
                     "void main(){\n"
-                    "vec2 l_var_0 = vec2(1, 2);\n"
-                    "vec2 l_var_1 = tan(l_var_0);\n"
-                    "o_var_0 = l_var_1;\n"
+                    "vec2 vec2_0 = vec2(1, 2);\n"
+                    "vec2 tan_1 = tan(vec2_0);\n"
+                    "out_0 = tan_1;\n"
                     "}\n";
 
                 EXPECT_STREQ(sourceStr.c_str(), expectedSource.c_str());
