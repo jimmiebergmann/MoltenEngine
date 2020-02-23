@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2020 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -26,7 +26,6 @@
 #ifndef CURSE_CORE_RENDERER_PIPELINE_HPP
 #define CURSE_CORE_RENDERER_PIPELINE_HPP
 
-#include "Curse/Renderer/Resource.hpp"
 #include "Curse/Renderer/Shader.hpp"
 #include <vector>
 
@@ -97,8 +96,6 @@ namespace Curse
         Pipeline(Pipeline&&) = delete;
         virtual ~Pipeline() = default;
 
-        Resource resource;
-
     };
 
     /**
@@ -109,7 +106,7 @@ namespace Curse
 
     public:
 
-        PipelineDescriptor() = default;
+        PipelineDescriptor();
         
         Pipeline::Topology topology;
         Pipeline::PolygonMode polygonMode;

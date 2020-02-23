@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2020 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -103,7 +103,7 @@ namespace Curse
 
         /**
         * @brief Constructor.
-        *        Elements are uninitialized.
+        *        Elements are initialized as 0.
         */
         Matrix();
 

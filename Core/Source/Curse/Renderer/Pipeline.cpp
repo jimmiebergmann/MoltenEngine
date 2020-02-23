@@ -23,39 +23,20 @@
 *
 */
 
-#ifndef CURSE_CORE_RENDERER_VULKANPIPELINE_HPP
-#define CURSE_CORE_RENDERER_VULKANPIPELINE_HPP
 
 #include "Curse/Renderer/Pipeline.hpp"
-
-#if defined(CURSE_ENABLE_VULKAN)
-#include "Curse/Renderer/Vulkan/Vulkan.hpp"
 
 namespace Curse
 {
 
-    class VulkanRenderer;
 
-    class CURSE_API VulkanPipeline : public Pipeline
-    {
-
-    private:
-
-        VulkanPipeline() = default;
-        VulkanPipeline(const VulkanPipeline&) = delete;
-        VulkanPipeline(VulkanPipeline&&) = delete;
-        ~VulkanPipeline() = default;
-
-        friend class VulkanRenderer;
-
-        VkPipeline graphicsPipeline;
-        std::vector<VkDescriptorSetLayout> descriptionSetLayouts;
-        VkPipelineLayout pipelineLayout;
-
-    };
+    PipelineDescriptor::PipelineDescriptor() :
+        topology(Pipeline::Topology::TriangleList),
+        polygonMode(Pipeline::PolygonMode::Fill),
+        frontFace(Pipeline::FrontFace::Clockwise),
+        cullMode(Pipeline::CullMode::None),
+        vertexStage(nullptr),
+        fragmentStage(nullptr)
+    { }
 
 }
-
-#endif
-
-#endif

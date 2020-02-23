@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2020 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -700,7 +700,7 @@ namespace Curse
         }
 
         VulkanPipeline* pipeline = new VulkanPipeline;
-        pipeline->resource = graphicsPipeline;
+        pipeline->graphicsPipeline = graphicsPipeline;
         pipeline->pipelineLayout = pipelineLayout;
         pipeline->descriptionSetLayouts = setLayouts;
 
@@ -952,10 +952,10 @@ namespace Curse
     {
         VulkanPipeline* vulkanPipeline = static_cast<VulkanPipeline*>(pipeline);
 
-        if (vulkanPipeline->resource)
+        if (vulkanPipeline->graphicsPipeline)
         {
             vkDeviceWaitIdle(m_logicalDevice);
-            vkDestroyPipeline(m_logicalDevice, vulkanPipeline->resource, nullptr);
+            vkDestroyPipeline(m_logicalDevice, vulkanPipeline->graphicsPipeline, nullptr);
         }
         if (vulkanPipeline->pipelineLayout)
         {
@@ -1025,7 +1025,7 @@ namespace Curse
     void VulkanRenderer::BindPipeline(Pipeline* pipeline)
     {
         VulkanPipeline* vulkanPipeline = static_cast<VulkanPipeline*>(pipeline);
-        vkCmdBindPipeline(*m_currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkanPipeline->resource);
+        vkCmdBindPipeline(*m_currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkanPipeline->graphicsPipeline);
     }
 
     void VulkanRenderer::BindUniformBlock(UniformBlock* uniformBlock, const uint32_t offset)
@@ -1039,7 +1039,7 @@ namespace Curse
     {
         if (m_beginDraw)
         {
-            CURSE_RENDERER_LOG(Logger::Severity::Error, "Drawing has already begun.");
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Calling BeginDraw twice, without any previous call to EndDraw.");
             return;
         }
       
@@ -1148,7 +1148,7 @@ namespace Curse
     {
         if (!m_beginDraw)
         {
-            CURSE_RENDERER_LOG(Logger::Severity::Error, "Drawing has not yet been started.");
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Calling EndDraw, without any previous call to BeginDraw.");
             return;
         }
 

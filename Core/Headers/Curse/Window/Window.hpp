@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2020 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -235,6 +235,37 @@ namespace Curse
         virtual int GetX11ScreenDevice( ) const = 0;
 
     #endif
+
+    };
+
+    /**
+    * @brief Platform independed window class.
+    */
+    class CURSE_API PlatformWindow
+    {
+
+    public:
+
+        /**
+        * @brief Enumerator describing window type.
+        */
+        enum class Type
+        {
+            Info,
+            Error
+        };
+
+        /**
+        * @brief Show a modal window with a OK button.
+        */
+        static void Message(const Type type, const std::string& title, const std::string content);
+
+        /**
+        * @brief Show a modal window with a Yes and No button.
+        *
+        * @return true if user pressed the Yes button, false if No button was pressed.
+        */
+        static bool MessageConfirm(const Type type, const std::string& title, const std::string content);
 
     };
 
