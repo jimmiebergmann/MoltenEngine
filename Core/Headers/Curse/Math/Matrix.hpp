@@ -56,7 +56,7 @@ namespace Curse
         union
         {
             T e[Components]; //< Elements of matrix.
-            Vector<Columns, T> row[Rows];  //< Rows of matrix.
+            Vector<Rows, T> column[Columns];  //< Columns of matrix.
         };
 
     };
@@ -79,6 +79,15 @@ namespace Curse
         * @brief Creates an identity matrix.
         */
         static Matrix<4, 4, T> Identity();
+
+        /**
+        * @brief Creates a "Look at point" view matrix.
+        *
+        * @param position Position of the viewer.
+        * @param point Point in space to view.
+        * @param up Orientation of the viewer.
+        */
+        static Matrix<4, 4, T> LookAtPoint(const Vector3<T>& position, const Vector3<T>& point, const Vector3<T>& up);
 
         /**
         * @brief Creates a perspective projection matrix.
@@ -115,7 +124,8 @@ namespace Curse
         /**
         * @brief Constructing and initializing all elements by rows.
         */
-        Matrix(const Vector4<T>& row1, const Vector4<T>& row2, const Vector4<T>& row3, const Vector4<T>& row4);
+        Matrix(const Vector4<T>& column1, const Vector4<T>& column2,
+               const Vector4<T>& column3, const Vector4<T>& column4);
 
         /**
         * @brief Translate matrix.
@@ -145,7 +155,7 @@ namespace Curse
         union
         {        
             T e[Components]; //< Elements of matrix.
-            Vector<4, T> row[4]; //< Rows of matrix.
+            Vector<Rows, T> column[Columns];  //< Columns of matrix.
         };
 
     };

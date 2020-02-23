@@ -77,7 +77,7 @@ namespace Curse
             VertexOutputNode(VertexOutputNode&&) = delete;
             ~VertexOutputNode();
 
-            InputPin<Curse::Vector3f32> m_input;
+            InputPin<Curse::Vector4f32> m_input;
 
             friend class VertexScript;
 

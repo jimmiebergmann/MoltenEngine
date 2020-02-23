@@ -42,7 +42,7 @@ namespace Curse
     constexpr size_t Matrix<4, 4, T>::Components;
 
     template<typename T>
-    Matrix<4, 4, T> Matrix<4, 4, T>::Identity()
+    inline Matrix<4, 4, T> Matrix<4, 4, T>::Identity()
     {
         return { static_cast<T>(1), static_cast<T>(0), static_cast<T>(0), static_cast<T>(0),
                  static_cast<T>(0), static_cast<T>(1), static_cast<T>(0), static_cast<T>(0),
@@ -51,18 +51,46 @@ namespace Curse
     }
 
     template<typename T>
+    inline Matrix<4, 4, T> Matrix<4, 4, T>::LookAtPoint(const Vector3<T>& position, const Vector3<T>& point, const Vector3<T>& up)
+    {
+        Vector3<T> direction = point - position;
+        direction.Normalize();
+
+        Vector3<T> side = direction.Cross(up).Normal();
+        Vector3<T> newUp = side.Cross(direction);
+
+        Matrix<4, 4, T> lookMatrix(
+            side.x,            newUp.x,           -direction.x,      static_cast<T>(0),
+            side.y,            newUp.y,           -direction.y,      static_cast<T>(0),
+            side.z,            newUp.z,           -direction.z,      static_cast<T>(0),
+            static_cast<T>(0), static_cast<T>(0), static_cast<T>(0), static_cast<T>(1)
+        );
+
+        Matrix<4, 4, T> positionMatrix(
+            static_cast<T>(1), static_cast<T>(0), static_cast<T>(0), static_cast<T>(0),
+            static_cast<T>(0), static_cast<T>(1), static_cast<T>(0), static_cast<T>(0),
+            static_cast<T>(0), static_cast<T>(0), static_cast<T>(1), static_cast<T>(0),
+            -position.x,       -position.y,       -position.z,       static_cast<T>(1)
+        );
+
+        auto result = lookMatrix * positionMatrix;
+
+        return result;
+    }
+
+    template<typename T>
     inline Matrix<4, 4, T> Matrix<4, 4, T>::Perspective(const T fov, const T aspect, const T near, const T far)
     {
         static constexpr T radiansExpr = static_cast<T>(1) / (static_cast<T>(2) * Constants::Pi<T>() / static_cast<T>(180));
         const T fovRadians = fov * radiansExpr;
         const T sine = std::sin(fovRadians);
-        const T zRange = far - near;    
+        const T zRange = far - near;
 
-        if (zRange == static_cast<T>(0) )
+        if (zRange == static_cast<T>(0))
         {
             throw Exception("Matrix::Perspective: Difference between near and far is 0.");
         }
-        if (sine == static_cast<T>(0) )
+        if (sine == static_cast<T>(0))
         {
             throw Exception("Matrix::Perspective: FOV is 0 or invalid.");
         }
@@ -71,7 +99,7 @@ namespace Curse
             throw Exception("Matrix::Perspective: Aspect ratio is 0.");
         }
 
-        const T cotan = std::cos(fovRadians) / sine;
+        const T cotan = std::cos(fovRadians) / sine;      
 
         return { cotan / aspect,    static_cast<T>(0), static_cast<T>(0),                       static_cast<T>(0),
                  static_cast<T>(0), cotan,             static_cast<T>(0),                       static_cast<T>(0),
@@ -100,7 +128,7 @@ namespace Curse
             throw Exception("Matrix::Perspective: Difference between near and far is 0.");
         }
 
-        return { static_cast<T>(2) / rangeX, static_cast<T>(0), static_cast<T>(0),  -(right + left) / rangeX,
+        return Matrix<4, 4, T>{ static_cast<T>(2) / rangeX, static_cast<T>(0), static_cast<T>(0),  -(right + left) / rangeX,
                  static_cast<T>(0), static_cast<T>(2) / rangeY, static_cast<T>(0),  -(top + bottom) / rangeY,
                  static_cast<T>(0), static_cast<T>(0), static_cast<T>(-2) / rangeZ, -(far + near) / rangeZ,
                  static_cast<T>(0), static_cast<T>(0), static_cast<T>(0), static_cast<T>(1) };
@@ -134,9 +162,9 @@ namespace Curse
     {}
 
     template<typename T>
-    inline Matrix<4, 4, T>::Matrix(const Vector4<T>& row1, const Vector4<T>& row2,
-                                   const Vector4<T>& row3, const Vector4<T>& row4) :
-        row{ row1, row2, row3, row4 }
+    inline Matrix<4, 4, T>::Matrix(const Vector4<T>& column1, const Vector4<T>& column2,
+                                   const Vector4<T>& column3, const Vector4<T>& column4) :
+        column{ column1, column2, column3, column4 }
     {}
 
     template<typename T>
@@ -144,10 +172,10 @@ namespace Curse
     {
         Matrix<4, 4, T> trans =
         {
-            Vector4<T>(1, 0, 0, translation.x),
-            Vector4<T>(0, 1, 0, translation.y),
-            Vector4<T>(0, 0, 1, translation.z),
-            Vector4<T>(0, 0, 0, 1)
+            Vector4<T>(1, 0, 0, 0),
+            Vector4<T>(0, 1, 0, 0),
+            Vector4<T>(0, 0, 1, 0),
+            Vector4<T>(translation.x, translation.y, translation.z, 1)
         };
         (*this) *= trans;
     }
@@ -170,25 +198,25 @@ namespace Curse
     {
         return
         {
-            (e[0] * matrix.e[0]) + (e[1] * matrix.e[4]) + (e[2] * matrix.e[8])  + (e[3] * matrix.e[12]),
-            (e[0] * matrix.e[1]) + (e[1] * matrix.e[5]) + (e[2] * matrix.e[9])  + (e[3] * matrix.e[13]),
-            (e[0] * matrix.e[2]) + (e[1] * matrix.e[6]) + (e[2] * matrix.e[10]) + (e[3] * matrix.e[14]),
-            (e[0] * matrix.e[3]) + (e[1] * matrix.e[7]) + (e[2] * matrix.e[11]) + (e[3] * matrix.e[15]),
+            (e[0] * matrix.e[0]) + (e[4] * matrix.e[1]) + (e[8] * matrix.e[2]) + (e[12] * matrix.e[3]),
+            (e[1] * matrix.e[0]) + (e[5] * matrix.e[1]) + (e[9] * matrix.e[2]) + (e[13] * matrix.e[3]),
+            (e[2] * matrix.e[0]) + (e[6] * matrix.e[1]) + (e[10] * matrix.e[2]) + (e[14] * matrix.e[3]),
+            (e[3] * matrix.e[0]) + (e[7] * matrix.e[1]) + (e[11] * matrix.e[2]) + (e[15] * matrix.e[3]),
 
-            (e[4] * matrix.e[0]) + (e[5] * matrix.e[4]) + (e[6] * matrix.e[8])  + (e[7] * matrix.e[12]),
-            (e[4] * matrix.e[1]) + (e[5] * matrix.e[5]) + (e[6] * matrix.e[9])  + (e[7] * matrix.e[13]),
-            (e[4] * matrix.e[2]) + (e[5] * matrix.e[6]) + (e[6] * matrix.e[10]) + (e[7] * matrix.e[14]),
-            (e[4] * matrix.e[3]) + (e[5] * matrix.e[7]) + (e[6] * matrix.e[11]) + (e[7] * matrix.e[15]),
+            (e[0] * matrix.e[4]) + (e[4] * matrix.e[5]) + (e[8] * matrix.e[6]) + (e[12] * matrix.e[7]),
+            (e[1] * matrix.e[4]) + (e[5] * matrix.e[5]) + (e[9] * matrix.e[6]) + (e[13] * matrix.e[7]),
+            (e[2] * matrix.e[4]) + (e[6] * matrix.e[5]) + (e[10] * matrix.e[6]) + (e[14] * matrix.e[7]),
+            (e[3] * matrix.e[4]) + (e[7] * matrix.e[5]) + (e[11] * matrix.e[6]) + (e[15] * matrix.e[7]),
 
-            (e[8] * matrix.e[0]) + (e[9] * matrix.e[4]) + (e[10] * matrix.e[8])  + (e[11] * matrix.e[12]),
-            (e[8] * matrix.e[1]) + (e[9] * matrix.e[5]) + (e[10] * matrix.e[9])  + (e[11] * matrix.e[13]),
-            (e[8] * matrix.e[2]) + (e[9] * matrix.e[6]) + (e[10] * matrix.e[10]) + (e[11] * matrix.e[14]),
-            (e[8] * matrix.e[3]) + (e[9] * matrix.e[7]) + (e[10] * matrix.e[11]) + (e[11] * matrix.e[15]),
+            (e[0] * matrix.e[8]) + (e[4] * matrix.e[9]) + (e[8] * matrix.e[10]) + (e[12] * matrix.e[11]),
+            (e[1] * matrix.e[8]) + (e[5] * matrix.e[9]) + (e[9] * matrix.e[10]) + (e[13] * matrix.e[11]),
+            (e[2] * matrix.e[8]) + (e[6] * matrix.e[9]) + (e[10] * matrix.e[10]) + (e[14] * matrix.e[11]),
+            (e[3] * matrix.e[8]) + (e[7] * matrix.e[9]) + (e[11] * matrix.e[10]) + (e[15] * matrix.e[11]),
 
-            (e[12] * matrix.e[0]) + (e[13] * matrix.e[4]) + (e[14] * matrix.e[8])  + (e[15] * matrix.e[12]),
-            (e[12] * matrix.e[1]) + (e[13] * matrix.e[5]) + (e[14] * matrix.e[9])  + (e[15] * matrix.e[13]),
-            (e[12] * matrix.e[2]) + (e[13] * matrix.e[6]) + (e[14] * matrix.e[10]) + (e[15] * matrix.e[14]),
-            (e[12] * matrix.e[3]) + (e[13] * matrix.e[7]) + (e[14] * matrix.e[11]) + (e[15] * matrix.e[15])
+            (e[0] * matrix.e[12]) + (e[4] * matrix.e[13]) + (e[8] * matrix.e[14]) + (e[12] * matrix.e[15]),
+            (e[1] * matrix.e[12]) + (e[5] * matrix.e[13]) + (e[9] * matrix.e[14]) + (e[13] * matrix.e[15]),
+            (e[2] * matrix.e[12]) + (e[6] * matrix.e[13]) + (e[10] * matrix.e[14]) + (e[14] * matrix.e[15]),
+            (e[3] * matrix.e[12]) + (e[7] * matrix.e[13]) + (e[11] * matrix.e[14]) + (e[15] * matrix.e[15])
         };
     }
 

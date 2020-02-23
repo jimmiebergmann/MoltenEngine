@@ -16,11 +16,13 @@
 
 static Curse::Logger logger;
 static Curse::Window* window = nullptr;
+static Curse::Vector3f32 cameraPos = {0.0f, 0.0f, 3.0f};
+static const float cameraSpeed = 1.0f;
 
 struct UniformBuffer
 {
-    Curse::Shader::PaddedType<Curse::Vector3f32> position[3];
-    Curse::Shader::PaddedType<Curse::Matrix4x4f32> mat[3];
+    Curse::Shader::PaddedType<Curse::Matrix4x4f32> projViewMatrix;
+    Curse::Shader::PaddedType<Curse::Matrix4x4f32> modelMatrix;
 };
 
 static void LoadShaders(Curse::Shader::VertexScript& vScript, Curse::Shader::FragmentScript& fScript)
@@ -38,27 +40,22 @@ static void LoadShaders(Curse::Shader::VertexScript& vScript, Curse::Shader::Fra
         auto outPos   = script.GetVertexOutputNode();
 
         auto uBlock0 = script.CreateUniformBlock(0);
-        auto uPos = uBlock0->AppendNode<Curse::Vector3f32, 3>();
-        uBlock0->AppendNode<Curse::Matrix4x4f32, 3>();
+        auto uProjView = uBlock0->AppendNode<Curse::Matrix4x4f32>();
+        auto uModel    = uBlock0->AppendNode<Curse::Matrix4x4f32>();
+        
+        auto inPosVec4 = script.CreateFunctionNode<Curse::Shader::Function::Vec3ToVec4f32>();
+        inPosVec4->GetInputPin(0)->Connect(*inPos->GetOutputPin());
+        static_cast<Curse::Shader::InputPin<float>*>(inPosVec4->GetInputPin(1))->SetDefaultValue(1.0f);
 
-        auto addPos = script.CreateOperatorNode<Curse::Shader::Operator::AddVec3f32>();
-        addPos->GetInputPin(0)->Connect(*inPos->GetOutputPin());
-        addPos->GetInputPin(1)->Connect(*uPos->GetOutputPin(0));
+        auto projModelmat = script.CreateOperatorNode<Curse::Shader::Operator::MultMat4f32>();
+        projModelmat->GetInputPin(0)->Connect(*uProjView->GetOutputPin());
+        projModelmat->GetInputPin(1)->Connect(*uModel->GetOutputPin());
 
-        auto addPos2 = script.CreateOperatorNode<Curse::Shader::Operator::AddVec3f32>();
-        addPos2->GetInputPin(0)->Connect(*addPos->GetOutputPin());
-        addPos2->GetInputPin(1)->Connect(*uPos->GetOutputPin(1));
+        auto finalPos = script.CreateOperatorNode<Curse::Shader::Operator::MultMat4Vec4f32>();
+        finalPos->GetInputPin(0)->Connect(*projModelmat->GetOutputPin());
+        finalPos->GetInputPin(1)->Connect(*inPosVec4->GetOutputPin());
 
-        auto compsToVec3 = script.CreateFunctionNode<Curse::Shader::Function::CompsToVec3f32>();
-        static_cast<Curse::Shader::InputPin<float>*>(compsToVec3->GetInputPin(0))->SetDefaultValue(-0.5f);
-        static_cast<Curse::Shader::InputPin<float>*>(compsToVec3->GetInputPin(1))->SetDefaultValue(0.0f);
-        static_cast<Curse::Shader::InputPin<float>*>(compsToVec3->GetInputPin(2))->SetDefaultValue(0.0f);
-
-        auto addPos3 = script.CreateOperatorNode<Curse::Shader::Operator::AddVec3f32>();
-        addPos3->GetInputPin(0)->Connect(*addPos2->GetOutputPin());
-        addPos3->GetInputPin(1)->Connect(*compsToVec3->GetOutputPin());
-
-        outPos->GetInputPin()->Connect(*addPos3->GetOutputPin());
+        outPos->GetInputPin()->Connect(*finalPos->GetOutputPin());
         outColor->GetInputPin()->Connect(*inColor->GetOutputPin());
     }
     // Fragment script
@@ -203,12 +200,19 @@ static void Run()
 
         renderer->BindPipeline(pipeline);
 
+        float fov = static_cast<float>(window->GetSize().x) / static_cast<float>(window->GetSize().y);
+        auto projViewMatrix = Curse::Matrix4x4f32::Perspective(60.0f, fov, 0.1f, 100.0f) *
+                              Curse::Matrix4x4f32::LookAtPoint(cameraPos, { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f });
+
         UniformBuffer bufferData1;
-        bufferData1.position[0] = Curse::Vector3f32{ std::sin(runTime * 3.0f) * 0.25f, 0.0f, 0.0f };
-        bufferData1.position[1] = Curse::Vector3f32{ 0.0f, 0.5f, 0.0f };
+        bufferData1.projViewMatrix = projViewMatrix;
+        bufferData1.modelMatrix = Curse::Matrix4x4f32::Identity();
+        bufferData1.modelMatrix.Translate({ std::sin(runTime * 3.0f) * 0.25f, 0.0f, 0.2f });
+
         UniformBuffer bufferData2;
-        bufferData2.position[0] = Curse::Vector3f32{ 0.0f, std::cos(runTime * 3.0f) * 0.25f, 0.0f };
-        bufferData2.position[1] = Curse::Vector3f32{ 0.5f, 0.0f, 0.0f };
+        bufferData2.projViewMatrix = projViewMatrix;
+        bufferData2.modelMatrix = Curse::Matrix4x4f32::Identity();
+        bufferData2.modelMatrix.Translate({ 0.0f, std::cos(runTime * 3.0f) * 0.25f, 0.0f });
 
         renderer->UpdateUniformBuffer(uniformBuffer, 0, sizeof(UniformBuffer), &bufferData1);
         renderer->UpdateUniformBuffer(uniformBuffer, 256, sizeof(UniformBuffer), &bufferData2);
@@ -235,8 +239,13 @@ static void Run()
    
     window->Show();
 
+    Curse::Clock deltaTimer;
+
     while (window->IsOpen())
     {
+        const float deltaTime = deltaTimer.GetTime().AsSeconds<float>();
+        deltaTimer.Reset();
+
         window->Update();
         if (!window->IsOpen())
         {
@@ -244,6 +253,28 @@ static void Run()
         }
 
         Curse::UserInput userInput = window->GetUserInput();
+        Curse::UserInput::Event event;
+        while (userInput.PollEvent(event))
+        {
+            switch (event.type)
+            {
+            case Curse::UserInput::Event::Type::KeyDown:
+            {
+                switch (event.keyboardEvent.key)
+                {
+                case Curse::Keyboard::Key::A: cameraPos.x -= cameraSpeed * deltaTime; break;
+                case Curse::Keyboard::Key::D: cameraPos.x += cameraSpeed * deltaTime; break;
+                case Curse::Keyboard::Key::W: cameraPos.y -= cameraSpeed * deltaTime; break;
+                case Curse::Keyboard::Key::S: cameraPos.y += cameraSpeed * deltaTime; break;
+                case Curse::Keyboard::Key::Q: cameraPos.z -= cameraSpeed * deltaTime; break;
+                case Curse::Keyboard::Key::E: cameraPos.z += cameraSpeed * deltaTime; break;
+                default: break;
+                }
+            }
+            break;
+            default: break;
+            }
+        }
 
         /*Curse::UserInput::Event event;
         while (userInput.PollEvent(event))

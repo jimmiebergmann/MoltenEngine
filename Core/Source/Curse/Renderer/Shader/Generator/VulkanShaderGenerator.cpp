@@ -548,7 +548,7 @@ namespace Curse
                                 throw Exception("Number of variables for vertex output variable is " + std::to_string(stackObject.inputVars.size()) + ", expected 1.");
                             }
 
-                            AppendToVector(source, stackObject.outputVar->name + " = vec4(" + stackObject.inputVars[0]->name + ", 1);\n");
+                            AppendToVector(source, stackObject.outputVar->name + " = " + stackObject.inputVars[0]->name + ";\n");
                         }
                         break;
                         default: break;

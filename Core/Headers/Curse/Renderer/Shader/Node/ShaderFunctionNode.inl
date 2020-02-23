@@ -148,7 +148,13 @@ namespace Curse
             FunctionNodeBase(script),
             m_output(std::make_unique<OutputPin<OutputType> >(*this))
         {
-            InitInputPin<InputTypes...>();
+            size_t index = 0;
+            LoopEachInputPin<InputTypes...>([&](auto t)
+            {
+                using currentPinType = typename decltype(t)::Type;
+                m_inputs[index] = std::move(std::make_unique<InputPin<currentPinType> >(*this));
+                index++;
+            });
         }
 
         template<FunctionType _FunctionType, typename OutputType, typename ... InputTypes>
@@ -157,18 +163,10 @@ namespace Curse
         }
 
         template<FunctionType _FunctionType, typename OutputType, typename ... InputTypes>
-        template<typename CurrentType, typename ...>
-        inline void FunctionNode<_FunctionType, OutputType, InputTypes...>::InitInputPin(const size_t index)
+        template<typename ... LoopTypes, typename Callback>
+        void FunctionNode<_FunctionType, OutputType, InputTypes...>::LoopEachInputPin(Callback&& callback)
         {
-            if (index == InputPinCount)
-            {
-                return;
-            }
-
-            auto inputPin = std::make_unique<InputPin<CurrentType> >(*this);
-            m_inputs[index] = std::move(inputPin);
-
-            InitInputPin<CurrentType>(index + 1);
+            (callback(InputPinTypeWrapper<LoopTypes>{}), ...);
         }
 
     }

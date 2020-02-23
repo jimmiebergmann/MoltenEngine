@@ -46,6 +46,12 @@
 #ifdef DeleteFile
     #undef DeleteFile
 #endif
+#ifdef far
+    #undef far
+#endif
+#ifdef near
+    #undef near
+#endif
 
 // Getting rid of conflicting Windows X macros.
 #ifdef IsMinimized

@@ -167,8 +167,19 @@ namespace Curse
             static constexpr size_t OutputPinCount = 1;
             static constexpr size_t InputPinCount = sizeof...(InputTypes);
 
-            template<typename CurrentType, typename ...>
-            void InitInputPin(const size_t index = 0);
+            /**
+            * @brief C++17 template loop, to iterate the template types and create the input pins.
+            */
+            /**@{*/
+            template<typename ... LoopTypes, typename Callback>
+            void LoopEachInputPin(Callback&& callback);
+
+            template<typename T>
+            struct InputPinTypeWrapper
+            {
+                using Type = T;
+            };
+            /**@}*/
 
             std::array<std::unique_ptr<Pin>, InputPinCount> m_inputs;
             std::unique_ptr<Pin> m_output;
