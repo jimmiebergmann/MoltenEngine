@@ -80,6 +80,66 @@ namespace Curse
         }
     }
 
+    // Dynamic win32 implementations.
+    WindowWin32::DynamicFunctions::DynamicFunctions() :
+        m_module(NULL),
+    #if (CURSE_PLATFORM_WINDOWS_SUPPORT_MULTI_MONITOR_DPI)
+        m_setProcessDpiMultiDisplayAwareness(NULL),
+    #endif 
+        m_setProcessDpiSingleDisplayAwareness(NULL)
+    {
+        // Multi monitor DPI.
+    #if (CURSE_PLATFORM_WINDOWS_SUPPORT_MULTI_MONITOR_DPI)
+
+        m_module = ::LoadLibrary("Shcore.dll");
+        if (m_module != NULL)
+        {
+            m_setProcessDpiMultiDisplayAwareness = reinterpret_cast<SetProcessDpiMultiDisplayAwarenessFunc>(::GetProcAddress(m_module, "SetProcessDpiAwareness"));
+            if (m_setProcessDpiMultiDisplayAwareness != NULL)
+            {
+                return;
+            }
+        }
+
+    #endif
+
+        // Single monitor DPI.
+        m_module = ::LoadLibrary("user32.dll");
+        if (m_module != NULL)
+        {
+            m_setProcessDpiSingleDisplayAwareness = reinterpret_cast<SetProcessDpiSingleDisplayAwarenessFunc>(::GetProcAddress(m_module, "SetProcessDPIAware"));
+        }
+    }
+
+    WindowWin32::DynamicFunctions::~DynamicFunctions()
+    {
+        if (m_module != NULL)
+        {
+            ::FreeLibrary(m_module);
+        }
+    }
+
+    bool WindowWin32::DynamicFunctions::SetProcessDPIAware()
+    {
+    #if (CURSE_PLATFORM_WINDOWS_SUPPORT_MULTI_MONITOR_DPI)
+        if (m_setProcessDpiMultiDisplayAwareness)
+        {
+            auto ret = m_setProcessDpiMultiDisplayAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
+            return ret == S_OK || ret == E_ACCESSDENIED;
+        }
+        
+    #else
+        if (m_setProcessDpiSingleDisplayAwareness)
+        {
+            return m_setProcessDpiSingleDisplayAwareness() != 0;
+        }
+    #endif
+        
+        return false;
+    }
+
+    WindowWin32::DynamicFunctions WindowWin32::s_DynamicFunctions;
+
 
     // Win32 window implementations.
     WindowWin32::WindowWin32() :
@@ -95,7 +155,8 @@ namespace Curse
         m_minimized(false),
         m_size(0, 0),
         m_position(0, 0),
-        m_title("")
+        m_title(""),
+        m_dpi(96, 96)
     {
     }
 
@@ -179,6 +240,18 @@ namespace Curse
         {
             CURSE_WINDOW_LOG(Logger::Severity::Error, "Failed to retreive window rect.");
             return false;
+        }
+
+        m_dpi = { 1, 1 };
+        auto dpiX = GetDeviceCaps(m_deviceContext, LOGPIXELSX);
+        auto dpiY = GetDeviceCaps(m_deviceContext, LOGPIXELSY);
+        if (dpiX > 0)
+        {
+            m_dpi.x = static_cast<uint32_t>(dpiX);
+        }
+        if (dpiY > 0)
+        {
+            m_dpi.y = static_cast<uint32_t>(dpiY);
         }
 
         m_size.x = static_cast<int32_t>(windowRect.right - windowRect.left);
@@ -424,6 +497,14 @@ namespace Curse
         {
 
         // Window events.
+        case WM_CREATE:
+        {
+            if (!s_DynamicFunctions.SetProcessDPIAware())
+            {
+                CURSE_WINDOW_LOG(Logger::Severity::Error, "Failed to make window DPI aware. Make sure user32.dll is available.");
+            }
+        }
+        break;
         case WM_CLOSE:
         {
             Close();
@@ -442,6 +523,34 @@ namespace Curse
             OnShow(m_showing);
         }
         break;
+
+        #if defined(WM_DPICHANGED)
+            case WM_DPICHANGED:
+            {
+                Vector2ui32 dpi = { 1, 1 };
+                auto dpiX = LOWORD(wParam);
+                auto dpiY = HIWORD(wParam);
+                if (dpiX > 0)
+                {
+                    dpi.x = static_cast<uint32_t>(dpiX);
+                }
+                if (dpiY > 0)
+                {
+                    dpi.y = static_cast<uint32_t>(dpiY);
+                }
+
+                if (dpi != m_dpi)
+                {
+                    m_dpi = dpi;
+                    Vector2f32 scale = { static_cast<float>(m_dpi.x) / 96.0f, static_cast<float>(m_dpi.y) / 96.0f };
+
+                    OnDpiChange(m_dpi);
+                    OnScaleChange(scale);
+                }
+            }
+            break;
+        #endif
+
         case WM_SIZE:
         {
             const Vector2i32 windowSize =

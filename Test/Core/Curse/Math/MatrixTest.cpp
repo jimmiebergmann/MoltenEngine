@@ -214,11 +214,11 @@ namespace Curse
 
     TEST(Math, Matrix4x4_Perspective)
     {       
-        EXPECT_NO_THROW(Matrix4x4f32::Perspective(60.0f, 1.0f, 1.0f, 0.0f));
+        EXPECT_NO_THROW(Matrix4x4f32::Perspective(Degrees(60.0f), 1.0f, 1.0f, 0.0f));
 
-        EXPECT_THROW(Matrix4x4f32::Perspective(0.0f, 1.0f, 1.0f, 0.0f), Exception);
-        EXPECT_THROW(Matrix4x4f32::Perspective(60.0f, 0.0f, 1.0f, 0.0f), Exception);
-        EXPECT_THROW(Matrix4x4f32::Perspective(60.0f, 1.0f, 1.0f, 1.0f), Exception);
+        EXPECT_THROW(Matrix4x4f32::Perspective(Degrees(0.0f), 1.0f, 1.0f, 0.0f), Exception);
+        EXPECT_THROW(Matrix4x4f32::Perspective(Degrees(60.0f), 0.0f, 1.0f, 0.0f), Exception);
+        EXPECT_THROW(Matrix4x4f32::Perspective(Degrees(60.0f), 1.0f, 1.0f, 1.0f), Exception);
     }
 
     TEST(Math, Matrix4x4_Orthographic)

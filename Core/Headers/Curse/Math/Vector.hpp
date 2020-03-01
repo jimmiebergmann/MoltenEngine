@@ -290,12 +290,12 @@ namespace Curse
         R Length() const;
 
         /**
-        * @brief Get normal out of vector.
+        * @brief Get normalized vector.
         */
         Vector<3, T> Normal() const;
 
         /**
-        * @brief Normalize vector.
+        * @brief Normalize this vector.
         */
         Vector<3, T>& Normalize();
 

@@ -31,7 +31,92 @@ namespace Curse
     {
     }
 
-    // Matrix 4 * 4
+
+    // Implementations of 3x3 matrix.
+    template<typename T>
+    constexpr size_t Matrix<3, 3, T>::Rows;
+
+    template<typename T>
+    constexpr size_t Matrix<3, 3, T>::Columns;
+
+    template<typename T>
+    constexpr size_t Matrix<3, 3, T>::Components;
+
+    template<typename T>
+    inline Matrix<3, 3, T> Matrix<3, 3, T>::Identity()
+    {
+        return { static_cast<T>(1), static_cast<T>(0), static_cast<T>(0),
+                 static_cast<T>(0), static_cast<T>(1), static_cast<T>(0),
+                 static_cast<T>(0), static_cast<T>(0), static_cast<T>(1) };
+    }
+
+    template<typename T>
+    inline Matrix<3, 3, T>::Matrix() :
+        e{ static_cast<T>(0), static_cast<T>(0), static_cast<T>(0),
+           static_cast<T>(0), static_cast<T>(0), static_cast<T>(0),
+           static_cast<T>(0), static_cast<T>(0), static_cast<T>(0) }
+    { }
+
+    template<typename T>
+    inline Matrix<3, 3, T>::Matrix(const T value) :
+        e{ value, value, value,
+           value, value, value,
+           value, value, value }
+    { }
+
+    template<typename T>
+    inline Matrix<3, 3, T>::Matrix(const T e1, const T e2, const T e3,
+                                   const T e4, const T e5, const T e6,
+                                   const T e7, const T e8, const T e9) :
+        e{ e1, e2, e3,
+           e4, e5, e6,
+           e7, e8, e9 }
+    { }
+
+    template<typename T>
+    inline Matrix<3, 3, T>::Matrix(const Vector3<T>& column1, const Vector3<T>& column2, const Vector3<T>& column3) :
+        column{ column1, column2, column3 }
+    { }
+
+    template<typename T>
+    inline Matrix<3, 3, T> Matrix<3, 3, T>::operator *(const Matrix<3, 3, T>& matrix) const
+    {
+        return
+        {
+            (e[0] * matrix.e[0]) + (e[3] * matrix.e[1]) + (e[6] * matrix.e[2]),
+            (e[1] * matrix.e[0]) + (e[4] * matrix.e[1]) + (e[7] * matrix.e[2]),
+            (e[2] * matrix.e[0]) + (e[5] * matrix.e[1]) + (e[8] * matrix.e[2]),
+
+            (e[0] * matrix.e[3]) + (e[3] * matrix.e[4]) + (e[6] * matrix.e[5]),
+            (e[1] * matrix.e[3]) + (e[4] * matrix.e[4]) + (e[7] * matrix.e[5]),
+            (e[2] * matrix.e[3]) + (e[5] * matrix.e[4]) + (e[8] * matrix.e[5]),
+
+            (e[0] * matrix.e[6]) + (e[3] * matrix.e[7]) + (e[6] * matrix.e[8]),
+            (e[1] * matrix.e[6]) + (e[4] * matrix.e[7]) + (e[7] * matrix.e[8]),
+            (e[2] * matrix.e[6]) + (e[5] * matrix.e[7]) + (e[8] * matrix.e[8]),
+        };
+    }
+
+    template<typename T>
+    inline Matrix<3, 3, T>& Matrix<3, 3, T>::operator *=(const Matrix<3, 3, T>& matrix)
+    {
+        (*this) = (*this) * matrix;
+        return *this;
+    }
+
+    template<typename T>
+    Vector<3, T> Matrix<3, 3, T>::operator *(const Vector<3, T>& vector) const
+    {
+        return
+        {
+            (e[0] * vector.c[0]) + (e[1] * vector.c[1]) + (e[2] * vector.c[2]),
+            (e[3] * vector.c[0]) + (e[4] * vector.c[1]) + (e[5] * vector.c[2]),
+            (e[6] * vector.c[0]) + (e[7] * vector.c[1]) + (e[8] * vector.c[2])
+        };
+    }
+
+
+    // Implementations of 4x4 matrix.
     template<typename T>
     constexpr size_t Matrix<4, 4, T>::Rows;
 
@@ -53,58 +138,60 @@ namespace Curse
     template<typename T>
     inline Matrix<4, 4, T> Matrix<4, 4, T>::LookAtPoint(const Vector3<T>& position, const Vector3<T>& point, const Vector3<T>& up)
     {
-        Vector3<T> direction = point - position;
-        direction.Normalize();
-
-        Vector3<T> side = direction.Cross(up).Normal();
-        Vector3<T> newUp = side.Cross(direction);
+        auto normDir = (point - position).Normal();
+        auto side = normDir.Cross(up).Normal();
+        auto newUp = side.Cross(normDir);
 
         Matrix<4, 4, T> lookMatrix(
-            side.x,            newUp.x,           -direction.x,      static_cast<T>(0),
-            side.y,            newUp.y,           -direction.y,      static_cast<T>(0),
-            side.z,            newUp.z,           -direction.z,      static_cast<T>(0),
-            static_cast<T>(0), static_cast<T>(0), static_cast<T>(0), static_cast<T>(1)
+            { side.x, normDir.x, newUp.x, static_cast<T>(0) },
+            { side.y, normDir.y, newUp.y, static_cast<T>(0) },
+            { side.z, normDir.z, newUp.z, static_cast<T>(0) },
+            { -side.Dot(position), -normDir.Dot(position), -newUp.Dot(position), static_cast<T>(1) }
         );
 
-        Matrix<4, 4, T> positionMatrix(
-            static_cast<T>(1), static_cast<T>(0), static_cast<T>(0), static_cast<T>(0),
-            static_cast<T>(0), static_cast<T>(1), static_cast<T>(0), static_cast<T>(0),
-            static_cast<T>(0), static_cast<T>(0), static_cast<T>(1), static_cast<T>(0),
-            -position.x,       -position.y,       -position.z,       static_cast<T>(1)
-        );
-
-        auto result = lookMatrix * positionMatrix;
-
-        return result;
+        return lookMatrix;
     }
 
     template<typename T>
-    inline Matrix<4, 4, T> Matrix<4, 4, T>::Perspective(const T fov, const T aspect, const T near, const T far)
+    inline Matrix<4, 4, T> Matrix<4, 4, T>::LookAtDirection(const Vector3<T>& position, const Vector3<T>& direction, const Vector3<T>& up)
     {
-        static constexpr T radiansExpr = static_cast<T>(1) / (static_cast<T>(2) * Constants::Pi<T>() / static_cast<T>(180));
-        const T fovRadians = fov * radiansExpr;
-        const T sine = std::sin(fovRadians);
+        auto normDir = direction.Normal();
+        auto side = normDir.Cross(up).Normal();
+        auto newUp = side.Cross(normDir);
+
+        Matrix<4, 4, T> lookMatrix(
+            { side.x, normDir.x, newUp.x, static_cast<T>(0) },
+            { side.y, normDir.y, newUp.y, static_cast<T>(0) },
+            { side.z, normDir.z, newUp.z, static_cast<T>(0) },
+            { -side.Dot(position), -normDir.Dot(position), -newUp.Dot(position), static_cast<T>(1) }
+        );
+
+        return lookMatrix;
+    }
+
+    template<typename T>
+    inline Matrix<4, 4, T> Matrix<4, 4, T>::Perspective(const Angle fov, const T aspect, const T near, const T far)
+    {
+        const T tanHalfFov = std::tan(fov.AsRadians<T>() / static_cast<T>(2));
         const T zRange = far - near;
 
         if (zRange == static_cast<T>(0))
         {
             throw Exception("Matrix::Perspective: Difference between near and far is 0.");
         }
-        if (sine == static_cast<T>(0))
+        if (tanHalfFov == static_cast<T>(0))
         {
-            throw Exception("Matrix::Perspective: FOV is 0 or invalid.");
+            throw Exception("Matrix::Perspective: Field of view is 0 or invalid.");
         }
         if (aspect == static_cast<T>(0))
         {
             throw Exception("Matrix::Perspective: Aspect ratio is 0.");
         }
 
-        const T cotan = std::cos(fovRadians) / sine;      
-
-        return { cotan / aspect,    static_cast<T>(0), static_cast<T>(0),                       static_cast<T>(0),
-                 static_cast<T>(0), cotan,             static_cast<T>(0),                       static_cast<T>(0),
-                 static_cast<T>(0), static_cast<T>(0), -(far + near) / zRange,                  static_cast<T>(-1),
-                 static_cast<T>(0), static_cast<T>(0), static_cast<T>(-2) * near* far / zRange, static_cast<T>(0) };
+        return { static_cast<T>(1) / (tanHalfFov * aspect), static_cast<T>(0),               static_cast<T>(0),                       static_cast<T>(0),
+                 static_cast<T>(0),                         static_cast<T>(0),               (far + near) / zRange,                   static_cast<T>(1),
+                 static_cast<T>(0),                         static_cast<T>(-1) / tanHalfFov, static_cast<T>(0),                       static_cast<T>(0),
+                 static_cast<T>(0),                         static_cast<T>(0),               static_cast<T>(-2) * near* far / zRange, static_cast<T>(0) };
     }
 
     template<typename T>
@@ -128,10 +215,19 @@ namespace Curse
             throw Exception("Matrix::Perspective: Difference between near and far is 0.");
         }
 
-        return Matrix<4, 4, T>{ static_cast<T>(2) / rangeX, static_cast<T>(0), static_cast<T>(0),  -(right + left) / rangeX,
+        return { static_cast<T>(2) / rangeX, static_cast<T>(0),          static_cast<T>(0),           static_cast<T>(0),
+                 static_cast<T>(0),          static_cast<T>(0),          static_cast<T>(-2) / rangeZ, static_cast<T>(0),
+                 static_cast<T>(0),          static_cast<T>(-2) / rangeY, static_cast<T>(0),           static_cast<T>(0),
+                 -(right + left) / rangeX,   -(far + near) / rangeZ,     -(top + bottom),             static_cast<T>(1)
+        };
+
+        /*
+        return Matrix<4, 4, T>{ 
+                 static_cast<T>(2) / rangeX, static_cast<T>(0), static_cast<T>(0),  -(right + left) / rangeX,
                  static_cast<T>(0), static_cast<T>(2) / rangeY, static_cast<T>(0),  -(top + bottom) / rangeY,
                  static_cast<T>(0), static_cast<T>(0), static_cast<T>(-2) / rangeZ, -(far + near) / rangeZ,
                  static_cast<T>(0), static_cast<T>(0), static_cast<T>(0), static_cast<T>(1) };
+        */
     }
 
     template<typename T>

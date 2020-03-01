@@ -33,6 +33,11 @@
 #include <Windows.h>
 #include <Windowsx.h>
 
+#define CURSE_PLATFORM_WINDOWS_SUPPORT_MULTI_MONITOR_DPI NTDDI_VERSION >= 0x06030000
+#if(CURSE_PLATFORM_WINDOWS_SUPPORT_MULTI_MONITOR_DPI)
+#include <shellscalingapi.h>
+#endif
+
 // Getting rid of conflicting Windows macros.
 #ifdef GetMessage
     #undef GetMessage

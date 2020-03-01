@@ -53,17 +53,12 @@ namespace Curse
          *
          * @return Pointer to window, nullptr if no window is available on the current platform.
          */
-        static Window* Create();
+        static Window* Create();      
 
         /**
-        * @brief On resize signal.
+        * @brief On DPI change signal.
         */
-        Signal<Vector2ui32> OnResize;
-
-        /**
-        * @brief On resize signal.
-        */
-        Signal<Vector2i32> OnMove;
+        Signal<Vector2ui32> OnDpiChange;
 
         /**
         * @brief On maximize signal.
@@ -74,6 +69,23 @@ namespace Curse
         * @brief On minimize signal.
         */
         Signal<Vector2i32> OnMinimize;
+
+        /**
+        * @brief On resize signal.
+        */
+        Signal<Vector2i32> OnMove;
+
+        /**
+        * @brief On resize signal.
+        */
+        Signal<Vector2ui32> OnResize;
+
+        /**
+        * @brief On scale change signal.
+        *        Same as OnDpiChange, but returning a floating point vector, representing the scale,
+        *        where 1.0 = 96 DPI, 120 DPI = 1.25, etc...
+        */
+        Signal<Vector2f32> OnScaleChange;
 
         /**
         * @brief On show/hide signal.

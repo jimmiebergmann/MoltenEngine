@@ -28,6 +28,7 @@
 
 #include "Curse/Math.hpp"
 #include "Curse/Math/Vector.hpp"
+#include "Curse/Math/Angle.hpp"
 #include "Curse/System/Exception.hpp"
 
 namespace Curse
@@ -61,8 +62,76 @@ namespace Curse
 
     };
 
+
     /**
-    * @brief Linear algebra class for matrix.
+    * @brief Linear algebra class for 3x3 matrix.
+    */
+    template<typename T>
+    class Matrix<3, 3, T>
+    {
+
+    public:
+
+        constexpr static size_t Rows = 3;
+        constexpr static size_t Columns = 3;
+        constexpr static size_t Components = Rows * Columns;
+        using Type = T;
+
+        /**
+        * @brief Creates an identity matrix.
+        */
+        static Matrix<3, 3, T> Identity();
+
+        /**
+        * @brief Constructor.
+        *        Elements are initialized as 0.
+        */
+        Matrix();
+
+        /**
+        * @brief Constructor.
+        *        Constructing and initializing all elements by a single value.
+        */
+        Matrix(const T value);
+
+        /**
+        * @brief Constructing and initializing all elements individually.
+        */
+        Matrix(const T e1, const T e2, const T e3, 
+               const T e4, const T e5, const T e6,
+               const T e7, const T e8, const T e9);
+
+        /**
+        * @brief Constructing and initializing all elements by rows.
+        */
+        Matrix(const Vector3<T>& column1, const Vector3<T>& column2, const Vector3<T>& column3);
+
+        /**
+        * @brief Multiplication by matrix operator.
+        */
+        Matrix<3, 3, T> operator *(const Matrix<3, 3, T>& matrix) const;
+
+        /**
+        * @brief Multiplication by matrix assignment operator.
+        */
+        Matrix<3, 3, T>& operator *=(const Matrix<3, 3, T>& matrix);
+
+        /**
+        * @brief Multiplication by vector operator.
+        */
+        Vector<3, T> operator *(const Vector<3, T>& vector) const;
+
+        union
+        {
+            T e[Components]; //< Elements of matrix.
+            Vector<Rows, T> column[Columns];  //< Columns of matrix.
+        };
+
+    };
+
+
+    /**
+    * @brief Linear algebra class for 4x4 matrix.
     */
     template<typename T>
     class Matrix<4, 4, T>
@@ -85,14 +154,23 @@ namespace Curse
         *
         * @param position Position of the viewer.
         * @param point Point in space to view.
-        * @param up Orientation of the viewer.
+        * @param up Vector pointing "up", relative to the view direction.
         */
         static Matrix<4, 4, T> LookAtPoint(const Vector3<T>& position, const Vector3<T>& point, const Vector3<T>& up);
 
         /**
+        * @brief Creates a "Look at direction" view matrix.
+        *
+        * @param position Position of the viewer.
+        * @param direction Direction from position to look.
+        * @param up Vector pointing "up", relative to the view direction.
+        */
+        static Matrix<4, 4, T> LookAtDirection(const Vector3<T>& position, const Vector3<T>& direction, const Vector3<T>& up);
+
+        /**
         * @brief Creates a perspective projection matrix.
         */
-        static Matrix<4, 4, T> Perspective(const T fov, const T aspect, const T near, const T far);
+        static Matrix<4, 4, T> Perspective(const Angle fov, const T aspect, const T near, const T far);
 
 
         /**
@@ -161,7 +239,16 @@ namespace Curse
     };
 
     template<typename T>
+    using Matrix3x3 = Matrix<3, 3, T>;
+
+    template<typename T>
     using Matrix4x4 = Matrix<4, 4, T>;
+
+    using Matrix3x3i32 = Matrix3x3<int32_t>;
+    using Matrix3x3i64 = Matrix3x3<int64_t>;
+    using Matrix3x3f32 = Matrix3x3<float>;
+    using Matrix3x3f64 = Matrix3x3<double>;
+
     using Matrix4x4i32 = Matrix4x4<int32_t>;
     using Matrix4x4i64 = Matrix4x4<int64_t>;
     using Matrix4x4f32 = Matrix4x4<float>;

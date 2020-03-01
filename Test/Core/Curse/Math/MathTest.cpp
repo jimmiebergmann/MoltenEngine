@@ -27,9 +27,6 @@
 #include "Curse/Math.hpp"
 #include <type_traits>
 
-#include <stdio.h>
-#include <iostream>
-
 namespace Curse
 {
 

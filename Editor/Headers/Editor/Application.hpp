@@ -29,6 +29,7 @@
 #include "Curse/Logger.hpp"
 #include "Curse/Math/Vector.hpp"
 #include "Curse/Renderer/Renderer.hpp"
+#include "Curse/Scene/Camera.hpp"
 #include "Curse/System/Clock.hpp"
 #include "Curse/Window/Window.hpp"
 #include <memory>
@@ -74,7 +75,7 @@ namespace Curse
 
             bool Update();
 
-            void Draw();
+            void Draw();            
 
             Logger m_logger;
             std::unique_ptr<Window> m_window;
@@ -94,7 +95,7 @@ namespace Curse
             Clock m_deltaTimer;
             float m_deltaTime;        
 
-            Vector3f32 m_cameraPosition;
+            Scene::Camera m_camera;
 
         };
 

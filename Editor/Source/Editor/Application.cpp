@@ -45,8 +45,7 @@ namespace Curse
             m_uniformBuffer(nullptr),
             m_uniformBlock(nullptr),
             m_programTime(0.0f),
-            m_deltaTime(0.0f) ,
-            m_cameraPosition{ 0.0f, 0.0f, 3.0f }
+            m_deltaTime(0.0f)
         { }
 
         Application::~Application()
@@ -90,14 +89,18 @@ namespace Curse
                 throw Exception("Failed to open editor window.");
             }
 
-            auto resizeCallback = [&](Vector2ui32)
+            m_window->OnResize.Connect([&](Vector2ui32)
             {
                 Tick();
-            };
-
-            m_window->OnMaximize.Connect(resizeCallback);
-            m_window->OnMinimize.Connect(resizeCallback);
-            m_window->OnResize.Connect(resizeCallback);
+            });
+            m_window->OnDpiChange.Connect([&](Vector2ui32 dpi)
+            {
+                m_logger.Write(Logger::Severity::Info, "Changed DPI: " + std::to_string(dpi.x) + ", " + std::to_string(dpi.y));
+            });
+            m_window->OnScaleChange.Connect([&](Vector2f32 scale)
+            {
+                m_logger.Write(Logger::Severity::Info, "Changed scale: " + std::to_string(scale.x) + ", " + std::to_string(scale.y));
+            });
 
             m_renderer = std::unique_ptr<Renderer>(Curse::Renderer::Create(Curse::Renderer::BackendApi::Vulkan));
             if (!m_renderer)
@@ -111,6 +114,16 @@ namespace Curse
             }
 
             LoadPipeline();
+
+            m_camera.SetPosition({ 0.0f, -3.0f, 0.0f });
+            m_camera.SetDirection({ 0.3f, 1.0f, 0.0f });
+            m_camera.SetProjectionType(Scene::Camera::ProjectionType::Perspective);
+            m_camera.SetFieldOfView(Degrees(60));
+            m_camera.SetWindowSize(m_window->GetSize());
+            m_window->OnResize.Connect([&](Vector2ui32 size)
+            {
+                m_camera.SetWindowSize(size);
+            });
         }
 
         void Application::LoadPipeline()
@@ -118,10 +131,10 @@ namespace Curse
             LoadShaders();
 
             Curse::PipelineDescriptor pipelineDesc;
-            pipelineDesc.topology = Curse::Pipeline::Topology::TriangleList;
+            pipelineDesc.topology = Curse::Pipeline::Topology::LineList;
             pipelineDesc.polygonMode = Curse::Pipeline::PolygonMode::Fill;
             pipelineDesc.frontFace = Curse::Pipeline::FrontFace::Clockwise;
-            pipelineDesc.cullMode = Curse::Pipeline::CullMode::Back;
+            pipelineDesc.cullMode = Curse::Pipeline::CullMode::None;
             pipelineDesc.vertexStage = m_vertexStage;
             pipelineDesc.fragmentStage = m_fragmentStage;
 
@@ -138,23 +151,44 @@ namespace Curse
                 Curse::Vector4f32 color;
             };
 
-            static const uint32_t vertexCount = 4;
-            static const Vertex vertices[vertexCount] =
+            std::vector<Vertex> vertices =
             {
-                { { -0.5f, -0.5, 0.0f }, { 1.0f, 1.0f, 1.0f, 1.0f } },
-                { { 0.5f, -0.5, 0.0f },  { 0.0f, 1.0f, 0.0f, 1.0f } },
-                { { 0.5f, 0.5, 0.0f },   { 0.0f, 0.0f, 1.0f, 1.0f } },
-                { { -0.5f, 0.5, 0.0f },  { 1.0f, 0.0f, 1.0f, 1.0f } }
+                { { 0.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } },
+                { { 1.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } },
+
+                { { 0.0f, 0.0f, 0.0f },  { 0.0f, 1.0f, 0.0f, 1.0f } },
+                { { 0.0f, 1.0f, 0.0f },  { 0.0f, 1.0f, 0.0f, 1.0f } },
+
+                { { 0.0f, 0.0f, 0.0 },  { 0.0f, 0.0f, 1.0f, 1.0f } },
+                { { 0.0f, 0.0f, 1.0 },  { 0.0f, 0.0f, 1.0f, 1.0f } }
             };
 
-            static const uint32_t indexCount = 6;
-            static const uint16_t indices[indexCount] =
+
+            for (int32_t i = -5; i <= 5; i++)
             {
-                0, 1, 2, 0, 2, 3
-            };
+                vertices.push_back(
+                    { { static_cast<float>(i), -5.0f, -0.1f }, { 0.7f, 0.7f, 0.7f, 1.0f } }
+                );
+                vertices.push_back(
+                    { { static_cast<float>(i), 5.0f, -0.1f }, { 0.7f, 0.7f, 0.7f, 1.0f } }
+                );
+
+                vertices.push_back(
+                    { { -5.0f, static_cast<float>(i), -0.1f }, { 0.7f, 0.7f, 0.7f, 1.0f } }
+                );
+                vertices.push_back(
+                    { { 5.0f, static_cast<float>(i), -0.1f }, { 0.7f, 0.7f, 0.7f, 1.0f } }
+                );
+            }
+
+            std::vector<uint16_t> indices;
+            for (size_t i = 0; i < vertices.size(); i++)
+            {
+                indices.push_back(static_cast<uint16_t>(i));
+            }
 
             Curse::VertexBufferDescriptor vertexBufferDesc;
-            vertexBufferDesc.vertexCount = vertexCount;
+            vertexBufferDesc.vertexCount = static_cast<uint32_t>(vertices.size());
             vertexBufferDesc.vertexSize = sizeof(Vertex);
             vertexBufferDesc.data = static_cast<const void*>(&vertices[0]);
             m_vertexBuffer = m_renderer->CreateVertexBuffer(vertexBufferDesc);
@@ -164,8 +198,8 @@ namespace Curse
             }
 
             Curse::IndexBufferDescriptor indexBufferDesc;
-            indexBufferDesc.indexCount = indexCount;
-            indexBufferDesc.data = static_cast<const void*>(indices);
+            indexBufferDesc.indexCount = static_cast<uint32_t>(indices.size());
+            indexBufferDesc.data = static_cast<const void*>(&indices[0]);
             indexBufferDesc.dataType = Curse::IndexBuffer::DataType::Uint16;
             m_indexBuffer = m_renderer->CreateIndexBuffer(indexBufferDesc);
             if (!m_indexBuffer)
@@ -178,7 +212,7 @@ namespace Curse
             m_uniformBuffer = m_renderer->CreateUniformBuffer(uniformBufferDesc);
             if (!m_uniformBuffer)
             {
-                throw Exception("Failed to uniform buffer.");
+                throw Exception("Failed to create uniform buffer.");
             }
 
             Curse::UniformBlockDescriptor uniformBlockDesc;
@@ -188,7 +222,7 @@ namespace Curse
             m_uniformBlock = m_renderer->CreateUniformBlock(uniformBlockDesc);
             if (!m_uniformBlock)
             {
-                throw Exception("Failed to uniform block.");
+                throw Exception("Failed to create uniform block.");
             }
         }
 
@@ -235,18 +269,18 @@ namespace Curse
                 auto& outBlock = script.GetOutputBlock();
                 auto outColor = outBlock.AppendNode<Vector4f32>();
 
-                auto mult = script.CreateOperatorNode<Shader::Operator::MultVec4f32>();
+                /*auto mult = script.CreateOperatorNode<Shader::Operator::MultVec4f32>();
                 auto add = script.CreateOperatorNode<Shader::Operator::AddVec4f32>();
                 auto const1 = script.CreateConstantNode<Vector4f32>({ 0.0f, 0.0f, 0.3f, 0.0f });
                 auto const2 = script.CreateConstantNode<Vector4f32>({ 1.0f, 0.5f, 0.0f, 1.0f });
-                auto cos = script.CreateFunctionNode<Shader::Function::CosVec4f32>();
+                auto cos = script.CreateFunctionNode<Shader::Function::CosVec4f32>();*/
 
-                outColor->GetInputPin()->Connect(*add->GetOutputPin());
-                add->GetInputPin(0)->Connect(*mult->GetOutputPin());
+                outColor->GetInputPin()->Connect(*inColor->GetOutputPin());
+                /*add->GetInputPin(0)->Connect(*mult->GetOutputPin());
                 add->GetInputPin(1)->Connect(*const1->GetOutputPin());
                 mult->GetInputPin(0)->Connect(*inColor->GetOutputPin());
                 mult->GetInputPin(1)->Connect(*cos->GetOutputPin());
-                cos->GetInputPin()->Connect(*const2->GetOutputPin());
+                cos->GetInputPin()->Connect(*const2->GetOutputPin());*/
             }
 
             m_vertexStage = m_renderer->CreateVertexShaderStage(m_vertexScript);
@@ -327,7 +361,8 @@ namespace Curse
 
         bool Application::Update()
         {
-            constexpr float cameraSpeed = 1.0f;
+            constexpr float cameraSpeed = 4.0f;
+            static Vector2i32 lastPosition{ 0, 0 };
 
             m_window->Update();
             if (!m_window->IsOpen())
@@ -341,16 +376,53 @@ namespace Curse
             {
                 switch (event.type)
                 {
+                case Curse::UserInput::Event::Type::MouseMove:
+                {
+                    if (Mouse::IsDown(Mouse::Button::Right))
+                    {
+                        auto posDiff = event.mouseMoveEvent.position - lastPosition;
+                        if (posDiff.x != 0)
+                        {
+                            m_camera.AddYaw(Degrees(-posDiff.x));
+                        }
+                        if (posDiff.y != 0)
+                        {
+                            m_camera.AddPitch(Degrees(-posDiff.y));
+                        }
+                    }
+                    lastPosition = event.mouseMoveEvent.position;
+                }
+                break;
                 case Curse::UserInput::Event::Type::KeyDown:
                 {
                     switch (event.keyboardEvent.key)
                     {
-                    case Curse::Keyboard::Key::A: m_cameraPosition.x -= cameraSpeed * m_deltaTime; break;
-                    case Curse::Keyboard::Key::D: m_cameraPosition.x += cameraSpeed * m_deltaTime; break;
-                    case Curse::Keyboard::Key::W: m_cameraPosition.y -= cameraSpeed * m_deltaTime; break;
-                    case Curse::Keyboard::Key::S: m_cameraPosition.y += cameraSpeed * m_deltaTime; break;
-                    case Curse::Keyboard::Key::Q: m_cameraPosition.z -= cameraSpeed * m_deltaTime; break;
-                    case Curse::Keyboard::Key::E: m_cameraPosition.z += cameraSpeed * m_deltaTime; break;
+                    case Curse::Keyboard::Key::A: m_camera.SetPosition(m_camera.GetPosition() - (m_camera.GetRightDirection() * cameraSpeed * m_deltaTime)); break;
+                    case Curse::Keyboard::Key::D: m_camera.SetPosition(m_camera.GetPosition() + (m_camera.GetRightDirection() * cameraSpeed * m_deltaTime)); break;
+                    case Curse::Keyboard::Key::W: m_camera.SetPosition(m_camera.GetPosition() + (m_camera.GetForwardDirection() * cameraSpeed * m_deltaTime)); break;
+                    case Curse::Keyboard::Key::S: m_camera.SetPosition(m_camera.GetPosition() - (m_camera.GetForwardDirection() * cameraSpeed * m_deltaTime)); break;
+                    case Curse::Keyboard::Key::Q: m_camera.SetPosition(m_camera.GetPosition() + (m_camera.GetUpDirection() * cameraSpeed * m_deltaTime)); break;
+                    case Curse::Keyboard::Key::E: m_camera.SetPosition(m_camera.GetPosition() - (m_camera.GetUpDirection() * cameraSpeed * m_deltaTime)); break;
+                    case Curse::Keyboard::Key::Up: m_camera.SetFieldOfView(m_camera.GetFieldOfView() - Degrees(40.0f * m_deltaTime)); break;
+                    case Curse::Keyboard::Key::Down: m_camera.SetFieldOfView(m_camera.GetFieldOfView() + Degrees(10.0f * m_deltaTime)); break;
+                    case Curse::Keyboard::Key::Left: m_camera.AddRoll(Degrees(-50.0f * m_deltaTime)); break;
+                    case Curse::Keyboard::Key::Right: m_camera.AddRoll(Degrees(+50.0f * m_deltaTime)); break;
+                    case Curse::Keyboard::Key::Escape: m_window->Close(); return false;
+                    default: break;
+                    }
+                }
+                break;
+                case Curse::UserInput::Event::Type::KeyReleased:
+                {
+                    switch (event.keyboardEvent.key)
+                    {
+                    case Curse::Keyboard::Key::P:
+                    {
+                        m_camera.SetProjectionType(m_camera.GetProjectionType() == Scene::Camera::ProjectionType::Perspective ? 
+                            Scene::Camera::ProjectionType::Orthographic : 
+                            Scene::Camera::ProjectionType::Perspective);
+                    }
+                        break;
                     default: break;
                     }
                 }
@@ -358,6 +430,8 @@ namespace Curse
                 default: break;
                 }
             }
+
+            m_camera.PostProcess();
 
             return true;
         }
@@ -377,9 +451,7 @@ namespace Curse
 
             m_renderer->BindPipeline(m_pipeline);
 
-            float fov = static_cast<float>(m_window->GetSize().x) / static_cast<float>(m_window->GetSize().y);
-            auto projViewMatrix = Curse::Matrix4x4f32::Perspective(60.0f, fov, 0.1f, 100.0f) *
-                Curse::Matrix4x4f32::LookAtPoint(m_cameraPosition, { 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f });
+            const auto projViewMatrix = m_camera.GetProjectionMatrix() * m_camera.GetViewMatrix();
 
             struct UniformBuffer
             {
@@ -390,23 +462,24 @@ namespace Curse
             UniformBuffer bufferData1;
             bufferData1.projViewMatrix = projViewMatrix;
             bufferData1.modelMatrix = Curse::Matrix4x4f32::Identity();
-            bufferData1.modelMatrix.Translate({ std::sin(m_programTime * 3.0f) * 0.25f, 0.0f, 0.2f });
+            //bufferData1.modelMatrix.Translate({ std::sin(m_programTime * 3.0f) * 0.25f, 0.0f, 0.2f });
 
-            UniformBuffer bufferData2;
+            /*UniformBuffer bufferData2;
             bufferData2.projViewMatrix = projViewMatrix;
             bufferData2.modelMatrix = Curse::Matrix4x4f32::Identity();
-            bufferData2.modelMatrix.Translate({ 0.0f, std::cos(m_programTime * 3.0f) * 0.25f, 0.0f });
+            bufferData2.modelMatrix.Translate({ 0.0f, std::cos(m_programTime * 3.0f) * 0.25f, 0.0f });*/
 
             m_renderer->UpdateUniformBuffer(m_uniformBuffer, 0, sizeof(UniformBuffer), &bufferData1);
-            m_renderer->UpdateUniformBuffer(m_uniformBuffer, 256, sizeof(UniformBuffer), &bufferData2);
+            //m_renderer->UpdateUniformBuffer(m_uniformBuffer, 256, sizeof(UniformBuffer), &bufferData2);
 
             m_renderer->BindUniformBlock(m_uniformBlock, 0);
             m_renderer->DrawVertexBuffer(m_indexBuffer, m_vertexBuffer);
 
-            m_renderer->BindUniformBlock(m_uniformBlock, 256);
-            m_renderer->DrawVertexBuffer(m_indexBuffer, m_vertexBuffer);
+            /*m_renderer->BindUniformBlock(m_uniformBlock, 256);
+            m_renderer->DrawVertexBuffer(m_indexBuffer, m_vertexBuffer);*/
 
             m_renderer->EndDraw();
+
         }
 
 

@@ -193,7 +193,35 @@ namespace Curse
 
         static LRESULT WindowProcStatic(HWND window, UINT message, WPARAM wParam, LPARAM lParam);
         LRESULT WindowProc(HWND window, UINT message, WPARAM wParam, LPARAM lParam);
-        //void PreprocessEvents();
+
+        class DynamicFunctions
+        {
+
+        public:
+
+            DynamicFunctions();
+            ~DynamicFunctions();
+
+            bool SetProcessDPIAware();
+
+        private:
+
+            DynamicFunctions(const DynamicFunctions&) = delete;
+            DynamicFunctions(DynamicFunctions&&) = delete;
+
+            HMODULE m_module;
+
+        #if (CURSE_PLATFORM_WINDOWS_SUPPORT_MULTI_MONITOR_DPI)
+            using SetProcessDpiMultiDisplayAwarenessFunc = HRESULT(*)(::PROCESS_DPI_AWARENESS);
+            SetProcessDpiMultiDisplayAwarenessFunc m_setProcessDpiMultiDisplayAwareness;
+        #endif
+
+            using SetProcessDpiSingleDisplayAwarenessFunc = BOOL(*)();
+            SetProcessDpiSingleDisplayAwarenessFunc m_setProcessDpiSingleDisplayAwareness;
+
+        };
+
+        static DynamicFunctions s_DynamicFunctions;
 
         Logger* m_logger;
         HWND m_window;
@@ -209,6 +237,7 @@ namespace Curse
         Vector2ui32 m_size;
         Vector2i32 m_position;
         std::string m_title;
+        Vector2ui32 m_dpi;
 
         UserInput m_userInput;
 
