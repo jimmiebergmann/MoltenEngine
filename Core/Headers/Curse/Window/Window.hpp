@@ -82,8 +82,7 @@ namespace Curse
 
         /**
         * @brief On scale change signal.
-        *        Same as OnDpiChange, but returning a floating point vector, representing the scale,
-        *        where 1.0 = 96 DPI, 120 DPI = 1.25, etc...
+        *        Same as OnDpiChange, but returning a floating point vector equal to DPI / 96.
         */
         Signal<Vector2f32> OnScaleChange;
 
@@ -184,6 +183,17 @@ namespace Curse
         * @brief Set current title of window.
         */
         virtual void SetTitle(const std::string& title) = 0;
+
+        /**
+        * @brief Get current DPI of window.
+        */
+        virtual Vector2ui32 GetDpi() const = 0;
+
+        /**
+        * @brief Get current scale of window.
+        *        Same as GetDpi, but returning a floating point vector equal to DPI / 96.
+        */
+        virtual Vector2f32 GetScale() const = 0;
 
         /**
         * @brief Get current size of window.

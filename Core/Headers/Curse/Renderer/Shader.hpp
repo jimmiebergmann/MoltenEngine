@@ -88,7 +88,7 @@ namespace Curse
         /**
         * @brief Helper wrapper class for aligning any data type by 16 bytes.
         */
-        CURSE_PADDED_STRUCT_BEGIN;
+        CURSE_PADDED_STRUCT_BEGIN
         template<typename T>
         class alignas(16) PaddedType : public T
         {
@@ -99,7 +99,7 @@ namespace Curse
             PaddedType(const T& type);
 
         };
-        CURSE_PADDED_STRUCT_END;
+        CURSE_PADDED_STRUCT_END
 
 
         /**

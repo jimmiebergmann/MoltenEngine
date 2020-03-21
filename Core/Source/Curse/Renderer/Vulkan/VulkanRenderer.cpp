@@ -1122,10 +1122,11 @@ namespace Curse
     void VulkanRenderer::DrawVertexBuffer(VertexBuffer* vertexBuffer)
     {
         VulkanVertexBuffer* vulkanVertexBuffer = static_cast<VulkanVertexBuffer*>(vertexBuffer);
+
         VkBuffer vertexBuffers[] = { vulkanVertexBuffer->resource };
         const VkDeviceSize offsets[] = { 0 };
-        vkCmdBindVertexBuffers(*m_currentCommandBuffer, 0, 1, vertexBuffers, offsets);
 
+        vkCmdBindVertexBuffers(*m_currentCommandBuffer, 0, 1, vertexBuffers, offsets);
         vkCmdDraw(*m_currentCommandBuffer, static_cast<uint32_t>(vulkanVertexBuffer->vertexCount), 1, 0, 0);
     }
 
@@ -1134,13 +1135,11 @@ namespace Curse
         VulkanIndexBuffer* vulkanIndexBuffer = static_cast<VulkanIndexBuffer*>(indexBuffer);
         VulkanVertexBuffer* vulkanVertexBuffer = static_cast<VulkanVertexBuffer*>(vertexBuffer);
 
-        const VkDeviceSize offsets[] = { 0 };
         VkBuffer vertexBuffers[] = { vulkanVertexBuffer->resource };
+        const VkDeviceSize offsets[] = { 0 };
 
         vkCmdBindVertexBuffers(*m_currentCommandBuffer, 0, 1, vertexBuffers, offsets);
-
         vkCmdBindIndexBuffer(*m_currentCommandBuffer, vulkanIndexBuffer->resource, 0, GetIndexBufferDataType(vulkanIndexBuffer->dataType));
-
         vkCmdDrawIndexed(*m_currentCommandBuffer, static_cast<uint32_t>(vulkanIndexBuffer->indexCount), 1, 0, 0, 0);
     }
 

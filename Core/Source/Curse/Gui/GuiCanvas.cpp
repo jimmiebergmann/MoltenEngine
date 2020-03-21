@@ -33,8 +33,8 @@ namespace Curse
 
         Canvas::Canvas(Renderer& renderer, const Vector2f32& size, const Vector2f32& position) :
             m_renderer(&renderer),
-            m_size(size),
-            m_position(position)
+            m_position(position),
+            m_size(size)
         {
             static_cast<Control&>(m_plane).SetCanvasInternal(this);
         }

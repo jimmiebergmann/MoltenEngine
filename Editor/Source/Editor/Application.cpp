@@ -151,50 +151,35 @@ namespace Curse
                 Curse::Vector4f32 color;
             };
 
-            std::vector<Vertex> vertices =
+  
+            std::vector<Vertex> vertexData =
             {
-                { { 0.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } },
-                { { 1.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } },
-
-                { { 0.0f, 0.0f, 0.0f },  { 0.0f, 1.0f, 0.0f, 1.0f } },
-                { { 0.0f, 1.0f, 0.0f },  { 0.0f, 1.0f, 0.0f, 1.0f } },
-
-                { { 0.0f, 0.0f, 0.0 },  { 0.0f, 0.0f, 1.0f, 1.0f } },
-                { { 0.0f, 0.0f, 1.0 },  { 0.0f, 0.0f, 1.0f, 1.0f } }
+                {{ 0.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f }}, {{ 1.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f }},
+                {{ 0.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f }}, {{ 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f }},
+                {{ 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f, 1.0f }}, {{ 0.0f, 0.0f, 1.0f }, { 0.0f, 0.0f, 1.0f, 1.0f }}
             };
-
-
             for (int32_t i = -5; i <= 5; i++)
             {
-                vertices.push_back(
-                    { { static_cast<float>(i), -5.0f, -0.1f }, { 0.7f, 0.7f, 0.7f, 1.0f } }
-                );
-                vertices.push_back(
-                    { { static_cast<float>(i), 5.0f, -0.1f }, { 0.7f, 0.7f, 0.7f, 1.0f } }
-                );
-
-                vertices.push_back(
-                    { { -5.0f, static_cast<float>(i), -0.1f }, { 0.7f, 0.7f, 0.7f, 1.0f } }
-                );
-                vertices.push_back(
-                    { { 5.0f, static_cast<float>(i), -0.1f }, { 0.7f, 0.7f, 0.7f, 1.0f } }
-                );
+                vertexData.push_back({ { static_cast<float>(i), -5.0f, -0.1f }, { 0.7f, 0.7f, 0.7f, 1.0f } });
+                vertexData.push_back({ { static_cast<float>(i), 5.0f, -0.1f }, { 0.7f, 0.7f, 0.7f, 1.0f } });
+                vertexData.push_back({ { -5.0f, static_cast<float>(i), -0.1f }, { 0.7f, 0.7f, 0.7f, 1.0f } });
+                vertexData.push_back({ { 5.0f, static_cast<float>(i), -0.1f }, { 0.7f, 0.7f, 0.7f, 1.0f } });
             }
 
             std::vector<uint16_t> indices;
-            for (size_t i = 0; i < vertices.size(); i++)
+            for (size_t i = 0; i < vertexData.size(); i++)
             {
                 indices.push_back(static_cast<uint16_t>(i));
             }
 
-            Curse::VertexBufferDescriptor vertexBufferDesc;
-            vertexBufferDesc.vertexCount = static_cast<uint32_t>(vertices.size());
-            vertexBufferDesc.vertexSize = sizeof(Vertex);
-            vertexBufferDesc.data = static_cast<const void*>(&vertices[0]);
-            m_vertexBuffer = m_renderer->CreateVertexBuffer(vertexBufferDesc);
+            Curse::VertexBufferDescriptor vertexPositionBufferDesc;
+            vertexPositionBufferDesc.vertexCount = static_cast<uint32_t>(vertexData.size());
+            vertexPositionBufferDesc.vertexSize = sizeof(Vertex);
+            vertexPositionBufferDesc.data = static_cast<const void*>(&vertexData[0]);
+            m_vertexBuffer = m_renderer->CreateVertexBuffer(vertexPositionBufferDesc);
             if (!m_vertexBuffer)
             {
-                throw Exception("Failed to create vertex buffer.");
+                throw Exception("Failed to create position vertex buffer.");
             }
 
             Curse::IndexBufferDescriptor indexBufferDesc;

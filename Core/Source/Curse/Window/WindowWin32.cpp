@@ -433,6 +433,16 @@ namespace Curse
         m_title = title;
     }
 
+    Vector2ui32 WindowWin32::GetDpi() const
+    {
+        return m_dpi;
+    }
+
+    Vector2f32 WindowWin32::GetScale() const
+    {
+        return { static_cast<float>(m_dpi.x) / 96.0f, static_cast<float>(m_dpi.y) / 96.0f };
+    }
+
     Vector2ui32 WindowWin32::GetSize() const
     {
         return m_size;
@@ -546,6 +556,21 @@ namespace Curse
 
                     OnDpiChange(m_dpi);
                     OnScaleChange(scale);
+
+                    RECT* rect = reinterpret_cast<RECT*>(lParam);
+                    if (rect)
+                    {
+                        if (!(::SetWindowPos(m_window, HWND_TOP,
+                                             static_cast<int>(rect->left),
+                                             static_cast<int>(rect->top),
+                                             static_cast<int>(rect->right) - static_cast<int>(rect->left),
+                                             static_cast<int>(rect->bottom) - static_cast<int>(rect->top),
+                                             0)))
+                        {
+                            CURSE_WINDOW_LOG(Logger::Severity::Error, "Failed to resize window accordingly to new DPI.");
+                        }
+                    }
+                   
                 }
             }
             break;

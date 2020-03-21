@@ -148,6 +148,17 @@ namespace Curse
         virtual void SetTitle(const std::string& title) override;
 
         /**
+        * @brief Get current DPI of window.
+        */
+        virtual Vector2ui32 GetDpi() const override;
+
+        /**
+        * @brief Get current scale of window.
+        *        Same as GetDpi, but returning a floating point vector equal to DPI / 96.
+        */
+        virtual Vector2f32 GetScale() const override;
+
+        /**
         * @brief Get current size of window.
         */
         virtual Vector2ui32 GetSize() const override;

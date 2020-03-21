@@ -228,6 +228,16 @@ namespace Curse
     {
     }
 
+    Vector2ui32 WindowX11::GetDpi() const
+    {
+        return { 96, 96 };
+    }
+
+    Vector2f32 WindowX11::GetScale() const
+    {
+        return { static_cast<float>(96) / 96.0f, static_cast<float>(96) / 96.0f };
+    }
+
     Vector2ui32 WindowX11::GetSize() const
     {
         return m_size;
