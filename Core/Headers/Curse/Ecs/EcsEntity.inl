@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2020 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,21 +23,35 @@
 *
 */
 
-#ifndef CURSE_CORE_TYPES_HPP
-#define CURSE_CORE_TYPES_HPP
-
-#include "Curse/Core.hpp"
-#include <stdint.h>
-#include <stddef.h>
-
-// MOVE THIS?
-#include <functional>
-
 namespace Curse
 {
 
-    using Byte = uint8_t; ///< Data type of a single byte.
+    namespace Ecs
+    {
+
+        template<typename ContextType>
+        inline EntityId Entity<ContextType>::GetEntityId() const
+        {
+            return m_entityId;
+        }
+
+        template<typename ContextType>
+        template<typename ... Components>
+        inline Entity<ContextType>& Entity<ContextType>::AddComponents()
+        {
+            if (m_context)
+            {
+                m_context->AddComponents<Components...>(*this);
+            }
+            return *this;
+        }
+
+        template<typename ContextType>
+        inline Entity<ContextType>::Entity(ContextType* context, const EntityId id) :
+            m_context(context),
+            m_id(id)
+        { }
+
+    }
 
 }
-
-#endif

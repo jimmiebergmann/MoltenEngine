@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2020 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,21 +23,36 @@
 *
 */
 
-#ifndef CURSE_CORE_TYPES_HPP
-#define CURSE_CORE_TYPES_HPP
+#ifndef CURSE_CORE_ECS_ECSSIGNATURE_HPP
+#define CURSE_CORE_ECS_ECSSIGNATURE_HPP
 
-#include "Curse/Core.hpp"
-#include <stdint.h>
-#include <stddef.h>
-
-// MOVE THIS?
-#include <functional>
+#include "Curse/Ecs/Ecs.hpp"
+#include "Curse/Utility/Bitfield.hpp"
 
 namespace Curse
 {
 
-    using Byte = uint8_t; ///< Data type of a single byte.
+    namespace Ecs
+    {
+
+        using Signature = Curse::Bitfield<CURSE_MAX_ECS_COMPONENT_TYPES>;
+
+        template<typename ... Components>
+        struct ComponentSignature
+        {
+
+            static inline const Signature signature = CreateSignature<Components...>();
+
+        };
+
+
+        template<typename ... Components>
+        Signature CreateSignature();
+
+    }
 
 }
+
+#include "Curse/Ecs/EcsSignature.inl"
 
 #endif

@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2020 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,21 +23,29 @@
 *
 */
 
-#ifndef CURSE_CORE_TYPES_HPP
-#define CURSE_CORE_TYPES_HPP
 
-#include "Curse/Core.hpp"
-#include <stdint.h>
-#include <stddef.h>
-
-// MOVE THIS?
-#include <functional>
+#include "Curse/Utility/Template.hpp"
 
 namespace Curse
 {
 
-    using Byte = uint8_t; ///< Data type of a single byte.
+    namespace Ecs
+    {
+
+        template<typename ... Components>
+        inline Signature CreateSignature()
+        {
+            Signature signature;
+
+            ForEachTemplateType<Components...>([&signature](auto type)
+            {
+                using Type = typename decltype(type)::Type;
+                signature.Set(Type::componentTypeId);
+            });
+
+            return std::move(signature);
+        }
+
+    }
 
 }
-
-#endif

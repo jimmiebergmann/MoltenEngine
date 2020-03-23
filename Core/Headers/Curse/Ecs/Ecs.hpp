@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2020 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,21 +23,13 @@
 *
 */
 
-#ifndef CURSE_CORE_TYPES_HPP
-#define CURSE_CORE_TYPES_HPP
+#ifndef CURSE_CORE_ECS_ECS_HPP
+#define CURSE_CORE_ECS_ECS_HPP
 
-#include "Curse/Core.hpp"
-#include <stdint.h>
-#include <stddef.h>
+#include "Curse/Utility/Template.hpp"
 
-// MOVE THIS?
-#include <functional>
-
-namespace Curse
-{
-
-    using Byte = uint8_t; ///< Data type of a single byte.
-
-}
+#define CURSE_MAX_ECS_COMPONENT_TYPES 512
+#define CURSE_COMPONENT(name, context) struct name : Curse::Ecs::Component<Context<context>, name>
+#define CURSE_SYSTEM(name, context, ...) struct name : public Curse::Ecs::System<Context<context>, name, __VA_ARGS__>
 
 #endif

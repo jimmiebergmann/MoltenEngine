@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2020 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,21 +23,53 @@
 *
 */
 
-#ifndef CURSE_CORE_TYPES_HPP
-#define CURSE_CORE_TYPES_HPP
+#ifndef CURSE_CORE_ECS_ECSENTITY_HPP
+#define CURSE_CORE_ECS_ECSENTITY_HPP
 
-#include "Curse/Core.hpp"
-#include <stdint.h>
-#include <stddef.h>
-
-// MOVE THIS?
-#include <functional>
+#include "Curse/Ecs/Ecs.hpp"
 
 namespace Curse
 {
 
-    using Byte = uint8_t; ///< Data type of a single byte.
+    namespace Ecs
+    {
+
+        template<typename Derived> class Context; ///< Forward declaration of Context class.
+
+        using EntityId = int32_t; ///< Data type of entity ID.
+
+        /**
+        * @brief Entity object, implicitly containing components.
+        */
+        template<typename ContextType>
+        class Entity
+        {
+
+        public:
+
+            EntityId GetEntityId() const;
+
+            template<typename ... Components>
+            Entity& AddComponents();
+
+        private:
+
+            /**
+            * @brief Private constructor, only called by ContextType.
+            */
+            Entity(ContextType* context, const EntityId id);
+
+            ContextType* m_context; ///< Pointer to parent context.
+            EntityId m_id; ///< Id of this entity.      
+
+            friend typename ContextType; ///< Friend class.
+
+        };
+
+    }
 
 }
+
+#include "Curse/Ecs/EcsEntity.inl"
 
 #endif
