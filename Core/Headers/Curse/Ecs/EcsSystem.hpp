@@ -58,12 +58,12 @@ namespace Curse
             /**
             * @brief Callback function, being called when a new entity of interest is created.
             */
-            virtual void OnCreatedEntity(Entity<ContextType> entity);
+            virtual void OnCreateEntity(Entity<ContextType> entity);
 
             /**
             * @brief Callback function, being called when a new entity of interest is destroyed, and thus removed.
             */
-            virtual void OnDestroyedEntity(Entity<ContextType> entity);
+            virtual void OnDestroyEntity(Entity<ContextType> entity);
 
             /**
             * @brief Function for overriding, handling processing of entities.
@@ -80,7 +80,7 @@ namespace Curse
         private:
 
             void InternalOnRegister(Private::ComponentGroup<ContextType>* componentGroup);
-            void InternalOnAddEntity(Entity<ContextType> entity);
+            void InternalOnCreateEntity(Entity<ContextType> entity);
 
             friend typename ContextType; ///< Friend class
         };

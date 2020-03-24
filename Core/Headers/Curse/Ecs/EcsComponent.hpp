@@ -44,280 +44,110 @@ namespace Curse
 
         using ComponentTypeId = int16_t; ///< Data type of component type ID.
 
-        /*
-        
-    template<typename ContextType>
-    class SystemBase;
-
-
-    using ComponentTypeIdType = int16_t;
-
-
-    struct ComponentOffsetItem
-    {
-        template<typename Comp>
-        static void Insert(std::vector<ComponentOffsetItem>& componentOffsets, const size_t fullSize)
+        /**
+        * @brief Component base class.
+        */
+        class ComponentBase
         {
-            const ComponentTypeIdType componentTypeId = Comp::ComponentTypeId;
 
-            ComponentOffsetItem newItem = { componentTypeId, 0 };
-
-            auto lower = std::lower_bound(componentOffsets.begin(), componentOffsets.end(), newItem,
-                [](const auto& a, const auto& b)
-            {
-                return a.componentTypeId < b.componentTypeId;
-            });
-
-            if (lower == componentOffsets.end())
-            {
-                newItem.offset = fullSize;
-                componentOffsets.push_back(newItem);
-            }
-            else
-            {
-                newItem.offset = lower->offset;
-                auto newIt = componentOffsets.insert(lower, newItem);
-                for (auto it = ++newIt; it != componentOffsets.end(); it++)
-                {
-                    it->offset += sizeof(Comp);
-                }
-            }
-
-        }
-
-        ComponentTypeIdType componentTypeId;
-        size_t offset;
-    };
-
-    template<typename ... Components>
-    constexpr std::array<ComponentOffsetItem, sizeof...(Components)> CreateComponentOffsets();
-
-    template<typename Comp, typename ... OfComps>
-    size_t GetComponentIndexOfTypes();
-    */
-
-
-    /**
-    * @brief Component base class.
-    */
-    class ComponentBase
-    {
-
-    };
-
-
-    /**
-    * @brief Component class.
-    *        Inherit from this class to create component structures.
-    *        Components are implicitly attached to entities.
-    */
-    template<typename ContextType, typename DerivedComponent>
-    class Component : public ComponentBase
-    {
-
-    public:
+        };
 
         /**
-        * @brief Id of this component type.
+        * @brief Component class.
+        *        Inherit from this class to create component structures.
+        *        Components are implicitly attached to entities.
         */
-        static inline const ComponentTypeId componentTypeId = ContextType::GetNextComponentTypeId();
-
-    };
-
-
-    namespace Private
-    {
-
-        /**
-        * @brief Structure of components grouped together for systems.
-        */
-        template<typename ContextType>
-        struct ComponentGroup
+        template<typename ContextType, typename DerivedComponent>
+        class Component : public ComponentBase
         {
+
+        public:
+
             /**
-            * @brief Constructor of component group.
+            * @brief Id of this component type.
             */
-            ComponentGroup(const size_t componentsPerEntity);
+            static inline const ComponentTypeId componentTypeId = ContextType::GetNextComponentTypeId();
 
-            std::vector<SystemBase<ContextType>*> systems;  ///< Vector of systems interested in this component group.
-            const size_t componentsPerEntity;               ///<  Number of components per entity.
-            std::vector<ComponentBase*> components;         ///< Vector of all components. The entity stride is defined by componentsPerEntity.
-            size_t entityCount;                             ///< Number of entities in this component group.
-
-            ///std::vector<Entity<ContextType>*> entities;
         };
 
 
-        /**
-        * @brief Count the total number of bytes of all passes components.
-        */
-        template<typename ... Components>
-        constexpr size_t GetComponenetsSize();
-
-
-        /**
-        * @brief Helper structure, containing offset of a component type id.
-        * @see ComponentOffsets
-        */
-        struct ComponentOffsetItem
+        namespace Private
         {
-            ComponentTypeId componentTypeId;
-            size_t offset;
-        };
+
+            /**
+            * @brief Structure of components grouped together for systems.
+            */
+            template<typename ContextType>
+            struct ComponentGroup
+            {
+                /**
+                * @brief Constructor of component group.
+                */
+                ComponentGroup(const size_t componentsPerEntity);
+
+                std::vector<SystemBase<ContextType>*> systems;  ///< Vector of systems interested in this component group.
+                const size_t componentsPerEntity;               ///<  Number of components per entity.
+                std::vector<ComponentBase*> components;         ///< Vector of all components. The entity stride is defined by componentsPerEntity.
+                size_t entityCount;                             ///< Number of entities in this component group.
+
+                ///std::vector<Entity<ContextType>*> entities;
+            };
 
 
-        /**
-        * @brief Helper function, for creating an array of component offsets.
-        */
-        template<typename ... Components>
-        constexpr std::array<ComponentOffsetItem, sizeof...(Components)> CreateComponentOffsets();
+            /**
+            * @brief Count the total number of bytes of all passes components.
+            */
+            template<typename ... Components>
+            constexpr size_t GetComponenetsSize();
+
+
+            /**
+            * @brief Helper structure, containing offset of a component type id.
+            * @see ComponentOffsets
+            */
+            struct ComponentOffsetItem
+            {
+                ComponentTypeId componentTypeId;
+                size_t offset;
+            };
+
+            using ComponentOffsetItems = std::vector<ComponentOffsetItem>; ///< Data type for vector of component offset items.
+
+
+            /**
+            * @brief Helper function, for creating an array of component offsets.
+            */
+            template<typename ... Components>
+            constexpr std::array<ComponentOffsetItem, sizeof...(Components)> CreateComponentOffsets();
         
 
-        /**
-        * @brief Helper structure, for retreiving data offset of each component.
-        */
-        template<typename ... Components>
-        struct ComponentOffsets
-        {
-            constexpr static size_t offsetCount = sizeof...(Components);
-            static inline const std::array<ComponentOffsetItem, sizeof...(Components)> offsets = CreateComponentOffsets<Components...>();
-        };
-
-
-        /**
-        * @brief Return the index of provided Comp, in the template parameter set of Components.
-        */
-        template<typename Comp, typename ... Components>
-        size_t GetComponentIndexOfTypes();
-
-        /**
-        * @brief Helper structure, for retreiving the offset of a component in a template parameter set.
-        */
-        template<typename Comp, typename ... Components>
-        struct ComponentIndex
-        {
-            static inline const size_t index = GetComponentIndexOfTypes<Comp, Components...>();
-        };
-
-    }
-
-    //template<typename ContextType, typename DerivedComponent>
-    //const ComponentTypeIdType Component<ContextType, DerivedComponent>::ComponentTypeId = ContextType::GetNextComponentTypeId();
-    /*
-
-    using ComponentSignature = Bitmask<CURSE_MAX_COMPONENT_TYPES>;
-
-    template<typename ContextType>
-    struct ComponentIndexGroup
-    {
-        ComponentIndexGroup(const size_t componentsPerEntity) :
-            componentsPerEntity(componentsPerEntity),
-            entityCount(0)
-        { }
-
-        std::vector<SystemBase<ContextType>*> systems;
-        const size_t componentsPerEntity;
-        std::vector<ComponentBase*> components;
-
-        std::vector<Entity<ContextType>*> entities;
-
-        size_t entityCount;
-    };
-
-
-    template<typename ... Components>
-    ComponentSignature CreateComponentSignature()
-    {
-        ComponentSignature signature;
-
-        LoopTemplateTypes<Components...>([&signature](auto type)
-        {
-            using Type = typename decltype(type)::Type;
-            signature.Set(Type::ComponentTypeId);
-        });
-
-        return std::move(signature);
-    }
-
-
-    template<typename ... Components>
-    struct ComponentOffsets
-    {
-        constexpr static size_t OffsetCount = sizeof...(Components);
-        static inline const std::array<ComponentOffsetItem, sizeof...(Components)> Offsets = CreateComponentOffsets<Components...>();
-    };
-
-
-
-    //template<typename ... Components>
-    //const std::array<ComponentOffsetItem, sizeof...(Components)> ComponentOffsets<Components...>::offsets = Private::CreateComponentOffsets<Components...>();
-
-
-
-    template<typename ... Components>
-    constexpr std::array<ComponentOffsetItem, sizeof...(Components)> CreateComponentOffsets()
-    {
-        struct Item
-        {
-            ComponentTypeIdType componentTypeId;
-            size_t size;
-
-            bool operator <(const Item& item) const
+            /**
+            * @brief Helper structure, for retreiving data offset of each component.
+            */
+            template<typename ... Components>
+            struct ComponentOffsets
             {
-                return componentTypeId < item.componentTypeId;
-            }
-        };
+                constexpr static size_t offsetCount = sizeof...(Components);
+                static inline const std::array<ComponentOffsetItem, sizeof...(Components)> offsets = CreateComponentOffsets<Components...>();
+            };
 
-        std::vector<Item> items;
-        LoopTemplateTypes<Components...>([&items](auto type)
-        {
-            using Type = typename decltype(type)::Type;
 
-            items.push_back({ Type::ComponentTypeId, sizeof(Type) });
-        });
+            /**
+            * @brief Return the index of provided Comp, in the template parameter set of Components.
+            */
+            template<typename Comp, typename ... Components>
+            size_t GetComponentIndexOfTypes();
 
-        std::sort(items.begin(), items.end());
-
-        std::array<ComponentOffsetItem, sizeof...(Components)> offsets = {};
-        size_t sum = 0;
-        for (size_t i = 0; i < items.size(); i++)
-        {
-            offsets[i].offset = sum;
-            offsets[i].componentTypeId = items[i].componentTypeId;
-            sum += items[i].size;
-        }
-
-        return offsets;
-    }
-
-    template<typename Comp, typename ... OfComps>
-    size_t GetComponentIndexOfTypes()
-    {
-        // TODO: static_assert with some cool meta programming, like TemplatePackContains<Comp, OfComps...>
-
-        std::vector<ComponentTypeIdType> componentIds;
-
-        LoopTemplateTypes<OfComps...>([&componentIds](auto type)
-        {
-            using Type = typename decltype(type)::Type;
-            componentIds.push_back(Type::ComponentTypeId);
-        });
-
-        std::sort(componentIds.begin(), componentIds.end());
-
-        for (size_t i = 0; i < componentIds.size(); i++)
-        {
-            if (componentIds[i] == Comp::ComponentTypeId)
+            /**
+            * @brief Helper structure, for retreiving the offset of a component in a template parameter set.
+            */
+            template<typename Comp, typename ... Components>
+            struct ComponentIndex
             {
-                return i;
-            }
+                static inline const size_t index = GetComponentIndexOfTypes<Comp, Components...>();
+            };
+
         }
-
-        throw std::runtime_error("Comp is not contained by OfComps");
-    }
-        
-        */
-
 
     }
 

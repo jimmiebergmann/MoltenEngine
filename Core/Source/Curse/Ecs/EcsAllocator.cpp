@@ -25,6 +25,7 @@
 
 #include "Curse/Ecs/EcsAllocator.hpp"
 #include "Curse/System/Exception.hpp"
+#include <cstring>
 
 namespace Curse
 {
@@ -102,7 +103,7 @@ namespace Curse
             }
 
             m_freeDataIndex += size;
-            return static_cast<void*>(&m_blocks[blockIndex] + dataIndex);
+            return static_cast<void*>(m_blocks[blockIndex] + dataIndex);
         }
 
         size_t Allocator::AppendNewBlock()

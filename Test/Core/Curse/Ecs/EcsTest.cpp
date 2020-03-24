@@ -40,7 +40,7 @@ namespace Curse
         struct TestContext : Context<TestContext>
         {
             TestContext() :
-                Context<TestContext>({1048576})
+                Context<TestContext>({4000})
             {}
         };
 
@@ -69,12 +69,12 @@ namespace Curse
                 ++onRegisterCount;
             }
 
-            void OnCreatedEntity(TestEntity entity) override
+            void OnCreateEntity(TestEntity entity) override
             {
                 ++onCreatedEntityCount;
             }
  
-            void OnDestroyedEntity(TestEntity entity) override
+            void OnDestroyEntity(TestEntity entity) override
             {
                 ++onDestroyedEntityCount;
             }
@@ -83,17 +83,29 @@ namespace Curse
             {
                 for (size_t i = 0; i < GetEntityCount(); i++)
                 {
-                    GetComponent<TestTranslation>(i).position = {};
+                    auto& trans = GetComponent<TestTranslation>(i);
+                    trans.position = {};
+                    trans.scale = {};
+
+                    auto& phys = GetComponent<TestPhysics>(i);
+                    phys.velocity = {};
+                    phys.weight = 0.0f;
+
+                    auto& character = GetComponent<TestCharacter>(i);
+                    std::memcpy(character.name, "test", 5);
+
+                    loopedEntities++;
                 }
             }
 
             static inline size_t onRegisterCount = 0;
             static inline size_t onCreatedEntityCount = 0;
             static inline size_t onDestroyedEntityCount = 0;
+            static inline size_t loopedEntities = 0;
 
         };
 
-        TEST(Ecs, Component)
+        TEST(Ecs, Systems)
         {
             EXPECT_EQ(TestTranslation::componentTypeId, ComponentTypeId(0));
             EXPECT_EQ(TestPhysics::componentTypeId, ComponentTypeId(1));
@@ -102,24 +114,26 @@ namespace Curse
             TestContext context;
             TestSystem testSystem;
 
-            //EXPECT_EQ(TestSystem::onRegisterCount, size_t(0));
+            EXPECT_EQ(TestSystem::onRegisterCount, size_t(0));
             context.RegisterSystem(testSystem);
-            //EXPECT_EQ(TestSystem::onRegisterCount, size_t(1));
+            EXPECT_EQ(TestSystem::onRegisterCount, size_t(1));
 
-            //EXPECT_EQ(TestSystem::onCreatedEntityCount, size_t(0));
+            EXPECT_EQ(TestSystem::onCreatedEntityCount, size_t(0));
             auto e1 = context.CreateEntity<TestTranslation, TestPhysics, TestCharacter>();
-            //EXPECT_EQ(TestSystem::onCreatedEntityCount, size_t(1));
+            EXPECT_EQ(TestSystem::onCreatedEntityCount, size_t(1));
             
             auto e2 = context.CreateEntity<TestTranslation, TestCharacter>();
             auto e3 = context.CreateEntity<TestTranslation, TestPhysics>();
             auto e4 = context.CreateEntity<>();
+            auto e = context.CreateEntity<TestPhysics>();
 
-            //EXPECT_EQ(TestSystem::onCreatedEntityCount, size_t(1));
-            e4.AddComponents<TestTranslation, TestPhysics, TestCharacter>();
+            EXPECT_EQ(TestSystem::onCreatedEntityCount, size_t(1));
+            e4.AddComponents<TestTranslation, TestCharacter>();
             //EXPECT_EQ(TestSystem::onCreatedEntityCount, size_t(2));
 
+            EXPECT_EQ(TestSystem::loopedEntities, size_t(0));
             testSystem.Process(Seconds<float>(1.0));
-
+            //EXPECT_EQ(TestSystem::loopedEntities, size_t(2));
         }
     }
 

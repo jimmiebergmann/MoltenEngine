@@ -84,7 +84,7 @@ namespace Curse
         template<typename ... Components>
         inline Entity<Context<DerivedContext> > Context<DerivedContext>::CreateEntity()
         {
-            constexpr auto componentsSize = Private::GetComponenetsSize<Components...>();
+            constexpr auto entitySize = Private::GetComponenetsSize<Components...>();
             const auto& signature = ComponentSignature<Components...>::signature;
 
             // Find the indices for each component, sorted by ComponentIds.
@@ -92,7 +92,7 @@ namespace Curse
             const auto offsets = Private::ComponentOffsets<Components...>::offsets;
 
             // Get entity template, or create a new one if missing,
-            EntityTemplate* entityT = nullptr;
+            Private::EntityTemplate<Context>* entityT = nullptr;
             auto etIt = m_entityTemplates.find(signature);
             if (etIt != m_entityTemplates.end())
             {
@@ -100,7 +100,7 @@ namespace Curse
             }
             else
             {
-                entityT = new EntityTemplate(componentsSize, { offsets.begin(), offsets.end() });
+                entityT = new Private::EntityTemplate<Context>(m_descriptor.entitiesPerCollection, entitySize, { offsets.begin(), offsets.end() });
                 m_entityTemplates.insert({ signature, entityT });
             }
 
@@ -111,10 +111,57 @@ namespace Curse
 
             Entity<Context> entity(this, entityId);
 
-            if constexpr (componentsSize > 0)
+            if constexpr (entitySize > 0)
             {
                 // Get the last collection of this template.
-                /*auto collection = */entityT->GetFreeCollection(m_allocator, m_descriptor.entitiesPerCollection);
+                auto collection = entityT->GetFreeCollection(m_allocator);
+                const size_t collectionBlockIndex = collection->GetBlockIndex();
+                const size_t collectionDataIndex = collection->GetDataIndex();
+                const uint16_t collectionEntry = collection->GetFreeEntry();
+                const size_t collectionEntryOffset = static_cast<size_t>(collectionEntry) * entitySize;
+
+                /// Call constructors.
+                for (auto& offset : offsets)
+                {
+                    ForEachTemplateType<Components...>([this, &offset, &collection, &collectionEntryOffset](auto type)
+                    {
+                        using Type = typename decltype(type)::Type;
+
+                        if (Type::componentTypeId == offset.componentTypeId)
+                        {
+                            auto componentData = reinterpret_cast<uint8_t*>(collection->GetData()) + collectionEntryOffset + offset.offset;
+                            Type* component = reinterpret_cast<Type*>(componentData);
+                            *component = Type();
+                        }
+                    });
+                }
+
+                // Loop throguh the systems component groups and add the indicies if needed.
+                for (auto& pair : m_componentGroups)
+                {
+                    if ((pair.first & signature) == pair.first)
+                    {
+                        auto* componentGroup = pair.second;
+
+                        for (size_t i = 0; i < offsetCount; i++)
+                        {
+                            auto& offset = offsets[i];
+                            if (pair.first.IsSet(offset.componentTypeId))
+                            {
+                                auto dataOffset = collectionDataIndex + collectionEntryOffset + offset.offset;
+                                auto dataPointer = reinterpret_cast<uint8_t*>(m_allocator.GetBlock(collectionBlockIndex)) + dataOffset;
+                                componentGroup->components.push_back(reinterpret_cast<ComponentBase*>(dataPointer));
+                            }
+                        }
+
+                        componentGroup->entityCount++;
+
+                        for (auto* system : componentGroup->systems)
+                        {
+                            system->InternalOnCreateEntity(entity);
+                        }
+                    }
+                }
             }          
 
             return entity;
@@ -122,8 +169,13 @@ namespace Curse
 
         template<typename DerivedContext>
         template<typename ... Components>
-        Context<DerivedContext>& Context<DerivedContext>::AddComponents(const Entity<Context> /*entity*/)
+        Context<DerivedContext>& Context<DerivedContext>::AddComponents(const Entity<Context> entity)
         {
+            if (!entity.m_context)
+            {
+                return *this;
+            }
+
             return *this;
         }
 
@@ -160,79 +212,6 @@ namespace Curse
         {
             static ComponentTypeId currentComponentTypeId = 0;
             return currentComponentTypeId++;
-        }
-
-        /// Implementations of entity template collections.
-        template<typename DerivedContext>
-        inline Context<DerivedContext>::EntityTemplate::Collection::Collection(void* data, const uint16_t entitiesPerCollection, const size_t blockIndex, const size_t dataIndex) :
-            data(data),
-            entitiesPerCollection(entitiesPerCollection),
-            blockIndex(blockIndex),
-            dataIndex(dataIndex),
-            lastFreeEntry(0)
-        { }
-
-        template<typename DerivedContext>
-        inline bool Context<DerivedContext>::EntityTemplate::Collection::IsFull() const
-        {
-            return lastFreeEntry + 1 == entitiesPerCollection;
-        }
-
-        template<typename DerivedContext>
-        inline uint16_t Context<DerivedContext>::EntityTemplate::Collection::GetFreeEntry()
-        {
-            if (freeEntries.size())
-            {
-                auto entry = freeEntries.top();
-                freeEntries.pop();
-                return entry;
-            }
-
-            return lastFreeEntry++;
-        }
-
-        template<typename DerivedContext>
-        inline void Context<DerivedContext>::EntityTemplate::Collection::ReturnEntry(const uint16_t entryId)
-        {
-            if (lastFreeEntry && entryId == lastFreeEntry - 1)
-            {
-                lastFreeEntry--;
-                return;
-            }
-            freeEntries.push(entryId);
-        }
-
-        /// Implementations of entity template.
-        template<typename DerivedContext>
-        inline Context<DerivedContext>::EntityTemplate::EntityTemplate(const size_t entitySize, std::vector<Private::ComponentOffsetItem>&& componentOffsets) :
-            entitySize(entitySize),
-            componentOffsets(std::move(componentOffsets))
-        { }
-
-        template<typename DerivedContext>
-        inline Context<DerivedContext>::EntityTemplate::~EntityTemplate()
-        {
-            /*for (auto* collection : collections)
-            {
-                delete collection;
-            }*/
-        }
-
-        template<typename DerivedContext>
-        inline Context<DerivedContext>::EntityTemplate::template Collection* Context<DerivedContext>::EntityTemplate::GetFreeCollection(Allocator& allocator, const uint16_t entitiesPerCollection)
-        {
-            if (!collections.size() || collections.back()->IsFull())
-            {
-                size_t blockIndex = 0;
-                size_t dataIndex = 0;           
-                void* data = allocator.RequestMemory(entitySize * static_cast<size_t>(entitiesPerCollection), blockIndex, dataIndex);
-
-                auto collection = new Collection(data, entitiesPerCollection, blockIndex, dataIndex);
-                collections.push_back(collection);
-                return collection;
-            }
-
-            return collections.back();
         }
 
     }

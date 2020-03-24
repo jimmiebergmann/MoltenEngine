@@ -28,11 +28,11 @@
 
 #include "Curse/Ecs/Ecs.hpp"
 #include "Curse/Ecs/EcsAllocator.hpp"
+#include "Curse/Ecs/EcsEntityTemplate.hpp"
 #include "Curse/Ecs/EcsSystem.hpp"
 #include "Curse/Ecs/EcsEntity.hpp"
 #include "Curse/Ecs/EcsComponent.hpp"
 #include <map>
-#include <queue>
 
 namespace Curse
 {
@@ -78,7 +78,7 @@ namespace Curse
             * The caller is currently responsible of calling DestoryEntity for freeing memory, by calling DestoryEntity.
             */
             template<typename ... Components>
-            inline Entity<Context> CreateEntity();
+            Entity<Context> CreateEntity();
 
             /**
             * @brief Destroy an entity.
@@ -87,7 +87,9 @@ namespace Curse
             ///void DestroyEntity(Entity<Context>& entity);
 
             /**
-            * @brief Add one or more components to an already created entity.
+            * @brief Add additional components to entity.
+            *        Select components to add via the template parameter list.
+            *        Already added components are ignored from the template parameter list.
             */
             template<typename ... Components>
             Context& AddComponents(const Entity<Context> entity);
@@ -129,62 +131,9 @@ namespace Curse
                 Signature signature;
             };
 
-            /**
-            * @return Entity template structure, containing data of all entities of the same component sets.
-            */
-            struct EntityTemplate
-            {
-
-                /**
-                * @return Structure of entity template collection data.
-                *         A collection contains a set of entities, mapped to memory.
-                */
-                struct Collection
-                {
-
-                    Collection(void* data, const uint16_t entitiesPerCollection, const size_t blockIndex, const size_t dataIndex);
-
-                    /**
-                    * @return True if this collection is full, else false.
-                    */
-                    bool IsFull() const;
-
-                    /**
-                    * @return Index of next avilalble entity in this collection.
-                    */
-                    uint16_t GetFreeEntry();
-
-                    /**
-                    * @brief Return an used entity, back to the collection.
-                    */
-                    void ReturnEntry(const uint16_t entryId);
-
-                    
-                    void* data;
-                    uint16_t entitiesPerCollection;
-                    size_t blockIndex;
-                    size_t dataIndex;
-                    uint16_t lastFreeEntry;
-
-                    template<typename T>
-                    using PriorityQueue = std::priority_queue<T, std::vector<T>, std::greater<uint16_t> >;
-
-                    PriorityQueue<uint16_t> freeEntries;
-                };
-
-                EntityTemplate(const size_t entitySize, std::vector<Private::ComponentOffsetItem>&& componentOffsets);
-                ~EntityTemplate();
-                Collection* GetFreeCollection(Allocator& allocator, const uint16_t entitiesPerCollection);
-
-                using Collections = std::vector<Collection*>;
-                Collections collections;
-                const size_t entitySize;                                          ///< Total size in bytes of a single entity.
-                const std::vector<Private::ComponentOffsetItem> componentOffsets; ///< Offsets of the entities components.
-            };
-
             using Systems = std::vector<SystemItem>;
             using ComponentGroups = std::map<Signature, Private::ComponentGroup<Context>*>;
-            using EntityTemplateMap = std::map<Signature, EntityTemplate*>;
+            using EntityTemplateMap = std::map<Signature, Private::EntityTemplate<Context>*>;
             
             ContextDescritor m_descriptor;          ///< Context descriptor, containing configurations. 
             Allocator m_allocator;                  ///< Memory allocator, taking care of memory allocations.

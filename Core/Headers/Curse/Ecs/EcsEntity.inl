@@ -29,6 +29,11 @@ namespace Curse
     namespace Ecs
     {
 
+        // Implementations of entity.
+        template<typename ContextType>
+        Entity<ContextType>::~Entity()
+        { }
+
         template<typename ContextType>
         inline EntityId Entity<ContextType>::GetEntityId() const
         {
@@ -51,6 +56,21 @@ namespace Curse
             m_context(context),
             m_id(id)
         { }
+
+
+        // Implementations of entity data.
+        namespace Private
+        {
+
+            template<typename ContextType>
+            inline EntityData<ContextType>::EntityData(const Signature& signature, EntityTemplate<ContextType>* entityTemplate) :
+                signature(signature),
+                entityTemplate(entityTemplate),
+                collection(nullptr),
+                collectionEntry(0)
+            { }
+
+        }
 
     }
 

@@ -36,11 +36,11 @@ namespace Curse
         { }
 
         template<typename ContextType>
-        inline void SystemBase<ContextType>::OnCreatedEntity(Entity<ContextType>)
+        inline void SystemBase<ContextType>::OnCreateEntity(Entity<ContextType>)
         { }
 
         template<typename ContextType>
-        inline void SystemBase<ContextType>::OnDestroyedEntity(Entity<ContextType>)
+        inline void SystemBase<ContextType>::OnDestroyEntity(Entity<ContextType>)
         { }
 
         template<typename ContextType>
@@ -58,10 +58,10 @@ namespace Curse
         }
 
         template<typename ContextType>
-        inline void SystemBase<ContextType>::InternalOnAddEntity(Entity<ContextType> entity)
+        inline void SystemBase<ContextType>::InternalOnCreateEntity(Entity<ContextType> entity)
         {
             ++m_entityCount;
-            OnAddEntity(entity);
+            OnCreateEntity(entity);
         }
 
 

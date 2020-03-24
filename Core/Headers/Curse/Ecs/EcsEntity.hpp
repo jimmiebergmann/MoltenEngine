@@ -27,6 +27,7 @@
 #define CURSE_CORE_ECS_ECSENTITY_HPP
 
 #include "Curse/Ecs/Ecs.hpp"
+#include "Curse/Ecs/EcsSignature.hpp"
 
 namespace Curse
 {
@@ -47,8 +48,21 @@ namespace Curse
 
         public:
 
+            /**
+            * @brief Virtual destructor.
+            */
+            virtual ~Entity();
+
+            /**
+            * @brief Get id of entity.
+            */
             EntityId GetEntityId() const;
 
+            /**
+            * @brief Add additional components to entity.
+            *        Select components to add via the template parameter list.
+            *        Already added components are ignored from the template parameter list.
+            */
             template<typename ... Components>
             Entity& AddComponents();
 
@@ -65,6 +79,30 @@ namespace Curse
             friend typename ContextType; ///< Friend class.
 
         };
+
+
+
+        namespace Private
+        {
+
+            template<typename ContextType> class EntityTemplate;
+            template<typename ContextType> class EntityTemplateCollection;
+
+            /**
+            * @brief Structure of data related to entity, such as information about what collection the entity is part of.
+            */
+            template<typename ContextType>
+            struct EntityData
+            {
+                EntityData(const Signature& signature, EntityTemplate<ContextType>* entityTemplate);
+
+                Signature signature;
+                EntityTemplate<ContextType>* entityTemplate;
+                typename EntityTemplateCollection<ContextType>* collection;
+                uint16_t collectionIndex;
+            };
+
+        }
 
     }
 
