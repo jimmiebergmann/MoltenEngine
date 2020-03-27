@@ -23,6 +23,9 @@
 *
 */
 
+#include <algorithm>
+#include <vector>
+
 namespace Curse
 {
 
@@ -105,9 +108,10 @@ namespace Curse
             }
 
             // Create entity!
-            EntityId entityId = m_nextEntityId++;
-            //auto entityData = new EntityData(signature, entityT);
-            //m_entities.push_back(entityData);
+            EntityId entityId = GetNextEntityId();
+
+            auto entityData = new Private::EntityData<Context>(signature);
+            m_entities.insert({ entityId, entityData });
 
             Entity<Context> entity(this, entityId);
 
@@ -115,21 +119,24 @@ namespace Curse
             {
                 // Get the last collection of this template.
                 auto collection = entityT->GetFreeCollection(m_allocator);
-                const size_t collectionBlockIndex = collection->GetBlockIndex();
-                const size_t collectionDataIndex = collection->GetDataIndex();
+                entityData->templateCollection = collection;
                 const uint16_t collectionEntry = collection->GetFreeEntry();
+                entityData->collectionEntry = collectionEntry;
                 const size_t collectionEntryOffset = static_cast<size_t>(collectionEntry) * entitySize;
 
-                /// Call constructors.
+                Byte* entityDataPtr = collection->GetData() + collectionEntryOffset;
+                entityData->data = entityDataPtr;
+
+                /// Call component constructors.
                 for (auto& offset : offsets)
                 {
-                    ForEachTemplateType<Components...>([this, &offset, &collection, &collectionEntryOffset](auto type)
+                    ForEachTemplateType<Components...>([this, &entityDataPtr, &offset](auto type)
                     {
                         using Type = typename decltype(type)::Type;
 
                         if (Type::componentTypeId == offset.componentTypeId)
                         {
-                            auto componentData = reinterpret_cast<uint8_t*>(collection->GetData()) + collectionEntryOffset + offset.offset;
+                            auto componentData = entityDataPtr + offset.offset;
                             Type* component = reinterpret_cast<Type*>(componentData);
                             *component = Type();
                         }
@@ -139,27 +146,40 @@ namespace Curse
                 // Loop throguh the systems component groups and add the indicies if needed.
                 for (auto& pair : m_componentGroups)
                 {
-                    if ((pair.first & signature) == pair.first)
+                    auto& groupSignature = pair.first;
+                    if ((groupSignature & signature) != pair.first)
                     {
-                        auto* componentGroup = pair.second;
+                        continue;
+                    }
 
-                        for (size_t i = 0; i < offsetCount; i++)
+                    auto* componentGroup = pair.second;
+
+                    // Get a vector of component data pointers or relevance for this component group.
+                    std::vector<ComponentBase*> componentPointers;
+                    for (size_t i = 0; i < offsetCount; i++)
+                    {
+                        auto& offset = offsets[i];
+                        if (groupSignature.IsSet(offset.componentTypeId))
                         {
-                            auto& offset = offsets[i];
-                            if (pair.first.IsSet(offset.componentTypeId))
-                            {
-                                auto dataOffset = collectionDataIndex + collectionEntryOffset + offset.offset;
-                                auto dataPointer = reinterpret_cast<uint8_t*>(m_allocator.GetBlock(collectionBlockIndex)) + dataOffset;
-                                componentGroup->components.push_back(reinterpret_cast<ComponentBase*>(dataPointer));
-                            }
+                            auto componentBase = reinterpret_cast<ComponentBase*>(entityDataPtr + offset.offset);
+                            componentPointers.push_back(componentBase);
                         }
+                    }
 
-                        componentGroup->entityCount++;
+                    // Add component pointers to the component group.
+                    if (componentPointers.size())
+                    {
+                        auto& components = componentGroup->components;
+                        auto low = std::lower_bound(components.begin(), components.end(), componentPointers[0]);
+                        components.insert(low, componentPointers.begin(), componentPointers.end());
+                    }
 
-                        for (auto* system : componentGroup->systems)
-                        {
-                            system->InternalOnCreateEntity(entity);
-                        }
+                    componentGroup->entityCount++;
+
+                    // Notify all systems in interest of this entity signature about entity creation.
+                    for (auto* system : componentGroup->systems)
+                    {
+                        system->InternalOnCreateEntity(entity);
                     }
                 }
             }          
@@ -168,15 +188,82 @@ namespace Curse
         }
 
         template<typename DerivedContext>
-        template<typename ... Components>
-        Context<DerivedContext>& Context<DerivedContext>::AddComponents(const Entity<Context> entity)
+        void Context<DerivedContext>::DestroyEntity(Entity<Context<DerivedContext> >& entity)
         {
             if (!entity.m_context)
             {
-                return *this;
+                return;
+            }
+            entity.m_context = nullptr;
+
+            auto entityId = entity.GetEntityId();
+            auto eIt = m_entities.find(entityId);
+            if (eIt == m_entities.end())
+            {
+                return;
             }
 
-            return *this;
+            auto entityData = eIt->second;
+            auto& signature = entityData->signature;
+            auto collection = entityData->templateCollection;
+            if (collection)
+            {
+                for (auto& pair : m_componentGroups)
+                {
+                    if ((pair.first & signature) != pair.first)
+                    {
+                        continue;
+                    }
+
+                    auto* componentGroup = pair.second;
+                    auto& components = componentGroup->components;
+
+                    auto low = std::lower_bound(components.begin(), components.end(), entityData->data);
+                    if (low == components.end())
+                    {
+                        continue;
+                    }
+
+                    components.erase(low, low + componentGroup->componentsPerEntity);
+                    componentGroup->entityCount--;
+
+                    for (auto* system : componentGroup->systems)
+                    {
+                        system->InternalOnDestroyEntity(entity);
+                    }
+                }
+            }
+            
+            collection->ReturnEntry(entityData->collectionEntry);
+            m_freeEntityIds.push(entityId);
+
+            delete entityData;
+            m_entities.erase(eIt);
+        }
+
+        template<typename DerivedContext>
+        template<typename ... Components>
+        void Context<DerivedContext>::AddComponents(const Entity<Context<DerivedContext>> entity)
+        {
+            constexpr size_t componentAddCount = sizeof...(Components);
+            if constexpr (componentAddCount == 0)
+            {
+                return;
+            }
+
+            if (!entity.m_context)
+            {
+                return;
+            }
+
+            constexpr auto entitySize = Private::GetComponenetsSize<Components...>();
+            
+
+           
+
+            //const auto& signature = ComponentSignature<Components...>::signature;
+
+
         }
 
         template<typename DerivedContext>
@@ -196,6 +283,11 @@ namespace Curse
         template<typename DerivedContext>
         inline Context<DerivedContext>::~Context()
         {
+            for (auto pair : m_entities)
+            {
+                delete pair.second;
+            }
+
             for (auto pair : m_entityTemplates)
             {
                 delete pair.second;
@@ -212,6 +304,18 @@ namespace Curse
         {
             static ComponentTypeId currentComponentTypeId = 0;
             return currentComponentTypeId++;
+        }
+
+        template<typename DerivedContext>
+        inline EntityId Context<DerivedContext>::GetNextEntityId()
+        {
+            if (m_freeEntityIds.size())
+            {
+                auto entityId = m_freeEntityIds.front();
+                m_freeEntityIds.pop();
+                return entityId;
+            }
+            return m_nextEntityId++;
         }
 
     }

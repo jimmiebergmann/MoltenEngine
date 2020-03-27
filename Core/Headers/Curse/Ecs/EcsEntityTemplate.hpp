@@ -40,6 +40,10 @@ namespace Curse
         namespace Private
         {
 
+            // Forward declarations.
+            template<typename ContextType> class EntityTemplate;
+
+
             /**
             * @brief Structure of entity template collection data.
             *         A collection contains a set of entities, mapped to memory.
@@ -54,7 +58,7 @@ namespace Curse
                 * @brief Constructor.
                 *        Collection is initialized by providing a partial block of data.
                 */
-                EntityTemplateCollection(void* data, const size_t blockIndex, const size_t dataIndex, const uint16_t entitiesPerCollection);
+                EntityTemplateCollection(EntityTemplate<ContextType>* entityTemplate, Byte* data, const size_t blockIndex, const size_t dataIndex, const uint16_t entitiesPerCollection);
 
                 /**
                 * @return Index of which block the data of this collection is located.
@@ -70,8 +74,8 @@ namespace Curse
                 * @return Pointer to data start of this collection.
                 */
                 /**@{*/
-                void* GetData();
-                const void* GetData() const;
+                Byte* GetData();
+                const Byte* GetData() const;
                 /**@}*/
 
                 /**
@@ -96,11 +100,12 @@ namespace Curse
                 template<typename T>
                 using PriorityQueue = std::priority_queue<T, std::vector<T>, std::greater<uint16_t> >;
 
-                void* m_data;                           ///< Pointer to data start of this collection.
-                size_t m_blockIndex;                    ///< 
-                size_t m_dataIndex;
-                uint16_t m_lastFreeEntry;
-                PriorityQueue<uint16_t> m_freeEntries;
+                EntityTemplate<ContextType>* m_entityTemplate;  ///< 
+                Byte* m_data;                                   ///< Pointer to data start of this collection.
+                size_t m_blockIndex;                            ///< 
+                size_t m_dataIndex;                             ///< 
+                uint16_t m_lastFreeEntry;                       ///< 
+                PriorityQueue<uint16_t> m_freeEntries;          ///< 
 
             };
 

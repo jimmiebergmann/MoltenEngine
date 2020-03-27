@@ -81,6 +81,7 @@ namespace Curse
 
             void InternalOnRegister(Private::ComponentGroup<ContextType>* componentGroup);
             void InternalOnCreateEntity(Entity<ContextType> entity);
+            void InternalOnDestroyEntity(Entity<ContextType> entity);
 
             friend typename ContextType; ///< Friend class
         };

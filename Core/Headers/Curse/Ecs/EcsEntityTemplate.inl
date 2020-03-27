@@ -34,8 +34,9 @@ namespace Curse
 
             /// Implementations of entity template collections.
             template<typename ContextType>
-            inline EntityTemplateCollection<ContextType>::EntityTemplateCollection(void* data, const size_t blockIndex, const size_t dataIndex, const uint16_t entitiesPerCollection) :
+            inline EntityTemplateCollection<ContextType>::EntityTemplateCollection(EntityTemplate<ContextType>* entityTemplate, Byte* data, const size_t blockIndex, const size_t dataIndex, const uint16_t entitiesPerCollection) :
                 entitiesPerCollection(entitiesPerCollection),
+                m_entityTemplate(entityTemplate),
                 m_data(data),
                 m_blockIndex(blockIndex),
                 m_dataIndex(dataIndex),
@@ -56,12 +57,12 @@ namespace Curse
             }
 
             template<typename ContextType>
-            void* EntityTemplateCollection<ContextType>::GetData()
+            Byte* EntityTemplateCollection<ContextType>::GetData()
             {
                 return m_data;
             }
             template<typename ContextType>
-            const void* EntityTemplateCollection<ContextType>::GetData() const
+            const Byte* EntityTemplateCollection<ContextType>::GetData() const
             {
                 return m_data;
             }
@@ -90,7 +91,7 @@ namespace Curse
             {
                 if (m_lastFreeEntry && entryId == m_lastFreeEntry - 1)
                 {
-                    lastFreeEntry--;
+                    m_lastFreeEntry--;
                     return;
                 }
                 m_freeEntries.push(entryId);
@@ -122,9 +123,9 @@ namespace Curse
                 {
                     size_t blockIndex = 0;
                     size_t dataIndex = 0;
-                    void* data = allocator.RequestMemory(entitySize * static_cast<size_t>(entitiesPerCollection), blockIndex, dataIndex);
+                    Byte* data = allocator.RequestMemory(entitySize * static_cast<size_t>(entitiesPerCollection), blockIndex, dataIndex);
 
-                    auto collection = new EntityTemplateCollection<ContextType>(data, blockIndex, dataIndex, entitiesPerCollection);
+                    auto collection = new EntityTemplateCollection<ContextType>(this, data, blockIndex, dataIndex, entitiesPerCollection);
                     collections.push_back(collection);
                     return collection;
                 }

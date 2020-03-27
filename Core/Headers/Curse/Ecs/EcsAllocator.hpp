@@ -63,8 +63,8 @@ namespace Curse
             * @brief Get data pointer to provided block index.
             */
             /**@{*/ 
-            void* GetBlock(const size_t block);
-            const void* GetBlock(const size_t block) const;
+            Byte* GetBlock(const size_t block);
+            const Byte* GetBlock(const size_t block) const;
             /**@}*/
 
             /**
@@ -96,7 +96,7 @@ namespace Curse
             *
             * @throw Exception if system is out of memory, requested size is 0 or > GetBlockSize().
             */
-            void* RequestMemory(const size_t size, size_t& blockIndex, size_t& dataIndex);
+            Byte* RequestMemory(const size_t size, size_t& blockIndex, size_t& dataIndex);
 
         private:
 

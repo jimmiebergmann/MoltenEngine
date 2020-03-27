@@ -81,6 +81,7 @@ namespace Curse
 
             void Process(const Time & deltaTime) override
             {
+                loopedEntities = 0;
                 for (size_t i = 0; i < GetEntityCount(); i++)
                 {
                     auto& trans = GetComponent<TestTranslation>(i);
@@ -125,15 +126,28 @@ namespace Curse
             auto e2 = context.CreateEntity<TestTranslation, TestCharacter>();
             auto e3 = context.CreateEntity<TestTranslation, TestPhysics>();
             auto e4 = context.CreateEntity<>();
-            auto e = context.CreateEntity<TestPhysics>();
+            auto e5 = context.CreateEntity<TestPhysics>();
 
             EXPECT_EQ(TestSystem::onCreatedEntityCount, size_t(1));
-            e4.AddComponents<TestTranslation, TestCharacter>();
-            //EXPECT_EQ(TestSystem::onCreatedEntityCount, size_t(2));
+            auto e6 = context.CreateEntity<TestTranslation, TestPhysics, TestCharacter>();
+            EXPECT_EQ(TestSystem::onCreatedEntityCount, size_t(2));
 
-            EXPECT_EQ(TestSystem::loopedEntities, size_t(0));
             testSystem.Process(Seconds<float>(1.0));
-            //EXPECT_EQ(TestSystem::loopedEntities, size_t(2));
+            EXPECT_EQ(TestSystem::loopedEntities, size_t(2));
+
+            EXPECT_EQ(TestSystem::onDestroyedEntityCount, size_t(0));
+            context.DestroyEntity(e1);
+            EXPECT_EQ(TestSystem::onDestroyedEntityCount, size_t(1));
+
+            testSystem.Process(Seconds<float>(1.0));
+            EXPECT_EQ(TestSystem::loopedEntities, size_t(1));
+
+            EXPECT_EQ(TestSystem::onCreatedEntityCount, size_t(2));
+            auto e7 = context.CreateEntity<TestTranslation, TestPhysics, TestCharacter>();
+            EXPECT_EQ(TestSystem::onCreatedEntityCount, size_t(3));
+
+            testSystem.Process(Seconds<float>(1.0));
+            EXPECT_EQ(TestSystem::loopedEntities, size_t(2));
         }
     }
 

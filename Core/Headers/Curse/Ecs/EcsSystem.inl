@@ -64,6 +64,13 @@ namespace Curse
             OnCreateEntity(entity);
         }
 
+        template<typename ContextType>
+        inline void SystemBase<ContextType>::InternalOnDestroyEntity(Entity<ContextType> entity)
+        {
+            --m_entityCount;
+            OnDestroyEntity(entity);
+        }
+
 
         /// Implementations of system class.
         template<typename ContextType, typename DerivedSystem, typename ... RequiredCompnents>

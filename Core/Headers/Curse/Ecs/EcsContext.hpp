@@ -33,6 +33,7 @@
 #include "Curse/Ecs/EcsEntity.hpp"
 #include "Curse/Ecs/EcsComponent.hpp"
 #include <map>
+#include <queue>
 
 namespace Curse
 {
@@ -84,7 +85,7 @@ namespace Curse
             * @brief Destroy an entity.
             *        Memory will be available for other entities.
             */
-            ///void DestroyEntity(Entity<Context>& entity);
+            void DestroyEntity(Entity<Context>& entity);
 
             /**
             * @brief Add additional components to entity.
@@ -92,7 +93,7 @@ namespace Curse
             *        Already added components are ignored from the template parameter list.
             */
             template<typename ... Components>
-            Context& AddComponents(const Entity<Context> entity);
+            void AddComponents(const Entity<Context> entity);
 
             /**
             * @brief Get allocator.
@@ -123,6 +124,13 @@ namespace Curse
             static ComponentTypeId GetNextComponentTypeId();
 
             /**
+            * @brief Get the next available entity ID, destroyed entity ID's are queued for reuse.
+            *
+            * @return m_freeEntityIds.top() is returned if available, else m_nextEntityId++;
+            */
+            EntityId GetNextEntityId();
+
+            /**
             * @brief Structure of system and its components signatures
             */
             struct SystemItem
@@ -134,12 +142,15 @@ namespace Curse
             using Systems = std::vector<SystemItem>;
             using ComponentGroups = std::map<Signature, Private::ComponentGroup<Context>*>;
             using EntityTemplateMap = std::map<Signature, Private::EntityTemplate<Context>*>;
+            using EntityMap = std::map<EntityId, Private::EntityData<Context>*>;
             
             ContextDescritor m_descriptor;          ///< Context descriptor, containing configurations. 
             Allocator m_allocator;                  ///< Memory allocator, taking care of memory allocations.
             ComponentGroups m_componentGroups;      ///< Container of all component groups.
             EntityTemplateMap m_entityTemplates;    ///< Map of all entity templates.
-            EntityId m_nextEntityId;
+            EntityMap m_entities;                   ///< Map of all entities.
+            EntityId m_nextEntityId;                ///< The next availalbe entity ID.
+            std::queue<EntityId> m_freeEntityIds;   ///< Queue of deleted entity ID's, ready for reuse.
             Systems m_systems;
 
             /**

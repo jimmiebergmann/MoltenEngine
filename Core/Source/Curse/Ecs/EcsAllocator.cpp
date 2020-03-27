@@ -51,11 +51,11 @@ namespace Curse
             }
         }
 
-        void* Allocator::GetBlock(const size_t block)
+        Byte* Allocator::GetBlock(const size_t block)
         {
             return m_blocks[block];
         }
-        const void* Allocator::GetBlock(const size_t block) const
+        const Byte* Allocator::GetBlock(const size_t block) const
         {
             return m_blocks[block];
         }
@@ -80,7 +80,7 @@ namespace Curse
             return m_freeDataIndex;
         }
 
-        void* Allocator::RequestMemory(const size_t size, size_t& blockIndex, size_t& dataIndex)
+        Byte* Allocator::RequestMemory(const size_t size, size_t& blockIndex, size_t& dataIndex)
         {
             blockIndex = m_freeBlockIndex;
             dataIndex = m_freeDataIndex;
@@ -103,7 +103,7 @@ namespace Curse
             }
 
             m_freeDataIndex += size;
-            return static_cast<void*>(m_blocks[blockIndex] + dataIndex);
+            return m_blocks[blockIndex] + dataIndex;
         }
 
         size_t Allocator::AppendNewBlock()

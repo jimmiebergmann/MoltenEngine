@@ -37,7 +37,7 @@ namespace Curse
         template<typename ContextType>
         inline EntityId Entity<ContextType>::GetEntityId() const
         {
-            return m_entityId;
+            return m_id;
         }
 
         template<typename ContextType>
@@ -63,11 +63,14 @@ namespace Curse
         {
 
             template<typename ContextType>
-            inline EntityData<ContextType>::EntityData(const Signature& signature, EntityTemplate<ContextType>* entityTemplate) :
+            inline EntityData<ContextType>::EntityData(const Signature& signature) :
                 signature(signature),
-                entityTemplate(entityTemplate),
-                collection(nullptr),
+                templateCollection(nullptr),
+                data(nullptr),
                 collectionEntry(0)
+                //,
+                //collection(nullptr),
+                //collectionEntry(0)
             { }
 
         }

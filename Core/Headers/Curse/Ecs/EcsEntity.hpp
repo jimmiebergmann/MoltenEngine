@@ -94,12 +94,13 @@ namespace Curse
             template<typename ContextType>
             struct EntityData
             {
-                EntityData(const Signature& signature, EntityTemplate<ContextType>* entityTemplate);
+                EntityData(const Signature& signature);
 
                 Signature signature;
-                EntityTemplate<ContextType>* entityTemplate;
-                typename EntityTemplateCollection<ContextType>* collection;
-                uint16_t collectionIndex;
+                EntityTemplateCollection<ContextType>* templateCollection;
+                void* data;
+                //typename EntityTemplateCollection<ContextType>* collection;
+                uint16_t collectionEntry;
             };
 
         }
