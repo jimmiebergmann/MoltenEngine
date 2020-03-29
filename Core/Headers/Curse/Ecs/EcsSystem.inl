@@ -77,6 +77,9 @@ namespace Curse
         template<typename Comp>
         Comp& System<ContextType, DerivedSystem, RequiredCompnents...>::GetComponent(const size_t entityIndex)
         {
+            static_assert(TemplateArgumentsContains<Comp, RequiredCompnents...>(),
+                "Provided type for GetComponent is not available for this system.");
+
             const size_t componentIndex = (entityIndex * SystemBase<ContextType>::m_componentGroup->componentsPerEntity) + Private::ComponentIndex<Comp, RequiredCompnents...>::index;
             return *static_cast<Comp*>(SystemBase<ContextType>::m_componentGroup->components[componentIndex]);
         }

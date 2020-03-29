@@ -23,6 +23,9 @@
 *
 */
 
+#include <type_traits>
+#include "Curse/Utility/Template.hpp"
+
 namespace Curse
 {
 
@@ -32,6 +35,20 @@ namespace Curse
         namespace Private
         {
 
+            template<typename ... Types>
+            inline constexpr bool AreExplicitComponentTypes()
+            {
+                return (std::is_base_of<ComponentBase, Types>::value && ...) &&
+                       (!std::is_same<ComponentBase, Types>::value && ...);
+            }
+
+            template<typename ContextType, typename ... Types>
+            inline constexpr bool AreExplicitContextComponentTypes()
+            {
+                return (std::is_base_of<ComponentContextBase<ContextType>, Types>::value && ...) &&
+                       (!std::is_same<ComponentContextBase<ContextType>, Types>::value && ...);
+            }
+
             template<typename ContextType>
             inline ComponentGroup<ContextType>::ComponentGroup(const size_t componentsPerEntity) :
                 componentsPerEntity(componentsPerEntity),
@@ -39,10 +56,12 @@ namespace Curse
             { }
 
             template<typename ... Components>
-            inline constexpr size_t GetComponenetsSize()
+            inline constexpr size_t GetComponentsSize()
             {
+                static_assert(Private::AreExplicitComponentTypes<Components...>(), "Implicit component type.");
+
                 size_t size = 0;
-                ForEachTemplateType<Components...>([&size](auto type)
+                ForEachTemplateArgument<Components...>([&size](auto type)
                 {
                     using Type = typename decltype(type)::Type;
                     size += sizeof(Type);
@@ -52,7 +71,41 @@ namespace Curse
             }
 
             template<typename ... Components>
-            inline constexpr std::array<ComponentOffsetItem, sizeof...(Components)> CreateComponentOffsets()
+            inline void ExtendComponentOffsetList(ComponentOffsetList& offsetList, const size_t oldTotalSize)
+            {
+                size_t currentSize = oldTotalSize;
+
+                offsetList.reserve(offsetList.size() + sizeof...(Components));
+                ForEachTemplateArgument<Components...>([&offsetList, &currentSize](auto type)
+                {
+                    using Type = typename decltype(type)::Type;
+
+                    auto lower = std::lower_bound(offsetList.begin(), offsetList.end(), Type::componentTypeId,
+                        [](const auto& a, const auto& b)
+                    {
+                        return a.componentTypeId < b;
+                    });
+
+                    if (lower == offsetList.end())
+                    {
+                        offsetList.push_back({ Type::componentTypeId, currentSize });
+                    }
+                    else
+                    {
+                        auto newIt = offsetList.insert(lower, { Type::componentTypeId, lower->offset });
+                        for (auto it = ++newIt; it != offsetList.end(); it++)
+                        {
+                            it->offset += sizeof(Type);
+                        }
+                    }
+
+                    currentSize += sizeof(Type);
+
+                });
+            }
+
+            template<typename ... Components>
+            inline constexpr ComponentOffsetArray<sizeof...(Components)> CreateComponentOffsets()
             {
                 struct Item
                 {
@@ -66,7 +119,7 @@ namespace Curse
                 };
 
                 std::vector<Item> items;
-                ForEachTemplateType<Components...>([&items](auto type)
+                ForEachTemplateArgument<Components...>([&items](auto type)
                 {
                     using Type = typename decltype(type)::Type;
                     items.push_back({ Type::componentTypeId, sizeof(Type) });
@@ -74,7 +127,7 @@ namespace Curse
 
                 std::sort(items.begin(), items.end());
 
-                std::array<ComponentOffsetItem, sizeof...(Components)> offsets = {};
+                ComponentOffsetArray<sizeof...(Components)> offsets = {};
                 size_t sum = 0;
                 for (size_t i = 0; i < items.size(); i++)
                 {
@@ -90,12 +143,13 @@ namespace Curse
             template<typename Comp, typename ... Components>
             inline size_t GetComponentIndexOfTypes()
             {
-           
-                // TODO: static_assert with some cool meta programming, like TemplatePackContains<Comp, OfComps...>
+                static_assert(TemplateArgumentsContains<Comp, Components...>(),
+                    "Provided component is missing in the component template argument list.");
+                static_assert(Private::AreExplicitComponentTypes<Components...>(), "Implicit component type.");
 
                 std::vector<ComponentTypeId> componentIds;
 
-                ForEachTemplateType<Components...>([&componentIds](auto type)
+                ForEachTemplateArgument<Components...>([&componentIds](auto type)
                 {
                     using Type = typename decltype(type)::Type;
                     componentIds.push_back(Type::componentTypeId);
@@ -111,7 +165,7 @@ namespace Curse
                     }
                 }
 
-                throw Exception("Comp is not in the set of Components.");
+                return 0;
             }
 
         }

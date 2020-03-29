@@ -40,7 +40,7 @@ namespace Curse
         struct TestContext : Context<TestContext>
         {
             TestContext() :
-                Context<TestContext>({4000})
+                Context<TestContext>(ContextDescriptor{4000})
             {}
         };
 
@@ -148,6 +148,13 @@ namespace Curse
 
             testSystem.Process(Seconds<float>(1.0));
             EXPECT_EQ(TestSystem::loopedEntities, size_t(2));
+
+            context.AddComponents<TestCharacter>(e3);
+            EXPECT_EQ(TestSystem::onCreatedEntityCount, size_t(4));
+
+            testSystem.Process(Seconds<float>(1.0));
+            EXPECT_EQ(TestSystem::loopedEntities, size_t(3));
+
         }
     }
 

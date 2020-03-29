@@ -23,6 +23,9 @@
 *
 */
 
+#include <algorithm>
+#include <limits>
+
 namespace Curse
 {
 
@@ -34,7 +37,8 @@ namespace Curse
 
             /// Implementations of entity template collections.
             template<typename ContextType>
-            inline EntityTemplateCollection<ContextType>::EntityTemplateCollection(EntityTemplate<ContextType>* entityTemplate, Byte* data, const size_t blockIndex, const size_t dataIndex, const uint16_t entitiesPerCollection) :
+            inline EntityTemplateCollection<ContextType>::EntityTemplateCollection(EntityTemplate<ContextType>* entityTemplate, Byte* data,
+                                                                                   const size_t blockIndex, const size_t dataIndex, const size_t entitiesPerCollection) :
                 entitiesPerCollection(entitiesPerCollection),
                 m_entityTemplate(entityTemplate),
                 m_data(data),
@@ -68,7 +72,18 @@ namespace Curse
             }
 
             template<typename ContextType>
-            inline uint16_t EntityTemplateCollection<ContextType>::GetFreeEntry()
+            EntityTemplate<ContextType>* EntityTemplateCollection<ContextType>::GetEntityTemplate()
+            {
+                return m_entityTemplate;
+            }
+            template<typename ContextType>
+            const EntityTemplate<ContextType>* EntityTemplateCollection<ContextType>::GetEntityTemplate() const
+            {
+                return m_entityTemplate;
+            }
+
+            template<typename ContextType>
+            inline CollectionEntryId EntityTemplateCollection<ContextType>::GetFreeEntry()
             {
                 if (m_freeEntries.size())
                 {
@@ -83,12 +98,16 @@ namespace Curse
             template<typename ContextType>
             inline bool EntityTemplateCollection<ContextType>::IsFull() const
             {
-                return m_lastFreeEntry + 1 == entitiesPerCollection;
+                return static_cast<size_t>(m_lastFreeEntry) + 1 == entitiesPerCollection;
             }
 
             template<typename ContextType>
-            inline void EntityTemplateCollection<ContextType>::ReturnEntry(const uint16_t entryId)
+            inline void EntityTemplateCollection<ContextType>::ReturnEntry(const CollectionEntryId entryId)
             {
+                // SHOULD WE CLEAR? REDUNDANT DUE TO CONSTUCTOR CALL AT COMPONENT CREATION?
+                //auto dataPtr = m_data + static_cast<size_t>(entryId) * m_entityTemplate->entitySize;
+                //std::memset(dataPtr, 0, m_entityTemplate->entitySize);
+
                 if (m_lastFreeEntry && entryId == m_lastFreeEntry - 1)
                 {
                     m_lastFreeEntry--;
@@ -100,8 +119,8 @@ namespace Curse
 
             /// Implementations of entity template.
             template<typename ContextType>
-            inline EntityTemplate<ContextType>::EntityTemplate(const uint16_t entitiesPerCollection, const size_t entitySize, Private::ComponentOffsetItems&& componentOffsets) :
-                entitiesPerCollection(entitiesPerCollection),
+            inline EntityTemplate<ContextType>::EntityTemplate(const size_t entitiesPerCollection, const size_t entitySize, Private::ComponentOffsetList&& componentOffsets) :
+                entitiesPerCollection(std::min(entitiesPerCollection, static_cast<size_t>(std::numeric_limits<CollectionEntryId>::max()))),
                 entitySize(entitySize),
                 componentOffsets(std::move(componentOffsets)),
                 collections{}

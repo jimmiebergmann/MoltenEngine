@@ -44,6 +44,9 @@ namespace Curse
             template<typename ContextType> class EntityTemplate;
 
 
+            using CollectionEntryId = uint8_t; /// < Data type of entity template collection entry ID.
+
+
             /**
             * @brief Structure of entity template collection data.
             *         A collection contains a set of entities, mapped to memory.
@@ -57,8 +60,11 @@ namespace Curse
                 /**
                 * @brief Constructor.
                 *        Collection is initialized by providing a partial block of data.
+                *        
+                * @param entitiesPerCollection is clamped to max value of CollectionEntryId.
                 */
-                EntityTemplateCollection(EntityTemplate<ContextType>* entityTemplate, Byte* data, const size_t blockIndex, const size_t dataIndex, const uint16_t entitiesPerCollection);
+                EntityTemplateCollection(EntityTemplate<ContextType>* entityTemplate, Byte* data, const size_t blockIndex,
+                                         const size_t dataIndex, const size_t entitiesPerCollection);
 
                 /**
                 * @return Index of which block the data of this collection is located.
@@ -71,17 +77,25 @@ namespace Curse
                 size_t GetDataIndex() const;
 
                 /**
-                * @return Pointer to data start of this collection.
+                * @return Pointer to entity template of thuis collection.
                 */
                 /**@{*/
                 Byte* GetData();
                 const Byte* GetData() const;
                 /**@}*/
+                EntityTemplate<ContextType>* GetEntityTemplate();
+                const EntityTemplate<ContextType>* GetEntityTemplate() const;
+                /**
+                * @return Pointer to data start of this collection.
+                */
+                /**@{*/
+                
+                /**@}*/
 
                 /**
                 * @return Index of next avilalble entity in this collection.
                 */
-                uint16_t GetFreeEntry();
+                CollectionEntryId GetFreeEntry();
 
                 /**
                 * @return True if this collection is full, else false.
@@ -91,21 +105,21 @@ namespace Curse
                 /**
                 * @brief Return an used entity, back to the collection.
                 */
-                void ReturnEntry(const uint16_t entryId);
+                void ReturnEntry(const CollectionEntryId entryId);
 
-                const uint16_t entitiesPerCollection;   ///< Maximum number of enteties of this collection.
+                const size_t entitiesPerCollection;   ///< Maximum number of enteties of this collection.
 
             private:
 
                 template<typename T>
-                using PriorityQueue = std::priority_queue<T, std::vector<T>, std::greater<uint16_t> >;
+                using PriorityQueue = std::priority_queue<T, std::vector<T>, std::greater<CollectionEntryId> >;
 
                 EntityTemplate<ContextType>* m_entityTemplate;  ///< 
                 Byte* m_data;                                   ///< Pointer to data start of this collection.
                 size_t m_blockIndex;                            ///< 
                 size_t m_dataIndex;                             ///< 
-                uint16_t m_lastFreeEntry;                       ///< 
-                PriorityQueue<uint16_t> m_freeEntries;          ///< 
+                CollectionEntryId m_lastFreeEntry;                       ///< 
+                PriorityQueue<CollectionEntryId> m_freeEntries;          ///< 
 
             };
 
@@ -123,7 +137,7 @@ namespace Curse
                 * @brief Constructor.
                 *         Entity templates are constructed, by providing the size in bytes of each entity, and an vector of component offsets.
                 */
-                EntityTemplate(const uint16_t entitiesPerCollection, const size_t entitySize, Private::ComponentOffsetItems&& componentOffsets);
+                EntityTemplate(const size_t entitiesPerCollection, const size_t entitySize, Private::ComponentOffsetList&& componentOffsets);
 
                 /**
                 * @brief Destructor. Cleaning up allocated collections.
@@ -135,9 +149,9 @@ namespace Curse
                 */
                 EntityTemplateCollection<ContextType>* GetFreeCollection(Allocator& allocator);
 
-                const uint16_t entitiesPerCollection;                    ///< Maximum number of enteties per collection.
-                const size_t entitySize;                                 ///< Total size in bytes of a single entity.
-                const Private::ComponentOffsetItems componentOffsets;    ///< Offsets of the entities components.
+                const size_t entitiesPerCollection;                     ///< Maximum number of enteties per collection.
+                const size_t entitySize;                                ///< Total size in bytes of a single entity.
+                const Private::ComponentOffsetList componentOffsets;    ///< Offsets of the entities components.
 
             private:
 

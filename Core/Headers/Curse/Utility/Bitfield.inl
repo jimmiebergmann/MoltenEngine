@@ -32,13 +32,13 @@ namespace Curse
     { }
 
     template<size_t BitCount>
-    inline Bitfield<BitCount>::Bitfield(const Bitfield& bitfields) :
-        m_fragments(bitfields.m_fragments)
+    inline Bitfield<BitCount>::Bitfield(const Bitfield& bitfield) :
+        m_fragments(bitfield.m_fragments)
     { }
 
     template<size_t BitCount>
-    inline Bitfield<BitCount>::Bitfield(Bitfield&& bitfields) noexcept :
-        m_fragments(std::move(bitfields.m_fragments))
+    inline Bitfield<BitCount>::Bitfield(Bitfield&& bitfield) noexcept :
+        m_fragments(std::move(bitfield.m_fragments))
     { }
 
     template<size_t BitCount>
@@ -122,6 +122,20 @@ namespace Curse
         static_assert(std::is_integral<BitType>::value, "Bit type is not an integral.");
         Unset(bit);
         Unset(rest...);
+    }
+
+    template<size_t BitCount>
+    inline Bitfield<BitCount>& Bitfield<BitCount>::operator =(const Bitfield& bitfield)
+    {
+        m_fragments = bitfield.m_fragments;
+        return *this;
+    }
+
+    template<size_t BitCount>
+    inline Bitfield<BitCount>& Bitfield<BitCount>::operator =(Bitfield&& bitfield) noexcept
+    {
+        m_fragments = std::move(bitfield.m_fragments);
+        return *this;
     }
 
     template<size_t BitCount>

@@ -32,7 +32,7 @@ namespace Curse
     {
 
         // Implementations of context descriptor.
-        ContextDescritor::ContextDescritor(const size_t memoryBlockSize, const uint16_t entitiesPerCollection, const size_t reservedComponentsPerGroup) :
+        ContextDescriptor::ContextDescriptor(const size_t memoryBlockSize, const size_t entitiesPerCollection, const size_t reservedComponentsPerGroup) :
             memoryBlockSize(memoryBlockSize),
             entitiesPerCollection(entitiesPerCollection),
             reservedComponentsPerGroup(reservedComponentsPerGroup)

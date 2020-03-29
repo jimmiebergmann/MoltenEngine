@@ -28,11 +28,7 @@
 
 #include "Curse/Ecs/Ecs.hpp"
 #include <array>
-/*#include "Curse/System/Bitfield.hpp"
 #include <vector>
-#include <array>
-#include <algorithm>
-#include <limits>*/
 
 namespace Curse
 {
@@ -53,12 +49,21 @@ namespace Curse
         };
 
         /**
+        * @brief Component base class for specific context type.
+        */
+        template<typename ContextType>
+        class ComponentContextBase : public ComponentBase
+        {
+
+        };
+
+        /**
         * @brief Component class.
         *        Inherit from this class to create component structures.
         *        Components are implicitly attached to entities.
         */
         template<typename ContextType, typename DerivedComponent>
-        class Component : public ComponentBase
+        class Component : public ComponentContextBase<ContextType>
         {
 
         public:
@@ -73,6 +78,21 @@ namespace Curse
 
         namespace Private
         {
+
+            /**
+            * @brief Checks if provided types are explicit component types.
+            * @return True if Types inherits from ComponentBase, else false.
+            */
+            template<typename ... Types>
+            constexpr bool AreExplicitComponentTypes();
+
+            /**
+            * @brief Checks if provided types are explicit component types.
+            * @return True if Types inherits from ComponentContextBase<ContextType>, else false.
+            */
+            template<typename ContextType, typename ... Types>
+            constexpr bool AreExplicitContextComponentTypes();
+
 
             /**
             * @brief Structure of components grouped together for systems.
@@ -98,7 +118,7 @@ namespace Curse
             * @brief Count the total number of bytes of all passes components.
             */
             template<typename ... Components>
-            constexpr size_t GetComponenetsSize();
+            constexpr size_t GetComponentsSize();
 
 
             /**
@@ -111,16 +131,29 @@ namespace Curse
                 size_t offset;
             };
 
-            using ComponentOffsetItems = std::vector<ComponentOffsetItem>; ///< Data type for vector of component offset items.
+            using ComponentOffsetList = std::vector<ComponentOffsetItem>; ///< Vector of component offset items.
+
+            template<size_t Size>
+            using ComponentOffsetArray = std::array<ComponentOffsetItem, Size>; ///< Array of component offset items.
+
+
+            /**
+            * @brief Helper function, for creating an array of component offsets.
+            *
+            * @tparam Components List of components to extend to offsetList.
+            * @param offsetList Offset list to extend by template parameter list.
+            * @param newTotalSize Total size in bytes of the new extended offset list.
+            */
+            template<typename ... Components>
+            static void ExtendComponentOffsetList(ComponentOffsetList& offsetList, const size_t oldTotalSize);
 
 
             /**
             * @brief Helper function, for creating an array of component offsets.
             */
             template<typename ... Components>
-            constexpr std::array<ComponentOffsetItem, sizeof...(Components)> CreateComponentOffsets();
+            constexpr ComponentOffsetArray<sizeof...(Components)> CreateComponentOffsets();
         
-
             /**
             * @brief Helper structure, for retreiving data offset of each component.
             */
@@ -128,7 +161,7 @@ namespace Curse
             struct ComponentOffsets
             {
                 constexpr static size_t offsetCount = sizeof...(Components);
-                static inline const std::array<ComponentOffsetItem, sizeof...(Components)> offsets = CreateComponentOffsets<Components...>();
+                static inline const ComponentOffsetArray<sizeof...(Components)> offsets = CreateComponentOffsets<Components...>();
             };
 
 

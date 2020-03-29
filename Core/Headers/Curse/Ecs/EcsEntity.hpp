@@ -28,6 +28,7 @@
 
 #include "Curse/Ecs/Ecs.hpp"
 #include "Curse/Ecs/EcsSignature.hpp"
+#include "Curse/Ecs/EcsEntityTemplate.hpp"
 
 namespace Curse
 {
@@ -35,9 +36,20 @@ namespace Curse
     namespace Ecs
     {
 
-        template<typename Derived> class Context; ///< Forward declaration of Context class.
+        /**
+        * Forward declarations.
+        */
+        /**@{*/
+        template<typename Derived> class Context;
+        namespace Private
+        {
+            template<typename ContextType> struct EntityMetaData;
+        }
+        /**@}*/
+
 
         using EntityId = int32_t; ///< Data type of entity ID.
+
 
         /**
         * @brief Entity object, implicitly containing components.
@@ -71,36 +83,32 @@ namespace Curse
             /**
             * @brief Private constructor, only called by ContextType.
             */
-            Entity(ContextType* context, const EntityId id);
+            Entity(Private::EntityMetaData<ContextType>* metaData, const EntityId id);
 
-            ContextType* m_context; ///< Pointer to parent context.
-            EntityId m_id; ///< Id of this entity.      
+            Private::EntityMetaData<ContextType>* m_metaData; ///< Pointer to meta data
+            EntityId m_id;  ///< Id of this entity.      
 
             friend typename ContextType; ///< Friend class.
 
         };
 
 
-
         namespace Private
         {
-
-            template<typename ContextType> class EntityTemplate;
-            template<typename ContextType> class EntityTemplateCollection;
 
             /**
             * @brief Structure of data related to entity, such as information about what collection the entity is part of.
             */
             template<typename ContextType>
-            struct EntityData
+            struct EntityMetaData
             {
-                EntityData(const Signature& signature);
-
-                Signature signature;
-                EntityTemplateCollection<ContextType>* templateCollection;
-                void* data;
-                //typename EntityTemplateCollection<ContextType>* collection;
-                uint16_t collectionEntry;
+                EntityMetaData(ContextType* context, const Signature& signature);
+                
+                ContextType* context;
+                Signature signature; 
+                EntityTemplateCollection<ContextType>* collection;
+                CollectionEntryId collectionEntry;
+                Byte* dataPointer;
             };
 
         }

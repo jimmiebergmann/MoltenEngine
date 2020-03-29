@@ -41,8 +41,30 @@ namespace Curse
     *   using Type = typename decltype(type)::Type;
     * }
     */
-    template<typename ... Templates, typename Callback>
-    constexpr void ForEachTemplateType(Callback&& callback);
+    template<typename ... Types, typename Callback>
+    constexpr void ForEachTemplateArgument(Callback&& callback);
+
+    /**
+    * @brief Loop each template type in a parameter pack.
+    * Privide the types and a callback function, being called for each type.
+    *
+    * Same as ForEachTemplateType, but also provides the loop index(starts at 0) to the calback function.
+    *
+    * Example:
+    * ForEachTemplateTypeIndexed<int, double>([](auto type, size_t index)
+    * {
+    *   using Type = typename decltype(type)::Type;
+    * }
+    */
+    template<typename ... Types, typename Callback>
+    constexpr void ForEachTemplateArgumentIndexed(Callback&& callback);
+
+    /**
+    * @brief Checks if a set of template argument types contains Type.
+    * @return True if Type is contained in Types, else false.
+    */
+    template<typename Type, typename ... Types>
+    constexpr bool TemplateArgumentsContains();
 
 }
 

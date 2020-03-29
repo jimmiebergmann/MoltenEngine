@@ -58,12 +58,12 @@ namespace Curse
         /**
         * @brief Copy bitfield from another bitfield of the same length.
         */
-        Bitfield(const Bitfield& bitfields);
+        Bitfield(const Bitfield& bitfield);
 
         /**
         * @brief Move bitfield from another bitfield.
         */
-        Bitfield(Bitfield&& bitfields) noexcept;
+        Bitfield(Bitfield&& bitfield) noexcept;
 
         /**
         * @brief Constructing bitfield by setting all bits to zero, except the passed bits.
@@ -109,6 +109,16 @@ namespace Curse
         */
         template<typename BitType, typename ... RestBitTypes>
         void Unset(const BitType bit, const RestBitTypes ... rest);
+
+        /**
+        * @brief Assign bitfield from another bitfield of the same length.
+        */
+        Bitfield& operator =(const Bitfield& bitfield);
+
+        /**
+        * @brief Move assign bitfield from another bitfield.
+        */
+        Bitfield& operator =(Bitfield&& bitfield) noexcept;
 
         /**
         * @return AND operator.

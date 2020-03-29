@@ -52,8 +52,8 @@ namespace Curse
         }
 
         template<typename ContextType>
-        inline Entity<ContextType>::Entity(ContextType* context, const EntityId id) :
-            m_context(context),
+        inline Entity<ContextType>::Entity(Private::EntityMetaData<ContextType>* metaData, const EntityId id) :
+            m_metaData(metaData),
             m_id(id)
         { }
 
@@ -63,14 +63,12 @@ namespace Curse
         {
 
             template<typename ContextType>
-            inline EntityData<ContextType>::EntityData(const Signature& signature) :
+            inline EntityMetaData<ContextType>::EntityMetaData(ContextType* context, const Signature& signature) :
+                context(context),
                 signature(signature),
-                templateCollection(nullptr),
-                data(nullptr),
-                collectionEntry(0)
-                //,
-                //collection(nullptr),
-                //collectionEntry(0)
+                collection(nullptr),
+                collectionEntry(0),
+                dataPointer(nullptr)
             { }
 
         }

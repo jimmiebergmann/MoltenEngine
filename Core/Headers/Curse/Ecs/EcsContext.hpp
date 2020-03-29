@@ -44,12 +44,12 @@ namespace Curse
         /*
         * Descriptor used for constructing a context.
         */
-        struct CURSE_API ContextDescritor
+        struct CURSE_API ContextDescriptor
         {
-            ContextDescritor(const size_t memoryBlockSize, const uint16_t entitiesPerCollection = 20, const size_t reservedComponentsPerGroup = 32);
+            ContextDescriptor(const size_t memoryBlockSize, const size_t entitiesPerCollection = 20, const size_t reservedComponentsPerGroup = 32);
 
             size_t memoryBlockSize;
-            uint16_t entitiesPerCollection;
+            size_t entitiesPerCollection;
             size_t reservedComponentsPerGroup;
         };
 
@@ -108,7 +108,7 @@ namespace Curse
             * @brief Protected constructor.
             *        User is supposed to create a context class and inherit Context<...>.
             */
-            Context(const ContextDescritor& descriptor);
+            Context(const ContextDescriptor& descriptor);
 
             /**
             * @brief Destructor.
@@ -123,6 +123,18 @@ namespace Curse
             */
             static ComponentTypeId GetNextComponentTypeId();
 
+            /*
+            * @throw Pointer to found entity template, nullptr if no entity template with provided signature exists.
+            */
+            Private::EntityTemplate<Context>* FindEntityTemplate(const Signature& signature);
+
+            /*
+            * @brief Create a new entity template.
+            *
+            * @throw Exception if entity template with provided signature already existed.
+            */
+            Private::EntityTemplate<Context>* CreateEntityTemplate(const Signature& signature, const size_t entitySize, Private::ComponentOffsetList&& componentOffsets);
+   
             /**
             * @brief Get the next available entity ID, destroyed entity ID's are queued for reuse.
             *
@@ -142,9 +154,9 @@ namespace Curse
             using Systems = std::vector<SystemItem>;
             using ComponentGroups = std::map<Signature, Private::ComponentGroup<Context>*>;
             using EntityTemplateMap = std::map<Signature, Private::EntityTemplate<Context>*>;
-            using EntityMap = std::map<EntityId, Private::EntityData<Context>*>;
+            using EntityMap = std::map<EntityId, Private::EntityMetaData<Context>*>;
             
-            ContextDescritor m_descriptor;          ///< Context descriptor, containing configurations. 
+            ContextDescriptor m_descriptor;         ///< Context descriptor, containing configurations. 
             Allocator m_allocator;                  ///< Memory allocator, taking care of memory allocations.
             ComponentGroups m_componentGroups;      ///< Container of all component groups.
             EntityTemplateMap m_entityTemplates;    ///< Map of all entity templates.

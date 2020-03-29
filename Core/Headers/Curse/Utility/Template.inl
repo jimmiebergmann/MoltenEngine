@@ -23,6 +23,8 @@
 *
 */
 
+#include <type_traits>
+
 namespace Curse
 {
 
@@ -37,10 +39,23 @@ namespace Curse
 
     }
 
-    template<typename ... Templates, typename Callback>
-    inline constexpr void ForEachTemplateType(Callback&& callback)
+    template<typename ... Types, typename Callback>
+    inline constexpr void ForEachTemplateArgument(Callback&& callback)
     {
-        (callback(Private::ForEachTemplateTypeWrapper<Templates>{}), ...);
+        (callback(Private::ForEachTemplateTypeWrapper<Types>{}), ...);
+    }
+
+    template<typename ... Types, typename Callback>
+    inline constexpr void ForEachTemplateArgumentIndexed(Callback&& callback)
+    {
+        size_t index = 0;
+        (callback(Private::ForEachTemplateTypeWrapper<Types>{}, index++), ...);
+    }
+
+    template<typename Type, typename ... Types>
+    inline constexpr bool TemplateArgumentsContains()
+    {
+        return (std::is_same<Type, Types>::value || ...);
     }
 
 }

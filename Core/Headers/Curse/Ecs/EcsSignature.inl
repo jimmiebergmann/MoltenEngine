@@ -25,6 +25,7 @@
 
 
 #include "Curse/Utility/Template.hpp"
+#include "Curse/Ecs/EcsComponent.hpp"
 
 namespace Curse
 {
@@ -35,9 +36,11 @@ namespace Curse
         template<typename ... Components>
         inline Signature CreateSignature()
         {
+            static_assert(Private::AreExplicitComponentTypes<Components...>(), "Implicit component type.");
+
             Signature signature;
 
-            ForEachTemplateType<Components...>([&signature](auto type)
+            ForEachTemplateArgument<Components...>([&signature](auto type)
             {
                 using Type = typename decltype(type)::Type;
                 signature.Set(Type::componentTypeId);
