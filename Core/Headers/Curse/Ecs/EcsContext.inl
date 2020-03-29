@@ -88,7 +88,7 @@ namespace Curse
                 static_assert(sizeof(Type) != 0, "Component of size 0 is not supported.");                
             });
 
-            auto entitySize = Private::GetComponentsSize<Components...>();
+            constexpr auto entitySize = Private::GetComponentsSize<Components...>();
             const auto& signature = ComponentSignature<Components...>::signature;
 
             // Create entity!
