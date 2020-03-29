@@ -47,7 +47,7 @@ namespace Curse
         {
             for (auto* block : m_blocks)
             {
-                delete block;
+                delete[] block;
             }
         }
 
