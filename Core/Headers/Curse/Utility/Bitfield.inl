@@ -54,12 +54,12 @@ namespace Curse
     inline void Bitfield<BitCount>::Set(const BitType bit)
     {
         static_assert(std::is_integral<BitType>::value, "Bit type is not an integral.");
-        if (ActualBitCount <= bit)
+        if (ActualBitCount <= static_cast<size_t>(bit))
         {
             throw Exception("Bit is out of range.");
         }
-        const size_t fragmentIndex = bit / FragmentBitCount;
-        const size_t index = bit % FragmentBitCount;
+        const size_t fragmentIndex = static_cast<size_t>(bit) / FragmentBitCount;
+        const size_t index = static_cast<size_t>(bit) % FragmentBitCount;
         m_fragments[fragmentIndex] |= FragmentType(1) << index;
     }
 
@@ -106,12 +106,12 @@ namespace Curse
     inline void Bitfield<BitCount>::Unset(const BitType bit)
     {
         static_assert(std::is_integral<BitType>::value, "Bit type is not an integral.");
-        if (ActualBitCount <= bit)
+        if (ActualBitCount <= static_cast<size_t>(bit))
         {
             throw Exception("Bit is out of range.");
         }
-        const size_t fragmentIndex = bit / FragmentBitCount;
-        const size_t index = bit % FragmentBitCount;
+        const size_t fragmentIndex = static_cast<size_t>(bit) / FragmentBitCount;
+        const size_t index = static_cast<size_t>(bit) % FragmentBitCount;
         m_fragments[fragmentIndex] &= ~(FragmentType(1) << index);
     }
 
@@ -262,15 +262,15 @@ namespace Curse
     }
 
     template<size_t BitCount>
-    inline constexpr typename Bitfield<BitCount>::template FragmentArray Bitfield<BitCount>::CreateEmptyFragmentArray()
+    inline constexpr typename Bitfield<BitCount>::FragmentArray Bitfield<BitCount>::CreateEmptyFragmentArray()
     {
-        FragmentArray fragments;
+        FragmentArray fragments = {};
         for (size_t i = 0; i < FragmentCount; i++)
         {
             fragments[i] = size_t(0);
         }
 
-        return fragments;
+        return std::move(fragments);
     }
 
 }

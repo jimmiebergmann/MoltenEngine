@@ -31,7 +31,7 @@ namespace Curse
 
         // Implementations of entity.
         template<typename ContextType>
-        Entity<ContextType>::~Entity()
+        inline Entity<ContextType>::~Entity()
         { }
 
         template<typename ContextType>
@@ -46,7 +46,7 @@ namespace Curse
         {
             if (m_metaData)
             {
-                m_metaData->context->AddComponents<Components...>(*this);
+                m_metaData->context->template AddComponents<Components...>(*this);
             }
             return *this;
         }

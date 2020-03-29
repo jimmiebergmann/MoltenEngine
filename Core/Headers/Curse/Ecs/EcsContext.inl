@@ -103,7 +103,7 @@ namespace Curse
 
             Entity<Context> entity(metaData, entityId);
 
-            if constexpr (entitySize > 0)
+            if (entitySize > 0)
             {
                 // Get entity template, or create a new one if missing,
                 auto* entityTemplate = FindEntityTemplate(signature);

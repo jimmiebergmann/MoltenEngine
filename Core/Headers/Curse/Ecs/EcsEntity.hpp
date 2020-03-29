@@ -40,7 +40,8 @@ namespace Curse
         * Forward declarations.
         */
         /**@{*/
-        template<typename Derived> class Context;
+        template<typename DerivedContext> class Context;
+
         namespace Private
         {
             template<typename ContextType> struct EntityMetaData;
@@ -88,7 +89,7 @@ namespace Curse
             Private::EntityMetaData<ContextType>* m_metaData; ///< Pointer to meta data
             EntityId m_id;  ///< Id of this entity.      
 
-            friend typename ContextType; ///< Friend class.
+            template<typename DerivedContext> friend class Context; ///< Friend class.
 
         };
 

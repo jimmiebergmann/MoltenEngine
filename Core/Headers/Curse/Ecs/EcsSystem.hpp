@@ -38,6 +38,14 @@ namespace Curse
     namespace Ecs
     {
 
+
+        /**
+        * Forward declarations.
+        */
+        /**@{*/
+        template<typename DerivedContext> class Context;
+        /**@}*/
+
         /**
         * @brief Base class of system.
         *        Multiple functions are available for overloading, for example OnAddEntity.
@@ -83,7 +91,7 @@ namespace Curse
             void InternalOnCreateEntity(Entity<ContextType> entity);
             void InternalOnDestroyEntity(Entity<ContextType> entity);
 
-            friend typename ContextType; ///< Friend class
+            template<typename DerivedContext> friend class Context; ///< Friend class.
         };
 
 
@@ -113,11 +121,9 @@ namespace Curse
             */
             size_t GetEntityCount() const;
 
-        protected:
-
         private:
 
-            friend typename ContextType; ///< Friend class.
+            template<typename DerivedContext> friend class Context; ///< Friend class.
 
 
         };

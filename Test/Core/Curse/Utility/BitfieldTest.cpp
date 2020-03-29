@@ -151,8 +151,8 @@ namespace Curse
                 std::string strNot = "11111111111111111111111111111111111111111111111111111111111110001111111111111111111111111111111111111111111111111111111111001101";
 
                 auto c1 = a | b;
-                auto not = ~c1;
-                EXPECT_STREQ(not.ToString().c_str(), strNot.c_str());
+                auto inverse = ~c1;
+                EXPECT_STREQ(inverse.ToString().c_str(), strNot.c_str());
             }
         }
 
