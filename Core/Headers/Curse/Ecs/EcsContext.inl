@@ -91,10 +91,6 @@ namespace Curse
             constexpr auto entitySize = Private::GetComponentsSize<Components...>();
             const auto& signature = ComponentSignature<Components...>::signature;
 
-            // Find the indices for each component, sorted by ComponentIds.
-            constexpr size_t offsetCount = Private::ComponentOffsets<Components...>::offsetCount;
-            const auto offsets = Private::ComponentOffsets<Components...>::offsets;
-
             // Create entity!
             EntityId entityId = GetNextEntityId();
 
@@ -103,8 +99,12 @@ namespace Curse
 
             Entity<Context> entity(metaData, entityId);
 
-            if (entitySize > 0)
+            if constexpr (entitySize > 0)
             {
+                // Find the data offset of each component, sorted by ComponentTypeId.
+                constexpr size_t offsetCount = Private::ComponentOffsets<Components...>::offsetCount;
+                const auto offsets = Private::ComponentOffsets<Components...>::offsets;
+
                 // Get entity template, or create a new one if missing,
                 auto* entityTemplate = FindEntityTemplate(signature);
                 if (!entityTemplate)
