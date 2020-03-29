@@ -96,6 +96,10 @@ namespace Curse
         namespace Private
         {
 
+            // Forward declaration.
+            template<typename ContextType> struct ComponentGroup;
+
+
             /**
             * @brief Structure of data related to entity, such as information about what collection the entity is part of.
             */
@@ -103,11 +107,14 @@ namespace Curse
             struct EntityMetaData
             {
                 EntityMetaData(ContextType* context, const Signature& signature);
-                
+                     
+                using ComponentGroups = std::vector<ComponentGroup<ContextType>*>;
+
                 ContextType* context;
                 Signature signature; 
                 EntityTemplateCollection<ContextType>* collection;
                 CollectionEntryId collectionEntry;
+                ComponentGroups componentGroups;
                 Byte* dataPointer;
             };
 

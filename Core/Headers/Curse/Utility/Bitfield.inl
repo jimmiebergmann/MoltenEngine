@@ -262,7 +262,7 @@ namespace Curse
     }
 
     template<size_t BitCount>
-    inline constexpr Bitfield<BitCount>::template FragmentArray Bitfield<BitCount>::CreateEmptyFragmentArray()
+    inline constexpr typename Bitfield<BitCount>::template FragmentArray Bitfield<BitCount>::CreateEmptyFragmentArray()
     {
         FragmentArray fragments;
         for (size_t i = 0; i < FragmentCount; i++)

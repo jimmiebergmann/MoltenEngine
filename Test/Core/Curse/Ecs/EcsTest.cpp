@@ -37,7 +37,7 @@ namespace Curse
     namespace Ecs
     {
 
-        struct TestContext : Context<TestContext>
+        CURSE_ECS_CONTEXT(TestContext)
         {
             TestContext() :
                 Context<TestContext>(ContextDescriptor{4000})
@@ -46,22 +46,22 @@ namespace Curse
 
         using TestEntity = Entity<Context<TestContext>>;
 
-        CURSE_COMPONENT(TestTranslation, TestContext)
+        CURSE_ECS_COMPONENT(TestTranslation, TestContext)
         {
             Vector3f32 position;
             Vector3f32 scale;
         };
-        CURSE_COMPONENT(TestPhysics, TestContext)
+        CURSE_ECS_COMPONENT(TestPhysics, TestContext)
         {
             Vector3f32 velocity;
             float weight;
         };
-        CURSE_COMPONENT(TestCharacter, TestContext)
+        CURSE_ECS_COMPONENT(TestCharacter, TestContext)
         {
             char name[50];
         };
 
-        CURSE_SYSTEM(TestSystem, TestContext, TestTranslation, TestPhysics, TestCharacter)
+        CURSE_ECS_SYSTEM(TestSystem, TestContext, TestTranslation, TestPhysics, TestCharacter)
         {
 
             void OnRegister() override

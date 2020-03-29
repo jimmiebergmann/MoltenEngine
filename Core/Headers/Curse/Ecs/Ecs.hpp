@@ -28,8 +28,10 @@
 
 #include "Curse/Utility/Template.hpp"
 
-#define CURSE_MAX_ECS_COMPONENT_TYPES 512
-#define CURSE_COMPONENT(name, context) struct name : Curse::Ecs::Component<Context<context>, name>
-#define CURSE_SYSTEM(name, context, ...) struct name : public Curse::Ecs::System<Context<context>, name, __VA_ARGS__>
+#define CURSE_ECS_MAX_COMPONENT_TYPES 512
+#define CURSE_ECS_CONTEXT(name) struct name : Curse::Ecs::Context<name>
+#define CURSE_ECS_SYSTEM(name, context, ...) struct name : public Curse::Ecs::System<Context<context>, name, __VA_ARGS__>
+#define CURSE_ECS_COMPONENT(name, context) struct name : Curse::Ecs::Component<Context<context>, name>
+
 
 #endif

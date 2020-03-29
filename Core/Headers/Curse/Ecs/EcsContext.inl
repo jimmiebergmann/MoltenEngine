@@ -25,7 +25,7 @@
 
 #include <algorithm>
 #include <vector>
-#include <iostream>
+#include <cstring>
 
 namespace Curse
 {
@@ -136,7 +136,7 @@ namespace Curse
                 for (auto& pair : m_componentGroups)
                 {
                     auto& groupSignature = pair.first;
-                    if ((groupSignature & signature) != pair.first)
+                    if ((groupSignature & signature) != groupSignature)
                     {
                         continue;
                     }
@@ -155,16 +155,18 @@ namespace Curse
                         }
                     }
 
-                    // Add component pointers to the component group at correct location,
-                    // making sure content of component list is linear in memory.
-                    if (componentPointers.size())
+                    if (!componentPointers.size())
                     {
-                        auto& components = componentGroup->components;
-                        auto low = std::lower_bound(components.begin(), components.end(), componentPointers[0]);
-                        components.insert(low, componentPointers.begin(), componentPointers.end());
+                        continue;
                     }
 
+                    // Add component pointers to the component group at correct location,
+                    // making sure content of component list is linear in memory.
+                    auto& components = componentGroup->components;
+                    auto low = std::lower_bound(components.begin(), components.end(), componentPointers[0]);
+                    components.insert(low, componentPointers.begin(), componentPointers.end());
                     componentGroup->entityCount++;
+                    metaData->componentGroups.push_back(componentGroup);
 
                     // Notify all systems in interest of this entity signature about entity creation.
                     for (auto* system : componentGroup->systems)
@@ -185,45 +187,38 @@ namespace Curse
             {
                 return;
             }  
-            metaData->context = nullptr;
+            entity.m_metaData = nullptr;
 
             auto entityId = entity.GetEntityId();
             auto eIt = m_entities.find(entityId);
             if (eIt == m_entities.end())
             {
+                delete metaData;
                 return;
             }
 
-            auto& signature = metaData->signature;
-            auto collection = metaData->collection;
-            if (collection)
+            auto& componentGroups = metaData->componentGroups;
+
+            for (auto& componentGroup : componentGroups)
             {
-                for (auto& pair : m_componentGroups)
+                auto& components = componentGroup->components;
+
+                auto low = std::lower_bound(components.begin(), components.end(), static_cast<void*>(metaData->dataPointer));
+                if (low == components.end())
                 {
-                    if ((pair.first & signature) != pair.first)
-                    {
-                        continue;
-                    }
+                    continue;
+                }
 
-                    auto* componentGroup = pair.second;
-                    auto& components = componentGroup->components;
+                components.erase(low, low + componentGroup->componentsPerEntity);
+                componentGroup->entityCount--;
 
-                    auto low = std::lower_bound(components.begin(), components.end(), static_cast<void*>(metaData->dataPointer));
-                    if (low == components.end())
-                    {
-                        continue;
-                    }
-
-                    components.erase(low, low + componentGroup->componentsPerEntity);
-                    componentGroup->entityCount--;
-
-                    for (auto* system : componentGroup->systems)
-                    {
-                        system->InternalOnDestroyEntity(entity);
-                    }
+                for (auto* system : componentGroup->systems)
+                {
+                    system->InternalOnDestroyEntity(entity);
                 }
             }
             
+            auto collection = metaData->collection;
             collection->ReturnEntry(metaData->collectionEntry);
             m_freeEntityIds.push(entityId);
 
@@ -315,13 +310,13 @@ namespace Curse
                 const size_t newCollectionEntryOffset = static_cast<size_t>(newCollectionEntry)* newEntitySize;
                 Byte* newDataPointer = newCollection->GetData() + newCollectionEntryOffset;
 
+                // We need to move old components and construct new ones.
                 if (oldEntitySize > 0)
                 {
                     auto* oldDataPointer = metaData->dataPointer;
 
                     std::vector<size_t> constructorOffsets;
                     size_t oldOffsetIndex = 0;
-                    //for (auto& newOffset : newOffsets)
                     for(size_t i = 0; i < newOffsets.size(); i++)
                     {
                         auto& newOffset = newOffsets[i];
@@ -330,12 +325,10 @@ namespace Curse
                             return a.componentTypeId == newOffset.componentTypeId;
                         });
 
-                        // Current offset is for a new component.
                         if (oIt == oldOffsets->end())
                         {
                             constructorOffsets.push_back(newOffset.offset);
                         }
-                        // Copy old component to new memory location.
                         else
                         {
                             size_t nextNewOffset = (i + 1 < newOffsets.size()) ? newOffsets[i + 1].offset : newEntitySize;
@@ -348,7 +341,6 @@ namespace Curse
                         }
                     }
 
-                    // Call constructors of new components.
                     ForEachTemplateArgumentIndexed<Components...>([&newDataPointer, &constructorOffsets](auto type, const size_t index)
                     {
                         using Type = typename decltype(type)::Type;
@@ -357,7 +349,21 @@ namespace Curse
                         Type* component = reinterpret_cast<Type*>(componentData);
                         *component = Type();
                     });
+
+                    // Components in old component groups are pointing to the wrong data pointer location now.
+                    // Let's remove them and add them later again, pointing to the new data pointer.
+                    for (auto& componentGroup : metaData->componentGroups)
+                    {
+                        auto& components = componentGroup->components;
+
+                        auto low = std::lower_bound(components.begin(), components.end(), static_cast<void*>(metaData->dataPointer));
+                        if (low != components.end())
+                        {
+                            components.erase(low, low + componentGroup->componentsPerEntity);
+                        }
+                    }
                 }
+                // No old components, let's construct all new ones.
                 else
                 {
                     ForEachTemplateArgumentIndexed<Components...>([this, &newDataPointer, &newOffsets](auto type, const size_t index)
@@ -370,26 +376,17 @@ namespace Curse
                     });
                 }
 
-
-                // Set the new meta data.
-                metaData->signature = newSignature;
-                metaData->collection = newCollection;
-                metaData->collectionEntry = newCollectionEntry;
-                metaData->dataPointer = newDataPointer;
-
-                // Add components to component groups and notify systems.
                 for (auto& pair : m_componentGroups)
                 {
-                    /// FIX!
                     auto& groupSignature = pair.first;
-                   /* if ((groupSignature & componentsSignature) != pair.first)
+                    if ((groupSignature & oldSignature) == groupSignature)
                     {
                         continue;
-                    }*/
+                    }
 
                     auto* componentGroup = pair.second;
+                    auto& components = componentGroup->components;
 
-                    // Get a vector of component data pointers or relevance for this component group.
                     std::vector<ComponentBase*> componentPointers;
                     for (size_t i = 0; i < newOffsets.size(); i++)
                     {
@@ -401,24 +398,35 @@ namespace Curse
                         }
                     }
 
-                    // Add component pointers to the component group at correct location,
-                    // making sure content of component list is linear in memory.
-                    if (componentPointers.size())
+                    if (componentPointers.size() == 0)
                     {
-                        auto& components = componentGroup->components;
-                        auto low = std::lower_bound(components.begin(), components.end(), componentPointers[0]);
-                        components.insert(low, componentPointers.begin(), componentPointers.end());
+                        continue;
                     }
 
-                    componentGroup->entityCount++;
+                    auto low = std::lower_bound(components.begin(), components.end(), componentPointers[0]);
+                    components.insert(low, componentPointers.begin(), componentPointers.end());
 
-                    // Notify all systems in interest of this entity signature about entity creation.
-                    for (auto* system : componentGroup->systems)
+                    // New component group.
+                    // FIX HERE, IGNORE OLD COMPONENT GROUP.
+                    if ((groupSignature & newSignature) == groupSignature)
                     {
-                        system->InternalOnCreateEntity(entity);
+                        componentGroup->entityCount++;
+                        metaData->componentGroups.push_back(componentGroup);
+
+                        // Notify all systems in interest of this entity signature about entity creation.
+                        for (auto* system : componentGroup->systems)
+                        {
+                            system->InternalOnCreateEntity(entity);
+                        }
                     }
                 }
 
+                // Set the new meta data.
+                metaData->signature = newSignature;
+                metaData->collection = newCollection;
+                metaData->collectionEntry = newCollectionEntry;
+                metaData->dataPointer = newDataPointer;
+                
             }
         }
 

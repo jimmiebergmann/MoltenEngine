@@ -44,9 +44,9 @@ namespace Curse
         template<typename ... Components>
         inline Entity<ContextType>& Entity<ContextType>::AddComponents()
         {
-            if (m_context)
+            if (m_metaData)
             {
-                m_context->AddComponents<Components...>(*this);
+                m_metaData->context->AddComponents<Components...>(*this);
             }
             return *this;
         }
@@ -68,6 +68,7 @@ namespace Curse
                 signature(signature),
                 collection(nullptr),
                 collectionEntry(0),
+                componentGroups{},
                 dataPointer(nullptr)
             { }
 

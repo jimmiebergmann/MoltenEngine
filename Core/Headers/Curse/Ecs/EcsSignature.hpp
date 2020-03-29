@@ -35,8 +35,19 @@ namespace Curse
     namespace Ecs
     {
 
-        using Signature = Curse::Bitfield<CURSE_MAX_ECS_COMPONENT_TYPES>;
+        using Signature = Curse::Bitfield<CURSE_ECS_MAX_COMPONENT_TYPES>;
 
+
+        /**
+        * @brief Construct a signature from multiple component types.
+        */
+        template<typename ... Components>
+        Signature CreateSignature();
+
+
+        /**
+        * @brief Static declaration of signature footprint of multiple component types.
+        */
         template<typename ... Components>
         struct ComponentSignature
         {
@@ -44,10 +55,6 @@ namespace Curse
             static inline const Signature signature = CreateSignature<Components...>();
 
         };
-
-
-        template<typename ... Components>
-        Signature CreateSignature();
 
     }
 
