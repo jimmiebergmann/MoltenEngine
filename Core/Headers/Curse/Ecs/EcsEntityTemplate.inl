@@ -120,7 +120,7 @@ namespace Curse
             /// Implementations of entity template.
             template<typename ContextType>
             inline EntityTemplate<ContextType>::EntityTemplate(const size_t entitiesPerCollection, const size_t entitySize, Private::ComponentOffsetList&& componentOffsets) :
-                entitiesPerCollection(std::min(entitiesPerCollection, static_cast<size_t>(std::numeric_limits<CollectionEntryId>::max()))),
+                entitiesPerCollection(std::min(entitiesPerCollection, static_cast<size_t>(std::numeric_limits<CollectionEntryId>::max() - 1))),
                 entitySize(entitySize),
                 componentOffsets(std::move(componentOffsets)),
                 componentOffsetMap(CreateComponentOffsetMap()),

@@ -115,12 +115,12 @@ namespace Curse
                 template<typename T>
                 using PriorityQueue = std::priority_queue<T, std::vector<T>, std::greater<CollectionEntryId> >;
 
-                EntityTemplate<ContextType>* m_entityTemplate;  ///< 
-                Byte* m_data;                                   ///< Pointer to data start of this collection.
-                size_t m_blockIndex;                            ///< 
-                size_t m_dataIndex;                             ///< 
-                CollectionEntryId m_lastFreeEntry;                       ///< 
-                PriorityQueue<CollectionEntryId> m_freeEntries;          ///< 
+                EntityTemplate<ContextType>* m_entityTemplate;      ///< Pointer to parent entity template.
+                Byte* m_data;                                       ///< Pointer to data start of this collection.
+                size_t m_blockIndex;                                ///< Index of allocator block.
+                size_t m_dataIndex;                                 ///< Index of data, of allocator block.
+                CollectionEntryId m_lastFreeEntry;                  ///< Current available entry id.
+                PriorityQueue<CollectionEntryId> m_freeEntries;     ///< List of free enty id's.
 
             };
 
