@@ -96,7 +96,6 @@ namespace Curse
             
             Entity<Context> entity(metaData.get(), entityId);
 
-            Private::EntityTemplate<Context>* entityTemplate = nullptr;
             Private::EntityTemplateCollection<Context>* collection = nullptr;
             Private::CollectionEntryId collectionEntry = 0;
             bool gotCollectionEntry = false;
@@ -118,7 +117,7 @@ namespace Curse
                 const auto offsets = Private::ComponentOffsets<Components...>::offsets;
 
                 // Get entity template, or create a new one if missing,
-                entityTemplate = FindEntityTemplate(signature);
+                auto *entityTemplate = FindEntityTemplate(signature);
                 if (!entityTemplate)
                 {
                     entityTemplate = CreateEntityTemplate(signature, entitySize, { offsets.begin(), offsets.end() });

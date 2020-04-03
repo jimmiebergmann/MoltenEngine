@@ -38,6 +38,14 @@ namespace Curse
 
         using ComponentTypeId = int16_t; ///< Data type of component type ID.
 
+
+        // Forward declarations.
+        namespace Private
+        {
+            template<typename ContextType> ComponentTypeId GetNextComponentTypeId();
+        }
+        
+
         /**
         * @brief Component base class.
         */
