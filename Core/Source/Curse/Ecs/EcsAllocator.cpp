@@ -40,6 +40,10 @@ namespace Curse
             m_freeBlockIndex(0),
             m_freeDataIndex(0)
         {
+            if (!blockSize)
+            {
+                throw Exception("Block size of 0 is not allowed.");
+            }
             AppendNewBlock();
         }
 

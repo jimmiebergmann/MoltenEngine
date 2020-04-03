@@ -23,8 +23,8 @@
 *
 */
 
-#ifndef CURSE_CORE_SYSTEM_BITFIELD_HPP
-#define CURSE_CORE_SYSTEM_BITFIELD_HPP
+#ifndef CURSE_CORE_UTILITY_BITFIELD_HPP
+#define CURSE_CORE_UTILITY_BITFIELD_HPP
 
 #include "Curse/Types.hpp"
 #include "Curse/System/Exception.hpp"

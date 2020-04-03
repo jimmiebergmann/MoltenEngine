@@ -35,6 +35,13 @@ namespace Curse
         namespace Private
         {
 
+            template<typename ContextType>
+            inline ComponentTypeId GetNextComponentTypeId()
+            {
+                static ComponentTypeId currentComponentTypeId = 0;
+                return currentComponentTypeId++;
+            }
+
             template<typename ... Types>
             inline constexpr bool AreExplicitComponentTypes()
             {

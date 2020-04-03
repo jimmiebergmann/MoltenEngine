@@ -73,19 +73,19 @@ namespace Curse
 
 
         /// Implementations of system class.
-        template<typename ContextType, typename DerivedSystem, typename ... RequiredCompnents>
+        template<typename ContextType, typename DerivedSystem, typename ... RequiredComponents>
         template<typename Comp>
-        Comp& System<ContextType, DerivedSystem, RequiredCompnents...>::GetComponent(const size_t entityIndex)
+        Comp& System<ContextType, DerivedSystem, RequiredComponents...>::GetComponent(const size_t entityIndex)
         {
-            static_assert(TemplateArgumentsContains<Comp, RequiredCompnents...>(),
+            static_assert(TemplateArgumentsContains<Comp, RequiredComponents...>(),
                 "Provided type for GetComponent is not available for this system.");
 
-            const size_t componentIndex = (entityIndex * SystemBase<ContextType>::m_componentGroup->componentsPerEntity) + Private::ComponentIndex<Comp, RequiredCompnents...>::index;
+            const size_t componentIndex = (entityIndex * SystemBase<ContextType>::m_componentGroup->componentsPerEntity) + Private::ComponentIndex<Comp, RequiredComponents...>::index;
             return *static_cast<Comp*>(SystemBase<ContextType>::m_componentGroup->components[componentIndex]);
         }
 
-        template<typename ContextType, typename DerivedSystem, typename ... RequiredCompnents>
-        inline size_t System<ContextType, DerivedSystem, RequiredCompnents...>::GetEntityCount() const
+        template<typename ContextType, typename DerivedSystem, typename ... RequiredComponents>
+        inline size_t System<ContextType, DerivedSystem, RequiredComponents...>::GetEntityCount() const
         {
             return SystemBase<ContextType>::m_entityCount;
         }

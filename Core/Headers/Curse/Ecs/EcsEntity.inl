@@ -23,6 +23,8 @@
 *
 */
 
+#include "Curse/Ecs/EcsEntityTemplate.hpp"
+
 namespace Curse
 {
 
@@ -49,6 +51,29 @@ namespace Curse
                 m_metaData->context->template AddComponents<Components...>(*this);
             }
             return *this;
+        }
+
+        template<typename ContextType>
+        template<typename Comp>
+        Comp* Entity<ContextType>::GetComponent()
+        {
+            if (!m_metaData)
+            {
+                throw Exception("Cannot get component of destroyed entity.");
+            }
+
+            return m_metaData->context->template GetComponent<Comp>(*this);
+        }
+        template<typename ContextType>
+        template<typename Comp>
+        const Comp* Entity<ContextType>::GetComponent() const
+        {
+            if (!m_metaData)
+            {
+                throw Exception("Cannot get component of destroyed entity.");
+            }
+
+            return m_metaData->context->template GetComponent<Comp>(*this);
         }
 
         template<typename ContextType>

@@ -30,6 +30,7 @@
 #include "Curse/Ecs/EcsComponent.hpp"
 #include <queue>
 #include <vector>
+#include <map>
 
 namespace Curse
 {
@@ -77,19 +78,19 @@ namespace Curse
                 size_t GetDataIndex() const;
 
                 /**
-                * @return Pointer to entity template of thuis collection.
+                * @return Pointer to data start of this collection.
                 */
                 /**@{*/
                 Byte* GetData();
                 const Byte* GetData() const;
                 /**@}*/
-                EntityTemplate<ContextType>* GetEntityTemplate();
-                const EntityTemplate<ContextType>* GetEntityTemplate() const;
+
                 /**
-                * @return Pointer to data start of this collection.
+                * @return Pointer to entity template of this collection.
                 */
                 /**@{*/
-                
+                EntityTemplate<ContextType>* GetEntityTemplate();
+                const EntityTemplate<ContextType>* GetEntityTemplate() const;
                 /**@}*/
 
                 /**
@@ -149,13 +150,17 @@ namespace Curse
                 */
                 EntityTemplateCollection<ContextType>* GetFreeCollection(Allocator& allocator);
 
-                const size_t entitiesPerCollection;                     ///< Maximum number of enteties per collection.
-                const size_t entitySize;                                ///< Total size in bytes of a single entity.
-                const Private::ComponentOffsetList componentOffsets;    ///< Offsets of the entities components.
+                const size_t entitiesPerCollection;                         ///< Maximum number of enteties per collection.
+                const size_t entitySize;                                    ///< Total size in bytes of a single entity.
+                const Private::ComponentOffsetList componentOffsets;        ///< Compoent offsets of this entities components.
+                const std::map<ComponentTypeId, size_t> componentOffsetMap; ///< Map of component offsets for this entity template.
 
             private:
 
+                std::map<ComponentTypeId, size_t> CreateComponentOffsetMap();
+
                 using Collections = std::vector<EntityTemplateCollection<ContextType>*>;
+
                 Collections collections;    ///< Vector of all collections of this template.
 
             };

@@ -36,8 +36,6 @@ namespace Curse
     namespace Ecs
     {
 
-        template<typename ContextType> class SystemBase; ///< Forward declaration.
-
         using ComponentTypeId = int16_t; ///< Data type of component type ID.
 
         /**
@@ -71,13 +69,21 @@ namespace Curse
             /**
             * @brief Id of this component type.
             */
-            static inline const ComponentTypeId componentTypeId = ContextType::GetNextComponentTypeId();
+            static inline const ComponentTypeId componentTypeId = Private::GetNextComponentTypeId<ContextType>();
 
         };
 
 
+        template<typename ContextType> class SystemBase; ///< Forward declaration.
+     
         namespace Private
         {
+
+            /**
+             * @brief Function for components to get their component type IDs from.
+             */
+            template<typename ContextType>
+            ComponentTypeId GetNextComponentTypeId();
 
             /**
             * @brief Checks if provided types are explicit component types.

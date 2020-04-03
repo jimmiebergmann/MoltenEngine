@@ -98,7 +98,7 @@ namespace Curse
             template<typename ContextType>
             inline bool EntityTemplateCollection<ContextType>::IsFull() const
             {
-                return static_cast<size_t>(m_lastFreeEntry) + 1 == entitiesPerCollection;
+                return static_cast<size_t>(m_lastFreeEntry) == entitiesPerCollection && !m_freeEntries.size();
             }
 
             template<typename ContextType>
@@ -123,6 +123,7 @@ namespace Curse
                 entitiesPerCollection(std::min(entitiesPerCollection, static_cast<size_t>(std::numeric_limits<CollectionEntryId>::max()))),
                 entitySize(entitySize),
                 componentOffsets(std::move(componentOffsets)),
+                componentOffsetMap(CreateComponentOffsetMap()),
                 collections{}
             { }
 
@@ -150,6 +151,19 @@ namespace Curse
                 }
 
                 return collections.back();
+            }
+
+            template<typename ContextType>
+            inline std::map<ComponentTypeId, size_t> EntityTemplate<ContextType>::CreateComponentOffsetMap()
+            {
+                std::map<ComponentTypeId, size_t> offsets;
+
+                for (auto& offset : componentOffsets)
+                {
+                    offsets.insert({offset.componentTypeId, offset.offset});
+                }
+
+                return std::move(offsets);
             }
 
         }

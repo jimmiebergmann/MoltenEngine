@@ -102,13 +102,15 @@ namespace Curse
         * Make sure to register all systems to the context before creating any entities.
         * It is not possible to unregister a system from a context.
         */
-        template<typename ContextType, typename DerivedSystem, typename ... RequiredCompnents>
+        template<typename ContextType, typename DerivedSystem, typename ... RequiredComponents>
         class System : public SystemBase<ContextType>
         {
 
+            static_assert(sizeof...(RequiredComponents) > 0, "System with zero required components is not supported.");
+
         public:
 
-            static inline const Signature signature = CreateSignature<RequiredCompnents...>();
+            static inline const Signature signature = CreateSignature<RequiredComponents...>();
 
             /**
             * @brief Get component by entity index.

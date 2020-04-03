@@ -79,6 +79,19 @@ namespace Curse
             template<typename ... Components>
             Entity& AddComponents();
 
+            /**
+            * @brief Get attached component by type.
+            *
+            * @return Pointer to entity component. Nullptr if provided component is missing in the entity.
+            */
+            /**@{*/
+            template<typename Comp>
+            Comp* GetComponent();
+
+            template<typename Comp>
+            const Comp* GetComponent() const;
+            /**@}*/
+
         private:
 
             /**
@@ -112,7 +125,7 @@ namespace Curse
                 using ComponentGroups = std::vector<ComponentGroup<ContextType>*>;
 
                 ContextType* context;
-                Signature signature; 
+                Signature signature;
                 EntityTemplateCollection<ContextType>* collection;
                 CollectionEntryId collectionEntry;
                 ComponentGroups componentGroups;

@@ -50,6 +50,7 @@ namespace Curse
             *
             * @param blockSize Memory block size in bytes.
             *
+            * @throw Exception if blockSize is 0.
             */
             Allocator(const size_t blockSize);
 

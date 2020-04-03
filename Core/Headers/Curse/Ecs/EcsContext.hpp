@@ -34,6 +34,7 @@
 #include "Curse/Ecs/EcsComponent.hpp"
 #include <map>
 #include <queue>
+#include <set>
 
 namespace Curse
 {
@@ -93,7 +94,7 @@ namespace Curse
             *        Already added components are ignored from the template parameter list.
             */
             template<typename ... Components>
-            void AddComponents(const Entity<Context> entity);
+            void AddComponents(const Entity<Context>& entity);
 
             /**
             * @brief Get allocator.
@@ -101,6 +102,19 @@ namespace Curse
             *        This method makes it possible to access the allocators const functions, making it possible to dump memory if needed.
             */
             const Allocator& GetAlloator() const;
+
+            /**
+            * @brief Get entity component.
+            *
+            * @return Pointer to entity component. Nullptr if provided component is missing in the entity.
+            */
+            /**@{*/
+            template<typename Comp>
+            Comp* GetComponent(Entity<Context>& entity);
+
+            template<typename Comp>
+            const Comp* GetComponent(const Entity<Context>& entity) const;
+            /**@}*/
 
         protected:
 
@@ -118,11 +132,6 @@ namespace Curse
 
         private:
 
-            /**
-            * @brief Function for components to get their component type IDs from.
-            */
-            static ComponentTypeId GetNextComponentTypeId();
-
             /*
             * @throw Pointer to found entity template, nullptr if no entity template with provided signature exists.
             */
@@ -131,7 +140,8 @@ namespace Curse
             /*
             * @brief Create a new entity template.
             *
-            * @throw Exception if entity template with provided signature already existed.
+            * @throw Exception if entity template with provided signature already existed,
+            *        or if provided entitySize is greater than block size in allocator.
             */
             Private::EntityTemplate<Context>* CreateEntityTemplate(const Signature& signature, const size_t entitySize, Private::ComponentOffsetList&& componentOffsets);
    
@@ -142,19 +152,15 @@ namespace Curse
             */
             EntityId GetNextEntityId();
 
-            /**
-            * @brief Structure of system and its components signatures
-            */
-            struct SystemItem
-            {
-                SystemBase<Context>* system;
-                Signature signature;
-            };
+            void ReturnEntityId(const EntityId entityId);
 
-            using Systems = std::vector<SystemItem>;
+
+
+            using Systems = std::set<SystemBase<Context>*>;
             using ComponentGroups = std::map<Signature, Private::ComponentGroup<Context>*>;
             using EntityTemplateMap = std::map<Signature, Private::EntityTemplate<Context>*>;
             using EntityMap = std::map<EntityId, Private::EntityMetaData<Context>*>;
+            //using ComponentOffsetMap = std::map<Signature, Private::ComponentOffsetList>;
             
             ContextDescriptor m_descriptor;         ///< Context descriptor, containing configurations. 
             Allocator m_allocator;                  ///< Memory allocator, taking care of memory allocations.
@@ -163,14 +169,8 @@ namespace Curse
             EntityMap m_entities;                   ///< Map of all entities.
             EntityId m_nextEntityId;                ///< The next availalbe entity ID.
             std::queue<EntityId> m_freeEntityIds;   ///< Queue of deleted entity ID's, ready for reuse.
+            //ComponentOffsetMap m_componentOffsets;  ///< Map of component offset.
             Systems m_systems;
-
-            /**
-            * @brief Friend classes.
-            */
-            /**@{*/ 
-            template<typename ContextType, typename DerivedComponent> friend class Component;
-            /**@}*/
 
         };
 
