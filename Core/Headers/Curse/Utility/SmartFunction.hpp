@@ -46,9 +46,12 @@ namespace Curse
     *       // cleanup here..
     *   });
     *
-    *   throw Exception("Error here.");
+    *   if(error)
+    *   {
+    *       throw Exception("Error here.");
+    *   }
     *
-    *   sf.Release();
+    *   sf.Release(); // Everything is fine, release the cleanup function.
     *
     */
     class CURSE_API SmartFunction
@@ -62,7 +65,7 @@ namespace Curse
         * @brief Constructor.
         *        Pass function to call at destruction.
         */
-        SmartFunction(Function&& function);
+        SmartFunction(Function&& function = nullptr);
 
         /**
         * @brief Destructor.

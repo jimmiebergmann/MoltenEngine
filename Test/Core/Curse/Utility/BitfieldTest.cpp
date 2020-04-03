@@ -28,7 +28,7 @@
 
 namespace Curse
 {
-    TEST(System, Bitfield)
+    TEST(Utility, Bitfield)
     {
         {
             Bitfield<1> a;
