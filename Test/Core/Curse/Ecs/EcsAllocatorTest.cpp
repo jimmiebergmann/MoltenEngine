@@ -42,10 +42,10 @@ namespace Curse
             {
                 Allocator allocator(100);
 
-                EXPECT_EQ(allocator.GetBlockCount(), 1);
-                EXPECT_EQ(allocator.GetBlockSize(), 100);
-                EXPECT_EQ(allocator.GetCurrentBlockIndex(), 0);
-                EXPECT_EQ(allocator.GetCurrentDataIndex(), 0);
+                EXPECT_EQ(allocator.GetBlockCount(), size_t(1));
+                EXPECT_EQ(allocator.GetBlockSize(), size_t(100));
+                EXPECT_EQ(allocator.GetCurrentBlockIndex(), size_t(0));
+                EXPECT_EQ(allocator.GetCurrentDataIndex(), size_t(0));
             }
             {
                 Allocator allocator(100);
@@ -63,9 +63,9 @@ namespace Curse
                 EXPECT_NE(data, nullptr);
                 EXPECT_EQ(allocator.GetBlock(0), data);
 
-                EXPECT_EQ(allocator.GetBlockCount(), 1);
-                EXPECT_EQ(allocator.GetCurrentBlockIndex(), 0);
-                EXPECT_EQ(allocator.GetCurrentDataIndex(), 100);
+                EXPECT_EQ(allocator.GetBlockCount(), size_t(1));
+                EXPECT_EQ(allocator.GetCurrentBlockIndex(), size_t(0));
+                EXPECT_EQ(allocator.GetCurrentDataIndex(), size_t(100));
             }
             {
                 Allocator allocator(100);
@@ -91,7 +91,7 @@ namespace Curse
                     EXPECT_EQ(allocator.GetCurrentBlockIndex(), expectNextBlock);
                   
                     EXPECT_EQ(blockIndex[i], i / 2);
-                    EXPECT_EQ(dataIndex[i], 50 * (i % 2));
+                    EXPECT_EQ(dataIndex[i], size_t(50) * (i % 2));
                     EXPECT_EQ(data[i], (allocator.GetBlock(blockIndex[i]) + dataIndex[i]));
                 }
             }
