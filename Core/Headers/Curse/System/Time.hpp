@@ -211,6 +211,6 @@ namespace Curse
 
 }
 
-#include "Time.inl"
+#include "Curse/System/Time.inl"
 
 #endif

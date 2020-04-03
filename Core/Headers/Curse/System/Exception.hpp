@@ -65,6 +65,6 @@ namespace Curse
 
 }
 
-#include "Exception.inl"
+#include "Curse/System/Exception.inl"
 
 #endif

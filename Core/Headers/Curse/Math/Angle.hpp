@@ -89,6 +89,6 @@ namespace Curse
 
 }
 
-#include "Angle.inl"
+#include "Curse/Math/Angle.inl"
 
 #endif

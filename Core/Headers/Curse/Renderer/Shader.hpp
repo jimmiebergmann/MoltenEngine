@@ -117,6 +117,6 @@ namespace Curse
 
 }
  
-#include "Shader.inl"
+#include "Curse/Renderer/Shader.inl"
 
 #endif

@@ -253,6 +253,6 @@ namespace Curse
 
 }
 
-#include "ShaderUniformNode.inl"
+#include "Curse/Renderer/Shader/Node/ShaderUniformNode.inl"
 
 #endif

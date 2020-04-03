@@ -45,6 +45,6 @@ namespace Curse
 
 }
 
-#include "Math.inl"
+#include "Curse/Math.inl"
 
 #endif

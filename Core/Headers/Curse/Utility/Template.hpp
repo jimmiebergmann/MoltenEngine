@@ -68,6 +68,6 @@ namespace Curse
 
 }
 
-#include "Template.inl"
+#include "Curse/Utility/Template.inl"
 
 #endif

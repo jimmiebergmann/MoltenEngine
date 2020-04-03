@@ -604,6 +604,6 @@ namespace Curse
 
 }
 
-#include "Vector.inl"
+#include "Curse/Math/Vector.inl"
 
 #endif

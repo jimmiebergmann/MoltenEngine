@@ -332,6 +332,6 @@ namespace Curse
 
 }
 
-#include "Reference.inl"
+#include "Curse/Memory/Reference.inl"
 
 #endif

@@ -46,16 +46,28 @@ namespace Curse
 
         CURSE_ECS_COMPONENT(TestTranslation, TestContext)
         {
+            TestTranslation() :
+                position(0, 0, 0), scale(0, 0, 0)
+            { }
+
             Vector3i32 position;
             Vector3i32 scale;
         };
         CURSE_ECS_COMPONENT(TestPhysics, TestContext)
         {
+            TestPhysics() :
+                velocity(0, 0, 0), weight(0)
+            { }
+
             Vector3i32 velocity;
             int32_t weight;
         };
         CURSE_ECS_COMPONENT(TestCharacter, TestContext)
         {
+            TestCharacter() :
+                name("")
+            { }
+
             char name[50];
         };
 
@@ -248,13 +260,13 @@ namespace Curse
                 EXPECT_EQ(testPhysicsSystem1.onCreatedEntityCount, size_t(0));
                 EXPECT_EQ(testPhysicsSystem2.onCreatedEntityCount, size_t(0));
                 EXPECT_EQ(testPlayerSystem.onCreatedEntityCount, size_t(0));
-                EXPECT_EQ(e1.GetEntityId(), size_t(0));
+                EXPECT_EQ(e1.GetEntityId(), EntityId(0));
 
                 auto e2 = context.CreateEntity<>();
                 EXPECT_EQ(testPhysicsSystem1.onCreatedEntityCount, size_t(0));
                 EXPECT_EQ(testPhysicsSystem2.onCreatedEntityCount, size_t(0));
                 EXPECT_EQ(testPlayerSystem.onCreatedEntityCount, size_t(0));
-                EXPECT_EQ(e2.GetEntityId(), size_t(1));
+                EXPECT_EQ(e2.GetEntityId(), EntityId(1));
 
                 EXPECT_EQ(e1.GetComponent<TestTranslation>(), nullptr);
                 EXPECT_EQ(e1.GetComponent<TestPhysics>(), nullptr);
@@ -290,19 +302,19 @@ namespace Curse
                 EXPECT_EQ(testPhysicsSystem1.onCreatedEntityCount, size_t(0));
                 EXPECT_EQ(testPhysicsSystem2.onCreatedEntityCount, size_t(0));
                 EXPECT_EQ(testPlayerSystem.onCreatedEntityCount, size_t(0));
-                EXPECT_EQ(e1.GetEntityId(), size_t(0));
+                EXPECT_EQ(e1.GetEntityId(), EntityId(0));
 
                 auto e2 = context.CreateEntity<TestPhysics>();
                 EXPECT_EQ(testPhysicsSystem1.onCreatedEntityCount, size_t(0));
                 EXPECT_EQ(testPhysicsSystem2.onCreatedEntityCount, size_t(0));
                 EXPECT_EQ(testPlayerSystem.onCreatedEntityCount, size_t(0));
-                EXPECT_EQ(e2.GetEntityId(), size_t(1));
+                EXPECT_EQ(e2.GetEntityId(), EntityId(1));
 
                 auto e3 = context.CreateEntity<TestTranslation>();
                 EXPECT_EQ(testPhysicsSystem1.onCreatedEntityCount, size_t(0));
                 EXPECT_EQ(testPhysicsSystem2.onCreatedEntityCount, size_t(0));
                 EXPECT_EQ(testPlayerSystem.onCreatedEntityCount, size_t(0));
-                EXPECT_EQ(e3.GetEntityId(), size_t(2));
+                EXPECT_EQ(e3.GetEntityId(), EntityId(2));
 
 
                 ASSERT_NE(e1.GetComponent<TestPhysics>(), nullptr);
@@ -348,31 +360,31 @@ namespace Curse
                 EXPECT_EQ(testPhysicsSystem1.onCreatedEntityCount, size_t(1));
                 EXPECT_EQ(testPhysicsSystem2.onCreatedEntityCount, size_t(1));
                 EXPECT_EQ(testPlayerSystem.onCreatedEntityCount, size_t(0));
-                EXPECT_EQ(e1.GetEntityId(), size_t(0));
+                EXPECT_EQ(e1.GetEntityId(), EntityId(0));
 
                 auto e2 = context.CreateEntity<TestTranslation, TestPhysics, TestCharacter>();
                 EXPECT_EQ(testPhysicsSystem1.onCreatedEntityCount, size_t(2));
                 EXPECT_EQ(testPhysicsSystem2.onCreatedEntityCount, size_t(2));
                 EXPECT_EQ(testPlayerSystem.onCreatedEntityCount, size_t(1));
-                EXPECT_EQ(e2.GetEntityId(), size_t(1));
+                EXPECT_EQ(e2.GetEntityId(), EntityId(1));
 
                 auto e3 = context.CreateEntity<TestTranslation>();
                 EXPECT_EQ(testPhysicsSystem1.onCreatedEntityCount, size_t(2));
                 EXPECT_EQ(testPhysicsSystem2.onCreatedEntityCount, size_t(2));
                 EXPECT_EQ(testPlayerSystem.onCreatedEntityCount, size_t(1));
-                EXPECT_EQ(e3.GetEntityId(), size_t(2));
+                EXPECT_EQ(e3.GetEntityId(), EntityId(2));
 
                 auto e4 = context.CreateEntity<TestPhysics>();
                 EXPECT_EQ(testPhysicsSystem1.onCreatedEntityCount, size_t(2));
                 EXPECT_EQ(testPhysicsSystem2.onCreatedEntityCount, size_t(2));
                 EXPECT_EQ(testPlayerSystem.onCreatedEntityCount, size_t(1));
-                EXPECT_EQ(e4.GetEntityId(), size_t(3));
+                EXPECT_EQ(e4.GetEntityId(), EntityId(3));
 
                 auto e5 = context.CreateEntity<TestCharacter>();
                 EXPECT_EQ(testPhysicsSystem1.onCreatedEntityCount, size_t(2));
                 EXPECT_EQ(testPhysicsSystem2.onCreatedEntityCount, size_t(2));
                 EXPECT_EQ(testPlayerSystem.onCreatedEntityCount, size_t(1));
-                EXPECT_EQ(e5.GetEntityId(), size_t(4));
+                EXPECT_EQ(e5.GetEntityId(), EntityId(4));
 
                 testPhysicsSystem1.TestLoopEntities();
                 testPhysicsSystem2.TestLoopEntities();
@@ -467,13 +479,13 @@ namespace Curse
             {
                 auto e1 = context.CreateEntity();
                 e1.AddComponents();
-                EXPECT_EQ(e1.GetEntityId(), 0);
+                EXPECT_EQ(e1.GetEntityId(), EntityId(0));
                 context.DestroyEntity(e1);
             }
             {
                 auto e1 = context.CreateEntity();
                 e1.AddComponents();
-                EXPECT_EQ(e1.GetEntityId(), 0);
+                EXPECT_EQ(e1.GetEntityId(), EntityId(0));
 
                 EXPECT_EQ(testPhysicsSystem1.onCreatedEntityCount, size_t(0));
                 EXPECT_EQ(testPhysicsSystem2.onCreatedEntityCount, size_t(0));
@@ -552,7 +564,7 @@ namespace Curse
                 EXPECT_NO_THROW(context.CreateEntity<TestPhysics>());
 
                 auto e = context.CreateEntity<TestTranslation>();
-                EXPECT_EQ(e.GetEntityId(), size_t(6));
+                EXPECT_EQ(e.GetEntityId(), EntityId(6));
 
             }
         }

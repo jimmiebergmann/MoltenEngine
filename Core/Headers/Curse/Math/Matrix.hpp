@@ -256,6 +256,6 @@ namespace Curse
 
 }
 
-#include "Matrix.inl"
+#include "Curse/Math/Matrix.inl"
 
 #endif

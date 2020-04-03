@@ -132,6 +132,6 @@ namespace Curse
 
 }
 
-#include "ShaderConstantNode.inl"
+#include "Curse/Renderer/Shader/Node/ShaderConstantNode.inl"
 
 #endif

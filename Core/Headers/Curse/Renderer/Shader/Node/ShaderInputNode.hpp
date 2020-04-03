@@ -177,6 +177,6 @@ namespace Curse
 
 }
 
-#include "ShaderInputNode.inl"
+#include "Curse/Renderer/Shader/Node/ShaderInputNode.inl"
 
 #endif

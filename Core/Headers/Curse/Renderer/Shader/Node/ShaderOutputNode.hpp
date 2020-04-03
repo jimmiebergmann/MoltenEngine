@@ -169,6 +169,6 @@ namespace Curse
 
 }
 
-#include "ShaderOutputNode.inl"
+#include "Curse/Renderer/Shader/Node/ShaderOutputNode.inl"
 
 #endif

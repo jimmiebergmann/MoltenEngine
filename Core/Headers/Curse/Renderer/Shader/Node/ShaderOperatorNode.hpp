@@ -193,6 +193,6 @@ namespace Curse
 
 }
 
-#include "ShaderOperatorNode.inl"
+#include "Curse/Renderer/Shader/Node/ShaderOperatorNode.inl"
 
 #endif

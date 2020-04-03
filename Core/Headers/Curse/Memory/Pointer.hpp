@@ -244,6 +244,6 @@ namespace Curse
 
 }
 
-#include "Pointer.inl"
+#include "Curse/Memory/Pointer.inl"
 
 #endif

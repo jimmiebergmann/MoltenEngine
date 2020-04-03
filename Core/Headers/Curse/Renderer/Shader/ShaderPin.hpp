@@ -391,6 +391,6 @@ namespace Curse
 
 }
 
-#include "ShaderPin.inl"
+#include "Curse/Renderer/Shader/ShaderPin.inl"
 
 #endif

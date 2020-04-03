@@ -79,6 +79,6 @@ namespace Curse
 
 }
 
-#include "ShaderOperators.inl"
+#include "Curse/Renderer/Shader/ShaderOperators.inl"
 
 #endif
