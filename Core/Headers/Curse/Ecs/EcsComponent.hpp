@@ -164,18 +164,36 @@ namespace Curse
 
             /**
             * @brief Helper function, for creating an array of component offsets.
+            *        Ordered by componentTypeId for each component.
             */
             template<typename ... Components>
-            constexpr ComponentOffsetArray<sizeof...(Components)> CreateComponentOffsets();
+            constexpr ComponentOffsetArray<sizeof...(Components)> CreateOrderedComponentOffsets();
+
+            /**
+            * @brief Helper function, for creating an array of component offsets.
+            *        Ordered by the order of passed Components.
+            */
+            template<typename ... Components>
+            constexpr ComponentOffsetArray<sizeof...(Components)> CreateUnorderedComponentOffsets();
         
             /**
             * @brief Helper structure, for retreiving data offset of each component.
+            *        Ordered by componentTypeId for each component.
             */
             template<typename ... Components>
-            struct ComponentOffsets
+            struct OrderedComponentOffsets
             {
-                constexpr static size_t offsetCount = sizeof...(Components);
-                static inline const ComponentOffsetArray<sizeof...(Components)> offsets = CreateComponentOffsets<Components...>();
+                static inline const ComponentOffsetArray<sizeof...(Components)> offsets = CreateOrderedComponentOffsets<Components...>();
+            };
+
+            /**
+            * @brief Helper structure, for retreiving data offset of each component.
+            *        Ordered by the order of passed Components.
+            */
+            template<typename ... Components>
+            struct UnorderedComponentOffsets
+            {
+                static inline const ComponentOffsetArray<sizeof...(Components)> offsets = CreateUnorderedComponentOffsets<Components...>();
             };
 
 

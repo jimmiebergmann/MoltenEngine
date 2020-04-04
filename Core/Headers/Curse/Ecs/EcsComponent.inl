@@ -112,7 +112,7 @@ namespace Curse
             }
 
             template<typename ... Components>
-            inline constexpr ComponentOffsetArray<sizeof...(Components)> CreateComponentOffsets()
+            inline constexpr ComponentOffsetArray<sizeof...(Components)> CreateOrderedComponentOffsets()
             {
                 struct Item
                 {
@@ -143,6 +143,51 @@ namespace Curse
                     sum += items[i].size;
                 }
 
+                return std::move(offsets);
+            }
+
+            template<typename ... Components>
+            inline constexpr ComponentOffsetArray<sizeof...(Components)> CreateUnorderedComponentOffsets()
+            {
+                struct Item
+                {
+                    ComponentTypeId componentTypeId;
+                    size_t size;
+
+                    bool operator <(const Item& item) const
+                    {
+                        return componentTypeId < item.componentTypeId;
+                    }
+                };
+
+                std::vector<Item> items;
+                ForEachTemplateArgument<Components...>([&items](auto type)
+                {
+                    using Type = typename decltype(type)::Type;
+                    items.push_back({ Type::componentTypeId, sizeof(Type) });
+                });
+
+                std::sort(items.begin(), items.end());
+
+                std::map<ComponentTypeId, size_t> offsetMap;
+                size_t sum = 0;
+                for (size_t i = 0; i < items.size(); i++)
+                {
+                    offsetMap.insert({ items[i].componentTypeId, sum });
+                    sum += items[i].size;
+                }
+
+                ComponentOffsetArray<sizeof...(Components)> offsets = {};
+                ForEachTemplateArgumentIndexed<Components...>([&offsetMap, &offsets](auto type, const size_t index)
+                {
+                    using Type = typename decltype(type)::Type;
+                    auto it = offsetMap.find(Type::componentTypeId);
+                    
+                    auto& offset = offsets[index];
+                    offset.componentTypeId = Type::componentTypeId;
+                    offset.offset = it->second;
+                });
+                
                 return std::move(offsets);
             }
 

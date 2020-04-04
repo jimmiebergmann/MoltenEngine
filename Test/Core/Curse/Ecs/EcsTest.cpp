@@ -568,6 +568,107 @@ namespace Curse
 
             }
         }
+
+
+        CURSE_ECS_COMPONENT(TestIndex, TestContext)
+        {
+            TestIndex() :
+                index(-1)
+            { }
+
+            int32_t index;
+        };
+
+        CURSE_ECS_SYSTEM(AnyEntitiesSystem, TestContext, TestTranslation, TestPhysics, TestIndex)
+        {
+
+            struct Data
+            {
+                TestTranslation translation;
+                TestPhysics physics;
+            };
+
+            void Process(const Time & deltaTime) override
+            {
+                // Dummy imp. Check the Test* methods.
+            }
+
+
+            void TestCheckEntities(const std::vector<Data> & data)
+            {
+                ASSERT_EQ(data.size(), GetEntityCount());
+
+                for (size_t i = 0; i < GetEntityCount(); i++)
+                {
+                    auto& index = GetComponent<TestIndex>(i);
+                    auto& trans = GetComponent<TestTranslation>(i);
+                    auto& phys = GetComponent<TestPhysics>(i);
+
+                    ASSERT_GE(index.index, int32_t(0));
+                    ASSERT_LT(index.index, int32_t(GetEntityCount()));
+
+                    size_t currIndex = static_cast<size_t>(index.index);
+
+                    if (trans.position != (data[currIndex].translation.position))
+                    {
+                        EXPECT_TRUE(false);
+                    }
+
+                    EXPECT_EQ(trans.position, (data[currIndex].translation.position));
+                    EXPECT_EQ(trans.scale, (data[currIndex].translation.scale));
+                    EXPECT_EQ(phys.velocity, (data[currIndex].physics.velocity));
+                    EXPECT_EQ(phys.weight, (data[currIndex].physics.weight));
+                }
+            }
+
+        };
+
+        TEST(ECS, ManyEntities)
+        {
+            EXPECT_EQ(TestTranslation::componentTypeId, ComponentTypeId(0));
+            EXPECT_EQ(TestPhysics::componentTypeId, ComponentTypeId(1));
+            EXPECT_EQ(TestCharacter::componentTypeId, ComponentTypeId(2));
+
+            const size_t loopCount = 500;
+
+            ContextDescriptor desc(300);
+            TestContext context(desc);
+
+            AnyEntitiesSystem manyEntitiesSystem;
+            context.RegisterSystem(manyEntitiesSystem);
+
+            int32_t a = 0;
+            for (size_t i = 0; i < loopCount; i++)
+            {
+                context.CreateEntity();
+                context.CreateEntity<TestTranslation>();
+                context.CreateEntity<TestPhysics, TestIndex>();
+                auto e = context.CreateEntity<TestPhysics, TestTranslation, TestIndex>();
+                
+                auto index = e.GetComponent<TestIndex>();
+                auto phys = e.GetComponent<TestPhysics>();
+                auto trans = e.GetComponent<TestTranslation>();
+
+                index->index = static_cast<int32_t>(i);
+                phys->velocity = { a++ , a++ , a++ };
+                phys->weight = a++;
+                trans->position = { a++ , a++ , a++ };
+                trans->scale = { a++ , a++ , a++ };
+            }
+
+            a = 0;
+            std::vector<AnyEntitiesSystem::Data> data(loopCount);
+            for (size_t i = 0; i < loopCount; i++)
+            {
+                data[i].physics.velocity = { a++ , a++ , a++ };
+                data[i].physics.weight = a++;
+                data[i].translation.position = { a++ , a++ , a++ };
+                data[i].translation.scale = { a++ , a++ , a++ };
+            }
+
+            manyEntitiesSystem.TestCheckEntities(data);
+
+        }
     }
 
 }

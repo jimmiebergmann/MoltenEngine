@@ -112,15 +112,15 @@ namespace Curse
 
             if constexpr (entitySize > 0)
             {
-                // Find the data offset of each component, sorted by ComponentTypeId.
-                constexpr size_t offsetCount = Private::ComponentOffsets<Components...>::offsetCount;
-                const auto offsets = Private::ComponentOffsets<Components...>::offsets;
+                // Find the data offset of each component, sorted and unsorted by componentTypeId.
+                auto& orderedOffsets = Private::OrderedComponentOffsets<Components...>::offsets;
+                auto& unorderedOffsets = Private::UnorderedComponentOffsets<Components...>::offsets;
 
                 // Get entity template, or create a new one if missing,
                 auto *entityTemplate = FindEntityTemplate(signature);
                 if (!entityTemplate)
                 {
-                    entityTemplate = CreateEntityTemplate(signature, entitySize, { offsets.begin(), offsets.end() });
+                    entityTemplate = CreateEntityTemplate(signature, entitySize, { orderedOffsets.begin(), orderedOffsets.end() });
                 }
 
                 // Get a new collection and its data.
@@ -135,11 +135,11 @@ namespace Curse
                 metaData->dataPointer = dataPointer;
 
                 /// Call component constructors.
-                ForEachTemplateArgumentIndexed<Components...>([this, &dataPointer, &offsets](auto type, const size_t index)
+                ForEachTemplateArgumentIndexed<Components...>([this, &dataPointer, &unorderedOffsets, &entitySize](auto type, const size_t index)
                 {
                     using Type = typename decltype(type)::Type;
 
-                    auto componentData = dataPointer + offsets[index].offset;
+                    auto* componentData = dataPointer + unorderedOffsets[index].offset;
                     Type* component = reinterpret_cast<Type*>(componentData);
                     *component = Type();
                 });
@@ -157,9 +157,9 @@ namespace Curse
 
                     // Get a vector of component data pointers or relevance for this component group.
                     std::vector<ComponentBase*> componentPointers;
-                    for (size_t i = 0; i < offsetCount; i++)
+                    for (size_t i = 0; i < orderedOffsets.size(); i++)
                     {
-                        auto& offset = offsets[i];
+                        auto& offset = orderedOffsets[i];
                         if (groupSignature.IsSet(offset.componentTypeId))
                         {
                             auto componentBase = reinterpret_cast<ComponentBase*>(dataPointer + offset.offset);

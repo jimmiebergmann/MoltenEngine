@@ -152,15 +152,16 @@ namespace Curse
             */
             EntityId GetNextEntityId();
 
+            /**
+            * @brief entity id to context for reuse.
+            */
             void ReturnEntityId(const EntityId entityId);
-
 
 
             using Systems = std::set<SystemBase<Context>*>;
             using ComponentGroups = std::map<Signature, Private::ComponentGroup<Context>*>;
             using EntityTemplateMap = std::map<Signature, Private::EntityTemplate<Context>*>;
             using EntityMap = std::map<EntityId, Private::EntityMetaData<Context>*>;
-            //using ComponentOffsetMap = std::map<Signature, Private::ComponentOffsetList>;
             
             ContextDescriptor m_descriptor;         ///< Context descriptor, containing configurations. 
             Allocator m_allocator;                  ///< Memory allocator, taking care of memory allocations.
@@ -169,8 +170,7 @@ namespace Curse
             EntityMap m_entities;                   ///< Map of all entities.
             EntityId m_nextEntityId;                ///< The next availalbe entity ID.
             std::queue<EntityId> m_freeEntityIds;   ///< Queue of deleted entity ID's, ready for reuse.
-            //ComponentOffsetMap m_componentOffsets;  ///< Map of component offset.
-            Systems m_systems;
+            Systems m_systems;                      ///< Set of registered systems.
 
         };
 
