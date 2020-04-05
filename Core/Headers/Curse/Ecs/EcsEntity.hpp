@@ -74,7 +74,7 @@ namespace Curse
             /**
             * @brief Add additional components to entity.
             *        Select components to add via the template parameter list.
-            *        Already added components are ignored from the template parameter list.
+            *        Duplicates or already added components are ignored from the template parameter list.
             */
             template<typename ... Components>
             void AddComponents();

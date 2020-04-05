@@ -107,11 +107,21 @@ namespace Curse
             template<typename ContextType, typename ... Types>
             constexpr bool AreExplicitContextComponentTypes();
 
+
             /**
-            * @brief Count the total number of bytes of all passes components.
+            * @brief Helper function, count the total number of bytes of all passes components.
             */
             template<typename ... Components>
-            constexpr size_t GetComponentsSize();
+            constexpr size_t GetUniqueComponentSize();
+
+            /**
+            * @brief Helper structure, for retreiving total size of multiple components.
+            */
+            template<typename ... Components>
+            struct ComponentSize
+            {
+                static inline const size_t uniqueSize = GetUniqueComponentSize<Components...>();
+            };
 
 
             /**
@@ -150,8 +160,8 @@ namespace Curse
             *        The provided offset containers must be ordered.
             */
             template<typename ... Components, typename OffsetContainer>
-            void MigrateAddComponents(const OffsetContainer& oldOffsetList, const OffsetContainer& newOffsetList,
-                                      MigrationComponentOffsetList& oldComponentOffsets, MigrationComponentOffsetList& newComponentOffsets);
+            void MigrateAddComponents(const OffsetContainer& oldOrderedUniqueOffsets, const OffsetContainer& newOrderedUniqueOffsets,
+                                      MigrationComponentOffsetList& oldOrderedMigrationComponentOffsets, ComponentOffsetList& newUnorderedConstructorOffsets);
 
 
             /**
@@ -197,29 +207,42 @@ namespace Curse
 
             /**
             * @brief Helper function, for expanding an array of ordered component offsets.
-            *
-            * @tparam Components List of components to extend to offsetList.
-            * @param offsetList Offset list to extend by template parameter list.
-            * @param newTotalSize Total size in bytes of the new extended offset list.
             */
-            template<typename ... Components>
-            static void ExtendOrderedComponentOffsetList(ComponentOffsetList& offsetList, const size_t oldTotalSize);
+            template<typename OffsetContainer>
+            void ExtendOrderedUniqueComponentOffsets(ComponentOffsetList& offsetList, const OffsetContainer& extendingOffsets);
 
 
             /**
             * @brief Helper function, for creating an array of component offsets.
-            *        Ordered by componentTypeId for each component.
+            *        Ordered by componentTypeId of Components.
             */
             template<typename ... Components>
             constexpr ComponentOffsetArray<sizeof...(Components)> CreateOrderedComponentOffsets();
 
             /**
+            * @brief Helper function, for creating an array of unique component offsets.
+            *        Ordered by componentTypeId of Components.
+            *        Duplicates of componentTypeIds are removed and offsets are corrected.
+            */
+            template<typename ... Components>
+            constexpr ComponentOffsetList CreateOrderedUniqueComponentOffsets();
+
+            /**
             * @brief Helper function, for creating an array of component offsets.
             *        Ordered by the order of passed Components.
+            *        Offset of duplicates of components are set to std::numeric_limit<size_t>::max().
             */
             template<typename ... Components>
             constexpr ComponentOffsetArray<sizeof...(Components)> CreateUnorderedComponentOffsets();
-        
+
+            /**
+            * @brief Helper function, for creating an array of unique component offsets.
+            *        Ordered by componentTypeId of Components.
+            *        Duplicates of componentTypeIds are removed and offsets are corrected.
+            */
+            template<typename ... Components>
+            constexpr ComponentOffsetList CreateUnorderedUniqueComponentOffsets();
+
             /**
             * @brief Helper structure, for retreiving data offset of each component.
             *        Ordered by componentTypeId for each component.
@@ -228,16 +251,19 @@ namespace Curse
             struct OrderedComponentOffsets
             {
                 static inline const ComponentOffsetArray<sizeof...(Components)> offsets = CreateOrderedComponentOffsets<Components...>();
+                static inline const ComponentOffsetList uniqueOffsets = CreateOrderedUniqueComponentOffsets<Components...>();
             };
 
             /**
             * @brief Helper structure, for retreiving data offset of each component.
             *        Ordered by the order of passed Components.
+            *        Offset of duplicates of components are set to std::numeric_limit<size_t>::max().
             */
             template<typename ... Components>
             struct UnorderedComponentOffsets
             {
                 static inline const ComponentOffsetArray<sizeof...(Components)> offsets = CreateUnorderedComponentOffsets<Components...>();
+                static inline const ComponentOffsetList uniqueOffsets = CreateUnorderedUniqueComponentOffsets<Components...>();
             };
 
 

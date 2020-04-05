@@ -44,11 +44,17 @@ namespace Curse
 
         using TestEntity = Entity<Context<TestContext>>;
 
+        static size_t g_testTranslationConstructorCalls = 0;
+        static size_t g_testPhysicsConstructorCalls = 0;
+        static size_t g_testCharacterConstructorCalls = 0;
+
         CURSE_ECS_COMPONENT(TestTranslation, TestContext)
         {
             TestTranslation() :
                 position(0, 0, 0), scale(0, 0, 0)
-            { }
+            {
+                g_testTranslationConstructorCalls++;
+            }
 
             Vector3i32 position;
             Vector3i32 scale;
@@ -57,7 +63,9 @@ namespace Curse
         {
             TestPhysics() :
                 velocity(0, 0, 0), weight(0)
-            { }
+            {
+                g_testPhysicsConstructorCalls++;
+            }
 
             Vector3i32 velocity;
             int32_t weight;
@@ -66,7 +74,9 @@ namespace Curse
         {
             TestCharacter() :
                 name("")
-            { }
+            {
+                g_testCharacterConstructorCalls++;
+            }
 
             char name[50];
         };
@@ -754,6 +764,92 @@ namespace Curse
             manyEntitiesSystem.TestCheckEntities(data);
 
         }
+
+        TEST(ECS, DuplicateComponent)
+        { 
+            TestContext context;
+
+            {
+                g_testTranslationConstructorCalls = 0;
+                g_testPhysicsConstructorCalls = 0;
+                g_testCharacterConstructorCalls = 0;
+
+                auto e1 = context.CreateEntity<TestTranslation, TestPhysics, TestCharacter, TestTranslation, TestPhysics, TestCharacter>();
+
+                EXPECT_EQ(g_testTranslationConstructorCalls, size_t(1));
+                EXPECT_EQ(g_testPhysicsConstructorCalls, size_t(1));
+                EXPECT_EQ(g_testCharacterConstructorCalls, size_t(1));
+
+                e1.AddComponents<TestTranslation, TestPhysics, TestCharacter>();
+
+                EXPECT_EQ(g_testTranslationConstructorCalls, size_t(1));
+                EXPECT_EQ(g_testPhysicsConstructorCalls, size_t(1));
+                EXPECT_EQ(g_testCharacterConstructorCalls, size_t(1));
+            }
+            {
+                g_testTranslationConstructorCalls = 0;
+                g_testPhysicsConstructorCalls = 0;
+                g_testCharacterConstructorCalls = 0;
+
+                auto e1 = context.CreateEntity<TestPhysics, TestTranslation, TestTranslation, TestPhysics, TestCharacter, TestCharacter>();
+
+                EXPECT_EQ(g_testTranslationConstructorCalls, size_t(1));
+                EXPECT_EQ(g_testPhysicsConstructorCalls, size_t(1));
+                EXPECT_EQ(g_testCharacterConstructorCalls, size_t(1));
+
+                e1.AddComponents<TestTranslation, TestPhysics, TestCharacter>();
+
+                EXPECT_EQ(g_testTranslationConstructorCalls, size_t(1));
+                EXPECT_EQ(g_testPhysicsConstructorCalls, size_t(1));
+                EXPECT_EQ(g_testCharacterConstructorCalls, size_t(1));
+            }
+            {
+                g_testTranslationConstructorCalls = 0;
+                g_testPhysicsConstructorCalls = 0;
+                g_testCharacterConstructorCalls = 0;
+
+                auto e1 = context.CreateEntity();
+
+                e1.AddComponents<TestTranslation, TestTranslation>();
+                EXPECT_EQ(g_testTranslationConstructorCalls, size_t(1));
+                EXPECT_EQ(g_testPhysicsConstructorCalls, size_t(0));
+                EXPECT_EQ(g_testCharacterConstructorCalls, size_t(0));
+
+                e1.AddComponents<TestTranslation, TestPhysics, TestPhysics>();
+                EXPECT_EQ(g_testTranslationConstructorCalls, size_t(1));
+                EXPECT_EQ(g_testPhysicsConstructorCalls, size_t(1));
+                EXPECT_EQ(g_testCharacterConstructorCalls, size_t(0));
+
+                e1.AddComponents<TestTranslation, TestPhysics, TestCharacter, TestTranslation, TestPhysics, TestPhysics>();
+                EXPECT_EQ(g_testTranslationConstructorCalls, size_t(1));
+                EXPECT_EQ(g_testPhysicsConstructorCalls, size_t(1));
+                EXPECT_EQ(g_testCharacterConstructorCalls, size_t(1));
+            }
+            {
+                g_testTranslationConstructorCalls = 0;
+                g_testPhysicsConstructorCalls = 0;
+                g_testCharacterConstructorCalls = 0;
+
+                auto e1 = context.CreateEntity();
+
+                e1.AddComponents<TestTranslation>();
+                EXPECT_EQ(g_testTranslationConstructorCalls, size_t(1));
+                EXPECT_EQ(g_testPhysicsConstructorCalls, size_t(0));
+                EXPECT_EQ(g_testCharacterConstructorCalls, size_t(0));
+
+                e1.AddComponents<TestTranslation, TestPhysics>();
+                EXPECT_EQ(g_testTranslationConstructorCalls, size_t(1));
+                EXPECT_EQ(g_testPhysicsConstructorCalls, size_t(1));
+                EXPECT_EQ(g_testCharacterConstructorCalls, size_t(0));
+
+                e1.AddComponents<TestTranslation, TestPhysics, TestCharacter>();
+                EXPECT_EQ(g_testTranslationConstructorCalls, size_t(1));
+                EXPECT_EQ(g_testPhysicsConstructorCalls, size_t(1));
+                EXPECT_EQ(g_testCharacterConstructorCalls, size_t(1));
+            }
+           
+        }
+
     }
 
 }

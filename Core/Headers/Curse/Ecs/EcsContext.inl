@@ -29,7 +29,6 @@
 #include <cstring>
 #include <memory>
 
-#include <iostream> // Debug!
 
 namespace Curse
 {
@@ -89,7 +88,7 @@ namespace Curse
                 static_assert(sizeof(Type) != 0, "Component of size 0 is not supported.");                
             });
 
-            constexpr auto entitySize = Private::GetComponentsSize<Components...>();
+            auto entitySize = Private::ComponentSize<Components...>::uniqueSize;
             const auto& signature = ComponentSignature<Components...>::signature;
 
             // Create the entity.
@@ -112,17 +111,17 @@ namespace Curse
                 ReturnEntityId(entityId);
             });
 
-            if constexpr (entitySize > 0)
+            if(entitySize > 0)
             {
                 // Find the data offset of each component, sorted and unsorted by componentTypeId.
-                const auto& orderedOffsets = Private::OrderedComponentOffsets<Components...>::offsets;
-                const auto& unorderedOffsets = Private::UnorderedComponentOffsets<Components...>::offsets;
+                const auto& orderedUniqueOffsets = Private::OrderedComponentOffsets<Components...>::uniqueOffsets;
+                const auto& unorderedUniqueOffsets = Private::UnorderedComponentOffsets<Components...>::uniqueOffsets;
 
                 // Get entity template, or create a new one if missing,
                 auto *entityTemplate = FindEntityTemplate(signature);
                 if (!entityTemplate)
                 {
-                    entityTemplate = CreateEntityTemplate(signature, entitySize, { orderedOffsets.begin(), orderedOffsets.end() });
+                    entityTemplate = CreateEntityTemplate(signature, entitySize, { orderedUniqueOffsets.begin(), orderedUniqueOffsets.end() });
                 }
 
                 // Get a new collection and its data.
@@ -137,7 +136,7 @@ namespace Curse
                 metaData->dataPointer = entityDataPointer;
 
                 /// Call component constructors.
-                CallComponentConstructors<Components...>(entityDataPointer, unorderedOffsets);
+                CallComponentConstructors<Components...>(entityDataPointer, unorderedUniqueOffsets);
 
                 // Loop throguh the systems component groups and add the indicies if needed.
                 for (auto& pair : m_componentGroups)
@@ -150,7 +149,7 @@ namespace Curse
 
                     // Add components to component group.
                     auto* componentGroup = pair.second;
-                    componentGroup->AddEntityComponents(entityDataPointer, orderedOffsets);
+                    componentGroup->AddEntityComponents(entityDataPointer, orderedUniqueOffsets);
                     metaData->componentGroups.push_back(componentGroup);
 
                     // Notify all systems in interest of this entity signature about entity creation.
@@ -256,27 +255,29 @@ namespace Curse
                 // Get old entity data.
                 static const Private::ComponentOffsetList s_emptyOffsetList = {};
 
-                auto* oldOffsetList = &s_emptyOffsetList;
+                auto* oldOrderedUniqueOffsets = &s_emptyOffsetList;
                 auto* oldCollection = metaData->collection;
                 Private::EntityTemplate<Context>* oldEntityTemplate = nullptr;
                 size_t oldEntitySize = 0;
                 if (oldCollection)
                 {
                     oldEntityTemplate = oldCollection->GetEntityTemplate();
-                    oldOffsetList = &oldEntityTemplate->componentOffsets;
+                    oldOrderedUniqueOffsets = &oldEntityTemplate->componentOffsets;
                     oldEntitySize = oldEntityTemplate->entitySize;
                 }
 
                 // Get new entity data.
-                constexpr auto componentsSize = Private::GetComponentsSize<Components...>();
+                auto componentsSize = Private::ComponentSize<Components...>::uniqueSize;
                 auto newEntitySize = oldEntitySize + componentsSize;
-                auto newOffsetList = *oldOffsetList;
-                Private::ExtendOrderedComponentOffsetList<Components...>(newOffsetList, oldEntitySize);
+
+                auto newOrderedUniqueOffsets = *oldOrderedUniqueOffsets;
+                const auto& addingOrderedOffsets = Private::OrderedComponentOffsets<Components...>::uniqueOffsets;
+                Private::ExtendOrderedUniqueComponentOffsets(newOrderedUniqueOffsets, addingOrderedOffsets);
 
                 auto* newEntityTemplate = FindEntityTemplate(newSignature);
                 if (!newEntityTemplate)
                 {
-                    newEntityTemplate = CreateEntityTemplate(newSignature, newEntitySize, Private::ComponentOffsetList(newOffsetList));
+                    newEntityTemplate = CreateEntityTemplate(newSignature, newEntitySize, Private::ComponentOffsetList(newOrderedUniqueOffsets));
                 }
 
                 // Return old entry to old collection.
@@ -294,12 +295,13 @@ namespace Curse
                 if (oldEntitySize > 0)
                 {
                     // Copy old data to new data pointer.
-                    Private::MigrationComponentOffsetList oldMigrationOffsets;
-                    Private::ComponentOffsetList newMigrationOffsets;
-                    Private::MigrateAddComponents<Components...>(*oldOffsetList, newOffsetList, oldMigrationOffsets, newMigrationOffsets);
+                    Private::MigrationComponentOffsetList oldOrderedMigrationOffsets;
+                    Private::ComponentOffsetList newUnorderedConstructorOffsets;
+                    Private::MigrateAddComponents<Components...>(*oldOrderedUniqueOffsets, newOrderedUniqueOffsets,
+                                                                 oldOrderedMigrationOffsets, newUnorderedConstructorOffsets);
                     
                     auto* oldEntityDataPointer = oldCollection->GetData() + (static_cast<size_t>(metaData->collectionEntry) * oldEntitySize);
-                    for (auto& offset : oldMigrationOffsets)
+                    for (auto& offset : oldOrderedMigrationOffsets)
                     {
                         auto* destination = newEntityDataPointer + offset.newOffset;
                         auto* source = oldEntityDataPointer + offset.oldOffset;
@@ -307,7 +309,7 @@ namespace Curse
                     }
                     
                     // Call constructors of new components
-                    CallComponentConstructors<Components...>(newEntityDataPointer, newMigrationOffsets);
+                    CallComponentConstructors<Components...>(newEntityDataPointer, newUnorderedConstructorOffsets, *oldOrderedUniqueOffsets);
 
                     // Update old component groups with new component base pointers.
                     for (auto& pair : m_componentGroups)
@@ -321,17 +323,17 @@ namespace Curse
                         auto* componentGroup = pair.second;
 
                         // Erase old component pointers.
-                        componentGroup->EraseEntityComponents(oldEntityDataPointer, *oldOffsetList);
+                        componentGroup->EraseEntityComponents(oldEntityDataPointer, *oldOrderedUniqueOffsets);
 
                         // Add new component pointers.
-                        componentGroup->AddEntityComponents(newEntityDataPointer, newOffsetList);
+                        componentGroup->AddEntityComponents(newEntityDataPointer, newOrderedUniqueOffsets);
                     }
                 }
                 else
                 {
                     // No previous components, let's just call the constructors for the new ones.
-                    const auto& unorderedOffsets = Private::UnorderedComponentOffsets<Components...>::offsets;
-                    CallComponentConstructors<Components...>(newEntityDataPointer, unorderedOffsets);
+                    const auto& unorderedUniqueOffsets = Private::UnorderedComponentOffsets<Components...>::uniqueOffsets;
+                    CallComponentConstructors<Components...>(newEntityDataPointer, unorderedUniqueOffsets);
                 }
 
                 // Add component pointers to new component groups of interest.
@@ -346,7 +348,7 @@ namespace Curse
 
                     // Add components to component group.
                     auto* componentGroup = pair.second;
-                    componentGroup->AddEntityComponents(newEntityDataPointer, newOffsetList);             
+                    componentGroup->AddEntityComponents(newEntityDataPointer, newOrderedUniqueOffsets);
                     metaData->componentGroups.push_back(componentGroup);
 
                     // Notify all systems in interest of this entity signature about entity creation.
@@ -506,39 +508,53 @@ namespace Curse
         }
 
         template<typename DerivedContext>
-        template<typename ... Components>
-        inline void Context<DerivedContext>::CallComponentConstructors(Byte* entityDataPointer, const Private::ComponentOffsetArray<sizeof...(Components)>& offsetArray)
+        template<typename ... Components, typename OffsetContainer>
+        inline void Context<DerivedContext>::CallComponentConstructors(Byte* entityDataPointer, const OffsetContainer& offsets)
         {
-            ForEachTemplateArgumentIndexed<Components...>([&](auto type, const size_t index)
+            std::vector<ComponentTypeId> visitedComponents;
+            size_t index = 0;
+
+            ForEachTemplateArgument<Components...>([&](auto type)
             {
                 using Type = typename decltype(type)::Type;
 
-                Type* component = reinterpret_cast<Type*>(entityDataPointer + offsetArray[index].offset);
-                *component = Type();
+                if (std::find(visitedComponents.begin(), visitedComponents.end(), Type::componentTypeId) == visitedComponents.end())
+                {
+                    visitedComponents.push_back(Type::componentTypeId);
+
+                    Type* component = reinterpret_cast<Type*>(entityDataPointer + offsets[index].offset);
+                    *component = Type();
+
+                    index++;
+                }
             });
         }
+
         template<typename DerivedContext>
-        template<typename ... Components>
-        inline void Context<DerivedContext>::CallComponentConstructors(Byte* entityDataPointer, const Private::ComponentOffsetList& offsetList)
+        template<typename ... Components, typename OffsetContainer1, typename OffsetContainer2>
+        inline void Context<DerivedContext>::CallComponentConstructors(Byte* entityDataPointer, const OffsetContainer1& constructOffsets, const OffsetContainer2& ignoreOffsets)
         {
-            ForEachTemplateArgumentIndexed<Components...>([&](auto type, const size_t index)
+            std::vector<ComponentTypeId> visitedComponents;
+            for (auto& offset : ignoreOffsets)
+            {
+                visitedComponents.push_back(offset.componentTypeId);
+            }
+
+            size_t index = 0;
+
+            ForEachTemplateArgument<Components...>([&](auto type)
             {
                 using Type = typename decltype(type)::Type;
 
-                Type* component = reinterpret_cast<Type*>(entityDataPointer + offsetList[index].offset);
-                *component = Type();
-            });
-        }
-        template<typename DerivedContext>
-        template<typename ... Components>
-        inline void Context<DerivedContext>::CallComponentConstructors(Byte* entityDataPointer, const std::vector<size_t>& offsets)
-        {
-            ForEachTemplateArgumentIndexed<Components...>([&](auto type, const size_t index)
-            {
-                using Type = typename decltype(type)::Type;
+                if (std::find(visitedComponents.begin(), visitedComponents.end(), Type::componentTypeId) == visitedComponents.end())
+                {
+                    visitedComponents.push_back(Type::componentTypeId);
 
-                Type* component = reinterpret_cast<Type*>(entityDataPointer + offsets[index]);
-                *component = Type();
+                    Type* component = reinterpret_cast<Type*>(entityDataPointer + constructOffsets[index].offset);
+                    *component = Type();
+
+                    index++;
+                }
             });
         }
 

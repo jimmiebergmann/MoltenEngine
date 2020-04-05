@@ -92,7 +92,7 @@ namespace Curse
             /**
             * @brief Add additional components to entity.
             *        Select components to add via the template parameter list.
-            *        Already added components are ignored from the template parameter list.
+            *        Duplicates or already added components are ignored from the template parameter list.
             */
             template<typename ... Components>
             void AddComponents(const Entity<Context>& entity);
@@ -169,15 +169,13 @@ namespace Curse
             * @brief Call constructors of provided components, and apply the data to the entity data pointer by the offset list.
             */
             /**@{*/
-            template<typename ... Components>
-            void CallComponentConstructors(Byte * entityDataPointer, const Private::ComponentOffsetArray<sizeof...(Components)> & offsetArray);
+            template<typename ... Components, typename OffsetContainer>
+            void CallComponentConstructors(Byte * entityDataPointer, const OffsetContainer& offsets);
 
-            template<typename ... Components>
-            void CallComponentConstructors(Byte* entityDataPointer, const Private::ComponentOffsetList& offsetList);
-
-            template<typename ... Components>
-            void CallComponentConstructors(Byte* entityDataPointer, const std::vector<size_t>& offsets);
+            template<typename ... Components, typename OffsetContainer1, typename OffsetContainer2>
+            void CallComponentConstructors(Byte* entityDataPointer, const OffsetContainer1& constructOffsets, const OffsetContainer2& ignoreOffsets);
             /**@}*/
+
 
             using Systems = std::set<SystemBase<Context>*>;
             using ComponentGroups = std::map<Signature, Private::ComponentGroup<Context>*>;

@@ -60,37 +60,44 @@ namespace Curse
             }
 
             template<typename ... Components>
-            inline constexpr size_t GetComponentsSize()
+            inline constexpr size_t GetUniqueComponentSize()
             {
-                static_assert(Private::AreExplicitComponentTypes<Components...>(), "Implicit component type.");
-
-                size_t size = 0;
-                ForEachTemplateArgument<Components...>([&size](auto type)
+                size_t size = 0;          
+                std::vector<ComponentTypeId> visitedOffsets;
+                ForEachTemplateArgument<Components...>([&](auto type)
                 {
                     using Type = typename decltype(type)::Type;
-                    size += sizeof(Type);
+
+                    if (std::find(visitedOffsets.begin(), visitedOffsets.end(), Type::componentTypeId) == visitedOffsets.end())
+                    {
+                        visitedOffsets.push_back(Type::componentTypeId);
+                        size += sizeof(Type);
+                    }
                 });
 
                 return size;
             }
 
             template<typename ... Components, typename OffsetContainer>
-            inline void MigrateAddComponents(const OffsetContainer& oldOffsetList, const OffsetContainer& newOffsetList,
-                                             MigrationComponentOffsetList& oldComponentOffsets, ComponentOffsetList& newComponentOffsets)
+            inline void MigrateAddComponents(const OffsetContainer& oldOrderedUniqueOffsets, const OffsetContainer& newOrderedUniqueOffsets, 
+                                             MigrationComponentOffsetList& oldOrderedMigrationComponentOffsets, ComponentOffsetList& newUnorderedConstructorOffsets)
             {
                 size_t newOffsetIndex = 0;
 
-                for (size_t i = 0; i < oldOffsetList.size(); i++)
+                std::vector<ComponentTypeId> visitedComponents;
+
+                for (size_t i = 0; i < oldOrderedUniqueOffsets.size(); i++)
                 {
-                    auto& oldOffset = oldOffsetList[i];
-                    for (size_t j = newOffsetIndex; j < newOffsetList.size(); j++)
+                    auto& oldOffset = oldOrderedUniqueOffsets[i];
+                    for (size_t j = newOffsetIndex; j < newOrderedUniqueOffsets.size(); j++)
                     {
                         ++newOffsetIndex;
 
-                        auto& newOffset = newOffsetList[j];
+                        auto& newOffset = newOrderedUniqueOffsets[j];
                         if (oldOffset.componentTypeId == newOffset.componentTypeId)
                         {
-                            oldComponentOffsets.push_back({ newOffset.componentSize, oldOffset.offset, newOffset.offset });
+                            oldOrderedMigrationComponentOffsets.push_back({ newOffset.componentSize, oldOffset.offset, newOffset.offset });
+                            visitedComponents.push_back(oldOffset.componentTypeId);
                             break;
                         }
                     }
@@ -100,15 +107,20 @@ namespace Curse
                 {
                     using Type = typename decltype(type)::Type;
 
-                    for (auto& offset : newOffsetList)
+                    if (std::find(visitedComponents.begin(), visitedComponents.end(), Type::componentTypeId) != visitedComponents.end())
                     {
-                        if (Type::componentTypeId == offset.componentTypeId)
-                        {
-                            newComponentOffsets.push_back({ offset.componentTypeId, offset.componentSize, offset.offset });
-                            break;
-                        }
+                        return;
                     }
+                    visitedComponents.push_back(Type::componentTypeId);
+
+                    auto it = std::find_if(newOrderedUniqueOffsets.begin(), newOrderedUniqueOffsets.end(), [&](auto a)
+                    {
+                        return a.componentTypeId == Type::componentTypeId;
+                    });
+                    
+                    newUnorderedConstructorOffsets.push_back(*it);
                 });
+
             }
 
             template<typename ContextType>
@@ -175,7 +187,50 @@ namespace Curse
             }
 
 
-            template<typename ... Components>
+            template<typename OffsetContainer>
+            inline void ExtendOrderedUniqueComponentOffsets(ComponentOffsetList& offsetList, const OffsetContainer& extendingOffsets)
+            {
+                size_t currentSize = offsetList.size() ? (offsetList.back().offset + offsetList.back().componentSize) : 0;
+
+                std::vector<ComponentTypeId> visitedComponents;
+                for (auto& offset : offsetList)
+                {
+                    visitedComponents.push_back(offset.componentTypeId);
+                }
+
+                for (auto& offset : extendingOffsets)
+                {
+                    if (std::find(visitedComponents.begin(), visitedComponents.end(), offset.componentTypeId) != visitedComponents.end())
+                    {
+                        continue;
+                    }
+
+                    visitedComponents.push_back(offset.componentTypeId);
+
+                    auto lower = std::lower_bound(offsetList.begin(), offsetList.end(), offset.componentTypeId,
+                        [](const auto& a, const auto& b)
+                    {
+                        return a.componentTypeId < b;
+                    });
+
+                    if (lower == offsetList.end())
+                    {
+                        offsetList.push_back({ offset.componentTypeId, offset.componentSize, currentSize });
+                    }
+                    else
+                    {
+                        auto newIt = offsetList.insert(lower, { offset.componentTypeId, offset.componentSize, lower->offset });
+                        for (auto it = ++newIt; it != offsetList.end(); it++)
+                        {
+                            it->offset += offset.componentSize;
+                        }
+                    }
+
+                    currentSize += offset.componentSize;
+                }
+            }
+
+            /*template<typename ... Components>
             inline void ExtendOrderedComponentOffsetList(ComponentOffsetList& offsetList, const size_t oldTotalSize)
             {
                 size_t currentSize = oldTotalSize;
@@ -206,7 +261,7 @@ namespace Curse
 
                     currentSize += sizeof(Type);
                 });
-            }
+            }*/
 
             template<typename ... Components>
             inline constexpr ComponentOffsetArray<sizeof...(Components)> CreateOrderedComponentOffsets()
@@ -253,8 +308,31 @@ namespace Curse
             }
 
             template<typename ... Components>
+            inline constexpr ComponentOffsetList CreateOrderedUniqueComponentOffsets()
+            {
+                ComponentOffsetList uniqueOffsets;
+                auto orderedOffsets = CreateOrderedComponentOffsets<Components...>();
+                
+                std::vector<ComponentTypeId> visitedOffsets;
+                size_t currentOffset = 0;
+                for (auto& offset : orderedOffsets)
+                {
+                    if (std::find(visitedOffsets.begin(), visitedOffsets.end(), offset.componentTypeId) == visitedOffsets.end())
+                    {
+                        visitedOffsets.push_back(offset.componentTypeId);
+                        uniqueOffsets.push_back({ offset.componentTypeId, offset.componentSize, currentOffset });
+                        currentOffset += offset.componentSize;
+                    }
+                }
+
+                return std::move(uniqueOffsets);
+            }
+
+            template<typename ... Components>
             inline constexpr ComponentOffsetArray<sizeof...(Components)> CreateUnorderedComponentOffsets()
             {
+                // Note: Giving incorrect offsets of duplicates.
+
                 if constexpr (sizeof...(Components) == 0)
                 {
                     return {};
@@ -316,6 +394,77 @@ namespace Curse
                 }
             }
 
+            template<typename ... Components>
+            inline constexpr ComponentOffsetList CreateUnorderedUniqueComponentOffsets()
+            {
+                if constexpr (sizeof...(Components) == 0)
+                {
+                    return {};
+                }
+                else
+                {
+                    struct ItemSize
+                    {
+                        ComponentTypeId componentTypeId;
+                        size_t componentSize;
+
+                        bool operator <(const ItemSize& item) const
+                        {
+                            return componentTypeId < item.componentTypeId;
+                        }
+                    };
+
+                    struct ItemOffset
+                    {
+                        ComponentTypeId componentTypeId;
+                        size_t offset;
+                    };
+
+                    std::vector<ItemSize> sizeTypes;
+                    std::vector<ComponentTypeId> visitedOffsets;
+                    ForEachTemplateArgument<Components...>([&sizeTypes, &visitedOffsets](auto type)
+                    {
+                        using Type = typename decltype(type)::Type;
+
+                        if (std::find(visitedOffsets.begin(), visitedOffsets.end(), Type::componentTypeId) == visitedOffsets.end())
+                        {
+                            visitedOffsets.push_back(Type::componentTypeId);
+                            sizeTypes.push_back({ Type::componentTypeId, sizeof(Type) });
+                        }
+                    });
+                    std::sort(sizeTypes.begin(), sizeTypes.end());
+
+                    std::vector<ItemOffset> offsetType;
+                    size_t offsetSum = 0;
+                    for (size_t i = 0; i < sizeTypes.size(); i++)
+                    {
+                        offsetType.push_back({ sizeTypes[i].componentTypeId, offsetSum });
+                        offsetSum += sizeTypes[i].componentSize;
+                    }
+
+                    ComponentOffsetList uniqueOffsets;
+                    visitedOffsets.clear();
+                    ForEachTemplateArgumentIndexed<Components...>([&offsetType, &uniqueOffsets, &visitedOffsets](auto type, const size_t index)
+                    {
+                        using Type = typename decltype(type)::Type;
+
+                        for (size_t i = 0; i < offsetType.size(); i++)
+                        {
+                            if (offsetType[i].componentTypeId == Type::componentTypeId)
+                            {
+                                if (std::find(visitedOffsets.begin(), visitedOffsets.end(), Type::componentTypeId) == visitedOffsets.end())
+                                {
+                                    visitedOffsets.push_back(Type::componentTypeId);
+                                    uniqueOffsets.push_back({ Type::componentTypeId, sizeof(Type), offsetType[i].offset }); 
+                                }
+                                break;
+                            }
+                        }
+                    });
+
+                    return std::move(uniqueOffsets);
+                }
+            }
           
             template<typename Comp, typename ... Components>
             inline size_t GetComponentIndexOfTypes()
