@@ -579,7 +579,7 @@ namespace Curse
             int32_t index;
         };
 
-        CURSE_ECS_SYSTEM(AnyEntitiesSystem, TestContext, TestTranslation, TestPhysics, TestIndex)
+        CURSE_ECS_SYSTEM(TestManyEntitySystem, TestContext, TestTranslation, TestPhysics, TestIndex)
         {
 
             struct Data
@@ -623,18 +623,19 @@ namespace Curse
 
         };
 
-        TEST(ECS, ManyEntities)
+        TEST(ECS, Many_CreateEntity)
         {
             EXPECT_EQ(TestTranslation::componentTypeId, ComponentTypeId(0));
             EXPECT_EQ(TestPhysics::componentTypeId, ComponentTypeId(1));
             EXPECT_EQ(TestCharacter::componentTypeId, ComponentTypeId(2));
+            EXPECT_EQ(TestIndex::componentTypeId, ComponentTypeId(3));
 
             const size_t loopCount = 500;
 
             ContextDescriptor desc(300);
             TestContext context(desc);
 
-            AnyEntitiesSystem manyEntitiesSystem;
+            TestManyEntitySystem manyEntitiesSystem;
             context.RegisterSystem(manyEntitiesSystem);
 
             int32_t a = 0;
@@ -657,8 +658,83 @@ namespace Curse
             }
 
             a = 0;
-            std::vector<AnyEntitiesSystem::Data> data(loopCount);
+            std::vector<TestManyEntitySystem::Data> data(loopCount);
             for (size_t i = 0; i < loopCount; i++)
+            {
+                data[i].physics.velocity = { a++ , a++ , a++ };
+                data[i].physics.weight = a++;
+                data[i].translation.position = { a++ , a++ , a++ };
+                data[i].translation.scale = { a++ , a++ , a++ };
+            }
+
+            manyEntitiesSystem.TestCheckEntities(data);
+        }
+
+        TEST(ECS, Many_AddComponent)
+        {
+            EXPECT_EQ(TestTranslation::componentTypeId, ComponentTypeId(0));
+            EXPECT_EQ(TestPhysics::componentTypeId, ComponentTypeId(1));
+            EXPECT_EQ(TestCharacter::componentTypeId, ComponentTypeId(2));
+            EXPECT_EQ(TestIndex::componentTypeId, ComponentTypeId(3));
+
+            const size_t loopCount = 500;
+
+            ContextDescriptor desc(300);
+            TestContext context(desc);
+
+            TestManyEntitySystem manyEntitiesSystem;
+            TestPlayerSystem playerSystem;
+            context.RegisterSystem(manyEntitiesSystem);
+            context.RegisterSystem(playerSystem);
+
+            int32_t a = 0;
+            int32_t currentIndex = 0;
+            for (size_t i = 0; i < loopCount; i++)
+            {
+                context.CreateEntity();
+                auto e1 = context.CreateEntity();
+                auto e2 = context.CreateEntity();
+                auto e3 = context.CreateEntity();
+                auto e4 = context.CreateEntity();
+
+                e1.AddComponents<TestTranslation>();
+                e2.AddComponents<TestPhysics, TestIndex>();
+                e3.AddComponents<TestPhysics, TestTranslation, TestIndex>();
+                e3.AddComponents<TestCharacter>();
+
+                {
+                    auto index = e3.GetComponent<TestIndex>();
+                    auto phys = e3.GetComponent<TestPhysics>();
+                    auto trans = e3.GetComponent<TestTranslation>();
+
+                    index->index = currentIndex++;
+                    phys->velocity = { a++ , a++ , a++ };
+                    phys->weight = a++;
+                    trans->position = { a++ , a++ , a++ };
+                    trans->scale = { a++ , a++ , a++ };
+                }
+                {
+                    e4.AddComponents<TestPhysics>();
+                    auto phys = e4.GetComponent<TestPhysics>();
+                    phys->velocity = { a++ , a++ , a++ };
+                    phys->weight = a++;
+
+                    e4.AddComponents<TestIndex>();
+                    auto index = e4.GetComponent<TestIndex>();
+                    index->index = currentIndex++;
+                    
+                    e4.AddComponents<TestTranslation>();
+                    auto trans = e4.GetComponent<TestTranslation>();
+                    trans->position = { a++ , a++ , a++ };
+                    trans->scale = { a++ , a++ , a++ };  
+                }
+            }
+
+            a = 0;
+
+            const size_t doubleLoopCount = loopCount * 2;
+            std::vector<TestManyEntitySystem::Data> data(doubleLoopCount);
+            for (size_t i = 0; i < doubleLoopCount; i++)
             {
                 data[i].physics.velocity = { a++ , a++ , a++ };
                 data[i].physics.weight = a++;

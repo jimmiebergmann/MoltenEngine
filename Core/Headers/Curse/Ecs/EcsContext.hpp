@@ -35,6 +35,7 @@
 #include <map>
 #include <queue>
 #include <set>
+#include <vector>
 
 namespace Curse
 {
@@ -157,6 +158,19 @@ namespace Curse
             */
             void ReturnEntityId(const EntityId entityId);
 
+            /**
+            * @brief Call constructors of provided components, and apply the data to the entity data pointer by the offset list.
+            */
+            /**@{*/
+            template<typename ... Components>
+            void CallComponentConstructors(Byte * entityDataPointer, const Private::ComponentOffsetArray<sizeof...(Components)> & offsetArray);
+
+            template<typename ... Components>
+            void CallComponentConstructors(Byte* entityDataPointer, const Private::ComponentOffsetList& offsetList);
+
+            template<typename ... Components>
+            void CallComponentConstructors(Byte* entityDataPointer, const std::vector<size_t>& offsets);
+            /**@}*/
 
             using Systems = std::set<SystemBase<Context>*>;
             using ComponentGroups = std::map<Signature, Private::ComponentGroup<Context>*>;

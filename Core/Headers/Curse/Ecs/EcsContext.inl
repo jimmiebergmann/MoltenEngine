@@ -29,6 +29,8 @@
 #include <cstring>
 #include <memory>
 
+#include <iostream> // Debug!
+
 namespace Curse
 {
 
@@ -56,7 +58,7 @@ namespace Curse
                 constexpr size_t componentCount = sizeof...(RequiredComponents);
                 size_t componentsReserved = componentCount * m_descriptor.reservedComponentsPerGroup;
 
-                auto* componentGroup = new Private::ComponentGroup<Context>(componentCount);
+                auto* componentGroup = new Private::ComponentGroup<Context>(signature, componentCount);
                 componentGroup->systems.reserve(8); // HARDCODED VALUE HERE.
                 componentGroup->systems.push_back(systemPtr);
                 componentGroup->components.reserve(componentsReserved);
@@ -113,8 +115,8 @@ namespace Curse
             if constexpr (entitySize > 0)
             {
                 // Find the data offset of each component, sorted and unsorted by componentTypeId.
-                auto& orderedOffsets = Private::OrderedComponentOffsets<Components...>::offsets;
-                auto& unorderedOffsets = Private::UnorderedComponentOffsets<Components...>::offsets;
+                const auto& orderedOffsets = Private::OrderedComponentOffsets<Components...>::offsets;
+                const auto& unorderedOffsets = Private::UnorderedComponentOffsets<Components...>::offsets;
 
                 // Get entity template, or create a new one if missing,
                 auto *entityTemplate = FindEntityTemplate(signature);
@@ -128,21 +130,14 @@ namespace Curse
                 collectionEntry = collection->GetFreeEntry(); 
                 gotCollectionEntry = true;
                 const size_t collectionEntryOffset = static_cast<size_t>(collectionEntry) * entitySize;
-                Byte* dataPointer = collection->GetData() + collectionEntryOffset;
+                Byte* entityDataPointer = collection->GetData() + collectionEntryOffset;
 
                 metaData->collection = collection;
                 metaData->collectionEntry = collectionEntry;
-                metaData->dataPointer = dataPointer;
+                metaData->dataPointer = entityDataPointer;
 
                 /// Call component constructors.
-                ForEachTemplateArgumentIndexed<Components...>([this, &dataPointer, &unorderedOffsets, &entitySize](auto type, const size_t index)
-                {
-                    using Type = typename decltype(type)::Type;
-
-                    auto* componentData = dataPointer + unorderedOffsets[index].offset;
-                    Type* component = reinterpret_cast<Type*>(componentData);
-                    *component = Type();
-                });
+                CallComponentConstructors<Components...>(entityDataPointer, unorderedOffsets);
 
                 // Loop throguh the systems component groups and add the indicies if needed.
                 for (auto& pair : m_componentGroups)
@@ -153,31 +148,9 @@ namespace Curse
                         continue;
                     }
 
+                    // Add components to component group.
                     auto* componentGroup = pair.second;
-
-                    // Get a vector of component data pointers or relevance for this component group.
-                    std::vector<ComponentBase*> componentPointers;
-                    for (size_t i = 0; i < orderedOffsets.size(); i++)
-                    {
-                        auto& offset = orderedOffsets[i];
-                        if (groupSignature.IsSet(offset.componentTypeId))
-                        {
-                            auto componentBase = reinterpret_cast<ComponentBase*>(dataPointer + offset.offset);
-                            componentPointers.push_back(componentBase);
-                        }
-                    }
-
-                    if (!componentPointers.size())
-                    {
-                        continue;
-                    }
-
-                    // Add component pointers to the component group at correct location,
-                    // making sure content of component list is linear in memory.
-                    auto& components = componentGroup->components;
-                    auto low = std::lower_bound(components.begin(), components.end(), componentPointers[0]);
-                    components.insert(low, componentPointers.begin(), componentPointers.end());
-                    componentGroup->entityCount++;
+                    componentGroup->AddEntityComponents(entityDataPointer, orderedOffsets);
                     metaData->componentGroups.push_back(componentGroup);
 
                     // Notify all systems in interest of this entity signature about entity creation.
@@ -189,7 +162,7 @@ namespace Curse
             }          
 
             errorCleaner.Release();
-            m_entities.insert({ entityId,  metaData.release() });
+            m_entities.insert({ entityId, metaData.release() });
 
             return entity;
         }
@@ -213,19 +186,9 @@ namespace Curse
             }
 
             auto& componentGroups = metaData->componentGroups;
-
             for (auto& componentGroup : componentGroups)
             {
-                auto& components = componentGroup->components;
-
-                auto low = std::lower_bound(components.begin(), components.end(), static_cast<void*>(metaData->dataPointer));
-                if (low == components.end())
-                {
-                    continue;
-                }
-
-                components.erase(low, low + componentGroup->componentsPerEntity);
-                componentGroup->entityCount--;
+                componentGroup->EraseEntityComponents(metaData->dataPointer);
 
                 for (auto* system : componentGroup->systems)
                 {
@@ -251,13 +214,6 @@ namespace Curse
         {
             static_assert(Private::AreExplicitContextComponentTypes<Context, Components...>(), "Implicit component type.");
 
-            // Make sure the size of each component is larger than 0 bytes.
-            ForEachTemplateArgument<Components...>([](auto type)
-            {
-                using Type = typename decltype(type)::Type;
-                static_assert(sizeof(Type) != 0, "Component of size 0 is not supported.");
-            });
-
             // Ignore if template parameter list is empty.
             constexpr size_t componentsCount = sizeof...(Components);
             if constexpr (componentsCount == 0)
@@ -266,6 +222,13 @@ namespace Curse
             }
             else
             {
+                // Make sure the size of each component is larger than 0 bytes.
+                ForEachTemplateArgument<Components...>([](auto type)
+                {
+                    using Type = typename decltype(type)::Type;
+                    static_assert(sizeof(Type) != 0, "Component of size 0 is not supported.");
+                });
+          
                 // Make sure the meta data is set, or else the entity is probably destroyed.
                 // Also check if entity is part of this context.
                 auto* metaData = entity.m_metaData;
@@ -275,17 +238,16 @@ namespace Curse
                 }
 
                 // Make sure that this component is part of this context.
-                auto entityId = entity.GetEntityId();
-                auto eIt = m_entities.find(entityId);
-                if (eIt == m_entities.end())
+                const auto entityId = entity.GetEntityId();
+                if (m_entities.find(entityId) == m_entities.end())
                 {
                     return;
                 }
 
                 // Ignore this call if the new signature is the same  as the old one.
                 const auto& componentsSignature = ComponentSignature<Components...>::signature;
-                auto& oldSignature = metaData->signature;
-                auto newSignature = oldSignature | componentsSignature;
+                const auto& oldSignature = metaData->signature;
+                const auto newSignature = oldSignature | componentsSignature;
                 if (newSignature == oldSignature)
                 {
                     return;
@@ -294,27 +256,27 @@ namespace Curse
                 // Get old entity data.
                 static const Private::ComponentOffsetList s_emptyOffsetList = {};
 
-                auto* oldOffsets = &s_emptyOffsetList;
+                auto* oldOffsetList = &s_emptyOffsetList;
                 auto* oldCollection = metaData->collection;
                 Private::EntityTemplate<Context>* oldEntityTemplate = nullptr;
                 size_t oldEntitySize = 0;
                 if (oldCollection)
                 {
                     oldEntityTemplate = oldCollection->GetEntityTemplate();
-                    oldOffsets = &oldEntityTemplate->componentOffsets;
+                    oldOffsetList = &oldEntityTemplate->componentOffsets;
                     oldEntitySize = oldEntityTemplate->entitySize;
                 }
 
                 // Get new entity data.
                 constexpr auto componentsSize = Private::GetComponentsSize<Components...>();
                 auto newEntitySize = oldEntitySize + componentsSize;
-                auto newOffsets = *oldOffsets;
-                Private::ExtendComponentOffsetList<Components...>(newOffsets, oldEntitySize);
+                auto newOffsetList = *oldOffsetList;
+                Private::ExtendOrderedComponentOffsetList<Components...>(newOffsetList, oldEntitySize);
 
                 auto* newEntityTemplate = FindEntityTemplate(newSignature);
                 if (!newEntityTemplate)
                 {
-                    newEntityTemplate = CreateEntityTemplate(newSignature, newEntitySize, Private::ComponentOffsetList(newOffsets));
+                    newEntityTemplate = CreateEntityTemplate(newSignature, newEntitySize, Private::ComponentOffsetList(newOffsetList));
                 }
 
                 // Return old entry to old collection.
@@ -323,130 +285,82 @@ namespace Curse
                     oldCollection->ReturnEntry(metaData->collectionEntry);
                 }
 
-                if (newEntitySize > 0)
+
+                auto* newCollection = newEntityTemplate->GetFreeCollection(m_allocator);
+                const auto newCollectionEntry = newCollection->GetFreeEntry();
+                const size_t newCollectionEntryOffset = static_cast<size_t>(newCollectionEntry) * newEntitySize;
+                Byte* newEntityDataPointer = newCollection->GetData() + newCollectionEntryOffset;
+
+                if (oldEntitySize > 0)
                 {
-                    auto* newCollection = newEntityTemplate->GetFreeCollection(m_allocator);
-                    const auto newCollectionEntry = newCollection->GetFreeEntry();
-                    const size_t newCollectionEntryOffset = static_cast<size_t>(newCollectionEntry) * newEntitySize;
-                    Byte* newDataPointer = newCollection->GetData() + newCollectionEntryOffset;
-
-                    // We need to move old components and construct new ones.
-                    if (oldEntitySize > 0)
+                    // Copy old data to new data pointer.
+                    Private::MigrationComponentOffsetList oldMigrationOffsets;
+                    Private::ComponentOffsetList newMigrationOffsets;
+                    Private::MigrateAddComponents<Components...>(*oldOffsetList, newOffsetList, oldMigrationOffsets, newMigrationOffsets);
+                    
+                    auto* oldEntityDataPointer = oldCollection->GetData() + (static_cast<size_t>(metaData->collectionEntry) * oldEntitySize);
+                    for (auto& offset : oldMigrationOffsets)
                     {
-                        auto* oldDataPointer = metaData->dataPointer;
-
-                        std::vector<size_t> constructorOffsets;
-                        size_t oldOffsetIndex = 0;
-                        for (size_t i = 0; i < newOffsets.size(); i++)
-                        {
-                            auto& newOffset = newOffsets[i];
-
-                            auto oIt = find_if(oldOffsets->begin(), oldOffsets->end(), [&newOffset](const auto& a) {
-                                return a.componentTypeId == newOffset.componentTypeId;
-                            });
-
-                            if (oIt == oldOffsets->end())
-                            {
-                                constructorOffsets.push_back(newOffset.offset);
-                            }
-                            else
-                            {
-                                size_t nextNewOffset = (i + 1 < newOffsets.size()) ? newOffsets[i + 1].offset : newEntitySize;
-
-                                size_t copyFromLocation = (*oldOffsets)[oldOffsetIndex].offset;
-                                size_t copyToLocation = newOffset.offset;
-                                size_t componentSize = nextNewOffset - newOffset.offset;
-                                std::memcpy(newDataPointer + copyToLocation, oldDataPointer + copyFromLocation, componentSize);
-                                ++oldOffsetIndex;
-                            }
-                        }
-
-                        ForEachTemplateArgumentIndexed<Components...>([&newDataPointer, &constructorOffsets](auto type, const size_t index)
-                        {
-                            using Type = typename decltype(type)::Type;
-
-                            auto componentData = newDataPointer + constructorOffsets[index];
-                            Type* component = reinterpret_cast<Type*>(componentData);
-                            *component = Type();
-                        });
-
-                        // Components in old component groups are pointing to the wrong data pointer location now.
-                        // Let's remove them and add them later again, pointing to the new data pointer.
-                        for (auto& componentGroup : metaData->componentGroups)
-                        {
-                            auto& components = componentGroup->components;
-
-                            auto low = std::lower_bound(components.begin(), components.end(), static_cast<void*>(metaData->dataPointer));
-                            if (low != components.end())
-                            {
-                                components.erase(low, low + componentGroup->componentsPerEntity);
-                            }
-                        }
+                        auto* destination = newEntityDataPointer + offset.newOffset;
+                        auto* source = oldEntityDataPointer + offset.oldOffset;
+                        std::memcpy(destination, source, offset.componentSize);
                     }
-                    // No old components, let's construct all new ones.
-                    else
-                    {
-                        ForEachTemplateArgumentIndexed<Components...>([this, &newDataPointer, &newOffsets](auto type, const size_t index)
-                        {
-                            using Type = typename decltype(type)::Type;
+                    
+                    // Call constructors of new components
+                    CallComponentConstructors<Components...>(newEntityDataPointer, newMigrationOffsets);
 
-                            auto componentData = newDataPointer + newOffsets[index].offset;
-                            Type* component = reinterpret_cast<Type*>(componentData);
-                            *component = Type();
-                        });
-                    }
-
+                    // Update old component groups with new component base pointers.
                     for (auto& pair : m_componentGroups)
                     {
                         auto& groupSignature = pair.first;
-                        if ((groupSignature & oldSignature) == groupSignature)
+                        if ((groupSignature & oldSignature) != groupSignature)
                         {
                             continue;
                         }
 
                         auto* componentGroup = pair.second;
-                        auto& components = componentGroup->components;
 
-                        std::vector<ComponentBase*> componentPointers;
-                        for (size_t i = 0; i < newOffsets.size(); i++)
-                        {
-                            auto& offset = newOffsets[i];
-                            if (groupSignature.IsSet(offset.componentTypeId))
-                            {
-                                auto componentBase = reinterpret_cast<ComponentBase*>(newDataPointer + offset.offset);
-                                componentPointers.push_back(componentBase);
-                            }
-                        }
+                        // Erase old component pointers.
+                        componentGroup->EraseEntityComponents(oldEntityDataPointer, *oldOffsetList);
 
-                        if (componentPointers.size() == 0)
-                        {
-                            continue;
-                        }
+                        // Add new component pointers.
+                        componentGroup->AddEntityComponents(newEntityDataPointer, newOffsetList);
+                    }
+                }
+                else
+                {
+                    // No previous components, let's just call the constructors for the new ones.
+                    const auto& unorderedOffsets = Private::UnorderedComponentOffsets<Components...>::offsets;
+                    CallComponentConstructors<Components...>(newEntityDataPointer, unorderedOffsets);
+                }
 
-                        auto low = std::lower_bound(components.begin(), components.end(), componentPointers[0]);
-                        components.insert(low, componentPointers.begin(), componentPointers.end());
-
-                        // New component group.
-                        // FIX HERE, IGNORE OLD COMPONENT GROUP.
-                        if ((groupSignature & newSignature) == groupSignature)
-                        {
-                            componentGroup->entityCount++;
-                            metaData->componentGroups.push_back(componentGroup);
-
-                            // Notify all systems in interest of this entity signature about entity creation.
-                            for (auto* system : componentGroup->systems)
-                            {
-                                system->InternalOnCreateEntity(entity);
-                            }
-                        }
+                // Add component pointers to new component groups of interest.
+                for (auto& pair : m_componentGroups)
+                {
+                    auto& groupSignature = pair.first;
+                    if ((groupSignature & oldSignature) == groupSignature ||
+                        (groupSignature & newSignature) != groupSignature)
+                    {
+                        continue;
                     }
 
-                    // Set the new meta data.
-                    metaData->signature = newSignature;
-                    metaData->collection = newCollection;
-                    metaData->collectionEntry = newCollectionEntry;
-                    metaData->dataPointer = newDataPointer;
+                    // Add components to component group.
+                    auto* componentGroup = pair.second;
+                    componentGroup->AddEntityComponents(newEntityDataPointer, newOffsetList);             
+                    metaData->componentGroups.push_back(componentGroup);
+
+                    // Notify all systems in interest of this entity signature about entity creation.
+                    for (auto* system : componentGroup->systems)
+                    {
+                        system->InternalOnCreateEntity(entity);
+                    }
                 }
+
+                // Set the new meta data.
+                metaData->signature = newSignature;
+                metaData->collection = newCollection;
+                metaData->collectionEntry = newCollectionEntry;
+                metaData->dataPointer = newEntityDataPointer;
             }
         }
 
@@ -574,7 +488,7 @@ namespace Curse
         }
 
         template<typename DerivedContext>
-        void Context<DerivedContext>::ReturnEntityId(const EntityId entityId)
+        inline void Context<DerivedContext>::ReturnEntityId(const EntityId entityId)
         {
             if (m_nextEntityId && entityId == m_nextEntityId - 1)
             {
@@ -582,6 +496,43 @@ namespace Curse
                 return;
             }
             m_freeEntityIds.push(entityId);
+        }
+
+        template<typename DerivedContext>
+        template<typename ... Components>
+        inline void Context<DerivedContext>::CallComponentConstructors(Byte* entityDataPointer, const Private::ComponentOffsetArray<sizeof...(Components)>& offsetArray)
+        {
+            ForEachTemplateArgumentIndexed<Components...>([&](auto type, const size_t index)
+            {
+                using Type = typename decltype(type)::Type;
+
+                Type* component = reinterpret_cast<Type*>(entityDataPointer + offsetArray[index].offset);
+                *component = Type();
+            });
+        }
+        template<typename DerivedContext>
+        template<typename ... Components>
+        inline void Context<DerivedContext>::CallComponentConstructors(Byte* entityDataPointer, const Private::ComponentOffsetList& offsetList)
+        {
+            ForEachTemplateArgumentIndexed<Components...>([&](auto type, const size_t index)
+            {
+                using Type = typename decltype(type)::Type;
+
+                Type* component = reinterpret_cast<Type*>(entityDataPointer + offsetList[index].offset);
+                *component = Type();
+            });
+        }
+        template<typename DerivedContext>
+        template<typename ... Components>
+        inline void Context<DerivedContext>::CallComponentConstructors(Byte* entityDataPointer, const std::vector<size_t>& offsets)
+        {
+            ForEachTemplateArgumentIndexed<Components...>([&](auto type, const size_t index)
+            {
+                using Type = typename decltype(type)::Type;
+
+                Type* component = reinterpret_cast<Type*>(entityDataPointer + offsets[index]);
+                *component = Type();
+            });
         }
 
     }

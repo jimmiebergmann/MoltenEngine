@@ -23,8 +23,11 @@
 *
 */
 
-#include <type_traits>
+
 #include "Curse/Utility/Template.hpp"
+#include <type_traits>
+#include <map>
+#include <algorithm>
 
 namespace Curse
 {
@@ -56,12 +59,6 @@ namespace Curse
                        (!std::is_same<ComponentContextBase<ContextType>, Types>::value && ...);
             }
 
-            template<typename ContextType>
-            inline ComponentGroup<ContextType>::ComponentGroup(const size_t componentsPerEntity) :
-                componentsPerEntity(componentsPerEntity),
-                entityCount(0)
-            { }
-
             template<typename ... Components>
             inline constexpr size_t GetComponentsSize()
             {
@@ -77,8 +74,109 @@ namespace Curse
                 return size;
             }
 
+            template<typename ... Components, typename OffsetContainer>
+            inline void MigrateAddComponents(const OffsetContainer& oldOffsetList, const OffsetContainer& newOffsetList,
+                                             MigrationComponentOffsetList& oldComponentOffsets, ComponentOffsetList& newComponentOffsets)
+            {
+                size_t newOffsetIndex = 0;
+
+                for (size_t i = 0; i < oldOffsetList.size(); i++)
+                {
+                    auto& oldOffset = oldOffsetList[i];
+                    for (size_t j = newOffsetIndex; j < newOffsetList.size(); j++)
+                    {
+                        ++newOffsetIndex;
+
+                        auto& newOffset = newOffsetList[j];
+                        if (oldOffset.componentTypeId == newOffset.componentTypeId)
+                        {
+                            oldComponentOffsets.push_back({ newOffset.componentSize, oldOffset.offset, newOffset.offset });
+                            break;
+                        }
+                    }
+                }
+
+                ForEachTemplateArgument<Components...>([&](auto type)
+                {
+                    using Type = typename decltype(type)::Type;
+
+                    for (auto& offset : newOffsetList)
+                    {
+                        if (Type::componentTypeId == offset.componentTypeId)
+                        {
+                            newComponentOffsets.push_back({ offset.componentTypeId, offset.componentSize, offset.offset });
+                            break;
+                        }
+                    }
+                });
+            }
+
+            template<typename ContextType>
+            inline ComponentGroup<ContextType>::ComponentGroup(const Signature& signature, const size_t componentsPerEntity) :
+                signature(signature),
+                componentsPerEntity(componentsPerEntity),
+                entityCount(0)
+            { }
+
+            template<typename ContextType>
+            template<typename OffsetContainer>
+            inline void ComponentGroup<ContextType>::AddEntityComponents(Byte* entityDataPointer, const OffsetContainer& offsets)
+            {
+                std::vector<ComponentBase*> componentOfInterest;
+                for (size_t i = 0; i < offsets.size(); i++)
+                {
+                    if (signature.IsSet(offsets[i].componentTypeId))
+                    {
+                        auto* componentBase = reinterpret_cast<ComponentBase*>(entityDataPointer + offsets[i].offset);
+                        componentOfInterest.push_back(componentBase);
+                    }
+                }
+
+                if (componentOfInterest.size())
+                {
+                    auto low = std::lower_bound(components.begin(), components.end(), componentOfInterest[0]);
+                    components.insert(low, componentOfInterest.begin(), componentOfInterest.end());
+                    ++entityCount;
+                }
+            }
+
+            template<typename ContextType>
+            inline void ComponentGroup<ContextType>::EraseEntityComponents(const Byte* entityDataPointer)
+            {
+                auto* firstComponent = reinterpret_cast<const ComponentBase*>(entityDataPointer);
+                auto low = std::lower_bound(components.begin(), components.end(), firstComponent);
+                if (low != components.end())
+                {
+                    components.erase(low, low + componentsPerEntity);
+                    --entityCount;
+                }           
+            }
+
+            template<typename ContextType>
+            template<typename OffsetContainer>
+            inline void ComponentGroup<ContextType>::EraseEntityComponents(const Byte* entityDataPointer, const OffsetContainer& offsets)
+            {
+                int32_t firstIndex = -1;
+                for (int32_t i = 0; i < offsets.size(); i++)
+                {
+                    if (signature.IsSet(offsets[i].componentTypeId))
+                    {
+                        firstIndex = i;
+                        break;
+                    }
+                }
+                if (firstIndex != -1)
+                {
+                    auto* firstComponent = reinterpret_cast<const ComponentBase*>(entityDataPointer + offsets[firstIndex].offset);
+                    auto low = std::lower_bound(components.begin(), components.end(), firstComponent);
+                    components.erase(low, low + componentsPerEntity);
+                    --entityCount;
+                }
+            }
+
+
             template<typename ... Components>
-            inline void ExtendComponentOffsetList(ComponentOffsetList& offsetList, const size_t oldTotalSize)
+            inline void ExtendOrderedComponentOffsetList(ComponentOffsetList& offsetList, const size_t oldTotalSize)
             {
                 size_t currentSize = oldTotalSize;
 
@@ -95,11 +193,11 @@ namespace Curse
 
                     if (lower == offsetList.end())
                     {
-                        offsetList.push_back({ Type::componentTypeId, currentSize });
+                        offsetList.push_back({ Type::componentTypeId, sizeof(Type), currentSize });
                     }
                     else
                     {
-                        auto newIt = offsetList.insert(lower, { Type::componentTypeId, lower->offset });
+                        auto newIt = offsetList.insert(lower, { Type::componentTypeId, sizeof(Type), lower->offset });
                         for (auto it = ++newIt; it != offsetList.end(); it++)
                         {
                             it->offset += sizeof(Type);
@@ -107,88 +205,104 @@ namespace Curse
                     }
 
                     currentSize += sizeof(Type);
-
                 });
             }
 
             template<typename ... Components>
             inline constexpr ComponentOffsetArray<sizeof...(Components)> CreateOrderedComponentOffsets()
             {
-                struct Item
+                if constexpr (sizeof...(Components) == 0)
                 {
-                    ComponentTypeId componentTypeId;
-                    size_t size;
-
-                    bool operator <(const Item& item) const
-                    {
-                        return componentTypeId < item.componentTypeId;
-                    }
-                };
-
-                std::vector<Item> items;
-                ForEachTemplateArgument<Components...>([&items](auto type)
-                {
-                    using Type = typename decltype(type)::Type;
-                    items.push_back({ Type::componentTypeId, sizeof(Type) });
-                });
-
-                std::sort(items.begin(), items.end());
-
-                ComponentOffsetArray<sizeof...(Components)> offsets = {};
-                size_t sum = 0;
-                for (size_t i = 0; i < items.size(); i++)
-                {
-                    offsets[i].offset = sum;
-                    offsets[i].componentTypeId = items[i].componentTypeId;
-                    sum += items[i].size;
+                    return {};
                 }
+                else
+                {
+                    struct Item
+                    {
+                        ComponentTypeId componentTypeId;
+                        size_t componentSize;
 
-                return std::move(offsets);
+                        bool operator <(const Item& item) const
+                        {
+                            return componentTypeId < item.componentTypeId;
+                        }
+                    };
+
+                    std::vector<Item> items;
+                    ForEachTemplateArgument<Components...>([&items](auto type)
+                    {
+                        using Type = typename decltype(type)::Type;
+                        items.push_back({ Type::componentTypeId, sizeof(Type) });
+                    });
+
+                    std::sort(items.begin(), items.end());
+
+                    ComponentOffsetArray<sizeof...(Components)> offsets = {};
+                    size_t sum = 0;
+                    for (size_t i = 0; i < items.size(); i++)
+                    {
+                        offsets[i].componentTypeId = items[i].componentTypeId;
+                        offsets[i].componentSize = items[i].componentSize;
+                        offsets[i].offset = sum;
+                        
+                        sum += items[i].componentSize;
+                    }
+
+                    return std::move(offsets);
+                }
             }
 
             template<typename ... Components>
             inline constexpr ComponentOffsetArray<sizeof...(Components)> CreateUnorderedComponentOffsets()
             {
-                struct Item
+                if constexpr (sizeof...(Components) == 0)
                 {
-                    ComponentTypeId componentTypeId;
-                    size_t size;
-
-                    bool operator <(const Item& item) const
-                    {
-                        return componentTypeId < item.componentTypeId;
-                    }
-                };
-
-                std::vector<Item> items;
-                ForEachTemplateArgument<Components...>([&items](auto type)
-                {
-                    using Type = typename decltype(type)::Type;
-                    items.push_back({ Type::componentTypeId, sizeof(Type) });
-                });
-
-                std::sort(items.begin(), items.end());
-
-                std::map<ComponentTypeId, size_t> offsetMap;
-                size_t sum = 0;
-                for (size_t i = 0; i < items.size(); i++)
-                {
-                    offsetMap.insert({ items[i].componentTypeId, sum });
-                    sum += items[i].size;
+                    return {};
                 }
-
-                ComponentOffsetArray<sizeof...(Components)> offsets = {};
-                ForEachTemplateArgumentIndexed<Components...>([&offsetMap, &offsets](auto type, const size_t index)
+                else
                 {
-                    using Type = typename decltype(type)::Type;
-                    auto it = offsetMap.find(Type::componentTypeId);
-                    
-                    auto& offset = offsets[index];
-                    offset.componentTypeId = Type::componentTypeId;
-                    offset.offset = it->second;
-                });
-                
-                return std::move(offsets);
+                    struct Item
+                    {
+                        ComponentTypeId componentTypeId;
+                        size_t componentSize;
+
+                        bool operator <(const Item& item) const
+                        {
+                            return componentTypeId < item.componentTypeId;
+                        }
+                    };
+
+                    std::vector<Item> items;
+                    ForEachTemplateArgument<Components...>([&items](auto type)
+                    {
+                        using Type = typename decltype(type)::Type;
+                        items.push_back({ Type::componentTypeId, sizeof(Type) });
+                    });
+
+                    std::sort(items.begin(), items.end());
+
+                    std::map<ComponentTypeId, size_t> offsetMap;
+                    size_t sum = 0;
+                    for (size_t i = 0; i < items.size(); i++)
+                    {
+                        offsetMap.insert({ items[i].componentTypeId, sum });
+                        sum += items[i].componentSize;
+                    }
+
+                    ComponentOffsetArray<sizeof...(Components)> offsets = {};
+                    ForEachTemplateArgumentIndexed<Components...>([&offsetMap, &offsets](auto type, const size_t index)
+                    {
+                        using Type = typename decltype(type)::Type;
+                        auto it = offsetMap.find(Type::componentTypeId);
+
+                        auto& offset = offsets[index];
+                        offset.componentTypeId = Type::componentTypeId;
+                        offset.componentSize = sizeof(Type);
+                        offset.offset = it->second;
+                    });
+
+                    return std::move(offsets);
+                }
             }
 
           

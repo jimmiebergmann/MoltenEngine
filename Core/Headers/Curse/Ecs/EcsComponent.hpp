@@ -26,7 +26,7 @@
 #ifndef CURSE_CORE_ECS_ECSCOMPONENT_HPP
 #define CURSE_CORE_ECS_ECSCOMPONENT_HPP
 
-#include "Curse/Ecs/Ecs.hpp"
+#include "Curse/Ecs/EcsSignature.hpp"
 #include <array>
 #include <vector>
 
@@ -107,27 +107,6 @@ namespace Curse
             template<typename ContextType, typename ... Types>
             constexpr bool AreExplicitContextComponentTypes();
 
-
-            /**
-            * @brief Structure of components grouped together for systems.
-            */
-            template<typename ContextType>
-            struct ComponentGroup
-            {
-                /**
-                * @brief Constructor of component group.
-                */
-                ComponentGroup(const size_t componentsPerEntity);
-
-                std::vector<SystemBase<ContextType>*> systems;  ///< Vector of systems interested in this component group.
-                const size_t componentsPerEntity;               ///<  Number of components per entity.
-                std::vector<ComponentBase*> components;         ///< Vector of all components. The entity stride is defined by componentsPerEntity.
-                size_t entityCount;                             ///< Number of entities in this component group.
-
-                ///std::vector<Entity<ContextType>*> entities;
-            };
-
-
             /**
             * @brief Count the total number of bytes of all passes components.
             */
@@ -137,11 +116,14 @@ namespace Curse
 
             /**
             * @brief Helper structure, containing offset of a component type id.
-            * @see ComponentOffsets
+            *
+            * @see OrderedComponentOffsets
+            * @see UnorderedComponentOffsets
             */
             struct ComponentOffsetItem
             {
                 ComponentTypeId componentTypeId;
+                size_t componentSize;
                 size_t offset;
             };
 
@@ -152,14 +134,76 @@ namespace Curse
 
 
             /**
-            * @brief Helper function, for creating an array of component offsets.
+            * @brief Helper structure for migrating components from one offset to another.
+            */
+            struct MigrationComponentOffsetItem
+            {
+                size_t componentSize;
+                size_t oldOffset;
+                size_t newOffset;
+            };
+
+            using MigrationComponentOffsetList = std::vector<MigrationComponentOffsetItem>; ///< Vector of migration component offset items.
+
+            /**
+            * @brief Helper function for getting a list of migration offsets, from one component group to another.
+            *        The provided offset containers must be ordered.
+            */
+            template<typename ... Components, typename OffsetContainer>
+            void MigrateAddComponents(const OffsetContainer& oldOffsetList, const OffsetContainer& newOffsetList,
+                                      MigrationComponentOffsetList& oldComponentOffsets, MigrationComponentOffsetList& newComponentOffsets);
+
+
+            /**
+            * @brief Structure of components grouped together for systems.
+            */
+            template<typename ContextType>
+            struct ComponentGroup
+            {
+                /**
+                * @brief Constructor of component group.
+                */
+                ComponentGroup(const Signature& signature, const size_t componentsPerEntity);
+
+                /**
+                * @brief Add components to this component group,
+                *        by providing a data pointer to the entity and a container of offset items.
+                *        The offset items are used for determining what components are of interest.
+                */
+                template<typename OffsetContainer>
+                void AddEntityComponents(Byte* entityDataPointer, const OffsetContainer& offsets);
+
+                /**
+                * @brief Erase components from this component group,
+                *        by providing a data pointer to the entity.
+                */
+                /**@{*/
+                void EraseEntityComponents(const Byte* entityDataPointer);
+
+                /*
+                * @brief The offset items are used for determining what components are of interest.
+                */
+                template<typename OffsetContainer>
+                void EraseEntityComponents(const Byte* entityDataPointer, const OffsetContainer& offsets);
+                /**@}*/
+
+                const Signature signature;                      ///< Signature of this component group.
+                const size_t componentsPerEntity;               ///< Number of components per entity.
+                std::vector<SystemBase<ContextType>*> systems;  ///< Vector of systems interested in this component group.    
+                std::vector<ComponentBase*> components;         ///< Vector of all components. The entity stride is defined by componentsPerEntity.
+                size_t entityCount;                             ///< Number of entities in this component group.
+            };
+
+
+            /**
+            * @brief Helper function, for expanding an array of ordered component offsets.
             *
             * @tparam Components List of components to extend to offsetList.
             * @param offsetList Offset list to extend by template parameter list.
             * @param newTotalSize Total size in bytes of the new extended offset list.
             */
             template<typename ... Components>
-            static void ExtendComponentOffsetList(ComponentOffsetList& offsetList, const size_t oldTotalSize);
+            static void ExtendOrderedComponentOffsetList(ComponentOffsetList& offsetList, const size_t oldTotalSize);
 
 
             /**
