@@ -687,7 +687,7 @@ namespace Curse
             context.RegisterSystem(manyEntitiesSystem);
             context.RegisterSystem(playerSystem);
 
-            int32_t a = 0;
+            int32_t val = 0;
             int32_t currentIndex = 0;
             for (size_t i = 0; i < loopCount; i++)
             {
@@ -708,16 +708,18 @@ namespace Curse
                     auto trans = e3.GetComponent<TestTranslation>();
 
                     index->index = currentIndex++;
-                    phys->velocity = { a++ , a++ , a++ };
-                    phys->weight = a++;
-                    trans->position = { a++ , a++ , a++ };
-                    trans->scale = { a++ , a++ , a++ };
+                    phys->velocity = { val, val + 1 , val + 2 };
+                    phys->weight = val + 3;
+                    trans->position = { val + 4, val + 5, val + 6 };
+                    trans->scale = { val + 7, val + 8, val + 9 };
+
+                    val += 10;
                 }
                 {
                     e4.AddComponents<TestPhysics>();
                     auto phys = e4.GetComponent<TestPhysics>();
-                    phys->velocity = { a++ , a++ , a++ };
-                    phys->weight = a++;
+                    phys->velocity = { val, val + 1 , val + 2 };
+                    phys->weight = val + 3;
 
                     e4.AddComponents<TestIndex>();
                     auto index = e4.GetComponent<TestIndex>();
@@ -725,21 +727,24 @@ namespace Curse
                     
                     e4.AddComponents<TestTranslation>();
                     auto trans = e4.GetComponent<TestTranslation>();
-                    trans->position = { a++ , a++ , a++ };
-                    trans->scale = { a++ , a++ , a++ };  
+                    trans->position = { val + 4, val + 5, val + 6 };
+                    trans->scale = { val + 7, val + 8, val + 9 };
+
+                    val += 10;
                 }
             }
 
-            a = 0;
+            val = 0;
 
             const size_t doubleLoopCount = loopCount * 2;
             std::vector<TestManyEntitySystem::Data> data(doubleLoopCount);
             for (size_t i = 0; i < doubleLoopCount; i++)
             {
-                data[i].physics.velocity = { a++ , a++ , a++ };
-                data[i].physics.weight = a++;
-                data[i].translation.position = { a++ , a++ , a++ };
-                data[i].translation.scale = { a++ , a++ , a++ };
+                data[i].physics.velocity = { val , val + 1 , val + 2 };
+                data[i].physics.weight = val + 3;
+                data[i].translation.position = { val + 4 , val + 5 , val + 6 };
+                data[i].translation.scale = { val + 7 , val + 8 , val + 9 };
+                val += 10;
             }
 
             manyEntitiesSystem.TestCheckEntities(data);
