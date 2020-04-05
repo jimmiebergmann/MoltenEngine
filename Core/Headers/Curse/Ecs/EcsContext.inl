@@ -365,6 +365,13 @@ namespace Curse
         }
 
         template<typename DerivedContext>
+        template<typename ... Components>
+        inline void Context<DerivedContext>::RemoveComponents(const Entity<Context>& entity)
+        {
+
+        }
+
+        template<typename DerivedContext>
         inline const Allocator& Context<DerivedContext>::GetAlloator() const
         {
             return m_allocator;

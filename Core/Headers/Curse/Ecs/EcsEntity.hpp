@@ -77,7 +77,14 @@ namespace Curse
             *        Already added components are ignored from the template parameter list.
             */
             template<typename ... Components>
-            Entity& AddComponents();
+            void AddComponents();
+
+            /**
+            * @brief Remove components from entity.
+            *        Select components to remove via the template parameter list.
+            */
+            template<typename ... Components>
+            void RemoveComponents();
 
             /**
             * @brief Get attached component by type.

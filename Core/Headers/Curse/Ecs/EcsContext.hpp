@@ -98,6 +98,13 @@ namespace Curse
             void AddComponents(const Entity<Context>& entity);
 
             /**
+            * @brief Remove components from entity.
+            *        Select components to remove via the template parameter list.
+            */
+            template<typename ... Components>
+            void RemoveComponents(const Entity<Context>& entity);
+
+            /**
             * @brief Get allocator.
             *        The returned allocated is of type const & by design.
             *        This method makes it possible to access the allocators const functions, making it possible to dump memory if needed.

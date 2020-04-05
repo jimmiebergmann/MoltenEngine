@@ -93,7 +93,12 @@ after_success:
   - lcov -e coverage.info '*/Core/Headers/*' '*/Core/Source/*' --output-file coverage.info
   - lcov --list coverage.info
   - if [ ${CODECOV_UPLOAD} ]; then bash <(curl -s https://codecov.io/bash); fi
-  - if [ ${CODECOV_UPLOAD} ]; then coveralls --root . -E "/Test/*" -E ".*gtest.*" -E ".*CMakeFiles.*"; fi
+  - |
+    if [ ${CODECOV_UPLOAD} ]; then
+      cd $TRAVIS_BUILD_DIR
+      coveralls --help
+      coveralls --root . --build-root ./Build -E ".*/Test/.*" -E ".*/Editor/.*" -E ".*CMakeFiles.*"
+    fi
 
 notifications:
   email: false

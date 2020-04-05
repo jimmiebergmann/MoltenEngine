@@ -44,13 +44,22 @@ namespace Curse
 
         template<typename ContextType>
         template<typename ... Components>
-        inline Entity<ContextType>& Entity<ContextType>::AddComponents()
+        inline void Entity<ContextType>::AddComponents()
         {
             if (m_metaData)
             {
                 m_metaData->context->template AddComponents<Components...>(*this);
             }
-            return *this;
+        }
+
+        template<typename ContextType>
+        template<typename ... Components>
+        inline void Entity<ContextType>::RemoveComponents()
+        {
+            if (m_metaData)
+            {
+                m_metaData->context->template RemoveComponents<Components...>(*this);
+            }
         }
 
         template<typename ContextType>
