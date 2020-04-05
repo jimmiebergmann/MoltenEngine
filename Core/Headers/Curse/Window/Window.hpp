@@ -280,14 +280,14 @@ namespace Curse
         /**
         * @brief Show a modal window with a OK button.
         */
-        static void Message(const Type type, const std::string& title, const std::string content);
+        static void Message(const Type type, const std::string& title, const std::string& content);
 
         /**
         * @brief Show a modal window with a Yes and No button.
         *
         * @return true if user pressed the Yes button, false if No button was pressed.
         */
-        static bool MessageConfirm(const Type type, const std::string& title, const std::string content);
+        static bool MessageConfirm(const Type type, const std::string& title, const std::string& content);
 
     };
 

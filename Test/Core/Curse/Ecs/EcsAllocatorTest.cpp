@@ -27,6 +27,7 @@
 #include "Curse/Ecs/EcsAllocator.hpp"
 #include "Curse/System/Exception.hpp"
 #include <algorithm>
+#include <type_traits>
 
 namespace Curse
 {
@@ -51,6 +52,12 @@ namespace Curse
                 Allocator allocator(100);
                 size_t blockIndex = 0;
                 size_t dataIndex = 0;
+                EXPECT_THROW(allocator.RequestMemory(0, blockIndex, dataIndex), Curse::Exception);
+            }
+            {
+                Allocator allocator(100);
+                size_t blockIndex = 0;
+                size_t dataIndex = 0;
                 ASSERT_NO_THROW(allocator.RequestMemory(100, blockIndex, dataIndex));
             }
             {
@@ -62,6 +69,9 @@ namespace Curse
                 EXPECT_EQ(dataIndex, size_t(0));
                 EXPECT_NE(data, nullptr);
                 EXPECT_EQ(allocator.GetBlock(0), data);
+
+                const Allocator& constAllocator = allocator;
+                EXPECT_EQ(constAllocator.GetBlock(0), data);
 
                 EXPECT_EQ(allocator.GetBlockCount(), size_t(1));
                 EXPECT_EQ(allocator.GetCurrentBlockIndex(), size_t(0));

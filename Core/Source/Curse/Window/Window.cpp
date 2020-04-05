@@ -53,24 +53,24 @@ namespace Curse
 
     // Platform window implementations.
 #if CURSE_PLATFORM == CURSE_PLATFORM_WINDOWS
-    void PlatformWindow::Message(const Type type, const std::string& title, const std::string content)
+    void PlatformWindow::Message(const Type type, const std::string& title, const std::string& content)
     {
         UINT icon = type == Type::Error ? MB_ICONEXCLAMATION : MB_ICONINFORMATION;
         MessageBox(NULL, content.c_str(), title.c_str(), icon | MB_OK);
     }
 
-    bool PlatformWindow::MessageConfirm(const Type type, const std::string& title, const std::string content)
+    bool PlatformWindow::MessageConfirm(const Type type, const std::string& title, const std::string& content)
     {
         UINT icon = type == Type::Error ? MB_ICONEXCLAMATION : MB_ICONINFORMATION;
         int result = MessageBox(NULL, content.c_str(), title.c_str(), icon | MB_YESNO);
         return result == IDYES;
     }
 #else
-    void PlatformWindow::Message(const Type, const std::string&, const std::string)
+    void PlatformWindow::Message(const Type, const std::string&, const std::string&)
     {
     }
 
-    bool PlatformWindow::MessageConfirm(const Type, const std::string&, const std::string)
+    bool PlatformWindow::MessageConfirm(const Type, const std::string&, const std::string&)
     {
         return false;
     }
