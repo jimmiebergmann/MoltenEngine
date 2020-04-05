@@ -60,7 +60,7 @@ namespace Curse
             }
 
             template<typename ... Components>
-            inline constexpr size_t GetUniqueComponentSize()
+            inline size_t GetUniqueComponentSize()
             {
                 size_t size = 0;          
                 std::vector<ComponentTypeId> visitedOffsets;

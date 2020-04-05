@@ -112,7 +112,7 @@ namespace Curse
             * @brief Helper function, count the total number of bytes of all passes components.
             */
             template<typename ... Components>
-            constexpr size_t GetUniqueComponentSize();
+            size_t GetUniqueComponentSize();
 
             /**
             * @brief Helper structure, for retreiving total size of multiple components.
