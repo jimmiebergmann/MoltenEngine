@@ -103,7 +103,7 @@ namespace Curse
 
         protected:
 
-            ArithmeticOperatorNodeBase(Script& script);
+            explicit ArithmeticOperatorNodeBase(Script& script);
             ArithmeticOperatorNodeBase(const ArithmeticOperatorNodeBase&) = delete;
             ArithmeticOperatorNodeBase(ArithmeticOperatorNodeBase&&) = delete;
             virtual ~ArithmeticOperatorNodeBase();

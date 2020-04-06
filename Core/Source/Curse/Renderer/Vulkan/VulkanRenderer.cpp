@@ -215,9 +215,9 @@ namespace Curse
             case IndexBuffer::DataType::Uint32: return VkIndexType::VK_INDEX_TYPE_UINT32;
             default: break;
         }
+        CURSE_UNSCOPED_ENUM_END
 
         throw Exception("Provided data type is not supported as index buffer data type by the Vulkan renderer.");
-        CURSE_UNSCOPED_ENUM_END
     }
 
     static VkDeviceSize GetIndexBufferDataTypeSize(const IndexBuffer::DataType dataType)

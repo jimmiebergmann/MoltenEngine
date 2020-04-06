@@ -184,7 +184,7 @@ namespace Curse
             /**
             * @brief Constructor.
             */
-            InputPin(Node& node, const std::string& name = "");
+            explicit InputPin(Node& node, const std::string& name = "");
 
             /**
             * @brief Constructor.
@@ -303,7 +303,7 @@ namespace Curse
             /**
             * @brief Constructor.
             */
-            OutputPin(Node& node, const std::string& name = "");
+            explicit OutputPin(Node& node, const std::string& name = "");
 
             /**
             * @brief Destructor.

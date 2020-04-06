@@ -135,7 +135,7 @@ namespace Curse
             * @brief Protected constructor.
             *        User is supposed to create a context class and inherit Context<...>.
             */
-            Context(const ContextDescriptor& descriptor);
+            explicit Context(const ContextDescriptor& descriptor);
 
             /**
             * @brief Destructor.
