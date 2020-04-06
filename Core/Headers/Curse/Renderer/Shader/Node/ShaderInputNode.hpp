@@ -56,7 +56,7 @@ namespace Curse
 
         protected:
 
-            InputNodeBase(Script& script);
+            explicit InputNodeBase(Script& script);
             InputNodeBase(const InputNodeBase&) = delete;
             InputNodeBase(InputNodeBase&&) = delete;
             virtual ~InputNodeBase();
@@ -100,7 +100,7 @@ namespace Curse
 
         private:
 
-            InputNode(Script& script);
+            explicit InputNode(Script& script);
             InputNode(const InputNode&) = delete;
             InputNode(InputNode&&) = delete;
             ~InputNode();

@@ -75,7 +75,7 @@ namespace Curse
 
         protected:
 
-            OperatorNodeBase(Script& script);
+            explicit OperatorNodeBase(Script& script);
             OperatorNodeBase(const OperatorNodeBase&) = delete;
             OperatorNodeBase(OperatorNodeBase&&) = delete;
             virtual ~OperatorNodeBase();

@@ -54,7 +54,7 @@ namespace Curse
 
         protected:
 
-            ConstantNodeBase(Script& script);
+            explicit ConstantNodeBase(Script& script);
             ConstantNodeBase(const ConstantNodeBase&) = delete;
             ConstantNodeBase(ConstantNodeBase&&) = delete;
             virtual ~ConstantNodeBase();
@@ -113,7 +113,7 @@ namespace Curse
 
         protected:
 
-            ConstantNode(Script& script, const T& value);
+            explicit ConstantNode(Script& script, const T& value);
             ConstantNode(const ConstantNode&) = delete;
             ConstantNode(ConstantNode&&) = delete;
             ~ConstantNode();

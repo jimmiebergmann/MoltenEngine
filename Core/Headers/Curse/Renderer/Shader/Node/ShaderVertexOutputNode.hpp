@@ -72,7 +72,7 @@ namespace Curse
 
         private:
 
-            VertexOutputNode(Script& script);
+            explicit VertexOutputNode(Script& script);
             VertexOutputNode(const VertexOutputNode&) = delete;
             VertexOutputNode(VertexOutputNode&&) = delete;
             ~VertexOutputNode();

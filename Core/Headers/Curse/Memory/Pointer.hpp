@@ -69,7 +69,7 @@ namespace Curse
         /**
         * @brief Constructing smart pointer by passing an object.
         */
-        Pointer(TypePtr rawPointer);
+        explicit Pointer(TypePtr rawPointer);
 
         /**
         * @brief Deleted copy constructor.
@@ -164,7 +164,7 @@ namespace Curse
         /**
         * @brief Constructing smart pointer by passing an object.
         */
-        Pointer(TypePtr rawPointer);
+        explicit Pointer(TypePtr rawPointer);
 
         /**
         * @brief Deleted copy constructor.

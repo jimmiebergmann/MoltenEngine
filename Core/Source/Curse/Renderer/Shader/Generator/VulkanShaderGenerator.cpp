@@ -256,7 +256,7 @@ namespace Curse
             {
             public:
 
-                NodeStackObject(VariablePtr variable) :
+                explicit NodeStackObject(VariablePtr variable) :
                     outputVar(variable),
                     node(variable->node),
                     currentInputPinIndex(0),
@@ -424,7 +424,7 @@ namespace Curse
             for (auto& outputVar : outputVars)
             {
                 std::stack<NodeStackObject> nodeStack;
-                nodeStack.push({ outputVar });
+                nodeStack.push(NodeStackObject{ outputVar });
 
                 while (nodeStack.size())
                 {
@@ -462,7 +462,7 @@ namespace Curse
                         // Create child node.
                         VariablePtr childVar = std::make_shared<Variable>("", &outputPin->GetNode(), outputPin);
                         stackObject.AddInputVariable(childVar);
-                        nodeStack.push({ childVar });
+                        nodeStack.push(NodeStackObject{ childVar });
                         visitedOutputPins.insert({ outputPin, childVar });
                         stackObject.MoveToNextInputPin();
                         continue;

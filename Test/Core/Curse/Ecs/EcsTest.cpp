@@ -27,7 +27,7 @@
 #include "Curse/Ecs/EcsContext.hpp"
 #include "Curse/Math/Vector.hpp"
 #include <type_traits>
-
+#include <string>
 
 namespace Curse
 {
@@ -429,9 +429,9 @@ namespace Curse
                 e2.GetComponent<TestPhysics>()->velocity = { 17, 18, 19 };
                 e2.GetComponent<TestPhysics>()->weight = 20;
 
-                const char name[] = "Jimmie Bergmann";
+                const std::string name = "Jimmie Bergmann";
                 std::memset(e2.GetComponent<TestCharacter>()->name, 0, 50);
-                std::memcpy(e2.GetComponent<TestCharacter>()->name, name, strlen(name));
+                std::memcpy(e2.GetComponent<TestCharacter>()->name, name.c_str(), name.size());
 
                 // Check data.
                 std::vector<TestPhysicsSystem::Data> physSystemData(2);

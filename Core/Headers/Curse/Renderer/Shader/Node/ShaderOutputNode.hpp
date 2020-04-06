@@ -55,7 +55,7 @@ namespace Curse
 
         protected:
 
-            OutputNodeBase(Script& script);
+            explicit OutputNodeBase(Script& script);
             OutputNodeBase(const OutputNodeBase&) = delete;
             OutputNodeBase(OutputNodeBase&&) = delete;
             virtual ~OutputNodeBase();
@@ -99,7 +99,7 @@ namespace Curse
 
         private:
 
-            OutputNode(Script& script);
+            explicit OutputNode(Script& script);
             OutputNode(const OutputNode&) = delete;
             OutputNode(OutputNode&&) = delete;
             ~OutputNode();

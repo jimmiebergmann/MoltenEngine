@@ -31,7 +31,7 @@ namespace Curse
     template<typename ... Args>
     inline Pointer<T> Pointer<T>::Create(Args&& ... args)
     {
-        return { new T(std::forward<Args>(args)...) };
+        return Pointer<T>{ new T(std::forward<Args>(args)...) };
     }
 
     template<typename T>
@@ -93,7 +93,7 @@ namespace Curse
     template<typename T>
     inline Pointer<T[]> Pointer<T[]>::Create(const size_t size)
     {
-        return { new T[size] };
+        return Pointer<T[]>{ new T[size] };
     }
 
     template<typename T>

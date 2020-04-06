@@ -73,7 +73,7 @@ namespace Curse
         /**
         * @brief Constructing reference by passing an object.
         */
-        Reference(TypePtr object);
+        explicit Reference(TypePtr object);
 
         /**
         * @brief Constructing reference by passing an object and deleter function.
@@ -213,7 +213,7 @@ namespace Curse
         /**
         * @brief Constructing reference by passing an object.
         */
-        Reference(TypePtr object);
+        explicit Reference(TypePtr object);
 
         /**
         * @brief Constructing reference by passing an object and deleter function.

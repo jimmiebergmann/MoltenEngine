@@ -249,7 +249,7 @@ namespace Curse
         struct PhysicalDevice
         {
             PhysicalDevice();
-            PhysicalDevice(VkPhysicalDevice device);
+            explicit PhysicalDevice(VkPhysicalDevice device);
             PhysicalDevice(VkPhysicalDevice device, uint32_t graphicsQueueIndex, uint32_t presentQueueIndex);
             void Clear();
 

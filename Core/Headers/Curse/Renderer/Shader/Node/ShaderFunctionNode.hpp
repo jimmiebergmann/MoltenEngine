@@ -157,7 +157,7 @@ namespace Curse
 
         protected:
 
-            FunctionNode(Script& script);
+            explicit FunctionNode(Script& script);
             FunctionNode(const FunctionNode&) = delete;
             FunctionNode(FunctionNode&&) = delete;
             ~FunctionNode();

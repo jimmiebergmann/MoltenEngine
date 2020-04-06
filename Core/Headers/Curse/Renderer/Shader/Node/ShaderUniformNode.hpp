@@ -63,7 +63,7 @@ namespace Curse
 
         protected:
 
-            UniformNodeBase(Script& script);
+            explicit UniformNodeBase(Script& script);
             UniformNodeBase(const UniformNodeBase&) = delete;
             UniformNodeBase(UniformNodeBase&&) = delete;
             virtual ~UniformNodeBase();
@@ -107,7 +107,7 @@ namespace Curse
 
         private:
 
-            UniformNode(Script& script);
+            explicit UniformNode(Script& script);
             UniformNode(const UniformNode&) = delete;
             UniformNode(UniformNode&&) = delete;
             ~UniformNode();

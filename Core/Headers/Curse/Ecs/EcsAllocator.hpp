@@ -52,7 +52,7 @@ namespace Curse
             *
             * @throw Exception if blockSize is 0.
             */
-            Allocator(const size_t blockSize);
+            explicit Allocator(const size_t blockSize);
 
             /**
             * @brief Destructor. Cleaning up all allocated memory blocks.

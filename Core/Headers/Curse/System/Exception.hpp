@@ -49,12 +49,12 @@ namespace Curse
         /**
         * @brief Constructor.
         */
-        Exception(const char * message);
+        explicit Exception(const char * message);
 
         /**
         * @brief Constructor.
         */
-        Exception(const std::string & message);
+        explicit Exception(const std::string & message);
 
         /**
         * @brief Get message of exception.
