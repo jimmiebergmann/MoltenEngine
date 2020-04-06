@@ -173,7 +173,7 @@ namespace Curse
 
         protected:
 
-            ArithmeticOperatorNode(Script& script);
+            explicit ArithmeticOperatorNode(Script& script);
             ArithmeticOperatorNode(const ArithmeticOperatorNode&) = delete;
             ArithmeticOperatorNode(ArithmeticOperatorNode&&) = delete;
             ~ArithmeticOperatorNode();

@@ -32,7 +32,7 @@ namespace Curse
     template<typename ... Args>
     inline Reference<T> Reference<T>::Create(Args&& ... args)
     {
-        return { new Controller(new Type(std::forward<Args>(args)...), [](TypePtr ptr) { delete ptr; }) };
+        return Reference<T>{ new Controller(new Type(std::forward<Args>(args)...), [](TypePtr ptr) { delete ptr; }) };
     }
 
     template<typename T>
@@ -285,7 +285,7 @@ namespace Curse
     template<typename T>
     inline Reference<T[]> Reference<T[]>::Create(const size_t size)
     {
-        return { new Controller(new Type[size], [](TypePtr ptr) { delete[] ptr; }) };
+        return Reference<T[]>{ new Controller(new Type[size], [](TypePtr ptr) { delete[] ptr; }) };
     }
 
     template<typename T>

@@ -169,7 +169,7 @@ namespace Curse
             Deleter m_deleter;
         };
 
-        Reference(Controller * controlObject);
+        explicit Reference(Controller * controlObject);
 
         Controller* m_controller;
 
@@ -315,7 +315,7 @@ namespace Curse
             Deleter m_deleter;
         };
 
-        Reference(Controller* controlObject);
+        explicit Reference(Controller* controlObject);
 
         Controller* m_controller;
 

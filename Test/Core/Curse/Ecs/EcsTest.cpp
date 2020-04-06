@@ -713,6 +713,61 @@ namespace Curse
                 EXPECT_EQ(testPhysicsSystem2.onDestroyedEntityCount, size_t(1));
                 EXPECT_EQ(testPlayerSystem.onDestroyedEntityCount, size_t(1));
             }
+            {// Order tests
+                {
+                    testPhysicsSystem1.ResetStats();
+                    testPhysicsSystem2.ResetStats();
+                    testPlayerSystem.ResetStats();
+
+                    EXPECT_EQ(testPhysicsSystem1.onDestroyedEntityCount, size_t(0));
+                    EXPECT_EQ(testPhysicsSystem2.onDestroyedEntityCount, size_t(0));
+                    EXPECT_EQ(testPlayerSystem.onDestroyedEntityCount, size_t(0));
+
+                    auto e1 = context.CreateEntity<TestTranslation, TestPhysics, TestCharacter>();
+                    auto e2 = context.CreateEntity<TestTranslation, TestPhysics, TestCharacter>();
+                    auto e3 = context.CreateEntity<TestTranslation, TestPhysics, TestCharacter>();
+
+                    EXPECT_NO_THROW((e2.RemoveComponents< TestCharacter, TestTranslation, TestPhysics>()));
+                    EXPECT_EQ(e2.GetComponent<TestTranslation>(), nullptr);
+                    EXPECT_EQ(e2.GetComponent<TestPhysics>(), nullptr);
+                    EXPECT_EQ(e2.GetComponent<TestCharacter>(), nullptr);
+
+                    EXPECT_EQ(testPhysicsSystem1.onDestroyedEntityCount, size_t(1));
+                    EXPECT_EQ(testPhysicsSystem2.onDestroyedEntityCount, size_t(1));
+                    EXPECT_EQ(testPlayerSystem.onDestroyedEntityCount, size_t(1));
+                }
+                {
+                    testPhysicsSystem1.ResetStats();
+                    testPhysicsSystem2.ResetStats();
+                    testPlayerSystem.ResetStats();
+
+                    EXPECT_EQ(testPhysicsSystem1.onDestroyedEntityCount, size_t(0));
+                    EXPECT_EQ(testPhysicsSystem2.onDestroyedEntityCount, size_t(0));
+                    EXPECT_EQ(testPlayerSystem.onDestroyedEntityCount, size_t(0));
+
+                    auto e1 = context.CreateEntity<TestTranslation, TestPhysics, TestCharacter>();
+                    auto e2 = context.CreateEntity<TestTranslation, TestPhysics, TestCharacter>();
+                    auto e3 = context.CreateEntity<TestTranslation, TestPhysics, TestCharacter>();
+
+                    EXPECT_NO_THROW((e2.RemoveComponents< TestCharacter, TestTranslation>()));
+                    EXPECT_EQ(e2.GetComponent<TestTranslation>(), nullptr);
+                    EXPECT_NE(e2.GetComponent<TestPhysics>(), nullptr);
+                    EXPECT_EQ(e2.GetComponent<TestCharacter>(), nullptr);
+
+                    EXPECT_EQ(testPhysicsSystem1.onDestroyedEntityCount, size_t(1));
+                    EXPECT_EQ(testPhysicsSystem2.onDestroyedEntityCount, size_t(1));
+                    EXPECT_EQ(testPlayerSystem.onDestroyedEntityCount, size_t(1));
+
+                    EXPECT_NO_THROW((e2.RemoveComponents< TestCharacter, TestTranslation, TestPhysics>()));
+                    EXPECT_EQ(e2.GetComponent<TestTranslation>(), nullptr);
+                    EXPECT_EQ(e2.GetComponent<TestPhysics>(), nullptr);
+                    EXPECT_EQ(e2.GetComponent<TestCharacter>(), nullptr);
+
+                    EXPECT_EQ(testPhysicsSystem1.onDestroyedEntityCount, size_t(1));
+                    EXPECT_EQ(testPhysicsSystem2.onDestroyedEntityCount, size_t(1));
+                    EXPECT_EQ(testPlayerSystem.onDestroyedEntityCount, size_t(1));
+                }
+            }
         }
 
 
@@ -899,6 +954,79 @@ namespace Curse
 
             manyEntitiesSystem.TestCheckEntities(data);
 
+        }
+
+        TEST(ECS, Many_RemoveComponent)
+        {
+            const size_t loopCount = 500;
+
+            ContextDescriptor desc(300);
+            TestContext context(desc);
+
+            TestManyEntitySystem manyEntitiesSystem;
+            TestPlayerSystem playerSystem;
+            context.RegisterSystem(manyEntitiesSystem);
+            context.RegisterSystem(playerSystem);
+
+            int32_t val = 0;
+            int32_t currentIndex = 0;
+            for (size_t i = 0; i < loopCount; i++)
+            {
+                context.CreateEntity();
+                auto e1 = context.CreateEntity();
+                auto e2 = context.CreateEntity();
+                auto e3 = context.CreateEntity();
+                auto e4 = context.CreateEntity();
+
+                e1.AddComponents<TestTranslation>();
+                e2.AddComponents<TestPhysics, TestIndex>();
+                e3.AddComponents<TestPhysics, TestTranslation, TestIndex>();
+                e3.AddComponents<TestCharacter>();
+                e4.AddComponents<TestPhysics, TestTranslation, TestIndex>();
+                e4.AddComponents<TestCharacter>();
+
+                {
+                    auto phys = e3.GetComponent<TestPhysics>();
+                    auto trans = e3.GetComponent<TestTranslation>();
+
+                    phys->velocity = { val, val + 1 , val + 2 };
+                    phys->weight = val + 3;
+                    trans->position = { val + 4, val + 5, val + 6 };
+                    trans->scale = { val + 7, val + 8, val + 9 };
+
+                    val += 10;
+                }
+                {
+                    auto index = e4.GetComponent<TestIndex>();
+                    auto phys = e4.GetComponent<TestPhysics>();
+                    auto trans = e4.GetComponent<TestTranslation>();
+
+                    index->index = currentIndex++;
+                    phys->velocity = { val, val + 1 , val + 2 };
+                    phys->weight = val + 3;
+                    trans->position = { val + 4, val + 5, val + 6 };
+                    trans->scale = { val + 7, val + 8, val + 9 };
+
+                    val += 10;
+                }
+
+                e3.RemoveComponents<TestPhysics>();
+            }
+
+            val = 0;
+
+            std::vector<TestManyEntitySystem::Data> data(loopCount);
+            for (size_t i = 0; i < loopCount; i++)
+            {
+                val += 10;
+                data[i].physics.velocity = { val, val + 1, val + 2 };
+                data[i].physics.weight = val + 3;
+                data[i].translation.position = { val + 4, val + 5, val + 6 };
+                data[i].translation.scale = { val + 7, val + 8, val + 9 };
+                val += 10;
+            }
+
+            manyEntitiesSystem.TestCheckEntities(data);
         }
 
         TEST(ECS, DuplicateComponent)
