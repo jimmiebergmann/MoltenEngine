@@ -29,7 +29,6 @@
 #include <cstring>
 #include <memory>
 
-
 namespace Curse
 {
 
@@ -209,7 +208,7 @@ namespace Curse
 
         template<typename DerivedContext>
         template<typename ... Components>
-        void Context<DerivedContext>::AddComponents(const Entity<Context<DerivedContext>>& entity)
+        void Context<DerivedContext>::AddComponents(Entity<Context<DerivedContext>>& entity)
         {
             static_assert(Private::AreExplicitContextComponentTypes<Context, Components...>(), "Implicit component type.");
 
@@ -267,12 +266,13 @@ namespace Curse
                 }
 
                 // Get new entity data.
-                auto componentsSize = Private::ComponentSize<Components...>::uniqueSize;
-                auto newEntitySize = oldEntitySize + componentsSize;
-
                 auto newOrderedUniqueOffsets = *oldOrderedUniqueOffsets;
                 const auto& addingOrderedOffsets = Private::OrderedComponentOffsets<Components...>::uniqueOffsets;
                 Private::ExtendOrderedUniqueComponentOffsets(newOrderedUniqueOffsets, addingOrderedOffsets);
+
+                auto componentsSize = Private::ComponentSize<Components...>::uniqueSize;
+                auto duplicateComponentSize = Private::GetDuplicateComponentSize(addingOrderedOffsets, *oldOrderedUniqueOffsets);
+                auto newEntitySize = oldEntitySize + componentsSize - duplicateComponentSize;
 
                 auto* newEntityTemplate = FindEntityTemplate(newSignature);
                 if (!newEntityTemplate)
@@ -285,7 +285,6 @@ namespace Curse
                 {
                     oldCollection->ReturnEntry(metaData->collectionEntry);
                 }
-
 
                 auto* newCollection = newEntityTemplate->GetFreeCollection(m_allocator);
                 const auto newCollectionEntry = newCollection->GetFreeEntry();
@@ -322,10 +321,8 @@ namespace Curse
 
                         auto* componentGroup = pair.second;
 
-                        // Erase old component pointers.
+                        // Update the data pointers in the component group, by removing and adding.
                         componentGroup->EraseEntityComponents(oldEntityDataPointer, *oldOrderedUniqueOffsets);
-
-                        // Add new component pointers.
                         componentGroup->AddEntityComponents(newEntityDataPointer, newOrderedUniqueOffsets);
                     }
                 }
@@ -367,10 +364,153 @@ namespace Curse
         }
 
         template<typename DerivedContext>
-        template<typename ... Components>
-        inline void Context<DerivedContext>::RemoveComponents(const Entity<Context>& entity)
+        inline void Context<DerivedContext>::RemoveAllComponents(Entity<Context>& entity)
         {
+            // Make sure the meta data is set, or else the entity is probably destroyed.
+            // Also check if entity is part of this context.
+            auto* metaData = entity.m_metaData;
+            if (!metaData || metaData->context != this || !metaData->collection)
+            {
+                return;
+            }
 
+            // Make sure that this component is part of this context.
+            const auto entityId = entity.GetEntityId();
+            if (m_entities.find(entityId) == m_entities.end())
+            {
+                return;
+            }
+
+            InternalRemoveAllComponents(entity);
+        }
+
+        template<typename DerivedContext>
+        template<typename ... Components>
+        inline void Context<DerivedContext>::RemoveComponents(Entity<Context>& entity)
+        {
+            static_assert(Private::AreExplicitContextComponentTypes<Context, Components...>(), "Implicit component type.");
+
+            // Ignore if template parameter list is empty.
+            constexpr size_t componentsCount = sizeof...(Components);
+            if constexpr (componentsCount == 0)
+            {
+                return;
+            }
+            else
+            {
+                // Make sure the size of each component is larger than 0 bytes.
+                ForEachTemplateArgument<Components...>([](auto type)
+                {
+                    using Type = typename decltype(type)::Type;
+                    static_assert(sizeof(Type) != 0, "Component of size 0 is not supported.");
+                });
+
+                // Make sure the meta data is set, or else the entity is probably destroyed.
+                // Also check if entity is part of this context.
+                auto* metaData = entity.m_metaData;
+                if (!metaData || metaData->context != this || !metaData->collection)
+                {
+                    return;
+                }
+
+                // Make sure that this component is part of this context.
+                const auto entityId = entity.GetEntityId();
+                if (m_entities.find(entityId) == m_entities.end())
+                {
+                    return;
+                }
+
+                // Calculate signatures.
+                const auto& componentsSignature = ComponentSignature<Components...>::signature;
+                const auto& oldSignature = metaData->signature;
+                const auto removeSignature = oldSignature & componentsSignature;
+                if (!removeSignature.IsAnySet())
+                {
+                    return;
+                }
+                const auto newSignature = oldSignature & (~componentsSignature);
+                
+                if (newSignature.IsAnySet())  // Remove specific components.  
+                {
+                    // Get old entity data.
+                    auto* oldCollection = metaData->collection;
+                    auto* oldEntityTemplate = oldCollection->GetEntityTemplate();
+                    auto& oldOrderedUniqueOffsets = oldEntityTemplate->componentOffsets;
+                    size_t oldEntitySize = oldEntityTemplate->entitySize;
+                    
+                    // Get new entity data.
+                    const auto& removingOrderedUniqueOffsets = Private::OrderedComponentOffsets<Components...>::uniqueOffsets;
+                    Private::MigrationComponentOffsetList oldOrderedMigrationOffsets;
+                    Private::ComponentOffsetList newOrderedUniqueOffsets;
+                    size_t removeComponentsSize = 0;
+
+                    Private::MigrateRemoveComponents(oldOrderedUniqueOffsets, removingOrderedUniqueOffsets,
+                                                     oldOrderedMigrationOffsets, newOrderedUniqueOffsets, removeComponentsSize);
+
+                    auto newEntitySize = oldEntitySize - removeComponentsSize;
+                    auto* newEntityTemplate = FindEntityTemplate(newSignature);
+                    if (!newEntityTemplate)
+                    {
+                        newEntityTemplate = CreateEntityTemplate(newSignature, newEntitySize, Private::ComponentOffsetList(newOrderedUniqueOffsets));
+                    }
+                    
+                    // Return old entry to old collection.
+                    oldCollection->ReturnEntry(metaData->collectionEntry);
+
+                    auto* newCollection = newEntityTemplate->GetFreeCollection(m_allocator);
+                    const auto newCollectionEntry = newCollection->GetFreeEntry();
+                    const size_t newCollectionEntryOffset = static_cast<size_t>(newCollectionEntry) * newEntitySize;
+                    Byte* newEntityDataPointer = newCollection->GetData() + newCollectionEntryOffset;
+                    
+                    auto* oldEntityDataPointer = oldCollection->GetData() + (static_cast<size_t>(metaData->collectionEntry) * oldEntitySize);
+                    for (auto& offset : oldOrderedMigrationOffsets)
+                    {
+                        auto* destination = newEntityDataPointer + offset.newOffset;
+                        auto* source = oldEntityDataPointer + offset.oldOffset;
+                        std::memcpy(destination, source, offset.componentSize);
+                    }
+
+                    // Set the new meta data.
+                    metaData->signature = newSignature;
+                    metaData->collection = newCollection;
+                    metaData->collectionEntry = newCollectionEntry;
+                    metaData->dataPointer = newEntityDataPointer;
+                    
+                    //for (auto& pair : *componentGroups)
+                    auto& componentGroups = metaData->componentGroups;
+                    for(auto it = componentGroups.begin(); it != componentGroups.end();)
+                    {
+                        auto* componentGroup = *it;
+                        auto& groupSignature = componentGroup->signature;
+
+                        if ((groupSignature & newSignature) != groupSignature)
+                        {
+                            it = componentGroups.erase(it);
+
+                            // Remove component pointers from component groups not anymore of interest.
+                            componentGroup->EraseEntityComponents(oldEntityDataPointer, oldOrderedUniqueOffsets);
+                            
+                            for (auto* system : componentGroup->systems)
+                            {
+                                system->InternalOnDestroyEntity(entity);
+                            }
+                        }
+                        else
+                        {
+                            ++it;
+
+                            // Update data pointers in component groups still of interest.
+                            componentGroup->EraseEntityComponents(oldEntityDataPointer, oldOrderedUniqueOffsets);
+                            componentGroup->AddEntityComponents(newEntityDataPointer, newOrderedUniqueOffsets);
+                        }
+                    }
+                }
+                else 
+                {
+                    // Remove all components.
+                    InternalRemoveAllComponents(entity);
+                }
+            }
         }
 
         template<typename DerivedContext>
@@ -557,6 +697,36 @@ namespace Curse
                 }
             });
         }
+
+        template<typename DerivedContext>
+        inline void Context<DerivedContext>::InternalRemoveAllComponents(Entity<Context<DerivedContext>>& entity)
+        {
+            auto* metaData = entity.m_metaData;
+
+            auto& componentGroups = metaData->componentGroups;
+            for (auto& componentGroup : componentGroups)
+            {
+                componentGroup->EraseEntityComponents(metaData->dataPointer);
+
+                for (auto* system : componentGroup->systems)
+                {
+                    system->InternalOnDestroyEntity(entity);
+                }
+            }
+
+            auto collection = metaData->collection;
+            if (collection)
+            {
+                collection->ReturnEntry(metaData->collectionEntry);
+            }
+
+            metaData->signature.UnsetAll();
+            metaData->collection = nullptr;
+            metaData->collectionEntry = 0;
+            metaData->componentGroups.clear();
+            metaData->dataPointer = nullptr;
+        }
+       
 
     }
 

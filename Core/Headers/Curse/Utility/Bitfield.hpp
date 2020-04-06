@@ -111,6 +111,11 @@ namespace Curse
         void Unset(const BitType bit, const RestBitTypes ... rest);
 
         /**
+        * @brief Unset all bits.
+        */
+        void UnsetAll();
+
+        /**
         * @brief Assign bitfield from another bitfield of the same length.
         */
         Bitfield& operator =(const Bitfield& bitfield);

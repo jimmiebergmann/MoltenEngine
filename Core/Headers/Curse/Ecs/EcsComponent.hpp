@@ -125,6 +125,14 @@ namespace Curse
 
 
             /**
+            * @brief Calculate summed size of duplicated offsets.
+            *        Provided offset containers must be ordered ny ComponentTypeId and unique.
+            */
+            template<typename OffsetContainer>
+            size_t GetDuplicateComponentSize(const OffsetContainer& firstOffsets, const OffsetContainer& secondOffsets);
+
+
+            /**
             * @brief Helper structure, containing offset of a component type id.
             *
             * @see OrderedComponentOffsets
@@ -156,13 +164,20 @@ namespace Curse
             using MigrationComponentOffsetList = std::vector<MigrationComponentOffsetItem>; ///< Vector of migration component offset items.
 
             /**
-            * @brief Helper function for getting a list of migration offsets, from one component group to another.
+            * @brief Helper function for getting a list of migration offsets for component adding, from one component group to another.
             *        The provided offset containers must be ordered.
             */
-            template<typename ... Components, typename OffsetContainer>
-            void MigrateAddComponents(const OffsetContainer& oldOrderedUniqueOffsets, const OffsetContainer& newOrderedUniqueOffsets,
+            template<typename ... Components, typename OffsetContainer1, typename OffsetContainer2>
+            void MigrateAddComponents(const OffsetContainer1& oldOrderedUniqueOffsets, const OffsetContainer2& newOrderedUniqueOffsets,
                                       MigrationComponentOffsetList& oldOrderedMigrationComponentOffsets, ComponentOffsetList& newUnorderedConstructorOffsets);
 
+            /**
+            * @brief Helper function for getting a list of migration offsets for component removal, from one component group to another.
+            *        The provided offset containers must be ordered.
+            */
+            template<typename OffsetContainer1, typename OffsetContainer2>
+            void MigrateRemoveComponents(const OffsetContainer1& oldOrderedUniqueOffsets, const OffsetContainer2& removingOrderedUniqueOffsets,
+                                         MigrationComponentOffsetList& oldOrderedMigrationOffsets, ComponentOffsetList& newOrderedUniqueOffsets, size_t& removeComponentsSize);
 
             /**
             * @brief Structure of components grouped together for systems.
@@ -217,7 +232,7 @@ namespace Curse
             *        Ordered by componentTypeId of Components.
             */
             template<typename ... Components>
-            constexpr ComponentOffsetArray<sizeof...(Components)> CreateOrderedComponentOffsets();
+            ComponentOffsetArray<sizeof...(Components)> CreateOrderedComponentOffsets();
 
             /**
             * @brief Helper function, for creating an array of unique component offsets.
@@ -225,7 +240,7 @@ namespace Curse
             *        Duplicates of componentTypeIds are removed and offsets are corrected.
             */
             template<typename ... Components>
-            constexpr ComponentOffsetList CreateOrderedUniqueComponentOffsets();
+            ComponentOffsetList CreateOrderedUniqueComponentOffsets();
 
             /**
             * @brief Helper function, for creating an array of component offsets.
@@ -233,7 +248,7 @@ namespace Curse
             *        Offset of duplicates of components are set to std::numeric_limit<size_t>::max().
             */
             template<typename ... Components>
-            constexpr ComponentOffsetArray<sizeof...(Components)> CreateUnorderedComponentOffsets();
+            ComponentOffsetArray<sizeof...(Components)> CreateUnorderedComponentOffsets();
 
             /**
             * @brief Helper function, for creating an array of unique component offsets.
@@ -241,7 +256,7 @@ namespace Curse
             *        Duplicates of componentTypeIds are removed and offsets are corrected.
             */
             template<typename ... Components>
-            constexpr ComponentOffsetList CreateUnorderedUniqueComponentOffsets();
+            ComponentOffsetList CreateUnorderedUniqueComponentOffsets();
 
             /**
             * @brief Helper structure, for retreiving data offset of each component.

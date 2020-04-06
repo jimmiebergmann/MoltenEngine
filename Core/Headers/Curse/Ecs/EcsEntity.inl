@@ -53,6 +53,15 @@ namespace Curse
         }
 
         template<typename ContextType>
+        inline void Entity<ContextType>::RemoveAllComponents()
+        {
+            if (m_metaData)
+            {
+                m_metaData->context->RemoveAllComponents(*this);
+            }
+        }
+
+        template<typename ContextType>
         template<typename ... Components>
         inline void Entity<ContextType>::RemoveComponents()
         {

@@ -80,6 +80,11 @@ namespace Curse
             void AddComponents();
 
             /**
+            * @brief Remove all components from entity.
+            */
+            void RemoveAllComponents();
+
+            /**
             * @brief Remove components from entity.
             *        Select components to remove via the template parameter list.
             */

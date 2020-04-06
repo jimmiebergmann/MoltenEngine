@@ -95,14 +95,19 @@ namespace Curse
             *        Duplicates or already added components are ignored from the template parameter list.
             */
             template<typename ... Components>
-            void AddComponents(const Entity<Context>& entity);
+            void AddComponents(Entity<Context>& entity);
+
+            /**
+            * @brief Remove all components from entity.
+            */
+            void RemoveAllComponents(Entity<Context>& entity);
 
             /**
             * @brief Remove components from entity.
             *        Select components to remove via the template parameter list.
             */
             template<typename ... Components>
-            void RemoveComponents(const Entity<Context>& entity);
+            void RemoveComponents(Entity<Context>& entity);
 
             /**
             * @brief Get allocator.
@@ -140,6 +145,11 @@ namespace Curse
 
         private:
 
+            using Systems = std::set<SystemBase<Context>*>;
+            using ComponentGroups = std::map<Signature, Private::ComponentGroup<Context>*>;
+            using EntityTemplateMap = std::map<Signature, Private::EntityTemplate<Context>*>;
+            using EntityMetaDataMap = std::map<EntityId, Private::EntityMetaData<Context>*>;
+
             /*
             * @throw Pointer to found entity template, nullptr if no entity template with provided signature exists.
             */
@@ -176,17 +186,14 @@ namespace Curse
             void CallComponentConstructors(Byte* entityDataPointer, const OffsetContainer1& constructOffsets, const OffsetContainer2& ignoreOffsets);
             /**@}*/
 
+            void InternalRemoveAllComponents(Entity<Context<DerivedContext>>& entity);
 
-            using Systems = std::set<SystemBase<Context>*>;
-            using ComponentGroups = std::map<Signature, Private::ComponentGroup<Context>*>;
-            using EntityTemplateMap = std::map<Signature, Private::EntityTemplate<Context>*>;
-            using EntityMap = std::map<EntityId, Private::EntityMetaData<Context>*>;
-            
+
             ContextDescriptor m_descriptor;         ///< Context descriptor, containing configurations. 
             Allocator m_allocator;                  ///< Memory allocator, taking care of memory allocations.
             ComponentGroups m_componentGroups;      ///< Container of all component groups.
             EntityTemplateMap m_entityTemplates;    ///< Map of all entity templates.
-            EntityMap m_entities;                   ///< Map of all entities.
+            EntityMetaDataMap m_entities;           ///< Map of all entities.
             EntityId m_nextEntityId;                ///< The next availalbe entity ID.
             std::queue<EntityId> m_freeEntityIds;   ///< Queue of deleted entity ID's, ready for reuse.
             Systems m_systems;                      ///< Set of registered systems.

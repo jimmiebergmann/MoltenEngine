@@ -125,6 +125,15 @@ namespace Curse
     }
 
     template<size_t BitCount>
+    void Bitfield<BitCount>::UnsetAll()
+    {
+        for (size_t i = 0; i < FragmentCount; i++)
+        {
+            m_fragments[i] = size_t(0);
+        }
+    }
+
+    template<size_t BitCount>
     inline Bitfield<BitCount>& Bitfield<BitCount>::operator =(const Bitfield& bitfield)
     {
         m_fragments = bitfield.m_fragments;

@@ -474,7 +474,7 @@ namespace Curse
             testPlayerSystem.ResetStats();
         }
 
-        TEST(ECS, AddComponent)
+        TEST(ECS, AddComponents)
         {
             TestContext context;
 
@@ -576,6 +576,142 @@ namespace Curse
                 auto e = context.CreateEntity<TestTranslation>();
                 EXPECT_EQ(e.GetEntityId(), EntityId(6));
 
+            }
+        }
+
+        TEST(ECS, RemoveAllComponents)
+        {
+            TestContext context;
+
+            TestPhysicsSystem testPhysicsSystem1;
+            TestPhysicsSystem testPhysicsSystem2;
+            TestPlayerSystem testPlayerSystem;
+
+            context.RegisterSystem(testPhysicsSystem1);
+            context.RegisterSystem(testPhysicsSystem2);
+            context.RegisterSystem(testPlayerSystem);
+
+            {
+                auto e1 = context.CreateEntity();
+                EXPECT_NO_THROW((e1.RemoveAllComponents()));
+            }
+            {
+                auto e1 = context.CreateEntity<TestTranslation>();
+
+                EXPECT_NO_THROW((e1.RemoveAllComponents()));
+                EXPECT_EQ(e1.GetComponent<TestTranslation>(), nullptr);
+
+                EXPECT_NO_THROW((e1.RemoveAllComponents()));
+                EXPECT_EQ(e1.GetComponent<TestTranslation>(), nullptr);
+
+                e1.AddComponents<TestTranslation>();
+                EXPECT_NE(e1.GetComponent<TestTranslation>(), nullptr);
+
+                EXPECT_NO_THROW((e1.RemoveAllComponents()));
+                EXPECT_EQ(e1.GetComponent<TestTranslation>(), nullptr);
+
+            }
+        }
+        TEST(ECS, RemoveComponents)
+        {
+            TestContext context;
+
+            TestPhysicsSystem testPhysicsSystem1;
+            TestPhysicsSystem testPhysicsSystem2;
+            TestPlayerSystem testPlayerSystem;
+
+            context.RegisterSystem(testPhysicsSystem1);
+            context.RegisterSystem(testPhysicsSystem2);
+            context.RegisterSystem(testPlayerSystem);
+
+            {
+                auto e1 = context.CreateEntity();
+                EXPECT_NO_THROW((e1.RemoveComponents()));
+                EXPECT_NO_THROW((e1.RemoveComponents<TestTranslation>()));
+                EXPECT_NO_THROW((e1.RemoveComponents<TestPhysics>()));
+                EXPECT_NO_THROW((e1.RemoveComponents<TestTranslation, TestPhysics>()));
+            }
+            {
+                auto e1 = context.CreateEntity<TestTranslation>();
+
+                EXPECT_NO_THROW((e1.RemoveComponents()));
+                EXPECT_NE(e1.GetComponent<TestTranslation>(), nullptr);
+
+                EXPECT_NO_THROW((e1.RemoveComponents<TestTranslation>()));
+                EXPECT_EQ(e1.GetComponent<TestTranslation>(), nullptr);
+            }
+            {
+                auto e1 = context.CreateEntity<TestTranslation, TestPhysics>();
+                auto* trans = e1.GetComponent<TestTranslation>();
+                auto* phys = e1.GetComponent<TestPhysics>();
+                trans->position = { 1, 2, 3 };
+                trans->scale = { 4, 5, 6 };
+                phys->velocity = { 7, 8, 9 };
+                phys->weight = 10;
+
+                EXPECT_NO_THROW((e1.RemoveComponents()));
+                EXPECT_NE(e1.GetComponent<TestTranslation>(), nullptr);
+                EXPECT_NE(e1.GetComponent<TestPhysics>(), nullptr);
+
+                EXPECT_NO_THROW((e1.RemoveComponents<TestTranslation>()));
+                EXPECT_EQ(e1.GetComponent<TestTranslation>(), nullptr);
+                ASSERT_NE(e1.GetComponent<TestPhysics>(), nullptr);
+                phys = e1.GetComponent<TestPhysics>();
+                EXPECT_EQ(phys->velocity, Vector3i32(7, 8, 9));
+                EXPECT_EQ(phys->weight, int32_t(10));
+
+                EXPECT_NO_THROW((e1.RemoveComponents<TestPhysics>()));
+                EXPECT_EQ(e1.GetComponent<TestTranslation>(), nullptr);
+                EXPECT_EQ(e1.GetComponent<TestPhysics>(), nullptr);
+            }
+            {
+                testPhysicsSystem1.ResetStats();
+                testPhysicsSystem2.ResetStats();
+                testPlayerSystem.ResetStats();
+
+                EXPECT_EQ(testPhysicsSystem1.onDestroyedEntityCount, size_t(0));
+                EXPECT_EQ(testPhysicsSystem2.onDestroyedEntityCount, size_t(0));
+                EXPECT_EQ(testPlayerSystem.onDestroyedEntityCount, size_t(0));
+
+                auto e1 = context.CreateEntity<TestTranslation, TestPhysics, TestCharacter>();
+                auto e2 = context.CreateEntity<TestTranslation, TestPhysics, TestCharacter>();
+                auto e3 = context.CreateEntity<TestTranslation, TestPhysics, TestCharacter>();
+
+                EXPECT_NO_THROW((e2.RemoveComponents()));
+                EXPECT_NE(e2.GetComponent<TestTranslation>(), nullptr);
+                EXPECT_NE(e2.GetComponent<TestPhysics>(), nullptr);
+                EXPECT_NE(e2.GetComponent<TestCharacter>(), nullptr);
+
+                EXPECT_EQ(testPhysicsSystem1.onDestroyedEntityCount, size_t(0));
+                EXPECT_EQ(testPhysicsSystem2.onDestroyedEntityCount, size_t(0));
+                EXPECT_EQ(testPlayerSystem.onDestroyedEntityCount, size_t(0));
+
+                EXPECT_NO_THROW((e2.RemoveComponents<TestPhysics>()));
+                EXPECT_NE(e2.GetComponent<TestTranslation>(), nullptr);
+                EXPECT_EQ(e2.GetComponent<TestPhysics>(), nullptr);
+                EXPECT_NE(e2.GetComponent<TestCharacter>(), nullptr);
+
+                EXPECT_EQ(testPhysicsSystem1.onDestroyedEntityCount, size_t(1));
+                EXPECT_EQ(testPhysicsSystem2.onDestroyedEntityCount, size_t(1));
+                EXPECT_EQ(testPlayerSystem.onDestroyedEntityCount, size_t(1));
+
+                EXPECT_NO_THROW((e2.RemoveComponents<TestCharacter>()));
+                EXPECT_NE(e2.GetComponent<TestTranslation>(), nullptr);
+                EXPECT_EQ(e2.GetComponent<TestPhysics>(), nullptr);
+                EXPECT_EQ(e2.GetComponent<TestCharacter>(), nullptr);
+
+                EXPECT_EQ(testPhysicsSystem1.onDestroyedEntityCount, size_t(1));
+                EXPECT_EQ(testPhysicsSystem2.onDestroyedEntityCount, size_t(1));
+                EXPECT_EQ(testPlayerSystem.onDestroyedEntityCount, size_t(1));
+
+                EXPECT_NO_THROW((e2.RemoveComponents<TestTranslation>()));
+                EXPECT_EQ(e2.GetComponent<TestTranslation>(), nullptr);
+                EXPECT_EQ(e2.GetComponent<TestPhysics>(), nullptr);
+                EXPECT_EQ(e2.GetComponent<TestCharacter>(), nullptr);
+
+                EXPECT_EQ(testPhysicsSystem1.onDestroyedEntityCount, size_t(1));
+                EXPECT_EQ(testPhysicsSystem2.onDestroyedEntityCount, size_t(1));
+                EXPECT_EQ(testPlayerSystem.onDestroyedEntityCount, size_t(1));
             }
         }
 
