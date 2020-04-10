@@ -23,34 +23,21 @@
 *
 */
 
-#ifndef CURSE_CORE_MATH_HPP
-#define CURSE_CORE_MATH_HPP
-
-#include "Curse/Types.hpp"
-#include <cmath>
+#include "Test.hpp"
+#include "Curse/Math/Octree.hpp"
 
 namespace Curse
 {
 
-    namespace Constants
+    TEST(Math, Octree)
     {
 
-        /**
-        * @brief Contant PI, for float, double and long double.
-        */
-        template<typename T>
-        constexpr T Pi();
+        OctreeAABB<int, float> octree({ 0.0f }, { 10.0f }, 20);
+
+        int value = 5;
+
+        octree.Insert(value, { {-1, -1, -1}, {1, 1, 1} });
 
     }
 
-    /**
-    * @brief Calculate power of base 2.
-    */
-    template<typename T>
-    constexpr T Power2(const size_t exponent);
-
 }
-
-#include "Curse/Math.inl"
-
-#endif

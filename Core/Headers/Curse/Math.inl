@@ -49,4 +49,10 @@ namespace Curse
 
     }
 
+    template<typename T>
+    constexpr T Power2(const size_t exponent)
+    {
+        return exponent == 0 ? static_cast<T>(1) : static_cast<T>(2) * Power2<T>(exponent-1);
+    }
+
 }

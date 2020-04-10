@@ -26,8 +26,7 @@
 #ifndef CURSE_CORE_MATH_VECTOR_HPP
 #define CURSE_CORE_MATH_VECTOR_HPP
 
-#include "Curse/Types.hpp"
-#include <cmath>
+#include "Curse/Math.hpp"
 
 namespace Curse
 {

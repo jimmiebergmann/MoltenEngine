@@ -52,4 +52,22 @@ namespace Curse
         }
 
     }
+
+    TEST(Math, Power2)
+    {
+        static_assert(Power2<int32_t>(0) == int32_t(1), "Incorrect power of.");
+        static_assert(Power2<int32_t>(1) == int32_t(2), "Incorrect power of.");
+        static_assert(Power2<int32_t>(2) == int32_t(4), "Incorrect power of.");
+        static_assert(Power2<int32_t>(3) == int32_t(8), "Incorrect power of.");
+        static_assert(Power2<int32_t>(4) == int32_t(16), "Incorrect power of.");
+        static_assert(Power2<int32_t>(5) == int32_t(32), "Incorrect power of.");
+        static_assert(Power2<int32_t>(6) == int32_t(64), "Incorrect power of.");
+        static_assert(Power2<int32_t>(7) == int32_t(128), "Incorrect power of.");
+        static_assert(Power2<int32_t>(20) == int32_t(1048576), "Incorrect power of.");
+
+        EXPECT_EQ(Power2<int64_t>(0), int32_t(1));
+        EXPECT_EQ(Power2<int64_t>(1), int32_t(2));
+        EXPECT_EQ(Power2<int64_t>(2), int32_t(4));
+        EXPECT_EQ(Power2<int64_t>(20), int32_t(1048576));
+    }
 }

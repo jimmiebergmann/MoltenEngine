@@ -45,7 +45,8 @@ namespace Curse
             m_uniformBuffer(nullptr),
             m_uniformBlock(nullptr),
             m_programTime(0.0f),
-            m_deltaTime(0.0f)
+            m_deltaTime(0.0f),
+            m_octree({0.0f}, {10.0f}, 20)
         { }
 
         Application::~Application()
@@ -124,6 +125,16 @@ namespace Curse
             {
                 m_camera.SetWindowSize(size);
             });
+
+
+            int a = 5;
+            m_octree.Insert(a, { {-4, -4, -4} , {-2, -2, -2} });
+
+            m_octree.ForEachNode([&](auto aabb)
+            {
+                m_logger.Write(Logger::Severity::Info, std::to_string(aabb.min.x));
+            });
+
         }
 
         void Application::LoadPipeline()

@@ -26,10 +26,8 @@
 #ifndef CURSE_CORE_MATH_MATRIX_HPP
 #define CURSE_CORE_MATH_MATRIX_HPP
 
-#include "Curse/Math.hpp"
 #include "Curse/Math/Vector.hpp"
 #include "Curse/Math/Angle.hpp"
-#include "Curse/System/Exception.hpp"
 
 namespace Curse
 {

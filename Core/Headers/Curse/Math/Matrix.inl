@@ -23,6 +23,8 @@
 *
 */
 
+#include "Curse/System/Exception.hpp"
+
 namespace Curse
 {
 

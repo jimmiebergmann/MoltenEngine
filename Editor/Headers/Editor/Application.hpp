@@ -32,6 +32,7 @@
 #include "Curse/Scene/Camera.hpp"
 #include "Curse/System/Clock.hpp"
 #include "Curse/Window/Window.hpp"
+#include "Curse/Math/Octree.hpp"
 #include <memory>
 
 namespace Curse
@@ -96,6 +97,8 @@ namespace Curse
             float m_deltaTime;        
 
             Scene::Camera m_camera;
+
+            OctreeAABB<int, float> m_octree;
 
         };
 
