@@ -27,7 +27,7 @@
 #define CURSE_CORE_GUI_GUICANVAS_HPP
 
 #include "Curse/Types.hpp"
-#include "Curse/Gui/Control/GuiPlaneControl.hpp"
+#include "Curse/Gui/Control/PlaneControl.hpp"
 
 namespace Curse
 {

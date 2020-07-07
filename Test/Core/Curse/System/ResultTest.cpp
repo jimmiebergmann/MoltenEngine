@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2020 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,30 +23,51 @@
 *
 */
 
-#include "Curse/Gui/Control/GuiButtonControl.hpp"
+#include "Test.hpp"
+#include "Curse/System/Result.hpp"
+
+struct TestData
+{
+    int a;
+    float b;
+};
+
+Curse::Result<TestData, int> CreateTestError()
+{
+    return Curse::Result<TestData, int>::Error(-2);
+}
 
 namespace Curse
 {
-
-    namespace Gui
+    TEST(System, Result)
     {
-
-        Button::Button()
-        { }
-
-        Button::~Button()
-        { }
-
-        void Button::Update()
         {
+            Result<int, int> result;
 
+            EXPECT_FALSE(result);
+            if (result)
+            {
+                EXPECT_TRUE(result);
+            }
         }
 
-        void Button::Draw() const
         {
+            Result<int, int> result = Result<int, int>::Value(123);
+            EXPECT_TRUE(result);
+            EXPECT_EQ(result.Value(), int(123));
 
+            [[maybe_unused]] auto value = std::move(result);
         }
-
+        {
+            Result<int, int> result = Result<int, int>::Error(404);
+            EXPECT_FALSE(result);
+            EXPECT_EQ(result.Error(), int(404));
+        }
+        {
+            auto result = CreateTestError();
+            EXPECT_FALSE(result);
+            EXPECT_EQ(result.Error(), int(-2));
+        }
+        
     }
-
 }

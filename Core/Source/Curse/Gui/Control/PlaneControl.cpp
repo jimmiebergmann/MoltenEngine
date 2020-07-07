@@ -23,10 +23,7 @@
 *
 */
 
-#ifndef CURSE_CORE_GUI_GUIPLANECONTROL_HPP
-#define CURSE_CORE_GUI_GUIPLANECONTROL_HPP
-
-#include "Curse/Gui/GuiControl.hpp"
+#include "Curse/Gui/Control/PlaneControl.hpp"
 
 namespace Curse
 {
@@ -34,40 +31,30 @@ namespace Curse
     namespace Gui
     {
 
-        /**
-        * @brief 
-        */
-        class CURSE_API Plane : public ParentControlList
+        Plane::Plane()
+        { }
+
+        Plane::~Plane()
+        { }
+
+        void Plane::Update()
         {
+            for (auto* child : GetChilds())
+            {
+                SetDrawPositionInternal(*child, child->GetPosiion());
+                SetDrawSizeInternal(*child, child->GetSize());
+                UpdateInternal(*child);
+            }
+        }
 
-        public:
-
-            /**
-            * @brief Constructor.
-            */
-            Plane();
-
-            /**
-            * @brief 
-            */
-            virtual ~Plane();
-
-        protected:
-
-            /**
-            * @brief 
-            */
-            virtual void Update() override;
-
-            /**
-            * @brief 
-            */
-            virtual void Draw() const override;
-
-        };
+        void Plane::Draw() const
+        {
+            for (auto* child : GetChilds())
+            {
+                DrawInternal(*child);
+            }
+        }
 
     }
 
 }
-
-#endif

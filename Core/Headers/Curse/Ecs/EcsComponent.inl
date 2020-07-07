@@ -288,7 +288,7 @@ namespace Curse
             {
                 if constexpr (sizeof...(Components) == 0)
                 {
-                    return {};
+                    return ComponentOffsetArray<sizeof...(Components)>{};
                 }
                 else
                 {
@@ -355,7 +355,7 @@ namespace Curse
 
                 if constexpr (sizeof...(Components) == 0)
                 {
-                    return {};
+                    return ComponentOffsetArray<sizeof...(Components)>{};
                 }
                 else
                 {

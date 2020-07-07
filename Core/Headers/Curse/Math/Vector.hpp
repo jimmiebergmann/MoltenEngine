@@ -581,6 +581,7 @@ namespace Curse
     using Vector2ui64 = Vector2<uint64_t>;
     using Vector2f32 = Vector2<float>;
     using Vector2f64 = Vector2<double>;
+    using Vector2size = Vector2<size_t>;
 
     template<typename T>
     using Vector3 = Vector<3, T>;
@@ -591,6 +592,7 @@ namespace Curse
     using Vector3ui64 = Vector3<uint64_t>;
     using Vector3f32 = Vector3<float>;
     using Vector3f64 = Vector3<double>;
+    using Vector3size = Vector3<size_t>;
 
     template<typename T>
     using Vector4 = Vector<4, T>;
@@ -601,6 +603,7 @@ namespace Curse
     using Vector4ui64 = Vector4<uint64_t>;
     using Vector4f32 = Vector4<float>;
     using Vector4f64 = Vector4<double>;
+    using Vector4size = Vector4<size_t>;
 
 }
 

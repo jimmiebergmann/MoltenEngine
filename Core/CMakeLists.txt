@@ -70,11 +70,14 @@ set(CoreSourceDir "${CMAKE_CURRENT_SOURCE_DIR}/Source")
 file(GLOB_RECURSE CoreHeaders "${CoreHeadersDir}/*.h" "${CoreHeadersDir}/*.hpp" "${CoreHeadersDir}/*.inl")
 file(GLOB_RECURSE CoreSources "${CoreSourceDir}/*.c" "${CoreSourceDir}/*.cpp")
 
+set(VendorDir "${RootDir}/Vendor")
+
 message("Current source dir: ${CMAKE_CURRENT_SOURCE_DIR}")
 message("Code coverage: ${CURSE_ENABLE_COVERAGE}")
 
 
 include_directories ("${CoreHeadersDir}")
+include_directories ("${VendorDir}")
 add_library(Curse SHARED "${CoreSources}" "${CoreHeaders}")  
 
 CreateSourceGroups("${CoreSources}" "${CoreSourceDir}")
