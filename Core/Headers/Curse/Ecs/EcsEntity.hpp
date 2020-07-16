@@ -62,6 +62,11 @@ namespace Curse
         public:
 
             /**
+            * @brief Constructing an empty entity.
+            */
+            Entity();
+
+            /**
             * @brief Virtual destructor.
             */
             virtual ~Entity();
@@ -103,6 +108,11 @@ namespace Curse
             template<typename Comp>
             const Comp* GetComponent() const;
             /**@}*/
+
+            /**
+            * @brief Self-destroy entity.
+            */
+            void Destroy();
 
         private:
 

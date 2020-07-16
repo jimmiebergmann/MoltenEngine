@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2020 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,51 +23,47 @@
 *
 */
 
-#ifndef CURSE_CORE_GUI_PLANECONTROL_HPP
-#define CURSE_CORE_GUI_PLANECONTROL_HPP
+#ifndef CURSE_CORE_GUI_TEMPLATEDWIDGET_HPP
+#define CURSE_CORE_GUI_TEMPLATEDWIDGET_HPP
 
-#include "Curse/Gui/GuiControl.hpp"
+#include "Curse/Gui/Widget.hpp"
 
 namespace Curse
 {
 
     namespace Gui
     {
+        class Canvas;
+        class Widget;
+        template<typename Template> class TemplatedWidget;
+        template<typename Template> using TemplatedWidgetPointer = std::shared_ptr<TemplatedWidget<Template>>;
 
-        /**
-        * @brief 
-        */
-        class CURSE_API Plane : public ParentControlList
+        template<typename Template>
+        class TemplatedWidget : public Widget, public Template
         {
 
-        public:
+        private:
 
-            /**
-            * @brief Constructor.
-            */
-            Plane();
+            template<typename ... ConstructorArgs>
+            TemplatedWidget(
+                WidgetEntity entity,
+                const WidgetDescriptor& descriptor,
+                std::unique_ptr<RenderObject> renderObject,
+                ConstructorArgs ... constructorArgs);
 
-            /**
-            * @brief 
-            */
-            virtual ~Plane();
+            TemplatedWidget(const TemplatedWidget&) = delete;
+            TemplatedWidget(TemplatedWidget&&) = delete;
+            TemplatedWidget& operator = (const TemplatedWidget&) = delete;
+            TemplatedWidget& operator = (TemplatedWidget&&) = delete;
 
-        protected:
-
-            /**
-            * @brief 
-            */
-            virtual void Update() override;
-
-            /**
-            * @brief 
-            */
-            virtual void Draw() const override;
+            friend class Canvas;
 
         };
 
     }
 
 }
+
+#include "Curse/Gui/TemplatedWidget.inl"
 
 #endif

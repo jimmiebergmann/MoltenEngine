@@ -48,7 +48,7 @@ namespace Curse
         * @brief Constructors.
         */
         /**@{*/
-        [[nodiscard]] Result();
+        Result();
 
         [[nodiscard]] static Result Value(T&& type);
 
@@ -58,12 +58,12 @@ namespace Curse
         /*
         * @brief Copy constructor.
         */
-        [[nodiscard]] explicit Result(const Result& result);
+        explicit Result(const Result& result);
 
         /*
         * @brief Move constructor.
         */
-        [[nodiscard]] Result(Result&& result) noexcept;
+        Result(Result&& result) noexcept;
 
         /*
         * @return true if result is successful, else false.

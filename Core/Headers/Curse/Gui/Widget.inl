@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2020 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,62 +23,28 @@
 *
 */
 
-#include "Curse/Gui/GuiCanvas.hpp"
-
 namespace Curse
 {
 
     namespace Gui
     {
 
-        Canvas::Canvas(Renderer& renderer, const Vector2f32& size, const Vector2f32& position) :
-            m_renderer(&renderer),
-            m_position(position),
-            m_size(size)
+        template<typename ... Components>
+        inline void Widget::AddComponents()
         {
-            static_cast<Control&>(m_plane).SetCanvasInternal(this);
+            m_entity.AddComponents<Components...>();
         }
 
-        Canvas::~Canvas()
-        { }
-
-        void Canvas::Update()
+        template<typename ... Components>
+        inline void Widget::RemoveComponents()
         {
-            static_cast<Control&>(m_plane).Update();
+            m_entity.RemoveComponents<Components...>();
         }
 
-        void Canvas::Draw()
+        template<typename Component>
+        inline Component* Widget::GetComponent()
         {
-            static_cast<Control&>(m_plane).Draw();
-        }
-
-        Vector2f32 Canvas::GetPosiion() const
-        {
-            return m_position;
-        }
-    
-        Vector2f32 Canvas::GetSize() const
-        {
-            return m_size;
-        }
-
-        Plane& Canvas::GetPlane()
-        {
-            return m_plane;
-        }
-        const Plane& Canvas::GetPlane() const
-        {
-            return m_plane;
-        }
-
-        void Canvas::GetPosiion(const Vector2f32& position)
-        {
-            m_position = position;
-        }
-
-        void Canvas::SetSize(const Vector2f32& size)
-        {
-            m_size = size;
+            return m_entity.GetComponent<Component>();
         }
 
     }

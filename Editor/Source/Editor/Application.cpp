@@ -27,6 +27,9 @@
 #include "Editor/Application.hpp"
 #include "Curse/Window/Window.hpp"
 #include "Curse/Renderer/Renderer.hpp"
+#include "Curse/Gui/Behaviors/KeyboardListenerWidget.hpp"
+#include "Curse/Gui/Behaviors/MouseListenerWidget.hpp"
+#include "Curse/Gui/WidgetTemplates.hpp"
 #include <chrono>
 #include <thread>
 
@@ -45,7 +48,8 @@ namespace Curse
             m_uniformBuffer(nullptr),
             m_uniformBlock(nullptr),
             m_programTime(0.0f),
-            m_deltaTime(0.0f)
+            m_deltaTime(0.0f),
+            m_guiCanvas()
         { }
 
         Application::~Application()
@@ -124,6 +128,32 @@ namespace Curse
             {
                 m_camera.SetWindowSize(size);
             });
+
+            LoadGui();
+        }
+
+
+        void Application::LoadGui()
+        {
+            m_guiCanvas.Load(m_renderer.get(), &m_logger);
+
+            auto grid = m_guiCanvas.Add<Gui::VerticalGrid>(m_guiCanvas.GetRoot());
+            auto button1 = m_guiCanvas.Add<Gui::Button, Gui::MouseListener>(grid);
+            auto padding = m_guiCanvas.Add<Gui::Padding, Gui::MouseListener>(grid);
+            auto button2 = m_guiCanvas.Add<Gui::Button, Gui::MouseListener>(padding);
+
+            button1->GetComponent<Gui::MouseListener>()->OnClick = 
+                [&](Mouse::Button button, const Curse::Vector2f32& pos)
+            {
+                m_logger.Write(Logger::Severity::Info, "Pressed button 1 at: " + std::to_string(pos.x) + ", " + std::to_string(pos.y));
+            };
+
+            button2->GetComponent<Gui::MouseListener>()->OnClick =
+                [&](Mouse::Button button, const Curse::Vector2f32& pos)
+            {
+                m_logger.Write(Logger::Severity::Info, "Pressed button 2 at: " + std::to_string(pos.x) + ", " + std::to_string(pos.y));
+            };
+
         }
 
         void Application::LoadPipeline()
@@ -418,6 +448,8 @@ namespace Curse
 
             m_camera.PostProcess();
 
+            m_guiCanvas.Update();
+
             return true;
         }
 
@@ -464,6 +496,8 @@ namespace Curse
             m_renderer->DrawVertexBuffer(m_indexBuffer, m_vertexBuffer);*/
 
             m_renderer->EndDraw();
+
+            m_guiCanvas.Draw();
 
         }
 

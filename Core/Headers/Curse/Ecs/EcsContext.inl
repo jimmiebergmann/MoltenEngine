@@ -166,7 +166,7 @@ namespace Curse
         }
 
         template<typename DerivedContext>
-        void Context<DerivedContext>::DestroyEntity(Entity<Context<DerivedContext> >& entity)
+        inline void Context<DerivedContext>::DestroyEntity(Entity<Context<DerivedContext> >& entity)
         {
             auto* metaData = entity.m_metaData;
             if (!metaData)
@@ -174,8 +174,9 @@ namespace Curse
                 return;
             }  
             entity.m_metaData = nullptr;
+            auto entityId = entity.m_id;
+            entity.m_id = -1;
 
-            auto entityId = entity.GetEntityId();
             auto eIt = m_entities.find(entityId);
             if (eIt == m_entities.end())
             {
@@ -208,7 +209,7 @@ namespace Curse
 
         template<typename DerivedContext>
         template<typename ... Components>
-        void Context<DerivedContext>::AddComponents(Entity<Context<DerivedContext>>& entity)
+        inline void Context<DerivedContext>::AddComponents(Entity<Context<DerivedContext>>& entity)
         {
             static_assert(Private::AreExplicitContextComponentTypes<Context, Components...>(), "Implicit component type.");
 
@@ -521,7 +522,7 @@ namespace Curse
 
         template<typename DerivedContext>
         template<typename Comp>
-        Comp* Context<DerivedContext>::GetComponent(Entity<Context>& entity)
+        inline Comp* Context<DerivedContext>::GetComponent(Entity<Context>& entity)
         {
             auto* metaData = entity.m_metaData;
             if (!metaData || !metaData->collection)
@@ -542,7 +543,7 @@ namespace Curse
         }
         template<typename DerivedContext>
         template<typename Comp>
-        const Comp* Context<DerivedContext>::GetComponent(const Entity<Context>& entity) const
+        inline const Comp* Context<DerivedContext>::GetComponent(const Entity<Context>& entity) const
         {
             auto* metaData = entity.m_metaData;
             if (!metaData || !metaData->collection)

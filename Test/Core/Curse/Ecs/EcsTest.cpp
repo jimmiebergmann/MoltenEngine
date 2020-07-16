@@ -293,7 +293,7 @@ namespace Curse
                 EXPECT_EQ(testPlayerSystem.loopedEntities, size_t(0));
 
                 context.DestroyEntity(e1);
-                context.DestroyEntity(e2);
+                e2.Destroy();
 
                 EXPECT_EQ(testPhysicsSystem1.onDestroyedEntityCount, size_t(0));
                 EXPECT_EQ(testPhysicsSystem2.onDestroyedEntityCount, size_t(0));

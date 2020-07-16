@@ -31,9 +31,9 @@ namespace Curse
     constexpr size_t Vector<D, T>::Dimensions;    
 
     template<size_t D, typename T>
-    inline Vector<D, T>::Vector()
-    {
-    }
+    inline constexpr Vector<D, T>::Vector() :
+        c{}
+    { }
 
     template<size_t D, typename T>
     inline T Vector<D, T>::operator[](const size_t index) const
@@ -46,30 +46,27 @@ namespace Curse
     constexpr size_t Vector<2, T>::Dimensions;
 
     template<typename T>
-    inline Vector<2, T>::Vector()
-    {
-    }
+    inline constexpr Vector<2, T>::Vector() :
+        x{}, y{}
+    { }
 
     template<typename T>
     template<typename U>
-    inline Vector<2, T>::Vector(const U xy) :
+    inline constexpr Vector<2, T>::Vector(const U xy) :
         x(static_cast<T>(xy)), y(static_cast<T>(xy))
-    {
-    }
+    { }
 
     template<typename T>
     template<typename U1, typename U2>
-    inline Vector<2, T>::Vector(const U1 x, const U2 y) :
+    inline constexpr Vector<2, T>::Vector(const U1 x, const U2 y) :
        x(static_cast<T>(x)), y(static_cast<T>(y))
-    {
-    }
+    { }
 
     template<typename T>
     template<typename U>
-    inline Vector<2, T>::Vector(const Vector<2, U>& vector) :
+    inline constexpr Vector<2, T>::Vector(const Vector<2, U>& vector) :
         x(static_cast<T>(vector.x)), y(static_cast<T>(vector.y))
-    {
-    }
+    { }
 
     template<typename T>
     inline Vector<2, T> Vector<2, T>::Absolute() const
@@ -261,30 +258,27 @@ namespace Curse
     constexpr size_t Vector<3, T>::Dimensions;
 
     template<typename T>
-    inline Vector<3, T>::Vector()
-    {
-    }
+    inline constexpr Vector<3, T>::Vector() :
+        x{}, y{}, z{}
+    { }
 
     template<typename T>
     template<typename U>
-    inline Vector<3, T>::Vector(const U xyz) :
+    inline constexpr Vector<3, T>::Vector(const U xyz) :
         x(static_cast<T>(xyz)), y(static_cast<T>(xyz)), z(static_cast<T>(xyz))
-    {
-    }
+    { }
 
     template<typename T>
     template<typename U1, typename U2, typename U3>
-    inline Vector<3, T>::Vector(const U1 x, const U2 y, const U3 z) :
+    inline constexpr Vector<3, T>::Vector(const U1 x, const U2 y, const U3 z) :
         x(static_cast<T>(x)), y(static_cast<T>(y)), z(static_cast<T>(z))
-    {
-    }
+    { }
 
     template<typename T>
     template<typename U>
-    inline Vector<3, T>::Vector(const Vector<3, U>& vector) :
+    inline constexpr Vector<3, T>::Vector(const Vector<3, U>& vector) :
         x(static_cast<T>(vector.x)), y(static_cast<T>(vector.y)), z(static_cast<T>(vector.z))
-    {
-    }
+    { }
 
     template<typename T>
     inline Vector<3, T> Vector<3, T>::Absolute() const
@@ -507,30 +501,27 @@ namespace Curse
     constexpr size_t Vector<4, T>::Dimensions;
 
     template<typename T>
-    inline Vector<4, T>::Vector()
-    {
-    }
+    inline constexpr Vector<4, T>::Vector() :
+        x{}, y{}, z{}, w{}
+    { }
 
     template<typename T>
     template<typename U>
-    inline Vector<4, T>::Vector(const U xyzw) :
+    inline constexpr Vector<4, T>::Vector(const U xyzw) :
         x(static_cast<T>(xyzw)), y(static_cast<T>(xyzw)), z(static_cast<T>(xyzw)), w(static_cast<T>(xyzw))
-    {
-    }
+    { }
 
     template<typename T>
     template<typename U1, typename U2, typename U3, typename U4>
-    inline Vector<4, T>::Vector(const U1 x, const U2 y, const U3 z, const U4 w) :
+    inline constexpr Vector<4, T>::Vector(const U1 x, const U2 y, const U3 z, const U4 w) :
         x(static_cast<T>(x)), y(static_cast<T>(y)), z(static_cast<T>(z)), w(static_cast<T>(w))
-    {
-    }
+    { }
 
     template<typename T>
     template<typename U>
-    inline Vector<4, T>::Vector(const Vector<4, U>& vector) :
+    inline constexpr Vector<4, T>::Vector(const Vector<4, U>& vector) :
         x(static_cast<T>(vector.x)), y(static_cast<T>(vector.y)), z(static_cast<T>(vector.z)), w(static_cast<T>(vector.w))
-    {
-    }
+    { }
 
     template<typename T>
     inline Vector<4, T> Vector<4, T>::Absolute() const

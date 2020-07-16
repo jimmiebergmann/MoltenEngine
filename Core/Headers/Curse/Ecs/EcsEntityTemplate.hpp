@@ -38,6 +38,9 @@ namespace Curse
     namespace Ecs
     {
 
+        // Forward declarations.
+        class Allocator;
+
         namespace Private
         {
 

@@ -50,11 +50,6 @@
 
 #define CURSE_RENDERER_LOG(severity, message) if(m_logger){ m_logger->Write(severity, message); }
 
-#define LOG_ERROR_RETURN(ret, message) if(m_logger){ m_logger->Write(Curse::Logger::Severity::Error, message); return ret; }
-#define LOG_WARNING(message) if(m_logger){ m_logger->Write(Curse::Logger::Severity::Warning, message); }
-#define LOG_INFO(message) if(m_logger){ m_logger->Write(Curse::Logger::Severity::Info, message); }
-#define LOG_DEBUG(message) if(m_logger){ m_logger->Write(Curse::Logger::Severity::Debug, message); }
-
 namespace Curse
 {
 

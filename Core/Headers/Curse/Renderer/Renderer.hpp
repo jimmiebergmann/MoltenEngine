@@ -77,7 +77,7 @@ namespace Curse
         virtual ~Renderer();
 
         /**
-        * @brief Opens renderer.
+        * @brief Opens renderer by loading and attaching renderer to provided window.
         *
         * @param window Render target window.
         */

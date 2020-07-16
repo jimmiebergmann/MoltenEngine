@@ -48,7 +48,7 @@ namespace Curse
         * @brief Constructor.
         *        Vector's components are uninitialized.
         */
-        Vector();
+        constexpr Vector();
 
         /**
         * @brief Access vector component by index.
@@ -75,28 +75,28 @@ namespace Curse
         * @brief Constructor.
         *        Vector's components are uninitialized.
         */
-        Vector();
+        constexpr Vector();
 
         /**
         * @brief Constructor.
         *        Initializes all components by input parameter.
         */
         template<typename U>
-        Vector(const U xy);
+        constexpr Vector(const U xy);
 
         /**
         * @brief Constructor.
         *        Initializes all components separately by input parameters.
         */
         template<typename U1, typename U2>
-        Vector(const U1 x, const U2 y);
+        constexpr Vector(const U1 x, const U2 y);
 
         /**
         * @brief Constructor.
         *        Initializes vector by any other 2 dimensional vector class.
         */
         template<typename U>
-        Vector(const Vector<2, U>& vector);
+        constexpr Vector(const Vector<2, U>& vector);
 
         /**
         * @brief Get the absolute valute vector.
@@ -243,28 +243,28 @@ namespace Curse
         * @brief Constructor.
         *        Vector's components are uninitialized.
         */
-        Vector();
+        constexpr Vector();
 
         /**
         * @brief Constructor.
         *        Initializes all components by input parameter.
         */
         template<typename U>
-        Vector(const U xyz);
+        constexpr Vector(const U xyz);
 
         /**
         * @brief Constructor.
         *        Initializes all components separately by input parameters.
         */
         template<typename U1, typename U2, typename U3>
-        Vector(const U1 x, const U2 y, const U3 z);
+        constexpr Vector(const U1 x, const U2 y, const U3 z);
 
         /**
         * @brief Constructor.
         *        Initializes vector by any other 3 dimensional vector class.
         */
         template<typename U>
-        Vector(const Vector<3, U>& vector);
+        constexpr Vector(const Vector<3, U>& vector);
 
         /**
         * @brief Get the absolute valute vector.
@@ -418,28 +418,28 @@ namespace Curse
         * @brief Constructor.
         *        Vector's components are uninitialized.
         */
-        Vector();
+        constexpr Vector();
 
         /**
         * @brief Constructor.
         *        Initializes all components by input parameter.
         */
         template<typename U>
-        Vector(const U xyzw);
+        constexpr Vector(const U xyzw);
 
         /**
         * @brief Constructor.
         *        Initializes all components separately by input parameters.
         */
         template<typename U1, typename U2, typename U3, typename U4>
-        Vector(const U1 x, const U2 y, const U3 z, const U4 w);
+        constexpr Vector(const U1 x, const U2 y, const U3 z, const U4 w);
 
         /**
         * @brief Constructor.
         *        Initializes vector by any other 4 dimensional vector class.
         */
         template<typename U>
-        Vector(const Vector<4, U>& vector);
+        constexpr Vector(const Vector<4, U>& vector);
 
         /**
         * @brief Get the absolute valute vector.

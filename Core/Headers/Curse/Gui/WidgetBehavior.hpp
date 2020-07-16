@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2020 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,7 +23,11 @@
 *
 */
 
-#include "Curse/Gui/Control/PlaneControl.hpp"
+#ifndef CURSE_CORE_GUI_WIDGETBEHAVIOR_HPP
+#define CURSE_CORE_GUI_WIDGETBEHAVIOR_HPP
+
+#include "Curse/Ecs/EcsComponent.hpp"
+#include "Curse/Gui/Context.hpp"
 
 namespace Curse
 {
@@ -31,30 +35,11 @@ namespace Curse
     namespace Gui
     {
 
-        Plane::Plane()
-        { }
-
-        Plane::~Plane()
-        { }
-
-        void Plane::Update()
-        {
-            for (auto* child : GetChilds())
-            {
-                SetDrawPositionInternal(*child, child->GetPosiion());
-                SetDrawSizeInternal(*child, child->GetSize());
-                UpdateInternal(*child);
-            }
-        }
-
-        void Plane::Draw() const
-        {
-            for (auto* child : GetChilds())
-            {
-                DrawInternal(*child);
-            }
-        }
+        template<typename DerivedBehavior>
+        using WidgetBehavior = Ecs::Component<Ecs::Context<Private::Context>, DerivedBehavior>;
 
     }
 
 }
+
+#endif

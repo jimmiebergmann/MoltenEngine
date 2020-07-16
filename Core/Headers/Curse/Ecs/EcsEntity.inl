@@ -33,6 +33,12 @@ namespace Curse
 
         // Implementations of entity.
         template<typename ContextType>
+        inline Entity<ContextType>::Entity() :
+            m_metaData(nullptr),
+            m_id(-1)
+        { }
+
+        template<typename ContextType>
         inline Entity<ContextType>::~Entity()
         { }
 
@@ -92,6 +98,15 @@ namespace Curse
             }
 
             return m_metaData->context->template GetComponent<Comp>(*this);
+        }
+
+        template<typename ContextType>
+        inline void Entity<ContextType>::Destroy()
+        {
+            if (m_metaData)
+            {
+                m_metaData->context->DestroyEntity(*this);
+            }
         }
 
         template<typename ContextType>

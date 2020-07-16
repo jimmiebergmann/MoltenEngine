@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2020 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,10 +23,12 @@
 *
 */
 
-#ifndef CURSE_CORE_GUI_BUTTONCONTROL_HPP
-#define CURSE_CORE_GUI_BUTTONCONTROL_HPP
+#ifndef CURSE_CORE_GUI_WIDGETSYSTEM_HPP
+#define CURSE_CORE_GUI_WIDGETSYSTEM_HPP
 
-#include "Curse/Gui/GuiControl.hpp"
+#include "Curse/Ecs/EcsSystem.hpp"
+#include "Curse/Gui/Context.hpp"
+#include "Curse/Gui/Behaviors/BaseWidget.hpp"
 
 namespace Curse
 {
@@ -34,37 +36,8 @@ namespace Curse
     namespace Gui
     {
 
-        /**
-        * @brief 
-        */
-        class CURSE_API Button : public Control
-        {
-
-        public:
-
-            /**
-            * @brief Constructor.
-            */
-            Button();
-
-            /**
-            * @brief 
-            */
-            virtual ~Button();
-
-        protected:
-
-            /**
-            * @brief 
-            */
-            virtual void Update() override;
-
-            /**
-            * @brief 
-            */
-            virtual void Draw() const override;
-
-        };
+        template<typename DerivedSystem, typename ... Behaviors>
+        using WidgetSystem = Ecs::System<Ecs::Context<Private::Context>, DerivedSystem, BaseWidget, Behaviors...>;
 
     }
 

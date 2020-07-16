@@ -32,6 +32,7 @@
 #include "Curse/Scene/Camera.hpp"
 #include "Curse/System/Clock.hpp"
 #include "Curse/Window/Window.hpp"
+#include "Curse/Gui/Canvas.hpp"
 #include <memory>
 
 namespace Curse
@@ -66,6 +67,8 @@ namespace Curse
         private:
 
             void Load();
+            void LoadGui();
+
             void LoadPipeline();
             void LoadShaders();
 
@@ -96,6 +99,9 @@ namespace Curse
             float m_deltaTime;        
 
             Scene::Camera m_camera;
+
+            Gui::Canvas m_guiCanvas;
+
 
         };
 

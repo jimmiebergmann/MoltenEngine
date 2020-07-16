@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2020 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,7 +23,13 @@
 *
 */
 
-#include "Curse/Gui/Control/ButtonControl.hpp"
+#ifndef CURSE_CORE_GUI_BEHAVIOR_MOUSELISTENERWIDGET_HPP
+#define CURSE_CORE_GUI_BEHAVIOR_MOUSELISTENERWIDGET_HPP
+
+#include "Curse/Gui/WidgetBehavior.hpp"
+#include "Curse/Math/Vector.hpp"
+#include "Curse/System/UserInput.hpp"
+#include <functional>
 
 namespace Curse
 {
@@ -31,22 +37,17 @@ namespace Curse
     namespace Gui
     {
 
-        Button::Button()
-        { }
-
-        Button::~Button()
-        { }
-
-        void Button::Update()
+        struct CURSE_API MouseListener : WidgetBehavior<MouseListener>
         {
 
-        }
+            using OnClickFunction = std::function<void(const Mouse::Button, const Curse::Vector2f32&)>;
 
-        void Button::Draw() const
-        {
+            OnClickFunction OnClick;
 
-        }
+        };
 
     }
 
 }
+
+#endif
