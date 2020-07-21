@@ -74,6 +74,13 @@ namespace Curse
             void RegisterSystem(System<Context, DerivedSystem, RequiredComponents...>& system);
 
             /**
+            * Unregister a new system in this context.
+            * Systems are automatically unregistred at context destruction.
+            */
+            template<typename DerivedSystem, typename ... RequiredComponents>
+            void UnregisterSystem(System<Context, DerivedSystem, RequiredComponents...>& system);
+
+            /**
             * @brief Create a new entity by providing a set of components to attach to the entity.
             * 
             * All systems who are interested in this entity will be notified.

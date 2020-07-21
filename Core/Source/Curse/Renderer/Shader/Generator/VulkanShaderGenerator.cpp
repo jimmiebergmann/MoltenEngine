@@ -306,14 +306,18 @@ namespace Curse
             //constexpr size_t estUniVarLength = 999;
             constexpr size_t estLocalLength = 35;
 
-            auto& inputBlock = script.GetInputBlock();
-            auto& outputBlock = script.GetOutputBlock();
-            const VertexOutputNode* vertexOutputNode = (script.GetType() == Type::Vertex) ? static_cast<const VertexScript&>(script).GetVertexOutputNode() : nullptr;
+            auto& inputInterface = script.GetInputInterface();
+            auto& outputInterface = script.GetOutputInterface();
+            //auto& pushConstantInterface = script.GetPushConstantInterface();
+            const OutputVariable<Vector4f32>* vertexOutputNode = 
+                (script.GetType() == Type::Vertex) ? static_cast<const VertexScript&>(script).GetVertexOutputVariable() : nullptr;
+
             auto uniformBlocks = script.GetUniformBlocks();
+           // auto pushConstants = script.GetPushConstantInterface().GetNodes();
 
             const size_t estimatedSourceLength = estMainLength + estPreMainLength +
-                (inputBlock.GetNodeCount() * estInputLength) +
-                (outputBlock.GetNodeCount() * estOutputLength) +
+                (inputInterface.GetMemberCount() * estInputLength) +
+                (outputInterface.GetMemberCount() * estOutputLength) +
                 (vertexOutputNode ? estVertOutputLength : 0) +
                 (script.GetNodeCount() * estLocalLength);
 
@@ -328,16 +332,16 @@ namespace Curse
 
             // Input variables.
             size_t index = 0;
-            for (auto node : inputBlock.GetNodes())
+            for (auto* member : inputInterface.GetMembers())
             {
-                for (auto* pin : node->GetOutputPins())
+                for (auto* pin : member->GetOutputPins())
                 {
                     const std::string name = "in_" + std::to_string(index);
                     AppendToVector(source,
                         "layout(location = " + std::to_string(index) + ") in " +
                         GetGlslVariableDataType(pin->GetDataType()) + " " + name + ";\n");
 
-                    visitedOutputPins.insert({ pin, std::make_shared<Variable>(name, node, pin) });
+                    visitedOutputPins.insert({ pin, std::make_shared<Variable>(name, member, pin) });
                     index++;
                 }
             }
@@ -393,18 +397,43 @@ namespace Curse
                 AppendToVector(source, "} " + blockName + ";\n");
             }
 
+            // Push constants
+           /* size_t varIndex = 0;
+            if (pushConstants.size())
+            {
+                const std::string blockName = "pc";
+                AppendToVector(source, "layout(std140, push_constant) uniform s_" + blockName + " \n{\n");
+
+                for (auto* node : pushConstants)
+                {
+                    auto pins = node->GetOutputPins();
+
+                    for (auto* pin : pins)
+                    {
+                        const std::string name = "var_" + std::to_string(varIndex);
+                        const std::string fullName = blockName + "." + name;
+
+                        AppendToVector(source, GetGlslVariableDataType(pin->GetDataType()) + " " + name + ";\n");
+
+                        visitedOutputPins.insert({ pin, std::make_shared<Variable>(fullName, node, pin) });
+                        varIndex++;
+                    }
+                }
+                AppendToVector(source, "} " + blockName + ";\n");
+            }*/
+
             // Output variables.
             std::vector<VariablePtr> outputVars;
             index = 0;
-            for (auto node : outputBlock.GetNodes())
+            for (auto* member : outputInterface.GetMembers())
             {
-                for (auto* pin : node->GetInputPins())
+                for (auto* pin : member->GetInputPins())
                 {
                     const std::string name = "out_" + std::to_string(index);
                     AppendToVector(source,
                         "layout(location = " + std::to_string(index) + ") out " +
                         GetGlslVariableDataType(pin->GetDataType()) + " " + name + ";\n");
-                    outputVars.push_back(std::make_shared<Variable>(name, node, pin));
+                    outputVars.push_back(std::make_shared<Variable>(name, member, pin));
                     index++;
                 }
             }
@@ -531,7 +560,7 @@ namespace Curse
                             }
                         }
                         break;
-                        case NodeType::Output:
+                        case NodeType::Variable:
                         {
                             if (stackObject.inputVars.size() != 1)
                             {

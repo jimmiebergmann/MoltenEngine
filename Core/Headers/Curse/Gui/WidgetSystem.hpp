@@ -30,16 +30,11 @@
 #include "Curse/Gui/Context.hpp"
 #include "Curse/Gui/Behaviors/BaseWidget.hpp"
 
-namespace Curse
+namespace Curse::Gui
 {
 
-    namespace Gui
-    {
-
-        template<typename DerivedSystem, typename ... Behaviors>
-        using WidgetSystem = Ecs::System<Ecs::Context<Private::Context>, DerivedSystem, BaseWidget, Behaviors...>;
-
-    }
+    template<typename DerivedSystem, typename ... Behaviors>
+    using WidgetSystem = Ecs::System<Ecs::Context<Private::Context>, DerivedSystem, BaseWidget, Behaviors...>;
 
 }
 

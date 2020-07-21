@@ -210,6 +210,11 @@ namespace Curse
         virtual void DrawVertexBuffer(IndexBuffer* indexBuffer, VertexBuffer* vertexBuffer) override;
 
         /**
+        * @brie Push constant values to shader stage.
+        */
+        virtual void PushShaderConstants(Shader::Type stage, const uint32_t offset, const uint32_t size, const void* data) override;
+
+        /**
         * @brief Finalize and present rendering.
         */
         virtual void EndDraw() override;

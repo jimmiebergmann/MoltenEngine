@@ -63,15 +63,35 @@ namespace Curse
 
                 m_componentGroups.insert({ signature, componentGroup });
 
-                systemPtr->InternalOnRegister(componentGroup);
+                systemPtr->InternalOnRegister(this, componentGroup);
             }
             // The component group already exists, append system to the group.
             else
             {
                 auto* componentGroup = cgIt->second;
                 componentGroup->systems.push_back(systemPtr);
-                systemPtr->InternalOnRegister(componentGroup);
+                systemPtr->InternalOnRegister(this, componentGroup);
             }
+        }
+
+        template<typename DerivedContext>
+        template<typename DerivedSystem, typename ... RequiredComponents>
+        inline void Context<DerivedContext>::UnregisterSystem(System<Context, DerivedSystem, RequiredComponents...>& system)
+        {
+            auto* componentGroup = system.m_componentGroup;
+            if (componentGroup)
+            {
+                auto it = std::find(componentGroup->systems.begin(), componentGroup->systems.end(), &system);
+                componentGroup->systems.erase(it);
+            }
+
+            auto it = m_systems.find(&system);
+            if (it != m_systems.end())
+            {
+                m_systems.erase(it);
+            }
+            
+            system.InternalOnUnregister();
         }
 
         template<typename DerivedContext>

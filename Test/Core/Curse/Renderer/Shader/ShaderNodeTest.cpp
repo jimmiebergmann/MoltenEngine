@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2020 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -26,88 +26,84 @@
 #include "Test.hpp"
 #include "Curse/Renderer/Shader/ShaderScript.hpp"
 
-namespace Curse
+namespace Curse::Shader
 {
 
-    namespace Shader
+    TEST(Shader, Script_CreateOutputNode)
     {
-        TEST(Shader, Script_CreateOutputNode)
+        FragmentScript script;
+
         {
-            FragmentScript script;
-
+            OutputVariable<bool>* out = script.GetOutputInterface().AddMember<bool>();
+            EXPECT_EQ(out->GetInputPinCount(), size_t(1));
+            EXPECT_NE(out->GetInputPin(), nullptr);
+            EXPECT_NE(out->GetInputPin(0), nullptr);
+            EXPECT_EQ(out->GetInputPin(1), nullptr);
+            EXPECT_EQ(out->GetInputPin(), out->GetInputPin(0));
+            EXPECT_EQ(out->GetInputPins().size(), size_t(1));
+            if (out->GetInputPins().size())
             {
-                OutputNode<bool>* out = script.GetOutputBlock().AppendNode<bool>();
-                EXPECT_EQ(out->GetInputPinCount(), size_t(1));
-                EXPECT_NE(out->GetInputPin(), nullptr);
-                EXPECT_NE(out->GetInputPin(0), nullptr);
-                EXPECT_EQ(out->GetInputPin(1), nullptr);
-                EXPECT_EQ(out->GetInputPin(), out->GetInputPin(0));
-                EXPECT_EQ(out->GetInputPins().size(), size_t(1));
-                if (out->GetInputPins().size())
-                {
-                    EXPECT_EQ(out->GetInputPins()[0], out->GetInputPin());
-                }
-                EXPECT_EQ(out->GetInputPin()->GetDataType(), VariableDataType::Bool);
+                EXPECT_EQ(out->GetInputPins()[0], out->GetInputPin());
             }
-            {
-                OutputNode<int32_t>* out = script.GetOutputBlock().AppendNode<int32_t>();
-                EXPECT_EQ(out->GetInputPinCount(), size_t(1));
-                EXPECT_NE(out->GetInputPin(), nullptr);
-                EXPECT_NE(out->GetInputPin(0), nullptr);
-                EXPECT_EQ(out->GetInputPin(1), nullptr);
-                EXPECT_EQ(out->GetInputPin(), out->GetInputPin(0));
-                EXPECT_EQ(out->GetInputPins().size(), size_t(1));
-                if (out->GetInputPins().size())
-                {
-                    EXPECT_EQ(out->GetInputPins()[0], out->GetInputPin());
-                }
-                EXPECT_EQ(out->GetInputPin()->GetDataType(), VariableDataType::Int32);
-            }
-            {
-                OutputNode<Vector2f32>* out = script.GetOutputBlock().AppendNode<Vector2f32>();
-                EXPECT_EQ(out->GetInputPinCount(), size_t(1));
-                EXPECT_NE(out->GetInputPin(), nullptr);
-                EXPECT_NE(out->GetInputPin(0), nullptr);
-                EXPECT_EQ(out->GetInputPin(1), nullptr);
-                EXPECT_EQ(out->GetInputPin(), out->GetInputPin(0));
-                EXPECT_EQ(out->GetInputPins().size(), size_t(1));
-                if (out->GetInputPins().size())
-                {
-                    EXPECT_EQ(out->GetInputPins()[0], out->GetInputPin());
-                }
-                EXPECT_EQ(out->GetInputPin()->GetDataType(), VariableDataType::Vector2f32);
-            }
-            {
-                OutputNode<Vector3f32>* out = script.GetOutputBlock().AppendNode<Vector3f32>();
-                EXPECT_EQ(out->GetInputPinCount(), size_t(1));
-                EXPECT_NE(out->GetInputPin(), nullptr);
-                EXPECT_NE(out->GetInputPin(0), nullptr);
-                EXPECT_EQ(out->GetInputPin(1), nullptr);
-                EXPECT_EQ(out->GetInputPin(), out->GetInputPin(0));
-                EXPECT_EQ(out->GetInputPins().size(), size_t(1));
-                if (out->GetInputPins().size())
-                {
-                    EXPECT_EQ(out->GetInputPins()[0], out->GetInputPin());
-                }
-                EXPECT_EQ(out->GetInputPin()->GetDataType(), VariableDataType::Vector3f32);
-            }
-            {
-                OutputNode<Vector4f32>* out = script.GetOutputBlock().AppendNode<Vector4f32>();
-                EXPECT_EQ(out->GetInputPinCount(), size_t(1));
-                EXPECT_NE(out->GetInputPin(), nullptr);
-                EXPECT_NE(out->GetInputPin(0), nullptr);
-                EXPECT_EQ(out->GetInputPin(1), nullptr);
-                EXPECT_EQ(out->GetInputPin(), out->GetInputPin(0));
-                EXPECT_EQ(out->GetInputPins().size(), size_t(1));
-                if (out->GetInputPins().size())
-                {
-                    EXPECT_EQ(out->GetInputPins()[0], out->GetInputPin());
-                }
-                EXPECT_EQ(out->GetInputPin()->GetDataType(), VariableDataType::Vector4f32);
-            }
-        
+            EXPECT_EQ(out->GetInputPin()->GetDataType(), VariableDataType::Bool);
         }
-
+        {
+            OutputVariable<int32_t>* out = script.GetOutputInterface().AddMember<int32_t>();
+            EXPECT_EQ(out->GetInputPinCount(), size_t(1));
+            EXPECT_NE(out->GetInputPin(), nullptr);
+            EXPECT_NE(out->GetInputPin(0), nullptr);
+            EXPECT_EQ(out->GetInputPin(1), nullptr);
+            EXPECT_EQ(out->GetInputPin(), out->GetInputPin(0));
+            EXPECT_EQ(out->GetInputPins().size(), size_t(1));
+            if (out->GetInputPins().size())
+            {
+                EXPECT_EQ(out->GetInputPins()[0], out->GetInputPin());
+            }
+            EXPECT_EQ(out->GetInputPin()->GetDataType(), VariableDataType::Int32);
+        }
+        {
+            OutputVariable<Vector2f32>* out = script.GetOutputInterface().AddMember<Vector2f32>();
+            EXPECT_EQ(out->GetInputPinCount(), size_t(1));
+            EXPECT_NE(out->GetInputPin(), nullptr);
+            EXPECT_NE(out->GetInputPin(0), nullptr);
+            EXPECT_EQ(out->GetInputPin(1), nullptr);
+            EXPECT_EQ(out->GetInputPin(), out->GetInputPin(0));
+            EXPECT_EQ(out->GetInputPins().size(), size_t(1));
+            if (out->GetInputPins().size())
+            {
+                EXPECT_EQ(out->GetInputPins()[0], out->GetInputPin());
+            }
+            EXPECT_EQ(out->GetInputPin()->GetDataType(), VariableDataType::Vector2f32);
+        }
+        {
+            OutputVariable<Vector3f32>* out = script.GetOutputInterface().AddMember<Vector3f32>();
+            EXPECT_EQ(out->GetInputPinCount(), size_t(1));
+            EXPECT_NE(out->GetInputPin(), nullptr);
+            EXPECT_NE(out->GetInputPin(0), nullptr);
+            EXPECT_EQ(out->GetInputPin(1), nullptr);
+            EXPECT_EQ(out->GetInputPin(), out->GetInputPin(0));
+            EXPECT_EQ(out->GetInputPins().size(), size_t(1));
+            if (out->GetInputPins().size())
+            {
+                EXPECT_EQ(out->GetInputPins()[0], out->GetInputPin());
+            }
+            EXPECT_EQ(out->GetInputPin()->GetDataType(), VariableDataType::Vector3f32);
+        }
+        {
+            OutputVariable<Vector4f32>* out = script.GetOutputInterface().AddMember<Vector4f32>();
+            EXPECT_EQ(out->GetInputPinCount(), size_t(1));
+            EXPECT_NE(out->GetInputPin(), nullptr);
+            EXPECT_NE(out->GetInputPin(0), nullptr);
+            EXPECT_EQ(out->GetInputPin(1), nullptr);
+            EXPECT_EQ(out->GetInputPin(), out->GetInputPin(0));
+            EXPECT_EQ(out->GetInputPins().size(), size_t(1));
+            if (out->GetInputPins().size())
+            {
+                EXPECT_EQ(out->GetInputPins()[0], out->GetInputPin());
+            }
+            EXPECT_EQ(out->GetInputPin()->GetDataType(), VariableDataType::Vector4f32);
+        }
+        
     }
 
 }

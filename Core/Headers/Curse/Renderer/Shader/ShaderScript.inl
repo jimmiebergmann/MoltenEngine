@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2020 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,79 +23,74 @@
 *
 */
 
-namespace Curse
+namespace Curse::Shader
 {
 
-    namespace Shader
+    // Vertex shader script implementations.
+    template<typename T>
+    inline ConstantNode<T>* VertexScript::CreateConstantNode(const T& value)
     {
+        // CHECK TYPE.
+        auto constant = new ConstantNode<T>(*this, value);
+        m_allNodes.insert(constant);
+        return constant;
+    }
 
-        // Vertex shader script implementations.
-        template<typename T>
-        inline ConstantNode<T>* VertexScript::CreateConstantNode(const T& value)
-        {
-            // CHECK TYPE.
-            auto constant = new ConstantNode<T>(*this, value);
-            m_allNodes.insert(constant);
-            return constant;
-        }
+    template<typename Func>
+    inline Func* VertexScript::CreateFunctionNode()
+    {
+        // CHECK FUNCTION TYPE.
+        static_assert(std::is_base_of<FunctionNodeBase, Func>::value,
+            "Specified template parameter is not base of FunctionNode.");
 
-        template<typename Func>
-        inline Func* VertexScript::CreateFunctionNode()
-        {
-            // CHECK FUNCTION TYPE.
-            static_assert(std::is_base_of<FunctionNodeBase, Func>::value,
-                "Specified template parameter is not base of FunctionNode.");
+        auto func = new Func(*this);
+        m_allNodes.insert(func);
+        return func;
+    }
 
-            auto func = new Func(*this);
-            m_allNodes.insert(func);
-            return func;
-        }
+    template<typename Op>
+    inline Op* VertexScript::CreateOperatorNode()
+    {
+        static_assert(OperatorTrait<Op>::Supported, "Passed operator node is not supported.");
 
-        template<typename Op>
-        inline Op* VertexScript::CreateOperatorNode()
-        {
-            static_assert(OperatorTrait<Op>::Supported, "Passed operator node is not supported.");
-
-            auto op = new Op(*this);
-            m_allNodes.insert(op);
-            return op;
-        }
+        auto op = new Op(*this);
+        m_allNodes.insert(op);
+        return op;
+    }
 
 
-        // Fragment shader script implementations.
-        template<typename T>
-        inline ConstantNode<T>* FragmentScript::CreateConstantNode(const T& value)
-        {
-            // CHECK TYPE.
-            auto constant = new ConstantNode<T>(*this, value);
-            m_allNodes.insert(constant);
-            return constant;
-        }
+    // Fragment shader script implementations.
+    template<typename T>
+    inline ConstantNode<T>* FragmentScript::CreateConstantNode(const T& value)
+    {
+        // CHECK TYPE.
+        auto constant = new ConstantNode<T>(*this, value);
+        m_allNodes.insert(constant);
+        return constant;
+    }
 
-        template<typename Func>
-        inline Func* FragmentScript::CreateFunctionNode()
-        {
-            // CHECK FUNCTION TYPE.
-            static_assert(std::is_base_of<FunctionNodeBase, Func>::value,
-                "Specified template parameter is not base of FunctionNode.");
+    template<typename Func>
+    inline Func* FragmentScript::CreateFunctionNode()
+    {
+        // CHECK FUNCTION TYPE.
+        static_assert(std::is_base_of<FunctionNodeBase, Func>::value,
+            "Specified template parameter is not base of FunctionNode.");
 
-            auto func = new Func(*this);
-            m_allNodes.insert(func);
-            return func;
-        }
+        auto func = new Func(*this);
+        m_allNodes.insert(func);
+        return func;
+    }
 
-        template<typename Op>
-        inline Op* FragmentScript::CreateOperatorNode()
-        {
-            // CHECK OPERATOR TYPE.
-            static_assert(std::is_base_of<OperatorNodeBase, Op>::value,
-                "Specified template parameter is not base of OperatorNodeBase.");
+    template<typename Op>
+    inline Op* FragmentScript::CreateOperatorNode()
+    {
+        // CHECK OPERATOR TYPE.
+        static_assert(std::is_base_of<OperatorNodeBase, Op>::value,
+            "Specified template parameter is not base of OperatorNodeBase.");
 
-            auto op = new Op(*this);
-            m_allNodes.insert(op);
-            return op;
-        }
-
+        auto op = new Op(*this);
+        m_allNodes.insert(op);
+        return op;
     }
 
 }

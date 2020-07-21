@@ -23,8 +23,7 @@
 *
 */
 
-#include "Curse/Renderer/Shader/Node/ShaderInputNode.hpp"
-#include "Curse/Renderer/Shader/Node/ShaderOutputNode.hpp"
+#include "Curse/Renderer/Shader/Node/ShaderPushConstantNode.hpp"
 
 namespace Curse
 {
@@ -32,57 +31,62 @@ namespace Curse
     namespace Shader
     {
 
-        // Input node base implementations.
-        NodeType InputNodeBase::GetType() const
+        // Uniform base class implementations.
+        NodeType PushConstantNodeBase::GetType() const
         {
-            return NodeType::Input;
+            return NodeType::PushConstant;
         }
 
-        InputNodeBase::InputNodeBase(Script& script) :
+        bool PushConstantNodeBase::IsArray() const
+        {
+            return false;
+        }
+
+        PushConstantNodeBase::PushConstantNodeBase(Script& script) :
             Node(script)
         { }
 
-        InputNodeBase::~InputNodeBase()
+        PushConstantNodeBase::~PushConstantNodeBase()
         { }
 
 
-        // Input block implementations.
-        void InputBlock::DestroyNode(InputNodeBase* inputNode)
+        // Uniform block implementations.
+        void PushConstantBlock::DestroyNode(PushConstantNodeBase* uniformNode)
         {
             for (auto it = m_nodes.begin(); it != m_nodes.end(); it++)
             {
-                if (*it == inputNode)
+                if (*it == uniformNode)
                 {
                     m_nodes.erase(it);
-                    m_pinCount -= inputNode->GetOutputPinCount();
-                    delete inputNode;
+                    m_pinCount -= uniformNode->GetOutputPinCount();
+                    delete uniformNode;
                     return;
                 }
             }
         }
 
-        size_t InputBlock::GetNodeCount() const
+        size_t PushConstantBlock::GetNodeCount() const
         {
             return m_nodes.size();
         }
 
-        size_t InputBlock::GetOutputPinCount() const
+        size_t PushConstantBlock::GetOutputPinCount() const
         {
             return m_pinCount;
         }
 
-        std::vector<InputNodeBase*> InputBlock::GetNodes()
+        std::vector<PushConstantNodeBase*> PushConstantBlock::GetNodes()
         {
             return m_nodes;
         }
-        std::vector<const InputNodeBase*> InputBlock::GetNodes() const
+        std::vector<const PushConstantNodeBase*> PushConstantBlock::GetNodes() const
         {
             return { m_nodes.begin(), m_nodes.end() };
         }
 
-        bool InputBlock::CheckCompability(const OutputBlock& block) const
+        /*bool PushConstantBlock::CheckCompability(const UniformBlock& block) const
         {
-            auto blockNodes = block.GetNodes();
+            auto& blockNodes = block.m_nodes;
 
             if (m_nodes.size() != blockNodes.size())
             {
@@ -113,14 +117,14 @@ namespace Curse
             }
 
             return true;
-        }
+        }*/
 
-        InputBlock::InputBlock(Script& script) :
+        PushConstantBlock::PushConstantBlock(Script& script) :
             m_script(script),
             m_pinCount(0)
         { }
 
-        InputBlock::~InputBlock()
+        PushConstantBlock::~PushConstantBlock()
         {
             for (auto node : m_nodes)
             {

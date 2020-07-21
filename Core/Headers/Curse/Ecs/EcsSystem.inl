@@ -45,16 +45,30 @@ namespace Curse
 
         template<typename ContextType>
         inline SystemBase<ContextType>::SystemBase() :
+            m_context(nullptr),
             m_entityCount(0),
             m_componentGroup(nullptr)
         { }
 
         template<typename ContextType>
-        inline void SystemBase<ContextType>::InternalOnRegister(Private::ComponentGroup<ContextType>* componentGroup)
+        inline SystemBase<ContextType>::~SystemBase()
+        { }
+
+        template<typename ContextType>
+        inline void SystemBase<ContextType>::InternalOnRegister(ContextType* context, Private::ComponentGroup<ContextType>* componentGroup)
         {
             m_componentGroup = componentGroup;
             m_entityCount = componentGroup->entityCount;
+            m_context = context;
             OnRegister();
+        }
+
+        template<typename ContextType>
+        inline void SystemBase<ContextType>::InternalOnUnregister()
+        {
+            m_componentGroup = nullptr;
+            m_entityCount = 0;
+            m_context = nullptr;
         }
 
         template<typename ContextType>
@@ -73,6 +87,15 @@ namespace Curse
 
 
         /// Implementations of system class.
+        template<typename ContextType, typename DerivedSystem, typename ... RequiredComponents>
+        inline System<ContextType, DerivedSystem, RequiredComponents...>::~System()
+        {
+            if (m_context)
+            {
+                m_context->UnregisterSystem(*this);
+            }
+        }
+
         template<typename ContextType, typename DerivedSystem, typename ... RequiredComponents>
         template<typename Comp>
         Comp& System<ContextType, DerivedSystem, RequiredComponents...>::GetComponent(const size_t entityIndex)

@@ -28,31 +28,38 @@
 
 #include "Curse/Gui/WidgetTemplate.hpp"
 
-namespace Curse
+namespace Curse::Gui
 {
 
-    namespace Gui
+    struct Button {};
+
+}
+
+namespace Curse::Gui::Template
+{
+
+    template<>
+    inline const WidgetDescriptor Descriptor<Button> = 
     {
+        1, // maxChildCount
+        Vector2f32(), // maxSize
+        Vector2f32(), // minSize
+        WidgetFlags::FitChildren | WidgetFlags::FitParent // flags
+    };
 
-        struct Button {};
+    template<>
+    inline const auto CalculateWidgetSize<Button> = 
+        [](TemplatedWidget<Button>& /*button*/, const Vector2f32& /*grantedSize*/) 
+    {
+        //button.GetCache();
+    };
 
-        template<>
-        static inline const WidgetDescriptor WidgetDescriptorTemplate<Button> = 
-        {
-            1, // maxChildCount
-            Vector2f32(), // maxSize
-            Vector2f32(), // minSize
-            (WidgetFlagsType)WidgetFlags::FitChildren | 
-            (WidgetFlagsType)WidgetFlags::FitParent // flags
-        };
-
-        template<>
-        static inline const auto RenderObjectTemplate<Button> = [](RenderObject& renderObject)
-        {
-
-        };
-
-    }
+    template<>
+    inline const auto LoadRenderObject<Button> = 
+        [](RenderObject& renderObject)
+    {
+        renderObject.AddRect({ 100.0f, 100.0f }, { 100.0f, 100.0f });
+    };
 
 }
 

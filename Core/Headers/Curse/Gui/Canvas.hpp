@@ -37,58 +37,59 @@
 
 namespace Curse
 {
-
-    // Forward declarations...
     class Renderer;
     class Logger;
+}
 
-    namespace Gui
+namespace Curse::Gui
+{
+
+    class Renderer;
+
+    class CURSE_API Canvas
     {
 
+    public:
 
-        class CURSE_API Canvas
-        {
+        Canvas();
+        ~Canvas();
 
-        public:
+        bool Load(Curse::Renderer* backendRenderer, Logger* logger = nullptr);
 
-            Canvas();
+        void Unload();
 
-            bool Load(Renderer* renderer, Logger* logger = nullptr);
+        void Update();
 
-            void Unload();
+        void Draw();
 
-            void Update();
+        template<typename System>
+        void RegisterSystem(System& system);
 
-            void Draw();
+        template<typename TemplateType, typename ... Behaviors, typename ... ConstructorArgs>
+        TemplatedWidgetPointer<TemplateType> Add(WidgetPointer parent, ConstructorArgs ... args);
 
-            template<typename System>
-            void RegisterSystem(System& system);
+        bool Move(WidgetPointer widget, WidgetPointer parent);
 
-            template<typename Template, typename ... Behaviors, typename ... ConstructorArgs>
-            TemplatedWidgetPointer<Template> Add(WidgetPointer parent, ConstructorArgs ... args);
+        WidgetPointer GetRoot();
 
-            bool Move(WidgetPointer widget, WidgetPointer parent);
+    private:
 
-            WidgetPointer GetRoot();
+        Canvas(Canvas&&) = delete;
+        Canvas(const Canvas&) = delete;
+        Canvas& operator= (Canvas&&) = delete;
+        Canvas& operator= (const Canvas&) = delete;
 
-        private:
+        void TraversalWidgetSizeUpdate(WidgetPointer startWidget);
 
-            Canvas(Canvas&&) = delete;
-            Canvas(const Canvas&) = delete;
-            Canvas& operator= (Canvas&&) = delete;
-            Canvas& operator= (const Canvas&) = delete;
+        void DrawChild(Widget& widget);
 
-            void TraversalWidgetSizeUpdate(WidgetPointer startWidget);
-
-            Renderer* m_renderer;
-            Logger* m_logger;
-            std::unique_ptr<Private::Context> m_context;
-            std::unique_ptr<KeyboardSystem> m_keyboardSystem;
-            std::unique_ptr<MouseSystem> m_mouseSystem;
-            WidgetPointer m_rootWidget;
-        };
-
-    }
+        Renderer* m_renderer;
+        Logger* m_logger;
+        std::unique_ptr<Private::Context> m_context;
+        std::unique_ptr<KeyboardSystem> m_keyboardSystem;
+        std::unique_ptr<MouseSystem> m_mouseSystem;
+        WidgetPointer m_rootWidget;
+    };
 
 }
 

@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2020 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -34,360 +34,355 @@
 #include <typeindex>
 #include <algorithm>
 
-namespace Curse
+namespace Curse::Shader
 {
 
-    namespace Shader
-    {
-
-        // Forward declarations.
-        class Node;
-        template<typename T> class InputPin;
-        template<typename T> class OutputPin;
+    // Forward declarations.
+    class Node;
+    template<typename T> class InputPin;
+    template<typename T> class OutputPin;
         
 
+    /**
+    * @brief Enumerator of pin directions.
+    */
+    enum class PinDirection : uint8_t
+    {
+        In,
+        Out
+    };
+
+
+    /**
+    * @brief Base class of shader script pin.
+    */
+    class Pin
+    {
+
+    public:
+
         /**
-        * @brief Enumerator of pin directions.
+        * @brief Constructor.
         */
-        enum class PinDirection : uint8_t
-        {
-            In,
-            Out
-        };
-
+        Pin(Node & node, const std::string& name = "");
 
         /**
-        * @brief Base class of shader script pin.
+        * @brief Destructor.
         */
-        class Pin
-        {
+        virtual ~Pin();
 
-        public:
+        /**
+        * @brief Connect pin with target pin, of opposite direction.
+        *
+        * @return true if target pin got connected, false if direction of target pin is not of opposite direction.
+        */
+        virtual bool Connect(Pin& target) = 0;
 
-            /**
-            * @brief Constructor.
-            */
-            Pin(Node & node, const std::string& name = "");
+        /**
+        * @brief Disconnect all connected pins.
+        *
+        * @return Number of disconnected pins.
+        */
+        virtual size_t Disconnect() = 0;
 
-            /**
-            * @brief Destructor.
-            */
-            virtual ~Pin();
+        /**
+        * @brief Disconnect connected pin by index.
+        *
+        * @return true if pin is disconnected, false if index >= GetConnectionCount().
+        */
+        virtual bool Disconnect(const size_t index) = 0;
 
-            /**
-            * @brief Connect pin with target pin, of opposite direction.
-            *
-            * @return true if target pin got connected, false if direction of target pin is not of opposite direction.
-            */
-            virtual bool Connect(Pin& target) = 0;
-
-            /**
-            * @brief Disconnect all connected pins.
-            *
-            * @return Number of disconnected pins.
-            */
-            virtual size_t Disconnect() = 0;
-
-            /**
-            * @brief Disconnect connected pin by index.
-            *
-            * @return true if pin is disconnected, false if index >= GetConnectionCount().
-            */
-            virtual bool Disconnect(const size_t index) = 0;
-
-            /**
-            * @brief Disconnect connected pin by target pin.
-            *
-            * @return true if pin is disconnected, false if target pin is not connected to this pin.
-            */
-            virtual bool Disconnect(Pin& target) = 0;
+        /**
+        * @brief Disconnect connected pin by target pin.
+        *
+        * @return true if pin is disconnected, false if target pin is not connected to this pin.
+        */
+        virtual bool Disconnect(Pin& target) = 0;
   
-            /**
-            * @brief Get data type of pin.
-            */
-            virtual VariableDataType GetDataType() const = 0;
-
-            /**
-            * @brief Get direction of pin, in or out.
-            */
-            virtual PinDirection GetDirection() const = 0;
-
-            /**
-            * @brief Get number of connections.
-            *        Output pins can have multiple connections, but input pins can only have one.
-            */
-            virtual size_t GetConnectionCount() const = 0;
-
-            /**
-            * @brief Get connected pin by index.
-            *
-            * @return Pointer of connected pin, nullptr if index is >= GetConnectionCount() or pin isn't connected.
-            */
-            /**@{*/
-            virtual Pin* GetConnection(const size_t index = 0) = 0;
-            virtual const Pin* GetConnection(const size_t index = 0) const = 0;
-            /**@}*/
-
-            /**
-            * @brief Get all connections, wrapped in a vector.
-            */
-            /**@{*/
-            virtual std::vector<Pin*> GetConnections() = 0;
-            virtual std::vector<const Pin*> GetConnections() const = 0;
-            /**@}*/
-
-            /**
-            * @brief Get parent node object.
-            */
-            /**@{*/
-            Node& GetNode();
-            const Node& GetNode() const;   
-            /**@}*/
-
-            /**
-            * @brief Get name of pin.
-            */
-            const std::string& GetName() const;
-
-        protected:
-
-            void ConnectInternal(Pin& source, Pin& target);
-            void DisconnectInternal(Pin& source, Pin& target);
-
-            virtual void ConnectInternal(Pin& target) = 0;
-            virtual void DisconnectInternal(Pin& target) = 0;
-
-        private:
-
-            Pin(const Pin&) = delete;
-            Pin(Pin&&) = delete;
-
-            Node& m_node;
-            std::string m_name;
-
-        };
-
+        /**
+        * @brief Get data type of pin.
+        */
+        virtual VariableDataType GetDataType() const = 0;
 
         /**
-        * @brief Shader script input pin class.
-        *
-        * @tparam T Data type of pin.
+        * @brief Get direction of pin, in or out.
         */
-        template<typename T>
-        class InputPin : public Pin
-        {
+        virtual PinDirection GetDirection() const = 0;
 
-            static_assert(VariableTrait<T>::Supported, "Input pin of data type T is not supported.");
+        /**
+        * @brief Get number of connections.
+        *        Output pins can have multiple connections, but input pins can only have one.
+        */
+        virtual size_t GetConnectionCount() const = 0;
 
-        public:
+        /**
+        * @brief Get connected pin by index.
+        *
+        * @return Pointer of connected pin, nullptr if index is >= GetConnectionCount() or pin isn't connected.
+        */
+        /**@{*/
+        virtual Pin* GetConnection(const size_t index = 0) = 0;
+        virtual const Pin* GetConnection(const size_t index = 0) const = 0;
+        /**@}*/
 
-            /**
-            * @brief Constructor.
-            */
-            explicit InputPin(Node& node, const std::string& name = "");
+        /**
+        * @brief Get all connections, wrapped in a vector.
+        */
+        /**@{*/
+        virtual std::vector<Pin*> GetConnections() = 0;
+        virtual std::vector<const Pin*> GetConnections() const = 0;
+        /**@}*/
 
-            /**
-            * @brief Constructor.
-            */
-            InputPin(Node& node, const T& defaultValue, const std::string& name = "");
+        /**
+        * @brief Get parent node object.
+        */
+        /**@{*/
+        Node& GetNode();
+        const Node& GetNode() const;   
+        /**@}*/
 
-            /**
-            * @brief Destructor.
-            */
-            virtual ~InputPin();
+        /**
+        * @brief Get name of pin.
+        */
+        const std::string& GetName() const;
 
-            /**
-            * @brief Connect pin with target pin, of opposite direction.
-            *        The current connected pin is being disconnect, if target is different from the currently connected one.
-            *
-            * @return true if target pin got connected, false if direction of target pin is not equal to PinDirection::Out.
-            */
-            virtual bool Connect(Pin& target) override;
+    protected:
+
+        void ConnectInternal(Pin& source, Pin& target);
+        void DisconnectInternal(Pin& source, Pin& target);
+
+        virtual void ConnectInternal(Pin& target) = 0;
+        virtual void DisconnectInternal(Pin& target) = 0;
+
+    private:
+
+        Pin(const Pin&) = delete;
+        Pin(Pin&&) = delete;
+
+        Node& m_node;
+        std::string m_name;
+
+    };
+
+
+    /**
+    * @brief Shader script input pin class.
+    *
+    * @tparam T Data type of pin.
+    */
+    template<typename T>
+    class InputPin : public Pin
+    {
+
+        static_assert(VariableTrait<T>::Supported, "Input pin of data type T is not supported.");
+
+    public:
+
+        /**
+        * @brief Constructor.
+        */
+        explicit InputPin(Node& node, const std::string& name = "");
+
+        /**
+        * @brief Constructor.
+        */
+        InputPin(Node& node, const T& defaultValue, const std::string& name = "");
+
+        /**
+        * @brief Destructor.
+        */
+        virtual ~InputPin();
+
+        /**
+        * @brief Connect pin with target pin, of opposite direction.
+        *        The current connected pin is being disconnect, if target is different from the currently connected one.
+        *
+        * @return true if target pin got connected, false if direction of target pin is not equal to PinDirection::Out.
+        */
+        virtual bool Connect(Pin& target) override;
             
-            /**
-            * @brief Disconnect current connected pins.
-            *
-            * @return 1(number of connected pins) if disconnected, else 0.
-            */
-            virtual size_t Disconnect() override;
-
-            /**
-            * @brief Disconnect connected pin by index.
-            *
-            * @return true if pin got disconnected, false if no pin currently is connected, or if index != 0.
-            */
-            virtual bool Disconnect(const size_t index) override;
-
-            /**
-            * @brief Disconnect connected pin by target pin.
-            *
-            * @return true if pin got disconnected, false if target pin is not connected to this pin.
-            */
-            virtual bool Disconnect(Pin& target) override;
-
-            /**
-            * @brief Get data type of pin
-            */
-            virtual VariableDataType GetDataType() const override;
-
-            /**
-            * @brief Get direction of pin, in or out.
-            */
-            virtual PinDirection GetDirection() const override;
-
-            /**
-            * @brief Get default value of pin.
-            */
-            virtual T GetDefaultValue() const;
-
-            /**
-            * @brief Get default value of pin.
-            */
-            virtual void SetDefaultValue(const T& defaultValue);
-
-            /**
-            * @brief Get number of connections.
-            *
-            * @return 1 if output pin is connected, else 0.
-            */
-            virtual size_t GetConnectionCount() const override;
-
-            /**
-            * @brief Get connected pin by index.
-            *
-            * @return Pointer of pin, nullptr if index is >= GetConnectionCount() or pin isn't connected.
-            */
-            /**@{*/
-            virtual Pin* GetConnection(const size_t index = 0) override;
-            virtual const Pin* GetConnection(const size_t index = 0) const override;
-            /**@}*/
-
-            /**
-            * @brief Get all connections, wrapped in a vector.
-            */
-            /**@{*/
-            virtual std::vector<Pin*> GetConnections() override;
-            virtual std::vector<const Pin*> GetConnections() const override;           
-            /**@}*/
-
-        protected:
-
-            virtual void ConnectInternal(Pin& target) override;
-            virtual void DisconnectInternal(Pin& target) override;
-
-        private:
-
-            InputPin(const InputPin&) = delete;
-            InputPin(InputPin&&) = delete;
-
-            T m_defaultValue;
-            Pin* m_connection;
-
-            friend class Node;
-
-        };
-
+        /**
+        * @brief Disconnect current connected pins.
+        *
+        * @return 1(number of connected pins) if disconnected, else 0.
+        */
+        virtual size_t Disconnect() override;
 
         /**
-        * @brief Shader script output pin class.
+        * @brief Disconnect connected pin by index.
         *
-        * @tparam T Data type of pin.
+        * @return true if pin got disconnected, false if no pin currently is connected, or if index != 0.
         */
-        template<typename T>
-        class OutputPin : public Pin
-        {
-            static_assert(VariableTrait<T>::Supported, "Input pin of data type T is not supported.");
+        virtual bool Disconnect(const size_t index) override;
 
-        public:
+        /**
+        * @brief Disconnect connected pin by target pin.
+        *
+        * @return true if pin got disconnected, false if target pin is not connected to this pin.
+        */
+        virtual bool Disconnect(Pin& target) override;
 
-            /**
-            * @brief Constructor.
-            */
-            explicit OutputPin(Node& node, const std::string& name = "");
+        /**
+        * @brief Get data type of pin
+        */
+        virtual VariableDataType GetDataType() const override;
 
-            /**
-            * @brief Destructor.
-            */
-            virtual ~OutputPin();
+        /**
+        * @brief Get direction of pin, in or out.
+        */
+        virtual PinDirection GetDirection() const override;
 
-            /**
-            * @brief Connect pin with target pin, of opposite direction.
-            *
-            * @return true if target pin got connected, false if direction of target pin is not equal to PinDirection::In.
-            */
-            virtual bool Connect(Pin& target) override;
+        /**
+        * @brief Get default value of pin.
+        */
+        virtual T GetDefaultValue() const;
 
-            /**
-            * @brief Disconnect current connected pins.
-            *
-            * @return number of disconnected pins.
-            */
-            virtual size_t Disconnect() override;
+        /**
+        * @brief Get default value of pin.
+        */
+        virtual void SetDefaultValue(const T& defaultValue);
 
-            /**
-            * @brief Disconnect connected pin by index.
-            *
-            * @return true if pin is disconnected, false if index >= GetConnectionCount().
-            */
-            virtual bool Disconnect(const size_t index) override;
+        /**
+        * @brief Get number of connections.
+        *
+        * @return 1 if output pin is connected, else 0.
+        */
+        virtual size_t GetConnectionCount() const override;
 
-            /**
-            * @brief Disconnect connected pin by target pin.
-            *
-            * @return true if pin got disconnected, false if target pin is not connected to this pin.
-            */
-            virtual bool Disconnect(Pin& target) override;
+        /**
+        * @brief Get connected pin by index.
+        *
+        * @return Pointer of pin, nullptr if index is >= GetConnectionCount() or pin isn't connected.
+        */
+        /**@{*/
+        virtual Pin* GetConnection(const size_t index = 0) override;
+        virtual const Pin* GetConnection(const size_t index = 0) const override;
+        /**@}*/
 
-            /**
-            * @brief Get data type of pin
-            */
-            virtual VariableDataType GetDataType() const override;
+        /**
+        * @brief Get all connections, wrapped in a vector.
+        */
+        /**@{*/
+        virtual std::vector<Pin*> GetConnections() override;
+        virtual std::vector<const Pin*> GetConnections() const override;           
+        /**@}*/
 
-            /**
-            * @brief Get direction of pin, in or out.
-            */
-            virtual PinDirection GetDirection() const override;
+    protected:
 
-            /**
-            * @brief Get number of connections.
-            */
-            virtual size_t GetConnectionCount() const override;
+        virtual void ConnectInternal(Pin& target) override;
+        virtual void DisconnectInternal(Pin& target) override;
 
-            /**
-            * @brief Get connected pin by index.
-            *
-            * @return Pointer of pin, nullptr if index is >= GetConnectionCount() or pin isn't connected.
-            */
-            /**@{*/
-            virtual Pin* GetConnection(const size_t index = 0) override;
-            virtual const Pin* GetConnection(const size_t index = 0) const override;
-            /**@}*/
+    private:
 
-            /**
-            * @brief Get all connections, wrapped in a vector.
-            */
-            /**@{*/
-            virtual std::vector<Pin*> GetConnections() override;
-            virtual std::vector<const Pin*> GetConnections() const override;
-            /**@}*/
+        InputPin(const InputPin&) = delete;
+        InputPin(InputPin&&) = delete;
 
-        protected:
+        T m_defaultValue;
+        Pin* m_connection;
 
-            virtual void ConnectInternal(Pin& target) override;
-            virtual void DisconnectInternal(Pin& target) override;
+        friend class Node;
 
-        private:
+    };
 
-            OutputPin(const OutputPin&) = delete;
-            OutputPin(OutputPin&&) = delete;
 
-            std::vector<Pin*> m_connections;
+    /**
+    * @brief Shader script output pin class.
+    *
+    * @tparam T Data type of pin.
+    */
+    template<typename T>
+    class OutputPin : public Pin
+    {
+        static_assert(VariableTrait<T>::Supported, "Input pin of data type T is not supported.");
 
-            friend class Node;
+    public:
 
-        };
+        /**
+        * @brief Constructor.
+        */
+        explicit OutputPin(Node& node, const std::string& name = "");
 
-    }
+        /**
+        * @brief Destructor.
+        */
+        virtual ~OutputPin();
+
+        /**
+        * @brief Connect pin with target pin, of opposite direction.
+        *
+        * @return true if target pin got connected, false if direction of target pin is not equal to PinDirection::In.
+        */
+        virtual bool Connect(Pin& target) override;
+
+        /**
+        * @brief Disconnect current connected pins.
+        *
+        * @return number of disconnected pins.
+        */
+        virtual size_t Disconnect() override;
+
+        /**
+        * @brief Disconnect connected pin by index.
+        *
+        * @return true if pin is disconnected, false if index >= GetConnectionCount().
+        */
+        virtual bool Disconnect(const size_t index) override;
+
+        /**
+        * @brief Disconnect connected pin by target pin.
+        *
+        * @return true if pin got disconnected, false if target pin is not connected to this pin.
+        */
+        virtual bool Disconnect(Pin& target) override;
+
+        /**
+        * @brief Get data type of pin
+        */
+        virtual VariableDataType GetDataType() const override;
+
+        /**
+        * @brief Get direction of pin, in or out.
+        */
+        virtual PinDirection GetDirection() const override;
+
+        /**
+        * @brief Get number of connections.
+        */
+        virtual size_t GetConnectionCount() const override;
+
+        /**
+        * @brief Get connected pin by index.
+        *
+        * @return Pointer of pin, nullptr if index is >= GetConnectionCount() or pin isn't connected.
+        */
+        /**@{*/
+        virtual Pin* GetConnection(const size_t index = 0) override;
+        virtual const Pin* GetConnection(const size_t index = 0) const override;
+        /**@}*/
+
+        /**
+        * @brief Get all connections, wrapped in a vector.
+        */
+        /**@{*/
+        virtual std::vector<Pin*> GetConnections() override;
+        virtual std::vector<const Pin*> GetConnections() const override;
+        /**@}*/
+
+    protected:
+
+        virtual void ConnectInternal(Pin& target) override;
+        virtual void DisconnectInternal(Pin& target) override;
+
+    private:
+
+        OutputPin(const OutputPin&) = delete;
+        OutputPin(OutputPin&&) = delete;
+
+        std::vector<Pin*> m_connections;
+
+        friend class Node;
+
+    };
 
 }
 

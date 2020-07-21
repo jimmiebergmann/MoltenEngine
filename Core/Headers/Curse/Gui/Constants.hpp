@@ -29,27 +29,17 @@
 #include "Curse/Math/Vector.hpp"
 #include <limits>
 
-namespace Curse
+namespace Curse::Gui::Constants
 {
 
-    namespace Gui
-    {
+    constexpr size_t AnyCount = std::numeric_limits<size_t>::max();
 
-        namespace Constants
-        {
+    constexpr Vector2f32 MaxSize = {
+        std::numeric_limits<Vector2f32::Type>::max(),
+        std::numeric_limits<Vector2f32::Type>::max()
+    };
 
-            constexpr size_t AnyCount = std::numeric_limits<size_t>::max();
-
-            constexpr Vector2f32 MaxSize = {
-                std::numeric_limits<Vector2f32::Type>::max(),
-                std::numeric_limits<Vector2f32::Type>::max()
-            };
-
-            constexpr Vector2f32 MinSize = { 0.0f, 0.0f };
-
-        }
-
-    }
+    constexpr Vector2f32 MinSize = { 0.0f, 0.0f };
 
 }
 

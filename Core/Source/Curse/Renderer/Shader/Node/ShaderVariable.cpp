@@ -23,49 +23,30 @@
 *
 */
 
-#ifndef CURSE_CORE_GUI_SYSTEMS_MOUSEWIDGETSYSTEM_HPP
-#define CURSE_CORE_GUI_SYSTEMS_MOUSEWIDGETSYSTEM_HPP
+#include "Curse/Renderer/Shader/Node/ShaderVariable.hpp"
 
-#include "Curse/Gui/WidgetSystem.hpp"
-#include "Curse/Gui/Widget.hpp"
-#include "Curse/Gui/Behaviors/MouseListenerWidget.hpp"
-#include "Curse/Logger.hpp"
-
-namespace Curse::Gui
+namespace Curse::Shader
 {
 
-    class CURSE_API MouseSystem : public WidgetSystem<MouseSystem, MouseListener>
+    // Variable base implementations.
+    VariableBase::VariableBase(Script& script) :
+        Node(script)
+    {}
+
+    NodeType VariableBase::GetType() const
     {
+        return NodeType::Variable;
+    }
 
-    public:
+    // Input variable base implementations.
+    InputVariableBase::InputVariableBase(Script& script) :
+        VariableBase(script)
+    {}
 
-        MouseSystem(Logger& logger) :
-            m_logger(logger)
-        { }
 
-        void OnRegister() override
-        {
-            m_logger.Write(Logger::Severity::Info, "Creating mouse system, number of widgets: " + std::to_string(GetEntityCount()));
-
-        }
-
-        void OnCreateEntity(WidgetEntity entity) override
-        {
-            m_logger.Write(Logger::Severity::Info, "Added widget to mouse system, number of widgets: " + std::to_string(GetEntityCount()));
-        }
-
-        void OnDestroyEntity(WidgetEntity entity) override
-        {
-        }
-
-        void Process(const Time& deltaTime) override
-        {
-        }
-
-        Logger& m_logger;
-
-    };
+    // Output variable base implementations.
+    OutputVariableBase::OutputVariableBase(Script& script) :
+        VariableBase(script)
+    {}
 
 }
-
-#endif

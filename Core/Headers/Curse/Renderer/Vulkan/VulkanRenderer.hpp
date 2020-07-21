@@ -212,6 +212,11 @@ namespace Curse
         virtual void DrawVertexBuffer(IndexBuffer* indexBuffer, VertexBuffer* vertexBuffer) override;
 
         /**
+        * @brie Push constant values to shader stage.
+        */
+        virtual void PushShaderConstants(Shader::Type stage, const uint32_t offset, const uint32_t size, const void* data) override;
+
+        /**
         * @brief Finalize and present rendering.
         */
         virtual void EndDraw() override;
@@ -293,7 +298,9 @@ namespace Curse
         bool FindPhysicalDeviceMemoryType(uint32_t& index, const uint32_t filter, const VkMemoryPropertyFlags properties);
         bool CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& memory);
         void CopyBuffer(VkBuffer source, VkBuffer destination, VkDeviceSize size);
-        bool CreateVertexInputAttributes(const Shader::InputBlock& inputBlock, std::vector<VkVertexInputAttributeDescription>& attributes, uint32_t& stride);
+        bool CreateVertexInputAttributes(const Shader::InputStructure& inputs, std::vector<VkVertexInputAttributeDescription>& attributes, uint32_t& stride);
+        bool CreateDescriptorSetLayouts(const Shader::VertexScript& vertexScript, const Shader::FragmentScript& fragmentScript, std::vector<VkDescriptorSetLayout>& setLayouts);
+        bool CreatePushConstants(const Shader::VertexScript& vertexScript, const Shader::FragmentScript& fragmentScript, std::vector<VkPushConstantRange>& pushConstants);
 
         Logger* m_logger;
         Version m_version;
@@ -328,7 +335,8 @@ namespace Curse
         bool m_beginDraw;
         uint32_t m_currentImageIndex;
         VkCommandBuffer* m_currentCommandBuffer;
-        VkFramebuffer* m_currentFramebuffer;
+        VkFramebuffer m_currentFramebuffer;
+        VkPipelineLayout m_currentPipelineLayout;
         
         
     };

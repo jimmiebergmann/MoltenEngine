@@ -23,53 +23,70 @@
 *
 */
 
-#ifndef CURSE_CORE_GUI_RENDEROBJECT_HPP
-#define CURSE_CORE_GUI_RENDEROBJECT_HPP
+#ifndef CURSE_CORE_GUI_GUIRENDERER_HPP
+#define CURSE_CORE_GUI_GUIRENDERER_HPP
 
 #include "Curse/Math/Vector.hpp"
-#include <memory>
+#include "Curse/Math/Matrix.hpp"
 
-/*namespace Curse
+namespace Curse
 {
     class Renderer;
+    class Pipeline;  
     class VertexBuffer;
     class IndexBuffer;
-}*/
+}
+
+namespace Curse::Shader
+{
+    class VertexScript;
+    class FragmentScript;
+    class VertexStage;
+    class FragmentStage;
+}
 
 namespace Curse::Gui
 {
-        
-    class Renderer;
 
-    class CURSE_API RenderObject
+    class CURSE_API Renderer
     {
 
     public:
 
-        RenderObject(Renderer* renderer);
+        Renderer();
+        ~Renderer();
 
-        ~RenderObject();
+        void Open(Curse::Renderer* backendRenderer);
+        void Close();
 
-        void Draw();
-
-        void AddRect(const Vector2f32& localPosition, const Vector2f32& size);
-
-        const Vector2f32& GetPosition() const;
-        void SetPosition(const Vector2f32& position);
+        void DrawRect(const Vector2f32& position, const Vector2f32& size, const Vector4f32& color);
 
     private:
 
-        /*struct Object
+        Renderer(const Renderer&) = delete;
+        Renderer(Renderer&&) = delete;
+        Renderer& operator =(const Renderer&) = delete;
+        Renderer& operator =(Renderer&&) = delete;
+
+        struct RenderInstance
         {
+            RenderInstance();
+
+            Pipeline* pipeline;
             VertexBuffer* vertexBuffer;
             IndexBuffer* indexBuffer;
-            Vector2f32 position;
-            Vector2f32 size;
-        };*/
+            Shader::VertexScript* vertexScript;
+            Shader::FragmentScript* fragmentScript;
+            Shader::VertexStage* vertexStage;
+            Shader::FragmentStage* fragmentStage;
+        };
 
-        Renderer* m_renderer;
-        Vector2f32 m_position;
-        std::vector<std::pair<Vector2f32, Vector2f32>> m_objects;
+        void LoadRectRenderInstance();
+        void DestroyRenderInstance(RenderInstance& instance);
+
+        Curse::Renderer* m_backendRenderer;
+        Matrix4x4f32 m_projection;
+        RenderInstance m_rect;
 
     };
 

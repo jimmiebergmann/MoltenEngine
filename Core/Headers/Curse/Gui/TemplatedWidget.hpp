@@ -28,39 +28,35 @@
 
 #include "Curse/Gui/Widget.hpp"
 
-namespace Curse
+namespace Curse::Gui
 {
 
-    namespace Gui
+    class Canvas;
+    class Widget;
+    template<typename TemplateType> class TemplatedWidget;
+    template<typename TemplateType> using TemplatedWidgetPointer = std::shared_ptr<TemplatedWidget<TemplateType>>;
+
+    template<typename TemplateType>
+    class TemplatedWidget : public Widget, public TemplateType
     {
-        class Canvas;
-        class Widget;
-        template<typename Template> class TemplatedWidget;
-        template<typename Template> using TemplatedWidgetPointer = std::shared_ptr<TemplatedWidget<Template>>;
 
-        template<typename Template>
-        class TemplatedWidget : public Widget, public Template
-        {
+    private:
 
-        private:
+        template<typename ... ConstructorArgs>
+        TemplatedWidget(
+            WidgetEntity entity,
+            const WidgetDescriptor& descriptor,
+            std::unique_ptr<RenderObject> renderObject,
+            ConstructorArgs ... constructorArgs);
 
-            template<typename ... ConstructorArgs>
-            TemplatedWidget(
-                WidgetEntity entity,
-                const WidgetDescriptor& descriptor,
-                std::unique_ptr<RenderObject> renderObject,
-                ConstructorArgs ... constructorArgs);
+        TemplatedWidget(const TemplatedWidget&) = delete;
+        TemplatedWidget(TemplatedWidget&&) = delete;
+        TemplatedWidget& operator = (const TemplatedWidget&) = delete;
+        TemplatedWidget& operator = (TemplatedWidget&&) = delete;
 
-            TemplatedWidget(const TemplatedWidget&) = delete;
-            TemplatedWidget(TemplatedWidget&&) = delete;
-            TemplatedWidget& operator = (const TemplatedWidget&) = delete;
-            TemplatedWidget& operator = (TemplatedWidget&&) = delete;
+        friend class Canvas;
 
-            friend class Canvas;
-
-        };
-
-    }
+    };
 
 }
 

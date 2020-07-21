@@ -81,17 +81,22 @@ namespace Curse
         protected:
 
             SystemBase();
+            virtual ~SystemBase();
 
+            ContextType* m_context;
             size_t m_entityCount;
             Private::ComponentGroup<ContextType>* m_componentGroup;
+            
 
         private:
 
-            void InternalOnRegister(Private::ComponentGroup<ContextType>* componentGroup);
+            void InternalOnRegister(ContextType* context, Private::ComponentGroup<ContextType>* componentGroup);
+            void InternalOnUnregister();
             void InternalOnCreateEntity(Entity<ContextType> entity);
             void InternalOnDestroyEntity(Entity<ContextType> entity);
 
             template<typename DerivedContext> friend class Context; ///< Friend class.
+            
         };
 
 
@@ -111,6 +116,11 @@ namespace Curse
         public:
 
             static inline const Signature signature = CreateSignature<RequiredComponents...>();
+
+            /**
+            * @brief Destriuctor.
+            */
+            ~System();
 
             /**
             * @brief Get component by entity index.

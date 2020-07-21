@@ -23,24 +23,19 @@
 *
 */
 
-namespace Curse
+namespace Curse::Gui
 {
 
-    namespace Gui
-    {
-
-        template<typename Template>
-        template<typename ... ConstructorArgs>
-        TemplatedWidget<Template>::TemplatedWidget(
-            WidgetEntity entity,
-            const WidgetDescriptor& descriptor,
-            std::unique_ptr<RenderObject> renderObject,
-            ConstructorArgs ... constructorArgs)
-        :
-            Widget(entity, descriptor, std::move(renderObject)),
-            Template(constructorArgs...)
-        { }
-
-    }
+    template<typename TemplateType>
+    template<typename ... ConstructorArgs>
+    TemplatedWidget<TemplateType>::TemplatedWidget(
+        WidgetEntity entity,
+        const WidgetDescriptor& descriptor,
+        std::unique_ptr<RenderObject> renderObject,
+        ConstructorArgs ... constructorArgs)
+    :
+        Widget(entity, descriptor, std::move(renderObject)),
+        TemplateType(constructorArgs...)
+    { }
 
 }

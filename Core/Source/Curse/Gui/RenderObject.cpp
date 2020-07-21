@@ -24,29 +24,40 @@
 */
 
 #include "Curse/Gui/RenderObject.hpp"
-#include "Curse/Renderer/Renderer.hpp"
+#include "Curse/Gui/GuiRenderer.hpp"
 
-namespace Curse
+namespace Curse::Gui
 {
 
-    namespace Gui
+    RenderObject::RenderObject(Renderer * renderer) :
+        m_renderer(renderer)
+    { }
+
+    RenderObject::~RenderObject()
     {
+    }
 
-        RenderObject::RenderObject(Renderer * renderer) :
-            m_renderer(renderer)
-        { }
-
-
-        const Vector2f32& RenderObject::GetPosition() const
+    void RenderObject::Draw()
+    {
+        for (auto& object : m_objects)
         {
-            return m_position;
+            m_renderer->DrawRect(object.first, object.second, Vector4f32(1.0f, 0.0f, 0.0f, 1.0f));
         }
+    }
 
-        void RenderObject::SetPosition(const Vector2f32& position)
-        {
-            m_position = position;
-        }
+    void RenderObject::AddRect(const Vector2f32& localPosition, const Vector2f32& size)
+    {
+        m_objects.push_back({ localPosition , size});
+    }
 
+    const Vector2f32& RenderObject::GetPosition() const
+    {
+        return m_position;
+    }
+
+    void RenderObject::SetPosition(const Vector2f32& position)
+    {
+        m_position = position;
     }
 
 }

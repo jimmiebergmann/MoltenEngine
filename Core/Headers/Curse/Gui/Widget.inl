@@ -23,30 +23,25 @@
 *
 */
 
-namespace Curse
+namespace Curse::Gui
 {
 
-    namespace Gui
+    template<typename ... Components>
+    inline void Widget::AddComponents()
     {
+        m_entity.AddComponents<Components...>();
+    }
 
-        template<typename ... Components>
-        inline void Widget::AddComponents()
-        {
-            m_entity.AddComponents<Components...>();
-        }
+    template<typename ... Components>
+    inline void Widget::RemoveComponents()
+    {
+        m_entity.RemoveComponents<Components...>();
+    }
 
-        template<typename ... Components>
-        inline void Widget::RemoveComponents()
-        {
-            m_entity.RemoveComponents<Components...>();
-        }
-
-        template<typename Component>
-        inline Component* Widget::GetComponent()
-        {
-            return m_entity.GetComponent<Component>();
-        }
-
+    template<typename Component>
+    inline Component* Widget::GetComponent()
+    {
+        return m_entity.GetComponent<Component>();
     }
 
 }

@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2020 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -30,119 +30,117 @@
 #include <memory>
 #include <array>
 
-namespace Curse
+namespace Curse::Shader
 {
 
-    namespace Shader
-    {
-
-        /**
-        * @brief Forward declarations.
-        */
-        class Script;
-        class VertexScript;
-        class FragmentScript;
+    /**
+    * @brief Forward declarations.
+    */
+    class Script;
+    class VertexScript;
+    class FragmentScript;
         
 
+    /**
+    * @brief Enumerator of node types.
+    */
+    enum class NodeType : uint8_t
+    {
+        Constant,       ///< Local constant, only present in fragment shader.
+        Function,       ///< Built-in shader function.
+        //Input,          ///< Input data from previous shader stage, or data from vertex buffer.
+        Operator,       ///< Operator node in local space.
+        //Output,         ///< Output data for next shader stage, or data for framebuffer.
+        PushConstant,   ///< Push constant node, constants set by the client.
+        Uniform,        ///< Uniform node, single object being sent runtime from client.
+        VertexOutput,   ///< Output data of vertex position, being outputted in the vertex shader stage.
+
+        Variable
+    };
+
+
+    /**
+    * @brief shader script node base class.
+    */
+    class CURSE_API Node
+    {
+
+    public:
+
         /**
-        * @brief Enumerator of node types.
+        * @brief Get parent shader script.
         */
-        enum class NodeType : uint8_t
-        {
-            Constant,       ///< Local constant, only present in fragment shader.
-            Function,       ///< Built-in shader function.
-            Input,          ///< Input data from previous shader stage, or data from vertex buffer.
-            Operator,       ///< Operator node in local space.
-            Output,         ///< Output data for next shader stage, or data for framebuffer.
-            Uniform,        ///< Uniform node, single object being sent runtime from client.
-            VertexOutput    ///< Output data of vertex position, being outputted in the vertex shader stage.
-        };
-
+        /**@{*/
+        Script& GetScript();
+        const Script& GetScript() const;
+        /**@}*/
 
         /**
-        * @brief shader script node base class.
+        * @brief Get number of input pins.
         */
-        class CURSE_API Node
-        {
+        virtual size_t GetInputPinCount() const;
 
-        public:
+        /**
+        * @brief Get number of output pins.
+        */
+        virtual size_t GetOutputPinCount() const;
 
-            /**
-            * @brief Get parent shader script.
-            */
-            /**@{*/
-            Script& GetScript();
-            const Script& GetScript() const;
-            /**@}*/
+        /**
+        * @brief Get input pin by index.
+        *
+        * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
+        */
+        /**@{*/
+        virtual Pin* GetInputPin(const size_t index = 0);
+        virtual const Pin* GetInputPin(const size_t index = 0) const;
+        /**@}*/
 
-            /**
-            * @brief Get number of input pins.
-            */
-            virtual size_t GetInputPinCount() const;
+        /**
+        * @brief Get all input pins, wrapped in a vector.
+        */
+        /**@{*/
+        virtual std::vector<Pin*> GetInputPins();
+        virtual std::vector<const Pin*> GetInputPins() const;
+        /**@}*/
 
-            /**
-            * @brief Get number of output pins.
-            */
-            virtual size_t GetOutputPinCount() const;
+        /**
+        * @brief Get output pin by index.
+        *
+        * @return Pointer of output pin at given index, nullptr if index is >= GetOutputPinCount().
+        */
+        /**@{*/
+        virtual Pin* GetOutputPin(const size_t index = 0);
+        virtual const Pin* GetOutputPin(const size_t index = 0) const;
+        /**@}*/
 
-            /**
-            * @brief Get input pin by index.
-            *
-            * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
-            */
-            /**@{*/
-            virtual Pin* GetInputPin(const size_t index = 0);
-            virtual const Pin* GetInputPin(const size_t index = 0) const;
-            /**@}*/
+        /**
+        * @brief Get all output pins, wrapped in a vector.
+        */
+        /**@{*/
+        virtual std::vector<Pin*> GetOutputPins();
+        virtual std::vector<const Pin*> GetOutputPins() const;
+        /**@}*/
 
-            /**
-            * @brief Get all input pins, wrapped in a vector.
-            */
-            /**@{*/
-            virtual std::vector<Pin*> GetInputPins();
-            virtual std::vector<const Pin*> GetInputPins() const;
-            /**@}*/
+        /**
+        * @brief Get type of node.
+        */
+        virtual NodeType GetType() const = 0;
 
-            /**
-            * @brief Get output pin by index.
-            *
-            * @return Pointer of output pin at given index, nullptr if index is >= GetOutputPinCount().
-            */
-            /**@{*/
-            virtual Pin* GetOutputPin(const size_t index = 0);
-            virtual const Pin* GetOutputPin(const size_t index = 0) const;
-            /**@}*/
+    protected:
 
-            /**
-            * @brief Get all output pins, wrapped in a vector.
-            */
-            /**@{*/
-            virtual std::vector<Pin*> GetOutputPins();
-            virtual std::vector<const Pin*> GetOutputPins() const;
-            /**@}*/
+        Node(Script& script);
+        Node(const Node&) = delete;
+        Node(Node&&) = delete;
+        virtual ~Node();
 
-            /**
-            * @brief Get type of node.
-            */
-            virtual NodeType GetType() const = 0;
+    private:
 
-        protected:
+        Script& m_script; ///< Parent shader script.
 
-            Node(Script& script);
-            Node(const Node&) = delete;
-            Node(Node&&) = delete;
-            virtual ~Node();
+        friend class VertexScript;
+        friend class FragmentScript;
 
-        private:
-
-            Script& m_script; ///< Parent shader script.
-
-            friend class VertexScript;
-            friend class FragmentScript;
-
-        }; 
-
-    }
+    };
 
 }
 

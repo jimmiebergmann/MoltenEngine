@@ -28,37 +28,53 @@
 
 #include "Curse/Gui/WidgetTemplate.hpp"
 
-namespace Curse
+namespace Curse::Gui
 {
 
-    namespace Gui
+    struct Padding
+    {
+        Padding(
+            const float left = 0.0f,
+            const float right = 0.0f,
+            const float top = 0.0f,
+            const float bottom = 0.0f)
+            :
+            left(left), right(right), top(top), bottom(bottom)
+        { }
+
+        float left;
+        float right;
+        float top;
+        float bottom;
+    };
+
+}
+
+namespace Curse::Gui::Template
+{
+
+    template<>
+    inline const WidgetDescriptor Descriptor<Padding> =
+    {
+        1, // maxChildCount
+        Vector2f32(), // maxSize
+        Vector2f32(), // minSize
+        (uint32_t)WidgetFlags::FitParent // flags
+    };
+
+    template<>
+    inline const auto CalculateWidgetSize<Padding> =
+        [](TemplatedWidget<Padding>& /*padding*/, const Vector2f32& /*grantedSize*/)
     {
 
-        struct Padding
-        {
-            float left;
-            float right;
-            float top;
-            float bottom;
-        };
+    };
 
-        template<>
-        static inline const WidgetDescriptor WidgetDescriptorTemplate<Padding> =
-        {
-            1, // maxChildCount
-            Vector2f32(), // maxSize
-            Vector2f32(), // minSize
-            (WidgetFlagsType)WidgetFlags::FitChildren |
-            (WidgetFlagsType)WidgetFlags::FitParent // flags
-        };
-
-        template<>
-        static inline const auto RenderObjectTemplate<Padding> = [](RenderObject& renderObject)
-        {
-
-        };
-
-    }
+    template<>
+    inline const auto LoadRenderObject<Padding> =
+        [](RenderObject& renderObject)
+    {
+        renderObject.AddRect({ 300.0f, 300.0f }, { 100.0f, 100.0f });
+    };
 
 }
 

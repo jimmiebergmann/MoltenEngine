@@ -28,26 +28,15 @@
 
 #include "Curse/Ecs/EcsContext.hpp"
 
-namespace Curse
+namespace Curse::Gui::Private
 {
-
-    namespace Gui
+     
+    struct CURSE_API Context : Ecs::Context<Context>
     {
-
-        namespace Private
-        {
-         
-            struct CURSE_API Context : Ecs::Context<Context>
-            {
-                Context(const Curse::Ecs::ContextDescriptor & descriptor) :
-                    Ecs::Context<Context>(descriptor)
-                {}
-            };
-
-        }
-
-
-    }
+        Context(const Curse::Ecs::ContextDescriptor & descriptor) :
+            Ecs::Context<Context>(descriptor)
+        {}
+    };
 
 }
 

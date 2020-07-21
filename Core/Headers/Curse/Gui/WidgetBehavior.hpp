@@ -29,16 +29,11 @@
 #include "Curse/Ecs/EcsComponent.hpp"
 #include "Curse/Gui/Context.hpp"
 
-namespace Curse
+namespace Curse::Gui
 {
 
-    namespace Gui
-    {
-
-        template<typename DerivedBehavior>
-        using WidgetBehavior = Ecs::Component<Ecs::Context<Private::Context>, DerivedBehavior>;
-
-    }
+    template<typename DerivedBehavior>
+    using WidgetBehavior = Ecs::Component<Ecs::Context<Private::Context>, DerivedBehavior>;
 
 }
 

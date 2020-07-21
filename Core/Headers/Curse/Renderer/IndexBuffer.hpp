@@ -57,7 +57,7 @@ namespace Curse
 
         Resource resource;
         size_t indexCount;
-        IndexBuffer::DataType dataType;
+        DataType dataType;
 
     };
 

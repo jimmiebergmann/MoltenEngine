@@ -31,22 +31,17 @@
 #include "Curse/System/UserInput.hpp"
 #include <functional>
 
-namespace Curse
+namespace Curse::Gui
 {
 
-    namespace Gui
+    struct CURSE_API KeyboardListener : WidgetBehavior<KeyboardListener>
     {
 
-        struct CURSE_API KeyboardListener : WidgetBehavior<KeyboardListener>
-        {
+        using OnPressFunction = std::function<void(const Keyboard::Key)>;
 
-            using OnPressFunction = std::function<void(const Keyboard::Key)>;
+        OnPressFunction OnPress;
 
-            OnPressFunction OnPress;
-
-        };
-
-    }
+    };
 
 }
 

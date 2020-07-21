@@ -28,39 +28,34 @@
 
 #include "Curse/Gui/WidgetBehavior.hpp"
 
-namespace Curse
+namespace Curse::Gui
 {
 
-    namespace Gui
+    class Widget;
+
+    struct CURSE_API BaseWidget : WidgetBehavior<BaseWidget>
     {
-
-        class Widget;
-
-        struct CURSE_API BaseWidget : WidgetBehavior<BaseWidget>
-        {
            
-            /*BaseWidget() = default;
-            BaseWidget(const size_t maxChildCount,
-                       const Vector2f32& maxSize = Constants::MaxSize,
-                       const Vector2f32& minSize = Constants::MinSize) :
-                maxChildCount(maxChildCount),
-                maxSize(maxSize),
-                minSize(minSize)
-            { }
+        /*BaseWidget() = default;
+        BaseWidget(const size_t maxChildCount,
+                    const Vector2f32& maxSize = Constants::MaxSize,
+                    const Vector2f32& minSize = Constants::MinSize) :
+            maxChildCount(maxChildCount),
+            maxSize(maxSize),
+            minSize(minSize)
+        { }
 
-            size_t maxChildCount;
-            Vector2f32 maxSize;
-            Vector2f32 minSize;*/
+        size_t maxChildCount;
+        Vector2f32 maxSize;
+        Vector2f32 minSize;*/
 
-            std::weak_ptr<Widget> widget;
+        std::weak_ptr<Widget> widget;
             
             
-            //Vector2f32 size;
-            //std::unique_ptr<RenderObject> renderObject;
+        //Vector2f32 size;
+        //std::unique_ptr<RenderObject> renderObject;
 
-        };
-
-    }
+    };
 
 }
 

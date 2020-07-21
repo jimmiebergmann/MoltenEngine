@@ -23,42 +23,37 @@
 *
 */
 
-namespace Curse
+namespace Curse::Gui
 {
 
-    namespace Gui
+    template<typename System>
+    inline void Canvas::RegisterSystem(System& system)
     {
+        m_context->RegisterSystem(system);
+    }
 
-        template<typename System>
-        inline void Canvas::RegisterSystem(System& system)
+    template<typename TemplateType, typename ... Behaviors, typename ... ConstructorArgs>
+    inline TemplatedWidgetPointer<TemplateType> Canvas::Add(WidgetPointer parent, ConstructorArgs ... args)
+    {
+        if (!parent || !parent->AllowsMoreChildren())
         {
-            m_context->RegisterSystem(system);
+            return nullptr;
         }
 
-        template<typename Template, typename ... Behaviors, typename ... ConstructorArgs>
-        inline TemplatedWidgetPointer<Template> Canvas::Add(WidgetPointer parent, ConstructorArgs ... args)
-        {
-            if (!parent || !parent->AllowsMoreChildren())
-            {
-                return nullptr;
-            }
+        auto widgetEntity = m_context->CreateEntity<BaseWidget, Behaviors...>();
+        auto renderObject = std::make_unique<RenderObject>(m_renderer);
+        Template::LoadRenderObject<TemplateType>(*renderObject);
+        auto widgetPointer = new TemplatedWidget<TemplateType>(
+            widgetEntity,
+            Template::Descriptor<TemplateType>,
+            std::move(renderObject),
+            args...);
+        auto widget = TemplatedWidgetPointer<TemplateType>(widgetPointer);
+        widgetEntity.GetComponent<BaseWidget>()->widget = widget;
 
-            auto widgetEntity = m_context->CreateEntity<BaseWidget, Behaviors...>();
-            auto renderObject = std::make_unique<RenderObject>(m_renderer);
-            RenderObjectTemplate<Template>(*renderObject);
-            auto widgetPointer = new TemplatedWidget<Template>(
-                widgetEntity,
-                WidgetDescriptorTemplate<Template>,
-                std::move(renderObject),
-                args...);
-            auto widget = TemplatedWidgetPointer<Template>(widgetPointer);
-            widgetEntity.GetComponent<BaseWidget>()->widget = widget;
-
-            parent->m_children.push_back(widget);
-            widget->m_parent = parent;
-            return widget;
-        }
-
+        parent->m_children.push_back(widget);
+        widget->m_parent = parent;
+        return widget;
     }
 
 }

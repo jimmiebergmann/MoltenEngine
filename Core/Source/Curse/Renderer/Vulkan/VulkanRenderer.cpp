@@ -47,6 +47,7 @@
 #include <algorithm>
 #include <limits>
 #include <memory>
+#include <array>
 
 #define CURSE_RENDERER_LOG(severity, message) if(m_logger){ m_logger->Write(severity, message); }
 
@@ -167,6 +168,13 @@ namespace Curse
                 formatSize = 16;
                 return true;
             }
+            case Shader::VariableDataType::Matrix4x4f32:
+            {
+                vulkanFormat = VkFormat::VK_FORMAT_R32G32B32A32_SFLOAT;
+                formatSize = 64;
+                return true;
+            }
+
             default: break;
         }
         return false;
@@ -253,7 +261,8 @@ namespace Curse
         m_beginDraw(false),
         m_currentImageIndex(0),
         m_currentCommandBuffer(nullptr),
-        m_currentFramebuffer(nullptr)
+        m_currentFramebuffer(VK_NULL_HANDLE),
+        m_currentPipelineLayout(VK_NULL_HANDLE)
     {
     }
 
@@ -357,7 +366,8 @@ namespace Curse
         m_resized = false;
         m_beginDraw = false;    
         m_currentCommandBuffer = nullptr;
-        m_currentFramebuffer = nullptr;
+        m_currentFramebuffer = VK_NULL_HANDLE;
+        m_currentPipelineLayout = VK_NULL_HANDLE;
     }
 
     void VulkanRenderer::Resize(const Vector2ui32& size)
@@ -493,25 +503,19 @@ namespace Curse
 
         auto& vertexScript = vulkanVertexShaderStage->script;
         auto& fragmentScript = vulkanFragmentShaderStage->script;
-        const Shader::Script* shaderScripts[2] =
-        {
-            static_cast<const Shader::Script*>(&vertexScript),
-            static_cast<const Shader::Script*>(&fragmentScript)
-        };
-
-        auto& vertexOutputBlock = vertexScript.GetOutputBlock();
-        auto& fragmentInputBlock = fragmentScript.GetInputBlock();
+        auto& vertexOutputs = vertexScript.GetOutputInterface();
+        auto& fragmentInputs = fragmentScript.GetInputInterface();
         
-        if (!fragmentInputBlock.CheckCompability(vertexOutputBlock))
+        if (!vertexOutputs.CheckCompability(fragmentInputs))
         {
-            CURSE_RENDERER_LOG(Logger::Severity::Error, "Vertex output block is not compatible with fragment input block.");
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Vertex output structure is not compatible with fragment input structure.");
             return nullptr;
         }
 
-        auto& vertexInputBlock = vertexScript.GetInputBlock();
+        auto& vertexInputs = vertexScript.GetInputInterface();
         std::vector<VkVertexInputAttributeDescription> vertexInputAttributes;
         uint32_t vertexBindingStride = 0;       
-        if (!CreateVertexInputAttributes(vertexInputBlock, vertexInputAttributes, vertexBindingStride))
+        if (!CreateVertexInputAttributes(vertexInputs, vertexInputAttributes, vertexBindingStride))
         {
             return nullptr;
         }
@@ -597,67 +601,24 @@ namespace Curse
         dynamicStateInfo.dynamicStateCount = 2;
         dynamicStateInfo.flags = 0;
 
-        std::map<uint32_t, VkShaderStageFlags> uniformShaderStageFlags;
-        uint32_t highestSetId = 0;
-        for (auto script : shaderScripts)
+        std::vector<VkDescriptorSetLayout> setLayouts;
+        if (!CreateDescriptorSetLayouts(vertexScript, fragmentScript, setLayouts))
         {
-            auto uniformBlocks = script->GetUniformBlocks();
-
-            for (auto uniformBlock : uniformBlocks)
-            {
-                uint32_t setId = uniformBlock->GetId();
-                highestSetId = setId > highestSetId ? setId : highestSetId;
-
-                auto it = uniformShaderStageFlags.find(setId);
-                if (it != uniformShaderStageFlags.end())
-                {
-                    it->second |= GetShaderProgramStageFlag(script->GetType());
-                    continue;
-                }
-
-                uniformShaderStageFlags.insert({ setId , GetShaderProgramStageFlag(script->GetType()) });
-            }
-        }
-
-        if (highestSetId > static_cast<uint32_t>(uniformShaderStageFlags.size()))
-        {
-            CURSE_RENDERER_LOG(Logger::Severity::Error, "Uniform block id is out of bound, expected " + std::to_string(uniformShaderStageFlags.size() - 1) + " to be the highest.");
             return nullptr;
         }
 
-        std::vector<VkDescriptorSetLayout> setLayouts;
-        for (auto& pair : uniformShaderStageFlags)
+        /*std::vector<VkPushConstantRange> pushConstants;
+        if (!CreatePushConstants(vertexScript, fragmentScript, pushConstants))
         {
-            auto stageFlags = pair.second;
-
-            VkDescriptorSetLayoutBinding binding; 
-            binding.binding = 0;
-            binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-            binding.descriptorCount = 1;
-            binding.stageFlags = stageFlags;
-            binding.pImmutableSamplers = nullptr;
-            
-            VkDescriptorSetLayoutCreateInfo descriptorSetLayoutInfo = {};
-            descriptorSetLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-            descriptorSetLayoutInfo.bindingCount = 1;
-            descriptorSetLayoutInfo.pBindings = &binding;
-
-            VkDescriptorSetLayout descriptorSetLayout;
-            if (vkCreateDescriptorSetLayout(m_logicalDevice, &descriptorSetLayoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS)
-            {
-                CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to create descriptor set layout.");
-                return nullptr;
-            }
-
-            setLayouts.push_back(descriptorSetLayout);
-        }
+            return nullptr;
+        }*/
 
         VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(setLayouts.size());
         pipelineLayoutInfo.pSetLayouts = setLayouts.data();
-        pipelineLayoutInfo.pushConstantRangeCount = 0;
-        pipelineLayoutInfo.pPushConstantRanges = nullptr; 
+        pipelineLayoutInfo.pushConstantRangeCount = 0;//static_cast<uint32_t>(pushConstants.size());
+        pipelineLayoutInfo.pPushConstantRanges = nullptr;//pushConstants.data();
 
         VkPipelineLayout pipelineLayout;
         if (vkCreatePipelineLayout(m_logicalDevice, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
@@ -1021,6 +982,7 @@ namespace Curse
     {
         VulkanPipeline* vulkanPipeline = static_cast<VulkanPipeline*>(pipeline);
         vkCmdBindPipeline(*m_currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkanPipeline->graphicsPipeline);
+        m_currentPipelineLayout = vulkanPipeline->pipelineLayout;
     }
 
     void VulkanRenderer::BindUniformBlock(UniformBlock* uniformBlock, const uint32_t offset)
@@ -1071,7 +1033,7 @@ namespace Curse
         }
 
         m_currentCommandBuffer = &m_commandBuffers[m_currentImageIndex];
-        m_currentFramebuffer = &m_presentFramebuffers[m_currentImageIndex]->resource;
+        m_currentFramebuffer = m_presentFramebuffers[m_currentImageIndex]->resource;
 
         VkCommandBufferBeginInfo commandBufferBeginInfo = {};
         commandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -1087,7 +1049,7 @@ namespace Curse
         VkRenderPassBeginInfo renderPassBeginInfo = {};
         renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
         renderPassBeginInfo.renderPass = m_renderPass;
-        renderPassBeginInfo.framebuffer = *m_currentFramebuffer;
+        renderPassBeginInfo.framebuffer = m_currentFramebuffer;
         renderPassBeginInfo.renderArea.offset = { 0, 0 };
         renderPassBeginInfo.renderArea.extent = m_swapChainExtent;
 
@@ -1136,6 +1098,13 @@ namespace Curse
         vkCmdBindVertexBuffers(*m_currentCommandBuffer, 0, 1, vertexBuffers, offsets);
         vkCmdBindIndexBuffer(*m_currentCommandBuffer, vulkanIndexBuffer->resource, 0, GetIndexBufferDataType(vulkanIndexBuffer->dataType));
         vkCmdDrawIndexed(*m_currentCommandBuffer, static_cast<uint32_t>(vulkanIndexBuffer->indexCount), 1, 0, 0, 0);
+    }
+
+    void VulkanRenderer::PushShaderConstants(Shader::Type stage, const uint32_t offset, const uint32_t size, const void* data)
+    {
+        VkShaderStageFlags flags = stage == Shader::Type::Fragment ? VK_SHADER_STAGE_FRAGMENT_BIT : VK_SHADER_STAGE_VERTEX_BIT;
+
+        vkCmdPushConstants(*m_currentCommandBuffer, m_currentPipelineLayout, flags, offset, size, data);
     }
 
     void VulkanRenderer::EndDraw()
@@ -2128,13 +2097,13 @@ namespace Curse
         vkFreeCommandBuffers(m_logicalDevice, m_commandPool, 1, &commandBuffer);
     }
 
-    bool VulkanRenderer::CreateVertexInputAttributes(const Shader::InputBlock& inputBlock, std::vector<VkVertexInputAttributeDescription>& attributes, uint32_t& stride)
+    bool VulkanRenderer::CreateVertexInputAttributes(const Shader::InputStructure& inputs, std::vector<VkVertexInputAttributeDescription>& attributes, uint32_t& stride)
     {
-        attributes.resize(inputBlock.GetOutputPinCount());
+        attributes.resize(inputs.GetMemberCount());
         size_t index = 0;
         uint32_t location = 0;
 
-        for (auto* inputNode : inputBlock.GetNodes())
+        for (auto* inputNode : inputs.GetMembers())
         {
             for (auto* outputPin : inputNode->GetOutputPins())
             {
@@ -2156,6 +2125,111 @@ namespace Curse
                 stride += formatSize;
             }
         }
+        return true;
+    }
+
+    bool VulkanRenderer::CreateDescriptorSetLayouts(const Shader::VertexScript& vertexScript, const Shader::FragmentScript& fragmentScript, std::vector<VkDescriptorSetLayout>& setLayouts)
+    {
+        std::array<const Shader::Script*, 2> shaderScripts = { &vertexScript, &fragmentScript };
+
+        std::map<uint32_t, VkShaderStageFlags> uniformShaderStageFlags;
+        uint32_t highestSetId = 0;
+        for (auto script : shaderScripts)
+        {
+            auto uniformBlocks = script->GetUniformBlocks();
+
+            for (auto uniformBlock : uniformBlocks)
+            {
+                uint32_t setId = uniformBlock->GetId();
+                highestSetId = setId > highestSetId ? setId : highestSetId;
+
+                auto it = uniformShaderStageFlags.find(setId);
+                if (it != uniformShaderStageFlags.end())
+                {
+                    it->second |= GetShaderProgramStageFlag(script->GetType());
+                    continue;
+                }
+
+                uniformShaderStageFlags.insert({ setId , GetShaderProgramStageFlag(script->GetType()) });
+            }
+        }
+
+        if (highestSetId > static_cast<uint32_t>(uniformShaderStageFlags.size()))
+        {
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Uniform block id is out of bound, expected " + std::to_string(uniformShaderStageFlags.size() - 1) + " to be the highest.");
+            return nullptr;
+        }
+
+        setLayouts.clear();
+        for (auto& pair : uniformShaderStageFlags)
+        {
+            auto stageFlags = pair.second;
+
+            VkDescriptorSetLayoutBinding binding;
+            binding.binding = 0;
+            binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+            binding.descriptorCount = 1;
+            binding.stageFlags = stageFlags;
+            binding.pImmutableSamplers = nullptr;
+
+            VkDescriptorSetLayoutCreateInfo descriptorSetLayoutInfo = {};
+            descriptorSetLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+            descriptorSetLayoutInfo.bindingCount = 1;
+            descriptorSetLayoutInfo.pBindings = &binding;
+
+            VkDescriptorSetLayout descriptorSetLayout;
+            if (vkCreateDescriptorSetLayout(m_logicalDevice, &descriptorSetLayoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS)
+            {
+                CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to create descriptor set layout.");
+                return false;
+            }
+
+            setLayouts.push_back(descriptorSetLayout);
+        }
+        return true;
+    }
+
+    bool VulkanRenderer::CreatePushConstants(
+        const Shader::VertexScript& vertexScript, 
+        const Shader::FragmentScript& fragmentScript, 
+        std::vector<VkPushConstantRange>& pushConstants)
+    {
+        pushConstants.clear();
+
+        std::array<const Shader::Script*, 2> shaderScripts = { &vertexScript, &fragmentScript };
+        for (auto script : shaderScripts)
+        {
+            auto scriptStage = GetShaderProgramStageFlag(script->GetType());
+
+            uint32_t offset = 0;
+            auto& pushConstantBlock = script->GetPushConstantInterface();
+
+            for (auto* member : pushConstantBlock.GetMembers())
+            {
+                for (auto* outputPin : member->GetOutputPins())
+                {
+                    VkFormat format;
+                    uint32_t size = 0;
+                    if (!GetVertexAttributeFormatAndSize(outputPin->GetDataType(), format, size))
+                    {
+                        CURSE_RENDERER_LOG(Logger::Severity::Error, "Failed to get vertex attribute format and size for push constant.");
+                        return false;
+                    }
+                    
+                    
+                    pushConstants.push_back({ (VkFlags)scriptStage, offset, size });
+                    offset += size;
+                }
+            }
+
+            /*if (totalSize > 0)
+            {
+                pushConstants.push_back({ (VkFlags)scriptStage, 0, totalSize });
+            }*/
+        }
+
+       
+
         return true;
     }
 

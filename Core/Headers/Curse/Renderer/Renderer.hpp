@@ -219,9 +219,14 @@ namespace Curse
         virtual void DrawVertexBuffer(VertexBuffer* vertexBuffer) = 0;
 
         /**
-        * @brief * @brief Draw indexed vertex buffer, using the current bound pipeline.
+        *  @brief Draw indexed vertex buffer, using the current bound pipeline.
         */
         virtual void DrawVertexBuffer(IndexBuffer* indexBuffer, VertexBuffer* vertexBuffer) = 0;
+
+        /**
+        * @brie Push constant values to shader stage.
+        */
+        virtual void PushShaderConstants(Shader::Type stage, const uint32_t offset, const uint32_t size, const void* data) = 0;
 
         /**
         * @brief Finalize and present rendering.

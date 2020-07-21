@@ -27,32 +27,44 @@
 #define CURSE_CORE_GUI_TEMPLATES_VERTICALGRID_HPP
 
 #include "Curse/Gui/WidgetTemplate.hpp"
+#include "Curse/Gui/Templates/Padding.hpp"
 
-namespace Curse
+namespace Curse::Gui
 {
 
-    namespace Gui
+    struct VerticalGrid
+    {
+        Padding padding;
+        Padding slotPadding;
+    };
+
+}
+
+namespace Curse::Gui::Template
+{
+
+    template<>
+    inline const WidgetDescriptor Descriptor<VerticalGrid> =
+    {
+        Constants::AnyCount, // maxChildCount
+        Vector2f32(), // maxSize
+        Vector2f32(), // minSize
+        (uint32_t)WidgetFlags::FitParent // flags
+    };
+
+    template<>
+    inline const auto CalculateWidgetSize<VerticalGrid> =
+        [](TemplatedWidget<VerticalGrid>& /*verticalGrid*/, const Vector2f32& /*grantedSize*/)
     {
 
-        struct VerticalGrid {};
+    };
 
-        template<>
-        static inline const WidgetDescriptor WidgetDescriptorTemplate<VerticalGrid> =
-        {
-            1, // maxChildCount
-            Vector2f32(), // maxSize
-            Vector2f32(), // minSize
-            (WidgetFlagsType)WidgetFlags::FitChildren |
-            (WidgetFlagsType)WidgetFlags::FitParent // flags
-        };
-
-        template<>
-        static inline const auto RenderObjectTemplate<VerticalGrid> = [](RenderObject& renderObject)
-        {
-
-        };
-
-    }
+    template<>
+    inline const auto LoadRenderObject<VerticalGrid> =
+        [](RenderObject& renderObject)
+    {
+        renderObject.AddRect({ 500.0f, 500.0f }, { 100.0f, 100.0f });
+    };
 
 }
 

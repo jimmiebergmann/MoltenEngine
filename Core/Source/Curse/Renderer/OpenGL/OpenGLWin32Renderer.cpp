@@ -284,6 +284,10 @@ namespace Curse
     {
     }
 
+    void OpenGLWin32Renderer::PushShaderConstants(Shader::Type /*stage*/, const uint32_t /*offset*/, const uint32_t size, const void* /*data*/)
+    {
+    }
+
     void OpenGLWin32Renderer::EndDraw()
     {
     }

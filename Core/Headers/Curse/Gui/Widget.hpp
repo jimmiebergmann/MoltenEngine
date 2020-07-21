@@ -32,72 +32,67 @@
 #include "Curse/Gui/Context.hpp"
 #include <memory>
 
-namespace Curse
+namespace Curse::Gui
 {
+    class Canvas;
+    class Widget;
 
-    namespace Gui
+    using WidgetPointer = std::shared_ptr<Widget>;
+    using WidgetPointerWeak = std::weak_ptr<Widget>;
+    using WidgetEntity = Ecs::Entity<Ecs::Context<Private::Context>>;
+
+    struct CURSE_API WidgetCache
     {
-        class Canvas;
-        class Widget;
+        Vector2f32 assignedSize;
+    };
 
-        using WidgetPointer = std::shared_ptr<Widget>;
-        using WidgetPointerWeak = std::weak_ptr<Widget>;
-        using WidgetEntity = Ecs::Entity<Ecs::Context<Private::Context>>;
+    /*
+        * @breif
+        * @tparam T Widget data type.
+    */
+    class CURSE_API Widget : public WidgetDescriptor
+    {
 
-        struct CURSE_API WidgetCache
-        {
-            Vector2f32 assignedSize;
-        };
+    public:
 
-        /*
-         * @breif
-         * @tparam T Widget data type.
-        */
-        class CURSE_API Widget : public WidgetDescriptor
-        {
+        ~Widget();
 
-        public:
+        template<typename ... Components>
+        void AddComponents();
 
-            ~Widget();
+        template<typename ... Components>
+        void RemoveComponents();
 
-            template<typename ... Components>
-            void AddComponents();
+        template<typename Component>
+        Component* GetComponent();
 
-            template<typename ... Components>
-            void RemoveComponents();
+        bool AllowsMoreChildren();
 
-            template<typename Component>
-            Component* GetComponent();
+        const WidgetCache& GetCache() const;
 
-            bool AllowsMoreChildren();
+    protected:
 
-            const WidgetCache& GetCache() const;
+        Widget(
+            WidgetEntity entity,
+            const WidgetDescriptor& descriptor,
+            std::unique_ptr<RenderObject> renderObject);
 
-        protected:
+    private:
 
-            Widget(
-                WidgetEntity entity,
-                const WidgetDescriptor& descriptor,
-                std::unique_ptr<RenderObject> renderObject);
+        friend class Canvas;
 
-        private:
+        Widget(const Widget&) = delete;
+        Widget(Widget&&) = delete;
+        Widget& operator = (const Widget&) = delete;
+        Widget& operator = (Widget&&) = delete;
 
-            friend class Canvas;
+        WidgetEntity m_entity;
+        std::unique_ptr<RenderObject> m_renderObject;
+        WidgetPointerWeak m_parent;
+        std::vector<WidgetPointer> m_children;
+        WidgetCache m_cache;
 
-            Widget(const Widget&) = delete;
-            Widget(Widget&&) = delete;
-            Widget& operator = (const Widget&) = delete;
-            Widget& operator = (Widget&&) = delete;
-
-            WidgetEntity m_entity;
-            std::unique_ptr<RenderObject> m_renderObject;
-            WidgetPointerWeak m_parent;
-            std::vector<WidgetPointer> m_children;
-            WidgetCache m_cache;
-
-        };
-
-    }
+    };
 
 }
 

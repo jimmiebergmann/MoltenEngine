@@ -36,8 +36,8 @@ namespace Curse
         {
             FragmentScript script;
 
-            auto output = script.GetOutputBlock().AppendNode<Curse::Vector4f32>();
-            auto color = script.GetInputBlock().AppendNode<Curse::Vector4f32>();
+            auto output = script.GetOutputInterface().AddMember<Curse::Vector4f32>();
+            auto color = script.GetInputInterface().AddMember<Curse::Vector4f32>();
             auto mult = script.CreateOperatorNode<Curse::Shader::Operator::MultVec4f32>();
             auto add = script.CreateOperatorNode<Curse::Shader::Operator::AddVec4f32>();
             auto const1 = script.CreateConstantNode<Curse::Vector4f32>({ 0.0f, 0.0f, 0.3f, 0.0f });
@@ -76,7 +76,7 @@ namespace Curse
             // Cos
             {
                 FragmentScript script;
-                auto output = script.GetOutputBlock().AppendNode<Curse::Vector4f32>();
+                auto output = script.GetOutputInterface().AddMember<Curse::Vector4f32>();
                 auto cos = script.CreateFunctionNode<Curse::Shader::Function::CosVec4f32>();
 
                 output->GetInputPin()->Connect(*cos->GetOutputPin());
@@ -104,7 +104,7 @@ namespace Curse
             // Cos
             {
                 FragmentScript script;
-                auto output = script.GetOutputBlock().AppendNode<Curse::Vector4f32>();
+                auto output = script.GetOutputInterface().AddMember<Curse::Vector4f32>();
                 auto const1 = script.CreateConstantNode<Curse::Vector4f32>({ 1.0f, 2.0f, 3.0f, 4.0f });
                 auto cos = script.CreateFunctionNode<Curse::Shader::Function::CosVec4f32>();
 
@@ -129,7 +129,7 @@ namespace Curse
             // Sin
             {
                 FragmentScript script;
-                auto output = script.GetOutputBlock().AppendNode<Curse::Vector3f32>();
+                auto output = script.GetOutputInterface().AddMember<Curse::Vector3f32>();
                 auto const1 = script.CreateConstantNode<Curse::Vector3f32>({ 1.0f, 2.0f, 3.0f });
                 auto cos = script.CreateFunctionNode<Curse::Shader::Function::SinVec3f32>();
 
@@ -154,7 +154,7 @@ namespace Curse
             // Tan
             {
                 FragmentScript script;
-                auto output = script.GetOutputBlock().AppendNode<Curse::Vector2f32>();
+                auto output = script.GetOutputInterface().AddMember<Curse::Vector2f32>();
                 auto const1 = script.CreateConstantNode<Curse::Vector2f32>({ 1.0f, 2.0f });
                 auto cos = script.CreateFunctionNode<Curse::Shader::Function::TanVec2f32>();
 

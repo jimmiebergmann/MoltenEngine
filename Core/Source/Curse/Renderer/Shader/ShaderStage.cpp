@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2020 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -24,33 +24,20 @@
 */
 
 #include "Curse/Renderer/Shader/ShaderStage.hpp"
-#include "Curse/System/Exception.hpp"
-#include "Curse/System/FileSystem.hpp"
 
-namespace Curse
+namespace Curse::Shader
 {
 
-    namespace Shader
+    // Vertex shader stage implementations.
+    Type VertexStage::GetType() const
     {
+        return Type::Vertex;
+    }
 
-        // Stage base class implementations.
-        Stage::~Stage()
-        { }
-
-
-        // Vertex shader stage implementations.
-        Type VertexStage::GetType() const
-        {
-            return Type::Vertex;
-        }
-
-
-        // Fragment shader stage implementations.
-        Type FragmentStage::GetType() const
-        {
-            return Type::Fragment;
-        }
-
+    // Fragment shader stage implementations.
+    Type FragmentStage::GetType() const
+    {
+        return Type::Fragment;
     }
 
 }

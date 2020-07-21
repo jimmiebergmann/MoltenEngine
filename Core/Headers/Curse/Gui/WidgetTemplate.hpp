@@ -27,27 +27,26 @@
 #define CURSE_CORE_GUI_WIDGETTEMPLATE_HPP
 
 
+#include "Curse/Gui/TemplatedWidget.hpp"
 #include "Curse/Gui/Constants.hpp"
 #include "Curse/Gui/WidgetDescriptor.hpp"
 #include "Curse/Gui/RenderObject.hpp"
 #include <functional>
 
-namespace Curse
+namespace Curse::Gui::Template
 {
 
-    namespace Gui
-    {
+    template<typename TemplateType>
+    inline const WidgetDescriptor Descriptor = {};
 
-        template<typename Template>
-        static inline const WidgetDescriptor WidgetDescriptorTemplate = {};
+    template<typename TemplateType>
+    inline const auto CalculateWidgetSize = [](TemplatedWidget<TemplateType>&, const Vector2f32&) {};
 
-        template<typename Template>
-        static inline const auto WidgetDimensionsTemplate = [](Widget&) {};
+    template<typename TemplateType>
+    using CalculateWidgetSizeFunction = decltype(CalculateWidgetSize<TemplateType>);
 
-        template<typename Template>
-        static inline const auto RenderObjectTemplate = [](RenderObject &){};
-
-    }
+    template<typename TemplateType>
+    inline const auto LoadRenderObject = [](RenderObject&) {};
 
 }
 

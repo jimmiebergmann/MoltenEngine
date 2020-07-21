@@ -37,7 +37,7 @@ namespace Curse
         TEST(Shader, InputPin)
         {
             FragmentScript script;
-            Node* nodePtr = script.GetOutputBlock().AppendNode<bool>();
+            Node* nodePtr = script.GetOutputInterface().AddMember<bool>();
             Node& node = *nodePtr;
 
             InputPin<float> pin(node, "test name");
@@ -53,7 +53,7 @@ namespace Curse
         TEST(Shader, InputPin_DefaultValue)
         {
             FragmentScript script;
-            Node* nodePtr = script.GetOutputBlock().AppendNode<bool>();
+            Node* nodePtr = script.GetOutputInterface().AddMember<bool>();
             Node& node = *nodePtr;
 
             InputPin<int32_t> pin(node, 1234, "test name");
@@ -73,7 +73,7 @@ namespace Curse
         TEST(Shader, InputPin_DataType)
         {
             FragmentScript script;
-            Node* nodePtr = script.GetOutputBlock().AppendNode<bool>();
+            Node* nodePtr = script.GetOutputInterface().AddMember<bool>();
             Node& node = *nodePtr;
 
             {
@@ -111,12 +111,14 @@ namespace Curse
         TEST(Shader, InputPin_Connection)
         {
             FragmentScript script;
-            Node* nodePtr = script.GetOutputBlock().AppendNode<bool>();
-            Node& node = *nodePtr;
+            Node* nodePtr1 = script.GetOutputInterface().AddMember<bool>();
+            Node* nodePtr2 = script.GetOutputInterface().AddMember<bool>();
+            Node& node1 = *nodePtr1;
+            Node& node2 = *nodePtr2;
 
             {
-                InputPin<float> pin1(node);
-                InputPin<float> pin2(node);
+                InputPin<float> pin1(node1);
+                InputPin<float> pin2(node2);
 
                 EXPECT_EQ(pin1.GetConnections().size(), size_t(0));
                 EXPECT_EQ(pin2.GetConnections().size(), size_t(0));
@@ -128,8 +130,13 @@ namespace Curse
                 EXPECT_EQ(pin2.GetConnections().size(), size_t(0));
             }
             {
-                InputPin<float> in(node);
-                OutputPin<float> out(node);
+                InputPin<float> in(node1);
+                OutputPin<float> out(node1);
+                EXPECT_FALSE(in.Connect(out));
+            }
+            {
+                InputPin<float> in(node1);
+                OutputPin<float> out(node2);
 
                 const auto& in_const = in;
                 const auto& out_const = out;
@@ -203,9 +210,9 @@ namespace Curse
                 }
             }
             {
-                InputPin<float> in(node);
-                OutputPin<float> outA(node);
-                OutputPin<float> outB(node);
+                InputPin<float> in(node1);
+                OutputPin<float> outA(node2);
+                OutputPin<float> outB(node2);
 
                 EXPECT_TRUE(in.Connect(outA));
                 EXPECT_TRUE(in.Connect(outB));
@@ -226,9 +233,9 @@ namespace Curse
                 EXPECT_EQ(outB.GetConnections().size(), size_t(0));;
             }
             {
-                InputPin<float> in(node);
-                OutputPin<float> outA(node);
-                OutputPin<float> outB(node);
+                InputPin<float> in(node1);
+                OutputPin<float> outA(node2);
+                OutputPin<float> outB(node2);
 
                 EXPECT_TRUE(in.Connect(outA));
 
@@ -255,7 +262,7 @@ namespace Curse
         TEST(Shader, OutputPin)
         {
             FragmentScript script;
-            Node* nodePtr = script.GetOutputBlock().AppendNode<bool>();
+            Node* nodePtr = script.GetOutputInterface().AddMember<bool>();
             Node& node = *nodePtr;
 
             OutputPin<float> pin(node, "test name");
@@ -271,7 +278,7 @@ namespace Curse
         TEST(Shader, OutputPin_DataType)
         {
             FragmentScript script;
-            Node* nodePtr = script.GetOutputBlock().AppendNode<bool>();
+            Node* nodePtr = script.GetOutputInterface().AddMember<bool>();
             Node& node = *nodePtr;
 
             {
@@ -309,12 +316,14 @@ namespace Curse
         TEST(Shader, OutputPin_Connection)
         {
             FragmentScript script;
-            Node* nodePtr = script.GetOutputBlock().AppendNode<bool>();
-            Node& node = *nodePtr;
+            Node* nodePtr1 = script.GetOutputInterface().AddMember<bool>();
+            Node* nodePtr2 = script.GetOutputInterface().AddMember<bool>();
+            Node& node1 = *nodePtr1;
+            Node& node2 = *nodePtr2;
 
             {
-                OutputPin<float> pin1(node);
-                OutputPin<float> pin2(node);
+                OutputPin<float> pin1(node1);
+                OutputPin<float> pin2(node2);
 
                 EXPECT_EQ(pin1.GetConnections().size(), size_t(0));
                 EXPECT_EQ(pin2.GetConnections().size(), size_t(0));
@@ -326,8 +335,8 @@ namespace Curse
                 EXPECT_EQ(pin2.GetConnections().size(), size_t(0));
             }
             {
-                InputPin<float> in(node);
-                OutputPin<float> out(node);
+                InputPin<float> in(node1);
+                OutputPin<float> out(node2);
 
                 const auto& in_const = in;
                 const auto& out_const = out;
@@ -401,10 +410,10 @@ namespace Curse
                 }
             }
             {
-                InputPin<float> inA(node);
-                InputPin<float> inB(node);
-                InputPin<float> inC(node);
-                OutputPin<float> out(node);
+                InputPin<float> inA(node1);
+                InputPin<float> inB(node1);
+                InputPin<float> inC(node1);
+                OutputPin<float> out(node2);
 
                 EXPECT_TRUE(out.Connect(inA));
                 EXPECT_TRUE(out.Connect(inB));
@@ -463,10 +472,10 @@ namespace Curse
                 EXPECT_EQ(out.GetConnections().size(), size_t(0));
             }
             {
-                InputPin<float> inA(node);
-                InputPin<float> inB(node);
-                InputPin<float> inC(node);
-                OutputPin<float> out(node);
+                InputPin<float> inA(node1);
+                InputPin<float> inB(node1);
+                InputPin<float> inC(node1);
+                OutputPin<float> out(node2);
 
                 EXPECT_TRUE(out.Connect(inA));
                 EXPECT_TRUE(out.Connect(inB));
@@ -502,8 +511,8 @@ namespace Curse
             }
             {
                 {
-                    OutputPin<float> out1(node);
-                    OutputPin<float> out2(node);
+                    OutputPin<float> out1(node1);
+                    OutputPin<float> out2(node2);
 
                     EXPECT_FALSE(out1.Connect(out2));
 
@@ -516,8 +525,8 @@ namespace Curse
                     EXPECT_EQ(out2.GetConnections().size(), size_t(0));
                 }
                 {
-                    OutputPin<float> out1(node);
-                    InputPin<int32_t> in1(node);
+                    OutputPin<float> out1(node1);
+                    InputPin<int32_t> in1(node2);
 
                     EXPECT_FALSE(out1.Connect(in1));
 

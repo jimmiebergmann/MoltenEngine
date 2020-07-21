@@ -29,15 +29,14 @@
 #include "Curse/Renderer/Shader.hpp"
 #include <vector>
 
+namespace Curse::Shader
+{
+    class VertexStage;
+    class FragmentStage;
+}
+
 namespace Curse
 {
-    // Forward declarations.
-    namespace Shader
-    {
-        class VertexStage;
-        class FragmentStage;
-    }
-
     
     /**
     * @brief Pipeline base class.
@@ -79,7 +78,7 @@ namespace Curse
         };
 
         /**
-        * @brief Enumerator of culling modes
+        * @brief Enumerator of culling modes.
         */
         enum class CullMode : uint8_t
         {

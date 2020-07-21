@@ -31,22 +31,17 @@
 #include "Curse/System/UserInput.hpp"
 #include <functional>
 
-namespace Curse
+namespace Curse::Gui
 {
 
-    namespace Gui
+    struct CURSE_API MouseListener : WidgetBehavior<MouseListener>
     {
 
-        struct CURSE_API MouseListener : WidgetBehavior<MouseListener>
-        {
+        using OnClickFunction = std::function<void(const Mouse::Button, const Curse::Vector2f32&)>;
 
-            using OnClickFunction = std::function<void(const Mouse::Button, const Curse::Vector2f32&)>;
+        OnClickFunction OnClick;
 
-            OnClickFunction OnClick;
-
-        };
-
-    }
+    };
 
 }
 

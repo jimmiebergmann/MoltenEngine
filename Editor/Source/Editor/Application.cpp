@@ -33,6 +33,8 @@
 #include <chrono>
 #include <thread>
 
+#include "Curse/Renderer/Shader/Generator/VulkanShaderGenerator.hpp"
+
 namespace Curse
 {
 
@@ -139,7 +141,7 @@ namespace Curse
 
             auto grid = m_guiCanvas.Add<Gui::VerticalGrid>(m_guiCanvas.GetRoot());
             auto button1 = m_guiCanvas.Add<Gui::Button, Gui::MouseListener>(grid);
-            auto padding = m_guiCanvas.Add<Gui::Padding, Gui::MouseListener>(grid);
+            auto padding = m_guiCanvas.Add<Gui::Padding, Gui::MouseListener>(grid, 10.0f, 20.0f, 30.0f, 40.0f);
             auto button2 = m_guiCanvas.Add<Gui::Button, Gui::MouseListener>(padding);
 
             button1->GetComponent<Gui::MouseListener>()->OnClick = 
@@ -247,13 +249,13 @@ namespace Curse
             {
                 auto& script = m_vertexScript;
 
-                auto& inBlock = script.GetInputBlock();
-                auto inPos = inBlock.AppendNode<Vector3f32>();
-                auto inColor = inBlock.AppendNode<Vector4f32>();
+                auto& inputs = script.GetInputInterface();
+                auto inPos = inputs.AddMember<Vector3f32>();
+                auto inColor = inputs.AddMember<Vector4f32>();
 
-                auto& outBlock = script.GetOutputBlock();
-                auto outColor = outBlock.AppendNode<Vector4f32>();
-                auto outPos = script.GetVertexOutputNode();
+                auto& outputs = script.GetOutputInterface();
+                auto outColor = outputs.AddMember<Vector4f32>();
+                auto outPos = script.GetVertexOutputVariable();
 
                 auto uBlock0 = script.CreateUniformBlock(0);
                 auto uProjView = uBlock0->AppendNode<Matrix4x4f32>();
@@ -278,11 +280,11 @@ namespace Curse
             {
                 auto& script = m_fragmentScript;
 
-                auto& inBlock = script.GetInputBlock();
-                auto inColor = inBlock.AppendNode<Vector4f32>();
+                auto& inputs = script.GetInputInterface();
+                auto inColor = inputs.AddMember<Vector4f32>();
 
-                auto& outBlock = script.GetOutputBlock();
-                auto outColor = outBlock.AppendNode<Vector4f32>();
+                auto& outputs = script.GetOutputInterface();
+                auto outColor = outputs.AddMember<Vector4f32>();
 
                 /*auto mult = script.CreateOperatorNode<Shader::Operator::MultVec4f32>();
                 auto add = script.CreateOperatorNode<Shader::Operator::AddVec4f32>();
@@ -298,6 +300,20 @@ namespace Curse
                 cos->GetInputPin()->Connect(*const2->GetOutputPin());*/
             }
 
+            auto vertGlsl = Shader::VulkanGenerator::GenerateGlsl(m_vertexScript);
+            auto fragGlsl = Shader::VulkanGenerator::GenerateGlsl(m_fragmentScript);
+
+            std::string vertStr(vertGlsl.begin(), vertGlsl.end());
+            std::string fragStr(fragGlsl.begin(), fragGlsl.end());
+
+            m_logger.Write(Logger::Severity::Info, "vert -------------------------------------");
+            m_logger.Write(Logger::Severity::Info, vertStr);
+            m_logger.Write(Logger::Severity::Info, "-------------------------------------");
+            m_logger.Write(Logger::Severity::Info, "frag -------------------------------------");
+            m_logger.Write(Logger::Severity::Info, fragStr);
+            m_logger.Write(Logger::Severity::Info, "-------------------------------------");
+
+
             m_vertexStage = m_renderer->CreateVertexShaderStage(m_vertexScript);
             if (!m_vertexStage)
             {
@@ -312,6 +328,8 @@ namespace Curse
 
         void Application::Unload()
         {
+            m_guiCanvas.Unload();
+
             if (m_renderer)
             {
                 m_renderer->WaitForDevice();
@@ -495,10 +513,9 @@ namespace Curse
             /*m_renderer->BindUniformBlock(m_uniformBlock, 256);
             m_renderer->DrawVertexBuffer(m_indexBuffer, m_vertexBuffer);*/
 
-            m_renderer->EndDraw();
-
             m_guiCanvas.Draw();
 
+            m_renderer->EndDraw();
         }
 
 

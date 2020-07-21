@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2020 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -31,89 +31,85 @@
 #include <string>
 #include <vector>
 
-namespace Curse
+namespace Curse::Shader
 {
 
-    namespace Shader
+
+    /**
+    * @brief Shader stage base class.
+    */
+    class CURSE_API Stage
     {
 
-        /**
-        * @brief Shader stage base class.
-        */
-        class CURSE_API Stage
-        {
-
-        public:
-
-            /**
-            * @brief Get the type of shader.
-            */
-            virtual Type GetType() const = 0;
-
-
-        protected:
-
-            /**
-            * @brief Virtual destructor.
-            */
-            virtual ~Stage();
-
-        };
-
+    public:
 
         /**
-        * @brief Vertex shader stage class.
+        * @brief Get the type of shader stage.
         */
-        class CURSE_API VertexStage : public Stage
-        {
-
-        public:
-
-            /**
-            * @brief Get the type of shader.
-            */
-            virtual Type GetType() const override;
+        virtual Type GetType() const = 0;
 
 
-        protected:
+    protected:
 
-            VertexStage() = default;
-            virtual ~VertexStage() = default;
+        /**
+        * @brief Virtual destructor.
+        */
+        virtual ~Stage() = default;
 
-        private:
+    };
 
-            VertexStage(const VertexStage&) = delete;
-            VertexStage(VertexStage&&) = delete;
+
+    /**
+    * @brief Vertex shader stage class.
+    */
+    class CURSE_API VertexStage : public Stage
+    {
+
+    public:
+
+        /**
+        * @brief Get the type of shader stage. 
+        */
+        virtual Type GetType() const override;
+
+
+    protected:
+
+        VertexStage() = default;
+        virtual ~VertexStage() = default;
+
+    private:
+
+        VertexStage(const VertexStage&) = delete;
+        VertexStage(VertexStage&&) = delete;
             
-        };
+    };
 
+
+    /**
+    * @brief Fragment shader stage class.
+    */
+    class CURSE_API FragmentStage : public Stage
+    {
+
+    public:
 
         /**
-        * @brief Fragment shader stage class.
+        * @brief Get the type of shader.
         */
-        class CURSE_API FragmentStage : public Stage
-        {
+        virtual Type GetType() const override;
 
-        public:
+    protected:
 
-            /**
-            * @brief Get the type of shader.
-            */
-            virtual Type GetType() const override;
+        FragmentStage() = default;
+        virtual ~FragmentStage() = default;
 
-        protected:
+    private:
 
-            FragmentStage() = default;
-            virtual ~FragmentStage() = default;
+        FragmentStage(const FragmentStage&) = delete;
+        FragmentStage(FragmentStage&&) = delete;    
 
-        private:
-
-            FragmentStage(const FragmentStage&) = delete;
-            FragmentStage(FragmentStage&&) = delete;    
-
-        };
-
-    }
+    };
 
 }
 

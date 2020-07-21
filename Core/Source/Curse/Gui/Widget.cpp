@@ -25,37 +25,32 @@
 
 #include "Curse/Gui/Widget.hpp"
 
-namespace Curse
+namespace Curse::Gui
 {
 
-    namespace Gui
+    Widget::~Widget()
     {
-
-        Widget::~Widget()
-        {
-            m_entity.Destroy();
-        }
-
-        bool Widget::AllowsMoreChildren()
-        {
-            return m_children.size() < maxChildrenCount;
-        }
-
-        const WidgetCache& Widget::GetCache() const
-        {
-            return m_cache;
-        }
-
-        Widget::Widget(
-            WidgetEntity entity, 
-            const WidgetDescriptor& descriptor, 
-            std::unique_ptr<RenderObject> renderObject) 
-            :
-            m_entity(entity),
-            WidgetDescriptor(descriptor),
-            m_renderObject(std::move(renderObject))
-        { }
-
+        m_entity.Destroy();
     }
+
+    bool Widget::AllowsMoreChildren()
+    {
+        return m_children.size() < maxChildrenCount;
+    }
+
+    const WidgetCache& Widget::GetCache() const
+    {
+        return m_cache;
+    }
+
+    Widget::Widget(
+        WidgetEntity entity, 
+        const WidgetDescriptor& descriptor, 
+        std::unique_ptr<RenderObject> renderObject) 
+        :
+        m_entity(entity),
+        WidgetDescriptor(descriptor),
+        m_renderObject(std::move(renderObject))
+    { }
 
 }

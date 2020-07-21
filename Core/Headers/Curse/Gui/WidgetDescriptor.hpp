@@ -26,33 +26,36 @@
 #ifndef CURSE_CORE_GUI_WIDGETDESCRIPTOR_HPP
 #define CURSE_CORE_GUI_WIDGETDESCRIPTOR_HPP
 
-
 #include "Curse/Math/Vector.hpp"
 
-namespace Curse
+namespace Curse::Gui
 {
 
-    namespace Gui
+    using WidgetFlagsType = uint32_t;
+
+    enum class WidgetFlags : WidgetFlagsType
     {
+        None            = 0 << 0,
+        FitChildren     = 0 << 1,
+        FitParent       = 0 << 2
+    };
 
-        using WidgetFlagsType = uint32_t;
-
-        enum class WidgetFlags : WidgetFlagsType
-        {
-            None = 0,
-            FitChildren = 1 << 0,
-            FitParent = 2 << 0
-        };
-
-        struct CURSE_API WidgetDescriptor
-        {
-            size_t maxChildrenCount;
-            Vector2f32 maxSize;
-            Vector2f32 minSize;
-            WidgetFlagsType flags;
-        };
-
+    inline WidgetFlagsType operator| (const WidgetFlags lhs, const WidgetFlags rhs)
+    {
+        return static_cast<WidgetFlagsType>(lhs) | static_cast<WidgetFlagsType>(rhs);
     }
+    inline WidgetFlagsType operator& (const WidgetFlags lhs, const WidgetFlags rhs)
+    {
+        return static_cast<WidgetFlagsType>(lhs) & static_cast<WidgetFlagsType>(rhs);
+    }
+
+    struct CURSE_API WidgetDescriptor
+    {
+        size_t maxChildrenCount;
+        Vector2f32 maxSize;
+        Vector2f32 minSize;
+        WidgetFlagsType flags;
+    };
 
 }
 
