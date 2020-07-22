@@ -23,30 +23,17 @@
 *
 */
 
-#include "Curse/Renderer/Shader/ShaderScript.hpp"
-#include "Curse/System/Exception.hpp"
-#include <stack>
-#include <map>
-#include <memory>
-#include <algorithm>
+#include "Curse/Renderer/Shader/Visual/VisualShaderScript.hpp"
 
-#if defined(CURSE_ENABLE_GLSLANG)
-#include <glslang/public/ShaderLang.h>
-#include <SPIRV/GlslangToSpv.h>
-#include <StandAlone/DirStackFileIncluder.h>
-#endif
-
-#define CURSE_SHADERSCRIPT_LOG(severity, message) if(logger){ logger->Write(severity, message); }
-
-namespace Curse::Shader
+namespace Curse::Shader::Visual
 {
 
     // Shader script implementations.
-    VertexOutputNode* Script::GetVertexOutputVariable()
+    VertexOutputVariable* Script::GetVertexOutputVariable()
     {
         return nullptr;
     }
-    const VertexOutputNode* Script::GetVertexOutputVariable() const
+    const VertexOutputVariable* Script::GetVertexOutputVariable() const
     {
         return nullptr;
     }
@@ -56,7 +43,7 @@ namespace Curse::Shader
     VertexScript::VertexScript() :
         m_inputInterface(*this),
         m_outputInterface(*this),
-        m_pushConstantInterface(*this),
+        //m_pushConstantInterface(*this),
         m_vertexOutputVariable(*this)
     {}
 
@@ -68,7 +55,7 @@ namespace Curse::Shader
         }
     }
 
-    UniformBlock* VertexScript::CreateUniformBlock(const uint32_t id)
+    /*UniformBlock* VertexScript::CreateUniformBlock(const uint32_t id)
     {
         if (m_uniformBlocks.find(id) != m_uniformBlocks.end())
         {
@@ -78,7 +65,7 @@ namespace Curse::Shader
         auto uniformBlock = new UniformBlock(*this, id);
         m_uniformBlocks.insert({ id, uniformBlock });
         return uniformBlock;
-    }
+    }*/
 
     Type VertexScript::GetType() const
     {
@@ -130,25 +117,25 @@ namespace Curse::Shader
         return m_outputInterface;
     }
 
-    InputStructure& VertexScript::GetPushConstantInterface()
+    /*InputStructure& VertexScript::GetPushConstantInterface()
     {
         return m_pushConstantInterface;
     }
     const InputStructure& VertexScript::GetPushConstantInterface() const
     {
         return m_pushConstantInterface;
-    }
+    }*/
 
-    VertexOutputNode* VertexScript::GetVertexOutputVariable()
+    VertexOutputVariable* VertexScript::GetVertexOutputVariable()
     {
         return &m_vertexOutputVariable;
     }
-    const VertexOutputNode* VertexScript::GetVertexOutputVariable() const
+    const VertexOutputVariable* VertexScript::GetVertexOutputVariable() const
     {
         return &m_vertexOutputVariable;
     }
 
-    const size_t VertexScript::GetUniformBlockCount() const
+    /*const size_t VertexScript::GetUniformBlockCount() const
     {
         return m_uniformBlocks.size();
     }
@@ -170,14 +157,14 @@ namespace Curse::Shader
             uniformBlocks.push_back(pair.second);
         }
         return uniformBlocks;
-    }
+    }*/
 
 
     // Fragment shader script implementations.
     FragmentScript::FragmentScript() :
         m_inputInterface(*this),
-        m_outputInterface(*this),
-        m_pushConstantInterface(*this)
+        m_outputInterface(*this)//,
+        //m_pushConstantInterface(*this)
     {}
 
     FragmentScript::~FragmentScript()
@@ -188,7 +175,7 @@ namespace Curse::Shader
         }
     }
 
-    UniformBlock* FragmentScript::CreateUniformBlock(const uint32_t id)
+    /*UniformBlock* FragmentScript::CreateUniformBlock(const uint32_t id)
     {
         if (m_uniformBlocks.find(id) != m_uniformBlocks.end())
         {
@@ -198,7 +185,7 @@ namespace Curse::Shader
         auto uniformBlock = new UniformBlock(*this, id);
         m_uniformBlocks.insert({ id, uniformBlock });
         return uniformBlock;
-    }
+    }*/
 
     Type FragmentScript::GetType() const
     {
@@ -250,7 +237,7 @@ namespace Curse::Shader
         return m_outputInterface;
     }
 
-    InputStructure& FragmentScript::GetPushConstantInterface()
+    /*InputStructure& FragmentScript::GetPushConstantInterface()
     {
         return m_pushConstantInterface;
     }
@@ -281,6 +268,6 @@ namespace Curse::Shader
             uniformBlocks.push_back(pair.second);
         }
         return uniformBlocks;
-    }
+    }*/
 
 }

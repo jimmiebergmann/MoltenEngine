@@ -23,7 +23,7 @@
 *
 */
 
-namespace Curse::Shader
+namespace Curse::Shader::Visual
 {
     template<template<typename TDataType> typename TVariableType>
     Structure<TVariableType>::Structure(Script& script) :
@@ -121,7 +121,7 @@ namespace Curse::Shader
 
 }
 
-namespace Curse::Shader::Private
+namespace Curse::Shader::Visual::Private
 {
 
     template<>

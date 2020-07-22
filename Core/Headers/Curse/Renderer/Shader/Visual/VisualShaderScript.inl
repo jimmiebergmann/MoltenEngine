@@ -23,72 +23,70 @@
 *
 */
 
-namespace Curse::Shader
+namespace Curse::Shader::Visual
 {
 
     // Vertex shader script implementations.
-    template<typename T>
-    inline ConstantNode<T>* VertexScript::CreateConstantNode(const T& value)
+    template<typename TDataType>
+    inline ConstantVariable<TDataType>* VertexScript::CreateConstantVariable(const TDataType& value)
     {
         // CHECK TYPE.
-        auto constant = new ConstantNode<T>(*this, value);
-        m_allNodes.insert(constant);
-        return constant;
+        auto variable = new ConstantVariable<TDataType>(*this, value);
+        m_allNodes.insert(variable);
+        return variable;
     }
 
-    template<typename Func>
-    inline Func* VertexScript::CreateFunctionNode()
+    template<typename TFunction>
+    inline TFunction* VertexScript::CreateFunction()
     {
         // CHECK FUNCTION TYPE.
-        static_assert(std::is_base_of<FunctionNodeBase, Func>::value,
+        static_assert(std::is_base_of<FunctionBase, TFunction>::value,
             "Specified template parameter is not base of FunctionNode.");
 
-        auto func = new Func(*this);
+        auto func = new TFunction(*this);
         m_allNodes.insert(func);
         return func;
     }
 
-    template<typename Op>
-    inline Op* VertexScript::CreateOperatorNode()
+    template<typename TOperator>
+    inline TOperator* VertexScript::CreateOperator()
     {
-        static_assert(OperatorTrait<Op>::Supported, "Passed operator node is not supported.");
+        static_assert(Operators::Trait<TOperator>::Supported, "Passed operator node is not supported.");
 
-        auto op = new Op(*this);
+        auto op = new TOperator(*this);
         m_allNodes.insert(op);
         return op;
     }
 
 
     // Fragment shader script implementations.
-    template<typename T>
-    inline ConstantNode<T>* FragmentScript::CreateConstantNode(const T& value)
+    template<typename TDataType>
+    inline ConstantVariable<TDataType>* FragmentScript::CreateConstantVariable(const TDataType& value)
     {
         // CHECK TYPE.
-        auto constant = new ConstantNode<T>(*this, value);
-        m_allNodes.insert(constant);
-        return constant;
+        auto variable = new ConstantVariable<TDataType>(*this, value);
+        m_allNodes.insert(variable);
+        return variable;
     }
 
-    template<typename Func>
-    inline Func* FragmentScript::CreateFunctionNode()
+    template<typename TFunction>
+    inline TFunction* FragmentScript::CreateFunction()
     {
         // CHECK FUNCTION TYPE.
-        static_assert(std::is_base_of<FunctionNodeBase, Func>::value,
+        static_assert(std::is_base_of<FunctionBase, TFunction>::value,
             "Specified template parameter is not base of FunctionNode.");
 
-        auto func = new Func(*this);
+        auto func = new TFunction(*this);
         m_allNodes.insert(func);
         return func;
     }
 
-    template<typename Op>
-    inline Op* FragmentScript::CreateOperatorNode()
+    template<typename TOperator>
+    inline TOperator* FragmentScript::CreateOperator()
     {
-        // CHECK OPERATOR TYPE.
-        static_assert(std::is_base_of<OperatorNodeBase, Op>::value,
-            "Specified template parameter is not base of OperatorNodeBase.");
+        static_assert(Operators::Trait<TOperator>::Supported, "Passed operator node is not supported.");
 
-        auto op = new Op(*this);
+        auto op = new TOperator(*this);
         m_allNodes.insert(op);
         return op;
     }

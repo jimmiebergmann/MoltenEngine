@@ -23,44 +23,31 @@
 *
 */
 
-#ifndef CURSE_CORE_RENDERER_SHADER_VULKANSHADERGENERATOR_HPP
-#define CURSE_CORE_RENDERER_SHADER_VULKANSHADERGENERATOR_HPP
+#include "Curse/Renderer/Shader/Visual/VisualShaderOperator.hpp"
 
-#include "Curse/Renderer/Shader.hpp"
-#include <vector>
-
-namespace Curse
-{
-    class Logger;
-}
 namespace Curse::Shader::Visual
 {
-    class Script;
-}
 
-namespace Curse::Shader
-{
-
-    /**
-    * Vulkan shader code generator.
-    *
-    * Generation is performed in two steps:
-    *   1. Generate GLSL code, compatible with Spri-V.
-    *   2. Converting the GLSL code into SPIR-V.
-    */
-    class CURSE_API VulkanGenerator
+    // Operator node base implementations.
+    NodeType OperatorBase::GetType() const
     {
+        return NodeType::Operator;
+    }
 
-    public:
+    OperatorBase::OperatorBase(Script& script) :
+        Node(script)
+    { }
 
-        /** Generate GLSL code, compatible with Spri-V, from a visual shader script. */
-        static std::vector<uint8_t> GenerateGlsl(const Visual::Script& script, Logger* logger = nullptr);
 
-        /** Converting GLSL code into SPIR-V code. */
-        static std::vector<uint8_t> ConvertGlslToSpriV(const std::vector<uint8_t> & code, Type shaderType, Logger* logger = nullptr);
 
-    };
+    // Arithmetic operator node base implementations.
+    OperatorType ArithmeticOperatorBase::GetOperatorType() const
+    {
+        return OperatorType::Arithmetic;
+    }
+
+    ArithmeticOperatorBase::ArithmeticOperatorBase(Script& script) :
+        OperatorBase(script)
+    { }
 
 }
-
-#endif

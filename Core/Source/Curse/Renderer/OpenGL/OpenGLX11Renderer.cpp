@@ -195,12 +195,12 @@ namespace Curse
         return nullptr;
     }
 
-    Shader::VertexStage* OpenGLX11Renderer::CreateVertexShaderStage(const Shader::VertexScript&)
+    Shader::VertexStage* OpenGLX11Renderer::CreateVertexShaderStage(const Shader::Visual::VertexScript& /*script*/)
     {
         return nullptr;
     }
 
-    Shader::FragmentStage* OpenGLX11Renderer::CreateFragmentShaderStage(const Shader::FragmentScript&)
+    Shader::FragmentStage* OpenGLX11Renderer::CreateFragmentShaderStage(const Shader::Visual::FragmentScript&/*script*/)
     {
         return nullptr;
     }

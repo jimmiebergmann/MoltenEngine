@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2020 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -109,12 +109,12 @@ namespace Curse
         /**
         * @brief Create vertex shader stage object out of vertex script.
         */
-        virtual Shader::VertexStage* CreateVertexShaderStage(const Shader::VertexScript& script) override;
+        virtual Shader::VertexStage* CreateVertexShaderStage(const Shader::Visual::VertexScript& script) override;
 
         /**
         * @brief Create fragment shader stage object out of fragment script.
         */
-        virtual Shader::FragmentStage* CreateFragmentShaderStage(const Shader::FragmentScript& script) override;
+        virtual Shader::FragmentStage* CreateFragmentShaderStage(const Shader::Visual::FragmentScript& script) override;
 
         /**
         * @brief Create texture object.

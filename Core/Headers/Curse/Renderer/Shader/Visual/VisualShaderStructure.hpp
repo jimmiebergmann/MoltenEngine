@@ -23,13 +23,13 @@
 *
 */
 
-#ifndef CURSE_CORE_RENDERER_SHADER_SHADERSTRUCTURE_HPP
-#define CURSE_CORE_RENDERER_SHADER_SHADERSTRUCTURE_HPP
+#ifndef CURSE_CORE_RENDERER_SHADER_VISUAL_VISUALSHADERSTRUCTURE_HPP
+#define CURSE_CORE_RENDERER_SHADER_VISUAL_VISUALSHADERSTRUCTURE_HPP
 
-#include "Curse/Renderer/Shader/Node/ShaderVariable.hpp"
+#include "Curse/Renderer/Shader/Visual/VisualShaderVariable.hpp"
 #include <vector>
 
-namespace Curse::Shader
+namespace Curse::Shader::Visual
 {
 
     template<template<typename TDataType> typename TVariableType>
@@ -89,14 +89,14 @@ namespace Curse::Shader
 
 }
 
-namespace Curse::Shader::Private
+namespace Curse::Shader::Visual::Private
 {
 
-    template<typename LeftBaseType, typename RightBaseType>
-    static bool CheckStructureCompability(const LeftBaseType& lhs, const RightBaseType& rhs);
+    template<typename TLeftBaseType, typename TRightBaseType>
+    static bool CheckStructureCompability(const TLeftBaseType& lhs, const TRightBaseType& rhs);
 
 }
 
-#include "Curse/Renderer/Shader/ShaderStructure.inl"
+#include "Curse/Renderer/Shader/Visual/VisualShaderStructure.inl"
 
 #endif

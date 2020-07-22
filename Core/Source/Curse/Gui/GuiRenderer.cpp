@@ -26,7 +26,7 @@
 #include "Curse/Gui/GuiRenderer.hpp"
 #include "Curse/Renderer/Renderer.hpp"
 #include "Curse/Renderer/Pipeline.hpp"
-#include "Curse/Renderer/Shader/ShaderScript.hpp"
+#include "Curse/Renderer/Shader/Visual/VisualShaderScript.hpp"
 
 namespace Curse::Gui
 {
@@ -85,7 +85,7 @@ namespace Curse::Gui
 
     void Renderer::LoadRectRenderInstance()
     {
-        m_rect.vertexScript = new Shader::VertexScript();
+       /* m_rect.vertexScript = new Shader::VertexScript();
         m_rect.fragmentScript = new Shader::FragmentScript();
 
         {
@@ -98,7 +98,7 @@ namespace Curse::Gui
 
             auto& pushConstants = script.GetPushConstantInterface();
             auto inProjection = pushConstants.AddMember<Matrix4x4f32>();
-            /*auto inColor =*/ pushConstants.AddMember<Vector4f32>();
+            pushConstants.AddMember<Vector4f32>();
            
 
             auto inPosVec4 = script.CreateFunctionNode<Shader::Function::Vec3ToVec4f32>();
@@ -115,7 +115,7 @@ namespace Curse::Gui
             auto& script = *m_rect.fragmentScript;
 
             auto& pushConstants = script.GetPushConstantInterface();
-            /*auto inProjection =*/ pushConstants.AddMember<Matrix4x4f32>();
+            pushConstants.AddMember<Matrix4x4f32>();
             auto inColor = pushConstants.AddMember<Vector4f32>();
 
             auto& outputs = script.GetOutputInterface();
@@ -134,7 +134,7 @@ namespace Curse::Gui
         pipelineDesc.frontFace = Pipeline::FrontFace::Clockwise;
         pipelineDesc.fragmentStage = m_rect.fragmentStage;
         pipelineDesc.vertexStage = m_rect.vertexStage;
-        m_rect.pipeline = m_backendRenderer->CreatePipeline(pipelineDesc);
+        m_rect.pipeline = m_backendRenderer->CreatePipeline(pipelineDesc);*/
     }
 
     void Renderer::DestroyRenderInstance(RenderInstance& instance)

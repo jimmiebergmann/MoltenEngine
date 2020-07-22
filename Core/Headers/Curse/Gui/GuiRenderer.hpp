@@ -39,10 +39,14 @@ namespace Curse
 
 namespace Curse::Shader
 {
-    class VertexScript;
-    class FragmentScript;
     class VertexStage;
     class FragmentStage;
+}
+
+namespace Curse::Shader::Visual
+{
+    class VertexScript;
+    class FragmentScript;
 }
 
 namespace Curse::Gui
@@ -75,8 +79,8 @@ namespace Curse::Gui
             Pipeline* pipeline;
             VertexBuffer* vertexBuffer;
             IndexBuffer* indexBuffer;
-            Shader::VertexScript* vertexScript;
-            Shader::FragmentScript* fragmentScript;
+            Shader::Visual::VertexScript* vertexScript;
+            Shader::Visual::FragmentScript* fragmentScript;
             Shader::VertexStage* vertexStage;
             Shader::FragmentStage* fragmentStage;
         };

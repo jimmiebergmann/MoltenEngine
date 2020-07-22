@@ -23,44 +23,20 @@
 *
 */
 
-#ifndef CURSE_CORE_RENDERER_SHADER_VULKANSHADERGENERATOR_HPP
-#define CURSE_CORE_RENDERER_SHADER_VULKANSHADERGENERATOR_HPP
+#include "Curse/Renderer/Shader/Visual/VisualShaderFunction.hpp"
 
-#include "Curse/Renderer/Shader.hpp"
-#include <vector>
-
-namespace Curse
-{
-    class Logger;
-}
 namespace Curse::Shader::Visual
 {
-    class Script;
-}
 
-namespace Curse::Shader
-{
-
-    /**
-    * Vulkan shader code generator.
-    *
-    * Generation is performed in two steps:
-    *   1. Generate GLSL code, compatible with Spri-V.
-    *   2. Converting the GLSL code into SPIR-V.
-    */
-    class CURSE_API VulkanGenerator
+    // Function node base implementations.
+    NodeType FunctionBase::GetType() const
     {
+        return NodeType::Function;
+    }
 
-    public:
+    FunctionBase::FunctionBase(Script& script) :
+        Node(script)
+    { }
 
-        /** Generate GLSL code, compatible with Spri-V, from a visual shader script. */
-        static std::vector<uint8_t> GenerateGlsl(const Visual::Script& script, Logger* logger = nullptr);
-
-        /** Converting GLSL code into SPIR-V code. */
-        static std::vector<uint8_t> ConvertGlslToSpriV(const std::vector<uint8_t> & code, Type shaderType, Logger* logger = nullptr);
-
-    };
 
 }
-
-#endif

@@ -28,7 +28,8 @@
 
 #if defined(CURSE_ENABLE_VULKAN)
 
-#include "Curse/Renderer/Shader/ShaderScript.hpp"
+#include "Curse/Renderer/Shader/Visual/VisualShaderScript.hpp"
+#include "Curse/Renderer/Shader/Visual/VisualShaderStructure.hpp"
 #include "Curse/Renderer/Shader/Generator/VulkanShaderGenerator.hpp"
 #include "Curse/Renderer/Vulkan/VulkanFramebuffer.hpp"
 #include "Curse/Renderer/Vulkan/VulkanIndexBuffer.hpp"
@@ -664,7 +665,7 @@ namespace Curse
         return pipeline;
     }
 
-    Shader::VertexStage* VulkanRenderer::CreateVertexShaderStage(const Shader::VertexScript& script)
+    Shader::VertexStage* VulkanRenderer::CreateVertexShaderStage(const Shader::Visual::VertexScript& script)
     {
         auto glslCode = Shader::VulkanGenerator::GenerateGlsl(script, m_logger);
         if (!glslCode.size())
@@ -696,7 +697,7 @@ namespace Curse
         return shaderStage;
     }
 
-    Shader::FragmentStage* VulkanRenderer::CreateFragmentShaderStage(const Shader::FragmentScript& script)
+    Shader::FragmentStage* VulkanRenderer::CreateFragmentShaderStage(const Shader::Visual::FragmentScript& script)
     {
         auto glslCode = Shader::VulkanGenerator::GenerateGlsl(script, m_logger);
         if (!glslCode.size())
@@ -2097,7 +2098,10 @@ namespace Curse
         vkFreeCommandBuffers(m_logicalDevice, m_commandPool, 1, &commandBuffer);
     }
 
-    bool VulkanRenderer::CreateVertexInputAttributes(const Shader::InputStructure& inputs, std::vector<VkVertexInputAttributeDescription>& attributes, uint32_t& stride)
+    bool VulkanRenderer::CreateVertexInputAttributes(
+        const Shader::Visual::InputStructure& inputs, 
+        std::vector<VkVertexInputAttributeDescription>& attributes, 
+        uint32_t& stride)
     {
         attributes.resize(inputs.GetMemberCount());
         size_t index = 0;
@@ -2128,9 +2132,13 @@ namespace Curse
         return true;
     }
 
-    bool VulkanRenderer::CreateDescriptorSetLayouts(const Shader::VertexScript& vertexScript, const Shader::FragmentScript& fragmentScript, std::vector<VkDescriptorSetLayout>& setLayouts)
+    bool VulkanRenderer::CreateDescriptorSetLayouts(
+        const Shader::Visual::VertexScript& /*vertexScript*/, 
+        const Shader::Visual::FragmentScript& /*fragmentScript*/,
+        std::vector<VkDescriptorSetLayout>& /*setLayouts*/)
     {
-        std::array<const Shader::Script*, 2> shaderScripts = { &vertexScript, &fragmentScript };
+        return false;
+        /*std::array<const Shader::Visual::Script*, 2> shaderScripts = { &vertexScript, &fragmentScript };
 
         std::map<uint32_t, VkShaderStageFlags> uniformShaderStageFlags;
         uint32_t highestSetId = 0;
@@ -2156,7 +2164,8 @@ namespace Curse
 
         if (highestSetId > static_cast<uint32_t>(uniformShaderStageFlags.size()))
         {
-            CURSE_RENDERER_LOG(Logger::Severity::Error, "Uniform block id is out of bound, expected " + std::to_string(uniformShaderStageFlags.size() - 1) + " to be the highest.");
+            CURSE_RENDERER_LOG(Logger::Severity::Error, "Uniform block id is out of bound, expected " + 
+                std::to_string(uniformShaderStageFlags.size() - 1) + " to be the highest.");
             return nullptr;
         }
 
@@ -2186,15 +2195,16 @@ namespace Curse
 
             setLayouts.push_back(descriptorSetLayout);
         }
-        return true;
+        return true;*/
     }
 
     bool VulkanRenderer::CreatePushConstants(
-        const Shader::VertexScript& vertexScript, 
-        const Shader::FragmentScript& fragmentScript, 
+        const Shader::Visual::VertexScript& vertexScript,
+        const Shader::Visual::FragmentScript& fragmentScript,
         std::vector<VkPushConstantRange>& pushConstants)
     {
-        pushConstants.clear();
+        return false;
+        /*pushConstants.clear();
 
         std::array<const Shader::Script*, 2> shaderScripts = { &vertexScript, &fragmentScript };
         for (auto script : shaderScripts)
@@ -2221,16 +2231,9 @@ namespace Curse
                     offset += size;
                 }
             }
-
-            /*if (totalSize > 0)
-            {
-                pushConstants.push_back({ (VkFlags)scriptStage, 0, totalSize });
-            }*/
         }
 
-       
-
-        return true;
+        return true;*/
     }
 
 }

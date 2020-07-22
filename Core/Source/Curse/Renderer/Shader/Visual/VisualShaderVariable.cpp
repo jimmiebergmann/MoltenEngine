@@ -23,9 +23,9 @@
 *
 */
 
-#include "Curse/Renderer/Shader/Node/ShaderVariable.hpp"
+#include "Curse/Renderer/Shader/Visual/VisualShaderVariable.hpp"
 
-namespace Curse::Shader
+namespace Curse::Shader::Visual
 {
 
     // Variable base implementations.
@@ -38,6 +38,7 @@ namespace Curse::Shader
         return NodeType::Variable;
     }
 
+
     // Input variable base implementations.
     InputVariableBase::InputVariableBase(Script& script) :
         VariableBase(script)
@@ -46,6 +47,12 @@ namespace Curse::Shader
 
     // Output variable base implementations.
     OutputVariableBase::OutputVariableBase(Script& script) :
+        VariableBase(script)
+    {}
+
+
+    // Constant variable base implementations.
+    ConstantVariableBase::ConstantVariableBase(Script& script) :
         VariableBase(script)
     {}
 

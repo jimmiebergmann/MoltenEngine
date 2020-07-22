@@ -29,83 +29,71 @@
 #include "Curse/Logger.hpp"
 #include "Curse/Math/Vector.hpp"
 #include "Curse/Renderer/Renderer.hpp"
+#include "Curse/Renderer/Shader/Visual/VisualShaderScript.hpp"
 #include "Curse/Scene/Camera.hpp"
 #include "Curse/System/Clock.hpp"
 #include "Curse/Window/Window.hpp"
 #include "Curse/Gui/Canvas.hpp"
 #include <memory>
 
-namespace Curse
+namespace Curse::Editor
 {
 
-    namespace Editor
+    /** Editor application class. */
+    class Application
     {
 
-        /**
-        * @brief Editor application class.
-        */
-        class Application
-        {
+    public:
 
-        public:
+        /** Constructor. */
+        Application();
 
-            /**
-            * @brief Constructor.
-            */
-            Application();
+        /** Destructor. */
+        ~Application();
 
-            /**
-            * @brief Destructor.
-            */
-            ~Application();
+        /** Start editor application. */
+        int Start(int argv, char** argc);
 
-            /**
-            * @brief Start editor application.
-            */
-            int Start(int argv, char** argc);
+    private:
 
-        private:
+        void Load();
+        void LoadGui();
 
-            void Load();
-            void LoadGui();
+        void LoadPipeline();
+        void LoadShaders();
 
-            void LoadPipeline();
-            void LoadShaders();
+        void Unload();
 
-            void Unload();
+        void Tick();
 
-            void Tick();
+        bool Update();
 
-            bool Update();
+        void Draw();            
 
-            void Draw();            
+        Logger m_logger;
+        std::unique_ptr<Window> m_window;
+        std::unique_ptr <Renderer> m_renderer;
+        Pipeline* m_pipeline;
+        Shader::Visual::VertexScript m_vertexScript;
+        Shader::Visual::FragmentScript m_fragmentScript;
+        Shader::VertexStage* m_vertexStage;
+        Shader::FragmentStage* m_fragmentStage;
+        VertexBuffer* m_vertexBuffer;
+        IndexBuffer* m_indexBuffer;
+        UniformBuffer* m_uniformBuffer;
+        UniformBlock* m_uniformBlock;
 
-            Logger m_logger;
-            std::unique_ptr<Window> m_window;
-            std::unique_ptr <Renderer> m_renderer;
-            Pipeline* m_pipeline;
-            Shader::VertexScript m_vertexScript;
-            Shader::FragmentScript m_fragmentScript;
-            Shader::VertexStage* m_vertexStage;
-            Shader::FragmentStage* m_fragmentStage;
-            VertexBuffer* m_vertexBuffer;
-            IndexBuffer* m_indexBuffer;
-            UniformBuffer* m_uniformBuffer;
-            UniformBlock* m_uniformBlock;
+        Clock m_programTimer;
+        float m_programTime;
+        Clock m_deltaTimer;
+        float m_deltaTime;        
 
-            Clock m_programTimer;
-            float m_programTime;
-            Clock m_deltaTimer;
-            float m_deltaTime;        
+        Scene::Camera m_camera;
 
-            Scene::Camera m_camera;
-
-            Gui::Canvas m_guiCanvas;
+        Gui::Canvas m_guiCanvas;
 
 
-        };
-
-    }
+    };
 
 }
 

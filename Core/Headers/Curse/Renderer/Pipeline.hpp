@@ -38,17 +38,13 @@ namespace Curse::Shader
 namespace Curse
 {
     
-    /**
-    * @brief Pipeline base class.
-    */
+    /** Pipeline base class. */
     class CURSE_API Pipeline
     {
 
     public:
 
-        /**
-        * @brief Enumerator of different vertex structes.
-        */
+        /** Enumerator of different vertex structes. */
         enum class Topology : uint8_t
         {
             PointList,
@@ -58,9 +54,7 @@ namespace Curse
             TriangleStrip
         };
 
-        /**
-        * @brief Enumerator of different polygon rendering modes.
-        */
+        /** Enumerator of different polygon rendering modes. */
         enum class PolygonMode : uint8_t
         {
             Point,
@@ -68,18 +62,14 @@ namespace Curse
             Fill
         };
 
-        /**
-        * @brief Enumerator of front faces.
-        */
+        /**  Enumerator of front faces. */
         enum class FrontFace : uint8_t
         {
             Clockwise,
             Counterclockwise
         };
 
-        /**
-        * @brief Enumerator of culling modes.
-        */
+        /** Enumerator of culling modes. */
         enum class CullMode : uint8_t
         {
             None,
@@ -97,9 +87,7 @@ namespace Curse
 
     };
 
-    /**
-    * @brief Descriptor class of pipeline class.
-    */
+    /** Descriptor class of pipeline class. */
     class CURSE_API PipelineDescriptor
     {
 

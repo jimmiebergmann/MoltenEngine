@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2020 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -198,12 +198,12 @@ namespace Curse
         return nullptr;
     }
 
-    Shader::VertexStage* OpenGLWin32Renderer::CreateVertexShaderStage(const Shader::VertexScript&)
+    Shader::VertexStage* OpenGLWin32Renderer::CreateVertexShaderStage(const Shader::Visual::VertexScript& /*script*/)
     {
         return nullptr;
     }
 
-    Shader::FragmentStage* OpenGLWin32Renderer::CreateFragmentShaderStage(const Shader::FragmentScript&)
+    Shader::FragmentStage* OpenGLWin32Renderer::CreateFragmentShaderStage(const Shader::Visual::FragmentScript& /*script*/)
     {
         return nullptr;
     }

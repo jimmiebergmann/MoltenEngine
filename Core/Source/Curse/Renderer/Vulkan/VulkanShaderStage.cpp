@@ -31,12 +31,18 @@
 namespace Curse
 {
 
-    VulkanVertexShaderStage::VulkanVertexShaderStage(VkShaderModule module, const Shader::VertexScript& script) :
+    VulkanVertexShaderStage::VulkanVertexShaderStage(
+        VkShaderModule module, 
+        const Shader::Visual::VertexScript& script)
+        :
         module(module),
         script(script)
     { }
 
-    VulkanFragmentShaderStage::VulkanFragmentShaderStage(VkShaderModule module, const Shader::FragmentScript& script) :
+    VulkanFragmentShaderStage::VulkanFragmentShaderStage(
+        VkShaderModule module,
+        const Shader::Visual::FragmentScript& script)
+        :
         module(module),
         script(script)
     { }

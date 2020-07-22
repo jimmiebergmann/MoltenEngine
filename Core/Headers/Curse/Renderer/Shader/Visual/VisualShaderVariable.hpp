@@ -23,14 +23,24 @@
 *
 */
 
-#ifndef CURSE_CORE_RENDERER_SHADER_NODE_SHADERVARIABLE_HPP
-#define CURSE_CORE_RENDERER_SHADER_NODE_SHADERVARIABLE_HPP
+#ifndef CURSE_CORE_RENDERER_SHADER_VISUAL_VISUALSHADERVARIABLE_HPP
+#define CURSE_CORE_RENDERER_SHADER_VISUAL_VISUALSHADERVARIABLE_HPP
 
-#include "Curse/Renderer/Shader/ShaderNode.hpp"
+#include "Curse/Renderer/Shader/Visual/VisualShaderNode.hpp"
 
-namespace Curse::Shader
+namespace Curse::Shader::Visual
 {
 
+    /** Enumerator of variable types. */
+    enum class VariableType : uint32_t
+    {
+        Constant,
+        Input,
+        Output
+    };
+
+    
+    /** */
     class CURSE_API VariableBase : public Node
     {
 
@@ -40,6 +50,13 @@ namespace Curse::Shader
         virtual ~VariableBase() = default;
 
         virtual NodeType GetType() const override; 
+
+        /** @brief Get data type of variable. */
+        virtual VariableDataType GetDataType() const = 0;
+
+        /** @brief Get variable type. */
+        virtual VariableType GetVariableType() const = 0;
+
     };
 
 
@@ -76,11 +93,25 @@ namespace Curse::Shader
 
     };
 
+    class CURSE_API ConstantVariableBase : public VariableBase
+    {
 
-    /**
-    * @brief The variable class is a general input/output pin variable.
-    */
-    template<typename TDataType>
+    public:
+
+        ConstantVariableBase(Script& script);
+        virtual ~ConstantVariableBase() = default;
+
+    private:
+
+        using VariableBase::GetInputPin;
+        using VariableBase::GetInputPins;
+        using VariableBase::GetInputPinCount;
+
+    };
+
+
+    /** The variable class is a general input/output pin variable. */
+    /*template<typename TDataType>
     class Variable : public VariableBase
     {
 
@@ -90,6 +121,7 @@ namespace Curse::Shader
         using DataType = TDataType;
 
         Variable(Script& script);
+        Variable(Script& script, const DataType& defaultValue);
 
         virtual size_t GetInputPinCount() const override;
         virtual size_t GetOutputPinCount() const override;
@@ -101,6 +133,9 @@ namespace Curse::Shader
         virtual const Pin* GetOutputPin(const size_t index = 0) const override;
         virtual std::vector<Pin*> GetOutputPins() override;
         virtual std::vector<const Pin*> GetOutputPins() const override;
+        
+        /** @brief Get data type of variable. */
+       /* virtual VariableDataType GetDataType() const override;
 
     private:
 
@@ -110,9 +145,7 @@ namespace Curse::Shader
     };
 
 
-    /**
-    * @brief Input variables only consist of an input pin.
-    */
+    /** Input variables only consist of an input pin. */
     template<typename TDataType>
     class InputVariable : public InputVariableBase
     {
@@ -130,6 +163,12 @@ namespace Curse::Shader
         virtual std::vector<Pin*> GetOutputPins() override;
         virtual std::vector<const Pin*> GetOutputPins() const override;
 
+        /** @brief Get data type of variable. */
+        virtual VariableDataType GetDataType() const override;
+
+        /** @brief Get variable type. */
+        virtual VariableType GetVariableType() const override;
+
     private:
 
         OutputPin<DataType> m_outputPin;
@@ -137,9 +176,7 @@ namespace Curse::Shader
     };
 
 
-    /**
-    * @brief Input variables only consist of an output pin.
-    */
+    /** Input variables only consist of an output pin. */
     template<typename TDataType>
     class OutputVariable : public OutputVariableBase
     {
@@ -150,12 +187,19 @@ namespace Curse::Shader
         using DataType = TDataType;
 
         OutputVariable(Script& script);
+        OutputVariable(Script& script, const DataType& defaultValue);
 
         virtual size_t GetInputPinCount() const override;
         virtual Pin* GetInputPin(const size_t index = 0) override;
         virtual const Pin* GetInputPin(const size_t index = 0) const override;
         virtual std::vector<Pin*> GetInputPins() override;
-        virtual std::vector<const Pin*> GetInputPins() const override;        
+        virtual std::vector<const Pin*> GetInputPins() const override;   
+
+        /** @brief Get data type of variable. */
+        virtual VariableDataType GetDataType() const override;
+
+        /** @brief Get variable type. */
+        virtual VariableType GetVariableType() const override;
 
     private:
 
@@ -163,8 +207,54 @@ namespace Curse::Shader
 
     };
 
+    /**
+     * Visual shader script constant node.
+     * The stored value is not constant and can be changed at any time,
+     * but it's used as a constant in the generated shader code.
+     */
+    template<typename TDataType>
+    class ConstantVariable : public ConstantVariableBase
+    {
+
+    public:
+
+        using Base = InputVariableBase;
+        using DataType = TDataType;
+
+        ConstantVariable(Script& script, const DataType& value);
+        ConstantVariable(Script& script, DataType&& value);
+
+        virtual size_t GetOutputPinCount() const override;
+        virtual Pin* GetOutputPin(const size_t index = 0) override;
+        virtual const Pin* GetOutputPin(const size_t index = 0) const override;
+        virtual std::vector<Pin*> GetOutputPins() override;
+        virtual std::vector<const Pin*> GetOutputPins() const override;
+
+        /** @brief Get data type of variable. */
+        virtual VariableDataType GetDataType() const override;
+
+        /** @brief Get variable type. */
+        virtual VariableType GetVariableType() const override;
+
+        /** @brief Get constant value. */
+        const DataType& GetValue() const;
+
+        /** @brief Set constant value. */
+        /**@{*/
+        void SetValue(const DataType& value);
+        void SetValue(DataType&& value);
+        /**@}*/
+
+    private:
+
+        OutputPin<DataType> m_outputPin;
+        DataType m_value;
+    };
+
+    
+
 }
 
-#include "Curse/Renderer/Shader/Node/ShaderVariable.inl"
+#include "Curse/Renderer/Shader/Visual/VisualShaderVariable.inl"
 
 #endif

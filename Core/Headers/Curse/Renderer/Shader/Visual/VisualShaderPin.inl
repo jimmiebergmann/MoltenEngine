@@ -23,43 +23,8 @@
 *
 */
 
-namespace Curse::Shader
+namespace Curse::Shader::Visual
 {
-
-    // Pin implementations.
-    inline Pin::Pin(Node& node, const std::string& name) :
-        m_node(node),
-        m_name(name)
-    { }
-  
-    inline Pin::~Pin()
-    { }
-
-    inline Node& Pin::GetNode()
-    {
-        return m_node;
-    }
-
-    inline const Node& Pin::GetNode() const
-    {
-        return m_node;
-    }    
-
-    inline const std::string& Pin::GetName() const
-    {
-        return m_name;
-    }
-
-    inline void Pin::ConnectInternal(Pin& source, Pin& target)
-    {
-        source.ConnectInternal(target);
-    }
-
-    inline void Pin::DisconnectInternal(Pin& source, Pin& target)
-    {
-        source.DisconnectInternal(target);
-    }
-
 
     // Input pin implementations.
     template<typename T>
@@ -163,18 +128,6 @@ namespace Curse::Shader
     }
 
     template<typename T>
-    inline T InputPin<T>::GetDefaultValue() const
-    {
-        return m_defaultValue;
-    }
-
-    template<typename T>
-    void InputPin<T>::SetDefaultValue(const T& defaultValue)
-    {
-        m_defaultValue = defaultValue;
-    }
-
-    template<typename T>
     inline size_t InputPin<T>::GetConnectionCount() const
     {
         return m_connection ? 1 : 0;
@@ -218,6 +171,18 @@ namespace Curse::Shader
             return {};
         }
         return { m_connection };
+    }
+
+    template<typename T>
+    inline T InputPin<T>::GetDefaultValue() const
+    {
+        return m_defaultValue;
+    }
+
+    template<typename T>
+    void InputPin<T>::SetDefaultValue(const T& defaultValue)
+    {
+        m_defaultValue = defaultValue;
     }
 
     template<typename T>

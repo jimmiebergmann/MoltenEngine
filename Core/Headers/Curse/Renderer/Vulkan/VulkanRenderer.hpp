@@ -27,12 +27,14 @@
 #define CURSE_CORE_RENDERER_VULKAN_VULKANRENDERER_HPP
 
 #include "Curse/Renderer/Renderer.hpp"
+#include "Curse/Renderer/Shader/Visual/VisualShaderStructure.hpp"
 
 #if defined(CURSE_ENABLE_VULKAN)
 #include "Curse/Renderer/Vulkan/Vulkan.hpp"
 #include <vector>
 
 CURSE_UNSCOPED_ENUM_BEGIN
+
 
 namespace Curse
 {
@@ -111,12 +113,12 @@ namespace Curse
         /**
         * @brief Create vertex shader stage object out of vertex script.
         */
-        virtual Shader::VertexStage* CreateVertexShaderStage(const Shader::VertexScript& script) override;
+        virtual Shader::VertexStage* CreateVertexShaderStage(const Shader::Visual::VertexScript& script) override;
 
         /**
         * @brief Create fragment shader stage object out of fragment script.
         */
-        virtual Shader::FragmentStage* CreateFragmentShaderStage(const Shader::FragmentScript& script) override;
+        virtual Shader::FragmentStage* CreateFragmentShaderStage(const Shader::Visual::FragmentScript& script) override;
 
         /**
         * @brief Create texture object.
@@ -298,9 +300,9 @@ namespace Curse
         bool FindPhysicalDeviceMemoryType(uint32_t& index, const uint32_t filter, const VkMemoryPropertyFlags properties);
         bool CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& memory);
         void CopyBuffer(VkBuffer source, VkBuffer destination, VkDeviceSize size);
-        bool CreateVertexInputAttributes(const Shader::InputStructure& inputs, std::vector<VkVertexInputAttributeDescription>& attributes, uint32_t& stride);
-        bool CreateDescriptorSetLayouts(const Shader::VertexScript& vertexScript, const Shader::FragmentScript& fragmentScript, std::vector<VkDescriptorSetLayout>& setLayouts);
-        bool CreatePushConstants(const Shader::VertexScript& vertexScript, const Shader::FragmentScript& fragmentScript, std::vector<VkPushConstantRange>& pushConstants);
+        bool CreateVertexInputAttributes(const Shader::Visual::InputStructure& inputs, std::vector<VkVertexInputAttributeDescription>& attributes, uint32_t& stride);
+        bool CreateDescriptorSetLayouts(const Shader::Visual::VertexScript& vertexScript, const Shader::Visual::FragmentScript& fragmentScript, std::vector<VkDescriptorSetLayout>& setLayouts);
+        bool CreatePushConstants(const Shader::Visual::VertexScript& vertexScript, const Shader::Visual::FragmentScript& fragmentScript, std::vector<VkPushConstantRange>& pushConstants);
 
         Logger* m_logger;
         Version m_version;

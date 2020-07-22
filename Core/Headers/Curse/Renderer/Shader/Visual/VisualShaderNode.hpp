@@ -23,107 +23,88 @@
 *
 */
 
-#ifndef CURSE_CORE_RENDERER_SHADER_SHADERNODE_HPP
-#define CURSE_CORE_RENDERER_SHADER_SHADERNODE_HPP
+#ifndef CURSE_CORE_RENDERER_SHADER_VISUAL_VISUALSHADERNODE_HPP
+#define CURSE_CORE_RENDERER_SHADER_VISUAL_VISUALSHADERNODE_HPP
 
-#include "Curse/Renderer/Shader/ShaderPin.hpp"
+#include "Curse/Renderer/Shader/Visual/VisualShaderPin.hpp"
 #include <memory>
 #include <array>
 
-namespace Curse::Shader
+namespace Curse::Shader::Visual
 {
 
-    /**
-    * @brief Forward declarations.
-    */
     class Script;
     class VertexScript;
     class FragmentScript;
         
 
-    /**
-    * @brief Enumerator of node types.
-    */
+    /** Enumerator of node types. */
     enum class NodeType : uint8_t
     {
-        Constant,       ///< Local constant, only present in fragment shader.
+        //Constant,       ///< Local constant, only present in fragment shader.
         Function,       ///< Built-in shader function.
         //Input,          ///< Input data from previous shader stage, or data from vertex buffer.
         Operator,       ///< Operator node in local space.
         //Output,         ///< Output data for next shader stage, or data for framebuffer.
         PushConstant,   ///< Push constant node, constants set by the client.
         Uniform,        ///< Uniform node, single object being sent runtime from client.
-        VertexOutput,   ///< Output data of vertex position, being outputted in the vertex shader stage.
+        //VertexOutput,   ///< Output data of vertex position, being outputted in the vertex shader stage.
 
         Variable
     };
 
 
-    /**
-    * @brief shader script node base class.
-    */
+    /** Visual shader script node. This type is inherited by all script nodes.*/
     class CURSE_API Node
     {
 
     public:
 
-        /**
-        * @brief Get parent shader script.
-        */
+        /** Get parent script of this node. */
         /**@{*/
         Script& GetScript();
         const Script& GetScript() const;
         /**@}*/
 
-        /**
-        * @brief Get number of input pins.
-        */
+        /** Get number of input pins. */
         virtual size_t GetInputPinCount() const;
 
-        /**
-        * @brief Get number of output pins.
-        */
+        /**  Get number of output pins.*/
         virtual size_t GetOutputPinCount() const;
 
         /**
-        * @brief Get input pin by index.
-        *
-        * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
-        */
+         * Get input pin by index.
+         *
+         * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
+         */
         /**@{*/
         virtual Pin* GetInputPin(const size_t index = 0);
         virtual const Pin* GetInputPin(const size_t index = 0) const;
         /**@}*/
 
-        /**
-        * @brief Get all input pins, wrapped in a vector.
-        */
+        /** Get all input pins, wrapped in a vector. */
         /**@{*/
         virtual std::vector<Pin*> GetInputPins();
         virtual std::vector<const Pin*> GetInputPins() const;
         /**@}*/
 
         /**
-        * @brief Get output pin by index.
-        *
-        * @return Pointer of output pin at given index, nullptr if index is >= GetOutputPinCount().
-        */
+         * Get output pin by index.
+         *
+         * @return Pointer of output pin at given index, nullptr if index is >= GetOutputPinCount().
+         */
         /**@{*/
         virtual Pin* GetOutputPin(const size_t index = 0);
         virtual const Pin* GetOutputPin(const size_t index = 0) const;
         /**@}*/
 
-        /**
-        * @brief Get all output pins, wrapped in a vector.
-        */
+        /** Get all output pins, wrapped in a vector. */
         /**@{*/
         virtual std::vector<Pin*> GetOutputPins();
         virtual std::vector<const Pin*> GetOutputPins() const;
         /**@}*/
 
-        /**
-        * @brief Get type of node.
-        */
+        /** Get type of node. */
         virtual NodeType GetType() const = 0;
 
     protected:

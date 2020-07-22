@@ -24,9 +24,9 @@
 */
 
 #include "Test.hpp"
-#include "Curse/Renderer/Shader/ShaderScript.hpp"
+#include "Curse/Renderer/Shader/Visual/VisualShaderScript.hpp"
 
-namespace Curse::Shader
+namespace Curse::Shader::Visual
 {
 
     TEST(Shader, Script_CreateOutputNode)

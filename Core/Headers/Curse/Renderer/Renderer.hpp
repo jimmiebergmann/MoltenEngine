@@ -30,14 +30,24 @@
 #include "Curse/Renderer/Framebuffer.hpp"
 #include "Curse/Renderer/IndexBuffer.hpp"
 #include "Curse/Renderer/Pipeline.hpp"
-#include "Curse/Renderer/Shader/ShaderStage.hpp"
-#include "Curse/Renderer/Shader/ShaderScript.hpp"
 #include "Curse/Renderer/Texture.hpp"
 #include "Curse/Renderer/UniformBlock.hpp"
 #include "Curse/Renderer/UniformBuffer.hpp"
 #include "Curse/Renderer/VertexBuffer.hpp"
 #include "Curse/System/Version.hpp"
 #include <functional>
+
+namespace Curse::Shader
+{
+    class VertexStage;
+    class FragmentStage;
+}
+
+namespace Curse::Shader::Visual
+{
+    class VertexScript;
+    class FragmentScript;
+}
 
 namespace Curse
 {
@@ -123,12 +133,12 @@ namespace Curse
         /**
         * @brief Create vertex shader stage object out of vertex script.
         */
-        virtual Shader::VertexStage* CreateVertexShaderStage(const Shader::VertexScript& script) = 0;
+        virtual Shader::VertexStage* CreateVertexShaderStage(const Shader::Visual::VertexScript& script) = 0;
 
         /**
         * @brief Create fragment shader stage object out of fragment script.
         */
-        virtual Shader::FragmentStage* CreateFragmentShaderStage(const Shader::FragmentScript& script) = 0;
+        virtual Shader::FragmentStage* CreateFragmentShaderStage(const Shader::Visual::FragmentScript& script) = 0;
 
         /**
         * @brief Create texture object.

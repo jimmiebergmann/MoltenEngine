@@ -31,16 +31,16 @@
 #if defined(CURSE_ENABLE_VULKAN)
 #include "Curse/Renderer/Vulkan/Vulkan.hpp"
 
+namespace Curse::Shader::Visual
+{
+    class VertexScript;
+    class FragmentScript;
+}
+
 namespace Curse
 {
 
-    // Forward declarations.
     class VulkanRenderer;
-    namespace Shader
-    {
-        class VertexScript;
-        class FragmentScript;
-    }
 
 
     class CURSE_API VulkanVertexShaderStage : public Shader::VertexStage
@@ -48,13 +48,13 @@ namespace Curse
 
     private:
 
-        VulkanVertexShaderStage(VkShaderModule module, const Shader::VertexScript& script);
+        VulkanVertexShaderStage(VkShaderModule module, const Shader::Visual::VertexScript& script);
         VulkanVertexShaderStage(const VulkanVertexShaderStage&) = delete;
         VulkanVertexShaderStage(VulkanVertexShaderStage&&) = delete;
         ~VulkanVertexShaderStage() = default;
 
         VkShaderModule module;
-        const Shader::VertexScript& script;
+        const Shader::Visual::VertexScript& script;
 
         friend class VulkanRenderer;
 
@@ -65,13 +65,13 @@ namespace Curse
 
     private:
 
-        VulkanFragmentShaderStage(VkShaderModule module, const Shader::FragmentScript& script);
+        VulkanFragmentShaderStage(VkShaderModule module, const Shader::Visual::FragmentScript& script);
         VulkanFragmentShaderStage(const VulkanFragmentShaderStage&) = delete;
         VulkanFragmentShaderStage(VulkanFragmentShaderStage&&) = delete;
         ~VulkanFragmentShaderStage() = default;
 
         VkShaderModule module;
-        const Shader::FragmentScript& script;
+        const Shader::Visual::FragmentScript& script;
 
         friend class VulkanRenderer;
 

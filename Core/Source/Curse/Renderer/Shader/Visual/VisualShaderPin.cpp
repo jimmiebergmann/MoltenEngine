@@ -23,44 +23,43 @@
 *
 */
 
-#ifndef CURSE_CORE_RENDERER_SHADER_VULKANSHADERGENERATOR_HPP
-#define CURSE_CORE_RENDERER_SHADER_VULKANSHADERGENERATOR_HPP
+#include "Curse/Renderer/Shader/Visual/VisualShaderPin.hpp"
 
-#include "Curse/Renderer/Shader.hpp"
-#include <vector>
-
-namespace Curse
-{
-    class Logger;
-}
 namespace Curse::Shader::Visual
 {
-    class Script;
-}
 
-namespace Curse::Shader
-{
+    // Pin implementations.
+    inline Pin::Pin(Node& node, const std::string& name) :
+        m_node(node),
+        m_name(name)
+    { }
 
-    /**
-    * Vulkan shader code generator.
-    *
-    * Generation is performed in two steps:
-    *   1. Generate GLSL code, compatible with Spri-V.
-    *   2. Converting the GLSL code into SPIR-V.
-    */
-    class CURSE_API VulkanGenerator
+    inline Pin::~Pin()
+    { }
+
+    inline Node& Pin::GetNode()
     {
+        return m_node;
+    }
 
-    public:
+    inline const Node& Pin::GetNode() const
+    {
+        return m_node;
+    }
 
-        /** Generate GLSL code, compatible with Spri-V, from a visual shader script. */
-        static std::vector<uint8_t> GenerateGlsl(const Visual::Script& script, Logger* logger = nullptr);
+    inline const std::string& Pin::GetName() const
+    {
+        return m_name;
+    }
 
-        /** Converting GLSL code into SPIR-V code. */
-        static std::vector<uint8_t> ConvertGlslToSpriV(const std::vector<uint8_t> & code, Type shaderType, Logger* logger = nullptr);
+    inline void Pin::ConnectInternal(Pin& source, Pin& target)
+    {
+        source.ConnectInternal(target);
+    }
 
-    };
+    inline void Pin::DisconnectInternal(Pin& source, Pin& target)
+    {
+        source.DisconnectInternal(target);
+    }
 
 }
-
-#endif
