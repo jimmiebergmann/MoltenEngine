@@ -90,9 +90,9 @@ namespace Curse
         template<typename ContextType, typename DerivedSystem, typename ... RequiredComponents>
         inline System<ContextType, DerivedSystem, RequiredComponents...>::~System()
         {
-            if (m_context)
+            if (this->m_context)
             {
-                m_context->UnregisterSystem(*this);
+                this->m_context->UnregisterSystem(*this);
             }
         }
 

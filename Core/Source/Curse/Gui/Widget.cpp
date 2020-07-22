@@ -48,8 +48,8 @@ namespace Curse::Gui
         const WidgetDescriptor& descriptor, 
         std::unique_ptr<RenderObject> renderObject) 
         :
-        m_entity(entity),
         WidgetDescriptor(descriptor),
+        m_entity(entity), 
         m_renderObject(std::move(renderObject))
     { }
 

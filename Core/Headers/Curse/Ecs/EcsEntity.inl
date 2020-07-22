@@ -79,7 +79,7 @@ namespace Curse
 
         template<typename ContextType>
         template<typename Comp>
-        Comp* Entity<ContextType>::GetComponent()
+        inline Comp* Entity<ContextType>::GetComponent()
         {
             if (!m_metaData)
             {
@@ -90,7 +90,7 @@ namespace Curse
         }
         template<typename ContextType>
         template<typename Comp>
-        const Comp* Entity<ContextType>::GetComponent() const
+        inline const Comp* Entity<ContextType>::GetComponent() const
         {
             if (!m_metaData)
             {

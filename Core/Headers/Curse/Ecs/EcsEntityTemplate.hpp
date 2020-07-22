@@ -28,6 +28,7 @@
 
 #include "Curse/Ecs/Ecs.hpp"
 #include "Curse/Ecs/EcsComponent.hpp"
+#include "Curse/Ecs/EcsAllocator.hpp"
 #include <queue>
 #include <vector>
 #include <map>
@@ -37,9 +38,6 @@ namespace Curse
 
     namespace Ecs
     {
-
-        // Forward declarations.
-        class Allocator;
 
         namespace Private
         {

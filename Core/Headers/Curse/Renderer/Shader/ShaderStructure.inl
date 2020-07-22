@@ -41,7 +41,7 @@ namespace Curse::Shader
 
     template<template<typename TDataType> typename TVariableType>
     template<typename DataType>
-    Structure<TVariableType>::VariableType<DataType>* Structure<TVariableType>::AddMember()
+    Structure<TVariableType>::template VariableType<DataType>* Structure<TVariableType>::AddMember()
     {
         auto* member = new TVariableType<DataType>(m_script);
         m_members.push_back(member);
@@ -56,19 +56,19 @@ namespace Curse::Shader
 
     template<template<typename TDataType> typename TVariableType>
     template<typename DataType>
-    Structure<TVariableType>::VariableType<DataType>* Structure<TVariableType>::GetMember(const size_t index)
+    Structure<TVariableType>::template VariableType<DataType>* Structure<TVariableType>::GetMember(const size_t index)
     {
         return static_cast<VariableType<DataType>*>(GetMember(index));
     }
     template<template<typename TDataType> typename TVariableType>
     template<typename DataType>
-    const Structure<TVariableType>::VariableType<DataType>* Structure<TVariableType>::GetMember(const size_t index) const
+    const typename Structure<TVariableType>::template VariableType<DataType>* Structure<TVariableType>::GetMember(const size_t index) const
     {
         return static_cast<const VariableType<DataType>*>(GetMember(index));
     }
     
     template<template<typename TDataType> typename TVariableType>
-    Structure<TVariableType>::template VariableBaseType* Structure<TVariableType>::GetMember(const size_t index)
+    typename Structure<TVariableType>::VariableBaseType* Structure<TVariableType>::GetMember(const size_t index)
     {
         if (index >= m_members.size())
         {
@@ -78,7 +78,7 @@ namespace Curse::Shader
     }
 
     template<template<typename TDataType> typename TVariableType>
-    const Structure<TVariableType>::template VariableBaseType* Structure<TVariableType>::GetMember(const size_t index) const
+    const typename Structure<TVariableType>::VariableBaseType* Structure<TVariableType>::GetMember(const size_t index) const
     {
         if (index >= m_members.size())
         {
@@ -88,24 +88,24 @@ namespace Curse::Shader
     }
 
     template<template<typename TDataType> typename TVariableType>
-    Structure<TVariableType>::template VariableBaseType* Structure<TVariableType>::operator[](const size_t index)
+    typename Structure<TVariableType>::VariableBaseType* Structure<TVariableType>::operator[](const size_t index)
     {
         return GetMember(index);
     }
     template<template<typename TDataType> typename TVariableType>
-    const Structure<TVariableType>::template VariableBaseType* Structure<TVariableType>::operator[](const size_t index) const
+    const typename Structure<TVariableType>::VariableBaseType* Structure<TVariableType>::operator[](const size_t index) const
     {
         return GetMember(index);
     }
 
     template<template<typename TDataType> typename TVariableType>
-    Structure<TVariableType>::template VariableContainer Structure<TVariableType>::GetMembers()
+    typename Structure<TVariableType>::VariableContainer Structure<TVariableType>::GetMembers()
     {
         return { m_members.begin(), m_members.end() };
     }
 
     template<template<typename TDataType> typename TVariableType>
-    Structure<TVariableType>::template ConstVariableContainer Structure<TVariableType>::GetMembers() const
+    typename Structure<TVariableType>::ConstVariableContainer Structure<TVariableType>::GetMembers() const
     {
         return { m_members.begin(), m_members.end() };
     }
@@ -116,7 +116,7 @@ namespace Curse::Shader
     {
         return Private::CheckStructureCompability(
             static_cast<const VariableContainer&>(m_members), 
-            static_cast<const Structure<OtherVariableType>::VariableContainer&>(other.m_members));
+            static_cast<const typename Structure<OtherVariableType>::VariableContainer&>(other.m_members));
     }
 
 }

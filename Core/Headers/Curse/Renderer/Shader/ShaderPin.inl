@@ -87,7 +87,7 @@ namespace Curse::Shader
     {
         if (target.GetDataType() != GetDataType() ||
             &target.GetNode() == &GetNode() ||
-            &(target.GetNode().GetScript()) != &(GetNode().GetScript()) ||
+            //&(target.GetNode().GetScript()) != &(GetNode().GetScript()) ||
             target.GetDirection() != PinDirection::Out)
         {
             return false;
@@ -250,7 +250,7 @@ namespace Curse::Shader
     {
         if (target.GetDataType() != GetDataType() ||
             &target.GetNode() == &GetNode() ||
-            &(target.GetNode().GetScript()) != &(GetNode().GetScript()) ||
+            //&(target.GetNode().GetScript()) != &(GetNode().GetScript()) ||
             target.GetDirection() != PinDirection::In)
         {
             return false;

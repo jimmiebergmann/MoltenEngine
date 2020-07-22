@@ -49,7 +49,7 @@ namespace Curse::Gui
             std::move(renderObject),
             args...);
         auto widget = TemplatedWidgetPointer<TemplateType>(widgetPointer);
-        widgetEntity.GetComponent<BaseWidget>()->widget = widget;
+        widgetEntity.template GetComponent<BaseWidget>()->widget = widget;
 
         parent->m_children.push_back(widget);
         widget->m_parent = parent;

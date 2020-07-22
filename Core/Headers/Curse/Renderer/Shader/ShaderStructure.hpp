@@ -40,7 +40,7 @@ namespace Curse::Shader
 
         template<typename DataType>
         using VariableType = TVariableType<DataType>;
-        using VariableBaseType = TVariableType<float>::template Base;
+        using VariableBaseType = typename TVariableType<float>::Base;
         using VariableContainer = std::vector<VariableBaseType*>;
         using ConstVariableContainer = std::vector<const VariableBaseType*>;
 
