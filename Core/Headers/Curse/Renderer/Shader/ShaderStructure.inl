@@ -41,7 +41,7 @@ namespace Curse::Shader
 
     template<template<typename TDataType> typename TVariableType>
     template<typename DataType>
-    Structure<TVariableType>::VariableType<DataType>* Structure<TVariableType>::AddMember()
+    typename Structure<TVariableType>::template VariableType<DataType>* Structure<TVariableType>::AddMember()
     {
         auto* member = new TVariableType<DataType>(m_script);
         m_members.push_back(member);
@@ -56,7 +56,7 @@ namespace Curse::Shader
 
     template<template<typename TDataType> typename TVariableType>
     template<typename DataType>
-    Structure<TVariableType>::VariableType<DataType>* Structure<TVariableType>::GetMember(const size_t index)
+    typename Structure<TVariableType>::template VariableType<DataType>* Structure<TVariableType>::GetMember(const size_t index)
     {
         return static_cast<VariableType<DataType>*>(GetMember(index));
     }
