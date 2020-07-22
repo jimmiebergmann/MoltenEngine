@@ -98,7 +98,7 @@ namespace Curse
 
         template<typename ContextType, typename DerivedSystem, typename ... RequiredComponents>
         template<typename Comp>
-        Comp& System<ContextType, DerivedSystem, RequiredComponents...>::GetComponent(const size_t entityIndex)
+        inline Comp& System<ContextType, DerivedSystem, RequiredComponents...>::GetComponent(const size_t entityIndex)
         {
             static_assert(TemplateArgumentsContains<Comp, RequiredComponents...>(),
                 "Provided type for GetComponent is not available for this system.");

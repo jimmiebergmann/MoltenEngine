@@ -55,7 +55,7 @@ namespace Curse::Shader
         /**
         * @brief Destructor.
         */
-        virtual ~Script();
+        virtual ~Script() = default;
 
         /**
         * @brief Get type of shader script.

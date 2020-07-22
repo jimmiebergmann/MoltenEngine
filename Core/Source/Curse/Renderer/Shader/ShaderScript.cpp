@@ -42,9 +42,6 @@ namespace Curse::Shader
 {
 
     // Shader script implementations.
-    Script::~Script()
-    {}
-
     VertexOutputNode* Script::GetVertexOutputVariable()
     {
         return nullptr;
