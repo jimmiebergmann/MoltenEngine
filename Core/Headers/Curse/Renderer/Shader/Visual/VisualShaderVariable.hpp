@@ -40,7 +40,7 @@ namespace Curse::Shader::Visual
     };
 
     
-    /** */
+    /** Base class of all variable types. */
     class CURSE_API VariableBase : public Node
     {
 
@@ -60,6 +60,7 @@ namespace Curse::Shader::Visual
     };
 
 
+    /** Base class of input variable type. */
     class CURSE_API InputVariableBase : public VariableBase
     {
 
@@ -77,6 +78,7 @@ namespace Curse::Shader::Visual
     };
 
 
+    /** Base class of ouput variable type. */
     class CURSE_API OutputVariableBase : public VariableBase
     {
 
@@ -93,6 +95,8 @@ namespace Curse::Shader::Visual
 
     };
 
+
+    /** Base class of constant variable type. */
     class CURSE_API ConstantVariableBase : public VariableBase
     {
 
@@ -110,42 +114,10 @@ namespace Curse::Shader::Visual
     };
 
 
-    /** The variable class is a general input/output pin variable. */
-    /*template<typename TDataType>
-    class Variable : public VariableBase
-    {
-
-    public:
-
-        using Base = VariableBase;
-        using DataType = TDataType;
-
-        Variable(Script& script);
-        Variable(Script& script, const DataType& defaultValue);
-
-        virtual size_t GetInputPinCount() const override;
-        virtual size_t GetOutputPinCount() const override;
-        virtual Pin* GetInputPin(const size_t index = 0) override;
-        virtual const Pin* GetInputPin(const size_t index = 0) const override;
-        virtual std::vector<Pin*> GetInputPins() override;
-        virtual std::vector<const Pin*> GetInputPins() const override;
-        virtual Pin* GetOutputPin(const size_t index = 0) override;
-        virtual const Pin* GetOutputPin(const size_t index = 0) const override;
-        virtual std::vector<Pin*> GetOutputPins() override;
-        virtual std::vector<const Pin*> GetOutputPins() const override;
-        
-        /** @brief Get data type of variable. */
-       /* virtual VariableDataType GetDataType() const override;
-
-    private:
-
-        InputPin<DataType> m_inputPin;
-        OutputPin<DataType> m_outputPin;
-
-    };
-
-
-    /** Input variables only consist of an input pin. */
+    /**
+     * Visual shader script input variable node.
+     * Input variables only consist of an output pin.
+     */
     template<typename TDataType>
     class InputVariable : public InputVariableBase
     {
@@ -176,7 +148,10 @@ namespace Curse::Shader::Visual
     };
 
 
-    /** Input variables only consist of an output pin. */
+    /** 
+     * Visual shader script output variable node.
+     * Output variables only consist of an input pin. 
+     */
     template<typename TDataType>
     class OutputVariable : public OutputVariableBase
     {
@@ -208,7 +183,7 @@ namespace Curse::Shader::Visual
     };
 
     /**
-     * Visual shader script constant node.
+     * Visual shader script constant variable node.
      * The stored value is not constant and can be changed at any time,
      * but it's used as a constant in the generated shader code.
      */
@@ -250,8 +225,6 @@ namespace Curse::Shader::Visual
         OutputPin<DataType> m_outputPin;
         DataType m_value;
     };
-
-    
 
 }
 

@@ -26,7 +26,6 @@
 #ifndef CURSE_CORE_RENDERER_SHADER_VISUAL_VISUALSHADERSCRIPT_HPP
 #define CURSE_CORE_RENDERER_SHADER_VISUAL_VISUALSHADERSCRIPT_HPP
 
-//#include "Curse/Renderer/Shader/Visual/VisualShaderConstant.hpp"
 #include "Curse/Renderer/Shader/Visual/VisualShaderFunction.hpp"
 //#include "Curse/Renderer/Shader/Visual/VisualShaderUniform.hpp"
 //#include "Curse/Renderer/Shader/Visual/VisualShaderPushConstant.hpp"
@@ -42,12 +41,17 @@
 namespace Curse::Shader::Visual
 {
 
+    using InputInterface = InputStructure; ///< Input interface structure block.
+    using OutputInterface = OutputStructure; ///< Output interface structure block.
+    using UniformInterface = InputStructure; ///< Uniform interface structure block.
+    using PushConstantInterface = InputStructure; ///< Push constant interface structure block.
+
     /**
      * Type definition of vertex output variable node.
-     * This type is used by the vertex shader. 
+     * This type is available in and used by the vertex shader. 
      */
     using VertexOutputVariable = OutputVariable<Curse::Vector4f32>;
-
+    
 
     /** Visual shader script class, used for generating shaders via visual node based system. */
     class CURSE_API Script
@@ -78,8 +82,8 @@ namespace Curse::Shader::Visual
          * Members of this block is sent from the previous shader stage or from the vertex buffer.
          */
         /**@{*/
-        virtual InputStructure& GetInputInterface() = 0;
-        virtual const InputStructure& GetInputInterface() const = 0;
+        virtual InputInterface& GetInputInterface() = 0;
+        virtual const InputInterface& GetInputInterface() const = 0;
         /**@}*/
 
         /**
@@ -87,8 +91,8 @@ namespace Curse::Shader::Visual
          * Data in this block is sent to the next shader stage or to the framebuffer.
          */
         /**@{*/
-        virtual OutputStructure& GetOutputInterface() = 0;
-        virtual const OutputStructure& GetOutputInterface() const = 0;
+        virtual OutputInterface& GetOutputInterface() = 0;
+        virtual const OutputInterface& GetOutputInterface() const = 0;
         /**@}*/
 
         /**
@@ -186,8 +190,8 @@ namespace Curse::Shader::Visual
          * Members of this block is sent from the previous shader stage or from the vertex buffer.
          */
          /**@{*/
-        virtual InputStructure& GetInputInterface() override;
-        virtual const InputStructure& GetInputInterface() const override;
+        virtual InputInterface& GetInputInterface() override;
+        virtual const InputInterface& GetInputInterface() const override;
         /**@}*/
 
         /**
@@ -195,8 +199,8 @@ namespace Curse::Shader::Visual
          * Data in this block is sent to the next shader stage or to the framebuffer.
          */
          /**@{*/
-        virtual OutputStructure& GetOutputInterface() override;
-        virtual const OutputStructure& GetOutputInterface() const override;
+        virtual OutputInterface& GetOutputInterface() override;
+        virtual const OutputInterface& GetOutputInterface() const override;
         /**@}*/
 
         /**
@@ -230,8 +234,8 @@ namespace Curse::Shader::Visual
         
         //std::map<uint32_t, UniformBlock*> m_uniformBlocks;
 
-        InputStructure m_inputInterface;
-        OutputStructure m_outputInterface;
+        InputInterface m_inputInterface;
+        OutputInterface m_outputInterface;
         //InputStructure m_pushConstantInterface;
         VertexOutputVariable m_vertexOutputVariable;
     };
@@ -304,8 +308,8 @@ namespace Curse::Shader::Visual
          * Members of this block is sent from the previous shader stage or from the vertex buffer.
          */
          /**@{*/
-        virtual InputStructure& GetInputInterface() override;
-        virtual const InputStructure& GetInputInterface() const override;
+        virtual InputInterface& GetInputInterface() override;
+        virtual const InputInterface& GetInputInterface() const override;
         /**@}*/
 
         /**
@@ -313,8 +317,8 @@ namespace Curse::Shader::Visual
          * Data in this block is sent to the next shader stage or to the framebuffer.
          */
          /**@{*/
-        virtual OutputStructure& GetOutputInterface() override;
-        virtual const OutputStructure& GetOutputInterface() const override;
+        virtual OutputInterface& GetOutputInterface() override;
+        virtual const OutputInterface& GetOutputInterface() const override;
         /**@}*/
 
         /**
@@ -341,8 +345,8 @@ namespace Curse::Shader::Visual
         std::set<Node*> m_allNodes;
         //std::map<uint32_t, UniformBlock*> m_uniformBlocks;
 
-        InputStructure m_inputInterface;
-        OutputStructure m_outputInterface;
+        InputInterface m_inputInterface;
+        OutputInterface m_outputInterface;
         //InputStructure m_pushConstantInterface;
 
     };

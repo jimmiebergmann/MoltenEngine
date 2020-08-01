@@ -26,100 +26,6 @@
 namespace Curse::Shader::Visual
 {
 
-    // Variable implementations.
-   /* template<typename TDataType>
-    inline Variable<TDataType>::Variable(Script& script) :
-        VariableBase(script),
-        m_inputPin(*this),
-        m_outputPin(*this)
-    {}
-
-    template<typename TDataType>
-    inline Variable<TDataType>::Variable(Script& script, const DataType& defaultValue) :
-        VariableBase(script),
-        m_inputPin(*this),
-        m_outputPin(*this)
-    {}
-
-    template<typename TDataType>
-    inline size_t Variable<TDataType>::GetInputPinCount() const
-    {
-        return 1;
-    }
-
-    template<typename TDataType>
-    inline size_t Variable<TDataType>::GetOutputPinCount() const
-    {
-        return 1;
-    }
-
-    template<typename TDataType>
-    inline Pin* Variable<TDataType>::GetInputPin(const size_t index)
-    {
-        if (index != 0)
-        {
-            return nullptr;
-        }
-        return &m_inputPin;
-    }
-    template<typename TDataType>
-    inline const Pin* Variable<TDataType>::GetInputPin(const size_t index) const
-    {
-        if (index != 0)
-        {
-            return nullptr;
-        }
-        return &m_inputPin;
-    }
-
-    template<typename TDataType>
-    inline std::vector<Pin*> Variable<TDataType>::GetInputPins()
-    {
-        return { &m_inputPin };
-    }
-    template<typename TDataType>
-    inline std::vector<const Pin*> Variable<TDataType>::GetInputPins() const
-    {
-        return { &m_inputPin };
-    }
-
-    template<typename TDataType>
-    inline Pin* Variable<TDataType>::GetOutputPin(const size_t index)
-    {
-        if (index != 0)
-        {
-            return nullptr;
-        }
-        return &m_outputPin;
-    }
-    template<typename TDataType>
-    inline const Pin* Variable<TDataType>::GetOutputPin(const size_t index) const
-    {
-        if (index != 0)
-        {
-            return nullptr;
-        }
-        return &m_outputPin;
-    }
-
-    template<typename TDataType>
-    inline std::vector<Pin*> Variable<TDataType>::GetOutputPins()
-    {
-        return { &m_outputPin };
-    }
-    template<typename TDataType>
-    inline std::vector<const Pin*> Variable<TDataType>::GetOutputPins() const
-    {
-        return { &m_outputPin };
-    }
-
-    template<typename TDataType>
-    inline VariableDataType Variable<TDataType>::GetDataType() const
-    {
-        return m_inputPin.GetDataType();
-    }*/
-
-
     // Input variable implementations.
     template<typename TDataType>
     inline InputVariable<TDataType>::InputVariable(Script& script) :
@@ -298,7 +204,7 @@ namespace Curse::Shader::Visual
     template<typename TDataType>
     inline VariableType ConstantVariable<TDataType>::GetVariableType() const
     {
-        return VariableType::Input;
+        return VariableType::Constant;
     }
 
     template<typename TDataType>

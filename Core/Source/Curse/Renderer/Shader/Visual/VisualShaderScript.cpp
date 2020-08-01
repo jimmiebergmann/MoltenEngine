@@ -99,20 +99,20 @@ namespace Curse::Shader::Visual
         return { m_allNodes.begin(), m_allNodes.end() };
     }
 
-    InputStructure& VertexScript::GetInputInterface()
+    InputInterface& VertexScript::GetInputInterface()
     {
         return m_inputInterface;
     }
-    const InputStructure& VertexScript::GetInputInterface() const
+    const InputInterface& VertexScript::GetInputInterface() const
     {
         return m_inputInterface;
     }
 
-    OutputStructure& VertexScript::GetOutputInterface()
+    OutputInterface& VertexScript::GetOutputInterface()
     {
         return m_outputInterface;
     }
-    const OutputStructure& VertexScript::GetOutputInterface() const
+    const OutputInterface& VertexScript::GetOutputInterface() const
     {
         return m_outputInterface;
     }
@@ -219,20 +219,20 @@ namespace Curse::Shader::Visual
         return { m_allNodes.begin(), m_allNodes.end() };
     }
 
-    InputStructure& FragmentScript::GetInputInterface()
+    InputInterface& FragmentScript::GetInputInterface()
     {
         return m_inputInterface;
     }
-    const InputStructure& FragmentScript::GetInputInterface() const
+    const InputInterface& FragmentScript::GetInputInterface() const
     {
         return m_inputInterface;
     }
 
-    OutputStructure& FragmentScript::GetOutputInterface()
+    OutputInterface& FragmentScript::GetOutputInterface()
     {
         return m_outputInterface;
     }
-    const OutputStructure& FragmentScript::GetOutputInterface() const
+    const OutputInterface& FragmentScript::GetOutputInterface() const
     {
         return m_outputInterface;
     }
