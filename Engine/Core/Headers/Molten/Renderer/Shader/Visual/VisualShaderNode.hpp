@@ -110,9 +110,12 @@ namespace Molten::Shader::Visual
     protected:
 
         Node(Script& script);
+        virtual ~Node() = default;
+
         Node(const Node&) = delete;
         Node(Node&&) = delete;
-        virtual ~Node();
+        Node& operator =(const Node&) = delete;
+        Node& operator =(Node&&) = delete;
 
     private:
 

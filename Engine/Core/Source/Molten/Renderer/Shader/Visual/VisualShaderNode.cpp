@@ -88,19 +88,4 @@ namespace Molten::Shader::Visual
         m_script(script)
     { }
 
-    Node::~Node()
-    {
-        auto inputs = GetInputPins();
-        for (auto& input : inputs)
-        {
-            input->Disconnect();
-        }
-
-        auto outputs = GetOutputPins();
-        for (auto& output : outputs)
-        {
-            output->Disconnect();
-        }
-    }
-
 }
