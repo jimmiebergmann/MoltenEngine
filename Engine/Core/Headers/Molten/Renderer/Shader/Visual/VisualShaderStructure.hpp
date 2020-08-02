@@ -32,6 +32,12 @@
 namespace Molten::Shader::Visual
 {
 
+    /**
+     * Data structure container for visual shader scripts.
+     * This container can be used for interface blocks for unifoms, vertex data or push constants.
+     *
+     * @see Script
+     */
     template<template<typename TDataType> typename TVariableType>
     class Structure
     {
@@ -47,22 +53,45 @@ namespace Molten::Shader::Visual
         Structure(Script& script);
         ~Structure();
 
+        /** Append new data member to this structure.  */
         template<typename DataType>
         VariableType<DataType>* AddMember();
 
+        /** Get number of data members in this structure. */
         size_t GetMemberCount() const;
 
+        /**
+         * Get  data member by index and cast it to the currect variable type.
+         * 
+         * @param index must be less than GetMemberCount().
+         */
+        /**@{*/
         template<typename DataType>
         VariableType<DataType>* GetMember(const size_t index);
         template<typename DataType>
         const VariableType<DataType>* GetMember(const size_t index) const;
+        /**@}*/
 
+        /**
+         * Get  data member by index.
+         *
+         * @param index must be less than GetMemberCount().
+         */
         VariableBaseType* GetMember(const size_t index);
         const VariableBaseType* GetMember(const size_t index) const;
 
+        /**
+         * Operator for getting data member by index. Same as GetMember().
+         *
+         * @param index must be less than GetMemberCount().
+         */
         VariableBaseType* operator[](const size_t index);
         const VariableBaseType* operator[](const size_t index) const;
 
+        /**
+         * Get all data members in this structure.
+         * The returned container is not the original one, but a copy.
+         */
         VariableContainer GetMembers();
         ConstVariableContainer GetMembers() const;
 
@@ -71,13 +100,16 @@ namespace Molten::Shader::Visual
 
     private:
 
+        /** Copy and move operations are not allowed. */
+        /**@{*/
         Structure(const Structure& copy) = delete;
         Structure(const Structure&& move) = delete;
         Structure& operator =(const Structure& copy) = delete;
         Structure& operator =(const Structure&& move) = delete;
+        /**@*/
 
-        Script& m_script;
-        VariableContainer m_members;
+        Script& m_script; ///< parent script.
+        VariableContainer m_members; ///< Container of data members.
 
         template<template<typename OtherDataType> typename OtherVariableType>
         friend class Structure;
@@ -92,6 +124,7 @@ namespace Molten::Shader::Visual
 namespace Molten::Shader::Visual::Private
 {
 
+    /** Helper function for  */
     template<typename TLeftBaseType, typename TRightBaseType>
     static bool CheckStructureCompability(const TLeftBaseType& lhs, const TRightBaseType& rhs);
 
