@@ -29,35 +29,35 @@ namespace Molten::Shader::Visual
 {
 
     // Pin implementations.
-    inline Pin::Pin(Node& node, const std::string& name) :
+    Pin::Pin(Node& node, const std::string& name) :
         m_node(node),
         m_name(name)
     { }
 
-    inline Pin::~Pin()
+    Pin::~Pin()
     { }
 
-    inline Node& Pin::GetNode()
+    Node& Pin::GetNode()
     {
         return m_node;
     }
 
-    inline const Node& Pin::GetNode() const
+    const Node& Pin::GetNode() const
     {
         return m_node;
     }
 
-    inline const std::string& Pin::GetName() const
+    const std::string& Pin::GetName() const
     {
         return m_name;
     }
 
-    inline void Pin::ConnectInternal(Pin& source, Pin& target)
+    void Pin::ConnectInternal(Pin& source, Pin& target)
     {
         source.ConnectInternal(target);
     }
 
-    inline void Pin::DisconnectInternal(Pin& source, Pin& target)
+    void Pin::DisconnectInternal(Pin& source, Pin& target)
     {
         source.DisconnectInternal(target);
     }
