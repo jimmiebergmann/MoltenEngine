@@ -27,6 +27,7 @@
 #include "Molten/Renderer/Shader/Visual/VisualShaderScript.hpp"
 #include "Molten/Logger.hpp"
 #include <memory>
+#include <map>
 #include <stack>
 
 #if defined(MOLTEN_ENABLE_GLSLANG)
