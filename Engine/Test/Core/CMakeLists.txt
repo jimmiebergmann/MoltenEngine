@@ -64,7 +64,7 @@ CreateSourceGroups("${CoreTestHeaders}" "${CoreTestDir}")
 
 set_target_properties( MoltenCoreTest
   PROPERTIES
-  OUTPUT_NAME_DEBUG "CMoltenCoreTestDebug"
+  OUTPUT_NAME_DEBUG "MoltenCoreTestDebug"
   OUTPUT_NAME_RELEASE "MoltenCoreTest"
   RUNTIME_OUTPUT_DIRECTORY "${RootDir}/Bin"
   RUNTIME_OUTPUT_DIRECTORY_DEBUG "${RootDir}/Bin"
@@ -75,7 +75,7 @@ SetVisualStudioWorkingDir("MoltenCoreTest" "${RootDir}/Bin")
 
 if(MOLTEN_ENABLE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU") ## Code coverage
   set_target_properties(MoltenCoreTest PROPERTIES COMPILE_FLAGS "--coverage")
-  target_link_libraries(CMoltenCoreTest "gcov")
+  target_link_libraries(MoltenCoreTest "gcov")
 endif()
 
 target_link_libraries(MoltenCoreTest Molten gtest_main)
