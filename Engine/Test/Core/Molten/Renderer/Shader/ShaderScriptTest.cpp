@@ -49,7 +49,11 @@ namespace Molten::Shader::Visual
         mult->GetInputPin(0)->Connect(*color->GetOutputPin());
         mult->GetInputPin(1)->Connect(*var2->GetOutputPin());
 
-        auto source = VulkanGenerator::GenerateGlsl(script);
+        std::vector<uint8_t> source;
+        {
+            Molten::Test::Benchmarker bench("GLSL generator");
+            source = VulkanGenerator::GenerateGlsl(script);
+        }
         EXPECT_GT(source.size(), size_t(0));
         const std::string sourceStr(source.begin(), source.end());
 
@@ -80,7 +84,11 @@ namespace Molten::Shader::Visual
             output->GetInputPin()->Connect(*cos->GetOutputPin());
             static_cast<Shader::Visual::InputPin<Vector4f32>*>(cos->GetInputPin())->SetDefaultValue({2.1f, 3.5f, 4.7f, 5.2f});
 
-            auto source = VulkanGenerator::GenerateGlsl(script);
+            std::vector<uint8_t> source;
+            {
+                Molten::Test::Benchmarker bench("GLSL generator - default pin");
+                source = VulkanGenerator::GenerateGlsl(script);
+            }
             EXPECT_GT(source.size(), size_t(0));
             const std::string sourceStr(source.begin(), source.end());
 
@@ -109,7 +117,11 @@ namespace Molten::Shader::Visual
             output->GetInputPin()->Connect(*cos->GetOutputPin());
             cos->GetInputPin()->Connect(*var1->GetOutputPin());
 
-            auto source = VulkanGenerator::GenerateGlsl(script);
+            std::vector<uint8_t> source;
+            {
+                Molten::Test::Benchmarker bench("GLSL generator - function");
+                source = VulkanGenerator::GenerateGlsl(script);
+            }
             const std::string sourceStr(source.begin(), source.end());
 
             static const std::string expectedSource =

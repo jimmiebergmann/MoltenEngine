@@ -30,7 +30,7 @@
 namespace Molten::Shader::Visual
 {
 
-    TEST(Shader, InputVariable_Structure)
+    TEST(Shader, VisualScript_InputVariable_Structure)
     {
         FragmentScript script;
 
@@ -92,7 +92,7 @@ namespace Molten::Shader::Visual
         }
     }
 
-    TEST(Shader, OutputVariable_Structure)
+    TEST(Shader, VisualScript_OutputVariable_Structure)
     {
         FragmentScript script;
 
@@ -103,4 +103,44 @@ namespace Molten::Shader::Visual
         }
     }
 
+    TEST(Shader, VisualScript_Structure_Remove)
+    {
+        FragmentScript script;
+
+        {
+            Structure<InputVariable> vertexInput(script);
+            vertexInput.AddMember<Vector3f32>();
+            InputVariable<Vector2f32>* m2 = vertexInput.AddMember<Vector2f32>();
+            InputVariable<Vector4f32>* m3 = vertexInput.AddMember<Vector4f32>();
+            ASSERT_EQ(vertexInput.GetMemberCount(), size_t(3));
+            EXPECT_EQ(vertexInput.GetSizeOf(), size_t(36));
+
+            vertexInput.RemoveMember(0);
+            ASSERT_EQ(vertexInput.GetMemberCount(), size_t(2));
+            EXPECT_EQ(vertexInput.GetMember(0), m2);
+            EXPECT_EQ(vertexInput.GetMember(1), m3);
+            EXPECT_EQ(vertexInput.GetSizeOf(), size_t(24));
+
+            vertexInput.RemoveMember(1);
+            ASSERT_EQ(vertexInput.GetMemberCount(), size_t(1));
+            EXPECT_EQ(vertexInput.GetMember(0), m2);
+            EXPECT_EQ(vertexInput.GetSizeOf(), size_t(8));
+
+            vertexInput.RemoveMember(0);
+            ASSERT_EQ(vertexInput.GetMemberCount(), size_t(0));
+            EXPECT_EQ(vertexInput.GetSizeOf(), size_t(0));
+        }
+        {
+            Structure<InputVariable> vertexInput(script);
+            vertexInput.AddMember<Vector3f32>();
+            vertexInput.AddMember<Vector2f32>();
+            vertexInput.AddMember<Vector4f32>();
+            ASSERT_EQ(vertexInput.GetMemberCount(), size_t(3));
+            EXPECT_EQ(vertexInput.GetSizeOf(), size_t(36));
+
+            vertexInput.RemoveAllMembers();
+            ASSERT_EQ(vertexInput.GetMemberCount(), size_t(0));
+            EXPECT_EQ(vertexInput.GetSizeOf(), size_t(0));
+        }
+    }
 }

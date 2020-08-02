@@ -81,6 +81,12 @@ namespace Molten::Shader::Visual
         return VariableType::Input;
     }
 
+    template<typename TDataType>
+    inline size_t InputVariable<TDataType>::GetSizeOf() const
+    {
+        return VariableTrait<TDataType>::dataSize;
+    }
+
 
     // Output variable implementations.
     template<typename TDataType>
@@ -141,6 +147,12 @@ namespace Molten::Shader::Visual
     inline VariableType OutputVariable<TDataType>::GetVariableType() const
     {
         return VariableType::Output;
+    }
+
+    template<typename TDataType>
+    inline size_t OutputVariable<TDataType>::GetSizeOf() const
+    {
+        return VariableTrait<TDataType>::dataSize;
     }
 
 
@@ -205,6 +217,12 @@ namespace Molten::Shader::Visual
     inline VariableType ConstantVariable<TDataType>::GetVariableType() const
     {
         return VariableType::Constant;
+    }
+
+    template<typename TDataType>
+    inline size_t ConstantVariable<TDataType>::GetSizeOf() const
+    {
+        return VariableTrait<TDataType>::dataSize;
     }
 
     template<typename TDataType>

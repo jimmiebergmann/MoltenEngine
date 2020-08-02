@@ -108,6 +108,7 @@ namespace Molten::Shader
         inline static const bool supported = false; ///< Set to true if T is accepted as a data type of pin.
         inline static const T defaultValue = { }; ///< Set to the default value of pin data type T.
         inline static const VariableDataType dataType = VariableDataType::Bool; ///< Set to the corresponding VariableDataType of T.
+        inline static const size_t dataSize = 0; ///< Size of data type, in bytes.
     };
 
 }

@@ -35,4 +35,34 @@ namespace Molten::Test
         std::cout << "\033[0;36m" << message << "\033[0;0m" << std::endl;
     }
 
+    Benchmarker::Benchmarker(const std::string& description) :
+        m_description(description)
+    {}
+
+    Benchmarker::~Benchmarker()
+    {
+        auto time = m_clock.GetTime();       
+        auto [convertedTime, convertedUnit] = GetFittingUnits(time);
+        PrintInfo("Benchmarked \"" + m_description + "\", took " + std::to_string(convertedTime) + " " + convertedUnit + ".");
+    }
+
+    std::pair<double, std::string> Benchmarker::GetFittingUnits(const Time& time)
+    {
+        auto ns = time.AsNanoseconds<uint64_t>();
+        if (ns >= 1000000000UL)
+        {
+            return { time.AsSeconds<double>(), "s" };
+        }
+        else if (ns >= 1000000UL)
+        {
+            return { time.AsMilliseconds<double>(), "ms" };
+        }
+        else if (ns >= 1000UL)
+        {
+            return { time.AsMicroseconds<double>(), "us" };
+        }
+
+        return { time.AsNanoseconds<double>(), "ns" };
+    }
+
 }

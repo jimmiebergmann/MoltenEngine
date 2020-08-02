@@ -26,29 +26,24 @@
 #ifndef MOLTEN_CORE_RENDERER_SHADER_VISUAL_VISUALSHADERSCRIPT_HPP
 #define MOLTEN_CORE_RENDERER_SHADER_VISUAL_VISUALSHADERSCRIPT_HPP
 
-#include "Molten/Renderer/Shader/Visual/VisualShaderFunction.hpp"
-//#include "Molten/Renderer/Shader/Visual/VisualShaderUniform.hpp"
-//#include "Molten/Renderer/Shader/Visual/VisualShaderPushConstant.hpp"
+#include "Molten/Renderer/Shader/Visual/VisualShaderStructure.hpp"
+#include "Molten/Renderer/Shader/Visual/VisualShaderUniform.hpp"
 #include "Molten/Renderer/Shader/Visual/VisualShaderFunctions.hpp"
 #include "Molten/Renderer/Shader/Visual/VisualShaderOperators.hpp"
-#include "Molten/Renderer/Shader/Visual/VisualShaderStructure.hpp"
 #include "Molten/Logger.hpp"
 #include <vector>
 #include <set>
-#include <map>
-#include <string>
 
 namespace Molten::Shader::Visual
 {
 
     using InputInterface = InputStructure; ///< Input interface structure block.
     using OutputInterface = OutputStructure; ///< Output interface structure block.
-    using UniformInterface = InputStructure; ///< Uniform interface structure block.
     using PushConstantInterface = InputStructure; ///< Push constant interface structure block.
 
     /**
      * Type definition of vertex output variable node.
-     * This type is available in and used by the vertex shader. 
+     * This type is only available and used by the vertex shader. 
      */
     using VertexOutputVariable = OutputVariable<Vector4f32>;
     
@@ -96,25 +91,23 @@ namespace Molten::Shader::Visual
         /**@}*/
 
         /**
-         * Get interface block for push constant variables.
-         * Data in this block is sent from the client at runtime.
-         * Maximum number of bytes available in this structure is 128.
+         * Get interface blocks for uniform variables.
+         * This interface contains 0 or more uniform interfaces. UniformInterfaces is simply a container.
+         * Data in these blocks are sent from client to any shader stage.
          */
         /**@{*/
-        //virtual InputStructure& GetPushConstantInterface() = 0;
-        //virtual const InputStructure& GetPushConstantInterface() const = 0;
+        virtual UniformInterfaces& GetUniformInterfaces() = 0;
+        virtual const UniformInterfaces& GetUniformInterfaces() const = 0;
         /**@}*/
 
-        /** Get number of uniform blocks in this script. */
-        //virtual const size_t GetUniformBlockCount() const = 0;
-
-        /** Get all uniform blocks in this script. */
-        /**@{*/
-        //virtual std::vector<UniformBlock*> GetUniformBlocks() = 0;
-        //virtual std::vector<const UniformBlock*> GetUniformBlocks() const = 0;
-        /**@}*/ 
-
-    protected:
+        /**
+         * Get interface block for push constant variables.
+         * Data in this block is sent from client to any shader stage at runtime.
+         */
+         /**@{*/
+        virtual PushConstantInterface& GetPushConstantInterface() = 0;
+        virtual const PushConstantInterface& GetPushConstantInterface() const = 0;
+        /**@}*/
 
         /** Get vertex output variable. */
         /**@{*/
@@ -161,15 +154,6 @@ namespace Molten::Shader::Visual
         template<typename TOperator>
         TOperator* CreateOperator();
 
-        /**
-         * Create a new uniform block.
-         *
-         * @param id Id of the block. The id is used for sharing uniform data between shader stages.
-         *
-         * @return Pointer to the new block.
-         */
-        //UniformBlock* CreateUniformBlock(const uint32_t id);
-
         /** Get type of shader script. */
         virtual Type GetType() const override;
 
@@ -204,22 +188,22 @@ namespace Molten::Shader::Visual
         /**@}*/
 
         /**
-         * Get interface block for push constant variables.
-         *  Data in this block is sent from the client at runtime.
-         *  Maximum number of bytes available in this structure is 128.
+         * Get interface blocks for uniform variables.
+         * This interface contains 0 or more uniform interfaces. UniformInterfaces is simply a container.
+         * Data in these blocks are sent from client to any shader stage.
          */
-         /**@{*/
-        //virtual InputStructure& GetPushConstantInterface() override;
-        //virtual const InputStructure& GetPushConstantInterface() const override;
+        /**@{*/
+        virtual UniformInterfaces& GetUniformInterfaces() override;
+        virtual const UniformInterfaces& GetUniformInterfaces() const override;
         /**@}*/
 
-        /** Get number of uniform blocks in this script. */
-        //virtual const size_t GetUniformBlockCount() const override;
-
-        /** Get all uniform blocks in this script. */
-        /**@{*/
-        //virtual std::vector<UniformBlock*> GetUniformBlocks() override;
-        //virtual std::vector<const UniformBlock*> GetUniformBlocks() const override;
+        /**
+         * Get interface block for push constant variables.
+         * Data in this block is sent from client to any shader stage at runtime.
+         */
+         /**@{*/
+        virtual PushConstantInterface& GetPushConstantInterface() override;
+        virtual const PushConstantInterface& GetPushConstantInterface() const override;
         /**@}*/
 
         /** Get vertex output variable. */
@@ -231,12 +215,10 @@ namespace Molten::Shader::Visual
     private:
 
         std::set<Node*> m_allNodes;
-        
-        //std::map<uint32_t, UniformBlock*> m_uniformBlocks;
-
         InputInterface m_inputInterface;
         OutputInterface m_outputInterface;
-        //InputStructure m_pushConstantInterface;
+        UniformInterfaces m_uniformInterfaces;
+        PushConstantInterface m_pushConstantInterface;
         VertexOutputVariable m_vertexOutputVariable;
     };
 
@@ -256,10 +238,10 @@ namespace Molten::Shader::Visual
         ~FragmentScript();
 
         /**
-          * Create new variable node and append it to this script.
-          *
-          * @tparam TDataType Data type of variable node to create.
-          */
+         * Create new variable node and append it to this script.
+         *
+         * @tparam TDataType Data type of variable node to create.
+         */
         template<typename TDataType>
         ConstantVariable<TDataType>* CreateConstantVariable(const TDataType& value = VariableTrait<TDataType>::DefaultValue);
 
@@ -278,15 +260,6 @@ namespace Molten::Shader::Visual
          */
         template<typename TOperator>
         TOperator* CreateOperator();
-
-        /**
-         * Create a new uniform block.
-         *
-         * @param id Id of the block. The id is used for sharing uniform data between shader stages.
-         *
-         * @return Pointer to the new block.
-         */
-        //UniformBlock* CreateUniformBlock(const uint32_t id);
 
         /** Get type of shader script. */
         virtual Type GetType() const override;
@@ -322,32 +295,33 @@ namespace Molten::Shader::Visual
         /**@}*/
 
         /**
-         * Get interface block for push constant variables.
-         * Data in this block is sent from the client at runtime.
-         * Maximum number of bytes available in this structure is 128.
+         * Get interface blocks for uniform variables.
+         * This interface contains 0 or more uniform interfaces. UniformInterfaces is simply a container.
+         * Data in these blocks are sent from client to any shader stage.
          */
-         /**@{*/
-        //virtual InputStructure& GetPushConstantInterface() override;
-        //virtual const InputStructure& GetPushConstantInterface() const override;
+        /**@{*/
+        virtual UniformInterfaces& GetUniformInterfaces() override;
+        virtual const UniformInterfaces& GetUniformInterfaces() const override;
         /**@}*/
 
-        /** Get number of uniform blocks in this script. */
-        //virtual const size_t GetUniformBlockCount() const override;
-
-        /** Get all uniform blocks in this script. */
-        /**@{*/
-        //virtual std::vector<UniformBlock*> GetUniformBlocks() override;
-        //virtual std::vector<const UniformBlock*> GetUniformBlocks() const override;
+        /**
+         * Get interface block for push constant variables.
+         * Data in this block is sent from client to any shader stage at runtime.
+         */
+         /**@{*/
+        virtual PushConstantInterface& GetPushConstantInterface() override;
+        virtual const PushConstantInterface& GetPushConstantInterface() const override;
         /**@}*/
 
     private:
 
-        std::set<Node*> m_allNodes;
-        //std::map<uint32_t, UniformBlock*> m_uniformBlocks;
+        using Script::GetVertexOutputVariable;
 
+        std::set<Node*> m_allNodes;
         InputInterface m_inputInterface;
         OutputInterface m_outputInterface;
-        //InputStructure m_pushConstantInterface;
+        UniformInterfaces m_uniformInterfaces;
+        PushConstantInterface m_pushConstantInterface;
 
     };
 

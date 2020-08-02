@@ -32,30 +32,50 @@
 namespace Molten::Shader::Visual
 {
 
+    // Forward declarations
+    template<template<typename TVariableDataType> typename TVariableType, typename TMetaData = void>
+    class Structure;
+
+
     /**
      * Data structure container for visual shader scripts.
      * This container can be used for interface blocks for unifoms, vertex data or push constants.
      *
      * @see Script
      */
-    template<template<typename TDataType> typename TVariableType>
-    class Structure
+    template<template<typename TVariableDataType> typename TVariableType>
+    class Structure<TVariableType, void>
     {
 
     public:
 
-        template<typename DataType>
-        using VariableType = TVariableType<DataType>;
+        template<typename TDataType>
+        using VariableType = TVariableType<TDataType>;
         using VariableBaseType = typename TVariableType<float>::Base;
         using VariableContainer = std::vector<VariableBaseType*>;
         using ConstVariableContainer = std::vector<const VariableBaseType*>;
 
         Structure(Script& script);
-        ~Structure();
+        virtual ~Structure();
 
-        /** Append new data member to this structure.  */
-        template<typename DataType>
-        VariableType<DataType>* AddMember();
+        /** Structure member iterators. */
+        /**@{*/
+        typename VariableContainer::iterator begin();
+        typename VariableContainer::const_iterator begin() const;
+
+        typename VariableContainer::iterator end();
+        typename VariableContainer::const_iterator end() const;
+        /**@}*/
+
+        /** Append new data member to this structure. */
+        template<typename TDataType>
+        VariableType<TDataType>* AddMember();
+
+        /** Remove and destroy all data members. Accessing any removed data member is undefined behaviour. */
+        void RemoveMember(const size_t index);
+
+        /** Remove and destroy all data members. Accessing any removed data member is undefined behaviour. */
+        void RemoveAllMembers();
 
         /** Get number of data members in this structure. */
         size_t GetMemberCount() const;
@@ -66,10 +86,10 @@ namespace Molten::Shader::Visual
          * @param index must be less than GetMemberCount().
          */
         /**@{*/
-        template<typename DataType>
-        VariableType<DataType>* GetMember(const size_t index);
-        template<typename DataType>
-        const VariableType<DataType>* GetMember(const size_t index) const;
+        template<typename TDataType>
+        VariableType<TDataType>* GetMember(const size_t index);
+        template<typename TDataType>
+        const VariableType<TDataType>* GetMember(const size_t index) const;
         /**@}*/
 
         /**
@@ -95,8 +115,11 @@ namespace Molten::Shader::Visual
         VariableContainer GetMembers();
         ConstVariableContainer GetMembers() const;
 
-        template<template<typename OtherDataType> typename OtherVariableType>
-        bool CheckCompability(const Structure<OtherVariableType>& other) const;
+        /** Get sum of data member sizes in bytes. Kind of like sizeof(...). */
+        size_t GetSizeOf() const;
+
+        template<template<typename TOtherDataType> typename TOtherVariableType>
+        bool CheckCompability(const Structure<TOtherVariableType>& other) const;
 
     private:
 
@@ -110,11 +133,34 @@ namespace Molten::Shader::Visual
 
         Script& m_script; ///< parent script.
         VariableContainer m_members; ///< Container of data members.
+        size_t m_sizeOf;
 
-        template<template<typename OtherDataType> typename OtherVariableType>
+        template<template<typename OtherDataType> typename OtherVariableType, typename TMetaData>
         friend class Structure;
 
     };
+
+
+    /**
+     * Data structure with attached meta data. 
+     * The meta data is being inherited, making it possible to add custom methods to a structure.
+     *
+     * @see Script
+     */
+    template<template<typename TVariableDataType> typename TVariableType, typename TMetaData>
+    class Structure : public Structure<TVariableType, void>, public TMetaData
+    {
+
+    public:
+
+        /** Constructor, by providing meta data constructor parameters. */
+        template<typename ... TMetaDataParams>
+        Structure(Script& script, TMetaDataParams ... metaDataParameters);
+
+        ~Structure() = default;
+
+    };
+
 
     using InputStructure = Structure<InputVariable>;
     using OutputStructure = Structure<OutputVariable>;
@@ -124,7 +170,7 @@ namespace Molten::Shader::Visual
 namespace Molten::Shader::Visual::Private
 {
 
-    /** Helper function for  */
+    /** Helper function for comparing if two structures are compatible. */
     template<typename TLeftBaseType, typename TRightBaseType>
     static bool CheckStructureCompability(const TLeftBaseType& lhs, const TRightBaseType& rhs);
 

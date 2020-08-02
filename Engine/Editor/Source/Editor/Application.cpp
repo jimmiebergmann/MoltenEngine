@@ -257,17 +257,17 @@ namespace Molten
                 auto outColor = outputs.AddMember<Vector4f32>();
                 auto outPos = script.GetVertexOutputVariable();
 
-               /* auto uBlock0 = script.CreateUniformBlock(0);
-                auto uProjView = uBlock0->AppendNode<Matrix4x4f32>();
-                auto uModel = uBlock0->AppendNode<Matrix4x4f32>();*/
+                auto uBlock = script.GetUniformInterfaces().AddInterface(0);
+                auto uProjView = uBlock->AddMember<Matrix4x4f32>();
+                auto uModel = uBlock->AddMember<Matrix4x4f32>();
 
                 auto inPosVec4 = script.CreateFunction<Shader::Visual::Functions::Vec3ToVec4f32>();
                 inPosVec4->GetInputPin(0)->Connect(*inPos->GetOutputPin());
                 static_cast<Shader::Visual::InputPin<float>*>(inPosVec4->GetInputPin(1))->SetDefaultValue(1.0f);
 
                 auto projModelmat = script.CreateOperator<Shader::Visual::Operators::MultMat4f32>();
-                //projModelmat->GetInputPin(0)->Connect(*uProjView->GetOutputPin());
-               // projModelmat->GetInputPin(1)->Connect(*uModel->GetOutputPin());
+                projModelmat->GetInputPin(0)->Connect(*uProjView->GetOutputPin());
+                projModelmat->GetInputPin(1)->Connect(*uModel->GetOutputPin());
 
                 auto finalPos = script.CreateOperator<Shader::Visual::Operators::MultMat4Vec4f32>();
                 finalPos->GetInputPin(0)->Connect(*projModelmat->GetOutputPin());
@@ -313,7 +313,7 @@ namespace Molten
             m_logger.Write(Logger::Severity::Info, fragStr);
             m_logger.Write(Logger::Severity::Info, "-------------------------------------");
 
-
+            
             m_vertexStage = m_renderer->CreateVertexShaderStage(m_vertexScript);
             if (!m_vertexStage)
             {

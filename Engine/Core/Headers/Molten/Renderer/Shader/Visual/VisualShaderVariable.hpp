@@ -57,6 +57,9 @@ namespace Molten::Shader::Visual
         /** @brief Get variable type. */
         virtual VariableType GetVariableType() const = 0;
 
+        /** Get sizes of variable in bytes. Kind of like sizeof(...). */
+        virtual size_t GetSizeOf() const = 0;
+
     };
 
 
@@ -141,7 +144,18 @@ namespace Molten::Shader::Visual
         /** @brief Get variable type. */
         virtual VariableType GetVariableType() const override;
 
+        /** Get sizes of variable in bytes. Kind of like sizeof(...). */
+        virtual size_t GetSizeOf() const override;
+
     private:
+
+        /** Copy and move operations are not allowed. */
+        /**@{*/
+        InputVariable(const InputVariable& copy) = delete;
+        InputVariable(const InputVariable&& move) = delete;
+        InputVariable& operator =(const InputVariable& copy) = delete;
+        InputVariable& operator =(const InputVariable&& move) = delete;
+        /**@*/
 
         OutputPin<DataType> m_outputPin;
 
@@ -176,7 +190,18 @@ namespace Molten::Shader::Visual
         /** @brief Get variable type. */
         virtual VariableType GetVariableType() const override;
 
+        /** Get sizes of variable in bytes. Kind of like sizeof(...). */
+        virtual size_t GetSizeOf() const override;
+
     private:
+
+        /** Copy and move operations are not allowed. */
+        /**@{*/
+        OutputVariable(const OutputVariable& copy) = delete;
+        OutputVariable(const OutputVariable&& move) = delete;
+        OutputVariable& operator =(const OutputVariable& copy) = delete;
+        OutputVariable& operator =(const OutputVariable&& move) = delete;
+        /**@*/
 
         InputPin<DataType> m_inputPin;
 
@@ -211,6 +236,9 @@ namespace Molten::Shader::Visual
         /** @brief Get variable type. */
         virtual VariableType GetVariableType() const override;
 
+        /** Get sizes of variable in bytes. Kind of like sizeof(...). */
+        virtual size_t GetSizeOf() const override;
+
         /** @brief Get constant value. */
         const DataType& GetValue() const;
 
@@ -221,6 +249,14 @@ namespace Molten::Shader::Visual
         /**@}*/
 
     private:
+
+        /** Copy and move operations are not allowed. */
+        /**@{*/
+        ConstantVariable(const ConstantVariable& copy) = delete;
+        ConstantVariable(const ConstantVariable&& move) = delete;
+        ConstantVariable& operator =(const ConstantVariable& copy) = delete;
+        ConstantVariable& operator =(const ConstantVariable&& move) = delete;
+        /**@*/
 
         OutputPin<DataType> m_outputPin;
         DataType m_value;

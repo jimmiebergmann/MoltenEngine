@@ -27,11 +27,38 @@
 #define MOLTEN_TEST_HPP
 
 #include "gtest/gtest.h"
+#include "Molten/System/Clock.hpp"
+#include <string>
 
 namespace Molten::Test
 {
 
+    /** Googletest style info printer. */
     void PrintInfo(const std::string& message);
+
+    /** Googletest style time benchmarker class. This object will print the result at destruction. */
+    class Benchmarker
+    {
+
+    public:
+
+        Benchmarker(const std::string& description);
+        ~Benchmarker();
+
+    private:
+
+        Benchmarker(const Benchmarker&) = delete;
+        Benchmarker(Benchmarker&&) = delete;
+        Benchmarker& operator= (const Benchmarker&) = delete;
+        Benchmarker& operator= (Benchmarker&&) = delete;
+
+        /** Get time as double and it's unit. Units are split up by multiples of 1000.*/
+        std::pair<double, std::string> GetFittingUnits(const Time& time);
+
+        std::string m_description;
+        Molten::Clock m_clock;
+
+    };
 
 }
 

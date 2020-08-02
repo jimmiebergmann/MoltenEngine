@@ -309,7 +309,7 @@ namespace Molten::Shader
         const Visual::OutputVariable<Vector4f32>* vertexOutputNode =
             (script.GetType() == Type::Vertex) ? static_cast<const Visual::VertexScript&>(script).GetVertexOutputVariable() : nullptr;
 
-        //auto uniformBlocks = script.GetUniformBlocks();
+        auto& uniformInterfaces = script.GetUniformInterfaces();
         // auto pushConstants = script.GetPushConstantInterface().GetNodes();
 
         const size_t estimatedSourceLength = estMainLength + estPreMainLength +
@@ -344,23 +344,23 @@ namespace Molten::Shader
         }
 
         // Uniform variables.
-        /*index = 0;
-        for (auto block : uniformBlocks)
+        index = 0;
+        for (auto* uniformInterface : uniformInterfaces)
         {
             const std::string blockName = "ubo_" + std::to_string(index);
             AppendToVector(source, "layout(std140, binding= 0, set = " + std::to_string(index) + ") uniform s_" + blockName + "\n{\n");
             index++;
 
             size_t varIndex = 0;
-            for (auto* node : block->GetNodes())
+            for (auto* member : *uniformInterface)
             {
-                auto pins = node->GetOutputPins();
+                auto pins = member->GetOutputPins();
                 if (!pins.size())
                 {
-                    throw Exception("Uniform array node size of 0.");
+                    throw Exception("Uniform interface variable doesn't have any output pins.");
                 }
 
-                if (node->IsArray())
+                /*if (member->IsArray())
                 {
                     const std::string name = "var_" + std::to_string(varIndex);
                     AppendToVector(source, GetGlslVariableDataType(pins[0]->GetDataType()) + " " + name + "[" + std::to_string(pins.size()) + "];\n");              
@@ -377,7 +377,7 @@ namespace Molten::Shader
                     varIndex++;
                 }
                 else
-                {
+                {*/
                     for (auto* pin : pins)
                     {
                         const std::string name = "var_" + std::to_string(varIndex);
@@ -385,14 +385,14 @@ namespace Molten::Shader
 
                         AppendToVector(source, GetGlslVariableDataType(pin->GetDataType()) + " " + name + ";\n");
 
-                        visitedOutputPins.insert({ pin, std::make_shared<Variable>(fullName, node, pin) });
+                        visitedOutputPins.insert({ pin, std::make_shared<Variable>(fullName, member, pin) });
                         varIndex++;
                     }
-                }
+                //}
                     
             }
             AppendToVector(source, "} " + blockName + ";\n");
-        }*/
+        }
 
         // Push constants
         /* size_t varIndex = 0;

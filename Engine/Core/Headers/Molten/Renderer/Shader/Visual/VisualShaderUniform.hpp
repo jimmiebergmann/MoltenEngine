@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2020 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,236 +23,110 @@
 *
 */
 
-//#ifndef MOLTEN_CORE_RENDERER_SHADER_NODE_SHADERUNIFORMNODE_HPP
-//#define MOLTEN_CORE_RENDERER_SHADER_NODE_SHADERUNIFORMNODE_HPP
-//
-//#include "Molten/Renderer/Shader/ShaderNode.hpp"
-//#include <memory>
-//
-//namespace Molten
-//{
-//
-//    namespace Shader
-//    {
-//
-//        // Forward declarations.
-//        class InputBlock;
-//        class VertexScript;
-//        class FragmentScript;
-//
-//
-//        /**
-//        * @brief Base clas of uniform node, of shader script.
-//        */
-//        class MOLTEN_API UniformNodeBase : public Node
-//        {
-//
-//        public:
-//
-//            /**
-//            * @brief Get type of node.
-//            */
-//            virtual NodeType GetType() const override;
-//
-//            /**
-//            * @brief Checks if this uniform node is an array.
-//            *
-//            * @return True if this uniform node is an array, else false.
-//            */
-//            virtual bool IsArray() const;
-//
-//        protected:
-//
-//            explicit UniformNodeBase(Script& script);
-//            UniformNodeBase(const UniformNodeBase&) = delete;
-//            UniformNodeBase(UniformNodeBase&&) = delete;
-//            virtual ~UniformNodeBase();
-//
-//            friend class UniformBlock;
-//
-//        };
-//
-//
-//        /**
-//        * @brief Uniform node of shader script.
-//        */
-//        template<typename T>
-//        class UniformNode : public UniformNodeBase
-//        {
-//
-//        public:
-//
-//            /**
-//            * @brief Get number of output pins.
-//            */
-//            virtual size_t GetOutputPinCount() const override;
-//
-//            /**
-//            * @brief Get input pin by index.
-//            *
-//            * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
-//            */
-//            /**@{*/
-//            virtual Pin* GetOutputPin(const size_t index = 0) override;
-//            virtual const Pin* GetOutputPin(const size_t index = 0) const override;
-//            /**@}*/
-//
-//            /**
-//            * @brief Get all input pins, wrapped in a vector.
-//            */
-//            /**@{*/
-//            virtual std::vector<Pin*> GetOutputPins() override;
-//            virtual std::vector<const Pin*> GetOutputPins() const override;
-//            /**@}*/
-//
-//        private:
-//
-//            explicit UniformNode(Script& script);
-//            UniformNode(const UniformNode&) = delete;
-//            UniformNode(UniformNode&&) = delete;
-//            ~UniformNode();
-//
-//            OutputPin<T> m_output;
-//
-//            friend class UniformBlock;
-//
-//        };
-//
-//
-//        /**
-//        * @brief Uniform array node of shader script.
-//        */
-//        template<typename T, size_t Size>
-//        class UniformArrayNode : public UniformNodeBase
-//        {
-//
-//            static_assert(Size != 0, "Size of uniform array cannot be 0.");
-//
-//        public:
-//
-//            /**
-//            * @brief Checks if this uniform node is an array.
-//            *
-//            * @return True if this uniform node is an array, else false.
-//            */
-//            virtual bool IsArray() const override;
-//
-//            /**
-//            * @brief Get number of output pins.
-//            */
-//            virtual size_t GetOutputPinCount() const override;
-//
-//            /**
-//            * @brief Get input pin by index.
-//            *
-//            * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
-//            */
-//            /**@{*/
-//            virtual Pin* GetOutputPin(const size_t index = 0) override;
-//            virtual const Pin* GetOutputPin(const size_t index = 0) const override;
-//            /**@}*/
-//
-//            /**
-//            * @brief Get all input pins, wrapped in a vector.
-//            */
-//            /**@{*/
-//            virtual std::vector<Pin*> GetOutputPins() override;
-//            virtual std::vector<const Pin*> GetOutputPins() const override;
-//            /**@}*/
-//
-//        private:
-//
-//            UniformArrayNode(Script& script);
-//            UniformArrayNode(const UniformArrayNode&) = delete;
-//            UniformArrayNode(UniformArrayNode&&) = delete;
-//            ~UniformArrayNode();
-//
-//            void InitOutputPins();
-//
-//            std::array<std::unique_ptr<OutputPin<T> >, Size> m_outputs;
-//
-//            friend class UniformBlock;
-//
-//        };
-//
-//
-//        /**
-//        * @brief Uniform block node.
-//        */
-//        class MOLTEN_API UniformBlock
-//        {
-//
-//        public:
-//
-//            /**
-//            * @brief Append new uniform node to this block.
-//            */
-//            template<typename T>
-//            UniformNode<T>* AppendNode();
-//
-//            /**
-//            * @brief Append new uniform array node to this block.
-//            */
-//            template<typename T, size_t Size>
-//            UniformArrayNode<T, Size>* AppendNode();
-//
-//            /**
-//            * @brief Removes the node from the block, disconnects all connections of node
-//            *        and deallocates the pointer.
-//            */
-//            void DestroyNode(UniformNodeBase* uniformNode);
-//
-//            /**
-//            * @brief Get number of nodes in this block.
-//            */
-//            size_t GetNodeCount() const;
-//
-//            /**
-//            * @brief Get number of output pins in this block.
-//            */
-//            size_t GetOutputPinCount() const;
-//
-//            /**
-//            * @brief Get all output nodes.
-//            */
-//            /**@{*/
-//            std::vector<UniformNodeBase*> GetNodes();
-//            std::vector<const UniformNodeBase*> GetNodes() const;
-//            /**@}*/
-//
-//            /**
-//            * @brief Get id of this block.
-//            */
-//            uint32_t GetId() const;
-//
-//            /**
-//            * @brief Compare and check the layout compability between this and target uniform block.
-//            *
-//            * @return True if layouts are compatible, else false.
-//            */
-//            bool CheckCompability(const UniformBlock& block) const;
-//
-//        private:
-//
-//            UniformBlock(Script& script, const uint32_t id);
-//            UniformBlock(const UniformBlock&) = delete;
-//            UniformBlock(UniformBlock&&) = delete;
-//            ~UniformBlock();
-//
-//            Script& m_script;
-//            uint32_t m_id;
-//            std::vector<UniformNodeBase*> m_nodes;
-//            size_t m_pinCount;
-//
-//            friend class VertexScript;
-//            friend class FragmentScript;
-//
-//        };
-//
-//    }
-//
-//}
-//
-//#include "Molten/Renderer/Shader/Node/ShaderUniformNode.inl"
-//
-//#endif
+#ifndef MOLTEN_CORE_RENDERER_SHADER_VISUAL_VISUALSHADERUNIFORM_HPP
+#define MOLTEN_CORE_RENDERER_SHADER_VISUAL_VISUALSHADERUNIFORM_HPP
+
+#include "Molten/Renderer/Shader/Visual/VisualShaderStructure.hpp"
+#include <set>
+
+namespace Molten::Shader::Visual
+{
+
+    // Forward declarations.
+    class Script;
+    class UniformMetaData;
+
+
+    /** 
+     * Meta data related to uniform interfaces.
+     * The only available meta data for uniform interfaces is IDs.
+     */
+    class UniformMetaData
+    {
+
+    public:
+
+        explicit UniformMetaData(const uint32_t id);
+
+        uint32_t GetId() const;
+
+    private:
+
+        /** Copy and move operations are not allowed. */
+        /**@{*/
+        UniformMetaData(const UniformMetaData& copy) = delete;
+        UniformMetaData(const UniformMetaData&& move) = delete;
+        UniformMetaData& operator =(const UniformMetaData& copy) = delete;
+        UniformMetaData& operator =(const UniformMetaData&& move) = delete;
+        /**@*/
+
+        const uint32_t m_id;
+
+    };
+
+
+    /** Uniform interface type. */
+    using UniformInterface = Structure<InputVariable, UniformMetaData>;
+
+
+    /** Uniform interface container type. */
+    class MOLTEN_API UniformInterfaces
+    {
+
+    public:
+
+        using InterfaceContainer = std::vector<UniformInterface*>;
+
+        UniformInterfaces(Script& script);
+        ~UniformInterfaces();
+
+        /** Interface iterators. */
+        /**@{*/
+        InterfaceContainer::iterator begin();
+        InterfaceContainer::const_iterator begin() const;
+
+        InterfaceContainer::iterator end();
+        InterfaceContainer::const_iterator end() const;
+        /**@}*/
+
+        /** Append new interface. */
+        UniformInterface* AddInterface(const uint32_t id);
+
+        /**
+         * Remove and destroy interface by index or iterator.
+         * Accessing removed interfaces is undefined behaviour.
+         */
+        /**@{*/
+        void RemoveInterface(const size_t index);
+        void RemoveInterface(InterfaceContainer::iterator it);
+        /**@}*/
+
+
+        /** Remove all interfaces in this container. */
+        void RemoveAllInterfaces();
+
+        /** Get interface by index. Returns nullptr if index >= GetInterfaceCount(). */
+        UniformInterface* GetInterface(const size_t index);
+
+        /** Get number of interfaces in this container. */
+        size_t GetInterfaceCount() const;
+ 
+    private:
+
+        /** Copy and move operations are not allowed. */
+        /**@{*/
+        UniformInterfaces(const UniformInterfaces& copy) = delete;
+        UniformInterfaces(const UniformInterfaces&& move) = delete;
+        UniformInterfaces& operator =(const UniformInterfaces& copy) = delete;
+        UniformInterfaces& operator =(const UniformInterfaces&& move) = delete;
+        /**@*/
+
+        Script& m_script;
+        InterfaceContainer m_interfaces;
+        std::set<uint32_t> m_usedIds;
+
+    };
+
+}
+
+#endif

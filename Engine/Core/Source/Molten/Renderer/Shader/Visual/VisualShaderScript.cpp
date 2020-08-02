@@ -43,7 +43,8 @@ namespace Molten::Shader::Visual
     VertexScript::VertexScript() :
         m_inputInterface(*this),
         m_outputInterface(*this),
-        //m_pushConstantInterface(*this),
+        m_uniformInterfaces(*this),
+        m_pushConstantInterface(*this),
         m_vertexOutputVariable(*this)
     {}
 
@@ -54,18 +55,6 @@ namespace Molten::Shader::Visual
             delete node;
         }
     }
-
-    /*UniformBlock* VertexScript::CreateUniformBlock(const uint32_t id)
-    {
-        if (m_uniformBlocks.find(id) != m_uniformBlocks.end())
-        {
-            return nullptr;
-        }
-
-        auto uniformBlock = new UniformBlock(*this, id);
-        m_uniformBlocks.insert({ id, uniformBlock });
-        return uniformBlock;
-    }*/
 
     Type VertexScript::GetType() const
     {
@@ -117,14 +106,23 @@ namespace Molten::Shader::Visual
         return m_outputInterface;
     }
 
-    /*InputStructure& VertexScript::GetPushConstantInterface()
+    UniformInterfaces& VertexScript::GetUniformInterfaces()
+    {
+        return m_uniformInterfaces;
+    }
+    const UniformInterfaces& VertexScript::GetUniformInterfaces() const
+    {
+        return m_uniformInterfaces;
+    }
+
+    PushConstantInterface& VertexScript::GetPushConstantInterface()
     {
         return m_pushConstantInterface;
     }
-    const InputStructure& VertexScript::GetPushConstantInterface() const
+    const PushConstantInterface& VertexScript::GetPushConstantInterface() const
     {
         return m_pushConstantInterface;
-    }*/
+    }
 
     VertexOutputVariable* VertexScript::GetVertexOutputVariable()
     {
@@ -135,36 +133,13 @@ namespace Molten::Shader::Visual
         return &m_vertexOutputVariable;
     }
 
-    /*const size_t VertexScript::GetUniformBlockCount() const
-    {
-        return m_uniformBlocks.size();
-    }
-
-    std::vector<UniformBlock*> VertexScript::GetUniformBlocks()
-    {
-        std::vector<UniformBlock*> uniformBlocks;
-        for (auto& pair : m_uniformBlocks)
-        {
-            uniformBlocks.push_back(pair.second);
-        }
-        return uniformBlocks;
-    }
-    std::vector<const UniformBlock*> VertexScript::GetUniformBlocks() const
-    {
-        std::vector<const UniformBlock*> uniformBlocks;
-        for (auto& pair : m_uniformBlocks)
-        {
-            uniformBlocks.push_back(pair.second);
-        }
-        return uniformBlocks;
-    }*/
-
 
     // Fragment shader script implementations.
     FragmentScript::FragmentScript() :
         m_inputInterface(*this),
-        m_outputInterface(*this)//,
-        //m_pushConstantInterface(*this)
+        m_outputInterface(*this),
+        m_uniformInterfaces(*this),
+        m_pushConstantInterface(*this)
     {}
 
     FragmentScript::~FragmentScript()
@@ -174,18 +149,6 @@ namespace Molten::Shader::Visual
             delete node;
         }
     }
-
-    /*UniformBlock* FragmentScript::CreateUniformBlock(const uint32_t id)
-    {
-        if (m_uniformBlocks.find(id) != m_uniformBlocks.end())
-        {
-            return nullptr;
-        }
-
-        auto uniformBlock = new UniformBlock(*this, id);
-        m_uniformBlocks.insert({ id, uniformBlock });
-        return uniformBlock;
-    }*/
 
     Type FragmentScript::GetType() const
     {
@@ -237,37 +200,22 @@ namespace Molten::Shader::Visual
         return m_outputInterface;
     }
 
-    /*InputStructure& FragmentScript::GetPushConstantInterface()
+    UniformInterfaces& FragmentScript::GetUniformInterfaces()
+    {
+        return m_uniformInterfaces;
+    }
+    const UniformInterfaces& FragmentScript::GetUniformInterfaces() const
+    {
+        return m_uniformInterfaces;
+    }
+
+    PushConstantInterface& FragmentScript::GetPushConstantInterface()
     {
         return m_pushConstantInterface;
     }
-    const InputStructure& FragmentScript::GetPushConstantInterface() const
+    const PushConstantInterface& FragmentScript::GetPushConstantInterface() const
     {
         return m_pushConstantInterface;
     }
-
-    const size_t FragmentScript::GetUniformBlockCount() const
-    {
-        return m_uniformBlocks.size();
-    }
-
-    std::vector<UniformBlock*> FragmentScript::GetUniformBlocks()
-    {
-        std::vector<UniformBlock*> uniformBlocks;
-        for (auto& pair : m_uniformBlocks)
-        {
-            uniformBlocks.push_back(pair.second);
-        }
-        return uniformBlocks;
-    }
-    std::vector<const UniformBlock*> FragmentScript::GetUniformBlocks() const
-    {
-        std::vector<const UniformBlock*> uniformBlocks;
-        for (auto& pair : m_uniformBlocks)
-        {
-            uniformBlocks.push_back(pair.second);
-        }
-        return uniformBlocks;
-    }*/
 
 }

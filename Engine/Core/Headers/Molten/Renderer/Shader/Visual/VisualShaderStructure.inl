@@ -25,13 +25,16 @@
 
 namespace Molten::Shader::Visual
 {
-    template<template<typename TDataType> typename TVariableType>
-    Structure<TVariableType>::Structure(Script& script) :
-        m_script(script)
+
+    // Structure without any meta data implementations.
+    template<template<typename TVariableDataType> typename TVariableType>
+    inline Structure<TVariableType, void>::Structure(Script& script) :
+        m_script(script),
+        m_sizeOf(0)
     {}
 
-    template<template<typename TDataType> typename TVariableType>
-    Structure<TVariableType>::~Structure()
+    template<template<typename TVariableDataType> typename TVariableType>
+    inline Structure<TVariableType, void>::~Structure()
     {
         for (auto& member : m_members)
         {
@@ -39,36 +42,84 @@ namespace Molten::Shader::Visual
         }
     }
 
-    template<template<typename TDataType> typename TVariableType>
-    template<typename DataType>
-    typename Structure<TVariableType>::template VariableType<DataType>* Structure<TVariableType>::AddMember()
+    template<template<typename TVariableDataType> typename TVariableType>
+    inline typename Structure<TVariableType, void>::VariableContainer::iterator Structure<TVariableType, void>::begin()
     {
-        auto* member = new TVariableType<DataType>(m_script);
+        return m_members.begin();
+    }
+    template<template<typename TVariableDataType> typename TVariableType>
+    inline typename Structure<TVariableType, void>::VariableContainer::const_iterator Structure<TVariableType, void>::begin() const
+    {
+        return m_members.begin();
+    }
+
+    template<template<typename TVariableDataType> typename TVariableType>
+    inline typename Structure<TVariableType, void>::VariableContainer::iterator Structure<TVariableType, void>::end()
+    {
+        return m_members.end();
+    }
+    template<template<typename TVariableDataType> typename TVariableType>
+    inline typename Structure<TVariableType, void>::VariableContainer::const_iterator Structure<TVariableType, void>::end() const
+    {
+        return m_members.end();
+    }
+
+    template<template<typename TVariableDataType> typename TVariableType>
+    template<typename TDataType>
+    inline typename Structure<TVariableType, void>::template VariableType<TDataType>* Structure<TVariableType>::AddMember()
+    {
+        auto* member = new TVariableType<TDataType>(m_script);
         m_members.push_back(member);
+        m_sizeOf += member->GetSizeOf();
         return member;
     }
 
-    template<template<typename TDataType> typename TVariableType>
-    size_t Structure<TVariableType>::GetMemberCount() const
+    template<template<typename TVariableDataType> typename TVariableType>
+    inline void Structure<TVariableType, void>::RemoveMember(const size_t index)
+    {
+        if (index >= m_members.size())
+        {
+            return;
+        }
+        auto it = m_members.begin() + index;
+        auto* variablebase = *it;
+        m_sizeOf -= variablebase->GetSizeOf();
+        delete variablebase;
+        m_members.erase(it);
+    }
+
+    template<template<typename TVariableDataType> typename TVariableType>
+    inline void Structure<TVariableType, void>::RemoveAllMembers()
+    {
+        for (auto& member : m_members)
+        {
+            delete member;
+        }
+        m_members.clear();
+        m_sizeOf = 0;
+    }
+
+    template<template<typename TVariableDataType> typename TVariableType>
+    inline size_t Structure<TVariableType, void>::GetMemberCount() const
     {
         return m_members.size();
     }
 
-    template<template<typename TDataType> typename TVariableType>
-    template<typename DataType>
-    typename Structure<TVariableType>::template VariableType<DataType>* Structure<TVariableType>::GetMember(const size_t index)
+    template<template<typename TVariableDataType> typename TVariableType>
+    template<typename TDataType>
+    inline typename Structure<TVariableType, void>::template VariableType<TDataType>* Structure<TVariableType, void>::GetMember(const size_t index)
     {
-        return static_cast<VariableType<DataType>*>(GetMember(index));
+        return static_cast<VariableType<TDataType>*>(GetMember(index));
     }
-    template<template<typename TDataType> typename TVariableType>
-    template<typename DataType>
-    const typename Structure<TVariableType>::template VariableType<DataType>* Structure<TVariableType>::GetMember(const size_t index) const
+    template<template<typename TVariableDataType> typename TVariableType>
+    template<typename TDataType>
+    inline const typename Structure<TVariableType, void>::template VariableType<TDataType>* Structure<TVariableType, void>::GetMember(const size_t index) const
     {
-        return static_cast<const VariableType<DataType>*>(GetMember(index));
+        return static_cast<const VariableType<TDataType>*>(GetMember(index));
     }
     
-    template<template<typename TDataType> typename TVariableType>
-    typename Structure<TVariableType>::VariableBaseType* Structure<TVariableType>::GetMember(const size_t index)
+    template<template<typename TVariableDataType> typename TVariableType>
+    inline typename Structure<TVariableType, void>::VariableBaseType* Structure<TVariableType, void>::GetMember(const size_t index)
     {
         if (index >= m_members.size())
         {
@@ -77,8 +128,8 @@ namespace Molten::Shader::Visual
         return m_members[index];
     }
 
-    template<template<typename TDataType> typename TVariableType>
-    const typename Structure<TVariableType>::VariableBaseType* Structure<TVariableType>::GetMember(const size_t index) const
+    template<template<typename TVariableDataType> typename TVariableType>
+    inline const typename Structure<TVariableType, void>::VariableBaseType* Structure<TVariableType, void>::GetMember(const size_t index) const
     {
         if (index >= m_members.size())
         {
@@ -87,37 +138,52 @@ namespace Molten::Shader::Visual
         return m_members[index];
     }
 
-    template<template<typename TDataType> typename TVariableType>
-    typename Structure<TVariableType>::VariableBaseType* Structure<TVariableType>::operator[](const size_t index)
+    template<template<typename TVariableDataType> typename TVariableType>
+    inline typename Structure<TVariableType, void>::VariableBaseType* Structure<TVariableType, void>::operator[](const size_t index)
     {
         return GetMember(index);
     }
-    template<template<typename TDataType> typename TVariableType>
-    const typename Structure<TVariableType>::VariableBaseType* Structure<TVariableType>::operator[](const size_t index) const
+    template<template<typename TVariableDataType> typename TVariableType>
+    inline const typename Structure<TVariableType, void>::VariableBaseType* Structure<TVariableType, void>::operator[](const size_t index) const
     {
         return GetMember(index);
     }
 
-    template<template<typename TDataType> typename TVariableType>
-    typename Structure<TVariableType>::VariableContainer Structure<TVariableType>::GetMembers()
+    template<template<typename TVariableDataType> typename TVariableType>
+    inline typename Structure<TVariableType, void>::VariableContainer Structure<TVariableType, void>::GetMembers()
     {
         return { m_members.begin(), m_members.end() };
     }
 
-    template<template<typename TDataType> typename TVariableType>
-    typename Structure<TVariableType>::ConstVariableContainer Structure<TVariableType>::GetMembers() const
+    template<template<typename TVariableDataType> typename TVariableType>
+    inline typename Structure<TVariableType, void>::ConstVariableContainer Structure<TVariableType, void>::GetMembers() const
     {
         return { m_members.begin(), m_members.end() };
     }
 
-    template<template<typename TDataType> typename TVariableType>
-    template<template<typename OtherDataType> typename OtherVariableType>
-    bool Structure<TVariableType>::CheckCompability(const Structure<OtherVariableType>& other) const
+    template<template<typename TVariableDataType> typename TVariableType>
+    inline size_t Structure<TVariableType, void>::GetSizeOf() const
+    {
+        return m_sizeOf;
+    }
+
+    template<template<typename TVariableDataType> typename TVariableType>
+    template<template<typename TOtherDataType> typename TOtherVariableType>
+    inline bool Structure<TVariableType, void>::CheckCompability(const Structure<TOtherVariableType, void>& other) const
     {
         return Private::CheckStructureCompability(
             static_cast<const VariableContainer&>(m_members), 
-            static_cast<const typename Structure<OtherVariableType>::VariableContainer&>(other.m_members));
+            static_cast<const typename Structure<TOtherVariableType>::VariableContainer&>(other.m_members));
     }
+
+
+    // Structure with meta data implementations.
+    template<template<typename TVariableDataType> typename TVariableType, typename TMetaData>
+    template<typename ... TMetaDataParams>
+    Structure<TVariableType, TMetaData>::Structure(Script& script, TMetaDataParams ... metaDataParameters) :
+        Structure <TVariableType,void>(script),
+        TMetaData(metaDataParameters...)
+    { }
 
 }
 

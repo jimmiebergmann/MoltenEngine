@@ -2099,7 +2099,7 @@ namespace Molten
     }
 
     bool VulkanRenderer::CreateVertexInputAttributes(
-        const Shader::Visual::InputStructure& inputs, 
+        const Shader::Visual::InputStructure& inputs,
         std::vector<VkVertexInputAttributeDescription>& attributes, 
         uint32_t& stride)
     {
@@ -2133,22 +2133,21 @@ namespace Molten
     }
 
     bool VulkanRenderer::CreateDescriptorSetLayouts(
-        const Shader::Visual::VertexScript& /*vertexScript*/, 
-        const Shader::Visual::FragmentScript& /*fragmentScript*/,
-        std::vector<VkDescriptorSetLayout>& /*setLayouts*/)
+        const Shader::Visual::VertexScript& vertexScript, 
+        const Shader::Visual::FragmentScript& fragmentScript,
+        std::vector<VkDescriptorSetLayout>& setLayouts)
     {
-        return false;
-        /*std::array<const Shader::Visual::Script*, 2> shaderScripts = { &vertexScript, &fragmentScript };
+        std::array<const Shader::Visual::Script*, 2> shaderScripts = { &vertexScript, &fragmentScript };
 
         std::map<uint32_t, VkShaderStageFlags> uniformShaderStageFlags;
         uint32_t highestSetId = 0;
         for (auto script : shaderScripts)
         {
-            auto uniformBlocks = script->GetUniformBlocks();
+            auto& uniformInterfaces = script->GetUniformInterfaces();
 
-            for (auto uniformBlock : uniformBlocks)
+            for (auto* uniformInterface : uniformInterfaces)
             {
-                uint32_t setId = uniformBlock->GetId();
+                uint32_t setId = uniformInterface->GetId();
                 highestSetId = setId > highestSetId ? setId : highestSetId;
 
                 auto it = uniformShaderStageFlags.find(setId);
@@ -2164,7 +2163,7 @@ namespace Molten
 
         if (highestSetId > static_cast<uint32_t>(uniformShaderStageFlags.size()))
         {
-            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Uniform block id is out of bound, expected " + 
+            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Uniform interface id is out of bound, expected " + 
                 std::to_string(uniformShaderStageFlags.size() - 1) + " to be the highest.");
             return nullptr;
         }
@@ -2195,7 +2194,7 @@ namespace Molten
 
             setLayouts.push_back(descriptorSetLayout);
         }
-        return true;*/
+        return true;
     }
 
     bool VulkanRenderer::CreatePushConstants(

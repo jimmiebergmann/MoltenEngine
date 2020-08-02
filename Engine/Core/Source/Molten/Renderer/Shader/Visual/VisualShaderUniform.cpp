@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2020 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,122 +23,102 @@
 *
 */
 
-/*
-#include "Molten/Renderer/Shader/Node/ShaderUniformNode.hpp"
 
-namespace Molten
+#include "Molten/Renderer/Shader/Visual/VisualShaderUniform.hpp"
+
+namespace Molten::Shader::Visual
 {
+    
+    // Uniform meta data implementations.
+    UniformMetaData::UniformMetaData(const uint32_t id) :
+        m_id(id)
+    {}
 
-    namespace Shader
+    uint32_t UniformMetaData::GetId() const
     {
-
-        // Uniform base class implementations.
-        NodeType UniformNodeBase::GetType() const
-        {
-            return NodeType::Uniform;
-        }
-
-        bool UniformNodeBase::IsArray() const
-        {
-            return false;
-        }
-
-        UniformNodeBase::UniformNodeBase(Script& script) :
-            Node(script)
-        { }
-
-        UniformNodeBase::~UniformNodeBase()
-        { }
-
-
-        // Uniform block implementations.
-        void UniformBlock::DestroyNode(UniformNodeBase* uniformNode)
-        {
-            for (auto it = m_nodes.begin(); it != m_nodes.end(); it++)
-            {
-                if (*it == uniformNode)
-                {
-                    m_nodes.erase(it);
-                    m_pinCount -= uniformNode->GetOutputPinCount();
-                    delete uniformNode;
-                    return;
-                }
-            }
-        }
-
-        size_t UniformBlock::GetNodeCount() const
-        {
-            return m_nodes.size();
-        }
-
-        size_t UniformBlock::GetOutputPinCount() const
-        {
-            return m_pinCount;
-        }
-
-        std::vector<UniformNodeBase*> UniformBlock::GetNodes()
-        {
-            return m_nodes;
-        }
-        std::vector<const UniformNodeBase*> UniformBlock::GetNodes() const
-        {
-            return { m_nodes.begin(), m_nodes.end() };
-        }
-
-        uint32_t UniformBlock::GetId() const
-        {
-            return m_id;
-        }
-
-        bool UniformBlock::CheckCompability(const UniformBlock& block) const
-        {
-            auto& blockNodes = block.m_nodes;
-
-            if (m_nodes.size() != blockNodes.size())
-            {
-                return false;
-            }
-
-            for (size_t i = 0; i < m_nodes.size(); i++)
-            {
-                auto nodeA = m_nodes[i];
-                auto nodeB = blockNodes[i];
-
-                if (nodeA->GetOutputPinCount() != nodeB->GetInputPinCount())
-                {
-                    return false;
-                }
-
-                for (size_t j = 0; j < nodeA->GetOutputPinCount(); j++)
-                {
-                    auto pinA = nodeA->GetOutputPin(j);
-                    auto pinB = nodeB->GetInputPin(j);
-
-                    if (pinA->GetDataType() != pinB->GetDataType())
-                    {
-                        return false;
-                    }
-                }
-
-            }
-
-            return true;
-        }
-
-        UniformBlock::UniformBlock(Script& script, const uint32_t id) :
-            m_script(script),
-            m_id(id),
-            m_pinCount(0)
-        { }
-
-        UniformBlock::~UniformBlock()
-        {
-            for (auto node : m_nodes)
-            {
-                delete node;
-            }
-        }
-
+        return m_id;
     }
 
-}*/
+
+    // Uniform interfaces container implementations.
+    UniformInterfaces::UniformInterfaces(Script& script) :
+        m_script(script)
+    {}
+
+    UniformInterfaces::~UniformInterfaces()
+    {
+        RemoveAllInterfaces();
+    }
+ 
+    UniformInterfaces::InterfaceContainer::iterator UniformInterfaces::begin()
+    {
+        return m_interfaces.begin();
+    }
+    UniformInterfaces::InterfaceContainer::const_iterator UniformInterfaces::begin() const
+    {
+        return m_interfaces.begin();
+    }
+
+    UniformInterfaces::InterfaceContainer::iterator UniformInterfaces::end()
+    {
+        return m_interfaces.end();
+    }
+    UniformInterfaces::InterfaceContainer::const_iterator UniformInterfaces::end() const
+    {
+        return m_interfaces.end();
+    }
+
+    UniformInterface* UniformInterfaces::AddInterface(const uint32_t id)
+    {
+        if (m_usedIds.find(id) != m_usedIds.end())
+        {
+            return nullptr;
+        }
+
+        auto* newInterface = new UniformInterface(m_script, id);
+        m_interfaces.push_back(newInterface);
+        m_usedIds.insert(id);
+        return newInterface;
+    }
+
+    void UniformInterfaces::RemoveInterface(const size_t index)
+    {
+        if (index >= m_interfaces.size())
+        {
+            return;
+        }
+        auto it = m_interfaces.begin() + index;
+        m_usedIds.erase((*it)->GetId());
+        delete *it;
+        m_interfaces.erase(it);
+    }
+    void UniformInterfaces::RemoveInterface(InterfaceContainer::iterator it)
+    {
+        m_interfaces.erase(it);
+    }
+
+    void UniformInterfaces::RemoveAllInterfaces()
+    {
+        for (auto* inter : m_interfaces)
+        {
+            delete inter;
+        }
+        m_interfaces.clear();
+        m_usedIds.clear();
+    }
+
+    UniformInterface* UniformInterfaces::GetInterface(const size_t index)
+    {
+        if (index >= m_interfaces.size())
+        {
+            return nullptr;
+        }
+        return m_interfaces[index];
+    }
+
+    size_t UniformInterfaces::GetInterfaceCount() const
+    {
+        return m_interfaces.size();
+    }
+
+}
