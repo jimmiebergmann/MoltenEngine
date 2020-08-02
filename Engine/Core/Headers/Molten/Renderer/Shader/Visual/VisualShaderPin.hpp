@@ -150,7 +150,7 @@ namespace Molten::Shader::Visual
     class InputPin : public Pin
     {
 
-        static_assert(VariableTrait<T>::Supported, "Input pin of data type T is not supported.");
+        static_assert(VariableTrait<T>::supported, "Input pin of data type T is not supported.");
 
     public:
 
@@ -251,7 +251,7 @@ namespace Molten::Shader::Visual
     template<typename T>
     class OutputPin : public Pin
     {
-        static_assert(VariableTrait<T>::Supported, "Input pin of data type T is not supported.");
+        static_assert(VariableTrait<T>::supported, "Input pin of data type T is not supported.");
 
     public:
 

@@ -105,9 +105,9 @@ namespace Molten::Shader
     template<typename T>
     struct VariableTrait
     {
-        inline static const bool Supported = false; ///< Set to true if T is accepted as a data type of pin.
-        inline static const T DefaultValue = { }; ///< Set to the default value of pin data type T.
-        inline static const VariableDataType DataType = VariableDataType::Bool; ///< Set to the corresponding VariableDataType of T.
+        inline static const bool supported = false; ///< Set to true if T is accepted as a data type of pin.
+        inline static const T defaultValue = { }; ///< Set to the default value of pin data type T.
+        inline static const VariableDataType dataType = VariableDataType::Bool; ///< Set to the corresponding VariableDataType of T.
     };
 
 }

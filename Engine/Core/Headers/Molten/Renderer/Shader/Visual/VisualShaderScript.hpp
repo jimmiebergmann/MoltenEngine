@@ -97,8 +97,8 @@ namespace Molten::Shader::Visual
 
         /**
          * Get interface block for push constant variables.
-         *  Data in this block is sent from the client at runtime.
-         *  Maximum number of bytes available in this structure is 128.
+         * Data in this block is sent from the client at runtime.
+         * Maximum number of bytes available in this structure is 128.
          */
         /**@{*/
         //virtual InputStructure& GetPushConstantInterface() = 0;
@@ -323,8 +323,8 @@ namespace Molten::Shader::Visual
 
         /**
          * Get interface block for push constant variables.
-         *  Data in this block is sent from the client at runtime.
-         *  Maximum number of bytes available in this structure is 128.
+         * Data in this block is sent from the client at runtime.
+         * Maximum number of bytes available in this structure is 128.
          */
          /**@{*/
         //virtual InputStructure& GetPushConstantInterface() override;

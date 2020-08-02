@@ -30,7 +30,7 @@ namespace Molten::Shader::Visual
     template<typename T>
     inline InputPin<T>::InputPin(Node& node, const std::string& name) :
         Pin(node, name),
-        m_defaultValue(VariableTrait<T>::DefaultValue),
+        m_defaultValue(VariableTrait<T>::defaultValue),
         m_connection(nullptr)
     { }
 
@@ -118,7 +118,7 @@ namespace Molten::Shader::Visual
     template<typename T>
     VariableDataType InputPin<T>::GetDataType() const
     {
-        return VariableTrait<T>::DataType;
+        return VariableTrait<T>::dataType;
     }    
 
     template<typename T>
@@ -281,7 +281,7 @@ namespace Molten::Shader::Visual
     template<typename T>
     inline VariableDataType OutputPin<T>::GetDataType() const
     {
-        return VariableTrait<T>::DataType;
+        return VariableTrait<T>::dataType;
     }
 
     template<typename T>
