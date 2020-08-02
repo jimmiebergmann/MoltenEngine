@@ -4,7 +4,7 @@
 # Project related configuration options
 #---------------------------------------------------------------------------
 DOXYFILE_ENCODING      = UTF-8
-PROJECT_NAME           = Curse API
+PROJECT_NAME           = Molten Engine API
 PROJECT_NUMBER         = 0.1.0
 PROJECT_BRIEF          =
 PROJECT_LOGO           =
@@ -124,7 +124,7 @@ RECURSIVE              = YES
 EXCLUDE                =
 EXCLUDE_SYMLINKS       = NO
 EXCLUDE_PATTERNS       =
-EXCLUDE_SYMBOLS        = "Curse::Private"
+EXCLUDE_SYMBOLS        = "Molten::Private"
 EXAMPLE_PATH           =
 EXAMPLE_PATTERNS       = *
 EXAMPLE_RECURSIVE      = NO

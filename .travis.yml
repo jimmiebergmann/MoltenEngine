@@ -80,11 +80,11 @@ script:
   # Build
   - mkdir Build
   - cd Build
-  - cmake -DCURSE_ENABLE_COVERAGE=ON -DCURSE_ENABLE_VULKAN=OFF -DCMAKE_BUILD_TYPE=${CONFIG} ..
+  - cmake -DMOLTEN_ENABLE_COVERAGE=ON -DMOLTEN_ENABLE_VULKAN=OFF -DCMAKE_BUILD_TYPE=${CONFIG} ..
   - cmake --build . --config ${CONFIG}
   # Run test
   - cd ../Bin
-  - valgrind --leak-check=full --track-origins=yes --error-exitcode=1 ./CurseCoreTest${OUTPUT_NAME_POSTFIX}
+  - valgrind --leak-check=full --track-origins=yes --error-exitcode=1 ./MoltenCoreTest${OUTPUT_NAME_POSTFIX}
   - cd ../Build
   
 after_success:
