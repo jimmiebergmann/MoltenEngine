@@ -43,6 +43,7 @@
 #include "Molten/Logger.hpp"
 #include "Molten/System/Exception.hpp"
 #include "Molten/System/FileSystem.hpp"
+#include "Molten/Utility/SmartFunction.hpp"
 #include <map>
 #include <set>
 #include <algorithm>
@@ -409,18 +410,18 @@ namespace Molten
         const auto bufferSize = static_cast<VkDeviceSize>(descriptor.indexCount) * GetIndexBufferDataTypeSize(descriptor.dataType);
 
         VkBuffer stagingBuffer;
-        VkDeviceMemory stagingMemory;
-
-        auto destroyStagingData = [&]()
-        {
-            vkDestroyBuffer(m_logicalDevice, stagingBuffer, nullptr);
-            vkFreeMemory(m_logicalDevice, stagingMemory, nullptr);
-        };
+        VkDeviceMemory stagingMemory;        
 
         if (!CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingMemory))
         {
             return nullptr;
         }
+
+        SmartFunction stagingDestroyer = [&]()
+        {
+            vkDestroyBuffer(m_logicalDevice, stagingBuffer, nullptr);
+            vkFreeMemory(m_logicalDevice, stagingMemory, nullptr);
+        };
 
         void* data;
         vkMapMemory(m_logicalDevice, stagingMemory, 0, bufferSize, 0, &data);
@@ -431,12 +432,10 @@ namespace Molten
         VkDeviceMemory indexMemory;
         if (!CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffer, indexMemory))
         {
-            destroyStagingData();
             return nullptr;
         }
 
         CopyBuffer(stagingBuffer, indexBuffer, bufferSize);
-        destroyStagingData();
 
         VulkanIndexBuffer* buffer = new VulkanIndexBuffer;
         buffer->buffer = indexBuffer;
@@ -820,16 +819,16 @@ namespace Molten
         VkBuffer stagingBuffer;
         VkDeviceMemory stagingMemory;
 
-        auto destroyStagingData = [&]()
-        {
-            vkDestroyBuffer(m_logicalDevice, stagingBuffer, nullptr);
-            vkFreeMemory(m_logicalDevice, stagingMemory, nullptr);
-        };
-
         if (!CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingMemory))
         {
             return nullptr;
         }
+
+        SmartFunction stagingDestroyer = [&]()
+        {
+            vkDestroyBuffer(m_logicalDevice, stagingBuffer, nullptr);
+            vkFreeMemory(m_logicalDevice, stagingMemory, nullptr);
+        };
 
         void* data;
         vkMapMemory(m_logicalDevice, stagingMemory, 0, bufferSize, 0, &data);
@@ -840,12 +839,10 @@ namespace Molten
         VkDeviceMemory vertexMemory;
         if (!CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer, vertexMemory))
         {
-            destroyStagingData();
             return nullptr;
         }
 
         CopyBuffer(stagingBuffer, vertexBuffer, bufferSize);
-        destroyStagingData();
 
         VulkanVertexBuffer* buffer = new VulkanVertexBuffer;
         buffer->buffer = vertexBuffer;
