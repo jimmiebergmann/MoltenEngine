@@ -362,7 +362,6 @@ namespace Molten
         m_imagesInFlight.clear();
         m_maxFramesInFlight = 0;
         m_currentFrame = 0;
-        m_resourceCounter.Clear(m_logger);
 
         m_resized = false;
         m_beginDraw = false;    
@@ -444,8 +443,6 @@ namespace Molten
         buffer->memory = indexMemory;
         buffer->indexCount = descriptor.indexCount;
         buffer->dataType = descriptor.dataType;
-
-        m_resourceCounter.indexBufferCount++;
         return buffer;
     }
 
@@ -635,8 +632,6 @@ namespace Molten
         pipeline->graphicsPipeline = graphicsPipeline;
         pipeline->pipelineLayout = pipelineLayout;
         pipeline->descriptionSetLayouts = setLayouts;
-
-        m_resourceCounter.pipelineCount++;
         return pipeline;
     }
 
@@ -706,7 +701,6 @@ namespace Molten
 
     Texture* VulkanRenderer::CreateTexture()
     {
-        m_resourceCounter.textureCount++;
         return new VulkanTexture;
     }
 
@@ -858,8 +852,6 @@ namespace Molten
         buffer->memory = vertexMemory;
         buffer->vertexCount = descriptor.vertexCount;
         buffer->vertexSize = descriptor.vertexSize;
-
-        m_resourceCounter.vertexBufferCount++;
         return buffer;
     }
 
@@ -867,7 +859,6 @@ namespace Molten
     {
         VulkanFramebuffer* vulkanFramebuffer = static_cast<VulkanFramebuffer*>(framebuffer);
         vkDestroyFramebuffer(m_logicalDevice, vulkanFramebuffer->framebuffer, nullptr);
-        m_resourceCounter.framebufferCount--;
         delete vulkanFramebuffer;
     }
 
@@ -876,7 +867,6 @@ namespace Molten
         VulkanIndexBuffer* vulkanIndexBuffer = static_cast<VulkanIndexBuffer*>(indexBuffer);
         vkDestroyBuffer(m_logicalDevice, vulkanIndexBuffer->buffer, nullptr);
         vkFreeMemory(m_logicalDevice, vulkanIndexBuffer->memory, nullptr);
-        m_resourceCounter.indexBufferCount--;
         delete vulkanIndexBuffer;
     }
 
@@ -898,7 +888,6 @@ namespace Molten
             vkDestroyDescriptorSetLayout(m_logicalDevice, setLayout, nullptr);
         }
 
-        m_resourceCounter.pipelineCount--;
         delete vulkanPipeline;
     }
 
@@ -918,7 +907,6 @@ namespace Molten
 
     void VulkanRenderer::DestroyTexture(Texture* texture)
     {
-        m_resourceCounter.textureCount--;
         delete static_cast<VulkanTexture*>(texture);
     }
 
@@ -950,7 +938,6 @@ namespace Molten
         VulkanVertexBuffer* vulkanVertexBuffer = static_cast<VulkanVertexBuffer*>(vertexBuffer);
         vkDestroyBuffer(m_logicalDevice, vulkanVertexBuffer->buffer, nullptr);
         vkFreeMemory(m_logicalDevice, vulkanVertexBuffer->memory, nullptr);
-        m_resourceCounter.vertexBufferCount--;
         delete vulkanVertexBuffer;
     }
 
@@ -1191,49 +1178,6 @@ namespace Molten
         device = VK_NULL_HANDLE;
         graphicsQueueIndex = 0;
         presentQueueIndex = 0;
-    }
-
-    VulkanRenderer::ResourceCounter::ResourceCounter() :
-        framebufferCount(0),
-        indexBufferCount(0),
-        pipelineCount(0),
-        shaderCount(0),
-        textureCount(0),
-        vertexBufferCount(0)
-    {}
-
-    void VulkanRenderer::ResourceCounter::Clear(Logger * m_logger)
-    {
-        if (framebufferCount)
-        {
-            MOLTEN_RENDERER_LOG(Logger::Severity::Warning, std::to_string(framebufferCount) + " framebuffers are not destroyed.");
-        }
-        if (pipelineCount)
-        {
-            MOLTEN_RENDERER_LOG(Logger::Severity::Warning, std::to_string(pipelineCount) + " pipelines are not destroyed.");
-        }
-        if (indexBufferCount)
-        {
-            MOLTEN_RENDERER_LOG(Logger::Severity::Warning, std::to_string(indexBufferCount) + " index buffers are not destroyed.");
-        }
-        if (shaderCount)
-        {
-            MOLTEN_RENDERER_LOG(Logger::Severity::Warning, std::to_string(shaderCount) + " shaders are not destroyed.");
-        }
-        if (textureCount)
-        {
-            MOLTEN_RENDERER_LOG(Logger::Severity::Warning, std::to_string(textureCount) + " textures are not destroyed.");
-        }
-        if (vertexBufferCount)
-        {
-            MOLTEN_RENDERER_LOG(Logger::Severity::Warning, std::to_string(vertexBufferCount) + " vertex buffers are not destroyed.");
-        }
-        framebufferCount = 0;
-        indexBufferCount = 0;
-        pipelineCount = 0;
-        shaderCount = 0;
-        textureCount = 0;
-        vertexBufferCount = 0;
     }
 
     PFN_vkVoidFunction VulkanRenderer::GetVulkanFunction(const char* functionName) const
@@ -1878,8 +1822,6 @@ namespace Molten
 
         VulkanFramebuffer* vulkanFramebuffer = new VulkanFramebuffer;
         vulkanFramebuffer->framebuffer = framebuffer;
-
-        m_resourceCounter.framebufferCount++;
         return vulkanFramebuffer;
     }
 

@@ -266,19 +266,6 @@ namespace Molten
             SwapChainSupport swapChainSupport;
         };
 
-        struct ResourceCounter
-        {
-            ResourceCounter();
-            void Clear(Logger* logger);
-
-            uint32_t framebufferCount;
-            uint32_t indexBufferCount;
-            uint32_t pipelineCount;
-            uint32_t shaderCount;
-            uint32_t textureCount;
-            uint32_t vertexBufferCount;
-        };
-
         PFN_vkVoidFunction GetVulkanFunction(const char* functionName) const;
         bool LoadInstance(const Version& version);
         bool GetRequiredExtensions(std::vector<std::string>& extensions, const bool requestDebugger) const;
@@ -332,7 +319,6 @@ namespace Molten
         std::vector<VkFence> m_imagesInFlight;
         size_t m_maxFramesInFlight;
         size_t m_currentFrame;
-        ResourceCounter m_resourceCounter;
 
         bool m_resized;
         bool m_beginDraw;
