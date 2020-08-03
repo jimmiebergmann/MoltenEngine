@@ -31,17 +31,18 @@
 
 namespace Molten::Constants
 {
-    /** Helper type for catching incompatible data types for math constants. */
+    
+    /** Helper type for catching incompatible data types of math constants. */
     template<typename T>
     struct Invalid
     {
-        static_assert(false, "Passed template type is invalid for math constants.");
+        static constexpr T Value(); // Dummy function
     };
 
 
     /** Contant PI, for float, double and long double. */
     template<typename T>
-    inline constexpr T Pi{ Invalid<T> };
+    inline constexpr T Pi = Invalid<T>::Value();
 
 }
 

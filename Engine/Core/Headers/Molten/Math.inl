@@ -26,13 +26,23 @@
 namespace Molten::Constants
 {
 
+    // Invalid value implementations.
+    template<typename T>
+    constexpr T Invalid<T>::Value()
+    {
+        static_assert(false, "Passed template type is invalid for math constants.");
+        return {};
+    }
+
+
+    // Pi definitions.
     template<>
     inline constexpr float Pi<float>{ static_cast<float>(3.14159265358979323846264338327950288419716939937510582097494459230781640628620899L) };
 
     template<>
-    inline constexpr double Pi<double>{ static_cast<float>(3.14159265358979323846264338327950288419716939937510582097494459230781640628620899) };
+    inline constexpr double Pi<double>{ static_cast<double>(3.14159265358979323846264338327950288419716939937510582097494459230781640628620899L) };
 
     template<>
-    inline constexpr long double Pi<long double>{ static_cast<float>(3.14159265358979323846264338327950288419716939937510582097494459230781640628620899L) };
+    inline constexpr long double Pi<long double>{ static_cast<long double>(3.14159265358979323846264338327950288419716939937510582097494459230781640628620899L) };
 
 }
