@@ -36,7 +36,7 @@ namespace Molten::Constants
     template<typename T>
     struct Invalid
     {
-        tatic constexpr T Value(); // Dummy function.
+        static constexpr T Value(); // Dummy function.
     };
 
 
