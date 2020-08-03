@@ -23,6 +23,8 @@
 *
 */
 
+#include "Molten/Utility/Template.hpp"
+
 namespace Molten::Shader::Visual
 {
 
@@ -132,19 +134,12 @@ namespace Molten::Shader::Visual
         m_output(std::make_unique<OutputPin<TOutputType> >(*this))
     {
         size_t index = 0;
-        LoopEachInputPin<TInputTypes...>([&](auto t)
+        ForEachTemplateArgument<TInputTypes...>([&](auto t)
         {
             using currentPinType = typename decltype(t)::Type;
             m_inputs[index] = std::move(std::make_unique<InputPin<currentPinType> >(*this));
             index++;
         });
-    }
-
-    template<FunctionType TFunctionType, typename TOutputType, typename ... TInputTypes>
-    template<typename ... TLoopTypes, typename TCallback>
-    void Function<TFunctionType, TOutputType, TInputTypes...>::LoopEachInputPin(TCallback&& callback)
-    {
-        (callback(InputPinTypeWrapper<TLoopTypes>{}), ...);
     }
 
 }

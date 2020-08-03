@@ -144,19 +144,6 @@ namespace Molten::Shader::Visual
         static constexpr size_t OutputPinCount = 1;
         static constexpr size_t InputPinCount = sizeof...(TInputTypes);
 
-        /**
-        * @brief C++17 template loop, to iterate the template types and create the input pins.
-        */
-        /**@{*/
-        template<typename ... TLoopTypes, typename TCallback>
-        void LoopEachInputPin(TCallback&& callback);
-
-        template<typename T>
-        struct InputPinTypeWrapper
-        {
-            using Type = T;
-        };
-        /**@}*/
 
         std::array<std::unique_ptr<Pin>, InputPinCount> m_inputs;
         std::unique_ptr<Pin> m_output;
