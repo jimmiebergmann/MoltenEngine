@@ -49,8 +49,6 @@ namespace Molten
     private:
 
         VulkanVertexShaderStage(VkShaderModule module, const Shader::Visual::VertexScript& script);
-        VulkanVertexShaderStage(const VulkanVertexShaderStage&) = delete;
-        VulkanVertexShaderStage(VulkanVertexShaderStage&&) = delete;
         ~VulkanVertexShaderStage() = default;
 
         VkShaderModule module;

@@ -26,50 +26,36 @@
 #ifndef MOLTEN_CORE_RENDERER_SHADER_SHADERPROGRAM_HPP
 #define MOLTEN_CORE_RENDERER_SHADER_SHADERPROGRAM_HPP
 
-#include "Molten/Renderer/Resource.hpp"
 #include "Molten/Renderer/Shader.hpp"
-#include <string>
-#include <vector>
 
 namespace Molten::Shader
 {
 
-
-    /**
-    * @brief Shader stage base class.
-    */
+    /** Shader stage base class. */
     class MOLTEN_API Stage
     {
 
     public:
 
-        /**
-        * @brief Get the type of shader stage.
-        */
+        /** Get the type of shader stage. */
         virtual Type GetType() const = 0;
 
 
     protected:
 
-        /**
-        * @brief Virtual destructor.
-        */
+        /** Virtual destructor. */
         virtual ~Stage() = default;
 
     };
 
 
-    /**
-    * @brief Vertex shader stage class.
-    */
+    /**  Vertex shader stage class. */
     class MOLTEN_API VertexStage : public Stage
     {
 
     public:
 
-        /**
-        * @brief Get the type of shader stage. 
-        */
+        /** Get the type of shader stage.  */
         virtual Type GetType() const override;
 
 
@@ -82,21 +68,19 @@ namespace Molten::Shader
 
         VertexStage(const VertexStage&) = delete;
         VertexStage(VertexStage&&) = delete;
+        VertexStage& operator =(const VertexStage&) = delete;
+        VertexStage& operator =(VertexStage&&) = delete;
             
     };
 
 
-    /**
-    * @brief Fragment shader stage class.
-    */
+    /** Fragment shader stage class. */
     class MOLTEN_API FragmentStage : public Stage
     {
 
     public:
 
-        /**
-        * @brief Get the type of shader.
-        */
+        /** Get the type of shader. */
         virtual Type GetType() const override;
 
     protected:
@@ -108,6 +92,8 @@ namespace Molten::Shader
 
         FragmentStage(const FragmentStage&) = delete;
         FragmentStage(FragmentStage&&) = delete;    
+        FragmentStage& operator =(const FragmentStage&) = delete;
+        FragmentStage& operator =(FragmentStage&&) = delete;
 
     };
 

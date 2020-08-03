@@ -43,8 +43,6 @@ namespace Molten
     private:
 
         VulkanUniformBuffer() = default;
-        VulkanUniformBuffer(const VulkanUniformBuffer&) = delete;
-        VulkanUniformBuffer(VulkanUniformBuffer&&) = delete;
         ~VulkanUniformBuffer() = default;
 
         struct Frame

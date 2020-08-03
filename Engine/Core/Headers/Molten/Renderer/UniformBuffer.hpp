@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2020 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -26,29 +26,28 @@
 #ifndef MOLTEN_CORE_RENDERER_UNIFORMBUFFER_HPP
 #define MOLTEN_CORE_RENDERER_UNIFORMBUFFER_HPP
 
-#include "Molten/Renderer/Resource.hpp"
+#include "Molten/Types.hpp"
 
 namespace Molten
 {
 
-    /**
-    * @brief Uniform buffer resource object.
-    */
+    /** Uniform buffer resource object. */
     class MOLTEN_API UniformBuffer
     {
 
     protected:
 
         UniformBuffer() = default;
+        virtual ~UniformBuffer() = default;
+
         UniformBuffer(const UniformBuffer&) = delete;
         UniformBuffer(UniformBuffer&&) = delete;
-        virtual ~UniformBuffer() = default;
+        UniformBuffer& operator =(const UniformBuffer&) = delete;
+        UniformBuffer& operator =(UniformBuffer&&) = delete;
 
     };
 
-    /**
-    * @brief Descriptor class of uniform buffer class.
-    */
+    /** Descriptor class of uniform buffer class. */
     class MOLTEN_API UniformBufferDescriptor
     {
 

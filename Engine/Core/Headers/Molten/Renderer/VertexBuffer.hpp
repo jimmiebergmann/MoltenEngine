@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2020 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -26,22 +26,18 @@
 #ifndef MOLTEN_CORE_RENDERER_VERTEXBUFFER_HPP
 #define MOLTEN_CORE_RENDERER_VERTEXBUFFER_HPP
 
-#include "Molten/Renderer/Resource.hpp"
+#include "Molten/Types.hpp"
 
 namespace Molten
 {
 
-    /**
-    * @brief Vertex buffer resource object.
-    */
+    /** Vertex buffer resource object. */
     class MOLTEN_API VertexBuffer
     {
 
     public:
 
-        /**
-        * @brief Enumerator of data types.
-        */
+        /** Enumerator of data types. */
         enum class DataType : uint8_t
         {
             Float32,
@@ -51,13 +47,12 @@ namespace Molten
     protected:
 
         VertexBuffer() = default;
-        VertexBuffer(const VertexBuffer&) = delete;
-        VertexBuffer(VertexBuffer&&) = delete;
         virtual ~VertexBuffer() = default;
 
-        Resource resource;
-        uint32_t vertexCount;
-        uint32_t vertexSize;
+        VertexBuffer(const VertexBuffer&) = delete;
+        VertexBuffer(VertexBuffer&&) = delete;
+        VertexBuffer& operator =(const VertexBuffer&) = delete;
+        VertexBuffer& operator =(VertexBuffer&&) = delete;
 
     };
 

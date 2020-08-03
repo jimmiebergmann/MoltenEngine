@@ -402,32 +402,7 @@ namespace Molten
 
     Framebuffer* VulkanRenderer::CreateFramebuffer(const FramebufferDescriptor& descriptor)
     {
-        VkImageView attachments[] =
-        {
-            descriptor.image
-        };
-
-        VkFramebufferCreateInfo framebufferInfo = {};
-        framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-        framebufferInfo.renderPass = m_renderPass;
-        framebufferInfo.attachmentCount = 1;
-        framebufferInfo.pAttachments = attachments;
-        framebufferInfo.width = descriptor.size.x;
-        framebufferInfo.height = descriptor.size.y;
-        framebufferInfo.layers = 1;
-
-        VkFramebuffer framebuffer;
-        if (vkCreateFramebuffer(m_logicalDevice, &framebufferInfo, nullptr, &framebuffer) != VK_SUCCESS)
-        {
-            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Failed to create framebuffer.");
-            return nullptr;
-        }
-
-        VulkanFramebuffer* vulkanFramebuffer = new VulkanFramebuffer;
-        vulkanFramebuffer->resource = framebuffer;
-
-        m_resourceCounter.framebufferCount++;
-        return vulkanFramebuffer;
+        return nullptr;
     }
 
     IndexBuffer* VulkanRenderer::CreateIndexBuffer(const IndexBufferDescriptor& descriptor)
@@ -465,7 +440,7 @@ namespace Molten
         destroyStagingData();
 
         VulkanIndexBuffer* buffer = new VulkanIndexBuffer;
-        buffer->resource = indexBuffer;
+        buffer->buffer = indexBuffer;
         buffer->memory = indexMemory;
         buffer->indexCount = descriptor.indexCount;
         buffer->dataType = descriptor.dataType;
@@ -879,7 +854,7 @@ namespace Molten
         destroyStagingData();
 
         VulkanVertexBuffer* buffer = new VulkanVertexBuffer;
-        buffer->resource = vertexBuffer;
+        buffer->buffer = vertexBuffer;
         buffer->memory = vertexMemory;
         buffer->vertexCount = descriptor.vertexCount;
         buffer->vertexSize = descriptor.vertexSize;
@@ -891,7 +866,7 @@ namespace Molten
     void VulkanRenderer::DestroyFramebuffer(Framebuffer* framebuffer)
     {
         VulkanFramebuffer* vulkanFramebuffer = static_cast<VulkanFramebuffer*>(framebuffer);
-        vkDestroyFramebuffer(m_logicalDevice, vulkanFramebuffer->resource, nullptr);
+        vkDestroyFramebuffer(m_logicalDevice, vulkanFramebuffer->framebuffer, nullptr);
         m_resourceCounter.framebufferCount--;
         delete vulkanFramebuffer;
     }
@@ -899,7 +874,7 @@ namespace Molten
     void VulkanRenderer::DestroyIndexBuffer(IndexBuffer* indexBuffer)
     {
         VulkanIndexBuffer* vulkanIndexBuffer = static_cast<VulkanIndexBuffer*>(indexBuffer);
-        vkDestroyBuffer(m_logicalDevice, vulkanIndexBuffer->resource, nullptr);
+        vkDestroyBuffer(m_logicalDevice, vulkanIndexBuffer->buffer, nullptr);
         vkFreeMemory(m_logicalDevice, vulkanIndexBuffer->memory, nullptr);
         m_resourceCounter.indexBufferCount--;
         delete vulkanIndexBuffer;
@@ -973,7 +948,7 @@ namespace Molten
     void VulkanRenderer::DestroyVertexBuffer(VertexBuffer* vertexBuffer)
     {
         VulkanVertexBuffer* vulkanVertexBuffer = static_cast<VulkanVertexBuffer*>(vertexBuffer);
-        vkDestroyBuffer(m_logicalDevice, vulkanVertexBuffer->resource, nullptr);
+        vkDestroyBuffer(m_logicalDevice, vulkanVertexBuffer->buffer, nullptr);
         vkFreeMemory(m_logicalDevice, vulkanVertexBuffer->memory, nullptr);
         m_resourceCounter.vertexBufferCount--;
         delete vulkanVertexBuffer;
@@ -1034,7 +1009,7 @@ namespace Molten
         }
 
         m_currentCommandBuffer = &m_commandBuffers[m_currentImageIndex];
-        m_currentFramebuffer = m_presentFramebuffers[m_currentImageIndex]->resource;
+        m_currentFramebuffer = m_presentFramebuffers[m_currentImageIndex]->framebuffer;
 
         VkCommandBufferBeginInfo commandBufferBeginInfo = {};
         commandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -1081,7 +1056,7 @@ namespace Molten
     {
         VulkanVertexBuffer* vulkanVertexBuffer = static_cast<VulkanVertexBuffer*>(vertexBuffer);
 
-        VkBuffer vertexBuffers[] = { vulkanVertexBuffer->resource };
+        VkBuffer vertexBuffers[] = { vulkanVertexBuffer->buffer };
         const VkDeviceSize offsets[] = { 0 };
 
         vkCmdBindVertexBuffers(*m_currentCommandBuffer, 0, 1, vertexBuffers, offsets);
@@ -1093,11 +1068,11 @@ namespace Molten
         VulkanIndexBuffer* vulkanIndexBuffer = static_cast<VulkanIndexBuffer*>(indexBuffer);
         VulkanVertexBuffer* vulkanVertexBuffer = static_cast<VulkanVertexBuffer*>(vertexBuffer);
 
-        VkBuffer vertexBuffers[] = { vulkanVertexBuffer->resource };
+        VkBuffer vertexBuffers[] = { vulkanVertexBuffer->buffer };
         const VkDeviceSize offsets[] = { 0 };
 
         vkCmdBindVertexBuffers(*m_currentCommandBuffer, 0, 1, vertexBuffers, offsets);
-        vkCmdBindIndexBuffer(*m_currentCommandBuffer, vulkanIndexBuffer->resource, 0, GetIndexBufferDataType(vulkanIndexBuffer->dataType));
+        vkCmdBindIndexBuffer(*m_currentCommandBuffer, vulkanIndexBuffer->buffer, 0, GetIndexBufferDataType(vulkanIndexBuffer->dataType));
         vkCmdDrawIndexed(*m_currentCommandBuffer, static_cast<uint32_t>(vulkanIndexBuffer->indexCount), 1, 0, 0, 0);
     }
 
@@ -1865,11 +1840,8 @@ namespace Molten
     {
         for (auto& imageView : m_swapChainImageViews)
         {
-            FramebufferDescriptor descriptor;
-            descriptor.size.x = m_swapChainExtent.width;
-            descriptor.size.y = m_swapChainExtent.height;
-            descriptor.image = imageView;
-            VulkanFramebuffer* framebuffer = static_cast<VulkanFramebuffer*>(CreateFramebuffer(descriptor));
+            VulkanFramebuffer* framebuffer = static_cast<VulkanFramebuffer*>(
+                CreateFramebuffer(imageView, { m_swapChainExtent.width, m_swapChainExtent.height }));
             m_presentFramebuffers.push_back(framebuffer);
         }
 
@@ -1882,6 +1854,33 @@ namespace Molten
         m_maxFramesInFlight = m_presentFramebuffers.size() - 1;
 
         return true;
+    }
+
+    Framebuffer* VulkanRenderer::CreateFramebuffer(const VkImageView& imageView, const Vector2ui32 size)
+    {
+        VkImageView attachments[] = { imageView };
+
+        VkFramebufferCreateInfo framebufferInfo = {};
+        framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        framebufferInfo.renderPass = m_renderPass;
+        framebufferInfo.attachmentCount = 1;
+        framebufferInfo.pAttachments = attachments;
+        framebufferInfo.width = size.x;
+        framebufferInfo.height = size.y;
+        framebufferInfo.layers = 1;
+
+        VkFramebuffer framebuffer;
+        if (vkCreateFramebuffer(m_logicalDevice, &framebufferInfo, nullptr, &framebuffer) != VK_SUCCESS)
+        {
+            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Failed to create framebuffer.");
+            return nullptr;
+        }
+
+        VulkanFramebuffer* vulkanFramebuffer = new VulkanFramebuffer;
+        vulkanFramebuffer->framebuffer = framebuffer;
+
+        m_resourceCounter.framebufferCount++;
+        return vulkanFramebuffer;
     }
 
     bool VulkanRenderer::LoadCommandPool()

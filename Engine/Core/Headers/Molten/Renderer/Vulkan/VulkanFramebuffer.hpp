@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2020 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -42,9 +42,9 @@ namespace Molten
     private:
 
         VulkanFramebuffer() = default;
-        VulkanFramebuffer(const VulkanFramebuffer&) = delete;
-        VulkanFramebuffer(VulkanFramebuffer&&) = delete;
         ~VulkanFramebuffer() = default;
+
+        VkFramebuffer framebuffer;
 
         friend class VulkanRenderer;
 

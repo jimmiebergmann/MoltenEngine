@@ -42,15 +42,13 @@ namespace Molten
     private:
 
         VulkanPipeline() = default;
-        VulkanPipeline(const VulkanPipeline&) = delete;
-        VulkanPipeline(VulkanPipeline&&) = delete;
         ~VulkanPipeline() = default;
-
-        friend class VulkanRenderer;
 
         VkPipeline graphicsPipeline;
         std::vector<VkDescriptorSetLayout> descriptionSetLayouts;
         VkPipelineLayout pipelineLayout;
+
+        friend class VulkanRenderer;
 
     };
 

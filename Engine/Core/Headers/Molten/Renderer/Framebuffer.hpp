@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2020 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -26,32 +26,27 @@
 #ifndef MOLTEN_CORE_RENDERER_FRAMEBUFFER_HPP
 #define MOLTEN_CORE_RENDERER_FRAMEBUFFER_HPP
 
-#include "Molten/Renderer/Resource.hpp"
 #include "Molten/Math/Vector.hpp"
 
 namespace Molten
 {
 
-    /**
-    * @brief Framebuffer base class.
-    */
+    /** Framebuffer base class. */
     class MOLTEN_API Framebuffer
     {
 
     protected:
 
         Framebuffer() = default;
-        Framebuffer(const Framebuffer&) = delete;
-        Framebuffer(Framebuffer&&) = delete;
         virtual ~Framebuffer() = default;
 
-        Resource resource;
-
+        Framebuffer(const Framebuffer&) = delete;
+        Framebuffer(Framebuffer&&) = delete;
+        Framebuffer& operator =(const Framebuffer&) = delete;
+        Framebuffer& operator =(Framebuffer&&) = delete;
     };
 
-    /**
-    * @brief Descriptor class of framebuffer class.
-    */
+    /** Descriptor class of framebuffer class. */
     class MOLTEN_API FramebufferDescriptor
     {
 
@@ -59,7 +54,6 @@ namespace Molten
 
         FramebufferDescriptor() = default;
 
-        Resource image;
         Vector2ui32 size;
 
     };

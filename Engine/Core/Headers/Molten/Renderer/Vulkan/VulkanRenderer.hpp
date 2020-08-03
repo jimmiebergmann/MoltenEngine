@@ -293,6 +293,7 @@ namespace Molten
         bool LoadImageViews();
         bool LoadRenderPass();
         bool LoadPresentFramebuffer();
+        Framebuffer* CreateFramebuffer(const VkImageView& imageView, const Vector2ui32 size);
         bool LoadCommandPool();
         bool LoadSyncObjects();
         bool RecreateSwapChain();

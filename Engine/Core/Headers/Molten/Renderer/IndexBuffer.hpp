@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2020 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -26,22 +26,18 @@
 #ifndef MOLTEN_CORE_RENDERER_INDEXBUFFER_HPP
 #define MOLTEN_CORE_RENDERER_INDEXBUFFER_HPP
 
-#include "Molten/Renderer/Resource.hpp"
+#include "Molten/Types.hpp"
 
 namespace Molten
 {
 
-    /**
-    * @brief Index buffer resource object.
-    */
+    /** Index buffer resource object.¨*/
     class MOLTEN_API IndexBuffer
     {
 
     public:
 
-        /**
-        * @brief Enumerator of data types.
-        */
+        /** Enumerator of data types. */
         enum class DataType : uint8_t
         {
             Uint16, ///< 16 bit unsigned integer data type.
@@ -51,19 +47,16 @@ namespace Molten
     protected:
 
         IndexBuffer() = default;
-        IndexBuffer(const IndexBuffer&) = delete;
-        IndexBuffer(IndexBuffer&&) = delete;
         virtual ~IndexBuffer() = default;
 
-        Resource resource;
-        size_t indexCount;
-        DataType dataType;
+        IndexBuffer(const IndexBuffer&) = delete;
+        IndexBuffer(IndexBuffer&&) = delete;
+        IndexBuffer& operator =(const IndexBuffer&) = delete;
+        IndexBuffer& operator =(IndexBuffer&&) = delete;
 
     };
 
-    /**
-    * @brief Descriptor class of index buffer class.
-    */
+    /** Descriptor class of index buffer class. */
     class MOLTEN_API IndexBufferDescriptor
     {
 

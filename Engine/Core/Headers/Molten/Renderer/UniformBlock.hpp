@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2020 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -26,7 +26,7 @@
 #ifndef MOLTEN_CORE_RENDERER_UNIFORMBLOCK_HPP
 #define MOLTEN_CORE_RENDERER_UNIFORMBLOCK_HPP
 
-#include "Molten/Renderer/Resource.hpp"
+#include "Molten/Types.hpp"
 
 namespace Molten
 {
@@ -34,24 +34,23 @@ namespace Molten
     class Pipeline;
     class UniformBuffer;
 
-    /**
-    * @brief Uniform block resource object.
-    */
+    /** Uniform block resource object. */
     class MOLTEN_API UniformBlock
     {
 
     protected:
 
         UniformBlock() = default;
+        virtual ~UniformBlock() = default;
+
         UniformBlock(const UniformBlock&) = delete;
         UniformBlock(UniformBlock&&) = delete;
-        virtual ~UniformBlock() = default;
+        UniformBlock& operator =(const UniformBlock&) = delete;
+        UniformBlock& operator =(UniformBlock&&) = delete;
 
     };
 
-    /**
-    * @brief Descriptor class of uniform block class.
-    */
+    /** Descriptor class of uniform block class. */
     class MOLTEN_API UniformBlockDescriptor
     {
 

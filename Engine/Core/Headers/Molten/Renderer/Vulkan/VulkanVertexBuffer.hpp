@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2020 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -42,11 +42,12 @@ namespace Molten
     private:
 
         VulkanVertexBuffer() = default;
-        VulkanVertexBuffer(const VulkanVertexBuffer&) = delete;
-        VulkanVertexBuffer(VulkanVertexBuffer&&) = delete;
         ~VulkanVertexBuffer() = default;
 
+        VkBuffer buffer;
         VkDeviceMemory memory;
+        uint32_t vertexCount;
+        uint32_t vertexSize;
 
         friend class VulkanRenderer;
 

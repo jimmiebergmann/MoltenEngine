@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2020 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -43,8 +43,6 @@ namespace Molten
     private:
 
         VulkanUniformBlock() = default;
-        VulkanUniformBlock(const VulkanUniformBlock&) = delete;
-        VulkanUniformBlock(VulkanUniformBlock&&) = delete;
         ~VulkanUniformBlock() = default;
 
         VkPipelineLayout pipelineLayout;

@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2020 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -27,7 +27,6 @@
 #define MOLTEN_CORE_RENDERER_TEXTURE_HPP
 
 #include "Molten/Types.hpp"
-#include "Molten/Math/Vector.hpp"
 
 namespace Molten
 {
@@ -39,12 +38,16 @@ namespace Molten
 
     protected:
 
-        Texture() = default;      
-        Texture(const Texture&) = delete;
-        Texture(Texture&&) = delete;
+        Texture() = default;
         virtual ~Texture() = default;
 
-        uint64_t id;
+        Texture(const Texture&) = delete;
+        Texture(Texture&&) = delete;
+        Texture& operator =(const Texture&) = delete;
+        Texture& operator =(Texture&&) = delete;
+        
+
+        //uint64_t id;
 
 
     };
