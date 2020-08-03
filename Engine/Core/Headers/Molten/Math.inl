@@ -28,9 +28,10 @@ namespace Molten::Constants
 
     // Invalid value implementations.
     template<typename T>
-    constexpr T Invalid<T>::Value()
+    inline constexpr T Invalid<T>::Value()
     {
-        static_assert(false, "Passed template type is invalid for math constants.");
+        struct AlwaysFalse : std::false_type {};
+        static_assert(AlwaysFalse::value, "Provided data type of math constant is not supported.");
         return {};
     }
 
