@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2020 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -29,19 +29,19 @@
 #include "Molten/Types.hpp"
 #include <cmath>
 
-namespace Molten
+namespace Molten::Constants
 {
-
-    namespace Constants
+    /** Helper type for catching incompatible data types for math constants. */
+    template<typename T>
+    struct Invalid
     {
+        static_assert(false, "Passed template type is invalid for math constants.");
+    };
 
-        /**
-        * @brief Contant PI, for float, double and long double.
-        */
-        template<typename T>
-        constexpr T Pi();
 
-    }
+    /** Contant PI, for float, double and long double. */
+    template<typename T>
+    inline constexpr T Pi{ Invalid<T> };
 
 }
 

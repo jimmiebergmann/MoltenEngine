@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2020 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,30 +23,16 @@
 *
 */
 
-namespace Molten
+namespace Molten::Constants
 {
 
-    namespace Constants
-    {
+    template<>
+    inline constexpr float Pi<float>{ static_cast<float>(3.14159265358979323846264338327950288419716939937510582097494459230781640628620899L) };
 
-        template<>
-        constexpr float Pi()
-        {
-            return static_cast<float>(3.14159265358979323846264338327950288419716939937510582097494459230781640628620899L);
-        }
+    template<>
+    inline constexpr double Pi<double>{ static_cast<float>(3.14159265358979323846264338327950288419716939937510582097494459230781640628620899) };
 
-        template<>
-        constexpr double Pi()
-        {
-            return static_cast<double>(3.14159265358979323846264338327950288419716939937510582097494459230781640628620899);
-        }
-
-        template<>
-        constexpr long double Pi()
-        {
-            return static_cast<long double>(3.14159265358979323846264338327950288419716939937510582097494459230781640628620899L);
-        }
-
-    }
+    template<>
+    inline constexpr long double Pi<long double>{ static_cast<float>(3.14159265358979323846264338327950288419716939937510582097494459230781640628620899L) };
 
 }

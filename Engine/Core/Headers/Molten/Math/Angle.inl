@@ -28,7 +28,7 @@ namespace Molten
 
     // Angle implementations.
     inline Angle::Angle() :
-        m_radians(0.0f)
+        m_radians(0.0)
     { }
 
     template<typename T>
@@ -40,15 +40,15 @@ namespace Molten
     template<typename T>
     inline T Angle::AsDegrees() const
     {
-        return static_cast<T>(m_radians * 180.0f / Constants::Pi<double>());
+        return static_cast<T>(m_radians * 180.0 / Constants::Pi<double>());
     }
 
     inline Angle Angle::Normal() const
     {
-        auto radians = std::fmod(m_radians, Constants::Pi<double>() * 2.0f);
+        auto radians = std::fmod(m_radians, Constants::Pi<double> * 2.0);
         if (radians < 0.0f)
         {
-            radians += Constants::Pi<double>() * 2.0f;
+            radians += Constants::Pi<double> * 2.0;
         }
         return Angle{ radians };
     }
@@ -127,7 +127,7 @@ namespace Molten
     template<typename T>
     inline Angle Degrees(const T degrees)
     {
-        return Angle{ static_cast<double>(degrees) * Constants::Pi<double>() / 180.0f };
+        return Angle{ static_cast<double>(degrees) * Constants::Pi<double>() / 180.0 };
     }
 
 }

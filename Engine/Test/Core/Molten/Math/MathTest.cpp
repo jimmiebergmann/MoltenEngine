@@ -33,19 +33,19 @@ namespace Molten
     TEST(Math, Constants)
     {
         {
-            constexpr auto pi_1 = Constants::Pi<float>();
+            constexpr auto pi_1 = Constants::Pi<float>;
             float pi_2 = pi_1;
             EXPECT_TRUE((std::is_same<decltype(pi_2), float>::value));
             EXPECT_NEAR(pi_2, 3.1415927410125732421875f, 1e-16);
         }
         {
-            constexpr auto pi_1 = Constants::Pi<double>();
+            constexpr auto pi_1 = Constants::Pi<double>;
             double pi_2 = pi_1;
             EXPECT_TRUE((std::is_same<decltype(pi_2), double>::value));
             EXPECT_NEAR(pi_2, 3.141592653589793115997963468544185161590576171875, 1e-61);
         }
         {
-            constexpr auto pi_1 = Constants::Pi<long double>();
+            constexpr auto pi_1 = Constants::Pi<long double>;
             long double pi_2 = pi_1;
             EXPECT_TRUE((std::is_same<decltype(pi_2), long double>::value));
             EXPECT_NEAR(static_cast<double>(pi_2), 3.141592653589793115997963468544185161590576171875, 1e-61);

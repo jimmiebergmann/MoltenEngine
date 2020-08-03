@@ -48,8 +48,8 @@ namespace Molten
                 EXPECT_EQ(angle.AsDegrees<int32_t>(), int32_t(180));
                 EXPECT_NEAR(angle.AsDegrees<float>(), float(180.0f), 1e-16);
 
-                EXPECT_NEAR(angle.AsRadians<float>(), Constants::Pi<float>(), 1e-16);
-                EXPECT_NEAR(angle.AsRadians<double>(), Constants::Pi<double>(), 1e-61);
+                EXPECT_NEAR(angle.AsRadians<float>(), Constants::Pi<float>, 1e-16);
+                EXPECT_NEAR(angle.AsRadians<double>(), Constants::Pi<double>, 1e-61);
                 EXPECT_EQ(angle.AsRadians<int32_t>(), int32_t(3));
             }
             {
@@ -58,21 +58,21 @@ namespace Molten
                 EXPECT_EQ(angle.AsDegrees<int32_t>(), int32_t(270));
                 EXPECT_NEAR(angle.AsDegrees<float>(), float(270.0f), 1e-16);
 
-                EXPECT_NEAR(angle.AsRadians<float>(), 3.0f * Constants::Pi<float>() / 2.0f, 1e-16);
-                EXPECT_NEAR(angle.AsRadians<double>(), 3.0f * Constants::Pi<double>() / 2.0f, 1e-61);
+                EXPECT_NEAR(angle.AsRadians<float>(), 3.0f * Constants::Pi<float> / 2.0f, 1e-16);
+                EXPECT_NEAR(angle.AsRadians<double>(), 3.0f * Constants::Pi<double> / 2.0f, 1e-61);
                 EXPECT_EQ(angle.AsRadians<int32_t>(), int32_t(4));
             }
         }
         {
             {
-                Angle angle1 = Radians(Constants::Pi<float>());
-                EXPECT_NEAR(angle1.AsRadians<float>(), Constants::Pi<float>(), 1e-16);
+                Angle angle1 = Radians(Constants::Pi<float>);
+                EXPECT_NEAR(angle1.AsRadians<float>(), Constants::Pi<float>, 1e-16);
 
-                Angle angle2 = Radians(Constants::Pi<double>());
-                EXPECT_NEAR(angle2.AsRadians<double>(), Constants::Pi<double>(), 1e-61);
+                Angle angle2 = Radians(Constants::Pi<double>);
+                EXPECT_NEAR(angle2.AsRadians<double>(), Constants::Pi<double>, 1e-61);
             }
             {
-                Angle angle = Radians(Constants::Pi<double>() / 2.0f);
+                Angle angle = Radians(Constants::Pi<double> / 2.0f);
 
                 EXPECT_NEAR(angle.AsDegrees<double>(), double(90.0f), 1e-61);
             }
