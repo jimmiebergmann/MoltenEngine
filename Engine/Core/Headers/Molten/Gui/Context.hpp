@@ -33,7 +33,7 @@ namespace Molten::Gui::Private
      
     struct MOLTEN_API Context : Ecs::Context<Context>
     {
-        Context(const Ecs::ContextDescriptor & descriptor) :
+        explicit Context(const Ecs::ContextDescriptor & descriptor) :
             Ecs::Context<Context>(descriptor)
         {}
     };

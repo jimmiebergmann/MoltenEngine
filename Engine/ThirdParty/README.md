@@ -5,13 +5,13 @@ Submodules are preferred over subtrees.
 
 ## Get submodules
 After cloning Molten:
-```sh
+```
 $ git submodule update --init
 ```
 or get them while cloning:
-```sh
+```
 $ git clone --recurse-submodules https://github.com/jimmiebergmann/MoltenEngine.git
 ```
 
 ### Available submodules
-* Google Test - https://github.com/google/googletest
+*   Google Test - <https://github.com/google/googletest>

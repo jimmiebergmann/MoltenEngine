@@ -46,7 +46,7 @@ namespace Molten::Gui
 
     public:
 
-        RenderObject(Renderer* renderer);
+        explicit RenderObject(Renderer* renderer);
 
         ~RenderObject();
 

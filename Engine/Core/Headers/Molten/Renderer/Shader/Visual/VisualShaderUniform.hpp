@@ -77,7 +77,7 @@ namespace Molten::Shader::Visual
 
         using InterfaceContainer = std::vector<UniformInterface*>;
 
-        UniformInterfaces(Script& script);
+        explicit UniformInterfaces(Script& script);
         ~UniformInterfaces();
 
         /** Interface iterators. */

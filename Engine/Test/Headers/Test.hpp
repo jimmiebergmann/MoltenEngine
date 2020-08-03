@@ -42,7 +42,7 @@ namespace Molten::Test
 
     public:
 
-        Benchmarker(const std::string& description);
+        explicit Benchmarker(const std::string& description);
         ~Benchmarker();
 
     private:

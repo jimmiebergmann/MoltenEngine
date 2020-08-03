@@ -5,7 +5,7 @@ Real-time game engine framework and editor.
 **Warning:** Under heavy development.
 
 ## Build
-```sh
+```
 $ git clone --recurse-submodules https://github.com/jimmiebergmann/MoltenEngine.git
 $ mkdir MoltenEngine/Build
 $ cd MoltenEngine/Build
