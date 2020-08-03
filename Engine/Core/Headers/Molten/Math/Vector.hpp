@@ -82,7 +82,7 @@ namespace Molten
         *        Initializes all components by input parameter.
         */
         template<typename U>
-        constexpr Vector(const U xy);
+        explicit constexpr Vector(const U xy);
 
         /**
         * @brief Constructor.
@@ -250,7 +250,7 @@ namespace Molten
         *        Initializes all components by input parameter.
         */
         template<typename U>
-        constexpr Vector(const U xyz);
+        explicit constexpr Vector(const U xyz);
 
         /**
         * @brief Constructor.
@@ -425,7 +425,7 @@ namespace Molten
         *        Initializes all components by input parameter.
         */
         template<typename U>
-        constexpr Vector(const U xyzw);
+        explicit constexpr Vector(const U xyzw);
 
         /**
         * @brief Constructor.

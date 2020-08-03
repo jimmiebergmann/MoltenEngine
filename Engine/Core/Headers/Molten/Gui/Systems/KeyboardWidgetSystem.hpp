@@ -39,7 +39,7 @@ namespace Molten::Gui
 
     public:
 
-        KeyboardSystem(Logger& logger) :
+        explicit KeyboardSystem(Logger& logger) :
             m_logger(logger)
         { }
 

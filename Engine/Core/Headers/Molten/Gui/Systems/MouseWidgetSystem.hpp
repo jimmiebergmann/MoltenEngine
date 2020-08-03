@@ -39,7 +39,7 @@ namespace Molten::Gui
 
     public:
 
-        MouseSystem(Logger& logger) :
+        explicit MouseSystem(Logger& logger) :
             m_logger(logger)
         { }
 

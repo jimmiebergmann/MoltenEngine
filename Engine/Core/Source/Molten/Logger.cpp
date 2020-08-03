@@ -84,16 +84,15 @@ namespace Molten
         {
             std::cout << GetSeverityString(severity) << message << "\n";
         })
-    { }
-
-    Logger::Logger(const uint32_t severityFlags, Logger* parent) :
-        m_severityFlags(severityFlags),
-        m_callback(parent->m_callback)
-    { }
+    {}
 
     Logger::Logger(Callback callback, const uint32_t severityFlags) :
         m_severityFlags(severityFlags),
         m_callback(callback)
+    { }
+    Logger::Logger(const uint32_t severityFlags, Logger* parent) :
+        m_severityFlags(severityFlags),
+        m_callback(parent->m_callback)
     { }
 
     Logger::~Logger()

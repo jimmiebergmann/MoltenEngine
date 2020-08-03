@@ -50,7 +50,7 @@ namespace Molten
         {
             radians += Constants::Pi<double>() * 2.0f;
         }
-        return { radians };
+        return Angle{ radians };
     }
 
     inline Angle& Angle::Normalize()
@@ -121,13 +121,13 @@ namespace Molten
     template<typename T>
     inline Angle Radians(const T radians)
     {
-        return { static_cast<double>(radians) };
+        return Angle{ static_cast<double>(radians) };
     }
 
     template<typename T>
     inline Angle Degrees(const T degrees)
     {
-        return { static_cast<double>(degrees) * Constants::Pi<double>() / 180.0f };
+        return Angle{ static_cast<double>(degrees) * Constants::Pi<double>() / 180.0f };
     }
 
 }

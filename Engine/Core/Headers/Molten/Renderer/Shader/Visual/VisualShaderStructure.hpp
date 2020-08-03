@@ -55,7 +55,7 @@ namespace Molten::Shader::Visual
         using VariableContainer = std::vector<VariableBaseType*>;
         using ConstVariableContainer = std::vector<const VariableBaseType*>;
 
-        Structure(Script& script);
+        explicit Structure(Script& script);
         virtual ~Structure();
 
         /** Structure member iterators. */
@@ -155,7 +155,7 @@ namespace Molten::Shader::Visual
 
         /** Constructor, by providing meta data constructor parameters. */
         template<typename ... TMetaDataParams>
-        Structure(Script& script, TMetaDataParams ... metaDataParameters);
+        explicit Structure(Script& script, TMetaDataParams ... metaDataParameters);
 
         ~Structure() = default;
 

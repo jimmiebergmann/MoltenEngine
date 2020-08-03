@@ -66,7 +66,12 @@ namespace Molten
         * @param severityFlags Flags of severity levels.
         *
         */
-        Logger(const uint32_t severityFlags = SeverityAllFlags);
+        explicit Logger(const uint32_t severityFlags = SeverityAllFlags);
+
+        /**
+        * @brief Constructor, by providing a callback function.
+        */
+        explicit Logger(Callback callback, const uint32_t severityFlags = SeverityAllFlags);
 
         /**
         * @brief Constructor.
@@ -76,11 +81,6 @@ namespace Molten
         *
         */
         Logger(const uint32_t severityFlags, Logger* parent);
-
-        /**
-        * @brief Constructor, by providing a callback function.
-        */
-        Logger(Callback callback, const uint32_t severityFlags = SeverityAllFlags);
 
         /**
         * @brief Virtual destructor.
@@ -140,7 +140,10 @@ namespace Molten
         * @brief Constructor.
         *        Opens log file, if filename is provided.
         */
-        FileLogger(const std::string& filename = "", const OpenMode openMode = OpenMode::Append, const uint32_t severityFlags = Logger::SeverityAllFlags);
+        explicit FileLogger(
+            const std::string& filename = "",
+            const OpenMode openMode = OpenMode::Append,
+            const uint32_t severityFlags = Logger::SeverityAllFlags);
 
         /**
         * @brief Destructor.
@@ -151,7 +154,10 @@ namespace Molten
         /**
         * @brief Open log file for writing.
         */
-        virtual bool Open(const std::string & filename, const OpenMode openMode = OpenMode::Append, const uint32_t severityFlags = Logger::SeverityAllFlags);
+        virtual bool Open(
+            const std::string & filename,
+            const OpenMode openMode = OpenMode::Append,
+            const uint32_t severityFlags = Logger::SeverityAllFlags);
 
         /**
         * @brief Close the log file.

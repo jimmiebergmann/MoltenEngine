@@ -47,63 +47,63 @@ namespace Molten
         template<> struct VariableTrait<bool>
         {
             inline static const bool supported = true;
-            inline static const bool defaultValue = false;
+            inline static const bool defaultValue{ false };
             inline static const VariableDataType dataType = VariableDataType::Bool;
             inline static const size_t dataSize = 1;
         };
         template<> struct VariableTrait<int32_t>
         {
             inline static const bool supported = true;
-            inline static const int32_t defaultValue = 0;
+            inline static const int32_t defaultValue{ 0 };
             inline static const VariableDataType dataType = VariableDataType::Int32;
             inline static const size_t dataSize = 4;
         };
         template<> struct VariableTrait<float>
         {
             inline static const bool supported = true;
-            inline static const float defaultValue = 0.0f;
+            inline static const float defaultValue{ 0.0f };
             inline static const VariableDataType dataType = VariableDataType::Float32;
             inline static const size_t dataSize = 4;
         };
         template<> struct VariableTrait<Vector2f32>
         {
             inline static const bool supported = true;
-            inline static const Vector2f32 defaultValue = { 0.0f };
+            inline static const Vector2f32 defaultValue{ 0.0f };
             inline static const VariableDataType dataType = VariableDataType::Vector2f32;
             inline static const size_t dataSize = 8;
         };
         template<> struct VariableTrait<Vector3f32>
         {
             inline static const bool supported = true;
-            inline static const Vector3f32 defaultValue = { 0.0f };
+            inline static const Vector3f32 defaultValue{ 0.0f };
             inline static const VariableDataType dataType = VariableDataType::Vector3f32;
             inline static const size_t dataSize = 12;
         };
         template<> struct VariableTrait<Vector4f32>
         {
             inline static const bool supported = true;
-            inline static const Vector4f32 defaultValue = { 0.0f };
+            inline static const Vector4f32 defaultValue{ 0.0f };
             inline static const VariableDataType dataType = VariableDataType::Vector4f32;
             inline static const size_t dataSize = 16;
         };
         template<> struct VariableTrait<Matrix4x4f32>
         {
             inline static const bool supported = true;
-            inline static const Matrix4x4f32 defaultValue = { 0.0f };
+            inline static const Matrix4x4f32 defaultValue{ 0.0f };
             inline static const VariableDataType dataType = VariableDataType::Matrix4x4f32;
             inline static const size_t dataSize = 64;
         };
         template<> struct VariableTrait<Sampler2D>
         {
             inline static const bool supported = true;
-            inline static const Sampler2D defaultValue = { };
+            inline static const Sampler2D defaultValue{ };
             inline static const VariableDataType dataType = VariableDataType::Sampler2D;
             inline static const size_t dataSize = 4;
         };
         template<> struct VariableTrait<Sampler3D>
         {
             inline static const bool supported = true;
-            inline static const Sampler3D defaultValue = { };
+            inline static const Sampler3D defaultValue{ };
             inline static const VariableDataType dataType = VariableDataType::Sampler3D;
             inline static const size_t dataSize = 4;
         };

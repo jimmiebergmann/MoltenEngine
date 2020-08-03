@@ -46,7 +46,7 @@ namespace Molten::Shader::Visual
 
     public:
 
-        VariableBase(Script& script);
+        explicit VariableBase(Script& script);
         virtual ~VariableBase() = default;
 
         virtual NodeType GetType() const override; 
@@ -69,7 +69,7 @@ namespace Molten::Shader::Visual
 
     public:
 
-        InputVariableBase(Script& script);
+        explicit InputVariableBase(Script& script);
         virtual ~InputVariableBase() = default;
 
     private:
@@ -87,7 +87,7 @@ namespace Molten::Shader::Visual
 
     public:
 
-        OutputVariableBase(Script& script);
+        explicit OutputVariableBase(Script& script);
         virtual ~OutputVariableBase() = default;
 
     private:
@@ -105,7 +105,7 @@ namespace Molten::Shader::Visual
 
     public:
 
-        ConstantVariableBase(Script& script);
+        explicit ConstantVariableBase(Script& script);
         virtual ~ConstantVariableBase() = default;
 
     private:
@@ -130,7 +130,7 @@ namespace Molten::Shader::Visual
         using Base = InputVariableBase;
         using DataType = TDataType;
 
-        InputVariable(Script& script);
+        explicit InputVariable(Script& script);
 
         virtual size_t GetOutputPinCount() const override;
         virtual Pin* GetOutputPin(const size_t index = 0) override;
@@ -175,7 +175,7 @@ namespace Molten::Shader::Visual
         using Base = OutputVariableBase;
         using DataType = TDataType;
 
-        OutputVariable(Script& script);
+        explicit OutputVariable(Script& script);
         OutputVariable(Script& script, const DataType& defaultValue);
 
         virtual size_t GetInputPinCount() const override;

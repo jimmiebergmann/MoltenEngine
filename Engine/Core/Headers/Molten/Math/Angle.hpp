@@ -72,7 +72,7 @@ namespace Molten
 
     private:
 
-        Angle(double radians);
+        explicit Angle(double radians);
 
         double m_radians;
 

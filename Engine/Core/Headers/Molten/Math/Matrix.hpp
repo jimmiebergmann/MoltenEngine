@@ -92,7 +92,7 @@ namespace Molten
         * @brief Constructor.
         *        Constructing and initializing all elements by a single value.
         */
-        Matrix(const T value);
+        explicit Matrix(const T value);
 
         /**
         * @brief Constructing and initializing all elements individually.
@@ -189,7 +189,7 @@ namespace Molten
         * @brief Constructor.
         *        Constructing and initializing all elements by a single value.
         */
-        Matrix(const T value);
+        explicit Matrix(const T value);
 
         /**
         * @brief Constructing and initializing all elements individually.

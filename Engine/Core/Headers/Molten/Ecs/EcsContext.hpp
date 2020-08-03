@@ -48,7 +48,10 @@ namespace Molten
         */
         struct MOLTEN_API ContextDescriptor
         {
-            ContextDescriptor(const size_t memoryBlockSize, const size_t entitiesPerCollection = 20, const size_t reservedComponentsPerGroup = 32);
+            explicit ContextDescriptor(
+                const size_t memoryBlockSize, 
+                const size_t entitiesPerCollection = 20,
+                const size_t reservedComponentsPerGroup = 32);
 
             size_t memoryBlockSize;
             size_t entitiesPerCollection;
