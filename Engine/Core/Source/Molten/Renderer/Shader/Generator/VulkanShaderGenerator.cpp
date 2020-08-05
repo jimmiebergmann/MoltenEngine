@@ -31,9 +31,8 @@
 #include <stack>
 
 #if defined(MOLTEN_ENABLE_GLSLANG)
-#include <glslang/public/ShaderLang.h>
-#include <SPIRV/GlslangToSpv.h>
-#include <StandAlone/DirStackFileIncluder.h>
+#include "ThirdParty/glslang/glslang/Public/ShaderLang.h"
+#include "ThirdParty/glslang/SPIRV/GlslangToSpv.h"
 #endif
 
 #define MOLTEN_GENERATOR_LOG(severity, message) if(logger){ logger->Write(severity, message); }
@@ -742,8 +741,8 @@ namespace Molten::Shader
 
         // Preprocess the shader.
         std::string preprocessedGLSL;
-        DirStackFileIncluder includer;
-        if (!shader.preprocess(&resources, defaultVersion, ENoProfile, false, false, messages, &preprocessedGLSL, includer))
+        glslang::TShader::ForbidIncluder forbidIncluder;
+        if (!shader.preprocess(&resources, defaultVersion, ENoProfile, false, false, messages, &preprocessedGLSL, forbidIncluder))
         {
             MOLTEN_GENERATOR_LOG(Logger::Severity::Error, std::string("Shader preprocessing failed: ") + shader.getInfoLog());
             return {};

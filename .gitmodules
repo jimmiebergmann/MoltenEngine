@@ -1,3 +1,8 @@
-[submodule "Engine/ThirdParty/googletest"]
-	path = Engine/ThirdParty/googletest
+[submodule "Engine/Vendor/ThirdParty/googletest"]
+	path = Engine/Vendor/ThirdParty/googletest
 	url = https://github.com/google/googletest
+	shallow = true
+[submodule "Engine/Vendor/ThirdParty/glslang"]
+	path = Engine/Vendor/ThirdParty/glslang
+	url = https://github.com/jimmiebergmann/glslang
+	shallow = true

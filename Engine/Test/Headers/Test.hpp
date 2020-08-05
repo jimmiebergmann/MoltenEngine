@@ -26,7 +26,7 @@
 #ifndef MOLTEN_TEST_HPP
 #define MOLTEN_TEST_HPP
 
-#include "gtest/gtest.h"
+#include "ThirdParty/googletest/googletest/include/gtest/gtest.h"
 #include "Molten/System/Clock.hpp"
 #include <string>
 

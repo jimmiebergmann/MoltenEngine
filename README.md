@@ -4,6 +4,10 @@
 Real-time game engine framework and editor.  
 **Warning:** Under heavy development.
 
+## Requirements
+*   C++ >= 17 compiler
+*   CMake >= 3.16
+
 ## Build
 ```
 $ git clone --recurse-submodules https://github.com/jimmiebergmann/MoltenEngine.git

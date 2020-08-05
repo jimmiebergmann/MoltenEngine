@@ -1,5 +1,5 @@
 project (MoltenEditor)
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.16)
 include(${CMAKE_CURRENT_SOURCE_DIR}/../CMake/Tools.cmake)
 
 option(MOLTEN_ENABLE_COVERAGE "Enables code coverage reporting" OFF)
