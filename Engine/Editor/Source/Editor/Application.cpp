@@ -59,7 +59,7 @@ namespace Molten
             Unload();
         }
 
-        int Application::Start(int argv, char** argc)
+        int Application::Start(int /*argv*/, char** /*argc*/)
         {
             try
             {
@@ -145,13 +145,13 @@ namespace Molten
             auto button2 = m_guiCanvas.Add<Gui::Button, Gui::MouseListener>(padding);
 
             button1->GetComponent<Gui::MouseListener>()->OnClick = 
-                [&](Mouse::Button button, const Vector2f32& pos)
+                [&](Mouse::Button /*button*/, const Vector2f32& pos)
             {
                 m_logger.Write(Logger::Severity::Info, "Pressed button 1 at: " + std::to_string(pos.x) + ", " + std::to_string(pos.y));
             };
 
             button2->GetComponent<Gui::MouseListener>()->OnClick =
-                [&](Mouse::Button button, const Vector2f32& pos)
+                [&](Mouse::Button /*button*/, const Vector2f32& pos)
             {
                 m_logger.Write(Logger::Severity::Info, "Pressed button 2 at: " + std::to_string(pos.x) + ", " + std::to_string(pos.y));
             };

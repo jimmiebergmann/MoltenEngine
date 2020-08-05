@@ -95,17 +95,17 @@ namespace Molten
                 ++onRegisterCount;
             }
 
-            void OnCreateEntity(TestEntity entity) override
+            void OnCreateEntity(TestEntity ) override
             {
                 ++onCreatedEntityCount;
             }
 
-            void OnDestroyEntity(TestEntity entity) override
+            void OnDestroyEntity(TestEntity ) override
             {
                 ++onDestroyedEntityCount;
             }
 
-            void Process(const Time & deltaTime) override
+            void Process(const Time & ) override
             {
                 // Dummy imp. Check the Test* methods.
             }
@@ -168,17 +168,17 @@ namespace Molten
                 ++onRegisterCount;
             }
 
-            void OnCreateEntity(TestEntity entity) override
+            void OnCreateEntity(TestEntity ) override
             {
                 ++onCreatedEntityCount;
             }
  
-            void OnDestroyEntity(TestEntity entity) override
+            void OnDestroyEntity(TestEntity ) override
             {
                 ++onDestroyedEntityCount;
             }
 
-            void Process(const Time& deltaTime) override
+            void Process(const Time& ) override
             {
                 // Dummy imp. Check the Test* methods.
             }
@@ -789,7 +789,7 @@ namespace Molten
                 TestPhysics physics;
             };
 
-            void Process(const Time & deltaTime) override
+            void Process(const Time & ) override
             {
                 // Dummy imp. Check the Test* methods.
             }

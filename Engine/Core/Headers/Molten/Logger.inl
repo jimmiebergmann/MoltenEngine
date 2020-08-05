@@ -23,49 +23,43 @@
 *
 */
 
-#ifndef MOLTEN_CORE_GUI_SYSTEMS_MOUSEWIDGETSYSTEM_HPP
-#define MOLTEN_CORE_GUI_SYSTEMS_MOUSEWIDGETSYSTEM_HPP
-
-#include "Molten/Gui/WidgetSystem.hpp"
-#include "Molten/Gui/Widget.hpp"
-#include "Molten/Gui/Behaviors/MouseListenerWidget.hpp"
-#include "Molten/Logger.hpp"
-
-namespace Molten::Gui
+namespace Molten
 {
 
-    class MOLTEN_API MouseSystem : public WidgetSystem<MouseSystem, MouseListener>
+    inline void Logger::WriteInfo(Logger * logger, const std::string& message)
     {
-
-    public:
-
-        explicit MouseSystem(Logger& logger) :
-            m_logger(logger)
-        { }
-
-        void OnRegister() override
+        if(logger == nullptr)
         {
-            m_logger.Write(Logger::Severity::Info, "Creating mouse system, number of widgets: " + std::to_string(GetEntityCount()));
-
+            return;
         }
+        logger->Write(Severity::Info, message);
+    }
 
-        void OnCreateEntity(WidgetEntity /*widget*/) override
+    inline void Logger::WriteDebug(Logger * logger, const std::string& message)
+    {
+        if(logger == nullptr)
         {
-            m_logger.Write(Logger::Severity::Info, "Added widget to mouse system, number of widgets: " + std::to_string(GetEntityCount()));
+            return;
         }
+        logger->Write(Severity::Debug, message);
+    }
 
-        void OnDestroyEntity(WidgetEntity /*widget*/) override
+    inline void Logger::WriteWarning(Logger * logger, const std::string& message)
+    {
+        if(logger == nullptr)
         {
+            return;
         }
+        logger->Write(Severity::Warning, message);
+    }
 
-        void Process(const Time& /*deltaTime*/) override
+    inline void Logger::WriteError(Logger * logger, const std::string& message)
+    {
+        if(logger == nullptr)
         {
+            return;
         }
-
-        Logger& m_logger;
-
-    };
+        logger->Write(Severity::Error, message);
+    }
 
 }
-
-#endif

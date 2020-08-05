@@ -59,20 +59,6 @@ if(MOLTEN_ENABLE_OPENGL)
 	find_package(OpenGL)
 endif()
 
-# Set compiler flags
-if(MSVC)
-  if(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
-    string(REGEX REPLACE "/W[0-4]" "/W4" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-  else()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
-  endif()
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /WX")
-elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-long-long -pedantic -fno-elide-constructors")
-  set(CMAKE_CXX_FLAGS_DEBUG "-g")
-  set(CMAKE_CXX_FLAGS_RELEASE "-O3")
-endif()
-
 
 include_directories ("${CoreHeadersDir}")
 include_directories ("${ThirdPartyDir}")
@@ -130,6 +116,20 @@ if(MOLTEN_ENABLE_X11)
 endif()
 
 target_include_directories(Molten PUBLIC "${VendorDir}")
+
+# Set compiler flags
+if(MSVC)
+  if(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
+    string(REGEX REPLACE "/W[0-4]" "/W4" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+  else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
+  endif()
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /WX")
+elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
+  set(CMAKE_CXX_FLAGS_DEBUG "-g")
+  set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+  target_compile_options(Molten PRIVATE -Werror -Wall -Wextra -Wno-long-long)
+endif()
 
 
 # Print summary

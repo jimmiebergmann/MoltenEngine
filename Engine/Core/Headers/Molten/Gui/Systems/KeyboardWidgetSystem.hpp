@@ -48,16 +48,16 @@ namespace Molten::Gui
             m_logger.Write(Logger::Severity::Info, "Creating mouse keyboard, number of widgets: " + std::to_string(GetEntityCount()));
         }
 
-        void OnCreateEntity(WidgetEntity widget) override
+        void OnCreateEntity(WidgetEntity /*widget*/) override
         {
             m_logger.Write(Logger::Severity::Info, "Added widget to keyboard system, number of widgets: " + std::to_string(GetEntityCount()));
         }
     
-        void OnDestroyEntity(WidgetEntity widget) override
+        void OnDestroyEntity(WidgetEntity /*widget*/) override
         {
         }
 
-        void Process(const Time& deltaTime) override
+        void Process(const Time& /*deltaTime*/) override
         {
             /* for (size_t i = 0; i < GetEntityCount(); i++)
             {

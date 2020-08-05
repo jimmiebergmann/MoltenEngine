@@ -61,7 +61,7 @@ namespace Molten::Gui
         m_backendRenderer = nullptr;
     }
 
-    void Renderer::DrawRect(const Vector2f32& position, const Vector2f32& size, const Vector4f32& color)
+    void Renderer::DrawRect(const Vector2f32& /*position*/, const Vector2f32& /*size*/, const Vector4f32& /*color*/)
     {
         /*m_backendRenderer->BindPipeline(m_rect.pipeline);
 

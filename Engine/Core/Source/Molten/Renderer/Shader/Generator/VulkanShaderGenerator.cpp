@@ -35,7 +35,6 @@
 #include "ThirdParty/glslang/SPIRV/GlslangToSpv.h"
 #endif
 
-#define MOLTEN_GENERATOR_LOG(severity, message) if(logger){ logger->Write(severity, message); }
 
 namespace Molten::Shader
 {
@@ -234,7 +233,7 @@ namespace Molten::Shader
     }
 
 
-    std::vector<uint8_t> VulkanGenerator::GenerateGlsl(const Visual::Script& script, Logger* logger)
+    std::vector<uint8_t> VulkanGenerator::GenerateGlsl(const Visual::Script& script, Logger* /*logger*/)
     {
         struct Variable
         {
@@ -589,7 +588,7 @@ namespace Molten::Shader
     std::vector<uint8_t> VulkanGenerator::ConvertGlslToSpriV(const std::vector<uint8_t>& code, Type shaderType, Logger* logger)
     {
         // Helper function for getting the shader type.
-        static auto GetEShShaderType = [](const Shader::Type type)->EShLanguage
+        static auto GetEShShaderType = [](const Shader::Type type) -> EShLanguage
         {
             switch (type)
             {
@@ -733,7 +732,7 @@ namespace Molten::Shader
         shader.setEnvTarget(glslang::EShTargetSpv, TargetVersion);
 
         const char* inputCString = reinterpret_cast<const char*>(code.data());
-        const int  inputCLength = static_cast<const int>(code.size());
+        const int inputCLength = static_cast<int>(code.size());
         shader.setStringsWithLengths(&inputCString, &inputCLength, 1);
 
         EShMessages messages = (EShMessages)(EShMsgSpvRules | EShMsgVulkanRules);
@@ -744,7 +743,7 @@ namespace Molten::Shader
         glslang::TShader::ForbidIncluder forbidIncluder;
         if (!shader.preprocess(&resources, defaultVersion, ENoProfile, false, false, messages, &preprocessedGLSL, forbidIncluder))
         {
-            MOLTEN_GENERATOR_LOG(Logger::Severity::Error, std::string("Shader preprocessing failed: ") + shader.getInfoLog());
+            Logger::WriteError(logger, std::string("Shader preprocessing failed: ") + shader.getInfoLog());
             return {};
         }
 
@@ -754,7 +753,7 @@ namespace Molten::Shader
 
         if (!shader.parse(&resources, 100, false, messages))
         {
-            MOLTEN_GENERATOR_LOG(Logger::Severity::Error, std::string("Shader parsing failed: ") + shader.getInfoLog());
+            Logger::WriteError(logger, std::string("Shader parsing failed: ") + shader.getInfoLog());
             return {};
         }
 
@@ -764,7 +763,7 @@ namespace Molten::Shader
 
         if (!program.link(messages))
         {
-            MOLTEN_GENERATOR_LOG(Logger::Severity::Error, std::string("Shader linking failed: ") + shader.getInfoLog());
+            Logger::WriteError(logger, std::string("Shader linking failed: ") + shader.getInfoLog());
             return {};
         }
 
@@ -777,7 +776,7 @@ namespace Molten::Shader
         size_t outputSize = sizeof(unsigned int) * spirv.size();
         if (outputSize == 0)
         {
-            MOLTEN_GENERATOR_LOG(Logger::Severity::Error, std::string("Shader convertion failed."));
+           Logger::WriteError(logger, "Shader convertion failed.");
             return {};
         }
 
@@ -789,7 +788,7 @@ namespace Molten::Shader
 #else
     std::vector<uint8_t> VulkanGenerator::ConvertGlslToSpriV(const std::vector<uint8_t>&, Type, Logger* logger)
     {
-        MOLTEN_GENERATOR_LOG(Logger::Severity::Error, "Failed to convert GLSL code to SPIR-V. MOLTEN_ENABLE_GLSLANG is not enabled.");
+        Logger::WriteError(logger, "Failed to convert GLSL code to SPIR-V. MOLTEN_ENABLE_GLSLANG is not enabled.");
         return {};
     }
 #endif

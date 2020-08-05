@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2020 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -34,17 +34,13 @@
 namespace Molten
 {
 
-    /**
-    * @brief Logger class.
-    */
+    /** Logger class. */
     class MOLTEN_API Logger
     {
 
     public:
 
-        /**
-        * @brief Enumerator of log types.
-        */
+        /** Enumerator of log types. */
         enum class Severity : uint32_t
         {
             Info    = 1 << 0,
@@ -55,58 +51,55 @@ namespace Molten
 
         using Callback = std::function<void(const Severity, const char *)>;
 
-        /**
-        * @brief Constant, containing all severity flags.
-        */
+        /** Constant, containing all severity flags. */
         static const uint32_t SeverityAllFlags;
 
         /**
-        * @brief Default constructor.
-        *
-        * @param severityFlags Flags of severity levels.
-        *
-        */
+         * Default constructor.
+         *
+         * @param severityFlags Flags of severity levels.
+         *
+         */
         explicit Logger(const uint32_t severityFlags = SeverityAllFlags);
 
-        /**
-        * @brief Constructor, by providing a callback function.
-        */
+        /** Constructor, by providing a callback function. */
         explicit Logger(Callback callback, const uint32_t severityFlags = SeverityAllFlags);
 
         /**
-        * @brief Constructor.
-        *
-        * @param severityFlags Flags of severity levels.
-        * @param parent Parent logger, inheriting the callback, but with possibly different severity flags.
-        *
-        */
+         * Constructor.
+         *
+         * @param severityFlags Flags of severity levels.
+         * @param parent Parent logger, inheriting the callback, but with possibly different severity flags.
+         *
+         */
         Logger(const uint32_t severityFlags, Logger* parent);
 
-        /**
-        * @brief Virtual destructor.
-        */
+        /** Virtual destructor. */
         virtual ~Logger();
 
-        /**
-        * @brief Set log severity flags.
-        */
+        /** Set log severity flags. */
         virtual void SetSeverityFlags(const uint32_t severityFlags);
 
-        /**
-        * @brief Get log severity flags.
-        */
+        /** Get log severity flags. */
         virtual uint32_t GetSeverityFlags() const;
 
-        /**
-        * @brief Write log message function.
-        */
+        /** Write log message function. */
         virtual void Write(const Severity severity, const char* message);
 
-        /**
-        * @brief Write log message function.
-        */
-        virtual void Write(const Severity severity, const std::string& message);        
+        /** Write log message function. */
+        virtual void Write(const Severity severity, const std::string& message);
 
+        /** 
+         * Helper funktion for writing log messages.
+         * The funktion returns immediately if logger == nullptr.
+         */
+        /**@{*/
+        static void WriteInfo(Logger * logger, const std::string& message);
+        static void WriteDebug(Logger * logger, const std::string& message);
+        static void WriteWarning(Logger * logger, const std::string& message);
+        static void WriteError(Logger * logger, const std::string& message);
+        /**@}*/
+        
     protected:
 
         Logger(const Logger&) = delete;
@@ -119,54 +112,39 @@ namespace Molten
 
     };
 
-    /**
-    * @brief File logger class.
-    */
+
+    /** File logger class. */
     class MOLTEN_API FileLogger : public Logger
     {
 
     public:
 
-        /**
-        * @brief Enumerator of file open modes.
-        */
+        /** Enumerator of file open modes. */
         enum class OpenMode
         {
             Append,
             Truncate
         };
 
-        /**
-        * @brief Constructor.
-        *        Opens log file, if filename is provided.
-        */
+        /** Constructor. Opens log file, if filename is provided. */
         explicit FileLogger(
             const std::string& filename = "",
             const OpenMode openMode = OpenMode::Append,
             const uint32_t severityFlags = Logger::SeverityAllFlags);
 
-        /**
-        * @brief Destructor.
-        *        Closing current open log file.
-        */
+        /** Destructor. Closing current open log file. */
         virtual ~FileLogger();
 
-        /**
-        * @brief Open log file for writing.
-        */
+        /** Open log file for writing. */
         virtual bool Open(
             const std::string & filename,
             const OpenMode openMode = OpenMode::Append,
             const uint32_t severityFlags = Logger::SeverityAllFlags);
 
-        /**
-        * @brief Close the log file.
-        */
+        /** Close the log file. */
         virtual void Close();
 
-        /**
-        * @brief Checks if the log file is open.
-        */
+        /** Checks if the log file is open. */
         virtual bool IsOpen() const;
 
     private:
@@ -181,5 +159,7 @@ namespace Molten
     };
 
 }
+
+#include "Molten/Logger.inl"
 
 #endif

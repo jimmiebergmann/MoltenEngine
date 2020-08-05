@@ -281,7 +281,7 @@ namespace Molten
     {
     }
 
-    void OpenGLX11Renderer::PushShaderConstants(Shader::Type /*stage*/, const uint32_t /*offset*/, const uint32_t size, const void* /*data*/)
+    void OpenGLX11Renderer::PushShaderConstants(Shader::Type /*stage*/, const uint32_t /*offset*/, const uint32_t /*size*/, const void* /*data*/)
     {
     }
 

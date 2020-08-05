@@ -464,7 +464,7 @@ namespace Molten
 
                     ComponentOffsetList uniqueOffsets;
                     visitedOffsets.clear();
-                    ForEachTemplateArgumentIndexed<Components...>([&offsetType, &uniqueOffsets, &visitedOffsets](auto type, const size_t index)
+                    ForEachTemplateArgument<Components...>([&offsetType, &uniqueOffsets, &visitedOffsets](auto type)
                     {
                         using Type = typename decltype(type)::Type;
 
