@@ -60,8 +60,14 @@ before_script:
   - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 90
   - sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-8 90
   - sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-8 90
-  - sudo update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-8 90
-  
+  - sudo update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-8 90  
+  - |
+      DOWNLOAD_CMAKE_VERSION=3.18.1
+      wget -O cmake.sh https://github.com/Kitware/CMake/releases/download/v${DOWNLOAD_CMAKE_VERSION}/cmake-${DOWNLOAD_CMAKE_VERSION}-Linux-x86_64.sh
+      mkdir -p /tmp/cmake
+      sudo sh cmake.sh --skip-license --exclude-subdir --prefix=/tmp/cmake
+      export PATH=/tmp/cmake/bin:$PATH
+
   - export DISPLAY=:99.0
   #- mkdir VulkanSDK_latest
   #- cd VulkanSDK_latest

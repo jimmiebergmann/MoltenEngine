@@ -15,3 +15,4 @@ $ git clone --recurse-submodules https://github.com/jimmiebergmann/MoltenEngine.
 
 ### Available submodules
 *   Google Test - <https://github.com/google/googletest>
+*   Glslang - <https://github.com/jimmiebergmann/glslang>
