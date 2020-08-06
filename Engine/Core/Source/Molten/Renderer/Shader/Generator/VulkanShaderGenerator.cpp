@@ -441,9 +441,9 @@ namespace Molten::Shader
         AppendToVector(source, "void main(){\n");
 
         size_t localVariableIndex = 0;
-        auto GetNextIndexPostfix = [&localVariableIndex]()
+        auto GetNextIndexPostfix = [&localVariableIndex]() -> std::string
         {
-            return std::move("_" + std::to_string(localVariableIndex++));
+            return "_" + std::to_string(localVariableIndex++);
         };
 
         for (auto& outputVar : outputVars)
@@ -581,7 +581,7 @@ namespace Molten::Shader
 
         AppendToVector(source, "}\n");
 
-        return std::move(source);
+        return source;
     }
 
 #if defined(MOLTEN_ENABLE_GLSLANG)
@@ -707,7 +707,7 @@ namespace Molten::Shader
             resource.maxViewports = 16;
             resource.minProgramTexelOffset = -8;
 
-            return std::move(resource);
+            return resource;
         };
 
         static const TBuiltInResource resources = GetDefaultResources();
@@ -783,7 +783,7 @@ namespace Molten::Shader
         std::vector<uint8_t> output(outputSize);
         std::memcpy(output.data(), spirv.data(), outputSize);
 
-        return std::move(output);
+        return output;
     }
 #else
     std::vector<uint8_t> VulkanGenerator::ConvertGlslToSpriV(const std::vector<uint8_t>&, Type, Logger* logger)

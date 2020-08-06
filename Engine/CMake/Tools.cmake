@@ -22,8 +22,8 @@ function(SetDefaultCompileOptions target)
   target_compile_options(${target} PRIVATE
     $<$<OR:$<CXX_COMPILER_ID:Gnu>,$<CXX_COMPILER_ID:Clang>>:
       $<IF:$<CONFIG:Debug>,
-        -g  -Werror -Wall -Wextra -Wno-long-long, 
-        -O3 -Werror -Wall -Wextra -Wno-long-long
+        -g  -Werror -Wall -Wmove -Wextra -Wno-long-long, 
+        -O3 -Werror -Wall -Wmove -Wextra -Wno-long-long
       >
     >
     $<$<CXX_COMPILER_ID:MSVC>: 

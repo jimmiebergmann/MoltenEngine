@@ -43,7 +43,7 @@ namespace Molten
                 signature.Set(Type::componentTypeId);
             });
 
-            return std::move(signature);
+            return signature;
         }
 
     }

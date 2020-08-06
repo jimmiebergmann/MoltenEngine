@@ -267,7 +267,7 @@ namespace Molten
             }
         }
 
-        return std::move(output);
+        return output;
     }
 
     template<size_t BitCount>

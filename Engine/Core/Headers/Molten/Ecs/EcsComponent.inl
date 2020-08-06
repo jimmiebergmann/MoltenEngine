@@ -345,7 +345,7 @@ namespace Molten
                     }
                 }
 
-                return std::move(uniqueOffsets);
+                return uniqueOffsets;
             }
 
             template<typename ... Components>
@@ -482,7 +482,7 @@ namespace Molten
                         }
                     });
 
-                    return std::move(uniqueOffsets);
+                    return uniqueOffsets;
                 }
             }
           

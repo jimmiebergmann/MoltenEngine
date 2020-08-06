@@ -52,7 +52,7 @@ namespace Molten
 
         std::vector<uint8_t> data(dataSize);
         file.read(reinterpret_cast<char*>(data.data()), dataSize);
-        return std::move(data);
+        return data;
     }
 
 #if MOLTEN_PLATFORM == MOLTEN_PLATFORM_WINDOWS

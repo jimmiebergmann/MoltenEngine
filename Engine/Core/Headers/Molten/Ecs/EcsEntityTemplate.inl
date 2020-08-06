@@ -163,7 +163,7 @@ namespace Molten
                     offsets.insert({offset.componentTypeId, offset.offset});
                 }
 
-                return std::move(offsets);
+                return offsets;
             }
 
         }
