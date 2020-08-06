@@ -9,11 +9,11 @@ Real-time game engine framework and editor.
 *   CMake >= 3.16
 
 ## Build
-```
-$ git clone --recurse-submodules https://github.com/jimmiebergmann/MoltenEngine.git
-$ mkdir MoltenEngine/Build
-$ cd MoltenEngine/Build
-$ cmake ..
-$ cmake --build . --config Release
+``` shell
+git clone --recurse-submodules https://github.com/jimmiebergmann/MoltenEngine.git
+mkdir MoltenEngine/Build
+cd MoltenEngine/Build
+cmake ..
+cmake --build . --config Release
 ```
 See [CMake/README](https://github.com/jimmiebergmann/MoltenEngine/blob/master/CMake/CMake.md) for available build options.
