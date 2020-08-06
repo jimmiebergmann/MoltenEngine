@@ -7,11 +7,7 @@ option(MOLTEN_ENABLE_VULKAN "Enables Vulkan renderer." ON)
 option(MOLTEN_ENABLE_GLSLANG "Enables glslang compiler." ON)
 option(MOLTEN_ENABLE_OPENGL "Enables OpenGL renderer." ON)
 option(MOLTEN_ENABLE_COVERAGE "Enables coverage reporting." OFF)
-
-# Set C++ settings.
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED OFF)
-set(CMAKE_CXX_EXTENSIONS OFF)
+option(MOLTEN_ENABLE_X11 "Enables X server." ON)
 
 # Main directories and files.
 set(RootDir "${CMAKE_CURRENT_SOURCE_DIR}/../..")
@@ -26,16 +22,14 @@ file(GLOB_RECURSE CoreSources "${CoreSourceDir}/*.c" "${CoreSourceDir}/*.cpp")
 
 # Linux configurations.
 if(UNIX AND NOT APPLE)
-	option(MOLTEN_ENABLE_X11 "Enables X server." ON)
-
   set(LINUX TRUE)
-	find_package(Threads)
-	
-	if(MOLTEN_ENABLE_OPENGL AND (NOT MOLTEN_ENABLE_X11))
-		message(FATAL_ERROR "X11(MOLTEN_ENABLE_X11) is required if OpenGL(MOLTEN_ENABLE_OPENGL) is enabled.")
-	endif()
+  find_package(Threads)
+  
+  if(MOLTEN_ENABLE_OPENGL AND (NOT MOLTEN_ENABLE_X11))
+    message(FATAL_ERROR "X11(MOLTEN_ENABLE_X11) is required if OpenGL(MOLTEN_ENABLE_OPENGL) is enabled.")
+  endif()
 else()
-	set(MOLTEN_ENABLE_X11 OFF)
+  set(MOLTEN_ENABLE_X11 OFF)
 endif()
 
 # Glslang configurations
@@ -51,18 +45,18 @@ endif()
 
 # Vulkan configurations
 if(MOLTEN_ENABLE_VULKAN)
-	include(${CMAKE_CURRENT_SOURCE_DIR}/../CMake/FindVulkan.cmake)  
+  include(${CMAKE_CURRENT_SOURCE_DIR}/../CMake/FindVulkan.cmake)  
 endif()
 
 # OpenGL configurations
 if(MOLTEN_ENABLE_OPENGL)
-	find_package(OpenGL)
+  find_package(OpenGL)
 endif()
-
 
 include_directories ("${CoreHeadersDir}")
 include_directories ("${ThirdPartyDir}")
-add_library(Molten SHARED "${CoreSources}" "${CoreHeaders}")  
+add_library(Molten SHARED "${CoreSources}" "${CoreHeaders}")
+SetDefaultCompileOptions(Molten)
 
 CreateSourceGroups("${CoreSources}" "${CoreSourceDir}")
 CreateSourceGroups("${CoreHeaders}" "${CoreHeadersDir}")
@@ -92,48 +86,30 @@ endif()
 
 if(MOLTEN_ENABLE_VULKAN AND Vulkan_FOUND)
   target_include_directories(Molten PUBLIC "${Vulkan_INCLUDE}")
-  #target_include_directories(Molten PUBLIC "${Glslang_INCLUDE}")
   target_link_libraries(Molten "${Vulkan_LIBRARY}")
-  #target_link_libraries(Molten ${Glslang_LIBRARY})
-  #target_link_libraries(Molten ${SPIRV_LIBRARY})
   target_compile_definitions(Molten PUBLIC "MOLTEN_ENABLE_VULKAN")
-  #target_compile_definitions(Molten PUBLIC "MOLTEN_ENABLE_GLSLANG")
 endif()
 
 if(MOLTEN_ENABLE_GLSLANG AND Glslang_FOUND)
   target_link_libraries(Molten "${Glslang_LIBRARY}" "${SPIRV_LIBRARY}")  
-	target_compile_definitions(Molten PUBLIC "MOLTEN_ENABLE_GLSLANG")
+  target_compile_definitions(Molten PUBLIC "MOLTEN_ENABLE_GLSLANG")
 endif()
 
 if(MOLTEN_ENABLE_OPENGL AND OpenGL_FOUND)
-	target_link_libraries(Molten "${OPENGL_LIBRARIES}")
-	target_compile_definitions(Molten PUBLIC "MOLTEN_ENABLE_OPENGL")
+  target_link_libraries(Molten "${OPENGL_LIBRARIES}")
+  target_compile_definitions(Molten PUBLIC "MOLTEN_ENABLE_OPENGL")
 endif()
 
 if(MOLTEN_ENABLE_X11)
   target_link_libraries(Molten "X11")
-	target_compile_definitions(Molten PUBLIC "MOLTEN_ENABLE_X11")
+  target_compile_definitions(Molten PUBLIC "MOLTEN_ENABLE_X11")
 endif()
 
 target_include_directories(Molten PUBLIC "${VendorDir}")
 
-# Set compiler flags
-if(MSVC)
-  if(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
-    string(REGEX REPLACE "/W[0-4]" "/W4" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-  else()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
-  endif()
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /WX")
-elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
-  set(CMAKE_CXX_FLAGS_DEBUG "-g")
-  set(CMAKE_CXX_FLAGS_RELEASE "-O3")
-  target_compile_options(Molten PRIVATE -Werror -Wall -Wextra -Wno-long-long)
-endif()
-
 
 # Print summary
-message("Found flag summary: ")
+message("MOLTEN SUMMARY: ")
 message("Vulkan_FOUND:  ${Vulkan_FOUND}  ")
 message("Glslang_FOUND: ${Glslang_FOUND}")
 message("OpenGL_FOUND:  ${OpenGL_FOUND}")
