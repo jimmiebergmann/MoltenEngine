@@ -1,5 +1,10 @@
-project (Molten)
 cmake_minimum_required(VERSION 3.16)
+if(POLICY CMP0092)
+  cmake_policy(SET CMP0092 NEW)
+endif()
+
+project (Molten CXX)
+
 include(${CMAKE_CURRENT_SOURCE_DIR}/../CMake/Tools.cmake)
 
 # Options.

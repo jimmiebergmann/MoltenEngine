@@ -15,21 +15,22 @@ function(SetVisualStudioWorkingDir proj workingDir)
   endif()	
 endfunction(SetVisualStudioWorkingDir)
 
-# Set default compiler 
+# Set default compiler options.
 function(SetDefaultCompileOptions target)
+  if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang|GNU")
+    target_compile_options(${target} PRIVATE -Werror -Wall -Wmove -Wextra -Wno-long-long)
+    IF("${CMAKE_BUILD_TYPE}" MATCHES Debug)
+      target_compile_options(${target} PRIVATE -g)
+    else()
+      target_compile_options(${target} PRIVATE -O3)
+    endif()
+  elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+    target_compile_options(${target} PRIVATE /W4 /WX)
+  endif()
 
-  # Compiler flags.
-  target_compile_options(${target} PRIVATE
-    $<$<OR:$<CXX_COMPILER_ID:Gnu>,$<CXX_COMPILER_ID:Clang>>:
-      $<IF:$<CONFIG:Debug>,
-        -g  -Werror -Wall -Wmove -Wextra -Wno-long-long, 
-        -O3 -Werror -Wall -Wmove -Wextra -Wno-long-long
-      >
-    >
-    $<$<CXX_COMPILER_ID:MSVC>: 
-      /W4 /WX
-    >
-  )
+  get_target_property(compilerFlags ${target} COMPILE_OPTIONS)
+
+  message("Setting \"target_compile_options\": \"${compilerFlags}\" for ${CMAKE_CXX_COMPILER_ID}, target ${target}.")
 
   # C++ standard version.
   set_target_properties(${target}
