@@ -28,15 +28,27 @@
 namespace Molten::Shader::Visual
 {
 
-    // Structure without any meta data implementations.
-    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType, typename TVariableMetaData>
-    inline Structure<TVariableType, TVariableMetaData, void>::Structure(Script& script) :
+    // Structure base implementations.
+    template<typename TMetaData>
+    template<typename ... TMetaDataParams>
+    inline StructureMetaBase<TMetaData>::StructureMetaBase(TMetaDataParams ... metaDataParameters) :
+        TMetaData(metaDataParameters...)
+    {}
+
+
+    // Structure implementations.
+    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType, 
+        typename TVariableMetaData, typename TMetaData>
+    template<typename ... TMetaDataParams>
+    inline Structure<TVariableType, TVariableMetaData, TMetaData>::Structure(Script& script, TMetaDataParams ... metaDataParameters) :
+        StructureMetaBase<TMetaData>(metaDataParameters...),
         m_script(script),
         m_sizeOf(0)
     {}
 
-    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType, typename TVariableMetaData>
-    inline Structure<TVariableType, TVariableMetaData, void>::~Structure()
+    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType,
+        typename TVariableMetaData, typename TMetaData>
+    inline Structure<TVariableType, TVariableMetaData, TMetaData>::~Structure()
     {
         for (auto& member : m_members)
         {
@@ -44,31 +56,41 @@ namespace Molten::Shader::Visual
         }
     }
 
-    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType, typename TVariableMetaData>
-    inline typename Structure<TVariableType, TVariableMetaData, void>::VariableContainer::iterator Structure<TVariableType, TVariableMetaData, void>::begin()
+    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType,
+        typename TVariableMetaData, typename TMetaData>
+    inline typename Structure<TVariableType, TVariableMetaData, TMetaData>::VariableContainer::iterator 
+        Structure<TVariableType, TVariableMetaData, TMetaData>::begin()
     {
         return m_members.begin();
     }
-    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType, typename TVariableMetaData>
-    inline typename Structure<TVariableType, TVariableMetaData, void>::VariableContainer::const_iterator Structure<TVariableType, TVariableMetaData, void>::begin() const
+    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType,
+        typename TVariableMetaData, typename TMetaData>
+    inline typename Structure<TVariableType, TVariableMetaData, TMetaData>::VariableContainer::const_iterator
+        Structure<TVariableType, TVariableMetaData, TMetaData>::begin() const
     {
         return m_members.begin();
     }
 
-    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType, typename TVariableMetaData>
-    inline typename Structure<TVariableType, TVariableMetaData, void>::VariableContainer::iterator Structure<TVariableType, TVariableMetaData, void>::end()
+    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType,
+        typename TVariableMetaData, typename TMetaData>
+    inline typename Structure<TVariableType, TVariableMetaData, TMetaData>::VariableContainer::iterator 
+        Structure<TVariableType, TVariableMetaData, TMetaData>::end()
     {
         return m_members.end();
     }
-    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType, typename TVariableMetaData>
-    inline typename Structure<TVariableType, TVariableMetaData, void>::VariableContainer::const_iterator Structure<TVariableType, TVariableMetaData, void>::end() const
+    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType,
+        typename TVariableMetaData, typename TMetaData>
+    inline typename Structure<TVariableType, TVariableMetaData, TMetaData>::VariableContainer::const_iterator 
+        Structure<TVariableType, TVariableMetaData, TMetaData>::end() const
     {
         return m_members.end();
     }
 
-    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType, typename TVariableMetaData>
-    template<typename TDataType, typename ... TMetaData>
-    inline typename Structure<TVariableType, TVariableMetaData, void>::template VariableType<TDataType>* Structure<TVariableType, TVariableMetaData>::AddMember(TMetaData ... metaData)
+    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType,
+        typename TVariableMetaData, typename TMetaData>
+    template<typename TDataType, typename ... TMetaDataParams>
+    inline typename Structure<TVariableType, TVariableMetaData, TMetaData>::template VariableType<TDataType>*
+        Structure<TVariableType, TVariableMetaData, TMetaData>::AddMember(TMetaDataParams ... metaData)
     {
         auto* member = new VariableType<TDataType>(m_script, metaData...);
         m_members.push_back(member);
@@ -76,8 +98,9 @@ namespace Molten::Shader::Visual
         return member;
     }
 
-    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType, typename TVariableMetaData>
-    inline void Structure<TVariableType, TVariableMetaData, void>::RemoveMember(const size_t index)
+    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType,
+        typename TVariableMetaData, typename TMetaData>
+    inline void Structure<TVariableType, TVariableMetaData, TMetaData>::RemoveMember(const size_t index)
     {
         if (index >= m_members.size())
         {
@@ -90,8 +113,9 @@ namespace Molten::Shader::Visual
         m_members.erase(it);
     }
 
-    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType, typename TVariableMetaData>
-    inline void Structure<TVariableType, TVariableMetaData, void>::RemoveAllMembers()
+    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType,
+        typename TVariableMetaData, typename TMetaData>
+    inline void Structure<TVariableType, TVariableMetaData, TMetaData>::RemoveAllMembers()
     {
         for (auto& member : m_members)
         {
@@ -101,27 +125,34 @@ namespace Molten::Shader::Visual
         m_sizeOf = 0;
     }
 
-    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType, typename TVariableMetaData>
-    inline size_t Structure<TVariableType, TVariableMetaData, void>::GetMemberCount() const
+    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType,
+        typename TVariableMetaData, typename TMetaData>
+    inline size_t Structure<TVariableType, TVariableMetaData, TMetaData>::GetMemberCount() const
     {
         return m_members.size();
     }
 
-    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType, typename TVariableMetaData>
+    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType,
+        typename TVariableMetaData, typename TMetaData>
     template<typename TDataType>
-    inline typename Structure<TVariableType, TVariableMetaData, void>::template VariableType<TDataType>* Structure<TVariableType, TVariableMetaData, void>::GetMember(const size_t index)
+    inline typename Structure<TVariableType, TVariableMetaData, TMetaData>::template VariableType<TDataType>*
+        Structure<TVariableType, TVariableMetaData, TMetaData>::GetMember(const size_t index)
     {
         return static_cast<VariableType<TDataType>*>(GetMember(index));
     }
-    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType, typename TVariableMetaData>
+    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType,
+        typename TVariableMetaData, typename TMetaData>
     template<typename TDataType>
-    inline const typename Structure<TVariableType, TVariableMetaData, void>::template VariableType<TDataType>* Structure<TVariableType, TVariableMetaData, void>::GetMember(const size_t index) const
+    inline const typename Structure<TVariableType, TVariableMetaData, TMetaData>::template VariableType<TDataType>*
+        Structure<TVariableType, TVariableMetaData, TMetaData>::GetMember(const size_t index) const
     {
         return static_cast<const VariableType<TDataType>*>(GetMember(index));
     }
     
-    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType, typename TVariableMetaData>
-    inline typename Structure<TVariableType, TVariableMetaData, void>::VariableBaseType* Structure<TVariableType, TVariableMetaData, void>::GetMember(const size_t index)
+    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType,
+        typename TVariableMetaData, typename TMetaData>
+    inline typename Structure<TVariableType, TVariableMetaData, TMetaData>::VariableBaseType*
+        Structure<TVariableType, TVariableMetaData, TMetaData>::GetMember(const size_t index)
     {
         if (index >= m_members.size())
         {
@@ -130,8 +161,10 @@ namespace Molten::Shader::Visual
         return m_members[index];
     }
 
-    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType, typename TVariableMetaData>
-    inline const typename Structure<TVariableType, TVariableMetaData, void>::VariableBaseType* Structure<TVariableType, TVariableMetaData, void>::GetMember(const size_t index) const
+    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType,
+        typename TVariableMetaData, typename TMetaData>
+    inline const typename Structure<TVariableType, TVariableMetaData, TMetaData>::VariableBaseType*
+        Structure<TVariableType, TVariableMetaData, TMetaData>::GetMember(const size_t index) const
     {
         if (index >= m_members.size())
         {
@@ -140,63 +173,53 @@ namespace Molten::Shader::Visual
         return m_members[index];
     }
 
-    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType, typename TVariableMetaData>
-    inline typename Structure<TVariableType, TVariableMetaData, void>::VariableBaseType* Structure<TVariableType, TVariableMetaData, void>::operator[](const size_t index)
+    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType,
+        typename TVariableMetaData, typename TMetaData>
+    inline typename Structure<TVariableType, TVariableMetaData, TMetaData>::VariableBaseType*
+        Structure<TVariableType, TVariableMetaData, TMetaData>::operator[](const size_t index)
     {
         return GetMember(index);
     }
-    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType, typename TVariableMetaData>
-    inline const typename Structure<TVariableType, TVariableMetaData, void>::VariableBaseType* Structure<TVariableType, TVariableMetaData, void>::operator[](const size_t index) const
+    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType,
+        typename TVariableMetaData, typename TMetaData>
+    inline const typename Structure<TVariableType, TVariableMetaData, TMetaData>::VariableBaseType*
+        Structure<TVariableType, TVariableMetaData, TMetaData>::operator[](const size_t index) const
     {
         return GetMember(index);
     }
 
-    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType, typename TVariableMetaData>
-    inline typename Structure<TVariableType, TVariableMetaData, void>::VariableContainer Structure<TVariableType, TVariableMetaData, void>::GetMembers()
+    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType,
+        typename TVariableMetaData, typename TMetaData>
+    inline typename Structure<TVariableType, TVariableMetaData, TMetaData>::VariableContainer
+        Structure<TVariableType, TVariableMetaData, TMetaData>::GetMembers()
     {
         return { m_members.begin(), m_members.end() };
     }
 
-    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType, typename TVariableMetaData>
-    inline typename Structure<TVariableType, TVariableMetaData, void>::ConstVariableContainer Structure<TVariableType, TVariableMetaData, void>::GetMembers() const
+    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType,
+        typename TVariableMetaData, typename TMetaData>
+    inline typename Structure<TVariableType, TVariableMetaData, TMetaData>::ConstVariableContainer
+        Structure<TVariableType, TVariableMetaData, TMetaData>::GetMembers() const
     {
         return { m_members.begin(), m_members.end() };
     }
 
-    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType, typename TVariableMetaData>
-    inline size_t Structure<TVariableType, TVariableMetaData, void>::GetSizeOf() const
+    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType,
+        typename TVariableMetaData, typename TMetaData>
+    inline size_t Structure<TVariableType, TVariableMetaData, TMetaData>::GetSizeOf() const
     {
         return m_sizeOf;
     }
 
-    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType, typename TVariableMetaData>
+    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType,
+        typename TVariableMetaData, typename TMetaData>
     template<template<typename TOtherVariableTypeDataType, typename TOtherVariableTypeMetaData> typename TOtherVariableType,
         typename TOtherVariableMetaData, typename TOtherMetaData>
-    bool Structure<TVariableType, TVariableMetaData, void>::CheckCompability(const Structure<TOtherVariableType, TOtherVariableMetaData, TOtherMetaData>& other) const
+    bool Structure<TVariableType, TVariableMetaData, TMetaData>::
+        CheckCompability(const Structure<TOtherVariableType, TOtherVariableMetaData, TOtherMetaData>& other) const
     {
         
-        return Private::CheckStructureCompability(
-            static_cast<const VariableContainer&>(m_members),
-            static_cast<const typename Structure<TOtherVariableType, TOtherVariableMetaData, TOtherMetaData>::VariableContainer&>(other.m_members));
-    }
-
-
-    // Structure with meta data implementations.
-    template<template<typename TVariableDataType, typename TVariableTypeMetaData> typename TVariableType, typename TVariableMetaData, typename TMetaData>
-    template<typename ... TMetaDataParams>
-    Structure<TVariableType, TVariableMetaData, TMetaData>::Structure(Script& script, TMetaDataParams ... metaDataParameters) :
-        Structure <TVariableType, TVariableMetaData, void>(script),
-        TMetaData(metaDataParameters...)
-    { }
-
-    template<template<typename TVariableDataType, typename TVariableTypeMetaData> typename TVariableType, typename TVariableMetaData, typename TMetaData>
-    template<template<typename TOtherVariableTypeDataType, typename TOtherVariableTypeMetaData> typename TOtherVariableType,
-        typename TOtherVariableMetaData, typename TOtherMetaData>
-    bool Structure<TVariableType, TVariableMetaData, TMetaData>::CheckCompability(const Structure<TOtherVariableType, TOtherVariableMetaData, TOtherMetaData>& other) const
-    {
-        return Private::CheckStructureCompability(
-            static_cast<const VariableContainer&>(m_members),
-            static_cast<const typename Structure<TOtherVariableType, TOtherVariableMetaData, TOtherMetaData>::VariableContainer&>(other.m_members));
+        return Private::CheckStructureCompability(m_members, other.m_members);
     }
 
 }
