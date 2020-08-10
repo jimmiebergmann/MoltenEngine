@@ -23,19 +23,23 @@
 *
 */
 
-#include "Molten/Renderer/Shader/Visual/VisualShaderVariable.hpp"
-
-namespace Molten::Shader::Visual
+namespace Molten
 {
 
-    // Variable base implementations.
-    VariableBase::VariableBase(Script& script) :
-        Node(script)
-    {}
-
-    NodeType VariableBase::GetType() const
+    template<typename T>
+    void VulkanRenderer::InternalPushConstant(const uint32_t location, const T& value)
     {
-        return NodeType::Variable;
+        auto& pushConstants = m_currentPipeline->pushConstants;
+        if (location >= pushConstants.size())
+        {
+            return;
+        }
+
+        auto& locationData = pushConstants[location];
+        vkCmdPushConstants(
+            *m_currentCommandBuffer, m_currentPipeline->pipelineLayout,
+            locationData.stageFlags, locationData.offset, sizeof(value), &value);
+
     }
 
 }

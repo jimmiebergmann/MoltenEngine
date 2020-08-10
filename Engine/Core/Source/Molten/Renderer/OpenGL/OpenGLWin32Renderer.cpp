@@ -177,6 +177,11 @@ namespace Molten
         return m_version;
     }
 
+    uint32_t OpenGLWin32Renderer::GetPushConstantLocation(Pipeline* /*pipeline*/, const uint32_t /*id*/)
+    {
+        return 0;
+    }
+
     //std::vector<uint8_t> OpenGLWin32Renderer::CompileShaderProgram(const ShaderFormat /*inputFormat*/, const ShaderType /*inputType*/,
     //                                                              const std::vector<uint8_t>& /*inputData*/, const ShaderFormat /*outputFormat*/)
     //{
@@ -284,7 +289,25 @@ namespace Molten
     {
     }
 
-    void OpenGLWin32Renderer::PushShaderConstants(Shader::Type /*stage*/, const uint32_t /*offset*/, const uint32_t size, const void* /*data*/)
+    void OpenGLWin32Renderer::PushConstant(const uint32_t /*location*/, const bool& /*value*/)
+    {
+    }
+    void OpenGLWin32Renderer::PushConstant(const uint32_t /*location*/, const int32_t& /*value*/)
+    {
+    }
+    void OpenGLWin32Renderer::PushConstant(const uint32_t /*location*/, const float& /*value*/)
+    {
+    }
+    void OpenGLWin32Renderer::PushConstant(const uint32_t /*location*/, const Vector2f32& /*value*/)
+    {
+    }
+    void OpenGLWin32Renderer::PushConstant(const uint32_t /*location*/, const Vector3f32& /*value*/)
+    {
+    }
+    void OpenGLWin32Renderer::PushConstant(const uint32_t /*location*/, const Vector4f32& /*value*/)
+    {
+    }
+    void OpenGLWin32Renderer::PushConstant(const uint32_t /*location*/, const Matrix4x4f32& /*value*/)
     {
     }
 

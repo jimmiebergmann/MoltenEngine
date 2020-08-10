@@ -33,25 +33,26 @@ namespace Molten::Shader::Visual
 {
 
     // Forward declarations
-    template<template<typename TVariableDataType> typename TVariableType, typename TMetaData = void>
+    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData = void> typename TVariableType, 
+             typename TVariableMetaData = void, typename TMetaData = void>
     class Structure;
 
 
     /**
      * Data structure container for visual shader scripts.
-     * This container can be used for interface blocks for unifoms, vertex data or push constants.
+     * This container can be used for interface blocks of unifoms, vertex data or push constants.
      *
      * @see Script
      */
-    template<template<typename TVariableDataType> typename TVariableType>
-    class Structure<TVariableType, void>
+    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType, typename TVariableMetaData>
+    class Structure<TVariableType, TVariableMetaData, void>
     {
 
     public:
 
         template<typename TDataType>
-        using VariableType = TVariableType<TDataType>;
-        using VariableBaseType = typename TVariableType<float>::Base;
+        using VariableType = TVariableType<TDataType, TVariableMetaData>;
+        using VariableBaseType = typename TVariableType<float, TVariableMetaData>::Base;
         using VariableContainer = std::vector<VariableBaseType*>;
         using ConstVariableContainer = std::vector<const VariableBaseType*>;
 
@@ -68,8 +69,8 @@ namespace Molten::Shader::Visual
         /**@}*/
 
         /** Append new data member to this structure. */
-        template<typename TDataType>
-        VariableType<TDataType>* AddMember();
+        template<typename TDataType, typename ... TMetaData>
+        VariableType<TDataType>* AddMember(TMetaData ... metaData);
 
         /** Remove and destroy all data members. Accessing any removed data member is undefined behaviour. */
         void RemoveMember(const size_t index);
@@ -118,8 +119,9 @@ namespace Molten::Shader::Visual
         /** Get sum of data member sizes in bytes. Kind of like sizeof(...). */
         size_t GetSizeOf() const;
 
-        template<template<typename TOtherDataType> typename TOtherVariableType>
-        bool CheckCompability(const Structure<TOtherVariableType>& other) const;
+        template<template<typename TOtherVariableTypeDataType, typename TOtherVariableTypeMetaData> typename TOtherVariableType, 
+            typename TOtherVariableMetaData, typename TOtherMetaData>
+        bool CheckCompability(const Structure<TOtherVariableType, TOtherVariableMetaData, TOtherMetaData>& other) const;
 
     private:
 
@@ -135,7 +137,9 @@ namespace Molten::Shader::Visual
         VariableContainer m_members; ///< Container of data members.
         size_t m_sizeOf;
 
-        template<template<typename OtherDataType> typename OtherVariableType, typename TMetaData>
+        //template<template<typename OtherDataType> typename OtherVariableType, typename TMetaData>
+        template<template<typename TOtherVariableTypeDataType, typename TOtherVariableTypeMetaData> typename TOtherVariableType,
+            typename TOtherVariableMetaData, typename TOtherMetaData>
         friend class Structure;
 
     };
@@ -147,8 +151,8 @@ namespace Molten::Shader::Visual
      *
      * @see Script
      */
-    template<template<typename TVariableDataType> typename TVariableType, typename TMetaData>
-    class Structure : public Structure<TVariableType, void>, public TMetaData
+    template<template<typename TVariableDataType, typename TVariableTypeMetaData> typename TVariableType, typename TVariableMetaData, typename TMetaData>
+    class Structure : public Structure<TVariableType, TVariableMetaData, void>, public TMetaData
     {
 
     public:
@@ -158,6 +162,10 @@ namespace Molten::Shader::Visual
         explicit Structure(Script& script, TMetaDataParams ... metaDataParameters);
 
         ~Structure() = default;
+
+        template<template<typename TOtherVariableTypeDataType, typename TOtherVariableTypeMetaData> typename TOtherVariableType,
+            typename TOtherVariableMetaData, typename TOtherMetaData>
+        bool CheckCompability(const Structure<TOtherVariableType, TOtherVariableMetaData, TOtherMetaData>& other) const;
 
     };
 

@@ -264,7 +264,7 @@ namespace Molten
         m_currentImageIndex(0),
         m_currentCommandBuffer(nullptr),
         m_currentFramebuffer(VK_NULL_HANDLE),
-        m_currentPipelineLayout(VK_NULL_HANDLE)
+        m_currentPipeline(nullptr)
     {
     }
 
@@ -368,7 +368,7 @@ namespace Molten
         m_beginDraw = false;    
         m_currentCommandBuffer = nullptr;
         m_currentFramebuffer = VK_NULL_HANDLE;
-        m_currentPipelineLayout = VK_NULL_HANDLE;
+        m_currentPipeline = nullptr;
     }
 
     void VulkanRenderer::Resize(const Vector2ui32& size)
@@ -398,6 +398,11 @@ namespace Molten
     Version VulkanRenderer::GetVersion() const
     {
         return m_version;
+    }
+
+    uint32_t VulkanRenderer::GetPushConstantLocation(Pipeline* pipeline, const uint32_t id)
+    {
+        return 0;
     }
 
     Framebuffer* VulkanRenderer::CreateFramebuffer(const FramebufferDescriptor& descriptor)
@@ -579,18 +584,20 @@ namespace Molten
             return nullptr;
         }
 
-        /*std::vector<VkPushConstantRange> pushConstants;
-        if (!CreatePushConstants(vertexScript, fragmentScript, pushConstants))
+        std::vector<VkPushConstantRange> pushConstants;
+        VulkanPipeline::PushConstantLocations pipelinePushConstantLocations;
+        VulkanPipeline::PushConstants pipelinePushConstants;
+        if (!CreatePushConstants(vertexScript, fragmentScript, pushConstants, pipelinePushConstantLocations, pipelinePushConstants))
         {
             return nullptr;
-        }*/
+        }
 
         VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(setLayouts.size());
         pipelineLayoutInfo.pSetLayouts = setLayouts.data();
-        pipelineLayoutInfo.pushConstantRangeCount = 0;//static_cast<uint32_t>(pushConstants.size());
-        pipelineLayoutInfo.pPushConstantRanges = nullptr;//pushConstants.data();
+        pipelineLayoutInfo.pushConstantRangeCount = static_cast<uint32_t>(pushConstants.size());
+        pipelineLayoutInfo.pPushConstantRanges = pushConstants.data();
 
         VkPipelineLayout pipelineLayout;
         if (vkCreatePipelineLayout(m_logicalDevice, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
@@ -627,11 +634,7 @@ namespace Molten
             return nullptr;
         }
 
-        VulkanPipeline* pipeline = new VulkanPipeline;
-        pipeline->graphicsPipeline = graphicsPipeline;
-        pipeline->pipelineLayout = pipelineLayout;
-        pipeline->descriptionSetLayouts = setLayouts;
-        return pipeline;
+        return new VulkanPipeline(graphicsPipeline, pipelineLayout, setLayouts, std::move(pipelinePushConstantLocations), pipelinePushConstants);
     }
 
     Shader::VertexStage* VulkanRenderer::CreateVertexShaderStage(const Shader::Visual::VertexScript& script)
@@ -942,7 +945,7 @@ namespace Molten
     {
         VulkanPipeline* vulkanPipeline = static_cast<VulkanPipeline*>(pipeline);
         vkCmdBindPipeline(*m_currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkanPipeline->graphicsPipeline);
-        m_currentPipelineLayout = vulkanPipeline->pipelineLayout;
+        m_currentPipeline = vulkanPipeline;
     }
 
     void VulkanRenderer::BindUniformBlock(UniformBlock* uniformBlock, const uint32_t offset)
@@ -1060,11 +1063,33 @@ namespace Molten
         vkCmdDrawIndexed(*m_currentCommandBuffer, static_cast<uint32_t>(vulkanIndexBuffer->indexCount), 1, 0, 0, 0);
     }
 
-    void VulkanRenderer::PushShaderConstants(Shader::Type stage, const uint32_t offset, const uint32_t size, const void* data)
+    void VulkanRenderer::PushConstant(const uint32_t location, const bool& value)
     {
-        VkShaderStageFlags flags = stage == Shader::Type::Fragment ? VK_SHADER_STAGE_FRAGMENT_BIT : VK_SHADER_STAGE_VERTEX_BIT;
-
-        vkCmdPushConstants(*m_currentCommandBuffer, m_currentPipelineLayout, flags, offset, size, data);
+        InternalPushConstant(location, value);
+    }
+    void VulkanRenderer::PushConstant(const uint32_t location, const int32_t& value)
+    {
+        InternalPushConstant(location, value);
+    }
+    void VulkanRenderer::PushConstant(const uint32_t location, const float& value)
+    {
+        InternalPushConstant(location, value);
+    }
+    void VulkanRenderer::PushConstant(const uint32_t location, const Vector2f32& value)
+    {
+        InternalPushConstant(location, value);
+    }
+    void VulkanRenderer::PushConstant(const uint32_t location, const Vector3f32& value)
+    {
+        InternalPushConstant(location, value);
+    }
+    void VulkanRenderer::PushConstant(const uint32_t location, const Vector4f32& value)
+    {
+        InternalPushConstant(location, value);
+    }
+    void VulkanRenderer::PushConstant(const uint32_t location, const Matrix4x4f32& value)
+    {
+        InternalPushConstant(location, value);
     }
 
     void VulkanRenderer::EndDraw()
@@ -2138,39 +2163,65 @@ namespace Molten
     bool VulkanRenderer::CreatePushConstants(
         const Shader::Visual::VertexScript& vertexScript,
         const Shader::Visual::FragmentScript& fragmentScript,
-        std::vector<VkPushConstantRange>& pushConstants)
+        std::vector<VkPushConstantRange>& pushConstants,
+        VulkanPipeline::PushConstantLocations& pipelinePushConstantLocations,
+        VulkanPipeline::PushConstants& pipelinePushConstants)
     {
-        return false;
-        /*pushConstants.clear();
+       /* auto& vertexPushConstants = vertexScript.GetPushConstantInterface();
+        auto& fragmentPushConstants = fragmentScript.GetPushConstantInterface();
 
-        std::array<const Shader::Script*, 2> shaderScripts = { &vertexScript, &fragmentScript };
-        for (auto script : shaderScripts)
+        if (!vertexPushConstants.CheckCompability(fragmentPushConstants))
         {
-            auto scriptStage = GetShaderProgramStageFlag(script->GetType());
+            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Vertex and fragment push constant interfaces are not compatible.");
+            return false;
+        }
 
-            uint32_t offset = 0;
-            auto& pushConstantBlock = script->GetPushConstantInterface();
+        uint32_t totalSize = static_cast<uint32_t>(vertexPushConstants.GetSizeOf());
+        auto flags = (VkFlags)VK_SHADER_STAGE_VERTEX_BIT | (VkFlags)VK_SHADER_STAGE_FRAGMENT_BIT;
+        pushConstants.push_back({ flags, 0, totalSize });
 
-            for (auto* member : pushConstantBlock.GetMembers())
+        return true;*/
+
+        struct ShaderStageGroup
+        {
+            const Shader::Visual::Script* script;
+            VkFlags stageFlag;
+        };
+
+        std::array<ShaderStageGroup, 2> shaderScripts =
+        { 
+            ShaderStageGroup{ &vertexScript, VK_SHADER_STAGE_VERTEX_BIT },
+            ShaderStageGroup{ &fragmentScript, VK_SHADER_STAGE_FRAGMENT_BIT }
+        };
+
+        // Shader::VariableDataType dataType;
+
+        std::map<uint32_t, VkFlags> visitedIds;
+
+        for (auto& script : shaderScripts)
+        {
+            for (auto* member : script.script->GetPushConstantInterface())
             {
-                for (auto* outputPin : member->GetOutputPins())
+                auto id = member->GetId();
+                auto it = visitedIds.find(id);
+                if (it == visitedIds.end())
                 {
-                    VkFormat format;
-                    uint32_t size = 0;
-                    if (!GetVertexAttributeFormatAndSize(outputPin->GetDataType(), format, size))
-                    {
-                        MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Failed to get vertex attribute format and size for push constant.");
-                        return false;
-                    }
-                    
-                    
-                    pushConstants.push_back({ (VkFlags)scriptStage, offset, size });
-                    offset += size;
+                    visitedIds.insert({id, script.stageFlag });
+                }
+                else
+                {
+                    it->second |= script.stageFlag;
                 }
             }
         }
 
-        return true;*/
+        /*for (auto& script : shaderScripts)
+        {
+
+        }*/
+
+
+        return false;
     }
 
 }

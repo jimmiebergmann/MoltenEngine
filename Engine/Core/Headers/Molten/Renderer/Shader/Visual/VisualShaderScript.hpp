@@ -28,6 +28,7 @@
 
 #include "Molten/Renderer/Shader/Visual/VisualShaderStructure.hpp"
 #include "Molten/Renderer/Shader/Visual/VisualShaderUniform.hpp"
+#include "Molten/Renderer/Shader/Visual/VisualShaderPushConstant.hpp"
 #include "Molten/Renderer/Shader/Visual/VisualShaderFunctions.hpp"
 #include "Molten/Renderer/Shader/Visual/VisualShaderOperators.hpp"
 #include "Molten/Logger.hpp"
@@ -39,7 +40,6 @@ namespace Molten::Shader::Visual
 
     using InputInterface = InputStructure; ///< Input interface structure block.
     using OutputInterface = OutputStructure; ///< Output interface structure block.
-    using PushConstantInterface = InputStructure; ///< Push constant interface structure block.
 
     /**
      * Type definition of vertex output variable node.

@@ -5,11 +5,11 @@ Submodules are preferred over subtrees.
 
 ## Get submodules
 After cloning Molten:
-```
+``` shell
 $ git submodule update --init
 ```
 or get them while cloning:
-```
+``` shell
 $ git clone --recurse-submodules https://github.com/jimmiebergmann/MoltenEngine.git
 ```
 

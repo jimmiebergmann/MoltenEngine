@@ -23,19 +23,20 @@
 *
 */
 
-#include "Molten/Renderer/Shader/Visual/VisualShaderVariable.hpp"
+
+#include "Molten/Renderer/Shader/Visual/VisualShaderPushConstant.hpp"
 
 namespace Molten::Shader::Visual
 {
-
-    // Variable base implementations.
-    VariableBase::VariableBase(Script& script) :
-        Node(script)
+    
+    // Push constant meta data implementations.
+    PushConstantMetaData::PushConstantMetaData(const uint32_t id) :
+        m_id(id)
     {}
 
-    NodeType VariableBase::GetType() const
+    uint32_t PushConstantMetaData::GetId() const
     {
-        return NodeType::Variable;
+        return m_id;
     }
 
 }

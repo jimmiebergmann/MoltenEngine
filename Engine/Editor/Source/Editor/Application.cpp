@@ -241,6 +241,8 @@ namespace Molten
             {
                 throw Exception("Failed to create uniform block.");
             }
+
+            m_colorPushLocation = m_renderer->GetPushConstantLocation(m_pipeline, 12345);
         }
 
         void Application::LoadShaders()
@@ -283,16 +285,23 @@ namespace Molten
                 auto& inputs = script.GetInputInterface();
                 auto inColor = inputs.AddMember<Vector4f32>();
 
+                auto& pushConstants = script.GetPushConstantInterface();
+                auto pcColor = pushConstants.AddMember<Vector4f32>(12345);
+
                 auto& outputs = script.GetOutputInterface();
                 auto outColor = outputs.AddMember<Vector4f32>();
 
-                /*auto mult = script.CreateOperatorNode<Shader::Operator::MultVec4f32>();
-                auto add = script.CreateOperatorNode<Shader::Operator::AddVec4f32>();
+                auto mult = script.CreateOperator<Shader::Visual::Operators::MultVec4f32>();
+                mult->GetInputPin(0)->Connect(*inColor->GetOutputPin());
+                mult->GetInputPin(1)->Connect(*pcColor->GetOutputPin());
+
+
+                /*auto add = script.CreateOperatorNode<Shader::Operator::AddVec4f32>();
                 auto const1 = script.CreateConstantNode<Vector4f32>({ 0.0f, 0.0f, 0.3f, 0.0f });
                 auto const2 = script.CreateConstantNode<Vector4f32>({ 1.0f, 0.5f, 0.0f, 1.0f });
                 auto cos = script.CreateFunctionNode<Shader::Function::CosVec4f32>();*/
 
-                outColor->GetInputPin()->Connect(*inColor->GetOutputPin());
+                outColor->GetInputPin()->Connect(*mult->GetOutputPin());
                 /*add->GetInputPin(0)->Connect(*mult->GetOutputPin());
                 add->GetInputPin(1)->Connect(*const1->GetOutputPin());
                 mult->GetInputPin(0)->Connect(*inColor->GetOutputPin());
@@ -508,6 +517,9 @@ namespace Molten
             //m_renderer->UpdateUniformBuffer(m_uniformBuffer, 256, sizeof(UniformBuffer), &bufferData2);
 
             m_renderer->BindUniformBlock(m_uniformBlock, 0);
+
+            m_renderer->PushConstant(m_colorPushLocation, { 0.9f, 0.8f, 0.7f, 1.0f });
+
             m_renderer->DrawVertexBuffer(m_indexBuffer, m_vertexBuffer);
 
             /*m_renderer->BindUniformBlock(m_uniformBlock, 256);

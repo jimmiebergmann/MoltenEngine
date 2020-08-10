@@ -138,22 +138,22 @@ namespace Molten::Shader
                 return GetGlslFloatString(static_cast<const Visual::InputPin<float>&>(pin).GetDefaultValue());
             case VariableDataType::Vector2f32:
             {
-                auto vec = static_cast<const Visual::InputPin<Vector2f32>&>(pin).GetDefaultValue();
+                const auto& vec = static_cast<const Visual::InputPin<Vector2f32>&>(pin).GetDefaultValue();
                 return "vec2(" + GetGlslFloatString(vec.x) + ", " + GetGlslFloatString(vec.y) + ")";
             }
             case VariableDataType::Vector3f32:
             {
-                auto vec = static_cast<const Visual::InputPin<Vector3f32>&>(pin).GetDefaultValue();
+                const auto& vec = static_cast<const Visual::InputPin<Vector3f32>&>(pin).GetDefaultValue();
                 return "vec3(" + GetGlslFloatString(vec.x) + ", " + GetGlslFloatString(vec.y) + ", " + GetGlslFloatString(vec.z) + ")";
             }
             case VariableDataType::Vector4f32:
             {
-                auto vec = static_cast<const Visual::InputPin<Vector4f32>&>(pin).GetDefaultValue();
+                const auto& vec = static_cast<const Visual::InputPin<Vector4f32>&>(pin).GetDefaultValue();
                 return "vec4(" + GetGlslFloatString(vec.x) + ", " + GetGlslFloatString(vec.y) + ", " + GetGlslFloatString(vec.z) + ", " + GetGlslFloatString(vec.w) + ")";
             }
             case VariableDataType::Matrix4x4f32:
             {
-                auto mat = static_cast<const Visual::InputPin<Matrix4x4f32>&>(pin).GetDefaultValue();
+                const auto& mat = static_cast<const Visual::InputPin<Matrix4x4f32>&>(pin).GetDefaultValue();
                 return "mat4(" + GetGlslFloatString(mat.e[0]) + ", " +  GetGlslFloatString(mat.e[1]) + ", " +  GetGlslFloatString(mat.e[2]) + ", " +  GetGlslFloatString(mat.e[3]) + ", " +
                                     GetGlslFloatString(mat.e[4]) + ", " +  GetGlslFloatString(mat.e[5]) + ", " +  GetGlslFloatString(mat.e[6]) + ", " +  GetGlslFloatString(mat.e[7]) + ", " +
                                     GetGlslFloatString(mat.e[8]) + ", " +  GetGlslFloatString(mat.e[9]) + ", " +  GetGlslFloatString(mat.e[10]) + ", " + GetGlslFloatString(mat.e[11]) + ", " +
@@ -165,7 +165,7 @@ namespace Molten::Shader
         throw Exception("GetGlslDefaultValue is missing return value for pin.GetDataType() = " + std::to_string(static_cast<size_t>(pin.GetDataType())) + ".");
     }
 
-    static std::string GetGlslConstantValue(const Visual::ConstantVariableBase& constant)
+    static std::string GetGlslConstantValue(const Visual::VariableBase& constant)
     {
         switch (constant.GetDataType())
         {
@@ -177,22 +177,22 @@ namespace Molten::Shader
                 return GetGlslFloatString(static_cast<const Visual::ConstantVariable<float>&>(constant).GetValue());
             case VariableDataType::Vector2f32:
             {
-                auto vec = static_cast<const Visual::ConstantVariable<Vector2f32>&>(constant).GetValue();
+                const auto& vec = static_cast<const Visual::ConstantVariable<Vector2f32>&>(constant).GetValue();
                 return "vec2(" + GetGlslFloatString(vec.x) + ", " + GetGlslFloatString(vec.y) + ")";
             }
             case VariableDataType::Vector3f32:
             {
-                auto vec = static_cast<const Visual::ConstantVariable<Vector3f32>&>(constant).GetValue();
+                const auto& vec = static_cast<const Visual::ConstantVariable<Vector3f32>&>(constant).GetValue();
                 return "vec3(" + GetGlslFloatString(vec.x) + ", " + GetGlslFloatString(vec.y) + ", " + GetGlslFloatString(vec.z) + ")";
             }
             case VariableDataType::Vector4f32:
             {
-                auto vec = static_cast<const Visual::ConstantVariable<Vector4f32>&>(constant).GetValue();
+                const auto& vec = static_cast<const Visual::ConstantVariable<Vector4f32>&>(constant).GetValue();
                 return "vec4(" + GetGlslFloatString(vec.x) + ", " + GetGlslFloatString(vec.y) + ", " + GetGlslFloatString(vec.z) + ", " + GetGlslFloatString(vec.w) + ")";
             }
             case VariableDataType::Matrix4x4f32:
             {
-                auto mat = static_cast<const Visual::ConstantVariable<Matrix4x4f32>&>(constant).GetValue();
+                const auto& mat = static_cast<const Visual::ConstantVariable<Matrix4x4f32>&>(constant).GetValue();
                 return "mat4(" + GetGlslFloatString(mat.e[0]) + ", " +  GetGlslFloatString(mat.e[1]) + ", " +  GetGlslFloatString(mat.e[2]) + ", " +  GetGlslFloatString(mat.e[3]) + ", " +
                                     GetGlslFloatString(mat.e[4]) + ", " +  GetGlslFloatString(mat.e[5]) + ", " +  GetGlslFloatString(mat.e[6]) + ", " +  GetGlslFloatString(mat.e[7]) + ", " +
                                     GetGlslFloatString(mat.e[8]) + ", " +  GetGlslFloatString(mat.e[9]) + ", " +  GetGlslFloatString(mat.e[10]) + ", " + GetGlslFloatString(mat.e[11]) + ", " +
@@ -309,7 +309,7 @@ namespace Molten::Shader
             (script.GetType() == Type::Vertex) ? static_cast<const Visual::VertexScript&>(script).GetVertexOutputVariable() : nullptr;
 
         auto& uniformInterfaces = script.GetUniformInterfaces();
-        // auto pushConstants = script.GetPushConstantInterface().GetNodes();
+        auto& pushConstantInterface = script.GetPushConstantInterface();
 
         const size_t estimatedSourceLength = estMainLength + estPreMainLength +
             (inputInterface.GetMemberCount() * estInputLength) +
@@ -394,16 +394,15 @@ namespace Molten::Shader
         }
 
         // Push constants
-        /* size_t varIndex = 0;
-        if (pushConstants.size())
+        if (pushConstantInterface.GetMemberCount())
         {
             const std::string blockName = "pc";
             AppendToVector(source, "layout(std140, push_constant) uniform s_" + blockName + " \n{\n");
 
-            for (auto* node : pushConstants)
+            size_t varIndex = 0;
+            for (auto* member : pushConstantInterface)
             {
-                auto pins = node->GetOutputPins();
-
+                auto pins = member->GetOutputPins();
                 for (auto* pin : pins)
                 {
                     const std::string name = "var_" + std::to_string(varIndex);
@@ -411,12 +410,12 @@ namespace Molten::Shader
 
                     AppendToVector(source, GetGlslVariableDataType(pin->GetDataType()) + " " + name + ";\n");
 
-                    visitedOutputPins.insert({ pin, std::make_shared<Variable>(fullName, node, pin) });
+                    visitedOutputPins.insert({ pin, std::make_shared<Variable>(fullName, member, pin) });
                     varIndex++;
                 }
             }
             AppendToVector(source, "} " + blockName + ";\n");
-        }*/
+        }
 
         // Output variables.
         std::vector<VariablePtr> outputVars;
@@ -551,7 +550,7 @@ namespace Molten::Shader
                         {
                         case Visual::VariableType::Constant:
                         {
-                            auto* constVariableBase = static_cast<const Visual::ConstantVariableBase*>(stackObject.node);
+                            auto* constVariableBase = static_cast<const Visual::VariableBase*>(stackObject.node);
                             auto dataType = constVariableBase->GetDataType();
                             auto& dataTypeName = GetGlslVariableDataType(dataType);
                             stackObject.outputVar->name = dataTypeName + GetNextIndexPostfix();

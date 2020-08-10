@@ -30,6 +30,7 @@
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 #include "Molten/Renderer/Vulkan/Vulkan.hpp"
+#include <map>
 
 namespace Molten
 {
@@ -41,12 +42,29 @@ namespace Molten
 
     private:
 
-        VulkanPipeline() = default;
-        ~VulkanPipeline() = default;
+        struct PushConstantMember
+        {
+            int8_t offset;
+            VkShaderStageFlags stageFlags;
+        };
 
+        using PushConstantLocations = std::map<uint32_t, uint8_t>;
+        using PushConstants = std::vector<PushConstantMember>;
+
+        VulkanPipeline(
+            VkPipeline graphicsPipeline,
+            VkPipelineLayout pipelineLayout,
+            std::vector<VkDescriptorSetLayout> descriptionSetLayouts,
+            PushConstantLocations&& pushConstantLocations,
+            PushConstants pushConstants);
+
+        ~VulkanPipeline() = default;   
+        
         VkPipeline graphicsPipeline;
-        std::vector<VkDescriptorSetLayout> descriptionSetLayouts;
         VkPipelineLayout pipelineLayout;
+        std::vector<VkDescriptorSetLayout> descriptionSetLayouts;
+        PushConstantLocations pushConstantLocations;
+        PushConstants pushConstants;
 
         friend class VulkanRenderer;
 

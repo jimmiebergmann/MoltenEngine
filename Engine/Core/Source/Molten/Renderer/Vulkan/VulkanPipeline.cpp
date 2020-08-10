@@ -23,19 +23,27 @@
 *
 */
 
-#include "Molten/Renderer/Shader/Visual/VisualShaderVariable.hpp"
+#include "Molten/Renderer/Vulkan/VulkanPipeline.hpp"
 
-namespace Molten::Shader::Visual
+#if defined(MOLTEN_ENABLE_VULKAN)
+
+namespace Molten
 {
 
-    // Variable base implementations.
-    VariableBase::VariableBase(Script& script) :
-        Node(script)
+    VulkanPipeline::VulkanPipeline(
+        VkPipeline graphicsPipeline,
+        VkPipelineLayout pipelineLayout,
+        std::vector<VkDescriptorSetLayout> descriptionSetLayouts,
+        PushConstantLocations&& pushConstantLocations,
+        PushConstants pushConstants)
+        :
+        graphicsPipeline(graphicsPipeline),
+        pipelineLayout(pipelineLayout),
+        descriptionSetLayouts(descriptionSetLayouts),
+        pushConstantLocations(std::move(pushConstantLocations)),
+        pushConstants(pushConstants)
     {}
 
-    NodeType VariableBase::GetType() const
-    {
-        return NodeType::Variable;
-    }
-
 }
+
+#endif

@@ -23,19 +23,47 @@
 *
 */
 
-#include "Molten/Renderer/Shader/Visual/VisualShaderVariable.hpp"
+#ifndef MOLTEN_CORE_RENDERER_SHADER_VISUAL_VISUALSHADERPUSHCONSTANT_HPP
+#define MOLTEN_CORE_RENDERER_SHADER_VISUAL_VISUALSHADERPUSHCONSTANT_HPP
+
+#include "Molten/Renderer/Shader/Visual/VisualShaderStructure.hpp"
+#include <set>
 
 namespace Molten::Shader::Visual
 {
 
-    // Variable base implementations.
-    VariableBase::VariableBase(Script& script) :
-        Node(script)
-    {}
 
-    NodeType VariableBase::GetType() const
+    /** 
+     * Meta data related to push constant interface members.
+     * The only available meta data for push constant members is IDs.
+     */
+    class MOLTEN_API PushConstantMetaData
     {
-        return NodeType::Variable;
-    }
+
+    public:
+
+        explicit PushConstantMetaData(const uint32_t id);
+
+        uint32_t GetId() const;
+
+    private:
+
+        /** Copy and move operations are not allowed. */
+        /**@{*/
+        PushConstantMetaData(const PushConstantMetaData& copy) = delete;
+        PushConstantMetaData(const PushConstantMetaData&& move) = delete;
+        PushConstantMetaData& operator =(const PushConstantMetaData& copy) = delete;
+        PushConstantMetaData& operator =(const PushConstantMetaData&& move) = delete;
+        /**@*/
+
+        const uint32_t m_id;
+
+    };
+
+
+    /** Push constant interface type. */
+    using PushConstantInterface = Structure<InputVariable, PushConstantMetaData>;
 
 }
+
+#endif

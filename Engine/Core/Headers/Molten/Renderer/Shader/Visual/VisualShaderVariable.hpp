@@ -39,6 +39,17 @@ namespace Molten::Shader::Visual
         Output
     };
 
+
+    // Forward declarations.
+    template<typename TDataType, typename TMetaData = void>
+    class InputVariable;
+
+    template<typename TDataType, typename TMetaData = void>
+    class OutputVariable;
+
+    template<typename TDataType, typename TMetaData = void>
+    class ConstantVariable;
+
     
     /** Base class of all variable types. */
     class MOLTEN_API VariableBase : public Node
@@ -63,13 +74,39 @@ namespace Molten::Shader::Visual
     };
 
 
-    /** Base class of input variable type. */
-    class MOLTEN_API InputVariableBase : public VariableBase
+    template<typename TMetaData>
+    class VariableMetaBase : public VariableBase, public TMetaData
     {
 
     public:
 
-        explicit InputVariableBase(Script& script);
+        template<typename ... TMetaDataParams>
+        explicit VariableMetaBase(Script & script, TMetaDataParams ... metaDataParameters);
+        virtual ~VariableMetaBase() = default;
+
+    };
+
+    template<>
+    class VariableMetaBase<void> : public VariableBase
+    {
+
+    public:
+
+        explicit VariableMetaBase(Script& script);
+        virtual ~VariableMetaBase() = default;
+
+    };
+
+
+    /** Base class of input variable type. */
+    template<typename TMetaData = void>
+    class InputVariableBase : public VariableMetaBase<TMetaData>
+    {
+
+    public:
+
+        template<typename ... TMetaDataParams>
+        explicit InputVariableBase(Script& script, TMetaDataParams ... metaDataParameters);
         virtual ~InputVariableBase() = default;
 
     private:
@@ -82,12 +119,14 @@ namespace Molten::Shader::Visual
 
 
     /** Base class of ouput variable type. */
-    class MOLTEN_API OutputVariableBase : public VariableBase
+    template<typename TMetaData = void>
+    class OutputVariableBase : public VariableMetaBase<TMetaData>
     {
 
     public:
 
-        explicit OutputVariableBase(Script& script);
+        template<typename ... TMetaDataParams>
+        explicit OutputVariableBase(Script& script, TMetaDataParams ... metaDataParameters);
         virtual ~OutputVariableBase() = default;
 
     private:
@@ -100,12 +139,17 @@ namespace Molten::Shader::Visual
 
 
     /** Base class of constant variable type. */
-    class MOLTEN_API ConstantVariableBase : public VariableBase
+    template<typename TMetaData = void>
+    class ConstantVariableBase : public VariableMetaBase<TMetaData>
     {
 
     public:
 
-        explicit ConstantVariableBase(Script& script);
+        // template<typename ... TMetaDataParams>
+        // ConstantVariableBase(Script& script, TMetaDataParams ... metaDataParameters);
+
+        template<typename ... TMetaDataParams>
+        explicit ConstantVariableBase(Script& script, TMetaDataParams ... metaDataParameters);
         virtual ~ConstantVariableBase() = default;
 
     private:
@@ -121,16 +165,19 @@ namespace Molten::Shader::Visual
      * Visual shader script input variable node.
      * Input variables only consist of an output pin.
      */
-    template<typename TDataType>
-    class InputVariable : public InputVariableBase
+    template<typename TDataType, typename TMetaData>
+    class InputVariable : public InputVariableBase<TMetaData>
     {
 
     public:
 
-        using Base = InputVariableBase;
+        using Base = InputVariableBase<TMetaData>;
         using DataType = TDataType;
 
-        explicit InputVariable(Script& script);
+        template<typename ... TMetaDataParams>
+        explicit InputVariable(Script& script, TMetaDataParams ... metaDataParameters);
+
+        virtual ~InputVariable() = default;
 
         virtual size_t GetOutputPinCount() const override;
         virtual Pin* GetOutputPin(const size_t index = 0) override;
@@ -166,17 +213,18 @@ namespace Molten::Shader::Visual
      * Visual shader script output variable node.
      * Output variables only consist of an input pin. 
      */
-    template<typename TDataType>
-    class OutputVariable : public OutputVariableBase
+    template<typename TDataType, typename TMetaData>
+    class OutputVariable : public OutputVariableBase<TMetaData>
     {
 
     public:
 
-        using Base = OutputVariableBase;
+        using Base = OutputVariableBase<TMetaData>;
         using DataType = TDataType;
 
-        explicit OutputVariable(Script& script);
-        OutputVariable(Script& script, const DataType& defaultValue);
+        template<typename ... TMetaDataParams>
+        explicit OutputVariable(Script& script, TMetaDataParams ... metaDataParameters);
+        virtual ~OutputVariable() = default;
 
         virtual size_t GetInputPinCount() const override;
         virtual Pin* GetInputPin(const size_t index = 0) override;
@@ -207,22 +255,27 @@ namespace Molten::Shader::Visual
 
     };
 
+
     /**
      * Visual shader script constant variable node.
      * The stored value is not constant and can be changed at any time,
      * but it's used as a constant in the generated shader code.
      */
-    template<typename TDataType>
-    class ConstantVariable : public ConstantVariableBase
+    template<typename TDataType, typename TMetaData>
+    class ConstantVariable : public ConstantVariableBase<TMetaData>
     {
 
     public:
 
-        using Base = InputVariableBase;
+        using Base = ConstantVariableBase<TMetaData>;
         using DataType = TDataType;
 
-        ConstantVariable(Script& script, const DataType& value);
-        ConstantVariable(Script& script, DataType&& value);
+        template<typename ... TMetaDataParams>
+        ConstantVariable(Script& script, const DataType& value, TMetaDataParams ... metaDataParameters);
+        template<typename ... TMetaDataParams>
+        ConstantVariable(Script& script, DataType&& value, TMetaDataParams ... metaDataParameters);
+
+        virtual ~ConstantVariable() = default;
 
         virtual size_t GetOutputPinCount() const override;
         virtual Pin* GetOutputPin(const size_t index = 0) override;

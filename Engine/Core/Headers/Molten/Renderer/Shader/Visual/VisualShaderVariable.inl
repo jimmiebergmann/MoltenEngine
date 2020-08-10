@@ -26,21 +26,56 @@
 namespace Molten::Shader::Visual
 {
 
-    // Input variable implementations.
-    template<typename TDataType>
-    inline InputVariable<TDataType>::InputVariable(Script& script) :
-        InputVariableBase(script),
+
+    template<typename TMetaData>
+    template<typename ... TMetaDataParams>
+    inline VariableMetaBase<TMetaData>::VariableMetaBase(Script& script, TMetaDataParams ... metaDataParameters) :
+        VariableBase(script),
+        TMetaData(metaDataParameters...)
+    {}
+
+
+    inline VariableMetaBase<void>::VariableMetaBase(Script& script) :
+        VariableBase(script)
+    {}
+
+    template<typename TMetaData>
+    template<typename ... TMetaDataParams>
+    inline InputVariableBase<TMetaData>::InputVariableBase(Script& script, TMetaDataParams ... metaDataParameters) :
+        VariableMetaBase<TMetaData>(script, metaDataParameters...)
+    {}
+
+
+    // Output variable base implementations.
+    template<typename TMetaData>
+    template<typename ... TMetaDataParams>
+    inline OutputVariableBase<TMetaData>::OutputVariableBase(Script& script, TMetaDataParams ... metaDataParameters) :
+        VariableMetaBase<TMetaData>(script, metaDataParameters...)
+    {}
+
+
+    // Constant variable base implementations.
+    template<typename TMetaData>
+    template<typename ... TMetaDataParams>
+    inline ConstantVariableBase<TMetaData>::ConstantVariableBase(Script& script, TMetaDataParams ... metaDataParameters) :
+        VariableMetaBase<TMetaData>(script, metaDataParameters...)
+    {}
+
+    template<typename TDataType, typename TMetaData>
+    template<typename ... TMetaDataParams>
+    inline InputVariable<TDataType, TMetaData>::InputVariable(Script& script, TMetaDataParams ... metaDataParameters) :
+        InputVariableBase<TMetaData>(script, metaDataParameters...),
         m_outputPin(*this)
     {}
 
-    template<typename TDataType>
-    inline size_t InputVariable<TDataType>::GetOutputPinCount() const
+    template<typename TDataType, typename TMetaData>
+    inline size_t InputVariable<TDataType, TMetaData>::GetOutputPinCount() const
     {
         return 1;
     }
 
-    template<typename TDataType>
-    inline Pin* InputVariable<TDataType>::GetOutputPin(const size_t index)
+    template<typename TDataType, typename TMetaData>
+    inline Pin* InputVariable<TDataType, TMetaData>::GetOutputPin(const size_t index)
     {
         if (index != 0)
         {
@@ -48,8 +83,8 @@ namespace Molten::Shader::Visual
         }
         return &m_outputPin;
     }
-    template<typename TDataType>
-    inline const Pin* InputVariable<TDataType>::GetOutputPin(const size_t index) const
+    template<typename TDataType, typename TMetaData>
+    inline const Pin* InputVariable<TDataType, TMetaData>::GetOutputPin(const size_t index) const
     {
         if (index != 0)
         {
@@ -58,57 +93,52 @@ namespace Molten::Shader::Visual
         return &m_outputPin;
     }
 
-    template<typename TDataType>
-    inline std::vector<Pin*> InputVariable<TDataType>::GetOutputPins()
+    template<typename TDataType, typename TMetaData>
+    inline std::vector<Pin*> InputVariable<TDataType, TMetaData>::GetOutputPins()
     {
         return { &m_outputPin };
     }
-    template<typename TDataType>
-    inline std::vector<const Pin*> InputVariable<TDataType>::GetOutputPins() const
+    template<typename TDataType, typename TMetaData>
+    inline std::vector<const Pin*> InputVariable<TDataType, TMetaData>::GetOutputPins() const
     {
         return { &m_outputPin };
     }
 
-    template<typename TDataType>
-    inline VariableDataType InputVariable<TDataType>::GetDataType() const
+    template<typename TDataType, typename TMetaData>
+    inline VariableDataType InputVariable<TDataType, TMetaData>::GetDataType() const
     {
         return m_outputPin.GetDataType();
     }
 
-    template<typename TDataType>
-    inline VariableType InputVariable<TDataType>::GetVariableType() const
+    template<typename TDataType, typename TMetaData>
+    inline VariableType InputVariable<TDataType, TMetaData>::GetVariableType() const
     {
         return VariableType::Input;
     }
 
-    template<typename TDataType>
-    inline size_t InputVariable<TDataType>::GetSizeOf() const
+    template<typename TDataType, typename TMetaData>
+    inline size_t InputVariable<TDataType, TMetaData>::GetSizeOf() const
     {
         return VariableTrait<TDataType>::dataSize;
     }
-
+    
 
     // Output variable implementations.
-    template<typename TDataType>
-    inline OutputVariable<TDataType>::OutputVariable(Script& script) :
-        OutputVariableBase(script),
+    template<typename TDataType, typename TMetaData>
+    template<typename ... TMetaDataParams>
+    inline OutputVariable<TDataType, TMetaData>::OutputVariable(Script& script, TMetaDataParams ... metaDataParameters) :
+        OutputVariableBase<TMetaData>(script, metaDataParameters...),
         m_inputPin(*this)
     {}
 
-    template<typename TDataType>
-    inline OutputVariable<TDataType>::OutputVariable(Script& script, const DataType& defaultValue) :
-        OutputVariableBase(script),
-        m_inputPin(*this, defaultValue)
-    {}
-
-    template<typename TDataType>
-    inline size_t OutputVariable<TDataType>::GetInputPinCount() const
+    template<typename TDataType, typename TMetaData>
+    inline size_t OutputVariable<TDataType, TMetaData>::GetInputPinCount() const
     {
         return 1;
     }
 
-    template<typename TDataType>
-    inline Pin* OutputVariable<TDataType>::GetInputPin(const size_t index)
+    template<typename TDataType, typename TMetaData>
+    inline Pin* OutputVariable<TDataType, TMetaData>::GetInputPin(const size_t index)
     {
         if (index != 0)
         {
@@ -116,8 +146,8 @@ namespace Molten::Shader::Visual
         }
         return &m_inputPin;
     }
-    template<typename TDataType>
-    inline const Pin* OutputVariable<TDataType>::GetInputPin(const size_t index) const
+    template<typename TDataType, typename TMetaData>
+    inline const Pin* OutputVariable<TDataType, TMetaData>::GetInputPin(const size_t index) const
     {
         if (index != 0)
         {
@@ -126,59 +156,61 @@ namespace Molten::Shader::Visual
         return &m_inputPin;
     }
 
-    template<typename TDataType>
-    inline std::vector<Pin*> OutputVariable<TDataType>::GetInputPins()
+    template<typename TDataType, typename TMetaData>
+    inline std::vector<Pin*> OutputVariable<TDataType, TMetaData>::GetInputPins()
     {
         return { &m_inputPin };
     }
-    template<typename TDataType>
-    inline std::vector<const Pin*> OutputVariable<TDataType>::GetInputPins() const
+    template<typename TDataType, typename TMetaData>
+    inline std::vector<const Pin*> OutputVariable<TDataType, TMetaData>::GetInputPins() const
     {
         return { &m_inputPin };
     }
 
-    template<typename TDataType>
-    inline VariableDataType OutputVariable<TDataType>::GetDataType() const
+    template<typename TDataType, typename TMetaData>
+    inline VariableDataType OutputVariable<TDataType, TMetaData>::GetDataType() const
     {
         return m_inputPin.GetDataType();
     }
 
-    template<typename TDataType>
-    inline VariableType OutputVariable<TDataType>::GetVariableType() const
+    template<typename TDataType, typename TMetaData>
+    inline VariableType OutputVariable<TDataType, TMetaData>::GetVariableType() const
     {
         return VariableType::Output;
     }
 
-    template<typename TDataType>
-    inline size_t OutputVariable<TDataType>::GetSizeOf() const
+    template<typename TDataType, typename TMetaData>
+    inline size_t OutputVariable<TDataType, TMetaData>::GetSizeOf() const
     {
         return VariableTrait<TDataType>::dataSize;
     }
 
 
     // Constant variable implementations.
-    template<typename TDataType>
-    inline ConstantVariable<TDataType>::ConstantVariable(Script& script, const DataType& value) :
-        ConstantVariableBase(script),
+    template<typename TDataType, typename TMetaData>
+    template<typename ... TMetaDataParams>
+    inline ConstantVariable<TDataType, TMetaData>::ConstantVariable(Script& script, const DataType& value, TMetaDataParams ... metaDataParameters) :
+        ConstantVariableBase<TMetaData>(script, metaDataParameters...),
         m_outputPin(*this),
         m_value(value)
     {}
 
-    template<typename TDataType>
-    inline ConstantVariable<TDataType>::ConstantVariable(Script& script, DataType&& value) :
-        ConstantVariableBase(script),
+    template<typename TDataType, typename TMetaData>
+    template<typename ... TMetaDataParams>
+    inline ConstantVariable<TDataType, TMetaData>::ConstantVariable(Script& script, DataType&& value, TMetaDataParams ... metaDataParameters) :
+        ConstantVariableBase(script, metaDataParameters...),
         m_outputPin(*this),
         m_value(std::move(value))
     {}
 
-    template<typename TDataType>
-    inline size_t ConstantVariable<TDataType>::GetOutputPinCount() const
+    template<typename TDataType, typename TMetaData>
+    inline size_t ConstantVariable<TDataType, TMetaData>::GetOutputPinCount() const
     {
         return 1;
     }
 
-    template<typename TDataType>
-    inline Pin* ConstantVariable<TDataType>::GetOutputPin(const size_t index)
+    template<typename TDataType, typename TMetaData>
+    inline Pin* ConstantVariable<TDataType, TMetaData>::GetOutputPin(const size_t index)
     {
         if (index != 0)
         {
@@ -186,8 +218,8 @@ namespace Molten::Shader::Visual
         }
         return &m_outputPin;
     }
-    template<typename TDataType>
-    inline const Pin* ConstantVariable<TDataType>::GetOutputPin(const size_t index) const
+    template<typename TDataType, typename TMetaData>
+    inline const Pin* ConstantVariable<TDataType, TMetaData>::GetOutputPin(const size_t index) const
     {
         if (index != 0)
         {
@@ -196,48 +228,48 @@ namespace Molten::Shader::Visual
         return &m_outputPin;
     }
 
-    template<typename TDataType>
-    inline std::vector<Pin*> ConstantVariable<TDataType>::GetOutputPins()
+    template<typename TDataType, typename TMetaData>
+    inline std::vector<Pin*> ConstantVariable<TDataType, TMetaData>::GetOutputPins()
     {
         return { &m_outputPin };
     }
-    template<typename TDataType>
-    inline std::vector<const Pin*> ConstantVariable<TDataType>::GetOutputPins() const
+    template<typename TDataType, typename TMetaData>
+    inline std::vector<const Pin*> ConstantVariable<TDataType, TMetaData>::GetOutputPins() const
     {
         return { &m_outputPin };
     }
 
-    template<typename TDataType>
-    inline VariableDataType ConstantVariable<TDataType>::GetDataType() const
+    template<typename TDataType, typename TMetaData>
+    inline VariableDataType ConstantVariable<TDataType, TMetaData>::GetDataType() const
     {
         return m_outputPin.GetDataType();
     }
 
-    template<typename TDataType>
-    inline VariableType ConstantVariable<TDataType>::GetVariableType() const
+    template<typename TDataType, typename TMetaData>
+    inline VariableType ConstantVariable<TDataType, TMetaData>::GetVariableType() const
     {
         return VariableType::Constant;
     }
 
-    template<typename TDataType>
-    inline size_t ConstantVariable<TDataType>::GetSizeOf() const
+    template<typename TDataType, typename TMetaData>
+    inline size_t ConstantVariable<TDataType, TMetaData>::GetSizeOf() const
     {
         return VariableTrait<TDataType>::dataSize;
     }
 
-    template<typename TDataType>
-    inline const TDataType& ConstantVariable<TDataType>::GetValue() const
+    template<typename TDataType, typename TMetaData>
+    inline const TDataType& ConstantVariable<TDataType, TMetaData>::GetValue() const
     {
         return m_value;
     }
 
-    template<typename TDataType>
-    inline void ConstantVariable<TDataType>::SetValue(const DataType& value)
+    template<typename TDataType, typename TMetaData>
+    inline void ConstantVariable<TDataType, TMetaData>::SetValue(const DataType& value)
     {
         m_value = value;
     }
-    template<typename TDataType>
-    inline void ConstantVariable<TDataType>::SetValue(DataType&& value)
+    template<typename TDataType, typename TMetaData>
+    inline void ConstantVariable<TDataType, TMetaData>::SetValue(DataType&& value)
     {
         m_value = std::move(value);
     }

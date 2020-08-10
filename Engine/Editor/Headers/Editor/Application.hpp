@@ -82,7 +82,7 @@ namespace Molten::Editor
         IndexBuffer* m_indexBuffer;
         UniformBuffer* m_uniformBuffer;
         UniformBlock* m_uniformBlock;
-
+        uint32_t m_colorPushLocation;
         Clock m_programTimer;
         float m_programTime;
         Clock m_deltaTimer;

@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2020 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -174,6 +174,11 @@ namespace Molten
         return m_version;
     }
 
+    uint32_t OpenGLX11Renderer::GetPushConstantLocation(Pipeline* /*pipeline*/, const uint32_t /*id*/)
+    {
+        return 0;
+    }
+
     //std::vector<uint8_t> OpenGLX11Renderer::CompileShader(const ShaderFormat /*inputFormat*/, const ShaderType /*inputType*/,
     //                                                      const std::vector<uint8_t>& /*inputData*/, const ShaderFormat /*outputFormat*/)
     //{
@@ -281,7 +286,25 @@ namespace Molten
     {
     }
 
-    void OpenGLX11Renderer::PushShaderConstants(Shader::Type /*stage*/, const uint32_t /*offset*/, const uint32_t /*size*/, const void* /*data*/)
+    void OpenGLX11Renderer::PushConstant(const uint32_t /*location*/, const bool& /*value*/)
+    {
+    }
+    void OpenGLX11Renderer::PushConstant(const uint32_t /*location*/, const int32_t& /*value*/)
+    {
+    }
+    void OpenGLX11Renderer::PushConstant(const uint32_t /*location*/, const float& /*value*/)
+    {
+    }
+    void OpenGLX11Renderer::PushConstant(const uint32_t /*location*/, const Vector2f32& /*value*/)
+    {
+    }
+    void OpenGLX11Renderer::PushConstant(const uint32_t /*location*/, const Vector3f32& /*value*/)
+    {
+    }
+    void OpenGLX11Renderer::PushConstant(const uint32_t /*location*/, const Vector4f32& /*value*/)
+    {
+    }
+    void OpenGLX11Renderer::PushConstant(const uint32_t /*location*/, const Matrix4x4f32& /*value*/)
     {
     }
 

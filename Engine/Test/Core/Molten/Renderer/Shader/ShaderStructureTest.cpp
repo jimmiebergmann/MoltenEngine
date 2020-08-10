@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2020 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -59,18 +59,18 @@ namespace Molten::Shader::Visual
                 EXPECT_EQ(m3, pm3);
             }
             {
-                InputVariableBase* pm1 = vertexInput.GetMember(0);
-                InputVariableBase* pm2 = vertexInput.GetMember(1);
-                InputVariableBase* pm3 = vertexInput.GetMember(2);
+                VariableBase* pm1 = vertexInput.GetMember(0);
+                InputVariableBase<>* pm2 = vertexInput.GetMember(1);
+                InputVariableBase<>* pm3 = vertexInput.GetMember(2);
 
                 EXPECT_EQ(m1, pm1);
                 EXPECT_EQ(m2, pm2);
                 EXPECT_EQ(m3, pm3);
             }            
             {
-                InputVariableBase* pm1 = vertexInput[0];
-                InputVariableBase* pm2 = vertexInput[1];
-                InputVariableBase* pm3 = vertexInput[2];
+                VariableBase* pm1 = vertexInput[0];
+                InputVariableBase<>* pm2 = vertexInput[1];
+                InputVariableBase<>* pm3 = vertexInput[2];
 
                 EXPECT_EQ(m1, pm1);
                 EXPECT_EQ(m2, pm2);

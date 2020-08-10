@@ -41,7 +41,7 @@ namespace Molten::Shader::Visual
      * Meta data related to uniform interfaces.
      * The only available meta data for uniform interfaces is IDs.
      */
-    class UniformMetaData
+    class MOLTEN_API UniformMetaData
     {
 
     public:
@@ -66,7 +66,7 @@ namespace Molten::Shader::Visual
 
 
     /** Uniform interface type. */
-    using UniformInterface = Structure<InputVariable, UniformMetaData>;
+    using UniformInterface = Structure<InputVariable, void, UniformMetaData>;
 
 
     /** Uniform interface container type. */

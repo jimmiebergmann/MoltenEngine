@@ -41,16 +41,12 @@ namespace Molten::Shader::Visual
     /** Enumerator of node types. */
     enum class NodeType : uint8_t
     {
-        //Constant,       ///< Local constant, only present in fragment shader.
         Function,       ///< Built-in shader function.
-        //Input,          ///< Input data from previous shader stage, or data from vertex buffer.
         Operator,       ///< Operator node in local space.
-        //Output,         ///< Output data for next shader stage, or data for framebuffer.
         PushConstant,   ///< Push constant node, constants set by the client.
         Uniform,        ///< Uniform node, single object being sent runtime from client.
-        //VertexOutput,   ///< Output data of vertex position, being outputted in the vertex shader stage.
 
-        Variable
+        Variable  ///< ???
     };
 
 
