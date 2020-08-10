@@ -26,7 +26,7 @@
 namespace Molten::Shader::Visual
 {
 
-
+    // Variable meta data base implementations.
     template<typename TMetaData>
     template<typename ... TMetaDataParams>
     inline VariableMetaBase<TMetaData>::VariableMetaBase(Script& script, TMetaDataParams ... metaDataParameters) :
@@ -61,6 +61,8 @@ namespace Molten::Shader::Visual
         VariableMetaBase<TMetaData>(script, metaDataParameters...)
     {}
 
+
+    // Input variable implementations.
     template<typename TDataType, typename TMetaData>
     template<typename ... TMetaDataParams>
     inline InputVariable<TDataType, TMetaData>::InputVariable(Script& script, TMetaDataParams ... metaDataParameters) :
@@ -198,7 +200,7 @@ namespace Molten::Shader::Visual
     template<typename TDataType, typename TMetaData>
     template<typename ... TMetaDataParams>
     inline ConstantVariable<TDataType, TMetaData>::ConstantVariable(Script& script, DataType&& value, TMetaDataParams ... metaDataParameters) :
-        ConstantVariableBase(script, metaDataParameters...),
+        ConstantVariableBase<TMetaData>(script, metaDataParameters...),
         m_outputPin(*this),
         m_value(std::move(value))
     {}
