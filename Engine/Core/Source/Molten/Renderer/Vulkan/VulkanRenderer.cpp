@@ -50,8 +50,6 @@
 #include <memory>
 #include <array>
 
-#define MOLTEN_RENDERER_LOG(severity, message) if(m_logger){ m_logger->Write(severity, message); }
-
 namespace Molten
 {
 
@@ -374,7 +372,7 @@ namespace Molten
     {
         if (m_beginDraw)
         {
-            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Cannot resize renderer while drawing.");
+            Logger::WriteError(m_logger, "Cannot resize renderer while drawing.");
             return;
         }
 
@@ -662,7 +660,7 @@ namespace Molten
 
         if (descriptor.id >= vulkanPipeline->descriptionSetLayouts.size())
         {
-            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Id of uniform descriptor block is too large.");
+            Logger::WriteError(m_logger, "Id of uniform descriptor block is too large.");
             return nullptr;
         }
 
@@ -685,7 +683,7 @@ namespace Molten
 
         if (vkCreateDescriptorPool(m_logicalDevice, &poolInfo, nullptr, &vulkanUniformBlock->descriptorPool) != VK_SUCCESS)
         {
-            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Failed to create descriptor pool.");
+            Logger::WriteError(m_logger, "Failed to create descriptor pool.");
             return nullptr;
         }
       
@@ -699,7 +697,7 @@ namespace Molten
         vulkanUniformBlock->descriptorSets.resize(m_swapChainImages.size());
         if (vkAllocateDescriptorSets(m_logicalDevice, &allocInfo, vulkanUniformBlock->descriptorSets.data()) != VK_SUCCESS)
         {
-            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Failed to create descriptor sets.");
+            Logger::WriteError(m_logger, "Failed to create descriptor sets.");
             return nullptr;
         }
 
@@ -898,7 +896,7 @@ namespace Molten
     {
         if (m_beginDraw)
         {
-            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Calling BeginDraw twice, without any previous call to EndDraw.");
+            Logger::WriteError(m_logger, "Calling BeginDraw twice, without any previous call to EndDraw.");
             return;
         }
       
@@ -918,7 +916,7 @@ namespace Molten
         }
         else if (result != VK_SUCCESS)
         {
-            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Failed to acquire the next swap chain image.");
+            Logger::WriteError(m_logger, "Failed to acquire the next swap chain image.");
             return;
         }
 
@@ -930,7 +928,7 @@ namespace Molten
 
         if (m_currentImageIndex >= static_cast<uint32_t>(m_commandBuffers.size()))
         {
-            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Received invalid image index.");
+            Logger::WriteError(m_logger, "Received invalid image index.");
             return;
         }
 
@@ -944,7 +942,7 @@ namespace Molten
 
         if (vkBeginCommandBuffer(*m_currentCommandBuffer, &commandBufferBeginInfo) != VK_SUCCESS)
         {
-            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Failed to begin recording command buffer.");
+            Logger::WriteError(m_logger, "Failed to begin recording command buffer.");
             return;
         }
 
@@ -1035,14 +1033,14 @@ namespace Molten
     {
         if (!m_beginDraw)
         {
-            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Calling EndDraw, without any previous call to BeginDraw.");
+            Logger::WriteError(m_logger, "Calling EndDraw, without any previous call to BeginDraw.");
             return;
         }
 
         vkCmdEndRenderPass(*m_currentCommandBuffer);
         if (vkEndCommandBuffer(*m_currentCommandBuffer) != VK_SUCCESS)
         {
-            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Failed to record command buffer.");
+            Logger::WriteError(m_logger, "Failed to record command buffer.");
             return;
         }
 
@@ -1064,7 +1062,7 @@ namespace Molten
         vkResetFences(m_logicalDevice, 1, &m_inFlightFences[m_currentFrame]);
         if (vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, m_inFlightFences[m_currentFrame]) != VK_SUCCESS)
         {
-            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Failed to submit draw command buffer.");
+            Logger::WriteError(m_logger, "Failed to submit draw command buffer.");
             return;
         }
 
@@ -1161,7 +1159,7 @@ namespace Molten
         std::vector<std::string> extensions;
         if (!GetRequiredExtensions(extensions, m_logger != nullptr))
         {
-            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "The required Vulkan extensions are unavailable.");
+            Logger::WriteError(m_logger, "The required Vulkan extensions are unavailable.");
             return false;
         }
         std::vector<const char*> ptrExtensions(extensions.size());
@@ -1198,7 +1196,7 @@ namespace Molten
             {
                 case VK_ERROR_INCOMPATIBLE_DRIVER:
                 {
-                    MOLTEN_RENDERER_LOG(Logger::Severity::Error, "VulkanRenderer: Driver for version " + version.AsString() + " of Vulkan is unavailable.");
+                    Logger::WriteError(m_logger, "VulkanRenderer: Driver for version " + version.AsString() + " of Vulkan is unavailable.");
                     return false;
                 }
                 break;
@@ -1206,7 +1204,7 @@ namespace Molten
                     break;
             }
 
-            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Failed to create Vulkan instance.");
+            Logger::WriteError(m_logger, "Failed to create Vulkan instance.");
             return false;
         }
 
@@ -1217,18 +1215,18 @@ namespace Molten
 
             if (!m_debugMessenger.CreateDebugUtilsMessengerEXT)
             {
-                MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Failed to get function pointer for \"vkCreateDebugUtilsMessengerEXT\".");
+                Logger::WriteError(m_logger, "Failed to get function pointer for \"vkCreateDebugUtilsMessengerEXT\".");
                 return true;
             }
             else if (!m_debugMessenger.DestroyDebugUtilsMessengerEXT)
             {
-                MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Failed to get function pointer for \"vkDestroyDebugUtilsMessengerEXT\".");
+                Logger::WriteError(m_logger, "Failed to get function pointer for \"vkDestroyDebugUtilsMessengerEXT\".");
                 return true;
             }
 
             if (m_debugMessenger.CreateDebugUtilsMessengerEXT(m_instance, &debugMessageInfo, nullptr, &m_debugMessenger.messenger) != VK_SUCCESS)
             {
-                MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Failed to set up debug messenger.");
+                Logger::WriteError(m_logger, "Failed to set up debug messenger.");
                 return true;
             }     
         }
@@ -1296,7 +1294,7 @@ namespace Molten
         vkEnumerateInstanceLayerProperties(&availableLayersCount, nullptr);
         if (!availableLayersCount)
         {
-            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Failed to find any validation layers.");
+            Logger::WriteError(m_logger, "Failed to find any validation layers.");
             return false;
         }
         std::vector<VkLayerProperties> availableLayers(availableLayersCount);
@@ -1314,7 +1312,7 @@ namespace Molten
 
         if (missingLayers.size() != 0)
         {
-            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Failed to find all requested validation layers.");
+            Logger::WriteError(m_logger, "Failed to find all requested validation layers.");
             return false;
         }       
 
@@ -1358,14 +1356,14 @@ namespace Molten
 
         if (vkCreateWin32SurfaceKHR(m_instance, &surfaceInfo, nullptr, &m_surface) != VK_SUCCESS)
         {
-            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Failed to create window surface.");
+            Logger::WriteError(m_logger, "Failed to create window surface.");
             return false;
         }
         return true;
 
     #else
 
-        MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Vulkan surface loading is not supported for platform: " MOLTEN_PLATFORM_NAME);
+        Logger::WriteError(m_logger, "Vulkan surface loading is not supported for platform: " MOLTEN_PLATFORM_NAME);
         return false;
 
     #endif
@@ -1377,7 +1375,7 @@ namespace Molten
         vkEnumeratePhysicalDevices(m_instance, &deviceCount, nullptr);
         if (!deviceCount)
         {
-            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Failed to find any physical device supporting Vulkan.");
+            Logger::WriteError(m_logger, "Failed to find any physical device supporting Vulkan.");
             return false;
         }
         std::vector<VkPhysicalDevice> devices(deviceCount);
@@ -1399,7 +1397,7 @@ namespace Molten
 
         if (!scoredDevices.size())
         {
-            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Failed to find any physical device supporting the requirements.");
+            Logger::WriteError(m_logger, "Failed to find any physical device supporting the requirements.");
             return false;
         }
 
@@ -1502,7 +1500,7 @@ namespace Molten
         
         if (!extensionCount)
         {
-            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Failed to find any device extensions.");
+            Logger::WriteError(m_logger, "Failed to find any device extensions.");
             return false;
         }
 
@@ -1585,7 +1583,7 @@ namespace Molten
 
         if (vkCreateDevice(m_physicalDevice.device, &deviceInfo, nullptr, &m_logicalDevice) != VK_SUCCESS)
         {
-            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Failed to create logical device.");
+            Logger::WriteError(m_logger, "Failed to create logical device.");
             return false;
         }
 
@@ -1611,7 +1609,7 @@ namespace Molten
         }
         if (!foundSurfaceFormat)
         {
-            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Failed find required surface format for the swap chain.");
+            Logger::WriteError(m_logger, "Failed find required surface format for the swap chain.");
             return false;
         }
 
@@ -1648,7 +1646,7 @@ namespace Molten
 
         if(m_swapChain == VK_NULL_HANDLE)
         {
-            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Failed create swap chain.");
+            Logger::WriteError(m_logger, "Failed create swap chain.");
             return false;
         }
 
@@ -1656,7 +1654,7 @@ namespace Molten
         if(m_swapChainImages.size() != imageCount)
         {
             vkDestroySwapchainKHR(m_logicalDevice, m_swapChain, nullptr);
-            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Failed to create the requested number of swap chain images.");
+            Logger::WriteError(m_logger, "Failed to create the requested number of swap chain images.");
             return false;
         }
 
@@ -1686,7 +1684,7 @@ namespace Molten
 
             if (vkCreateImageView(m_logicalDevice, &imageViewInfo, nullptr, &m_swapChainImageViews[i]) != VK_SUCCESS)
             {
-                MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Failed create image view " + std::to_string(i) + ".");
+                Logger::WriteError(m_logger, "Failed create image view " + std::to_string(i) + ".");
                 return false;
             }
         }
@@ -1734,7 +1732,7 @@ namespace Molten
 
         if (vkCreateRenderPass(m_logicalDevice, &renderPassInfo, nullptr, &m_renderPass) != VK_SUCCESS)
         {
-            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Failed to create render pass.");
+            Logger::WriteError(m_logger, "Failed to create render pass.");
             return false;
         }
 
@@ -1752,7 +1750,7 @@ namespace Molten
 
         if (!m_presentFramebuffers.size())
         {
-            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "No framebuffers are available.");
+            Logger::WriteError(m_logger, "No framebuffers are available.");
             return false;
         }
 
@@ -1777,7 +1775,7 @@ namespace Molten
         VkFramebuffer framebuffer;
         if (vkCreateFramebuffer(m_logicalDevice, &framebufferInfo, nullptr, &framebuffer) != VK_SUCCESS)
         {
-            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Failed to create framebuffer.");
+            Logger::WriteError(m_logger, "Failed to create framebuffer.");
             return nullptr;
         }
 
@@ -1795,7 +1793,7 @@ namespace Molten
 
         if (vkCreateCommandPool(m_logicalDevice, &commandPoolInfo, nullptr, &m_commandPool) != VK_SUCCESS)
         {
-            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Failed to create command pool.");
+            Logger::WriteError(m_logger, "Failed to create command pool.");
             return false;
         }
 
@@ -1810,7 +1808,7 @@ namespace Molten
         if (vkAllocateCommandBuffers(m_logicalDevice, &commandBufferInfo, m_commandBuffers.data()) != VK_SUCCESS)
         {
             vkDestroyCommandPool(m_logicalDevice, m_commandPool, nullptr);
-            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Failed to allocate command buffers.");
+            Logger::WriteError(m_logger, "Failed to allocate command buffers.");
             return false;
         }
 
@@ -1837,7 +1835,7 @@ namespace Molten
                 vkCreateSemaphore(m_logicalDevice, &semaphoreInfo, nullptr, &m_renderFinishedSemaphores[i]) != VK_SUCCESS ||
                 vkCreateFence(m_logicalDevice, &fenceInfo, nullptr, &m_inFlightFences[i]) != VK_SUCCESS)
             {
-                MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Failed to create semaphores and fences.");
+                Logger::WriteError(m_logger, "Failed to create semaphores and fences.");
                 return false;
             }
         }
@@ -1928,7 +1926,7 @@ namespace Molten
 
         if (vkCreateBuffer(m_logicalDevice, &bufferInfo, nullptr, &buffer) != VK_SUCCESS)
         {
-            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Failed to create vertex buffer.");
+            Logger::WriteError(m_logger, "Failed to create vertex buffer.");
             return false;
         }
 
@@ -1939,7 +1937,7 @@ namespace Molten
         if (!FindPhysicalDeviceMemoryType(memoryTypeIndex, memoryReq.memoryTypeBits, properties))
         {
             vkDestroyBuffer(m_logicalDevice, buffer, nullptr);
-            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Failed to find matching memory type for vertex buffer.");
+            Logger::WriteError(m_logger, "Failed to find matching memory type for vertex buffer.");
             return false;
         }
 
@@ -1951,7 +1949,7 @@ namespace Molten
         if (vkAllocateMemory(m_logicalDevice, &memoryAllocateInfo, nullptr, &memory) != VK_SUCCESS)
         {
             vkDestroyBuffer(m_logicalDevice, buffer, nullptr);
-            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Failed to allocate vertex buffer memory.");
+            Logger::WriteError(m_logger, "Failed to allocate vertex buffer memory.");
             return false;
         }
 
@@ -1959,7 +1957,7 @@ namespace Molten
         {
             vkDestroyBuffer(m_logicalDevice, buffer, nullptr);
             vkFreeMemory(m_logicalDevice, memory, nullptr);
-            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Failed to bind memory to vertex buffer.");
+            Logger::WriteError(m_logger, "Failed to bind memory to vertex buffer.");
             return false;
         }
 
@@ -2017,7 +2015,7 @@ namespace Molten
                 uint32_t formatSize;
                 if (!GetVertexAttributeFormatAndSize(outputPin->GetDataType(), format, formatSize))
                 {
-                    MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Failed to find attribute format.");
+                    Logger::WriteError(m_logger, "Failed to find attribute format.");
                     return false;
                 }
 
@@ -2062,7 +2060,7 @@ namespace Molten
 
         if (highestSetId > static_cast<uint32_t>(uniformShaderStageFlags.size()))
         {
-            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Uniform interface id is out of bound, expected " + 
+            Logger::WriteError(m_logger, "Uniform interface id is out of bound, expected " + 
                 std::to_string(uniformShaderStageFlags.size() - 1) + " to be the highest.");
             return nullptr;
         }
@@ -2087,7 +2085,7 @@ namespace Molten
             VkDescriptorSetLayout descriptorSetLayout;
             if (vkCreateDescriptorSetLayout(m_logicalDevice, &descriptorSetLayoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS)
             {
-                MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Failed to create descriptor set layout.");
+                Logger::WriteError(m_logger, "Failed to create descriptor set layout.");
                 return false;
             }
 

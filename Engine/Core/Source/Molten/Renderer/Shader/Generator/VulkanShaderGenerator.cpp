@@ -224,6 +224,11 @@ namespace Molten::Shader
         throw Exception("GetGlslFunctionName is missing return value for functionType = " + std::to_string(static_cast<size_t>(functionType)) + ".");
     }
 
+    static std::string CreateGlslPushConstantMemberName(const uint32_t offset)
+    {
+        return g_glslPushConstantMemberPrefix + std::to_string(offset);
+    }
+
     static void AppendToVector(std::vector<uint8_t>& output, const std::string& input)
     {
         std::copy(input.begin(), input.end(), std::back_inserter(output));
@@ -266,7 +271,7 @@ namespace Molten::Shader
                     pushConstantLocations.insert({ id, offsetId });
                     nextByteOffset += static_cast<uint32_t>(member->GetPaddedSizeOf());
 
-                    auto variableName = g_glslPushConstantMemberPrefix + std::to_string(currentByteOffset);
+                    auto variableName = CreateGlslPushConstantMemberName(currentByteOffset);
                     AppendToVector(pushConstantCode, GetGlslVariableDataType(memberDataType) + " " + variableName + ";\n");
                 }
                 else
@@ -292,71 +297,6 @@ namespace Molten::Shader
         pushConstantTemplate.locations = std::move(pushConstantLocations);
 
         return true;
-
-
-        /*struct FlaggedScript
-        {
-            const Visual::Script* script;
-            uint32_t stageFlags;
-        };
-
-        std::vector<FlaggedScript> flaggedScripts;
-        flaggedScripts.reserve(scripts.size());
-
-        for (size_t i = 0; i < scripts.size(); i++)
-        {
-            auto* script = scripts[i];
-            if (script == nullptr)
-            {
-                Logger::WriteWarning(logger, "Provided visual script at index " + std::to_string(i) + "is null.");
-                continue;
-            }
-
-            uint32_t stageFlag = static_cast<uint32_t>(script->GetType());
-            auto it = std::find_if(flaggedScripts.begin(), flaggedScripts.end(), [&](const auto& currentScript)
-            {
-                return currentScript.stageFlags == stageFlag;
-            });
-
-            if (it != flaggedScripts.end())
-            {
-                Logger::WriteError(logger, "Faild to generate GLSL template data, same visual script is provided twice.");
-                return {};
-            }
-
-            flaggedScripts.push_back({script, stageFlag});
-        }
-
-        PushConstantTemplate pushConstantTemplate;
-        uint32_t totalBytes = 0;
-
-        struct VisitedPushConstant
-        {
-            size_t index;
-            VariableDataType dataType;
-        };
-        std::map<uint32_t, VisitedPushConstant> visitedPushConstants; ///< Id : index;
-
-        for (auto& flaggedScript : flaggedScripts)
-        {
-            auto* script = flaggedScript.script;
-            auto& pushConstantInterface = script->GetPushConstantInterface();
-
-            for (auto* pushConstant : pushConstantInterface)
-            {
-                uint32_t id = pushConstant->GetId();
-
-                //for (auto* pin : pushConstant->GetOutputPins())
-                //{
-
-                //}
-            }
-
-            //flaggedScript.
-        }*/
-        //pushConstantTemplate.blockByteCount = totalBytes;
-
-        //return GlslTemplates{ /*std::move(pushConstantTemplate)*/ };
     }
 
     std::vector<uint8_t> VulkanGenerator::GenerateGlsl(
@@ -566,7 +506,7 @@ namespace Molten::Shader
                 auto * member = pushConstantInterface.GetMember(i);
                 auto* pin = member->GetOutputPin();
 
-                const std::string name = g_glslPushConstantMemberPrefix + std::to_string(currentOffset.offset);
+                auto name = CreateGlslPushConstantMemberName(currentOffset.offset);
                 const std::string fullName = blockName + "." + name;
                 visitedOutputPins.insert({ pin, std::make_shared<Variable>(fullName, member, pin) });
             }
