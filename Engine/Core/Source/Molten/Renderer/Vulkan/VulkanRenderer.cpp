@@ -61,7 +61,6 @@ namespace Molten
         {
             case Shader::Type::Vertex:   return VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT;
             case Shader::Type::Fragment: return VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT;
-            default: break;
         }
 
         throw Exception("Provided shader type is not supported by the Vulkan renderer.");
@@ -78,7 +77,6 @@ namespace Molten
             case Pipeline::Topology::LineStrip:     return VkPrimitiveTopology::VK_PRIMITIVE_TOPOLOGY_LINE_STRIP;
             case Pipeline::Topology::TriangleList:  return VkPrimitiveTopology::VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
             case Pipeline::Topology::TriangleStrip: return VkPrimitiveTopology::VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
-            default: break;
         }
         throw Exception("Provided primitive topology is not supported by the Vulkan renderer.");
         MOLTEN_UNSCOPED_ENUM_END
@@ -92,7 +90,6 @@ namespace Molten
             case Pipeline::PolygonMode::Point: return VkPolygonMode::VK_POLYGON_MODE_POINT;
             case Pipeline::PolygonMode::Line:  return VkPolygonMode::VK_POLYGON_MODE_LINE;
             case Pipeline::PolygonMode::Fill:  return VkPolygonMode::VK_POLYGON_MODE_FILL;
-            default: break;
         }
         throw Exception("Provided polygon mode is not supported by the Vulkan renderer.");
         MOLTEN_UNSCOPED_ENUM_END
@@ -105,7 +102,6 @@ namespace Molten
         {
             case Pipeline::FrontFace::Clockwise:        return VkFrontFace::VK_FRONT_FACE_CLOCKWISE;
             case Pipeline::FrontFace::Counterclockwise: return VkFrontFace::VK_FRONT_FACE_COUNTER_CLOCKWISE;
-            default: break;
         }
         throw Exception("Provided front face is not supported by the Vulkan renderer.");
         MOLTEN_UNSCOPED_ENUM_END
@@ -120,7 +116,6 @@ namespace Molten
             case Pipeline::CullMode::Front:        return VkCullModeFlagBits::VK_CULL_MODE_FRONT_BIT;
             case Pipeline::CullMode::Back:         return VkCullModeFlagBits::VK_CULL_MODE_BACK_BIT;
             case Pipeline::CullMode::FrontAndBack: return VkCullModeFlagBits::VK_CULL_MODE_FRONT_AND_BACK;
-            default: break;
         }
         throw Exception("Provided cull mode is not supported by the Vulkan renderer.");
         MOLTEN_UNSCOPED_ENUM_END
@@ -173,8 +168,6 @@ namespace Molten
                 formatSize = 64;
                 return true;
             }
-
-            default: break;
         }
         return false;
         MOLTEN_UNSCOPED_ENUM_END
@@ -215,7 +208,6 @@ namespace Molten
         {
             case IndexBuffer::DataType::Uint16: return VkIndexType::VK_INDEX_TYPE_UINT16;
             case IndexBuffer::DataType::Uint32: return VkIndexType::VK_INDEX_TYPE_UINT32;
-            default: break;
         }
         MOLTEN_UNSCOPED_ENUM_END
 
@@ -228,14 +220,12 @@ namespace Molten
         {
             case IndexBuffer::DataType::Uint16: return sizeof(uint16_t);
             case IndexBuffer::DataType::Uint32: return sizeof(uint32_t);
-            default: break;
         }
 
         throw Exception("Provided data type is not supported as index buffer data type by the Vulkan renderer.");
     }
 
     
-
 
     // Vulkan renderer class implementations.
     VulkanRenderer::VulkanRenderer() :
@@ -1198,10 +1188,8 @@ namespace Molten
                 {
                     Logger::WriteError(m_logger, "VulkanRenderer: Driver for version " + version.AsString() + " of Vulkan is unavailable.");
                     return false;
-                }
-                break;
-                default:
-                    break;
+                } break;
+                default: break;
             }
 
             Logger::WriteError(m_logger, "Failed to create Vulkan instance.");

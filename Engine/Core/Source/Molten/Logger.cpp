@@ -44,7 +44,6 @@ namespace Molten
             case Logger::Severity::Debug:   return debug;
             case Logger::Severity::Warning: return warning;
             case Logger::Severity::Error:   return error;
-            default: break;
         }
 
         return empty;
@@ -58,14 +57,11 @@ namespace Molten
             case FileLogger::OpenMode::Append:
             {
                 mode |= std::ios_base::app;
-            }
-            break;
+            } break;
             case FileLogger::OpenMode::Truncate:
             {
                 mode |= std::ios_base::trunc;
-            }
-            break;
-            default: break;
+            } break;
         }
 
         return mode;

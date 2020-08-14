@@ -52,12 +52,7 @@ namespace Molten::Shader::Visual
 
         // Vector.
         Cross,
-        Dot,
-
-        // Sampler
-        Texture2D,
-        Texture3D
-
+        Dot
 
     };
 

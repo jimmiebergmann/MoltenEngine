@@ -35,17 +35,17 @@ namespace Molten
         switch (backendApi)
         {
         case BackendApi::OpenGL:
-            #if MOLTEN_ENABLE_OPENGL
-                return new OpenGLRenderer;
-            #endif
+#if MOLTEN_ENABLE_OPENGL
+            return new OpenGLRenderer;
+#else
             break;
+#endif
         case BackendApi::Vulkan:
-            #if MOLTEN_ENABLE_VULKAN
-                return new VulkanRenderer;
-            #endif
+#if MOLTEN_ENABLE_VULKAN
+            return new VulkanRenderer;
+#else
             break;
-        default:
-            break;
+#endif
         }
 
         return nullptr;

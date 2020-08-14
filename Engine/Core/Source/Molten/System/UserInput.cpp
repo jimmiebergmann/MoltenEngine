@@ -70,7 +70,6 @@ namespace Molten
         case Mouse::Button::Right: return VK_RBUTTON;
         case Mouse::Button::Backward: return VK_XBUTTON1;
         case Mouse::Button::Forward: return VK_XBUTTON2;
-        default: break;
         }
         return 0;
     }

@@ -65,7 +65,7 @@ namespace Molten
 
     static void ConvertExtendedWin32Key(Keyboard::Key& key, const LPARAM lParam)
     {
-        switch(key)
+        switch (key)
         {
         case Keyboard::Key::ControlLeft:
         {
@@ -73,10 +73,8 @@ namespace Molten
             {
                 key = Keyboard::Key::ControlRight;
             }
-        }
-        break;
-        default:
-            break;
+        } break;
+        default: break;
         }
     }
 
@@ -513,14 +511,12 @@ namespace Molten
             {
                 MOLTEN_WINDOW_LOG(Logger::Severity::Error, "Failed to make window DPI aware. Make sure user32.dll is available.");
             }
-        }
-        break;
+        } break;
         case WM_CLOSE:
         {
             Close();
             return 0;
-        }
-        break;
+        } break;
         case WM_SHOWWINDOW:
         {
             const bool status = wParam ? true : false;
@@ -531,51 +527,47 @@ namespace Molten
 
             m_showing = status;
             OnShow(m_showing);
-        }
-        break;
-
-        #if defined(WM_DPICHANGED)
-            case WM_DPICHANGED:
+        } break;
+#if defined(WM_DPICHANGED)
+        case WM_DPICHANGED:
+        {
+            Vector2ui32 dpi = { 1, 1 };
+            auto dpiX = LOWORD(wParam);
+            auto dpiY = HIWORD(wParam);
+            if (dpiX > 0)
             {
-                Vector2ui32 dpi = { 1, 1 };
-                auto dpiX = LOWORD(wParam);
-                auto dpiY = HIWORD(wParam);
-                if (dpiX > 0)
-                {
-                    dpi.x = static_cast<uint32_t>(dpiX);
-                }
-                if (dpiY > 0)
-                {
-                    dpi.y = static_cast<uint32_t>(dpiY);
-                }
-
-                if (dpi != m_dpi)
-                {
-                    m_dpi = dpi;
-                    Vector2f32 scale = { static_cast<float>(m_dpi.x) / 96.0f, static_cast<float>(m_dpi.y) / 96.0f };
-
-                    OnDpiChange(m_dpi);
-                    OnScaleChange(scale);
-
-                    RECT* rect = reinterpret_cast<RECT*>(lParam);
-                    if (rect)
-                    {
-                        if (!(::SetWindowPos(m_window, HWND_TOP,
-                                             static_cast<int>(rect->left),
-                                             static_cast<int>(rect->top),
-                                             static_cast<int>(rect->right) - static_cast<int>(rect->left),
-                                             static_cast<int>(rect->bottom) - static_cast<int>(rect->top),
-                                             0)))
-                        {
-                            MOLTEN_WINDOW_LOG(Logger::Severity::Error, "Failed to resize window accordingly to new DPI.");
-                        }
-                    }
-                   
-                }
+                dpi.x = static_cast<uint32_t>(dpiX);
             }
-            break;
-        #endif
+            if (dpiY > 0)
+            {
+                dpi.y = static_cast<uint32_t>(dpiY);
+            }
 
+            if (dpi != m_dpi)
+            {
+                m_dpi = dpi;
+                Vector2f32 scale = { static_cast<float>(m_dpi.x) / 96.0f, static_cast<float>(m_dpi.y) / 96.0f };
+
+                OnDpiChange(m_dpi);
+                OnScaleChange(scale);
+
+                RECT* rect = reinterpret_cast<RECT*>(lParam);
+                if (rect)
+                {
+                    if (!(::SetWindowPos(m_window, HWND_TOP,
+                                            static_cast<int>(rect->left),
+                                            static_cast<int>(rect->top),
+                                            static_cast<int>(rect->right) - static_cast<int>(rect->left),
+                                            static_cast<int>(rect->bottom) - static_cast<int>(rect->top),
+                                            0)))
+                    {
+                        MOLTEN_WINDOW_LOG(Logger::Severity::Error, "Failed to resize window accordingly to new DPI.");
+                    }
+                }
+                   
+            }
+        } break;
+#endif
         case WM_SIZE:
         {
             const Vector2i32 windowSize =
@@ -605,8 +597,7 @@ namespace Molten
                 m_minimized = false;
 
                 OnResize(m_size);
-            }
-            break;
+            } break;
             case SIZE_MAXIMIZED:
             {
                 if (m_maximized)
@@ -616,8 +607,7 @@ namespace Molten
                 m_maximized = true;
                 m_minimized = false;
                 OnMaximize(m_size);              
-            }
-            break;
+            } break;
             case SIZE_MINIMIZED:
             {
                 if (m_minimized)
@@ -627,13 +617,10 @@ namespace Molten
                 m_maximized = false;
                 m_minimized = true;
                 OnMinimize(m_size);
+            } break;
+            default: break;
             }
-            break;
-            default:
-                break;
-            }
-        }
-        break;
+        } break;
         case WM_MOVE:
         {
             const Vector2i32 position =
@@ -649,14 +636,8 @@ namespace Molten
 
             m_position = position;
             OnMove(m_position);
-        }
-        break;
-        case WM_ERASEBKGND:
-        {
-            return 0;
-        }
-        break;
-
+        } break;
+        case WM_ERASEBKGND: return 0;
         // Keyboard events.
         case WM_KEYDOWN:
         {
@@ -670,7 +651,7 @@ namespace Molten
                 m_userInput.PressKey(key);
                 return 0;
             }
-        }
+        } break;
         case WM_KEYUP:
         {
             uint32_t win32Key = static_cast<uint32_t>(wParam);
@@ -681,81 +662,72 @@ namespace Molten
                 m_userInput.ReleaseKey(key);
                 return 0;
             }
-        }
-
+        } break;
         // Mouse events.
         case WM_MOUSEMOVE:
         {
             auto position = Vector2i32(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
             m_userInput.MoveMouse(position);
             return 0;
-        }
+        } break;
         case WM_LBUTTONDOWN:
         {
             auto position = Vector2i32(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
             m_userInput.PressMouseButton(Mouse::Button::Left, position);
             return 0;
-        }
+        } break;
         case WM_MBUTTONDOWN:
         {
             auto position = Vector2i32(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
             m_userInput.PressMouseButton(Mouse::Button::Middle, position);
             return 0;
-        }
+        } break;
         case WM_RBUTTONDOWN:
         {
             auto position = Vector2i32(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
             m_userInput.PressMouseButton(Mouse::Button::Right, position);
             return 0;
-        }
+        } break;
         case WM_XBUTTONDOWN:
         {
             auto position = Vector2i32(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
             const auto button = HIWORD(wParam);
             switch (button)
             {
-            case XBUTTON1:
-                m_userInput.PressMouseButton(Mouse::Button::Backward, position); return 0;
-            case XBUTTON2:
-                m_userInput.PressMouseButton(Mouse::Button::Forward, position); return 0;
-            default:
-                break;
+            case XBUTTON1: m_userInput.PressMouseButton(Mouse::Button::Backward, position); return 0;
+            case XBUTTON2: m_userInput.PressMouseButton(Mouse::Button::Forward, position); return 0;
+            default: break;
             }
-        }
-
+        } break;
         case WM_LBUTTONUP:
         {
             auto position = Vector2i32(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
             m_userInput.ReleaseMouseButton(Mouse::Button::Left, position);
             return 0;
-        }
+        } break;
         case WM_MBUTTONUP:
         {
             auto position = Vector2i32(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
             m_userInput.ReleaseMouseButton(Mouse::Button::Middle, position);
             return 0;
-        }
+        } break;
         case WM_RBUTTONUP:
         {
             auto position = Vector2i32(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
             m_userInput.ReleaseMouseButton(Mouse::Button::Right, position);
             return 0;
-        }
+        } break;
         case WM_XBUTTONUP:
         {
             auto position = Vector2i32(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
             const auto button = HIWORD(wParam);
             switch (button)
             {
-            case XBUTTON1:
-                m_userInput.ReleaseMouseButton(Mouse::Button::Backward, position); return 0;
-            case XBUTTON2:
-                m_userInput.ReleaseMouseButton(Mouse::Button::Forward, position); return 0;
-            default:
-                break;
+            case XBUTTON1: m_userInput.ReleaseMouseButton(Mouse::Button::Backward, position); return 0;
+            case XBUTTON2: m_userInput.ReleaseMouseButton(Mouse::Button::Forward, position); return 0;
+            default: break;
             }
-        }
-
+        } break;
         default: break;
         }
 

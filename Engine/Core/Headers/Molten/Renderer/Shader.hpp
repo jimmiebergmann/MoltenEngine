@@ -76,9 +76,7 @@ namespace Molten::Shader
         Vector2f32,
         Vector3f32,
         Vector4f32,
-        Matrix4x4f32,
-        Sampler2D,
-        Sampler3D
+        Matrix4x4f32
     };
 
 

@@ -79,10 +79,6 @@ namespace Molten::Shader::Visual::Functions
     using DotVec3f32 = Function<FunctionType::Dot, float, Vector3f32, Vector3f32>;
     using DotVec4f32 = Function<FunctionType::Dot, float, Vector4f32, Vector4f32>;
 
-    // Sampler
-    using Texture2D = Function<FunctionType::Texture2D, Vector4f32, Sampler2D, Vector2f32>;
-    using Texture3D = Function<FunctionType::Texture3D, Vector4f32, Sampler3D, Vector3f32>;
-
 }
 
 #endif

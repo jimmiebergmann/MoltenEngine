@@ -29,7 +29,7 @@ function(SetDefaultCompileOptions target)
     endif()
 
   elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-    target_compile_options(${target} PRIVATE /W4 /WX)
+    target_compile_options(${target} PRIVATE /W4 /WX /w44062)
   endif()
 
   get_target_property(compilerFlags ${target} COMPILE_OPTIONS)

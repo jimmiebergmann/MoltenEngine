@@ -71,8 +71,10 @@ namespace Molten::Shader
     static const std::string g_glslArithOpNameMul = "mul";
     static const std::string g_glslArithOpNameSub = "sub";
 
-    // Push constant names
+    // Common names
     static const std::string g_glslPushConstantMemberPrefix = "mem";
+    static const std::string g_glslVertexName = "vertex";
+    static const std::string g_glslFragmentName = "fragment";
 
     static const std::string& GetGlslVariableDataType(const VariableDataType dataType)
     {
@@ -224,6 +226,16 @@ namespace Molten::Shader
         throw Exception("GetGlslFunctionName is missing return value for functionType = " + std::to_string(static_cast<size_t>(functionType)) + ".");
     }
 
+    static const std::string& GetGlslShaderTypeName(const Shader::Type type)
+    {
+        switch (type)
+        {
+            case Shader::Type::Vertex: return g_glslVertexName;
+            case Shader::Type::Fragment: return g_glslFragmentName;
+        }
+        throw Exception("GetGlslShaderTypeName is missing return value for type = " + std::to_string(static_cast<size_t>(type)) + ".");
+    }
+
     static std::string CreateGlslPushConstantMemberName(const uint32_t offset)
     {
         return g_glslPushConstantMemberPrefix + std::to_string(offset);
@@ -250,6 +262,9 @@ namespace Molten::Shader
         auto& pushConstantTemplate = glslTemplates.pushConstantTemplate;
         auto& pushConstantCode = glslTemplates.pushConstantTemplate.blockSource;
 
+        std::string variableName;
+        std::string blockSourceLine;
+
         for (auto* script : scripts)
         {
             PushConstantOffsets stageOffsets;
@@ -271,8 +286,17 @@ namespace Molten::Shader
                     pushConstantLocations.insert({ id, offsetId });
                     nextByteOffset += static_cast<uint32_t>(member->GetPaddedSizeOf());
 
-                    auto variableName = CreateGlslPushConstantMemberName(currentByteOffset);
-                    AppendToVector(pushConstantCode, GetGlslVariableDataType(memberDataType) + " " + variableName + ";\n");
+                    variableName = CreateGlslPushConstantMemberName(currentByteOffset);
+
+                    blockSourceLine = "layout(offset = ";
+                    blockSourceLine += std::to_string(currentByteOffset);
+                    blockSourceLine += ") ";
+                    blockSourceLine += GetGlslVariableDataType(memberDataType);
+                    blockSourceLine += " ";
+                    blockSourceLine += variableName;
+                    blockSourceLine += ";\n";
+
+                    AppendToVector(pushConstantCode, blockSourceLine);
                 }
                 else
                 {
@@ -417,6 +441,8 @@ namespace Molten::Shader
             (script.GetNodeCount() * estLocalLength) +
             (usePushConstants ? estPushConstantVarLength + pushConstantSource->size() : 0);
 
+        const auto& shaderTypeName = GetGlslShaderTypeName(script.GetType());
+
         std::vector<uint8_t> source;
         source.reserve(estimatedSourceLength);
 
@@ -496,7 +522,7 @@ namespace Molten::Shader
         if (usePushConstants)
         {    
             const std::string blockName = "pc";
-            AppendToVector(source, "layout(std140, push_constant) uniform s_" + blockName + " \n{\n");
+            AppendToVector(source, "layout(std140, push_constant) uniform s_" + shaderTypeName + '_' + blockName + "\n{\n");
             AppendToVector(source, *pushConstantSource);
             AppendToVector(source, "} " + blockName + ";\n");
 
@@ -612,8 +638,7 @@ namespace Molten::Shader
                         }
 
                         AppendToVector(source, ");\n");
-                    }
-                    break;
+                    } break;
                     case Visual::NodeType::Operator:
                     {
                         auto opNode = static_cast<const Visual::OperatorBase*>(stackObject.node);
@@ -636,8 +661,7 @@ namespace Molten::Shader
                             } break;
                             default: break;
                         }
-                    }
-                    break;
+                    } break;
                     case Visual::NodeType::Variable:
                     {
                         auto* variableBase = static_cast<const Visual::VariableBase*>(stackObject.node);

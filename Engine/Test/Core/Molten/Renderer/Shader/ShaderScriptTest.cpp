@@ -40,6 +40,9 @@ namespace Molten::Shader::Visual
         auto add = script.CreateOperator<Shader::Visual::Operators::AddVec4f32>();
         auto var1 = script.CreateConstantVariable<Vector4f32>({ 0.0f, 0.0f, 0.3f, 0.0f });
         auto var2 = script.CreateConstantVariable<Vector4f32>({ 1.0f, 0.5f, 0.0f, 1.0f });
+        script.GetPushConstantInterface().AddMember<Vector4f32>(123);
+        script.GetPushConstantInterface().AddMember<Vector2f32>(1234);
+        script.GetPushConstantInterface().AddMember<float>(12356);
 
         output->GetInputPin()->Connect(*add->GetOutputPin());
 
@@ -51,8 +54,18 @@ namespace Molten::Shader::Visual
 
         std::vector<uint8_t> source;
         {
-            Molten::Test::Benchmarker bench("GLSL generator");
-            source = VulkanGenerator::GenerateGlsl(script, nullptr);
+            VulkanGenerator::GlslTemplates glslTemplates;
+            Molten::Test::Benchmarker bench1("GLSL generator");
+            {
+                Molten::Test::Benchmarker bench2("GLSL template generator");
+                EXPECT_TRUE(VulkanGenerator::GenerateGlslTemplate(glslTemplates, { &script }, nullptr));
+            }
+
+            VulkanGenerator::GlslStageTemplates stageTemplates;
+            stageTemplates.pushConstantTemplate.blockSource = &glslTemplates.pushConstantTemplate.blockSource;
+            stageTemplates.pushConstantTemplate.offsets = &glslTemplates.pushConstantTemplate.stageOffsets[0];
+
+            source = VulkanGenerator::GenerateGlsl(script, &stageTemplates);
         }
         EXPECT_GT(source.size(), size_t(0));
         const std::string sourceStr(source.begin(), source.end());
@@ -60,7 +73,13 @@ namespace Molten::Shader::Visual
         static const std::string expectedSource =
             "#version 450\n"
             "#extension GL_ARB_separate_shader_objects : enable\n"
-            "layout(location = 0) in vec4 in_0;\n"
+            "layout(location = 0) in vec4 in_0;\n"         
+            "layout(std140, push_constant) uniform s_fragment_pc\n"
+            "{\n"
+            "layout(offset = 0) vec4 mem0;\n"
+            "layout(offset = 16) vec2 mem16;\n"
+            "layout(offset = 24) float mem24;\n"
+            "} pc;\n"
             "layout(location = 0) out vec4 out_0;\n"
             "void main(){\n"
             "vec4 vec4_0 = vec4(1, 0.5, 0, 1);\n"

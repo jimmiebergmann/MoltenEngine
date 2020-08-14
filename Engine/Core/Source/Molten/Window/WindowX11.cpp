@@ -162,7 +162,7 @@ namespace Molten
         {
             XNextEvent(m_display, &event);
 
-            switch(event.type)
+            switch (event.type)
             {
                 case ClientMessage:
                 {                  
@@ -172,10 +172,8 @@ namespace Molten
                         Close();
                         return;
                     }
-                }
-                break;
-                default:
-                    break;
+                } break;
+                default: break;
             }
         }
     }
