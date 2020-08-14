@@ -76,13 +76,12 @@ namespace Molten::Editor
         Pipeline* m_pipeline;
         Shader::Visual::VertexScript m_vertexScript;
         Shader::Visual::FragmentScript m_fragmentScript;
-        Shader::VertexStage* m_vertexStage;
-        Shader::FragmentStage* m_fragmentStage;
         VertexBuffer* m_vertexBuffer;
         IndexBuffer* m_indexBuffer;
         UniformBuffer* m_uniformBuffer;
         UniformBlock* m_uniformBlock;
         uint32_t m_colorPushLocation;
+        uint32_t m_color2PushLocation;
         Clock m_programTimer;
         float m_programTime;
         Clock m_deltaTimer;

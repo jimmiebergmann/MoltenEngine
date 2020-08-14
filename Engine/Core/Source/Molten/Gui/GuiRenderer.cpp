@@ -78,9 +78,7 @@ namespace Molten::Gui
         vertexBuffer(nullptr),
         indexBuffer(nullptr),
         vertexScript(nullptr),
-        fragmentScript(nullptr),
-        vertexStage(nullptr),
-        fragmentStage(nullptr)
+        fragmentScript(nullptr)
     { }
 
     void Renderer::LoadRectRenderInstance()
@@ -143,16 +141,6 @@ namespace Molten::Gui
         {
             m_backendRenderer->DestroyPipeline(instance.pipeline);
             instance.pipeline = nullptr;
-        }
-        if (instance.vertexStage)
-        {
-            m_backendRenderer->DestroyVertexShaderStage(instance.vertexStage);
-            instance.vertexStage = nullptr;
-        }
-        if (instance.fragmentStage)
-        {
-            m_backendRenderer->DestroyFragmentShaderStage(instance.fragmentStage);
-            instance.fragmentStage = nullptr;
         }
         if (instance.vertexBuffer)
         {

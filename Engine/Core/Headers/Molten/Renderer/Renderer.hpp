@@ -37,12 +37,6 @@
 #include "Molten/System/Version.hpp"
 #include <functional>
 
-namespace Molten::Shader
-{
-    class VertexStage;
-    class FragmentStage;
-}
-
 namespace Molten::Shader::Visual
 {
     class VertexScript;
@@ -115,12 +109,6 @@ namespace Molten
         /** Create pipeline object. */
         virtual Pipeline* CreatePipeline(const PipelineDescriptor& descriptor) = 0;
 
-        /** Create vertex shader stage object out of vertex script. */
-        virtual Shader::VertexStage* CreateVertexShaderStage(const Shader::Visual::VertexScript& script) = 0;
-
-        /** Create fragment shader stage object out of fragment script. */
-        virtual Shader::FragmentStage* CreateFragmentShaderStage(const Shader::Visual::FragmentScript& script) = 0;
-
         /** Create texture object. */
         virtual Texture* CreateTexture() = 0;
 
@@ -142,12 +130,6 @@ namespace Molten
 
         /** Destroy pipeline object. */
         virtual void DestroyPipeline(Pipeline* pipeline) = 0;
-
-        /** Destroy vertex shader stage object. */
-        virtual void DestroyVertexShaderStage(Shader::VertexStage* shader) = 0;
-
-        /** Destroy fragment shader stage object. */
-        virtual void DestroyFragmentShaderStage(Shader::FragmentStage* shader) = 0;
 
         /** Destroy texture object. */
         virtual void DestroyTexture(Texture* texture) = 0;

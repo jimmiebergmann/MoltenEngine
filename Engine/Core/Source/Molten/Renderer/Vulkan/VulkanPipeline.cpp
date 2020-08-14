@@ -31,17 +31,18 @@ namespace Molten
 {
 
     VulkanPipeline::VulkanPipeline(
-        VkPipeline graphicsPipeline,
-        VkPipelineLayout pipelineLayout,
-        std::vector<VkDescriptorSetLayout> descriptionSetLayouts,
-        PushConstantLocations&& pushConstantLocations,
-        PushConstants pushConstants)
-        :
+            VkPipeline graphicsPipeline,
+            VkPipelineLayout pipelineLayout,
+            std::vector<VkDescriptorSetLayout> descriptionSetLayouts,
+            PushConstantLocations&& pushConstantLocations,
+            PushConstantOffsets&& pushConstantOffsets,
+            std::vector<VkShaderModule>&& shaderModules) :
         graphicsPipeline(graphicsPipeline),
         pipelineLayout(pipelineLayout),
         descriptionSetLayouts(descriptionSetLayouts),
         pushConstantLocations(std::move(pushConstantLocations)),
-        pushConstants(pushConstants)
+        pushConstantOffsets(std::move(pushConstantOffsets)),
+        shaderModules(std::move(shaderModules))
     {}
 
 }

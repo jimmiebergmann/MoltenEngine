@@ -34,7 +34,6 @@
 #include "Molten/Renderer/Vulkan/VulkanFramebuffer.hpp"
 #include "Molten/Renderer/Vulkan/VulkanIndexBuffer.hpp"
 #include "Molten/Renderer/Vulkan/VulkanPipeline.hpp"
-#include "Molten/Renderer/Vulkan/VulkanShaderStage.hpp"
 #include "Molten/Renderer/Vulkan/VulkanTexture.hpp"
 #include "Molten/Renderer/Vulkan/VulkanUniformBlock.hpp"
 #include "Molten/Renderer/Vulkan/VulkanUniformBuffer.hpp"
@@ -402,7 +401,14 @@ namespace Molten
 
     uint32_t VulkanRenderer::GetPushConstantLocation(Pipeline* pipeline, const uint32_t id)
     {
-        return 0;
+        auto& locations = static_cast<VulkanPipeline*>(pipeline)->pushConstantLocations;
+        auto it = locations.find(id);
+        if (it == locations.end())
+        {
+            return 10000000;
+        }
+
+        return it->second;
     }
 
     Framebuffer* VulkanRenderer::CreateFramebuffer(const FramebufferDescriptor& descriptor)
@@ -452,49 +458,59 @@ namespace Molten
 
     Pipeline* VulkanRenderer::CreatePipeline(const PipelineDescriptor& descriptor)
     {
-        if (descriptor.vertexStage == nullptr)
+        if (descriptor.vertexScript == nullptr)
         {
-            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Vertex program is missing for pipeline. (vertexProgram == nullptr).");
+            Logger::WriteError(m_logger, "Vertex script is missing for pipeline. (vertexScript == nullptr).");
             return nullptr;
         }
-        if (descriptor.fragmentStage == nullptr)
+        if (descriptor.fragmentScript == nullptr)
         {
-            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Fragment program is missing for pipeline. (fragmentProgram == nullptr).");
+            Logger::WriteError(m_logger, "Fragment script is missing for pipeline. (fragmentScript == nullptr).");
             return nullptr;
         }
 
-        std::vector<VkPipelineShaderStageCreateInfo> shaderStageInfos(2, VkPipelineShaderStageCreateInfo{});
-        VulkanVertexShaderStage* vulkanVertexShaderStage = static_cast<VulkanVertexShaderStage*>(descriptor.vertexStage);
-        VulkanFragmentShaderStage* vulkanFragmentShaderStage = static_cast<VulkanFragmentShaderStage*>(descriptor.fragmentStage);
-        
-        for (size_t i = 0; i < 2; i++)
-        {
-            auto& createInfo = shaderStageInfos[i];
-            createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-            createInfo.pName = "main";
-        }
-        shaderStageInfos[0].module = vulkanVertexShaderStage->module;
-        shaderStageInfos[0].stage = GetShaderProgramStageFlag(vulkanVertexShaderStage->GetType());
-        shaderStageInfos[1].module = vulkanFragmentShaderStage->module;
-        shaderStageInfos[1].stage = GetShaderProgramStageFlag(vulkanFragmentShaderStage->GetType());
-
-        auto& vertexScript = vulkanVertexShaderStage->script;
-        auto& fragmentScript = vulkanFragmentShaderStage->script;
+        auto& vertexScript = *descriptor.vertexScript;
+        auto& fragmentScript = *descriptor.fragmentScript;
         auto& vertexOutputs = vertexScript.GetOutputInterface();
         auto& fragmentInputs = fragmentScript.GetInputInterface();
-        
+
         if (!vertexOutputs.CheckCompability(fragmentInputs))
         {
-            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Vertex output structure is not compatible with fragment input structure.");
+            Logger::WriteError(m_logger, "Vertex output structure is not compatible with fragment input structure.");
             return nullptr;
         }
 
-        auto& vertexInputs = vertexScript.GetInputInterface();
-        std::vector<VkVertexInputAttributeDescription> vertexInputAttributes;
-        uint32_t vertexBindingStride = 0;       
-        if (!CreateVertexInputAttributes(vertexInputs, vertexInputAttributes, vertexBindingStride))
+        const std::vector<Shader::Visual::Script*> shaderScripts =
+        {
+            descriptor.vertexScript, descriptor.fragmentScript
+        };
+
+        std::vector<VkPipelineShaderStageCreateInfo> shaderStageCreateInfos;
+        std::vector<VkShaderModule> shaderModules;
+        PushConstantLocations pushConstantLocations;
+        PushConstantOffsets pushConstantOffsets;
+        VkPushConstantRange pushConstantRange;
+
+        if (!LoadShaderStages(
+                shaderScripts,
+                shaderModules,
+                shaderStageCreateInfos,
+                pushConstantLocations,
+                pushConstantOffsets,
+                pushConstantRange))
         {
             return nullptr;
+        }
+
+        std::vector<VkVertexInputAttributeDescription> vertexInputAttributes;
+        uint32_t vertexBindingStride = 0;
+        if (descriptor.vertexScript)
+        {
+            auto& vertexInputs = descriptor.vertexScript->GetInputInterface();
+            if (!CreateVertexInputAttributes(vertexInputs, vertexInputAttributes, vertexBindingStride))
+            {
+                return nullptr;
+            }
         }
 
         VkVertexInputBindingDescription vertexBinding;
@@ -579,15 +595,7 @@ namespace Molten
         dynamicStateInfo.flags = 0;
 
         std::vector<VkDescriptorSetLayout> setLayouts;
-        if (!CreateDescriptorSetLayouts(vertexScript, fragmentScript, setLayouts))
-        {
-            return nullptr;
-        }
-
-        std::vector<VkPushConstantRange> pushConstants;
-        VulkanPipeline::PushConstantLocations pipelinePushConstantLocations;
-        VulkanPipeline::PushConstants pipelinePushConstants;
-        if (!CreatePushConstants(vertexScript, fragmentScript, pushConstants, pipelinePushConstantLocations, pipelinePushConstants))
+        if (!CreateDescriptorSetLayouts(shaderScripts, setLayouts))
         {
             return nullptr;
         }
@@ -596,20 +604,20 @@ namespace Molten
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(setLayouts.size());
         pipelineLayoutInfo.pSetLayouts = setLayouts.data();
-        pipelineLayoutInfo.pushConstantRangeCount = static_cast<uint32_t>(pushConstants.size());
-        pipelineLayoutInfo.pPushConstantRanges = pushConstants.data();
+        pipelineLayoutInfo.pushConstantRangeCount = (pushConstantRange.size > 0) ? 1 : 0;
+        pipelineLayoutInfo.pPushConstantRanges = (pushConstantRange.size > 0) ? &pushConstantRange : nullptr;
 
         VkPipelineLayout pipelineLayout;
         if (vkCreatePipelineLayout(m_logicalDevice, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
         {
-            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Failed to create pipeline layout.");
+            Logger::WriteError(m_logger, "Failed to create pipeline layout.");
             return nullptr;
         }
 
         VkGraphicsPipelineCreateInfo pipelineInfo = {};
         pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-        pipelineInfo.stageCount = static_cast<uint32_t>(shaderStageInfos.size());
-        pipelineInfo.pStages = shaderStageInfos.data();
+        pipelineInfo.stageCount = static_cast<uint32_t>(shaderStageCreateInfos.size());
+        pipelineInfo.pStages = shaderStageCreateInfos.data();
         pipelineInfo.pVertexInputState = &vertexInputInfo;
         pipelineInfo.pInputAssemblyState = &inputAssemblyStateInfo;
         pipelineInfo.pViewportState = &viewportStateInfo;
@@ -625,80 +633,21 @@ namespace Molten
         pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
         pipelineInfo.basePipelineIndex = -1;
 
-
         VkPipeline graphicsPipeline;
         if (vkCreateGraphicsPipelines(m_logicalDevice, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS)
         {
             vkDestroyPipelineLayout(m_logicalDevice, pipelineLayout, nullptr);
-            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Failed to create pipeline.");
+            Logger::WriteError(m_logger, "Failed to create pipeline.");
             return nullptr;
         }
 
-        return new VulkanPipeline(graphicsPipeline, pipelineLayout, setLayouts, std::move(pipelinePushConstantLocations), pipelinePushConstants);
-    }
-
-    Shader::VertexStage* VulkanRenderer::CreateVertexShaderStage(const Shader::Visual::VertexScript& script)
-    {
-        auto glslCode = Shader::VulkanGenerator::GenerateGlsl(script, m_logger);
-        if (!glslCode.size())
-        {
-            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Failed to generate GLSL code.");
-            return nullptr;
-        }
-
-        auto sprivCode = Shader::VulkanGenerator::ConvertGlslToSpriV(glslCode, Shader::Type::Vertex, m_logger);
-        if (!sprivCode.size())
-        {
-            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Failed to convert GLSL to SPIR-V.");
-            return nullptr;
-        }
-
-        VkShaderModuleCreateInfo shaderModuleInfo = {};
-        shaderModuleInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-        shaderModuleInfo.codeSize = sprivCode.size();
-        shaderModuleInfo.pCode = reinterpret_cast<const uint32_t*>(sprivCode.data());
-
-        VkShaderModule shaderModule;
-        if (vkCreateShaderModule(m_logicalDevice, &shaderModuleInfo, nullptr, &shaderModule) != VK_SUCCESS)
-        {
-            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Failed to create shader module.");
-            return nullptr;
-        }
-
-        auto shaderStage = new VulkanVertexShaderStage(shaderModule, script);
-        return shaderStage;
-    }
-
-    Shader::FragmentStage* VulkanRenderer::CreateFragmentShaderStage(const Shader::Visual::FragmentScript& script)
-    {
-        auto glslCode = Shader::VulkanGenerator::GenerateGlsl(script, m_logger);
-        if (!glslCode.size())
-        {
-            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Failed to generate GLSL code.");
-            return nullptr;
-        }
-
-        auto sprivCode = Shader::VulkanGenerator::ConvertGlslToSpriV(glslCode, Shader::Type::Fragment, m_logger);
-        if (!sprivCode.size())
-        {
-            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Failed to convert GLSL to SPIR-V.");
-            return nullptr;
-        }
-
-        VkShaderModuleCreateInfo shaderModuleInfo = {};
-        shaderModuleInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-        shaderModuleInfo.codeSize = sprivCode.size();
-        shaderModuleInfo.pCode = reinterpret_cast<const uint32_t*>(sprivCode.data());
-
-        VkShaderModule shaderModule;
-        if (vkCreateShaderModule(m_logicalDevice, &shaderModuleInfo, nullptr, &shaderModule) != VK_SUCCESS)
-        {
-            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Failed to create shader module.");
-            return nullptr;
-        }
-
-        auto shaderStage = new VulkanFragmentShaderStage(shaderModule, script);
-        return shaderStage;
+        return new VulkanPipeline(
+            graphicsPipeline, 
+            pipelineLayout, 
+            setLayouts, 
+            std::move(pushConstantLocations), 
+            std::move(pushConstantOffsets),
+            std::move(shaderModules));
     }
 
     Texture* VulkanRenderer::CreateTexture()
@@ -887,22 +836,12 @@ namespace Molten
         {
             vkDestroyDescriptorSetLayout(m_logicalDevice, setLayout, nullptr);
         }
+        for (auto& shaderModule : vulkanPipeline->shaderModules)
+        {
+            vkDestroyShaderModule(m_logicalDevice, shaderModule, nullptr);
+        }
 
         delete vulkanPipeline;
-    }
-
-    void VulkanRenderer::DestroyVertexShaderStage(Shader::VertexStage* stage)
-    {
-        VulkanVertexShaderStage* vulkanVertexShaderStage = static_cast<VulkanVertexShaderStage*>(stage);
-        vkDestroyShaderModule(m_logicalDevice, vulkanVertexShaderStage->module, nullptr);
-        delete vulkanVertexShaderStage;
-    }
-
-    void VulkanRenderer::DestroyFragmentShaderStage(Shader::FragmentStage* stage)
-    {
-        VulkanFragmentShaderStage* vulkanFragmentShaderStage = static_cast<VulkanFragmentShaderStage*>(stage);
-        vkDestroyShaderModule(m_logicalDevice, vulkanFragmentShaderStage->module, nullptr);
-        delete vulkanFragmentShaderStage;
     }
 
     void VulkanRenderer::DestroyTexture(Texture* texture)
@@ -2096,15 +2035,12 @@ namespace Molten
     }
 
     bool VulkanRenderer::CreateDescriptorSetLayouts(
-        const Shader::Visual::VertexScript& vertexScript, 
-        const Shader::Visual::FragmentScript& fragmentScript,
+        const std::vector<Shader::Visual::Script*>& visualScripts, 
         std::vector<VkDescriptorSetLayout>& setLayouts)
     {
-        std::array<const Shader::Visual::Script*, 2> shaderScripts = { &vertexScript, &fragmentScript };
-
         std::map<uint32_t, VkShaderStageFlags> uniformShaderStageFlags;
         uint32_t highestSetId = 0;
-        for (auto script : shaderScripts)
+        for (auto script : visualScripts)
         {
             auto& uniformInterfaces = script->GetUniformInterfaces();
 
@@ -2160,68 +2096,94 @@ namespace Molten
         return true;
     }
 
-    bool VulkanRenderer::CreatePushConstants(
-        const Shader::Visual::VertexScript& vertexScript,
-        const Shader::Visual::FragmentScript& fragmentScript,
-        std::vector<VkPushConstantRange>& pushConstants,
-        VulkanPipeline::PushConstantLocations& pipelinePushConstantLocations,
-        VulkanPipeline::PushConstants& pipelinePushConstants)
+    bool VulkanRenderer::LoadShaderStages(
+        const std::vector<Shader::Visual::Script*>& visualScripts,
+        std::vector<VkShaderModule>& shaderModules,
+        std::vector<VkPipelineShaderStageCreateInfo>& shaderStageCreateInfos,
+        PushConstantLocations& pushConstantLocations,
+        PushConstantOffsets& pushConstantOffsets,
+        VkPushConstantRange& pushConstantRange)
     {
-       /* auto& vertexPushConstants = vertexScript.GetPushConstantInterface();
-        auto& fragmentPushConstants = fragmentScript.GetPushConstantInterface();
+        pushConstantRange.size = 0;
 
-        if (!vertexPushConstants.CheckCompability(fragmentPushConstants))
+        Shader::VulkanGenerator::GlslTemplates glslTemplates;
+        if (!Shader::VulkanGenerator::GenerateGlslTemplate(glslTemplates, visualScripts, m_logger))
         {
-            MOLTEN_RENDERER_LOG(Logger::Severity::Error, "Vertex and fragment push constant interfaces are not compatible.");
             return false;
         }
 
-        uint32_t totalSize = static_cast<uint32_t>(vertexPushConstants.GetSizeOf());
-        auto flags = (VkFlags)VK_SHADER_STAGE_VERTEX_BIT | (VkFlags)VK_SHADER_STAGE_FRAGMENT_BIT;
-        pushConstants.push_back({ flags, 0, totalSize });
+        shaderStageCreateInfos.reserve(visualScripts.size());
+        shaderModules.reserve(visualScripts.size());
 
-        return true;*/
+        auto& pushConstantTemplate = glslTemplates.pushConstantTemplate;
 
-        struct ShaderStageGroup
+        for(size_t i = 0; i < visualScripts.size(); i++)
         {
-            const Shader::Visual::Script* script;
-            VkFlags stageFlag;
-        };
+            auto* script = visualScripts[i];
+            auto scriptType = script->GetType();
 
-        std::array<ShaderStageGroup, 2> shaderScripts =
-        { 
-            ShaderStageGroup{ &vertexScript, VK_SHADER_STAGE_VERTEX_BIT },
-            ShaderStageGroup{ &fragmentScript, VK_SHADER_STAGE_FRAGMENT_BIT }
-        };
+            Shader::VulkanGenerator::GlslStageTemplates stageTemplate;
+            stageTemplate.pushConstantTemplate.blockSource = &pushConstantTemplate.blockSource;
+            stageTemplate.pushConstantTemplate.offsets = &pushConstantTemplate.stageOffsets[i];
 
-        // Shader::VariableDataType dataType;
-
-        std::map<uint32_t, VkFlags> visitedIds;
-
-        for (auto& script : shaderScripts)
-        {
-            for (auto* member : script.script->GetPushConstantInterface())
+            auto glslCode = Shader::VulkanGenerator::GenerateGlsl(*script, &stageTemplate, m_logger);
+            if (!glslCode.size())
             {
-                auto id = member->GetId();
-                auto it = visitedIds.find(id);
-                if (it == visitedIds.end())
-                {
-                    visitedIds.insert({id, script.stageFlag });
-                }
-                else
-                {
-                    it->second |= script.stageFlag;
-                }
+                Logger::WriteError(m_logger, "Failed to generate GLSL code.");
+                return nullptr;
             }
+
+            auto sprivCode = Shader::VulkanGenerator::ConvertGlslToSpriV(glslCode, scriptType, m_logger);
+            if (!sprivCode.size())
+            {
+                Logger::WriteError(m_logger, "Failed to convert GLSL to SPIR-V.");
+                return nullptr;
+            }
+
+            auto shaderModule = CreateShaderModule(sprivCode);
+            if (shaderModule == VK_NULL_HANDLE)
+            {
+                Logger::WriteError(m_logger, "Failed to create shader module.");
+                return nullptr;
+            }
+            shaderModules.push_back(shaderModule);
+
+            VkPipelineShaderStageCreateInfo stageCreateInfo = {};
+            stageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+            stageCreateInfo.pName = "main";
+            stageCreateInfo.module = shaderModule;
+            stageCreateInfo.stage = GetShaderProgramStageFlag(scriptType);
+            shaderStageCreateInfos.push_back(stageCreateInfo);
         }
 
-        /*for (auto& script : shaderScripts)
+        if (pushConstantTemplate.blockByteCount)
         {
+            pushConstantRange.stageFlags = VK_SHADER_STAGE_ALL;
+            pushConstantRange.offset = 0;
+            pushConstantRange.size = pushConstantTemplate.blockByteCount;
+        }
 
-        }*/
+        pushConstantLocations = std::move(pushConstantTemplate.locations);
+        pushConstantOffsets = std::move(pushConstantTemplate.offsets);
 
+        return true;
+    }
 
-        return false;
+    VkShaderModule VulkanRenderer::CreateShaderModule(const std::vector<uint8_t>& spirvCode)
+    {
+        VkShaderModuleCreateInfo shaderModuleInfo = {};
+        shaderModuleInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+        shaderModuleInfo.codeSize = spirvCode.size();
+        shaderModuleInfo.pCode = reinterpret_cast<const uint32_t*>(spirvCode.data());
+
+        VkShaderModule shaderModule;
+        if (vkCreateShaderModule(m_logicalDevice, &shaderModuleInfo, nullptr, &shaderModule) != VK_SUCCESS)
+        {
+            Logger::WriteError(m_logger, "Failed to create shader module.");
+            return VK_NULL_HANDLE;
+        }
+
+        return shaderModule;
     }
 
 }

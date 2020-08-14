@@ -29,10 +29,10 @@
 #include "Molten/Renderer/Shader.hpp"
 #include <vector>
 
-namespace Molten::Shader
+namespace Molten::Shader::Visual
 {
-    class VertexStage;
-    class FragmentStage;
+    class VertexScript;
+    class FragmentScript;
 }
 
 namespace Molten
@@ -99,8 +99,8 @@ namespace Molten
         Pipeline::PolygonMode polygonMode;
         Pipeline::FrontFace frontFace;
         Pipeline::CullMode cullMode;
-        Shader::VertexStage* vertexStage;
-        Shader::FragmentStage* fragmentStage;
+        Shader::Visual::VertexScript* vertexScript;
+        Shader::Visual::FragmentScript* fragmentScript;
 
     };
 

@@ -34,11 +34,12 @@ namespace Molten::Shader::Visual
         TMetaData(metaDataParameters...)
     {}
 
-
     inline VariableMetaBase<void>::VariableMetaBase(Script& script) :
         VariableBase(script)
     {}
 
+
+    // Input variable base implementations.
     template<typename TMetaData>
     template<typename ... TMetaDataParams>
     inline InputVariableBase<TMetaData>::InputVariableBase(Script& script, TMetaDataParams ... metaDataParameters) :
@@ -123,7 +124,13 @@ namespace Molten::Shader::Visual
     {
         return VariableTrait<TDataType>::dataSize;
     }
-    
+
+    template<typename TDataType, typename TMetaData>
+    inline size_t InputVariable<TDataType, TMetaData>::GetPaddedSizeOf() const
+    {
+        return VariableTrait<TDataType>::paddedDataSize;
+    }
+
 
     // Output variable implementations.
     template<typename TDataType, typename TMetaData>
@@ -185,6 +192,12 @@ namespace Molten::Shader::Visual
     inline size_t OutputVariable<TDataType, TMetaData>::GetSizeOf() const
     {
         return VariableTrait<TDataType>::dataSize;
+    }
+
+    template<typename TDataType, typename TMetaData>
+    inline size_t OutputVariable<TDataType, TMetaData>::GetPaddedSizeOf() const
+    {
+        return VariableTrait<TDataType>::paddedDataSize;
     }
 
 
@@ -257,6 +270,12 @@ namespace Molten::Shader::Visual
     inline size_t ConstantVariable<TDataType, TMetaData>::GetSizeOf() const
     {
         return VariableTrait<TDataType>::dataSize;
+    }
+
+    template<typename TDataType, typename TMetaData>
+    inline size_t ConstantVariable<TDataType, TMetaData>::GetPaddedSizeOf() const
+    {
+        return VariableTrait<TDataType>::paddedDataSize;
     }
 
     template<typename TDataType, typename TMetaData>

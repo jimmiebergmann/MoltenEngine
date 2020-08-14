@@ -35,8 +35,8 @@ namespace Molten
         polygonMode(Pipeline::PolygonMode::Fill),
         frontFace(Pipeline::FrontFace::Clockwise),
         cullMode(Pipeline::CullMode::None),
-        vertexStage(nullptr),
-        fragmentStage(nullptr)
+        vertexScript(nullptr),
+        fragmentScript(nullptr)
     { }
 
 }

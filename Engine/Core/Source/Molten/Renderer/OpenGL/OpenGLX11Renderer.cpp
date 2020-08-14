@@ -200,16 +200,6 @@ namespace Molten
         return nullptr;
     }
 
-    Shader::VertexStage* OpenGLX11Renderer::CreateVertexShaderStage(const Shader::Visual::VertexScript& /*script*/)
-    {
-        return nullptr;
-    }
-
-    Shader::FragmentStage* OpenGLX11Renderer::CreateFragmentShaderStage(const Shader::Visual::FragmentScript&/*script*/)
-    {
-        return nullptr;
-    }
-
     Texture* OpenGLX11Renderer::CreateTexture()
     {
         return nullptr;
@@ -239,14 +229,6 @@ namespace Molten
     }
 
     void OpenGLX11Renderer::DestroyPipeline(Pipeline* /*shader*/)
-    {
-    }
-
-    void OpenGLX11Renderer::DestroyVertexShaderStage(Shader::VertexStage*)
-    {
-    }
-
-    void OpenGLX11Renderer::DestroyFragmentShaderStage(Shader::FragmentStage*)
     {
     }
 

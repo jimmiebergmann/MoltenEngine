@@ -203,16 +203,6 @@ namespace Molten
         return nullptr;
     }
 
-    Shader::VertexStage* OpenGLWin32Renderer::CreateVertexShaderStage(const Shader::Visual::VertexScript& /*script*/)
-    {
-        return nullptr;
-    }
-
-    Shader::FragmentStage* OpenGLWin32Renderer::CreateFragmentShaderStage(const Shader::Visual::FragmentScript& /*script*/)
-    {
-        return nullptr;
-    }
-
     Texture* OpenGLWin32Renderer::CreateTexture()
     {
         return nullptr;
@@ -242,14 +232,6 @@ namespace Molten
     }
 
     void OpenGLWin32Renderer::DestroyPipeline(Pipeline* /*shader*/)
-    {
-    }
-
-    void OpenGLWin32Renderer::DestroyVertexShaderStage(Shader::VertexStage*)
-    {
-    }
-
-    void OpenGLWin32Renderer::DestroyFragmentShaderStage(Shader::FragmentStage*)
     {
     }
 

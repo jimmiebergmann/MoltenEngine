@@ -37,12 +37,6 @@ namespace Molten
     class IndexBuffer;
 }
 
-namespace Molten::Shader
-{
-    class VertexStage;
-    class FragmentStage;
-}
-
 namespace Molten::Shader::Visual
 {
     class VertexScript;
@@ -81,8 +75,6 @@ namespace Molten::Gui
             IndexBuffer* indexBuffer;
             Shader::Visual::VertexScript* vertexScript;
             Shader::Visual::FragmentScript* fragmentScript;
-            Shader::VertexStage* vertexStage;
-            Shader::FragmentStage* fragmentStage;
         };
 
         void LoadRectRenderInstance();

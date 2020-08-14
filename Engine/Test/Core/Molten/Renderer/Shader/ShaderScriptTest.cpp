@@ -52,7 +52,7 @@ namespace Molten::Shader::Visual
         std::vector<uint8_t> source;
         {
             Molten::Test::Benchmarker bench("GLSL generator");
-            source = VulkanGenerator::GenerateGlsl(script);
+            source = VulkanGenerator::GenerateGlsl(script, nullptr);
         }
         EXPECT_GT(source.size(), size_t(0));
         const std::string sourceStr(source.begin(), source.end());
@@ -87,7 +87,7 @@ namespace Molten::Shader::Visual
             std::vector<uint8_t> source;
             {
                 Molten::Test::Benchmarker bench("GLSL generator - default pin");
-                source = VulkanGenerator::GenerateGlsl(script);
+                source = VulkanGenerator::GenerateGlsl(script, nullptr);
             }
             EXPECT_GT(source.size(), size_t(0));
             const std::string sourceStr(source.begin(), source.end());
@@ -120,7 +120,7 @@ namespace Molten::Shader::Visual
             std::vector<uint8_t> source;
             {
                 Molten::Test::Benchmarker bench("GLSL generator - function");
-                source = VulkanGenerator::GenerateGlsl(script);
+                source = VulkanGenerator::GenerateGlsl(script, nullptr);
             }
             const std::string sourceStr(source.begin(), source.end());
 
@@ -146,7 +146,7 @@ namespace Molten::Shader::Visual
             output->GetInputPin()->Connect(*cos->GetOutputPin());
             cos->GetInputPin()->Connect(*var1->GetOutputPin());
 
-            auto source = VulkanGenerator::GenerateGlsl(script);
+            auto source = VulkanGenerator::GenerateGlsl(script, nullptr);
             const std::string sourceStr(source.begin(), source.end());
 
             static const std::string expectedSource =
@@ -171,7 +171,7 @@ namespace Molten::Shader::Visual
             output->GetInputPin()->Connect(*cos->GetOutputPin());
             cos->GetInputPin()->Connect(*var1->GetOutputPin());
 
-            auto source = VulkanGenerator::GenerateGlsl(script);
+            auto source = VulkanGenerator::GenerateGlsl(script, nullptr);
             const std::string sourceStr(source.begin(), source.end());
 
             static const std::string expectedSource =

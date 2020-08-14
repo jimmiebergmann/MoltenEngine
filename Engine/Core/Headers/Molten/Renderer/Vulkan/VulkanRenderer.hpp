@@ -94,12 +94,6 @@ namespace Molten
         /** Create pipeline object. */
         virtual Pipeline* CreatePipeline(const PipelineDescriptor& descriptor) override;
 
-        /** Create vertex shader stage object out of vertex script. */
-        virtual Shader::VertexStage* CreateVertexShaderStage(const Shader::Visual::VertexScript& script) override;
-
-        /** Create fragment shader stage object out of fragment script. */
-        virtual Shader::FragmentStage* CreateFragmentShaderStage(const Shader::Visual::FragmentScript& script) override;
-
         /** Create texture object. */
         virtual Texture* CreateTexture() override;
 
@@ -121,12 +115,6 @@ namespace Molten
 
         /** Destroy pipeline object. */
         virtual void DestroyPipeline(Pipeline* pipeline) override;
-
-        /** Destroy vertex shader stage object. */
-        virtual void DestroyVertexShaderStage(Shader::VertexStage* shader) override;
-
-        /** Destroy fragment shader stage object. */
-        virtual void DestroyFragmentShaderStage(Shader::FragmentStage* shader) override;
 
         /** Destroy texture object. */
         virtual void DestroyTexture(Texture* texture) override;
@@ -239,13 +227,15 @@ namespace Molten
         bool CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& memory);
         void CopyBuffer(VkBuffer source, VkBuffer destination, VkDeviceSize size);
         bool CreateVertexInputAttributes(const Shader::Visual::InputStructure& inputs, std::vector<VkVertexInputAttributeDescription>& attributes, uint32_t& stride);
-        bool CreateDescriptorSetLayouts(const Shader::Visual::VertexScript& vertexScript, const Shader::Visual::FragmentScript& fragmentScript, std::vector<VkDescriptorSetLayout>& setLayouts);
-        bool CreatePushConstants(
-            const Shader::Visual::VertexScript& vertexScript, 
-            const Shader::Visual::FragmentScript& fragmentScript, 
-            std::vector<VkPushConstantRange>& pushConstants, 
-            VulkanPipeline::PushConstantLocations& pipelinePushConstantLocations,
-            VulkanPipeline::PushConstants& pipelinePushConstants);
+        bool CreateDescriptorSetLayouts(const std::vector<Shader::Visual::Script*>& visualScripts, std::vector<VkDescriptorSetLayout>& setLayouts);      
+        bool LoadShaderStages(
+            const std::vector<Shader::Visual::Script*>& visualScripts,
+            std::vector<VkShaderModule> & shaderModules,
+            std::vector<VkPipelineShaderStageCreateInfo>& shaderStageCreateInfos,
+            PushConstantLocations& pushConstantLocations,
+            PushConstantOffsets& pushConstantOffsets,
+            VkPushConstantRange& pushConstantRange);
+        VkShaderModule CreateShaderModule(const std::vector<uint8_t>& spirvCode);
 
         template<typename T>
         void InternalPushConstant(const uint32_t location, const T& value);
@@ -284,8 +274,7 @@ namespace Molten
         VkCommandBuffer* m_currentCommandBuffer;
         VkFramebuffer m_currentFramebuffer;
         VulkanPipeline * m_currentPipeline;
-        
-        
+           
     };
 
 }

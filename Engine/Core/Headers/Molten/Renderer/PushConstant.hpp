@@ -23,21 +23,27 @@
 *
 */
 
-#include "Molten/Renderer/Shader/ShaderStage.hpp"
+#ifndef MOLTEN_CORE_RENDERER_PUSHCONSTANT_HPP
+#define MOLTEN_CORE_RENDERER_PUSHCONSTANT_HPP
 
-namespace Molten::Shader
+#include "Molten/Renderer/Shader.hpp"
+#include <vector>
+#include <map>
+
+namespace Molten
 {
 
-    // Vertex shader stage implementations.
-    Type VertexStage::GetType() const
+    struct PushConstantOffset
     {
-        return Type::Vertex;
-    }
+        PushConstantOffset(const uint32_t offset, const Shader::VariableDataType dataType);
 
-    // Fragment shader stage implementations.
-    Type FragmentStage::GetType() const
-    {
-        return Type::Fragment;
-    }
+        uint32_t offset;
+        Shader::VariableDataType dataType;
+    };
+
+    using PushConstantOffsets = std::vector<PushConstantOffset>;
+    using PushConstantLocations = std::map<uint32_t, uint32_t>;
 
 }
+
+#endif

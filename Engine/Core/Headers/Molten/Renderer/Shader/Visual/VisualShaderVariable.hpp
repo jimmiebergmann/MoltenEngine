@@ -71,6 +71,9 @@ namespace Molten::Shader::Visual
         /** Get sizes of variable in bytes. Kind of like sizeof(...). */
         virtual size_t GetSizeOf() const = 0;
 
+        /** Get sizes of variable in bytes, padded by 4 bytes. Kind of like sizeof(PaddedType<T>). */
+        virtual size_t GetPaddedSizeOf() const = 0;
+
     };
 
 
@@ -194,6 +197,9 @@ namespace Molten::Shader::Visual
         /** Get sizes of variable in bytes. Kind of like sizeof(...). */
         virtual size_t GetSizeOf() const override;
 
+        /** Get sizes of variable in bytes, padded by 4 bytes. Kind of like sizeof(PaddedType<T>). */
+        virtual size_t GetPaddedSizeOf() const override;
+
     private:
 
         /** Copy and move operations are not allowed. */
@@ -240,6 +246,9 @@ namespace Molten::Shader::Visual
 
         /** Get sizes of variable in bytes. Kind of like sizeof(...). */
         virtual size_t GetSizeOf() const override;
+
+        /** Get sizes of variable in bytes, padded by 4 bytes. Kind of like sizeof(PaddedType<T>). */
+        virtual size_t GetPaddedSizeOf() const override;
 
     private:
 
@@ -291,6 +300,9 @@ namespace Molten::Shader::Visual
 
         /** Get sizes of variable in bytes. Kind of like sizeof(...). */
         virtual size_t GetSizeOf() const override;
+
+        /** Get sizes of variable in bytes, padded by 4 bytes. Kind of like sizeof(PaddedType<T>). */
+        virtual size_t GetPaddedSizeOf() const override;
 
         /** @brief Get constant value. */
         const DataType& GetValue() const;

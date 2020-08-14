@@ -43,12 +43,12 @@ namespace Molten
 
         Application::Application() :
             m_pipeline(nullptr),
-            m_vertexStage(nullptr),
-            m_fragmentStage(nullptr),
             m_vertexBuffer(nullptr),
             m_indexBuffer(nullptr),
             m_uniformBuffer(nullptr),
             m_uniformBlock(nullptr),
+            m_colorPushLocation(0),
+            m_color2PushLocation(0),
             m_programTime(0.0f),
             m_deltaTime(0.0f),
             m_guiCanvas()
@@ -167,8 +167,8 @@ namespace Molten
             pipelineDesc.polygonMode = Pipeline::PolygonMode::Fill;
             pipelineDesc.frontFace = Pipeline::FrontFace::Clockwise;
             pipelineDesc.cullMode = Pipeline::CullMode::None;
-            pipelineDesc.vertexStage = m_vertexStage;
-            pipelineDesc.fragmentStage = m_fragmentStage;
+            pipelineDesc.vertexScript = &m_vertexScript;
+            pipelineDesc.fragmentScript = &m_fragmentScript;
 
             m_pipeline = m_renderer->CreatePipeline(pipelineDesc);
             if (!m_pipeline)
@@ -243,6 +243,7 @@ namespace Molten
             }
 
             m_colorPushLocation = m_renderer->GetPushConstantLocation(m_pipeline, 12345);
+            m_color2PushLocation = m_renderer->GetPushConstantLocation(m_pipeline, 123456);
         }
 
         void Application::LoadShaders()
@@ -254,6 +255,10 @@ namespace Molten
                 auto& inputs = script.GetInputInterface();
                 auto inPos = inputs.AddMember<Vector3f32>();
                 auto inColor = inputs.AddMember<Vector4f32>();
+
+                auto& pushConstants = script.GetPushConstantInterface();
+                //pushConstants.AddMember<Vector4f32>(12345);
+                auto pushPos = pushConstants.AddMember<Vector4f32>(12345);
 
                 auto& outputs = script.GetOutputInterface();
                 auto outColor = outputs.AddMember<Vector4f32>();
@@ -267,13 +272,17 @@ namespace Molten
                 inPosVec4->GetInputPin(0)->Connect(*inPos->GetOutputPin());
                 static_cast<Shader::Visual::InputPin<float>*>(inPosVec4->GetInputPin(1))->SetDefaultValue(1.0f);
 
+                auto posMult = script.CreateOperator<Shader::Visual::Operators::MultVec4f32>();
+                posMult->GetInputPin(0)->Connect(*pushPos->GetOutputPin());
+                posMult->GetInputPin(1)->Connect(*inPosVec4->GetOutputPin());
+
                 auto projModelmat = script.CreateOperator<Shader::Visual::Operators::MultMat4f32>();
                 projModelmat->GetInputPin(0)->Connect(*uProjView->GetOutputPin());
                 projModelmat->GetInputPin(1)->Connect(*uModel->GetOutputPin());
 
                 auto finalPos = script.CreateOperator<Shader::Visual::Operators::MultMat4Vec4f32>();
                 finalPos->GetInputPin(0)->Connect(*projModelmat->GetOutputPin());
-                finalPos->GetInputPin(1)->Connect(*inPosVec4->GetOutputPin());
+                finalPos->GetInputPin(1)->Connect(*posMult->GetOutputPin());
 
                 outPos->GetInputPin()->Connect(*finalPos->GetOutputPin());
                 outColor->GetInputPin()->Connect(*inColor->GetOutputPin());
@@ -287,6 +296,7 @@ namespace Molten
 
                 auto& pushConstants = script.GetPushConstantInterface();
                 auto pcColor = pushConstants.AddMember<Vector4f32>(12345);
+                auto pcColor2 = pushConstants.AddMember<Vector4f32>(123456);
 
                 auto& outputs = script.GetOutputInterface();
                 auto outColor = outputs.AddMember<Vector4f32>();
@@ -295,13 +305,17 @@ namespace Molten
                 mult->GetInputPin(0)->Connect(*inColor->GetOutputPin());
                 mult->GetInputPin(1)->Connect(*pcColor->GetOutputPin());
 
+                auto mult2 = script.CreateOperator<Shader::Visual::Operators::MultVec4f32>();
+                mult2->GetInputPin(0)->Connect(*mult->GetOutputPin());
+                mult2->GetInputPin(1)->Connect(*pcColor2->GetOutputPin());
+
 
                 /*auto add = script.CreateOperatorNode<Shader::Operator::AddVec4f32>();
                 auto const1 = script.CreateConstantNode<Vector4f32>({ 0.0f, 0.0f, 0.3f, 0.0f });
                 auto const2 = script.CreateConstantNode<Vector4f32>({ 1.0f, 0.5f, 0.0f, 1.0f });
                 auto cos = script.CreateFunctionNode<Shader::Function::CosVec4f32>();*/
 
-                outColor->GetInputPin()->Connect(*mult->GetOutputPin());
+                outColor->GetInputPin()->Connect(*mult2->GetOutputPin());
                 /*add->GetInputPin(0)->Connect(*mult->GetOutputPin());
                 add->GetInputPin(1)->Connect(*const1->GetOutputPin());
                 mult->GetInputPin(0)->Connect(*inColor->GetOutputPin());
@@ -309,8 +323,22 @@ namespace Molten
                 cos->GetInputPin()->Connect(*const2->GetOutputPin());*/
             }
 
-            auto vertGlsl = Shader::VulkanGenerator::GenerateGlsl(m_vertexScript);
-            auto fragGlsl = Shader::VulkanGenerator::GenerateGlsl(m_fragmentScript);
+
+            Shader::VulkanGenerator::GlslTemplates glslTemplates;
+            std::vector<Shader::Visual::Script*> visualScripts = { &m_vertexScript, &m_fragmentScript };
+            if (!Shader::VulkanGenerator::GenerateGlslTemplate(glslTemplates, visualScripts, &m_logger))
+            {
+                return;
+            }
+
+            Shader::VulkanGenerator::GlslStageTemplates stageTemplate;
+            stageTemplate.pushConstantTemplate.blockSource = &glslTemplates.pushConstantTemplate.blockSource;
+
+            stageTemplate.pushConstantTemplate.offsets = &glslTemplates.pushConstantTemplate.stageOffsets[0];
+            auto vertGlsl = Shader::VulkanGenerator::GenerateGlsl(m_vertexScript, &stageTemplate);
+
+            stageTemplate.pushConstantTemplate.offsets = &glslTemplates.pushConstantTemplate.stageOffsets[1];
+            auto fragGlsl = Shader::VulkanGenerator::GenerateGlsl(m_fragmentScript, &stageTemplate);
 
             std::string vertStr(vertGlsl.begin(), vertGlsl.end());
             std::string fragStr(fragGlsl.begin(), fragGlsl.end());
@@ -321,18 +349,6 @@ namespace Molten
             m_logger.Write(Logger::Severity::Info, "frag -------------------------------------");
             m_logger.Write(Logger::Severity::Info, fragStr);
             m_logger.Write(Logger::Severity::Info, "-------------------------------------");
-
-            
-            m_vertexStage = m_renderer->CreateVertexShaderStage(m_vertexScript);
-            if (!m_vertexStage)
-            {
-                throw Exception("Failed to create vertex shader stage.");
-            }
-            m_fragmentStage = m_renderer->CreateFragmentShaderStage(m_fragmentScript);
-            if (!m_fragmentStage)
-            {
-                throw Exception("Failed to create fragment shader stage.");
-            }
         }
 
         void Application::Unload()
@@ -367,16 +383,6 @@ namespace Molten
                 {
                     m_renderer->DestroyPipeline(m_pipeline);
                     m_pipeline = nullptr;
-                }
-                if (m_fragmentStage)
-                {
-                    m_renderer->DestroyFragmentShaderStage(m_fragmentStage);
-                    m_fragmentStage = nullptr;
-                }
-                if (m_vertexStage)
-                {
-                    m_renderer->DestroyVertexShaderStage(m_vertexStage);
-                    m_vertexStage = nullptr;
                 }
 
                 m_renderer.reset();              
@@ -518,7 +524,10 @@ namespace Molten
 
             m_renderer->BindUniformBlock(m_uniformBlock, 0);
 
-            m_renderer->PushConstant(m_colorPushLocation, { 0.9f, 0.8f, 0.7f, 1.0f });
+            m_renderer->PushConstant(m_colorPushLocation, { 0.4f, 0.8f, 0.7f, 1.0f });
+            m_renderer->PushConstant(m_color2PushLocation, { 0.5f, 0.5f, 0.5f, 1.0f });
+
+            
 
             m_renderer->DrawVertexBuffer(m_indexBuffer, m_vertexBuffer);
 
