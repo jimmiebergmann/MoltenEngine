@@ -28,13 +28,18 @@
 
 struct TestData
 {
-    int a;
+    int32_t a;
     float b;
 };
 
-Molten::Result<TestData, int> CreateTestError()
+Molten::Result<TestData, int> CreateTestValue()
 {
-    return Molten::Result<TestData, int>::Error(-2);
+    return Molten::Result<TestData, int32_t>::Value({1, 2.0f});
+}
+
+Molten::Result<TestData, int32_t> CreateTestError()
+{
+    return Molten::Result<TestData, int32_t>::Error(-2);
 }
 
 namespace Molten
@@ -52,21 +57,27 @@ namespace Molten
         }
 
         {
-            Result<int, int> result = Result<int, int>::Value(123);
+            Result<int32_t, int32_t> result = Result<int32_t, int32_t>::Value(123);
             EXPECT_TRUE(result);
-            EXPECT_EQ(result.Value(), int(123));
+            EXPECT_EQ(result.Value(), int32_t(123));
 
             [[maybe_unused]] auto value = std::move(result);
         }
         {
-            Result<int, int> result = Result<int, int>::Error(404);
+            Result<int32_t, int32_t> result = Result<int32_t, int32_t>::Error(404);
             EXPECT_FALSE(result);
             EXPECT_EQ(result.Error(), int(404));
         }
         {
             auto result = CreateTestError();
             EXPECT_FALSE(result);
-            EXPECT_EQ(result.Error(), int(-2));
+            EXPECT_EQ(result.Error(), int32_t(-2));
+        }
+        {
+            auto result = CreateTestValue();
+            EXPECT_TRUE(result);
+            EXPECT_EQ(result.Value().a, int32_t(1));
+            EXPECT_EQ(result.Value().b, 2.0f);
         }
         
     }

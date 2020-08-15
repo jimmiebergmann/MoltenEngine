@@ -252,7 +252,7 @@ namespace Molten::Shader
 
     bool VulkanGenerator::GenerateGlslTemplate(
         VulkanGenerator::GlslTemplates & glslTemplates,
-        const std::vector<Visual::Script*> scripts,
+        const std::vector<Visual::Script*>& scripts,
         Logger* logger)
     {
         PushConstantOffsets pushConstantOffsets;

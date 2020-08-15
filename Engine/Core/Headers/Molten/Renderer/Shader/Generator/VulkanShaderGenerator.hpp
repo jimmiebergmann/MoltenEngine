@@ -90,13 +90,13 @@ namespace Molten::Shader
         };
 
         /** Generate GLSL template data from visual shader scripts. */
-        static bool GenerateGlslTemplate(VulkanGenerator::GlslTemplates& glslTemplates, const std::vector<Visual::Script*> scripts, Logger* logger);
+        static bool GenerateGlslTemplate(VulkanGenerator::GlslTemplates& glslTemplates, const std::vector<Visual::Script*>& scripts, Logger* logger);
 
         /** Generate GLSL code, compatible with Spri-V, from a visual shader script. */
         static std::vector<uint8_t> GenerateGlsl(const Visual::Script& script, const GlslStageTemplates* templateData, Logger* logger = nullptr);
 
         /** Converting GLSL code into SPIR-V code. */
-        static std::vector<uint8_t> ConvertGlslToSpriV(const std::vector<uint8_t> & code, Type shaderType, Logger* logger = nullptr);
+        static std::vector<uint8_t> ConvertGlslToSpriV(const std::vector<uint8_t>& code, Type shaderType, Logger* logger = nullptr);
 
     };
 

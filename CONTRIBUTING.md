@@ -1,12 +1,12 @@
 ## How to contribute
-1. Fork this repository.
-2. Create a new branch with any of the following naming conventions:
-   * topic-*something* E.g. `topic-renderer`.
-   * feature-*something* E.g. `feature-my-new-cool-thingie`.
-   * fix-*something* E.g. `fix-broken-thing`.
-   * Feel free to reference to an issue. I.e. `fix-issue-123`.
-3. Commit changes.
-4. Send pull request at Github.
+1.  Fork this repository.
+2.  Create a new branch with any of the following naming conventions:
+    - topic-*something* E.g. `topic-renderer`.
+    - feature-*something* E.g. `feature-my-new-cool-thingie`.
+    - fix-*something* E.g. `fix-broken-thing`.
+    - Feel free to reference to an issue. I.e. `fix-issue-123`.
+3.  Commit changes.
+4.  Send pull request at Github.
 
 ## Styleguides
 *   Use 4 spaces for indention.
