@@ -1,4 +1,8 @@
-find_path(Glslang_DIR NAMES "glslang/Public/ShaderLang.h" PATHS "${ThirdPartyDir}/glslang")
+find_path(
+  Glslang_DIR
+  NAMES "glslang/Public/ShaderLang.h"
+  PATHS "${ThirdPartyDir}/glslang"
+  NO_DEFAULT_PATH)
 
 if(NOT("${Glslang_DIR}" STREQUAL "Glslang_DIR-NOTFOUND"))
   set(Glslang_FOUND TRUE)
