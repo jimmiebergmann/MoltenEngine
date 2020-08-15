@@ -33,9 +33,7 @@
 namespace Molten::Shader
 {
 
-    /**
-        Enumerator of shader types.
-    */
+    /** Enumerator of shader types. */
     enum class Type : uint8_t
     {
         Vertex,
@@ -43,9 +41,7 @@ namespace Molten::Shader
     };
 
 
-    /**
-     * Enumerator of shader source formats.
-    */
+    /** Enumerator of shader source formats. */
     enum class SourceFormat : uint8_t
     {
         Glsl,
@@ -53,21 +49,7 @@ namespace Molten::Shader
         SpirV
     };
 
-
-    /**
-    * @brief Data type for 2D sampler.
-    */
-    struct Sampler2D { };
-
-    /**
-    * @brief Data type for 3D sampler.
-    */
-    struct Sampler3D { };
-
-
-    /**
-    * @brief Enumerator of available variable data types.
-    */
+    /** Enumerator of available variable data types. */
     enum class VariableDataType : uint8_t
     {
         Bool,
@@ -80,9 +62,7 @@ namespace Molten::Shader
     };
 
 
-    /**
-    * @brief Helper wrapper class for aligning any data type by 16 bytes.
-    */
+    /** Helper wrapper class for aligning any data type by 16 bytes. */
     MOLTEN_PADDED_STRUCT_BEGIN
     template<typename T>
     class alignas(16) PaddedType : public T
@@ -97,9 +77,7 @@ namespace Molten::Shader
     MOLTEN_PADDED_STRUCT_END
 
 
-    /**
-    * @brief Type trait for statically checking pin information of a certain data type.
-    */
+    /** Type trait for statically checking pin information of a certain data type. */
     template<typename T>
     struct VariableTrait
     {
