@@ -323,7 +323,7 @@ namespace Molten
                         sum += items[i].componentSize;
                     }
 
-                    return std::move(offsets);
+                    return offsets;
                 }
             }
 

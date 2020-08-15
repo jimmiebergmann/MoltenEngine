@@ -279,7 +279,7 @@ namespace Molten
             fragments[i] = size_t(0);
         }
 
-        return std::move(fragments);
+        return fragments;
     }
 
 }
