@@ -272,7 +272,6 @@ namespace Molten::Shader
             for (auto* member : script->GetPushConstantInterface())
             {
                 auto memberDataType = member->GetDataType();
-                uint32_t currentByteOffset = 0;
                 PushConstantOffset* currentOffset = nullptr;
 
                 uint32_t id = member->GetId();
@@ -280,7 +279,7 @@ namespace Molten::Shader
                 if (locationIt == pushConstantLocations.end())
                 {
                     uint32_t offsetId = static_cast<uint32_t>(pushConstantOffsets.size());
-                    currentByteOffset = nextByteOffset;
+                    uint32_t currentByteOffset = nextByteOffset;
                     pushConstantOffsets.push_back(PushConstantOffset{ currentByteOffset, memberDataType });
                     currentOffset = &pushConstantOffsets[offsetId];
                     pushConstantLocations.insert({ id, offsetId });

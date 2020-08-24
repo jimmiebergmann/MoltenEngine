@@ -52,12 +52,18 @@ namespace Molten::Gui
 
         void Draw();
 
-        void AddRect(const Vector2f32& localPosition, const Vector2f32& size);
+        void AddRect(const Vector2f32& relativePosition, const Vector2f32& size);
 
         const Vector2f32& GetPosition() const;
         void SetPosition(const Vector2f32& position);
 
     private:
+
+        struct SubObject
+        {
+            Vector2f32 position;
+            Vector2f32 size;
+        };
 
         /*struct Object
         {
@@ -69,7 +75,7 @@ namespace Molten::Gui
 
         Renderer* m_renderer;
         Vector2f32 m_position;
-        std::vector<std::pair<Vector2f32, Vector2f32>> m_objects;
+        std::vector<SubObject> m_objects;
 
     };
 

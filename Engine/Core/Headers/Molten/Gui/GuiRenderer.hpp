@@ -35,6 +35,7 @@ namespace Molten
     class Pipeline;  
     class VertexBuffer;
     class IndexBuffer;
+    class Logger;
 }
 
 namespace Molten::Shader::Visual
@@ -51,7 +52,7 @@ namespace Molten::Gui
 
     public:
 
-        Renderer();
+        Renderer(Logger* logger = nullptr);
         ~Renderer();
 
         void Open(Molten::Renderer* backendRenderer);
@@ -75,14 +76,19 @@ namespace Molten::Gui
             IndexBuffer* indexBuffer;
             Shader::Visual::VertexScript* vertexScript;
             Shader::Visual::FragmentScript* fragmentScript;
+            uint32_t projectionLocation;
+            uint32_t positionLocation;
+            uint32_t sizeLocation;
+            uint32_t colorLocation;
         };
 
         void LoadRectRenderInstance();
         void DestroyRenderInstance(RenderInstance& instance);
 
         Molten::Renderer* m_backendRenderer;
+        Logger* m_logger;
         Matrix4x4f32 m_projection;
-        RenderInstance m_rect;
+        RenderInstance m_rectInstance;
 
     };
 

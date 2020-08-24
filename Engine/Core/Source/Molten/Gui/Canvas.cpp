@@ -48,7 +48,7 @@ namespace Molten::Gui
     {
         m_logger = logger;
 
-        m_renderer = new Renderer;
+        m_renderer = new Renderer(m_logger);
         m_renderer->Open(backendRenderer);
 
         m_context = std::make_unique<Private::Context>(Ecs::ContextDescriptor(64000));

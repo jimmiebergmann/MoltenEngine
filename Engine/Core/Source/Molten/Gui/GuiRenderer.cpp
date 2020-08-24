@@ -27,12 +27,14 @@
 #include "Molten/Renderer/Renderer.hpp"
 #include "Molten/Renderer/Pipeline.hpp"
 #include "Molten/Renderer/Shader/Visual/VisualShaderScript.hpp"
+#include "Molten/Renderer/Shader/Generator/VulkanShaderGenerator.hpp"
 
 namespace Molten::Gui
 {
 
-    Renderer::Renderer() :
-        m_backendRenderer(nullptr)
+    Renderer::Renderer(Logger* logger) :
+        m_backendRenderer(nullptr),
+        m_logger(logger)
     {}
 
     Renderer::~Renderer()
@@ -45,9 +47,9 @@ namespace Molten::Gui
         Close();
 
         m_backendRenderer = backendRenderer;
-        m_projection = Matrix4x4f32::Orthographic(0.0f, 800.0f, 0.0f, 600.0f, 1.0f, -1.0f);
+        m_projection = Matrix4x4f32::Orthographic(0.0f, 800.0f, 600.0f, 0.0f, 1.0f, -1.0f);
 
-        //LoadRectRenderInstance();
+        LoadRectRenderInstance();
     }
 
     void Renderer::Close()
@@ -57,20 +59,20 @@ namespace Molten::Gui
             return;
         }
 
-        //DestroyRenderInstance(m_rect);
+        DestroyRenderInstance(m_rectInstance);
         m_backendRenderer = nullptr;
     }
 
-    void Renderer::DrawRect(const Vector2f32& /*position*/, const Vector2f32& /*size*/, const Vector4f32& /*color*/)
+    void Renderer::DrawRect(const Vector2f32& position, const Vector2f32& size, const Vector4f32& color)
     {
-        /*m_backendRenderer->BindPipeline(m_rect.pipeline);
+        m_backendRenderer->BindPipeline(m_rectInstance.pipeline);
 
-        m_backendRenderer->PushShaderConstants(Shader::Type::Fragment,  0,                    sizeof(m_projection), &m_projection);
-        m_backendRenderer->PushShaderConstants(Shader::Type::Vertex,    0,                    sizeof(m_projection), &m_projection);
-        m_backendRenderer->PushShaderConstants(Shader::Type::Fragment,  sizeof(m_projection), sizeof(color),        &color);
-        m_backendRenderer->PushShaderConstants(Shader::Type::Vertex,    sizeof(m_projection), sizeof(color),        &color);
+        m_backendRenderer->PushConstant(m_rectInstance.projectionLocation, m_projection);
+        m_backendRenderer->PushConstant(m_rectInstance.positionLocation, position);
+        m_backendRenderer->PushConstant(m_rectInstance.sizeLocation, size);
+        m_backendRenderer->PushConstant(m_rectInstance.colorLocation, color);
 
-        m_backendRenderer->DrawVertexBuffer(m_rect.indexBuffer, m_rect.vertexBuffer);*/
+        m_backendRenderer->DrawVertexBuffer(m_rectInstance.indexBuffer, m_rectInstance.vertexBuffer);
     }
 
     Renderer::RenderInstance::RenderInstance() :
@@ -78,79 +80,163 @@ namespace Molten::Gui
         vertexBuffer(nullptr),
         indexBuffer(nullptr),
         vertexScript(nullptr),
-        fragmentScript(nullptr)
+        fragmentScript(nullptr),
+        projectionLocation(0),
+        positionLocation(0),
+        sizeLocation(0),
+        colorLocation(0)
     { }
 
     void Renderer::LoadRectRenderInstance()
     {
-       /* m_rect.vertexScript = new Shader::VertexScript();
-        m_rect.fragmentScript = new Shader::FragmentScript();
-
+        const std::array<Vector2f32, 4> vertexData =
         {
-            auto& script = *m_rect.vertexScript;
+            Vector2f32{ 0.0f, 0.0f },
+            Vector2f32{ 1.0f, 0.0f },
+            Vector2f32{ 1.0f, 1.0f },
+            Vector2f32{ 0.0f, 1.0f }
+        };
 
-            auto outPos = script.GetVertexOutputVariable();
+        const std::array<uint16_t, 6> indices =
+        {
+            0, 1, 2, 
+            0, 2, 3
+        };
+
+        VertexBufferDescriptor vertexPositionBufferDesc;
+        vertexPositionBufferDesc.vertexCount = static_cast<uint32_t>(vertexData.size());
+        vertexPositionBufferDesc.vertexSize = sizeof(Vector2f32);
+        vertexPositionBufferDesc.data = static_cast<const void*>(vertexData.data());
+        m_rectInstance.vertexBuffer = m_backendRenderer->CreateVertexBuffer(vertexPositionBufferDesc);
+        if (!m_rectInstance.vertexBuffer)
+        {
+            throw Exception("Failed to create position vertex buffer.");
+        }
+
+        IndexBufferDescriptor indexBufferDesc;
+        indexBufferDesc.indexCount = static_cast<uint32_t>(indices.size());
+        indexBufferDesc.data = static_cast<const void*>(indices.data());
+        indexBufferDesc.dataType = IndexBuffer::DataType::Uint16;
+        m_rectInstance.indexBuffer = m_backendRenderer->CreateIndexBuffer(indexBufferDesc);
+        if (!m_rectInstance.indexBuffer)
+        {
+            throw Exception("Failed to create index buffer.");
+        }
+
+        m_rectInstance.vertexScript = new Shader::Visual::VertexScript();
+        m_rectInstance.fragmentScript = new Shader::Visual::FragmentScript();
+
+        { // Vertex
+            auto& script = *m_rectInstance.vertexScript;
 
             auto& inputs = script.GetInputInterface();
-            auto inPos = inputs.AddMember<Vector3f32>();
+            auto* vertexPosition = inputs.AddMember<Vector2f32>();
 
             auto& pushConstants = script.GetPushConstantInterface();
-            auto inProjection = pushConstants.AddMember<Matrix4x4f32>();
-            pushConstants.AddMember<Vector4f32>();
-           
+            auto* projection = pushConstants.AddMember<Matrix4x4f32>(1);
+            auto* position = pushConstants.AddMember<Vector2f32>(2);
+            auto* size = pushConstants.AddMember<Vector2f32>(3);
+            
+            auto* outPosition = script.GetVertexOutputVariable();
+            
+            auto* vertexScaled = script.CreateOperator<Shader::Visual::Operators::MultVec2f32>();
+            vertexScaled->GetInputPin(0)->Connect(*vertexPosition->GetOutputPin());
+            vertexScaled->GetInputPin(1)->Connect(*size->GetOutputPin());
 
-            auto inPosVec4 = script.CreateFunctionNode<Shader::Function::Vec3ToVec4f32>();
-            inPosVec4->GetInputPin(0)->Connect(*inPos->GetOutputPin());
-            static_cast<Shader::InputPin<float>*>(inPosVec4->GetInputPin(1))->SetDefaultValue(1.0f);
+            auto* vertexScaledMoved = script.CreateOperator<Shader::Visual::Operators::AddVec2f32>();
+            vertexScaledMoved->GetInputPin(0)->Connect(*vertexScaled->GetOutputPin());
+            vertexScaledMoved->GetInputPin(1)->Connect(*position->GetOutputPin());
 
-            auto finalPos = script.CreateOperatorNode<Shader::Operator::MultMat4Vec4f32>();
-            finalPos->GetInputPin(0)->Connect(*inProjection->GetOutputPin());
-            finalPos->GetInputPin(1)->Connect(*inPosVec4->GetOutputPin());
+            auto* vertexPositionVec4 = script.CreateFunction<Shader::Visual::Functions::Vec2ToVec4f32>();
+            vertexPositionVec4->GetInputPin(0)->Connect(*vertexScaledMoved->GetOutputPin());
+            static_cast<Shader::Visual::InputPin<float>*>(vertexPositionVec4->GetInputPin(1))->SetDefaultValue(0.0f);
+            static_cast<Shader::Visual::InputPin<float>*>(vertexPositionVec4->GetInputPin(2))->SetDefaultValue(1.0f);
 
-            outPos->GetInputPin()->Connect(*finalPos->GetOutputPin());
+            auto* projectedVertexPosition = script.CreateOperator<Shader::Visual::Operators::MultMat4Vec4f32>();
+            projectedVertexPosition->GetInputPin(0)->Connect(*projection->GetOutputPin());
+            projectedVertexPosition->GetInputPin(1)->Connect(*vertexPositionVec4->GetOutputPin());
+
+            outPosition->GetInputPin()->Connect(*projectedVertexPosition->GetOutputPin());
         }
+        { // Fragment
+            auto& script = *m_rectInstance.fragmentScript;
+
+            auto& pushConstants = script.GetPushConstantInterface();
+            auto* vertexColor = pushConstants.AddMember<Vector4f32>(4);
+
+            auto& outputs = script.GetOutputInterface();      
+            auto* outColor = outputs.AddMember<Vector4f32>();
+
+            outColor->GetInputPin()->Connect(*vertexColor->GetOutputPin());
+        }
+
+        // Debug
         {
-            auto& script = *m_rect.fragmentScript;
+            Shader::VulkanGenerator::GlslTemplates glslTemplates;
+            std::vector<Shader::Visual::Script*> visualScripts = { m_rectInstance.vertexScript, m_rectInstance.fragmentScript };
+            if (!Shader::VulkanGenerator::GenerateGlslTemplate(glslTemplates, visualScripts, m_logger))
+            {
+                return;
+            }
 
-            auto& pushConstants = script.GetPushConstantInterface();
-            pushConstants.AddMember<Matrix4x4f32>();
-            auto inColor = pushConstants.AddMember<Vector4f32>();
+            Shader::VulkanGenerator::GlslStageTemplates stageTemplate;
+            stageTemplate.pushConstantTemplate.blockSource = &glslTemplates.pushConstantTemplate.blockSource;
 
-            auto& outputs = script.GetOutputInterface();
-            auto outColor = outputs.AddMember<Vector4f32>();
+            stageTemplate.pushConstantTemplate.offsets = &glslTemplates.pushConstantTemplate.stageOffsets[0];
+            auto vertGlsl = Shader::VulkanGenerator::GenerateGlsl(*m_rectInstance.vertexScript, &stageTemplate);
 
-            outColor->GetInputPin()->Connect(*inColor->GetOutputPin());
+            stageTemplate.pushConstantTemplate.offsets = &glslTemplates.pushConstantTemplate.stageOffsets[1];
+            auto fragGlsl = Shader::VulkanGenerator::GenerateGlsl(*m_rectInstance.fragmentScript, &stageTemplate);
+
+            std::string vertStr(vertGlsl.begin(), vertGlsl.end());
+            std::string fragStr(fragGlsl.begin(), fragGlsl.end());
+
+            Logger::WriteInfo(m_logger, "vert -------------------------------------");
+            Logger::WriteInfo(m_logger, vertStr);
+            Logger::WriteInfo(m_logger, "-------------------------------------");
+            Logger::WriteInfo(m_logger, "frag -------------------------------------");
+            Logger::WriteInfo(m_logger, fragStr);
+            Logger::WriteInfo(m_logger, "-------------------------------------");
         }
-
-        m_rect.vertexStage = m_backendRenderer->CreateVertexShaderStage(*m_rect.vertexScript);
-        m_rect.fragmentStage = m_backendRenderer->CreateFragmentShaderStage(*m_rect.fragmentScript);
 
         PipelineDescriptor pipelineDesc;
         pipelineDesc.cullMode = Pipeline::CullMode::None;
         pipelineDesc.polygonMode = Pipeline::PolygonMode::Fill;
         pipelineDesc.topology = Pipeline::Topology::TriangleList;
-        pipelineDesc.frontFace = Pipeline::FrontFace::Clockwise;
-        pipelineDesc.fragmentStage = m_rect.fragmentStage;
-        pipelineDesc.vertexStage = m_rect.vertexStage;
-        m_rect.pipeline = m_backendRenderer->CreatePipeline(pipelineDesc);*/
+        pipelineDesc.frontFace = Pipeline::FrontFace::Clockwise;   
+        pipelineDesc.vertexScript = m_rectInstance.vertexScript;
+        pipelineDesc.fragmentScript = m_rectInstance.fragmentScript;
+        m_rectInstance.pipeline = m_backendRenderer->CreatePipeline(pipelineDesc);
+        if (!m_rectInstance.pipeline)
+        {
+            throw Exception("Failed to create gui pipeline");
+        }
+
+        m_rectInstance.projectionLocation = m_backendRenderer->GetPushConstantLocation(m_rectInstance.pipeline, 1);
+        m_rectInstance.positionLocation = m_backendRenderer->GetPushConstantLocation(m_rectInstance.pipeline, 2);
+        m_rectInstance.sizeLocation = m_backendRenderer->GetPushConstantLocation(m_rectInstance.pipeline, 3);
+        m_rectInstance.colorLocation = m_backendRenderer->GetPushConstantLocation(m_rectInstance.pipeline, 4);
     }
 
     void Renderer::DestroyRenderInstance(RenderInstance& instance)
     {
-        if (instance.pipeline)
+        if (m_backendRenderer)
         {
-            m_backendRenderer->DestroyPipeline(instance.pipeline);
-            instance.pipeline = nullptr;
-        }
-        if (instance.vertexBuffer)
-        {
-            m_backendRenderer->DestroyVertexBuffer(instance.vertexBuffer);
-            instance.vertexBuffer = nullptr;
-        }
-        if (instance.indexBuffer)
-        {
-            m_backendRenderer->DestroyIndexBuffer(instance.indexBuffer);
-            instance.indexBuffer = nullptr;
+            if (instance.pipeline)
+            {
+                m_backendRenderer->DestroyPipeline(instance.pipeline);
+                instance.pipeline = nullptr;
+            }
+            if (instance.vertexBuffer)
+            {
+                m_backendRenderer->DestroyVertexBuffer(instance.vertexBuffer);
+                instance.vertexBuffer = nullptr;
+            }
+            if (instance.indexBuffer)
+            {
+                m_backendRenderer->DestroyIndexBuffer(instance.indexBuffer);
+                instance.indexBuffer = nullptr;
+            }
         }
 
         delete instance.vertexScript;

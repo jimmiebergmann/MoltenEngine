@@ -526,9 +526,6 @@ namespace Molten
 
             m_renderer->PushConstant(m_colorPushLocation, { 0.4f, 0.8f, 0.7f, 1.0f });
             m_renderer->PushConstant(m_color2PushLocation, { 0.5f, 0.5f, 0.5f, 1.0f });
-
-            
-
             m_renderer->DrawVertexBuffer(m_indexBuffer, m_vertexBuffer);
 
             /*m_renderer->BindUniformBlock(m_uniformBlock, 256);

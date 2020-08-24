@@ -197,37 +197,35 @@ namespace Molten
     template<typename T>
     inline Matrix<4, 4, T> Matrix<4, 4, T>::Orthographic(const T left, const T right, const T bottom, const T top,
                                                          const T near, const T far)
-    {     
-        const T rangeX = right - left;
-        const T rangeY = top - bottom;
-        const T rangeZ = near - far;
+    {   
+        const T subX = right - left;
+        const T subY = bottom - top;
+        const T subZ = far - near;
 
-        if (rangeX == static_cast<T>(0))
+        if (subX == static_cast<T>(0))
         {
             throw Exception("Matrix::Perspective: Difference between left and right is 0.");
         }
-        if (rangeY == static_cast<T>(0))
+        if (subY == static_cast<T>(0))
         {
             throw Exception("Matrix::Perspective: Difference between top and bottom is 0.");
         }
-        if (rangeZ == static_cast<T>(0))
+        if (subZ == static_cast<T>(0))
         {
             throw Exception("Matrix::Perspective: Difference between near and far is 0.");
         }
 
-        return { static_cast<T>(2) / rangeX, static_cast<T>(0),          static_cast<T>(0),           static_cast<T>(0),
-                 static_cast<T>(0),          static_cast<T>(0),          static_cast<T>(-2) / rangeZ, static_cast<T>(0),
-                 static_cast<T>(0),          static_cast<T>(-2) / rangeY, static_cast<T>(0),           static_cast<T>(0),
-                 -(right + left) / rangeX,   -(far + near) / rangeZ,     -(top + bottom),             static_cast<T>(1)
+        const T addX = right + left;
+        const T addY = bottom + top;
+        const T addZ = far + near;
+        
+        return 
+        { 
+            static_cast<T>(2) / subX, static_cast<T>(0), static_cast<T>(0), static_cast<T>(0),
+            static_cast<T>(0), static_cast<T>(2) / subY, static_cast<T>(0), static_cast<T>(0),
+            static_cast<T>(0), static_cast<T>(0), static_cast<T>(-2) / subZ, static_cast<T>(0),
+            -(addX / subX), -(addY / subY), -(addZ / subZ), static_cast<T>(1)
         };
-
-        /*
-        return Matrix<4, 4, T>{ 
-                 static_cast<T>(2) / rangeX, static_cast<T>(0), static_cast<T>(0),  -(right + left) / rangeX,
-                 static_cast<T>(0), static_cast<T>(2) / rangeY, static_cast<T>(0),  -(top + bottom) / rangeY,
-                 static_cast<T>(0), static_cast<T>(0), static_cast<T>(-2) / rangeZ, -(far + near) / rangeZ,
-                 static_cast<T>(0), static_cast<T>(0), static_cast<T>(0), static_cast<T>(1) };
-        */
     }
 
     template<typename T>

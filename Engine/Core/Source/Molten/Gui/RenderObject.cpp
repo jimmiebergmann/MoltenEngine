@@ -41,13 +41,13 @@ namespace Molten::Gui
     {
         for (auto& object : m_objects)
         {
-            m_renderer->DrawRect(object.first, object.second, Vector4f32(1.0f, 0.0f, 0.0f, 1.0f));
+            m_renderer->DrawRect(object.position, object.size, Vector4f32(1.0f, 0.0f, 0.0f, 1.0f));
         }
     }
 
-    void RenderObject::AddRect(const Vector2f32& localPosition, const Vector2f32& size)
+    void RenderObject::AddRect(const Vector2f32& relativePosition, const Vector2f32& size)
     {
-        m_objects.push_back({ localPosition , size});
+        m_objects.push_back({ relativePosition , size});
     }
 
     const Vector2f32& RenderObject::GetPosition() const
