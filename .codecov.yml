@@ -5,9 +5,9 @@ ignore:
   - "Bin"
   - "Out"
   - "Build"
-  - "Vendor"
-  - "Editor"
-  - "Test"
+  - "Engine/Vendor"
+  - "Engine/Editor"
+  - "Engine/Test"
 
 coverage:
   range: 50..80
