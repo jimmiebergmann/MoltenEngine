@@ -52,7 +52,7 @@ namespace Molten::Shader::Visual
         {
             return nullptr;
         }
-        return std::vector<Pin*>{&m_inputLeft, & m_inputRight} [index] ;
+        return std::array<Pin*, 2>{&m_inputLeft, &m_inputRight}[index] ;
     }
     template<ArithmeticOperatorType TOperator, typename TOutputType, typename TLeftType, typename TRightType>
     inline const Pin* ArithmeticOperator<TOperator, TOutputType, TLeftType, TRightType>::GetInputPin(const size_t index) const
@@ -61,7 +61,7 @@ namespace Molten::Shader::Visual
         {
             return nullptr;
         }
-        return std::vector<const Pin*>{&m_inputLeft, & m_inputRight} [index] ;
+        return std::array<const Pin*, 2>{&m_inputLeft, &m_inputRight}[index] ;
     }
 
     template<ArithmeticOperatorType TOperator, typename TOutputType, typename TLeftType, typename TRightType>
