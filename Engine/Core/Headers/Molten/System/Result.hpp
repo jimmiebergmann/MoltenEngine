@@ -28,82 +28,73 @@
 
 #include "Molten/Core.hpp"
 #include <variant>
+#include <type_traits>
 
 namespace Molten
 {
 
-    /*
-    * @breif 
-    */
-    template<typename T, typename E>
+    /* 
+     * Result class with two possible values: Successful result and failed result.
+     * Purpose of this object is to be used as return value for functions, 
+     * with need of both error code value and requested data type.
+     * Check if the result is successful via boolean operator or IsValid().
+     * It is only possible to construct results via the static functions Success and Error,
+     * or by moving results from one to another.
+     */
+    template<typename T, typename TError>
     class Result
     {
 
+        static_assert(std::is_move_constructible<T>::value, "T is not move constructiable.");
+        static_assert(std::is_move_constructible<TError>::value, "TError is not move constructiable.");
+
     public:
 
-        using Type = T;         ///< Succeful return type of result.
-        using ErrorType = E;    ///< Error type of result.
+        using Type = T;             ///< Succeful return type of result.
+        using ErrorType = TError;   ///< Error type of result.
 
-        /*
-        * @brief Constructors.
-        */
-        /**@{*/
-        Result();
+        /* Creating a successful result. Access result value via Value(). */
+        [[nodiscard]] static Result CreateSuccess(T&& type);
 
-        [[nodiscard]] static Result Value(T&& type);
+        /* Creating an error result. Access result value via Error(). */
+        [[nodiscard]] static Result CreateError(TError&& error);
 
-        [[nodiscard]] static Result Error(E&& error);
-        /**@}*/
-
-        /*
-        * @brief Copy constructor.
-        */
-        explicit Result(const Result& result);
-
-        /*
-        * @brief Move constructor.
-        */
+        /* Move constructor. */
         Result(Result&& result) noexcept;
 
-        /*
-        * @return true if result is successful, else false.
-        */
-        explicit operator bool() const;
-
-        /*
-        * @brief Copy assigment operator. 
-        */
-        Result& operator=(const Result& result);
-
-        /*
-        * @brief Move assigment operator.
-        */
+        /* Move assigment operator. */
         Result& operator=(Result&& result) noexcept;
-   
-        /*
-        * @brief Get result error, undefined behaivor if result is in succesful state.
-        */
+
+        /* Checks if result is successful or not. */
         /**@{*/
-        [[nodiscard]] E& Error();
-        [[nodiscard]] const E& Error() const;
+        [[nodiscard]] explicit operator bool() const;
+        [[nodiscard]] bool IsValid() const;
+        /**@}*/
+   
+        /* Get result error, accessing this method with a successful result is undefined behaivor. */
+        /**@{*/
+        [[nodiscard]] TError& Error();
+        [[nodiscard]] const TError& Error() const;
         /**@}*/
 
-        /*
-        * @brief Get result value, undefined behaivor if result is in error state.
-        */
+        /* Get result value, accessing this method with an error result is undefined behaivor. */
         /**@{*/
         T& Value();
         const T& Value() const;
+        
+        T& operator *();
+        const T& operator *() const;
+
+        T* operator ->();
+        const T* operator ->() const;
         /**@}*/
 
     private:
 
-        /*
-        * @brief Private constructor.
-        */
-        Result(std::variant<T, E>&& variant);
+        using VariantType = std::variant<T, TError>;
 
-        using VariantType = std::variant<T, E>;
+        /* Private constructor. */
+        explicit Result(VariantType&& variant);
 
         VariantType m_data;
 

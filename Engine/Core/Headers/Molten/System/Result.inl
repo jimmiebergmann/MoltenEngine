@@ -26,82 +26,88 @@
 namespace Molten
 {
 
-    template<typename T, typename E>
-    inline Result<T, E>::Result() :
-        m_data{ std::in_place_index<1> }
-    { }
+    template<typename T, typename TError>
+    inline Result<T, TError> Result<T, TError>::CreateSuccess(T&& type)
+    {
+        return Result{ VariantType(std::in_place_index<0>, std::move(type)) };
+    }
 
-    template<typename T, typename E>
-    inline Result<T, E>::Result(const Result& result) :
-        m_data{result.m_data}
-    { }
+    template<typename T, typename TError>
+    inline Result<T, TError> Result<T, TError>::CreateError(TError&& error)
+    {
+        return Result{ VariantType(std::in_place_index<1>, std::move(error)) };
+    }
 
-    template<typename T, typename E>
-    inline Result<T, E>::Result(Result&& result) noexcept :
+    template<typename T, typename TError>
+    inline Result<T, TError>::Result(Result&& result) noexcept :
         m_data{std::move(result.m_data)}
-    { }
+    {}
+
+    template<typename T, typename TError>
+    inline Result<T, TError>& Result<T, TError>::operator=(Result&& result) noexcept
+    {
+        m_data = std::move(result.m_data);
+        return *this;
+    }
  
-    template<typename T, typename E>
-    inline Result<T, E>::operator bool() const
+    template<typename T, typename TError>
+    inline Result<T, TError>::operator bool() const
+    {
+        return IsValid();
+    }
+    template<typename T, typename TError>
+    inline bool Result<T, TError>::IsValid() const
     {
         return m_data.index() == 0;
     }
 
-    template<typename T, typename E>
-    inline Result<T, E>& Result<T, E>::operator=(const Result& result)
-    {
-        m_data = result.m_data;
-        return *this;
-    }
-
-    template<typename T, typename E>
-    inline Result<T, E>& Result<T, E>::operator=(Result&& result) noexcept
-    {
-        if (*this == result)
-        {
-            return *this;
-        }
-        m_data = std::move(result.m_data);
-        return *this;
-    }
-
-    template<typename T, typename E>
-    inline E& Result<T, E>::Error()
+    template<typename T, typename TError>
+    inline TError& Result<T, TError>::Error()
     {
         return std::get<1>(m_data);
     }
-    template<typename T, typename E>
-    inline const E& Result<T, E>::Error() const
+    template<typename T, typename TError>
+    inline const TError& Result<T, TError>::Error() const
     {
         return std::get<1>(m_data);
     }
 
-    template<typename T, typename E>
-    inline T& Result<T, E>::Value()
+    template<typename T, typename TError>
+    inline T& Result<T, TError>::Value()
     {
         return std::get<0>(m_data);
     }
-    template<typename T, typename E>
-    inline const T& Result<T, E>::Value() const
+    template<typename T, typename TError>
+    inline const T& Result<T, TError>::Value() const
     {
         return std::get<0>(m_data);
     }
 
-    template<typename T, typename E>
-    inline Result<T, E> Result<T, E>::Value(T&& type)
+    template<typename T, typename TError>
+    inline T& Result<T, TError>::operator *()
     {
-        return VariantType(std::in_place_index<0>, type);
+        return std::get<0>(m_data);
+    }
+    template<typename T, typename TError>
+    inline const T& Result<T, TError>::operator *() const
+    {
+        return std::get<0>(m_data);
     }
 
-    template<typename T, typename E>
-    inline Result<T, E> Result<T, E>::Error(E&& error)
+    template<typename T, typename TError>
+    inline T* Result<T, TError>::operator ->()
     {
-        return VariantType( std::in_place_index<1>, error);
+        return &std::get<0>(m_data);
+    }
+    template<typename T, typename TError>
+    inline const T* Result<T, TError>::operator ->() const
+    {
+        return &std::get<0>(m_data);
     }
 
-    template<typename T, typename E>
-    inline Result<T, E>::Result(std::variant<T, E>&& variant) :
+    template<typename T, typename TError>
+    inline Result<T, TError>::Result(VariantType&& variant) :
         m_data(std::move(variant))
-    { }
+    {}
 
 }
