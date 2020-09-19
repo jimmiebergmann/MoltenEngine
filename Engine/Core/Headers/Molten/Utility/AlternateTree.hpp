@@ -92,7 +92,7 @@ namespace Molten
         template<typename TPathType>
         const IteratorPath<TPathType> GetPath() const;*/
         
-       // IteratorPath<AlternateListMainPath> GetMainPath();
+        IteratorPath<MainPath> GetMainPath();
         /*const IteratorPath<MainPath> GetMainPath() const;
 
         IteratorPath<SubPath> GetSubPath();

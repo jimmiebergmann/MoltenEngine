@@ -42,7 +42,7 @@ namespace Molten
 
     template<typename T>
     template<typename TPathType>
-    typename AlternateList<T>::Type& AlternateList<T>::Iterator<TPathType>::operator *() const
+    inline typename AlternateList<T>::Type& AlternateList<T>::Iterator<TPathType>::operator *() const
     {
         return m_currentNode->value;
     }
@@ -51,38 +51,38 @@ namespace Molten
     template<typename TPathType>
     inline AlternateList<T>::Iterator<TPathType>& AlternateList<T>::Iterator<TPathType>::operator ++ () // Pre
     {
-        m_currentNode = AlternateListPathTraits<TPathType>::GetNext<T>(m_currentNode);
+        m_currentNode = AlternateListPathTraits<TPathType>::template GetNext<T>(m_currentNode);
         return *this;
     }
     
     template<typename T>
     template<typename TPathType>
-    inline typename AlternateList<T>::Iterator<TPathType>& AlternateList<T>::Iterator<TPathType>::operator -- () // Pre
+    inline typename AlternateList<T>::template Iterator<TPathType>& AlternateList<T>::Iterator<TPathType>::operator -- () // Pre
     {
-        m_currentNode = AlternateListPathTraits<TPathType>::GetPrev<T>(m_currentNode);
+        m_currentNode = AlternateListPathTraits<TPathType>::template GetPrev<T>(m_currentNode);
         return *this;
     }
     template<typename T>
     template<typename TPathType>
-    inline typename AlternateList<T>::Iterator<TPathType> AlternateList<T>::Iterator<TPathType>::operator ++ (int) // Post
+    inline typename AlternateList<T>::template Iterator<TPathType> AlternateList<T>::Iterator<TPathType>::operator ++ (int) // Post
     {
         auto* prevCurrent = m_currentNode;
-        m_currentNode = AlternateListPathTraits<TPathType>::GetNext<T>(m_currentNode);
+        m_currentNode = AlternateListPathTraits<TPathType>::template GetNext<T>(m_currentNode);
         return Iterator{ prevCurrent };
     }
 
     template<typename T>
     template<typename TPathType>
-    inline typename AlternateList<T>::Iterator<TPathType> AlternateList<T>::Iterator<TPathType>::operator -- (int) // Post
+    inline typename AlternateList<T>::template Iterator<TPathType> AlternateList<T>::Iterator<TPathType>::operator -- (int) // Post
     {
         auto* prevCurrent = m_currentNode;
-        m_currentNode = AlternateListPathTraits<TPathType>::GetPrev<T>(m_currentNode);
+        m_currentNode = AlternateListPathTraits<TPathType>::template GetPrev<T>(m_currentNode);
         return Iterator{ prevCurrent };
     }
 
     template<typename T>
     template<typename TPathType>
-    inline bool AlternateList<T>::Iterator<TPathType>::operator == (const Iterator<TPathType>& rhs) const
+    inline bool AlternateList<T>::template Iterator<TPathType>::operator == (const Iterator<TPathType>& rhs) const
     {
         return m_currentNode == rhs.m_currentNode;
     }
@@ -110,41 +110,41 @@ namespace Molten
 
     template<typename T>
     template<typename TPathType>
-    typename const AlternateList<T>::Type& AlternateList<T>::ConstIterator<TPathType>::operator *() const
+    inline const typename AlternateList<T>::Type& AlternateList<T>::ConstIterator<TPathType>::operator *() const
     {
         return m_currentNode->value;
     }
 
     template<typename T>
     template<typename TPathType>
-    inline AlternateList<T>::ConstIterator<TPathType>& AlternateList<T>::ConstIterator<TPathType>::operator ++ () // Pre
+    inline AlternateList<T>::template ConstIterator<TPathType>& AlternateList<T>::ConstIterator<TPathType>::operator ++ () // Pre
     {
-        m_currentNode = AlternateListPathTraits<TPathType>::GetNext<T>(m_currentNode);
+        m_currentNode = AlternateListPathTraits<TPathType>::template GetNext<T>(m_currentNode);
         return *this;
     }
 
     template<typename T>
     template<typename TPathType>
-    inline typename AlternateList<T>::ConstIterator<TPathType>& AlternateList<T>::ConstIterator<TPathType>::operator -- () // Pre
+    inline typename AlternateList<T>::template ConstIterator<TPathType>& AlternateList<T>::ConstIterator<TPathType>::operator -- () // Pre
     {
-        m_currentNode = AlternateListPathTraits<TPathType>::GetPrev<T>(m_currentNode);
+        m_currentNode = AlternateListPathTraits<TPathType>::template GetPrev<T>(m_currentNode);
         return *this;
     }
     template<typename T>
     template<typename TPathType>
-    inline typename AlternateList<T>::ConstIterator<TPathType> AlternateList<T>::ConstIterator<TPathType>::operator ++ (int) // Post
+    inline typename AlternateList<T>::template ConstIterator<TPathType> AlternateList<T>::ConstIterator<TPathType>::operator ++ (int) // Post
     {
         auto* prevCurrent = m_currentNode;
-        m_currentNode = AlternateListPathTraits<TPathType>::GetNext<T>(m_currentNode);
+        m_currentNode = AlternateListPathTraits<TPathType>::template GetNext<T>(m_currentNode);
         return ConstIterator{ prevCurrent };
     }
 
     template<typename T>
     template<typename TPathType>
-    inline typename AlternateList<T>::ConstIterator<TPathType> AlternateList<T>::ConstIterator<TPathType>::operator -- (int) // Post
+    inline typename AlternateList<T>::template ConstIterator<TPathType> AlternateList<T>::ConstIterator<TPathType>::operator -- (int) // Post
     {
         auto* prevCurrent = m_currentNode;
-        m_currentNode = AlternateListPathTraits<TPathType>::GetPrev<T>(m_currentNode);
+        m_currentNode = AlternateListPathTraits<TPathType>::template GetPrev<T>(m_currentNode);
         return ConstIterator{ prevCurrent };
     }
 
@@ -238,35 +238,35 @@ namespace Molten
 
     template<typename T>
     template<typename TPathType>
-    inline typename AlternateList<T>::IteratorPath<TPathType> AlternateList<T>::GetPath()
+    inline typename AlternateList<T>::template IteratorPath<TPathType> AlternateList<T>::GetPath()
     {
         return IteratorPath<TPathType>{ std::get<Path<TPathType>>(m_paths).root };
     }
     template<typename T>
     template<typename TPathType>
-    inline typename const AlternateList<T>::IteratorPath<TPathType> AlternateList<T>::GetPath() const
+    inline const typename AlternateList<T>::template IteratorPath<TPathType> AlternateList<T>::GetPath() const
     {
         return IteratorPath<TPathType>{ std::get<Path<TPathType>>(m_paths).root };
     }
 
     template<typename T>
-    inline typename AlternateList<T>::IteratorPath<typename AlternateList<T>::MainPath> AlternateList<T>::GetMainPath()
+    inline typename AlternateList<T>::template IteratorPath<typename AlternateList<T>::MainPath> AlternateList<T>::GetMainPath()
     {
         return IteratorPath<MainPath>{ std::get<Path<MainPath>>(m_paths).root };
     }
     template<typename T>
-    inline typename const AlternateList<T>::IteratorPath<typename AlternateList<T>::MainPath> AlternateList<T>::GetMainPath() const
+    inline const typename AlternateList<T>::template IteratorPath<typename AlternateList<T>::MainPath> AlternateList<T>::GetMainPath() const
     {
         return IteratorPath<MainPath>{ std::get<Path<MainPath>>(m_paths).root };
     }
 
     template<typename T>
-    inline typename AlternateList<T>::IteratorPath<typename AlternateList<T>::SubPath> AlternateList<T>::GetSubPath()
+    inline typename AlternateList<T>::template IteratorPath<typename AlternateList<T>::SubPath> AlternateList<T>::GetSubPath()
     {
         return IteratorPath<SubPath>{ std::get<Path<SubPath>>(m_paths).root };
     }
     template<typename T>
-    inline typename const AlternateList<T>::IteratorPath<typename AlternateList<T>::SubPath> AlternateList<T>::GetSubPath() const
+    inline const typename AlternateList<T>::template IteratorPath<typename AlternateList<T>::SubPath> AlternateList<T>::GetSubPath() const
     {
         return IteratorPath<SubPath>{ std::get<Path<SubPath>>(m_paths).root };
     }

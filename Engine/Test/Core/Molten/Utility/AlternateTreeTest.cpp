@@ -45,7 +45,7 @@ namespace Molten
 
         TreeType tree;
 
-        tree.GetRoot();// .GetPath<TreeType::MainPath>();
+        tree.GetRoot().GetMainPath();// .GetPath<TreeType::MainPath>();
 
         /*
         EXPECT_EQ(list.GetMainSize(), size_t(0));

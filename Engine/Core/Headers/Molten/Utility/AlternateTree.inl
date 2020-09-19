@@ -75,11 +75,11 @@ namespace Molten
 
     // AlternateListMainPath
 
-    /*template<typename T>
-    inline typename AlternateList<T>::template IteratorPath<AlternateListMainPath> AlternateTreeNode<T>::GetMainPath()
+    template<typename T>
+    inline typename AlternateTreeNode<T>::template IteratorPath<typename AlternateTreeNode<T>::MainPath> AlternateTreeNode<T>::GetMainPath()
     {
         return {};//IteratorPath<MainPath>{ std::get<Path<MainPath>>(m_paths).root };
-    }*/
+    }
 
     /*template<typename T>
     inline AlternateTreeNode<T>::IteratorPath<typename AlternateTreeNode<T>::MainPath> AlternateTreeNode<T>::GetMainPath()
