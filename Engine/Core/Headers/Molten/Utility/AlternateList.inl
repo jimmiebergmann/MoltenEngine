@@ -49,7 +49,7 @@ namespace Molten
 
     template<typename T>
     template<typename TPathType>
-    inline AlternateList<T>::Iterator<TPathType>& AlternateList<T>::Iterator<TPathType>::operator ++ () // Pre
+    inline typename AlternateList<T>::template Iterator<TPathType>& AlternateList<T>::Iterator<TPathType>::operator ++ () // Pre
     {
         m_currentNode = AlternateListPathTraits<TPathType>::template GetNext<T>(m_currentNode);
         return *this;
@@ -117,7 +117,7 @@ namespace Molten
 
     template<typename T>
     template<typename TPathType>
-    inline AlternateList<T>::template ConstIterator<TPathType>& AlternateList<T>::ConstIterator<TPathType>::operator ++ () // Pre
+    inline typename AlternateList<T>::template ConstIterator<TPathType>& AlternateList<T>::ConstIterator<TPathType>::operator ++ () // Pre
     {
         m_currentNode = AlternateListPathTraits<TPathType>::template GetNext<T>(m_currentNode);
         return *this;
@@ -172,26 +172,26 @@ namespace Molten
 
     template<typename T>
     template<typename TPathType>
-    inline AlternateList<T>::Iterator<TPathType> AlternateList<T>::IteratorPath<TPathType>::begin()
+    inline typename AlternateList<T>::template Iterator<TPathType> AlternateList<T>::IteratorPath<TPathType>::begin()
     {
         return Iterator<TPathType>{ m_beginNode };
     }
     template<typename T>
     template<typename TPathType>
-    inline AlternateList<T>::ConstIterator<TPathType> AlternateList<T>::IteratorPath<TPathType>::begin() const
+    inline typename AlternateList<T>::template ConstIterator<TPathType> AlternateList<T>::IteratorPath<TPathType>::begin() const
     {
         return ConstIterator<TPathType>{ m_beginNode };
     }
 
     template<typename T>
     template<typename TPathType>
-    inline AlternateList<T>::Iterator<TPathType> AlternateList<T>::IteratorPath<TPathType>::end()
+    inline typename AlternateList<T>::template Iterator<TPathType> AlternateList<T>::IteratorPath<TPathType>::end()
     {
         return Iterator<TPathType>{ nullptr };
     }
     template<typename T>
     template<typename TPathType>
-    inline AlternateList<T>::ConstIterator<TPathType> AlternateList<T>::IteratorPath<TPathType>::end() const
+    inline typename AlternateList<T>::template ConstIterator<TPathType> AlternateList<T>::IteratorPath<TPathType>::end() const
     {
         return ConstIterator<TPathType>{ nullptr };
     }
