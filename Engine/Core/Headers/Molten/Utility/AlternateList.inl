@@ -218,6 +218,18 @@ namespace Molten
     }
 
     template<typename T>
+    inline AlternateList<T>::AlternateList(AlternateList&& list) :
+        m_paths(std::move(list.m_paths))
+    {}
+
+    template<typename T>
+    inline AlternateList<T>& AlternateList<T>::operator =(AlternateList&& list)
+    {
+        m_paths = std::move(list.m_paths);
+        return *this;
+    }
+
+    template<typename T>
     template<typename TPathType>
     inline size_t AlternateList<T>::GetSize() const
     {
@@ -272,19 +284,6 @@ namespace Molten
     }
 
     template<typename T>
-    inline void AlternateList<T>::PushBack(const bool addSubPath, Type&& value)
-    {
-        auto newNode = new AlternateListNode<T>(std::move(value));
-
-        InternalPushBack<MainPath>(newNode);
-
-        if (addSubPath)
-        {
-            InternalPushBack<SubPath>(newNode);
-        }
-    }
-
-    template<typename T>
     inline void AlternateList<T>::PushBack(const bool addSubPath, const Type& value)
     {
         auto newNode = new AlternateListNode<T>(value);
@@ -298,15 +297,15 @@ namespace Molten
     }
 
     template<typename T>
-    inline void AlternateList<T>::PushFront(const bool addSubPath, Type&& value)
+    inline void AlternateList<T>::PushBack(const bool addSubPath, Type&& value)
     {
         auto newNode = new AlternateListNode<T>(std::move(value));
 
-        InternalPushFront<MainPath>(newNode);
+        InternalPushBack<MainPath>(newNode);
 
         if (addSubPath)
         {
-            InternalPushFront<SubPath>(newNode);
+            InternalPushBack<SubPath>(newNode);
         }
     }
 
@@ -324,12 +323,50 @@ namespace Molten
     }
 
     template<typename T>
+    inline void AlternateList<T>::PushFront(const bool addSubPath, Type&& value)
+    {
+        auto newNode = new AlternateListNode<T>(std::move(value));
+
+        InternalPushFront<MainPath>(newNode);
+
+        if (addSubPath)
+        {
+            InternalPushFront<SubPath>(newNode);
+        }
+    }
+
+    template<typename T>
     template<typename TPathType>
     inline AlternateList<T>::Path<TPathType>::Path() :
         root(nullptr),
         tail(nullptr),
         size(0)
     {}
+
+    template<typename T>
+    template<typename TPathType>
+    inline AlternateList<T>::Path<TPathType>::Path(Path&& path) :
+        root(path.root),
+        tail(path.tail),
+        size(path.size)
+    {
+        path.root = nullptr;
+        path.tail = nullptr;
+        path.size = 0;
+    }
+
+    template<typename T>
+    template<typename TPathType>
+    typename AlternateList<T>::template Path<TPathType>& AlternateList<T>::Path<TPathType>::operator =(Path<TPathType>&& path)
+    {
+        root = path.root;
+        tail = path.tail;
+        size = path.size;
+        path.root = nullptr;
+        path.tail = nullptr;
+        path.size = 0;
+        return *this;
+    }
 
     template<typename T>
     template<typename TPathType>

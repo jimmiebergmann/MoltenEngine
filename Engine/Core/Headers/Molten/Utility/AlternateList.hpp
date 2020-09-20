@@ -131,6 +131,9 @@ namespace Molten
 
         AlternateList() = default;
         ~AlternateList();
+        AlternateList(AlternateList&& list);
+
+        AlternateList& operator =(AlternateList&& list);
 
         template<typename TPathType>
         size_t GetSize() const;
@@ -148,11 +151,11 @@ namespace Molten
         IteratorPath<SubPath> GetSubPath();
         const IteratorPath<SubPath> GetSubPath() const;
 
-        void PushBack(const bool addSubPath, Type&& value);
         void PushBack(const bool addSubPath, const Type& value);
+        void PushBack(const bool addSubPath, Type&& value);    
 
-        void PushFront(const bool addSubPath, Type&& value);
         void PushFront(const bool addSubPath, const Type& value);
+        void PushFront(const bool addSubPath, Type&& value);    
 
         /*
         * TODO:
@@ -168,6 +171,12 @@ namespace Molten
         struct Path
         {
             Path();
+            Path(Path&& path);
+            Path& operator =(Path&& path);
+
+            Path(const Path&) = delete;
+            Path& operator =(const Path&) = delete;
+            
 
             AlternateListNode<T>* root;
             AlternateListNode<T>* tail;
@@ -175,9 +184,7 @@ namespace Molten
         };
 
         AlternateList(const AlternateList&) = delete;
-        AlternateList(AlternateList&&) = delete;
         AlternateList& operator =(const AlternateList&) = delete;
-        AlternateList& operator =(AlternateList&&) = delete;
 
         template<typename TPathType>
         void InternalPushBack(AlternateListNode<T>* newNode);

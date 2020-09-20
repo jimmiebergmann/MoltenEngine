@@ -27,7 +27,6 @@
 #define MOLTEN_CORE_UTILITY_ALTERNATETREE_HPP
 
 #include "Molten/Utility/AlternateList.hpp"
-#include <tuple>
 
 namespace Molten
 {
@@ -84,29 +83,52 @@ namespace Molten
         template<typename TPathType>
         using IteratorPath = typename List::template IteratorPath<TPathType>;
 
-        AlternateTreeNode(AlternateTreeNode * parent);
         ~AlternateTreeNode();
+        AlternateTreeNode(AlternateTreeNode&& node);
 
-       /* template<typename TPathType>
+        AlternateTreeNode& operator =(AlternateTreeNode&& node);
+
+        Type& GetValue();
+        const Type& GetValue() const;
+
+        bool HasParent() const;
+
+        template<typename TPathType>
+        size_t GetSize() const;
+        size_t GetMainSize() const;
+        size_t GetSubSize() const;
+
+        template<typename TPathType>
         IteratorPath<TPathType> GetPath();
         template<typename TPathType>
-        const IteratorPath<TPathType> GetPath() const;*/
-        
-        IteratorPath<MainPath> GetMainPath();
-        /*const IteratorPath<MainPath> GetMainPath() const;
+        const IteratorPath<TPathType> GetPath() const;
 
+        IteratorPath<MainPath> GetMainPath();
+        const IteratorPath<MainPath> GetMainPath() const;
+        
         IteratorPath<SubPath> GetSubPath();
-        const IteratorPath<SubPath> GetSubPath() const;*/
+        const IteratorPath<SubPath> GetSubPath() const;
+
+        void PushBack(const bool addSubPath, const Type& value);
+        void PushBack(const bool addSubPath, Type&& value);
+        
+        void PushFront(const bool addSubPath, const Type& value);
+        void PushFront(const bool addSubPath, Type&& value);
 
     private:
 
-        AlternateTreeNode(const AlternateTreeNode&) = delete;
-        AlternateTreeNode(AlternateTreeNode&&) = delete;
-        AlternateTreeNode& operator =(const AlternateTreeNode&) = delete;
-        AlternateTreeNode& operator =(AlternateTreeNode&&) = delete;
+        AlternateTreeNode(AlternateTreeNode* parent);
+        AlternateTreeNode(AlternateTreeNode* parent, const Type& value);
+        AlternateTreeNode(AlternateTreeNode* parent, Type&& value);
 
+        AlternateTreeNode(const AlternateTreeNode&) = delete;
+        AlternateTreeNode& operator =(const AlternateTreeNode&) = delete;
+
+        Type m_value;
         AlternateTreeNode* m_parent;
-        List m_list;
+        List m_children;
+
+        friend class AlternateTree<T>;
 
     };
 

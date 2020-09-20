@@ -1,4 +1,3 @@
-#include "AlternateTree.hpp"
 /*
 * MIT License
 *
@@ -52,62 +51,141 @@ namespace Molten
 
     // Alterante tree node implementations.
     template<typename T>
-    inline AlternateTreeNode<T>::AlternateTreeNode(AlternateTreeNode* parent) :
-        m_parent(parent)
-    {}
-
-    template<typename T>
     inline AlternateTreeNode<T>::~AlternateTreeNode()
     {}
 
-   /* template<typename T>
+    template<typename T>
+    inline AlternateTreeNode<T>::AlternateTreeNode(AlternateTreeNode&& node) :
+        m_value(std::move(node.m_value)),
+        m_parent(node.m_parent),
+        m_children(std::move(node.m_children))
+    {
+        node.m_parent = nullptr;
+    }
+
+    template<typename T>
+    inline AlternateTreeNode<T>& AlternateTreeNode<T>::operator =(AlternateTreeNode&& node)
+    {
+        m_value = std::move(node.m_value);
+        m_parent = node.m_parent;
+        m_children = std::move(node.m_children);
+
+        node.m_parent = nullptr;
+
+        return *this;
+    }
+
+    template<typename T>
+    inline typename AlternateTreeNode<T>::Type& AlternateTreeNode<T>::GetValue()
+    {
+        return m_value;
+    }
+    template<typename T>
+    inline const typename AlternateTreeNode<T>::Type& AlternateTreeNode<T>::GetValue() const
+    {
+        return m_value;
+    }
+
+    template<typename T>
+    inline bool AlternateTreeNode<T>::HasParent() const
+    {
+        return m_parent != nullptr;
+    }
+
+    template<typename T>
+    template<typename TPathType>
+    inline size_t AlternateTreeNode<T>::GetSize() const
+    {
+        return m_children.GetSize<TPathType>();
+    }
+
+    template<typename T>
+    inline size_t AlternateTreeNode<T>::GetMainSize() const
+    {
+        return m_children.GetMainSize();
+    }
+
+    template<typename T>
+    inline size_t AlternateTreeNode<T>::GetSubSize() const
+    {
+        return m_children.GetSubSize();
+    }
+
+    template<typename T>
     template<typename TPathType>
     inline AlternateTreeNode<T>::IteratorPath<TPathType> AlternateTreeNode<T>::GetPath()
     {
-        return m_list.GetPath<TPathType>();
+        return m_children.GetPath<TPathType>();
     }
     template<typename T>
     template<typename TPathType>
     inline const AlternateTreeNode<T>::IteratorPath<TPathType> AlternateTreeNode<T>::GetPath() const
     {
-        return m_list.GetPath<TPathType>();
-    }*/
-
-    // AlternateListMainPath
-
-    template<typename T>
-    inline typename AlternateTreeNode<T>::template IteratorPath<typename AlternateTreeNode<T>::MainPath> AlternateTreeNode<T>::GetMainPath()
-    {
-        return {};//IteratorPath<MainPath>{ std::get<Path<MainPath>>(m_paths).root };
+        return m_children.GetPath<TPathType>();
     }
 
-    /*template<typename T>
-    inline AlternateTreeNode<T>::IteratorPath<typename AlternateTreeNode<T>::MainPath> AlternateTreeNode<T>::GetMainPath()
+    template<typename T>
+    inline typename AlternateTreeNode<T>::template IteratorPath<AlternateListMainPath> AlternateTreeNode<T>::GetMainPath()
     {
-        return {};// m_list.GetPath<typename AlternateTreeNode<T>::MainPath>();
-    }*/
-
-    /*template<typename T>
-    inline typename AlternateTreeNode<T>::IteratorPath<typename AlternateTreeNode<T>::MainPath> AlternateTreeNode<T>::GetMainPath()
-    {
-        //return m_list.GetMainPath();
-    }*/
-
-    /*template<typename T>
-    inline const AlternateTreeNode<T>::IteratorPath<typename AlternateTreeNode<T>::MainPath> AlternateTreeNode<T>::GetMainPath() const
-    {
-        return m_list.GetMainPath();
-    }*/
-
-    /*template<typename T>
-    AlternateTreeNode<T>::IteratorPath<typename AlternateTreeNode<T>::SubPath> AlternateTreeNode<T>::GetSubPath()
-    {
-        return m_list.GetSubPath();
+        return m_children.GetMainPath();
     }
     template<typename T>
-    const AlternateTreeNode<T>::IteratorPath<typename AlternateTreeNode<T>::SubPath> AlternateTreeNode<T>::GetSubPath() const
+    inline const typename AlternateTreeNode<T>::template IteratorPath<AlternateListMainPath> AlternateTreeNode<T>::GetMainPath() const
     {
-        return m_list.GetSubPath();
-    }*/
+        return m_children.GetMainPath();
+    }
+
+    template<typename T>
+    inline typename AlternateTreeNode<T>::template IteratorPath<AlternateListSubPath> AlternateTreeNode<T>::GetSubPath()
+    {
+        return m_children.GetSubPath();
+    }
+    template<typename T>
+    inline const typename AlternateTreeNode<T>::template IteratorPath<AlternateListSubPath> AlternateTreeNode<T>::GetSubPath() const
+    {
+        return m_children.GetSubPath();
+    }
+
+    template<typename T>
+    inline void AlternateTreeNode<T>::PushBack(const bool addSubPath, const Type& value)
+    {
+        m_children.PushBack(addSubPath, AlternateTreeNode(this, value));
+    }
+
+    template<typename T>
+    inline void AlternateTreeNode<T>::PushBack(const bool addSubPath, Type&& value)
+    {
+        m_children.PushBack(addSubPath, AlternateTreeNode(this, std::move(value)));
+    }
+
+    template<typename T>
+    inline void AlternateTreeNode<T>::PushFront(const bool addSubPath, const Type& value)
+    {
+        m_children.PushFront(addSubPath, AlternateTreeNode(this, value));
+    }
+
+    template<typename T>
+    inline void AlternateTreeNode<T>::PushFront(const bool addSubPath, Type&& value)
+    {
+        m_children.PushFront(addSubPath, AlternateTreeNode(this, std::move(value)));
+    }
+
+    template<typename T>
+    inline AlternateTreeNode<T>::AlternateTreeNode(AlternateTreeNode* parent) :
+        m_value{},
+        m_parent(parent)
+    {}
+
+    template<typename T>
+    inline AlternateTreeNode<T>::AlternateTreeNode(AlternateTreeNode* parent, const Type& value) :
+        m_value(value),
+        m_parent(parent)
+    {}
+
+    template<typename T>
+    inline AlternateTreeNode<T>::AlternateTreeNode(AlternateTreeNode* parent, Type&& value) :
+        m_value(std::move(value)),
+        m_parent(parent)
+    {}
 
 }
