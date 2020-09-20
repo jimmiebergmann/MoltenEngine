@@ -96,7 +96,7 @@ namespace Molten
     template<typename TPathType>
     inline size_t AlternateTreeNode<T>::GetSize() const
     {
-        return m_children.GetSize<TPathType>();
+        return m_children.template GetSize<TPathType>();
     }
 
     template<typename T>
@@ -113,15 +113,15 @@ namespace Molten
 
     template<typename T>
     template<typename TPathType>
-    inline AlternateTreeNode<T>::IteratorPath<TPathType> AlternateTreeNode<T>::GetPath()
+    inline typename AlternateTreeNode<T>::template IteratorPath<TPathType> AlternateTreeNode<T>::GetPath()
     {
-        return m_children.GetPath<TPathType>();
+        return m_children.template GetPath<TPathType>();
     }
     template<typename T>
     template<typename TPathType>
-    inline const AlternateTreeNode<T>::IteratorPath<TPathType> AlternateTreeNode<T>::GetPath() const
+    inline const typename AlternateTreeNode<T>::template IteratorPath<TPathType> AlternateTreeNode<T>::GetPath() const
     {
-        return m_children.GetPath<TPathType>();
+        return m_children.template GetPath<TPathType>();
     }
 
     template<typename T>

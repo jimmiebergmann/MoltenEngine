@@ -94,7 +94,6 @@ namespace Molten
     {
         using TreeType = AlternateTree<TestData1>;
         using NodeType = AlternateTreeNode<TestData1>;
-        using NodeList = AlternateList<NodeType>;
 
         TreeType tree;
         NodeType& root = tree.GetRoot();
@@ -114,7 +113,6 @@ namespace Molten
 
         using TreeType = AlternateTree<TestData1>;
         using NodeType = AlternateTreeNode<TestData1>;
-        using NodeList = AlternateList<NodeType>;
 
         {
             TreeType tree;
@@ -134,8 +132,6 @@ namespace Molten
             EXPECT_EQ(root.GetMainSize(), size_t(9));
             EXPECT_EQ(root.GetSize<AlternateListSubPath>(), size_t(5));
             EXPECT_EQ(root.GetSubSize(), size_t(5));
-
-            auto it = root.GetMainPath().begin();
 
             if (!CompareListContent<NodeType, AlternateListMainPath, TestData1>(
                 root.GetMainPath().begin(),
