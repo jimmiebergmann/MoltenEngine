@@ -407,7 +407,87 @@ namespace Molten
 
     TEST(Utility, AlternateList_EraseSomeSub)
     {
+        using ListType = AlternateList<TestData1>;
 
+        {
+            { // 1 item.
+                ListType list;
+                auto mainPath = list.GetPath<AlternateListMainPath>();
+                auto subPath = list.GetPath<AlternateListSubPath>();
+
+                list.PushBack(false, TestData1{ 1 });
+                EXPECT_EQ(list.GetMainSize(), size_t(1));
+                EXPECT_EQ(list.GetSubSize(), size_t(0));
+
+                auto it = mainPath.begin();
+                list.Erase(it);
+
+                EXPECT_EQ(list.GetMainSize(), size_t(0));
+                EXPECT_EQ(list.GetSubSize(), size_t(0));
+
+                EXPECT_EQ(mainPath.begin(), mainPath.end());
+                EXPECT_EQ(subPath.begin(), subPath.end());
+            }
+            { // 2 items.
+                { // 0 subs.
+                    ListType list;
+                    auto mainPath = list.GetPath<AlternateListMainPath>();
+                    auto subPath = list.GetPath<AlternateListSubPath>();
+
+                    list.PushBack(false, TestData1{ 1 });
+                    list.PushBack(false, TestData1{ 2 });
+                    EXPECT_EQ(list.GetMainSize(), size_t(2));
+                    EXPECT_EQ(list.GetSubSize(), size_t(0));
+
+                    auto it = mainPath.begin();
+                    list.Erase(it);
+
+                    EXPECT_EQ(list.GetMainSize(), size_t(1));
+                    EXPECT_EQ(list.GetSubSize(), size_t(0));
+
+                    EXPECT_EQ(++mainPath.begin(), mainPath.end());
+                    EXPECT_EQ(subPath.begin(), subPath.end());
+
+                    it = mainPath.begin();
+                    list.Erase(it);
+
+                    EXPECT_EQ(list.GetMainSize(), size_t(0));
+                    EXPECT_EQ(list.GetSubSize(), size_t(0));
+
+                    EXPECT_EQ(mainPath.begin(), mainPath.end());
+                    EXPECT_EQ(subPath.begin(), subPath.end());
+                }
+                { // 1 sub.
+                    ListType list;
+                    auto mainPath = list.GetPath<AlternateListMainPath>();
+                    auto subPath = list.GetPath<AlternateListSubPath>();
+
+                    list.PushBack(false, TestData1{ 1 });
+                    list.PushBack(true, TestData1{ 2 });
+                    EXPECT_EQ(list.GetMainSize(), size_t(2));
+                    EXPECT_EQ(list.GetSubSize(), size_t(1));
+
+                    auto it = mainPath.begin();
+                    list.Erase(it);
+
+                    EXPECT_EQ(list.GetMainSize(), size_t(1));
+                    EXPECT_EQ(list.GetSubSize(), size_t(1));
+
+                    EXPECT_EQ((*subPath.begin()).value, size_t(2));
+                    EXPECT_EQ(++mainPath.begin(), mainPath.end());
+                    EXPECT_EQ(++subPath.begin(), subPath.end());
+
+                    it = list.GetPath<AlternateListMainPath>().begin();
+                    list.Erase(it);
+
+                    EXPECT_EQ(list.GetMainSize(), size_t(0));
+                    EXPECT_EQ(list.GetSubSize(), size_t(0));
+
+                    EXPECT_EQ(mainPath.begin(), mainPath.end());
+                    EXPECT_EQ(subPath.begin(), subPath.end());
+                }
+            }
+        }
     }
 
 }

@@ -343,7 +343,11 @@ namespace Molten
         auto* nextPathNode = AlternateListPathTraits<TPathType>::GetNext(node);
         
         InternalErase<MainPath>(node);
-        InternalErase<SubPath>(node);
+
+        if (InternalIsInSubPath(node))
+        {
+            InternalErase<SubPath>(node);
+        }
 
         delete node;
         return Iterator<TPathType>{ nextPathNode };
@@ -403,8 +407,8 @@ namespace Molten
     {
        // Remove from main path.
        auto& path = std::get<AlternateListPath<Type, TPathType>>(m_paths);
-       auto* prev = AlternateListPathTraits<TPathType>::GetPrev(node); // node->prevMain;
-       auto* next = AlternateListPathTraits<TPathType>::GetNext(node); // node->nextMain;
+       auto* prev = AlternateListPathTraits<TPathType>::GetPrev(node);
+       auto* next = AlternateListPathTraits<TPathType>::GetNext(node);
 
        if (path.root == node)
        {
@@ -417,13 +421,26 @@ namespace Molten
 
        if (prev)
        {
-           AlternateListPathTraits<TPathType>::SetNext(prev, next); //prev->nextMain = next;
+           AlternateListPathTraits<TPathType>::SetNext(prev, next);
        }
        if (next)
        {
-           AlternateListPathTraits<TPathType>::SetPrev(next, prev); //nextMain->prevMain = prev;
+           AlternateListPathTraits<TPathType>::SetPrev(next, prev);
        }
        path.size--;
+    }
+
+    template<typename T>
+    bool AlternateList<T>::InternalIsInSubPath(AlternateListNode<T>* node)
+    {
+        auto& path = std::get<AlternateListPath<Type, SubPath>>(m_paths);
+        auto* prev = AlternateListPathTraits<SubPath>::GetPrev(node);
+        auto* next = AlternateListPathTraits<SubPath>::GetNext(node);
+
+        return 
+            path.root == node || path.tail == node || 
+            (prev && AlternateListPathTraits<SubPath>::GetNext(prev) == node) ||
+            (next && AlternateListPathTraits<SubPath>::GetPrev(next) == node);
     }
 
 

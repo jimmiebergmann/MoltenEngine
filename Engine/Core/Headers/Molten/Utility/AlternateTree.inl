@@ -96,6 +96,75 @@ namespace Molten
     }
 
 
+    // Alterante tree const iterator implementations.
+    template<typename T>
+    template<typename TPathType>
+    inline AlternateTree<T>::ConstIterator<TPathType>::ConstIterator() :
+        m_node(nullptr),
+        m_listIterator(nullptr)
+    {}
+
+    template<typename T>
+    template<typename TPathType>
+    inline AlternateTree<T>::ConstIterator<TPathType>::ConstIterator(const AlternateTreeNode<Type>* node, ListConstIterator<TPathType> listIterator) :
+        m_node(node),
+        m_listIterator(listIterator)
+    {}
+
+    template<typename T>
+    template<typename TPathType>
+    inline typename AlternateTree<T>::Type& AlternateTree<T>::ConstIterator<TPathType>::operator *() const
+    {
+        return (*m_listIterator).GetValue();
+    }
+
+    template<typename T>
+    template<typename TPathType>
+    inline typename AlternateTree<T>::template ConstIterator<TPathType>& AlternateTree<T>::ConstIterator<TPathType>::operator ++ () // Pre
+    {
+        ++m_listIterator;
+        return *this;
+    }
+
+    template<typename T>
+    template<typename TPathType>
+    inline typename AlternateTree<T>::template ConstIterator<TPathType>& AlternateTree<T>::ConstIterator<TPathType>::operator -- () // Pre
+    {
+
+        --m_listIterator;
+        return *this;
+    }
+    template<typename T>
+    template<typename TPathType>
+    inline typename AlternateTree<T>::template ConstIterator<TPathType> AlternateTree<T>::ConstIterator<TPathType>::operator ++ (int) // Post
+    {
+        auto oldIterator = m_listIterator++;
+        return ConstIterator{ m_node, oldIterator };
+    }
+
+    template<typename T>
+    template<typename TPathType>
+    inline typename AlternateTree<T>::template ConstIterator<TPathType> AlternateTree<T>::ConstIterator<TPathType>::operator -- (int) // Post
+    {
+        auto oldIterator = m_listIterator--;
+        return ConstIterator{ m_node, oldIterator };
+    }
+
+    template<typename T>
+    template<typename TPathType>
+    inline bool AlternateTree<T>::ConstIterator<TPathType>::operator == (const ConstIterator<TPathType>& rhs) const
+    {
+        return m_listIterator == rhs.m_listIterator;
+    }
+
+    template<typename T>
+    template<typename TPathType>
+    inline bool AlternateTree<T>::ConstIterator<TPathType>::operator != (const ConstIterator<TPathType>& rhs) const
+    {
+        return m_listIterator != rhs.m_listIterator;
+    }
+
+
     // Alterante tree iterator path implementations.
     template<typename T>
     template<typename TPathType>
@@ -117,12 +186,12 @@ namespace Molten
     {
         return Iterator<TPathType>{ m_node, m_path.begin() };
     }
-    /*template<typename T>
+    template<typename T>
     template<typename TPathType>
-    inline typename AlternateList<T>::template ConstIterator<TPathType> AlternateList<T>::IteratorPath<TPathType>::begin() const
+    inline typename AlternateTree<T>::template ConstIterator<TPathType> AlternateTree<T>::IteratorPath<TPathType>::begin() const
     {
-        return ConstIterator<TPathType>{ m_beginNode };
-    }*/
+        return ConstIterator<TPathType>{ m_node, m_path.begin() };
+    }
 
     template<typename T>
     template<typename TPathType>
@@ -130,13 +199,12 @@ namespace Molten
     {
         return Iterator<TPathType>{ m_node, m_path.end() };
     }
-    /*template<typename T>
+    template<typename T>
     template<typename TPathType>
-    inline typename AlternateList<T>::template ConstIterator<TPathType> AlternateList<T>::IteratorPath<TPathType>::end() const
+    inline typename AlternateTree<T>::template ConstIterator<TPathType> AlternateTree<T>::IteratorPath<TPathType>::end() const
     {
-        return ConstIterator<TPathType>{ nullptr };
-    }*/
-
+        return ConstIterator<TPathType>{ m_node, m_path.end() };
+    }
 
 
     // Alterante tree implementations.
@@ -177,7 +245,7 @@ namespace Molten
     {}
 
     template<typename T>
-    inline AlternateTreeNode<T>::AlternateTreeNode(AlternateTreeNode&& node) :
+    inline AlternateTreeNode<T>::AlternateTreeNode(AlternateTreeNode&& node) noexcept :
         m_value(std::move(node.m_value)),
         m_parent(node.m_parent),
         m_children(std::move(node.m_children))
@@ -186,7 +254,7 @@ namespace Molten
     }
 
     template<typename T>
-    inline AlternateTreeNode<T>& AlternateTreeNode<T>::operator =(AlternateTreeNode&& node)
+    inline AlternateTreeNode<T>& AlternateTreeNode<T>::operator =(AlternateTreeNode&& node) noexcept
     {
         m_value = std::move(node.m_value);
         m_parent = node.m_parent;

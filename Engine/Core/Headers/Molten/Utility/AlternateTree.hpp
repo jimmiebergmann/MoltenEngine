@@ -55,6 +55,8 @@ namespace Molten
         using ListIteratorPath = typename List::template IteratorPath<TPathType>;
         template<typename TPathType>
         using ListIterator = typename List::template Iterator<TPathType>;
+        template<typename TPathType>
+        using ListConstIterator = typename List::template ConstIterator<TPathType>;
 
 
         template<typename TPathType>
@@ -86,6 +88,34 @@ namespace Molten
 
 
         template<typename TPathType>
+        class ConstIterator
+        {
+
+        public:
+
+            ConstIterator();
+            ConstIterator(const AlternateTreeNode<Type>* node, ListConstIterator<TPathType> listIterator);
+
+            Type& operator *() const;
+            ConstIterator& operator ++ ();
+            ConstIterator& operator -- ();
+            ConstIterator operator ++ (int);
+            ConstIterator operator -- (int);
+            bool operator == (const ConstIterator& rhs) const;
+            bool operator != (const ConstIterator& rhs) const;
+
+        private:
+
+            const AlternateTreeNode<Type>* m_node;
+            ListConstIterator<TPathType> m_listIterator;
+
+            friend class AlternateTree<T>;
+            friend class AlternateTreeNode<T>;
+
+        };
+
+
+        template<typename TPathType>
         class IteratorPath
         {
 
@@ -95,8 +125,10 @@ namespace Molten
             IteratorPath(AlternateTreeNode<Type>* node, ListIteratorPath<TPathType> path);
 
             Iterator<TPathType> begin();
+            ConstIterator<TPathType> begin() const;
 
             Iterator<TPathType> end();
+            ConstIterator<TPathType> end() const;
 
         private:
 
@@ -147,9 +179,9 @@ namespace Molten
         using IteratorPath = typename AlternateTree<T>::template IteratorPath<TPathType>;
 
         ~AlternateTreeNode();
-        AlternateTreeNode(AlternateTreeNode&& node);
+        AlternateTreeNode(AlternateTreeNode&& node) noexcept;
 
-        AlternateTreeNode& operator =(AlternateTreeNode&& node);
+        AlternateTreeNode& operator =(AlternateTreeNode&& node) noexcept;
 
         Type& GetValue();
         const Type& GetValue() const;

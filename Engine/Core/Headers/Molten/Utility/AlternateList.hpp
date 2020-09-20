@@ -168,8 +168,6 @@ namespace Molten
 
         /*
         * TODO:
-        
-
         void Insert(Iterator it, const bool addSubPath, Type&& value);
         void Insert(Iterator it, const bool addSubPath, const Type& value);
         */
@@ -187,6 +185,8 @@ namespace Molten
 
         template<typename TPathType>
         void InternalErase(AlternateListNode<T>* node);
+
+        bool InternalIsInSubPath(AlternateListNode<T>* node);
 
         std::tuple<AlternateListPath<Type, MainPath>, AlternateListPath<Type, SubPath>> m_paths;
 
