@@ -31,7 +31,7 @@
 namespace Molten
 {
 
-    TEST(Math, Angle)
+    TEST(Math, Angle_Convert)
     {
         {
             Angle angle;
@@ -79,4 +79,159 @@ namespace Molten
         }
 
     }
+
+    TEST(Math, Angle_Normalize)
+    {
+        {
+            {
+                Angle angle = Degrees(0).Normal();
+                EXPECT_NEAR(angle.AsDegrees<double>(), double(0.0f), 1e-08);
+            }
+            {
+                Angle angle = Degrees(250).Normal();
+                EXPECT_NEAR(angle.AsDegrees<double>(), double(250.0f), 1e-08);
+            }
+            {
+                Angle angle = Degrees(360).Normal();
+                EXPECT_NEAR(angle.AsDegrees<double>(), double(0.0f), 1e-08);
+            }
+            {
+                Angle angle = Degrees(1000).Normal();
+                EXPECT_NEAR(angle.AsDegrees<double>(), double(280.0f), 1e-08);
+            }
+            {
+                Angle angle = Degrees(2000).Normal();
+                EXPECT_NEAR(angle.AsDegrees<double>(), double(200.0f), 1e-08);
+            }
+        }
+        {
+            {
+                Angle angle = Degrees(0);
+                angle.Normalize();
+                EXPECT_NEAR(angle.AsDegrees<double>(), double(0.0f), 1e-08);
+            }
+            {
+                Angle angle = Degrees(250);
+                angle.Normalize();
+                EXPECT_NEAR(angle.AsDegrees<double>(), double(250.0f), 1e-08);
+            }
+            {
+                Angle angle = Degrees(360);
+                angle.Normalize();
+                EXPECT_NEAR(angle.AsDegrees<double>(), double(0.0f), 1e-08);
+            }
+            {
+                Angle angle = Degrees(1000);
+                angle.Normalize();
+                EXPECT_NEAR(angle.AsDegrees<double>(), double(280.0f), 1e-08);
+            }
+            {
+                Angle angle = Degrees(2000);
+                angle.Normalize();
+                EXPECT_NEAR(angle.AsDegrees<double>(), double(200.0f), 1e-08);
+            }
+        }
+    }
+
+    TEST(Math, Angle_Operators)
+    {
+        {
+            EXPECT_TRUE(Degrees(0) == Degrees(0));
+            EXPECT_TRUE(Degrees(250) == Degrees(250));
+            EXPECT_TRUE(Degrees(360) == Degrees(360));
+            EXPECT_TRUE(Degrees(1000) == Degrees(1000));
+            EXPECT_TRUE(Degrees(2000) == Degrees(2000));
+
+            EXPECT_FALSE(Degrees(0) == Degrees(1));
+            EXPECT_FALSE(Degrees(250) == Degrees(249));
+            EXPECT_FALSE(Degrees(360) == Degrees(361));
+            EXPECT_FALSE(Degrees(1000) == Degrees(1001));
+            EXPECT_FALSE(Degrees(2000) == Degrees(1999));
+        }
+        {
+            EXPECT_FALSE(Degrees(0) != Degrees(0));
+            EXPECT_FALSE(Degrees(250) != Degrees(250));
+            EXPECT_FALSE(Degrees(360) != Degrees(360));
+            EXPECT_FALSE(Degrees(1000) != Degrees(1000));
+            EXPECT_FALSE(Degrees(2000) != Degrees(2000));
+
+            EXPECT_TRUE(Degrees(0) != Degrees(1));
+            EXPECT_TRUE(Degrees(250) != Degrees(249));
+            EXPECT_TRUE(Degrees(360) != Degrees(361));
+            EXPECT_TRUE(Degrees(1000) != Degrees(1001));
+            EXPECT_TRUE(Degrees(2000) != Degrees(1999));
+        }
+        {
+            EXPECT_EQ(Degrees(0) + Degrees(0), Degrees(0));
+            EXPECT_EQ(Degrees(0) + Degrees(1), Degrees(1));
+            EXPECT_EQ(Degrees(1) + Degrees(0), Degrees(1));
+            EXPECT_EQ(Degrees(1) + Degrees(1), Degrees(2));
+
+            EXPECT_EQ(Degrees(0) + Degrees(-1), Degrees(-1));
+            EXPECT_EQ(Degrees(-1) + Degrees(0), Degrees(-1));
+            EXPECT_EQ(Degrees(-1) + Degrees(-1), Degrees(-2));
+
+            EXPECT_EQ(Degrees(1000) + Degrees(2000), Degrees(3000));
+        }
+        {
+
+            EXPECT_EQ(Degrees(0) += Degrees(0), Degrees(0));
+            EXPECT_EQ(Degrees(0) += Degrees(1), Degrees(1));
+            EXPECT_EQ(Degrees(1) += Degrees(0), Degrees(1));
+            EXPECT_EQ(Degrees(1) += Degrees(1), Degrees(2));
+
+            EXPECT_EQ(Degrees(0) += Degrees(-1), Degrees(-1));
+            EXPECT_EQ(Degrees(-1) += Degrees(0), Degrees(-1));
+            EXPECT_EQ(Degrees(-1) += Degrees(-1), Degrees(-2));
+
+            EXPECT_EQ(Degrees(1000) += Degrees(2000), Degrees(3000));
+        }
+        {
+            EXPECT_EQ(Degrees(0) - Degrees(0), Degrees(0));
+            EXPECT_EQ(Degrees(0) - Degrees(1), Degrees(-1));
+            EXPECT_EQ(Degrees(1) - Degrees(0), Degrees(1));
+            EXPECT_EQ(Degrees(1) - Degrees(1), Degrees(0));
+
+            EXPECT_EQ(Degrees(0) - Degrees(-1), Degrees(1));
+            EXPECT_EQ(Degrees(-1) - Degrees(0), Degrees(-1));
+            EXPECT_EQ(Degrees(-1) - Degrees(-1), Degrees(0));
+
+            EXPECT_EQ(Degrees(1000) - Degrees(2000), Degrees(-1000));
+        }
+        {
+            EXPECT_EQ(Degrees(0) -= Degrees(0), Degrees(0));
+            EXPECT_EQ(Degrees(0) -= Degrees(1), Degrees(-1));
+            EXPECT_EQ(Degrees(1) -= Degrees(0), Degrees(1));
+            EXPECT_EQ(Degrees(1) -= Degrees(1), Degrees(0));
+
+            EXPECT_EQ(Degrees(0) -= Degrees(-1), Degrees(1));
+            EXPECT_EQ(Degrees(-1) -= Degrees(0), Degrees(-1));
+            EXPECT_EQ(Degrees(-1) -= Degrees(-1), Degrees(0));
+
+            EXPECT_EQ(Degrees(1000) -= Degrees(2000), Degrees(-1000));
+        }
+        {
+            EXPECT_NEAR((Radians(0.0f) * Radians(0.0f)).AsRadians<double>(), double(0.0f), 1e-08);
+            EXPECT_NEAR((Radians(0.0f) * Radians(1.0f)).AsRadians<double>(), double(0.0f), 1e-08);
+            EXPECT_NEAR((Radians(1.0f) * Radians(0.0f)).AsRadians<double>(), double(0.0f), 1e-08);
+            EXPECT_NEAR((Radians(2.0f) * Radians(60.0f)).AsRadians<double>(), double(120.0f), 1e-08);
+        }
+        {
+            EXPECT_NEAR((Radians(0.0f) *= Radians(0.0f)).AsRadians<double>(), double(0.0f), 1e-08);
+            EXPECT_NEAR((Radians(0.0f) *= Radians(1.0f)).AsRadians<double>(), double(0.0f), 1e-08);
+            EXPECT_NEAR((Radians(1.0f) *= Radians(0.0f)).AsRadians<double>(), double(0.0f), 1e-08);
+            EXPECT_NEAR((Radians(2.0f) *= Radians(60.0f)).AsRadians<double>(), double(120.0f), 1e-08);
+        }
+        {
+            EXPECT_NEAR((Radians(0.0f) / Radians(1.0f)).AsRadians<double>(), double(0.0f), 1e-08);
+            EXPECT_NEAR((Radians(1.0f) / Radians(3.0f)).AsRadians<double>(), double(1.0f / 3.0f), 1e-08);
+            EXPECT_NEAR((Radians(4.0f) / Radians(30.0f)).AsRadians<double>(), double(4.0f / 30.0f), 1e-08);
+        }
+        {
+            EXPECT_NEAR((Radians(0.0f) /= Radians(1.0f)).AsRadians<double>(), double(0.0f), 1e-08);
+            EXPECT_NEAR((Radians(1.0f) /= Radians(3.0f)).AsRadians<double>(), double(1.0f / 3.0f), 1e-08);
+            EXPECT_NEAR((Radians(4.0f) /= Radians(30.0f)).AsRadians<double>(), double(4.0f / 30.0f), 1e-08);
+        }
+    }
+
 }
