@@ -237,7 +237,7 @@ namespace Molten
     template<typename TPathType>
     inline typename AlternateTreeNode<T>::template IteratorPath<TPathType> AlternateTreeNode<T>::GetPath()
     {
-        return IteratorPath<TPathType>{ this, m_children.GetPath<TPathType>() };
+        return IteratorPath<TPathType>{ this, m_children.template GetPath<TPathType>() };
     }
 
     template<typename T>

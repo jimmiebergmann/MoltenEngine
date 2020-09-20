@@ -104,7 +104,7 @@ namespace Molten
 
     template<typename T>
     template<typename TPathType>
-    inline AlternateList<T>::ConstIterator<TPathType>::ConstIterator(AlternateListNode<T>* currentNode) :
+    inline AlternateList<T>::ConstIterator<TPathType>::ConstIterator(const AlternateListNode<T>* currentNode) :
         m_currentNode(currentNode)
     {}
 
@@ -349,39 +349,6 @@ namespace Molten
         return Iterator<TPathType>{ nextPathNode };
     }
 
-    /*template<typename T>
-    template<typename TPathType>
-    inline AlternateList<T>::Path<TPathType>::Path() :
-        root(nullptr),
-        tail(nullptr),
-        size(0)
-    {}
-
-    template<typename T>
-    template<typename TPathType>
-    inline AlternateList<T>::Path<TPathType>::Path(Path&& path) :
-        root(path.root),
-        tail(path.tail),
-        size(path.size)
-    {
-        path.root = nullptr;
-        path.tail = nullptr;
-        path.size = 0;
-    }
-
-    template<typename T>
-    template<typename TPathType>
-    typename AlternateList<T>::template Path<TPathType>& AlternateList<T>::Path<TPathType>::operator =(Path<TPathType>&& path)
-    {
-        root = path.root;
-        tail = path.tail;
-        size = path.size;
-        path.root = nullptr;
-        path.tail = nullptr;
-        path.size = 0;
-        return *this;
-    }*/
-
     template<typename T>
     template<typename TPathType>
     inline void AlternateList<T>::InternalPushBack(AlternateListNode<T>* node)
@@ -509,7 +476,7 @@ namespace Molten
     }
 
     template<typename T, typename TPathType>
-    typename AlternateListPath<T, TPathType>& AlternateListPath<T, TPathType>::operator =(AlternateListPath<T, TPathType>&& path)
+    inline AlternateListPath<T, TPathType>& AlternateListPath<T, TPathType>::operator =(AlternateListPath<T, TPathType>&& path)
     {
         root = path.root;
         tail = path.tail;

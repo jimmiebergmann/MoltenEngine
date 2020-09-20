@@ -94,7 +94,7 @@ namespace Molten
         public:
 
             ConstIterator();
-            ConstIterator(AlternateListNode<T>* currentNode);
+            ConstIterator(const AlternateListNode<T>* currentNode);
 
             const Type& operator *() const;
             ConstIterator& operator ++ ();
@@ -105,6 +105,8 @@ namespace Molten
             bool operator != (const ConstIterator& rhs) const;
 
         private:
+
+            const AlternateListNode<T>* m_currentNode;
 
             friend class AlternateList<T>;
 
@@ -173,22 +175,6 @@ namespace Molten
         */
 
     private:
-
-        /*template<typename TPathType> 
-        struct Path
-        {
-            Path();
-            Path(Path&& path);
-            Path& operator =(Path&& path);
-
-            Path(const Path&) = delete;
-            Path& operator =(const Path&) = delete;
-            
-
-            AlternateListNode<T>* root;
-            AlternateListNode<T>* tail;
-            size_t size;
-        };*/
 
         AlternateList(const AlternateList&) = delete;
         AlternateList& operator =(const AlternateList&) = delete;
