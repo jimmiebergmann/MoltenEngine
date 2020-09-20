@@ -27,6 +27,118 @@
 namespace Molten
 {
 
+    // Alterante tree iterator implementations.
+    template<typename T>
+    template<typename TPathType>
+    inline AlternateTree<T>::Iterator<TPathType>::Iterator() :
+        m_node(nullptr),
+        m_listIterator(nullptr)
+    {}
+
+    template<typename T>
+    template<typename TPathType>
+    inline AlternateTree<T>::Iterator<TPathType>::Iterator(AlternateTreeNode<Type>* node, ListIterator<TPathType> listIterator) :
+        m_node(node),
+        m_listIterator(listIterator)
+    {}
+
+    template<typename T>
+    template<typename TPathType>
+    inline typename AlternateTree<T>::Type& AlternateTree<T>::Iterator<TPathType>::operator *() const
+    {
+        return (*m_listIterator).GetValue();
+    }
+    
+    template<typename T>
+    template<typename TPathType>
+    inline typename AlternateTree<T>::template Iterator<TPathType>& AlternateTree<T>::Iterator<TPathType>::operator ++ () // Pre
+    {
+        ++m_listIterator;
+        return *this;
+    }
+
+    template<typename T>
+    template<typename TPathType>
+    inline typename AlternateTree<T>::template Iterator<TPathType>& AlternateTree<T>::Iterator<TPathType>::operator -- () // Pre
+    {
+        
+        --m_listIterator;
+        return *this;
+    }
+    template<typename T>
+    template<typename TPathType>
+    inline typename AlternateTree<T>::template Iterator<TPathType> AlternateTree<T>::Iterator<TPathType>::operator ++ (int) // Post
+    {
+        auto oldIterator = m_listIterator++;
+        return Iterator{ m_node, oldIterator };
+    }
+
+    template<typename T>
+    template<typename TPathType>
+    inline typename AlternateTree<T>::template Iterator<TPathType> AlternateTree<T>::Iterator<TPathType>::operator -- (int) // Post
+    {
+        auto oldIterator = m_listIterator--;
+        return Iterator{ m_node, oldIterator };
+    }
+
+    template<typename T>
+    template<typename TPathType>
+    inline bool AlternateTree<T>::Iterator<TPathType>::operator == (const Iterator<TPathType>& rhs) const
+    {
+        return m_listIterator == rhs.m_listIterator;
+    }
+
+    template<typename T>
+    template<typename TPathType>
+    inline bool AlternateTree<T>::Iterator<TPathType>::operator != (const Iterator<TPathType>& rhs) const
+    {
+        return m_listIterator != rhs.m_listIterator;
+    }
+
+
+    // Alterante tree iterator path implementations.
+    template<typename T>
+    template<typename TPathType>
+    inline AlternateTree<T>::IteratorPath<TPathType>::IteratorPath() :
+        m_node(nullptr),
+        m_path(nullptr)
+    { }
+
+    template<typename T>
+    template<typename TPathType>
+    inline AlternateTree<T>::IteratorPath<TPathType>::IteratorPath(AlternateTreeNode<Type>* node, ListIteratorPath<TPathType> path) :
+        m_node(node),
+        m_path(path)
+    {}
+
+    template<typename T>
+    template<typename TPathType>
+    inline typename AlternateTree<T>::template Iterator<TPathType> AlternateTree<T>::IteratorPath<TPathType>::begin()
+    {
+        return Iterator<TPathType>{ m_node, m_path.begin() };
+    }
+    /*template<typename T>
+    template<typename TPathType>
+    inline typename AlternateList<T>::template ConstIterator<TPathType> AlternateList<T>::IteratorPath<TPathType>::begin() const
+    {
+        return ConstIterator<TPathType>{ m_beginNode };
+    }*/
+
+    template<typename T>
+    template<typename TPathType>
+    inline typename AlternateTree<T>::template Iterator<TPathType> AlternateTree<T>::IteratorPath<TPathType>::end()
+    {
+        return Iterator<TPathType>{ m_node, m_path.end() };
+    }
+    /*template<typename T>
+    template<typename TPathType>
+    inline typename AlternateList<T>::template ConstIterator<TPathType> AlternateList<T>::IteratorPath<TPathType>::end() const
+    {
+        return ConstIterator<TPathType>{ nullptr };
+    }*/
+
+
+
     // Alterante tree implementations.
     template<typename T>
     inline AlternateTree<T>::AlternateTree() :
@@ -46,6 +158,16 @@ namespace Molten
     inline const AlternateTreeNode<T>& AlternateTree<T>::GetRoot() const
     {
         return m_root;
+    }
+
+    template<typename T>
+    template<typename TPathType>
+    inline typename AlternateTree<T>::template Iterator<TPathType> AlternateTree<T>::Erase(Iterator<TPathType> it)
+    {
+        auto* node = it.m_node;
+        auto & children = node->m_children;
+        auto newIt = children.Erase(it.m_listIterator);
+        return Iterator<TPathType>{ node, newIt };
     }
 
 
@@ -115,35 +237,29 @@ namespace Molten
     template<typename TPathType>
     inline typename AlternateTreeNode<T>::template IteratorPath<TPathType> AlternateTreeNode<T>::GetPath()
     {
-        return m_children.template GetPath<TPathType>();
-    }
-    template<typename T>
-    template<typename TPathType>
-    inline const typename AlternateTreeNode<T>::template IteratorPath<TPathType> AlternateTreeNode<T>::GetPath() const
-    {
-        return m_children.template GetPath<TPathType>();
+        return IteratorPath<TPathType>{ this, m_children.GetPath<TPathType>() };
     }
 
     template<typename T>
     inline typename AlternateTreeNode<T>::template IteratorPath<AlternateListMainPath> AlternateTreeNode<T>::GetMainPath()
     {
-        return m_children.GetMainPath();
+        return IteratorPath<MainPath>{ this, m_children.GetMainPath() };
     }
     template<typename T>
     inline const typename AlternateTreeNode<T>::template IteratorPath<AlternateListMainPath> AlternateTreeNode<T>::GetMainPath() const
     {
-        return m_children.GetMainPath();
+        return IteratorPath<MainPath>{ this, m_children.GetMainPath() };
     }
 
     template<typename T>
     inline typename AlternateTreeNode<T>::template IteratorPath<AlternateListSubPath> AlternateTreeNode<T>::GetSubPath()
     {
-        return m_children.GetSubPath();
+        return IteratorPath<SubPath>{ this, m_children.GetSubPath() };
     }
     template<typename T>
     inline const typename AlternateTreeNode<T>::template IteratorPath<AlternateListSubPath> AlternateTreeNode<T>::GetSubPath() const
     {
-        return m_children.GetSubPath();
+        return IteratorPath<SubPath>{ this, m_children.GetSubPath() };
     }
 
     template<typename T>
@@ -168,6 +284,16 @@ namespace Molten
     inline void AlternateTreeNode<T>::PushFront(const bool addSubPath, Type&& value)
     {
         m_children.PushFront(addSubPath, AlternateTreeNode(this, std::move(value)));
+    }
+
+    template<typename T>
+    template<typename TPathType>
+    inline typename AlternateTreeNode<T>::template Iterator<TPathType> AlternateTreeNode<T>::Erase(Iterator<TPathType> it)
+    {
+        auto* node = it.m_node;
+        auto& children = node->m_children;
+        auto newIt = children.Erase(it.m_listIterator);
+        return Iterator<TPathType>{ node, newIt };
     }
 
     template<typename T>

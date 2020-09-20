@@ -48,15 +48,75 @@ namespace Molten
     public:
 
         using Type = T;
+        using List = AlternateList<AlternateTreeNode<Type>>;
         using MainPath = AlternateListMainPath;
         using SubPath = AlternateListMainPath;
+        template<typename TPathType>
+        using ListIteratorPath = typename List::template IteratorPath<TPathType>;
+        template<typename TPathType>
+        using ListIterator = typename List::template Iterator<TPathType>;
+
+
+        template<typename TPathType>
+        class Iterator
+        {
+
+        public:
+
+            Iterator();
+            Iterator(AlternateTreeNode<Type> * node, ListIterator<TPathType> listIterator);
+
+            Type& operator *() const;
+            Iterator& operator ++ ();
+            Iterator& operator -- ();
+            Iterator operator ++ (int);
+            Iterator operator -- (int);
+            bool operator == (const Iterator& rhs) const;
+            bool operator != (const Iterator& rhs) const;
+
+        private:
+
+            AlternateTreeNode<Type>* m_node;
+            ListIterator<TPathType> m_listIterator;
+
+            friend class AlternateTree<T>;
+            friend class AlternateTreeNode<T>;
+
+        };
+
+
+        template<typename TPathType>
+        class IteratorPath
+        {
+
+        public:
+
+            IteratorPath();
+            IteratorPath(AlternateTreeNode<Type>* node, ListIteratorPath<TPathType> path);
+
+            Iterator<TPathType> begin();
+
+            Iterator<TPathType> end();
+
+        private:
+
+            AlternateTreeNode<Type>* m_node;
+            ListIteratorPath<TPathType> m_path;
+
+            friend class AlternateTree<T>;
+            friend class AlternateTreeNode<T>;
+
+        };
+
 
         AlternateTree();
         ~AlternateTree();
 
-        AlternateTreeNode<T>& GetRoot();
-        const AlternateTreeNode<T>& GetRoot() const;
+        AlternateTreeNode<Type>& GetRoot();
+        const AlternateTreeNode<Type>& GetRoot() const;
 
+        template<typename TPathType>
+        Iterator<TPathType> Erase(Iterator<TPathType> it);
 
     private:
 
@@ -65,7 +125,7 @@ namespace Molten
         AlternateTree& operator =(const AlternateTree&) = delete;
         AlternateTree& operator =(AlternateTree&&) = delete;
 
-        AlternateTreeNode<T> m_root;
+        AlternateTreeNode<Type> m_root;
 
     };
 
@@ -80,8 +140,11 @@ namespace Molten
         using List = AlternateList<AlternateTreeNode<Type>>;
         using MainPath = AlternateListMainPath;
         using SubPath = AlternateListSubPath;
+
         template<typename TPathType>
-        using IteratorPath = typename List::template IteratorPath<TPathType>;
+        using Iterator = typename AlternateTree<T>::template Iterator<TPathType>;
+        template<typename TPathType>
+        using IteratorPath = typename AlternateTree<T>::template IteratorPath<TPathType>;
 
         ~AlternateTreeNode();
         AlternateTreeNode(AlternateTreeNode&& node);
@@ -100,8 +163,6 @@ namespace Molten
 
         template<typename TPathType>
         IteratorPath<TPathType> GetPath();
-        template<typename TPathType>
-        const IteratorPath<TPathType> GetPath() const;
 
         IteratorPath<MainPath> GetMainPath();
         const IteratorPath<MainPath> GetMainPath() const;
@@ -114,6 +175,9 @@ namespace Molten
         
         void PushFront(const bool addSubPath, const Type& value);
         void PushFront(const bool addSubPath, Type&& value);
+
+        template<typename TPathType>
+        Iterator<TPathType> Erase(Iterator<TPathType> it);
 
     private:
 

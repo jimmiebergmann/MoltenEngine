@@ -37,19 +37,19 @@ struct TestData1
     }
 };
 
-template<typename TValueType, typename TPathType, typename TCompareType>
+template<typename TValueType, typename TPathType>
 bool CompareListContent(
-    typename Molten::AlternateList<TValueType>::template Iterator<TPathType> begin,
-    typename Molten::AlternateList<TValueType>::template Iterator<TPathType> end,
-    const std::vector<TCompareType>& compareData)
+    typename Molten::AlternateTree<TValueType>::template Iterator<TPathType> begin,
+    typename Molten::AlternateTree<TValueType>::template Iterator<TPathType> end,
+    const std::vector<TValueType>& compareData)
 {
     // Post increment.
     size_t i = 0;
     for (auto it = begin; it != end; it++)
     {
-        EXPECT_EQ((*it).GetValue(), compareData[i]);
+        EXPECT_EQ(*it, compareData[i]);
 
-        if (!((*it).GetValue() == compareData[i]))
+        if (!(*it == compareData[i]))
         {
             return false;
         }
@@ -62,15 +62,15 @@ bool CompareListContent(
     {
         return false;
     }
-
+    
     // Pre increment.
     i = 0;
     auto it2 = begin;
     while (it2 != end)
     {
-        EXPECT_EQ((*it2).GetValue(), compareData[i]);
+        EXPECT_EQ(*it2, compareData[i]);
 
-        if (!((*it2).GetValue() == compareData[i]))
+        if (!(*it2 == compareData[i]))
         {
             return false;
         }
@@ -84,7 +84,7 @@ bool CompareListContent(
     {
         return false;
     }
-
+    
     return true;
 }
 
@@ -110,7 +110,6 @@ namespace Molten
 
     TEST(Utility, AlternateTree_PushBackRoot)
     {
-
         using TreeType = AlternateTree<TestData1>;
         using NodeType = AlternateTreeNode<TestData1>;
 
@@ -133,23 +132,69 @@ namespace Molten
             EXPECT_EQ(root.GetSize<AlternateListSubPath>(), size_t(5));
             EXPECT_EQ(root.GetSubSize(), size_t(5));
 
-            if (!CompareListContent<NodeType, AlternateListMainPath, TestData1>(
-                root.GetMainPath().begin(),
-                root.GetMainPath().end(),
+            if (!CompareListContent<TestData1, AlternateListMainPath>(
+                root.GetPath<AlternateListMainPath>().begin(),
+                root.GetPath<AlternateListMainPath>().end(),
                 { {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9} }))
             {
                 ADD_FAILURE();
             }
-
-            if (!CompareListContent<NodeType, AlternateListSubPath, TestData1>(
-                root.GetSubPath().begin(),
-                root.GetSubPath().end(),
+            
+            if (!CompareListContent<TestData1, AlternateListSubPath>(
+                root.GetPath<AlternateListSubPath>().begin(),
+                root.GetPath<AlternateListSubPath>().end(),
                 { {1}, {3}, {5}, {6}, {9} }))
             {
                 ADD_FAILURE();
             }
 
         }
+    }
+
+    TEST(Utility, AlternateTree_Erase)
+    {
+        using TreeType = AlternateTree<TestData1>;
+        using NodeType = AlternateTreeNode<TestData1>;
+
+        {
+            TreeType tree;
+            NodeType& root = tree.GetRoot();
+            auto mainPath = root.GetPath<AlternateListMainPath>();
+            auto subPath = root.GetPath<AlternateListSubPath>();
+
+            root.PushBack(true, TestData1{ 1 });
+            EXPECT_EQ(root.GetMainSize(), size_t(1));
+            EXPECT_EQ(root.GetSubSize(), size_t(1));
+
+            auto it = mainPath.begin();
+            tree.Erase(it);
+
+            EXPECT_EQ(root.GetMainSize(), size_t(0));
+            EXPECT_EQ(root.GetSubSize(), size_t(0));
+
+            EXPECT_EQ(mainPath.begin(), mainPath.end());
+            EXPECT_EQ(subPath.begin(), subPath.end());
+        }
+        {
+            TreeType tree;
+            NodeType& root = tree.GetRoot();
+            auto mainPath = root.GetPath<AlternateListMainPath>();
+            auto subPath = root.GetPath<AlternateListSubPath>();
+
+            root.PushBack(true, TestData1{ 1 });
+            EXPECT_EQ(root.GetMainSize(), size_t(1));
+            EXPECT_EQ(root.GetSubSize(), size_t(1));
+
+            auto it = mainPath.begin();
+            root.Erase(it);
+
+            EXPECT_EQ(root.GetMainSize(), size_t(0));
+            EXPECT_EQ(root.GetSubSize(), size_t(0));
+
+            EXPECT_EQ(mainPath.begin(), mainPath.end());
+            EXPECT_EQ(subPath.begin(), subPath.end());
+        }
+       
     }
 
 }

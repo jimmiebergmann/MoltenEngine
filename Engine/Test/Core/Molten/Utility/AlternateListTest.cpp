@@ -92,7 +92,8 @@ namespace Molten
 {
     TEST(Utility, AlternateList_Empty)
     {
-        AlternateList<TestData1> list;
+        using ListType = AlternateList<TestData1>;
+        ListType list;
 
         EXPECT_EQ(list.GetMainSize(), size_t(0));
         EXPECT_EQ(list.GetSubSize(), size_t(0));
@@ -118,8 +119,10 @@ namespace Molten
 
     TEST(Utility, AlternateList_PushBack)
     {
+        using ListType = AlternateList<TestData1>;
+
         {
-            AlternateList<TestData1> list;
+            ListType list;
             list.PushBack(true, TestData1{ 1 });
             list.PushBack(false, TestData1{ 2 });
             list.PushBack(true, TestData1{ 3 });
@@ -155,8 +158,10 @@ namespace Molten
 
     TEST(Utility, AlternateList_PushFront)
     {
+        using ListType = AlternateList<TestData1>;
+
         {
-            AlternateList<TestData1> list;
+            ListType list;
             list.PushFront(true, TestData1{ 1 });
             list.PushFront(false, TestData1{ 2 });
             list.PushFront(true, TestData1{ 3 });
@@ -188,6 +193,221 @@ namespace Molten
                 ADD_FAILURE();
             }
         }
+    }
+
+    TEST(Utility, AlternateList_EraseAllMain)
+    {
+        using ListType = AlternateList<TestData1>;
+
+        {
+            { // 1 item.
+                ListType list;
+
+                list.PushBack(true, TestData1{ 1 });
+                EXPECT_EQ(list.GetMainSize(), size_t(1));
+                EXPECT_EQ(list.GetSubSize(), size_t(1));
+
+                auto it = list.GetPath<AlternateListMainPath>().begin();
+                list.Erase(it);
+
+                EXPECT_EQ(list.GetMainSize(), size_t(0));
+                EXPECT_EQ(list.GetSubSize(), size_t(0));
+
+                EXPECT_EQ(list.GetPath<AlternateListMainPath>().begin(), list.GetPath<AlternateListMainPath>().end());
+                EXPECT_EQ(list.GetPath<AlternateListSubPath>().begin(), list.GetPath<AlternateListSubPath>().end());
+            }
+            { // 2 items.
+                { // Forward
+                    ListType list;
+                    auto mainPath = list.GetPath<AlternateListMainPath>();
+                    auto subPath = list.GetPath<AlternateListSubPath>();
+
+                    list.PushBack(true, TestData1{ 1 });
+                    list.PushBack(true, TestData1{ 2 });
+                    EXPECT_EQ(list.GetMainSize(), size_t(2));
+                    EXPECT_EQ(list.GetSubSize(), size_t(2));
+
+                    auto it = mainPath.begin();
+                    list.Erase(it);
+
+                    EXPECT_EQ(list.GetMainSize(), size_t(1));
+                    EXPECT_EQ(list.GetSubSize(), size_t(1));
+
+                    EXPECT_EQ((*mainPath.begin()).value, size_t(2));
+                    EXPECT_EQ(++mainPath.begin(), mainPath.end());
+                    EXPECT_EQ(++subPath.begin(), subPath.end());
+
+                    it = mainPath.begin();
+                    list.Erase(it);
+
+                    EXPECT_EQ(list.GetMainSize(), size_t(0));
+                    EXPECT_EQ(list.GetSubSize(), size_t(0));
+
+                    EXPECT_EQ(mainPath.begin(), mainPath.end());
+                    EXPECT_EQ(subPath.begin(), subPath.end());
+                }
+                { // Backward.
+                    ListType list;
+                    auto mainPath = list.GetPath<AlternateListMainPath>();
+                    auto subPath = list.GetPath<AlternateListSubPath>();
+
+                    list.PushBack(true, TestData1{ 1 });
+                    list.PushBack(true, TestData1{ 2 });
+                    EXPECT_EQ(list.GetMainSize(), size_t(2));
+                    EXPECT_EQ(list.GetSubSize(), size_t(2));
+
+                    auto it = ++mainPath.begin();
+                    list.Erase(it);
+
+                    EXPECT_EQ(list.GetMainSize(), size_t(1));
+                    EXPECT_EQ(list.GetSubSize(), size_t(1));
+
+                    EXPECT_EQ((*mainPath.begin()).value, size_t(1));
+                    EXPECT_EQ(++mainPath.begin(), mainPath.end());
+                    EXPECT_EQ(++subPath.begin(), subPath.end());
+
+                    it = mainPath.begin();
+                    list.Erase(it);
+
+                    EXPECT_EQ(list.GetMainSize(), size_t(0));
+                    EXPECT_EQ(list.GetSubSize(), size_t(0));
+
+                    EXPECT_EQ(mainPath.begin(), mainPath.end());
+                    EXPECT_EQ(subPath.begin(), subPath.end());
+                }
+            }
+            { // 3 items.
+                { // Forward
+                    ListType list;
+                    auto mainPath = list.GetPath<AlternateListMainPath>();
+                    auto subPath = list.GetPath<AlternateListSubPath>();
+
+                    list.PushBack(true, TestData1{ 1 });
+                    list.PushBack(true, TestData1{ 2 });
+                    list.PushBack(true, TestData1{ 3 });
+                    EXPECT_EQ(list.GetMainSize(), size_t(3));
+                    EXPECT_EQ(list.GetSubSize(), size_t(3));
+
+                    auto it = mainPath.begin();
+                    list.Erase(it);
+
+                    EXPECT_EQ(list.GetMainSize(), size_t(2));
+                    EXPECT_EQ(list.GetSubSize(), size_t(2));
+
+                    EXPECT_EQ((*mainPath.begin()).value, size_t(2));
+                    EXPECT_EQ((*(++mainPath.begin())).value, size_t(3));
+                    EXPECT_EQ((++(++mainPath.begin())), mainPath.end());
+                    EXPECT_EQ((++(++subPath.begin())), subPath.end());
+
+                    it = mainPath.begin();
+                    list.Erase(it);
+
+                    EXPECT_EQ(list.GetMainSize(), size_t(1));
+                    EXPECT_EQ(list.GetSubSize(), size_t(1));
+
+                    EXPECT_EQ((*mainPath.begin()).value, size_t(3));
+                    EXPECT_EQ(++mainPath.begin(), mainPath.end());
+                    EXPECT_EQ(++subPath.begin(), subPath.end());
+
+                    it = mainPath.begin();
+                    list.Erase(it);
+
+                    EXPECT_EQ(list.GetMainSize(), size_t(0));
+                    EXPECT_EQ(list.GetSubSize(), size_t(0));
+
+                    EXPECT_EQ(mainPath.begin(), mainPath.end());
+                    EXPECT_EQ(subPath.begin(), subPath.end());
+                }
+                { // Backward
+                    ListType list;
+                    auto mainPath = list.GetPath<AlternateListMainPath>();
+                    auto subPath = list.GetPath<AlternateListSubPath>();
+
+                    list.PushBack(true, TestData1{ 1 });
+                    list.PushBack(true, TestData1{ 2 });
+                    list.PushBack(true, TestData1{ 3 });
+                    EXPECT_EQ(list.GetMainSize(), size_t(3));
+                    EXPECT_EQ(list.GetSubSize(), size_t(3));
+
+                    auto it = ++(++mainPath.begin());
+                    list.Erase(it);
+
+                    EXPECT_EQ(list.GetMainSize(), size_t(2));
+                    EXPECT_EQ(list.GetSubSize(), size_t(2));
+
+                    EXPECT_EQ((*mainPath.begin()).value, size_t(1));
+                    EXPECT_EQ((*(++mainPath.begin())).value, size_t(2));
+                    EXPECT_EQ((++(++mainPath.begin())), mainPath.end());
+                    EXPECT_EQ((++(++subPath.begin())), subPath.end());
+                    
+                    it = ++mainPath.begin();
+                    list.Erase(it);
+
+                    EXPECT_EQ(list.GetMainSize(), size_t(1));
+                    EXPECT_EQ(list.GetSubSize(), size_t(1));
+
+                    EXPECT_EQ((*mainPath.begin()).value, size_t(1));
+                    EXPECT_EQ(++mainPath.begin(), mainPath.end());
+                    EXPECT_EQ(++subPath.begin(), subPath.end());
+
+                    it = mainPath.begin();
+                    list.Erase(it);
+
+                    EXPECT_EQ(list.GetMainSize(), size_t(0));
+                    EXPECT_EQ(list.GetSubSize(), size_t(0));
+
+                    EXPECT_EQ(mainPath.begin(), mainPath.end());
+                    EXPECT_EQ(subPath.begin(), subPath.end());
+                }
+                { // Middle
+                    ListType list;
+                    auto mainPath = list.GetPath<AlternateListMainPath>();
+                    auto subPath = list.GetPath<AlternateListSubPath>();
+
+                    list.PushBack(true, TestData1{ 1 });
+                    list.PushBack(true, TestData1{ 2 });
+                    list.PushBack(true, TestData1{ 3 });
+                    EXPECT_EQ(list.GetMainSize(), size_t(3));
+                    EXPECT_EQ(list.GetSubSize(), size_t(3));
+
+                    auto it = ++mainPath.begin();
+                    list.Erase(it);
+
+                    EXPECT_EQ(list.GetMainSize(), size_t(2));
+                    EXPECT_EQ(list.GetSubSize(), size_t(2));
+
+                    EXPECT_EQ((*mainPath.begin()).value, size_t(1));
+                    EXPECT_EQ((*(++mainPath.begin())).value, size_t(3));
+                    EXPECT_EQ((++(++mainPath.begin())), mainPath.end());
+                    EXPECT_EQ((++(++subPath.begin())), subPath.end());
+
+                    it = mainPath.begin();
+                    list.Erase(it);
+
+                    EXPECT_EQ(list.GetMainSize(), size_t(1));
+                    EXPECT_EQ(list.GetSubSize(), size_t(1));
+
+                    EXPECT_EQ((*mainPath.begin()).value, size_t(3));
+                    EXPECT_EQ(++mainPath.begin(), mainPath.end());
+                    EXPECT_EQ(++subPath.begin(), subPath.end());
+
+                    it = mainPath.begin();
+                    list.Erase(it);
+
+                    EXPECT_EQ(list.GetMainSize(), size_t(0));
+                    EXPECT_EQ(list.GetSubSize(), size_t(0));
+
+                    EXPECT_EQ(mainPath.begin(), mainPath.end());
+                    EXPECT_EQ(subPath.begin(), subPath.end());
+                }
+            }
+        }
+        
+    }
+
+    TEST(Utility, AlternateList_EraseSomeSub)
+    {
+
     }
 
 }
