@@ -68,6 +68,12 @@ namespace Molten
 
         public:
 
+            using iterator_category = std::bidirectional_iterator_tag;
+            using value_type = Type;
+            using difference_type = std::ptrdiff_t;
+            using pointer = Type*;
+            using reference = Type&;
+
             Iterator();
             Iterator(AlternateListNode<T>* currentNode);
 
@@ -92,6 +98,12 @@ namespace Molten
         {
 
         public:
+
+            using iterator_category = std::bidirectional_iterator_tag;
+            using value_type = Type;
+            using difference_type = std::ptrdiff_t;
+            using pointer = const Type*;
+            using reference = const Type&;
 
             ConstIterator();
             ConstIterator(const AlternateListNode<T>* currentNode);
@@ -119,7 +131,7 @@ namespace Molten
         public:
 
             IteratorPath();
-            IteratorPath(AlternateListPath<Type, TPathType>* path);
+            IteratorPath(AlternateList<Type>* list);
 
             Iterator<TPathType> begin();
             ConstIterator<TPathType> begin() const;
@@ -129,13 +141,13 @@ namespace Molten
 
         private:
 
-            AlternateListPath<Type, TPathType>* m_path;
+            AlternateList<Type>* m_list;
 
             friend class AlternateList<Type>;
 
         };
 
-        AlternateList() = default;
+        AlternateList();
         ~AlternateList();
         AlternateList(AlternateList&& list);
 
@@ -188,7 +200,11 @@ namespace Molten
 
         bool InternalIsInSubPath(AlternateListNode<T>* node);
 
+        AlternateListNode<Type>* m_endNode;
         std::tuple<AlternateListPath<Type, MainPath>, AlternateListPath<Type, SubPath>> m_paths;
+
+        friend class IteratorPath<MainPath>;
+        friend class IteratorPath<SubPath>;
 
     };
 
@@ -204,8 +220,16 @@ namespace Molten
         AlternateListNode();
         AlternateListNode(const Type& valueCopy);
         AlternateListNode(Type&& valueMove);
+        ~AlternateListNode();
 
-        Type value;
+        struct Content
+        {
+            Content(const Type& valueCopy);
+            Content(Type&& valueMove);
+            Type value;
+        };
+
+        Content* content;
         AlternateListNode* prevMain;
         AlternateListNode* prevSub;
         AlternateListNode* nextMain;
@@ -223,7 +247,7 @@ namespace Molten
     template<typename T, typename TPathType>
     struct AlternateListPath
     {
-        AlternateListPath();
+        AlternateListPath(AlternateListNode<T>* end);
         AlternateListPath(AlternateListPath&& path);
         AlternateListPath& operator =(AlternateListPath&& path);
 

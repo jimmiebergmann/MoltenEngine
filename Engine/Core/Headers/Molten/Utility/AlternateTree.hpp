@@ -65,8 +65,16 @@ namespace Molten
 
         public:
 
+            using iterator_category = std::bidirectional_iterator_tag;
+            using value_type = Type;
+            using difference_type = std::ptrdiff_t;
+            using pointer = Type*;
+            using reference = Type&;
+
             Iterator();
             Iterator(AlternateTreeNode<Type> * node, ListIterator<TPathType> listIterator);
+
+            AlternateTreeNode<Type>& GetNode();
 
             Type& operator *() const;
             Iterator& operator ++ ();
@@ -93,10 +101,18 @@ namespace Molten
 
         public:
 
+            using iterator_category = std::bidirectional_iterator_tag;
+            using value_type = Type;
+            using difference_type = std::ptrdiff_t;
+            using pointer = const Type*;
+            using reference = const Type&;
+
             ConstIterator();
             ConstIterator(const AlternateTreeNode<Type>* node, ListConstIterator<TPathType> listIterator);
 
-            Type& operator *() const;
+            const AlternateTreeNode<Type>& GetNode() const;
+
+            const Type& operator *() const;
             ConstIterator& operator ++ ();
             ConstIterator& operator -- ();
             ConstIterator operator ++ (int);

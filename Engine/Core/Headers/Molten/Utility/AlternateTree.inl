@@ -44,6 +44,13 @@ namespace Molten
 
     template<typename T>
     template<typename TPathType>
+    inline AlternateTreeNode<T>& AlternateTree<T>::Iterator<TPathType>::GetNode()
+    {
+        return *m_node;
+    }
+
+    template<typename T>
+    template<typename TPathType>
     inline typename AlternateTree<T>::Type& AlternateTree<T>::Iterator<TPathType>::operator *() const
     {
         return (*m_listIterator).GetValue();
@@ -113,7 +120,14 @@ namespace Molten
 
     template<typename T>
     template<typename TPathType>
-    inline typename AlternateTree<T>::Type& AlternateTree<T>::ConstIterator<TPathType>::operator *() const
+    inline const AlternateTreeNode<T>& AlternateTree<T>::ConstIterator<TPathType>::GetNode() const
+    {
+        return *m_node;
+    }
+
+    template<typename T>
+    template<typename TPathType>
+    inline const typename AlternateTree<T>::Type& AlternateTree<T>::ConstIterator<TPathType>::operator *() const
     {
         return (*m_listIterator).GetValue();
     }

@@ -260,4 +260,22 @@ namespace Molten
         }
     }
 
+    TEST(Utility, AlternateTree_TraverseTreePushBack)
+    {
+        using TreeType = AlternateTree<TestData1>;
+        using NodeType = AlternateTreeNode<TestData1>;
+
+        {
+            TreeType tree;
+            NodeType& root = tree.GetRoot();
+            auto mainPath = root.GetPath<AlternateListMainPath>();
+            auto subPath = root.GetPath<AlternateListSubPath>();
+
+            root.PushBack(true, TestData1{ 1 });
+            root.PushBack(true, TestData1{ 2 });
+            root.PushBack(true, TestData1{ 3 });
+
+        }
+    }
+
 }

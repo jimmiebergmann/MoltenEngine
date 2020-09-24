@@ -23,6 +23,8 @@
 *
 */
 
+
+
 #include "Test.hpp"
 #include "Molten/Utility/AlternateList.hpp"
 #include <vector>
@@ -488,6 +490,54 @@ namespace Molten
                 }
             }
         }
+    }
+
+    TEST(Utility, AlternateList_IteratorTraverse)
+    {
+        using ListType = AlternateList<TestData1>;
+
+        { // std::next
+            ListType list;
+
+            list.PushBack(true, TestData1{ 1 });
+            list.PushBack(true, TestData1{ 2 });
+            list.PushBack(true, TestData1{ 3 });
+
+            auto mainPath = list.GetPath<AlternateListMainPath>();
+            auto it = mainPath.begin();
+
+            auto itNext = it;
+            EXPECT_EQ((*itNext).value, size_t(1));
+
+            itNext = std::next(itNext);
+            EXPECT_EQ((*itNext).value, size_t(2));
+
+            itNext = std::next(itNext);
+            EXPECT_EQ((*itNext).value, size_t(3));
+
+            itNext = std::next(itNext);
+            EXPECT_EQ(itNext, mainPath.end());
+        }
+        { // std::prev
+            ListType list;
+
+            list.PushBack(true, TestData1{ 1 });
+            list.PushBack(true, TestData1{ 2 });
+            list.PushBack(true, TestData1{ 3 });
+
+            auto mainPath = list.GetPath<AlternateListMainPath>();
+            auto it = mainPath.end();
+
+            auto itPrev = std::prev(it);
+            EXPECT_EQ((*itPrev).value, size_t(3));
+
+            itPrev = std::prev(itPrev);
+            EXPECT_EQ((*itPrev).value, size_t(2));
+
+            itPrev = std::prev(itPrev);
+            EXPECT_EQ((*itPrev).value, size_t(1));
+        }
+        
     }
 
 }

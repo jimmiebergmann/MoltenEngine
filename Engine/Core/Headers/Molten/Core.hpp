@@ -172,6 +172,18 @@
     #define MOLTEN_BUILD_NAME MOLTEN_BUILD_DEBUG_NAME
 #endif
 
+// Debug assert
+#if MOLTEN_BUILD == MOLTEN_BUILD_DEBUG
+    #if _MSC_VER
+        #define MOLTEN_DEBUG_ASSERT(condition, message) \
+            if(!(condition)) { ((_CrtDbgReport(_CRT_ASSERT, __FILE__, __LINE__, NULL, "%s", message) != 1 ) || (_CrtDbgBreak(),  0));}
+    #else 
+        #define MOLTEN_DEBUG_ASSERT(condition, message)
+    #endif        
+#else
+    #define MOLTEN_DEBUG_ASSERT(condition, message)
+#endif
+
 // Export API
 #if !defined(MOLTEN_STATIC)
     #ifdef _MSC_VER
