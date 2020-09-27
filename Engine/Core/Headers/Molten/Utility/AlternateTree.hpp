@@ -54,6 +54,8 @@ namespace Molten
         template<typename TPathType>
         using ListIteratorPath = typename List::template IteratorPath<TPathType>;
         template<typename TPathType>
+        using ListConstIteratorPath = typename List::template ConstIteratorPath<TPathType>;
+        template<typename TPathType>
         using ListIterator = typename List::template Iterator<TPathType>;
         template<typename TPathType>
         using ListConstIterator = typename List::template ConstIterator<TPathType>;
@@ -66,17 +68,19 @@ namespace Molten
         public:
 
             using iterator_category = std::bidirectional_iterator_tag;
-            using value_type = Type;
+            using value_type = AlternateTreeNode<Type>;
             using difference_type = std::ptrdiff_t;
-            using pointer = Type*;
-            using reference = Type&;
+            using pointer = AlternateTreeNode<Type>*;
+            using reference = AlternateTreeNode<Type>&;
 
             Iterator();
             Iterator(AlternateTreeNode<Type> * node, ListIterator<TPathType> listIterator);
 
-            AlternateTreeNode<Type>& GetNode();
+            bool IsEmpty() const;
 
-            Type& operator *() const;
+            Type& GetValue();
+
+            AlternateTreeNode<Type>& operator *() const;
             Iterator& operator ++ ();
             Iterator& operator -- ();
             Iterator operator ++ (int);
@@ -102,17 +106,19 @@ namespace Molten
         public:
 
             using iterator_category = std::bidirectional_iterator_tag;
-            using value_type = Type;
+            using value_type = AlternateTreeNode<Type>;
             using difference_type = std::ptrdiff_t;
-            using pointer = const Type*;
-            using reference = const Type&;
+            using pointer = const AlternateTreeNode<Type>*;
+            using reference = const AlternateTreeNode<Type>&;
 
             ConstIterator();
             ConstIterator(const AlternateTreeNode<Type>* node, ListConstIterator<TPathType> listIterator);
 
-            const AlternateTreeNode<Type>& GetNode() const;
+            bool IsEmpty() const;
 
-            const Type& operator *() const;
+            const Type& GetValue() const;
+
+            const AlternateTreeNode<Type>& operator *() const;
             ConstIterator& operator ++ ();
             ConstIterator& operator -- ();
             ConstIterator operator ++ (int);
@@ -140,16 +146,44 @@ namespace Molten
             IteratorPath();
             IteratorPath(AlternateTreeNode<Type>* node, ListIteratorPath<TPathType> path);
 
-            Iterator<TPathType> begin();
-            ConstIterator<TPathType> begin() const;
+            bool IsEmpty() const;
 
+            size_t GetSize() const;
+
+            Iterator<TPathType> begin();
             Iterator<TPathType> end();
-            ConstIterator<TPathType> end() const;
 
         private:
 
             AlternateTreeNode<Type>* m_node;
             ListIteratorPath<TPathType> m_path;
+
+            friend class AlternateTree<T>;
+            friend class AlternateTreeNode<T>;
+
+        };
+
+
+        template<typename TPathType>
+        class ConstIteratorPath
+        {
+
+        public:
+
+            ConstIteratorPath();
+            ConstIteratorPath(const AlternateTreeNode<Type>* node, ListConstIteratorPath<TPathType> path);
+
+            bool IsEmpty() const;
+
+            size_t GetSize() const;
+
+            ConstIterator<TPathType> begin();
+            ConstIterator<TPathType> end();
+
+        private:
+
+            const AlternateTreeNode<Type>* m_node;
+            ListConstIteratorPath<TPathType> m_path;
 
             friend class AlternateTree<T>;
             friend class AlternateTreeNode<T>;
@@ -193,6 +227,8 @@ namespace Molten
         using Iterator = typename AlternateTree<T>::template Iterator<TPathType>;
         template<typename TPathType>
         using IteratorPath = typename AlternateTree<T>::template IteratorPath<TPathType>;
+        template<typename TPathType>
+        using ConstIteratorPath = typename AlternateTree<T>::template ConstIteratorPath<TPathType>;
 
         ~AlternateTreeNode();
         AlternateTreeNode(AlternateTreeNode&& node) noexcept;
@@ -211,18 +247,25 @@ namespace Molten
 
         template<typename TPathType>
         IteratorPath<TPathType> GetPath();
+        template<typename TPathType>
+        ConstIteratorPath<TPathType> GetPath() const;
 
         IteratorPath<MainPath> GetMainPath();
-        const IteratorPath<MainPath> GetMainPath() const;
+        ConstIteratorPath<MainPath> GetMainPath() const;
         
         IteratorPath<SubPath> GetSubPath();
-        const IteratorPath<SubPath> GetSubPath() const;
+        ConstIteratorPath<SubPath> GetSubPath() const;
 
         void PushBack(const bool addSubPath, const Type& value);
         void PushBack(const bool addSubPath, Type&& value);
         
         void PushFront(const bool addSubPath, const Type& value);
         void PushFront(const bool addSubPath, Type&& value);
+
+        template<typename TPathType>
+        Iterator<MainPath> Insert(Iterator<TPathType> position, const bool addSubPath, Type&& value);
+        template<typename TPathType>
+        Iterator<MainPath> Insert(Iterator<TPathType> position, const bool addSubPath, const Type& value);
 
         template<typename TPathType>
         Iterator<TPathType> Erase(Iterator<TPathType> it);

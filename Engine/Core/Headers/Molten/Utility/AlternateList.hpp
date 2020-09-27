@@ -77,6 +77,8 @@ namespace Molten
             Iterator();
             Iterator(AlternateListNode<T>* currentNode);
 
+            bool IsEmpty() const;
+
             Type& operator *() const;
             Iterator& operator ++ (); 
             Iterator& operator -- ();
@@ -108,6 +110,8 @@ namespace Molten
             ConstIterator();
             ConstIterator(const AlternateListNode<T>* currentNode);
 
+            bool IsEmpty() const;
+
             const Type& operator *() const;
             ConstIterator& operator ++ ();
             ConstIterator& operator -- ();
@@ -133,11 +137,12 @@ namespace Molten
             IteratorPath();
             IteratorPath(AlternateList<Type>* list);
 
-            Iterator<TPathType> begin();
-            ConstIterator<TPathType> begin() const;
+            bool IsEmpty() const;
 
+            size_t GetSize() const;
+
+            Iterator<TPathType> begin();
             Iterator<TPathType> end();
-            ConstIterator<TPathType> end() const;
 
         private:
 
@@ -147,11 +152,35 @@ namespace Molten
 
         };
 
+        template<typename TPathType>
+        class ConstIteratorPath
+        {
+
+        public:
+
+            ConstIteratorPath();
+            ConstIteratorPath(const AlternateList<Type>* list);
+
+            bool IsEmpty() const;
+
+            size_t GetSize() const;
+
+            ConstIterator<TPathType> begin();
+            ConstIterator<TPathType> end();
+
+        private:
+
+            const AlternateList<Type>* m_list;
+
+            friend class AlternateList<Type>;
+
+        };
+
         AlternateList();
         ~AlternateList();
-        AlternateList(AlternateList&& list);
+        AlternateList(AlternateList&& list) noexcept;
 
-        AlternateList& operator =(AlternateList&& list);
+        AlternateList& operator =(AlternateList&& list) noexcept;
 
         template<typename TPathType>
         size_t GetSize() const;
@@ -161,13 +190,13 @@ namespace Molten
         template<typename TPathType>
         IteratorPath<TPathType> GetPath();
         template<typename TPathType>
-        const IteratorPath<TPathType> GetPath() const;
+        ConstIteratorPath<TPathType> GetPath() const;
 
         IteratorPath<MainPath> GetMainPath();
-        const IteratorPath<MainPath> GetMainPath() const;
+        ConstIteratorPath<MainPath> GetMainPath() const;
 
         IteratorPath<SubPath> GetSubPath();
-        const IteratorPath<SubPath> GetSubPath() const;
+        ConstIteratorPath<SubPath> GetSubPath() const;
 
         void PushBack(const bool addSubPath, const Type& value);
         void PushBack(const bool addSubPath, Type&& value);    
@@ -176,18 +205,22 @@ namespace Molten
         void PushFront(const bool addSubPath, Type&& value);    
 
         template<typename TPathType>
-        Iterator<TPathType> Erase(Iterator<TPathType> it);
+        Iterator<MainPath> Insert(Iterator<TPathType> position, const bool addSubPath, Type&& value);
 
-        /*
-        * TODO:
-        void Insert(Iterator it, const bool addSubPath, Type&& value);
-        void Insert(Iterator it, const bool addSubPath, const Type& value);
-        */
+        template<typename TPathType>
+        Iterator<MainPath> Insert(Iterator<TPathType> position, const bool addSubPath, const Type& value);
+
+        template<typename TPathType>
+        Iterator<TPathType> Erase(Iterator<TPathType> it);        
 
     private:
 
         AlternateList(const AlternateList&) = delete;
         AlternateList& operator =(const AlternateList&) = delete;
+
+        bool InternalIsInSubPath(AlternateListNode<T>* node);
+
+        void InternalDeleteAllNodes();
 
         template<typename TPathType>
         void InternalPushBack(AlternateListNode<T>* node);
@@ -196,9 +229,15 @@ namespace Molten
         void InternalPushFront(AlternateListNode<T>* node);
 
         template<typename TPathType>
-        void InternalErase(AlternateListNode<T>* node);
+        void InternalInsertMain(Iterator<TPathType> position, AlternateListNode<T>* node);
 
-        bool InternalIsInSubPath(AlternateListNode<T>* node);
+        template<typename TPathType>
+        void InternalInsertSub(Iterator<TPathType> position, AlternateListNode<T>* node);
+
+        AlternateListNode<T>* InternalFindPrevSubNode(AlternateListNode<T>* node);
+
+        template<typename TPathType>
+        void InternalErase(AlternateListNode<T>* node);
 
         AlternateListNode<Type>* m_endNode;
         std::tuple<AlternateListPath<Type, MainPath>, AlternateListPath<Type, SubPath>> m_paths;
@@ -248,8 +287,8 @@ namespace Molten
     struct AlternateListPath
     {
         AlternateListPath(AlternateListNode<T>* end);
-        AlternateListPath(AlternateListPath&& path);
-        AlternateListPath& operator =(AlternateListPath&& path);
+        AlternateListPath(AlternateListPath&& path) noexcept;
+        AlternateListPath& operator =(AlternateListPath&& path) noexcept;
 
         AlternateListPath(const AlternateListPath&) = delete;
         AlternateListPath& operator =(const AlternateListPath&) = delete;

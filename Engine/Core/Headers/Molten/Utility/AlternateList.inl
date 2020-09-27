@@ -42,6 +42,13 @@ namespace Molten
 
     template<typename T>
     template<typename TPathType>
+    inline bool AlternateList<T>::Iterator<TPathType>::IsEmpty() const
+    {
+        return m_currentNode == nullptr;
+    }
+
+    template<typename T>
+    template<typename TPathType>
     inline typename AlternateList<T>::Type& AlternateList<T>::Iterator<TPathType>::operator *() const
     {
         MOLTEN_DEBUG_ASSERT(m_currentNode != nullptr, "Cannot dereference iterator of nullptr node.");
@@ -117,6 +124,13 @@ namespace Molten
     inline AlternateList<T>::ConstIterator<TPathType>::ConstIterator(const AlternateListNode<T>* currentNode) :
         m_currentNode(currentNode)
     {}
+
+    template<typename T>
+    template<typename TPathType>
+    inline bool AlternateList<T>::ConstIterator<TPathType>::IsEmpty() const
+    {
+        return m_currentNode == nullptr;
+    }
 
     template<typename T>
     template<typename TPathType>
@@ -197,27 +211,77 @@ namespace Molten
 
     template<typename T>
     template<typename TPathType>
-    inline typename AlternateList<T>::template Iterator<TPathType> AlternateList<T>::IteratorPath<TPathType>::begin()
+    inline bool AlternateList<T>::IteratorPath<TPathType>::IsEmpty() const
     {
-        return Iterator<TPathType>{ std::get<AlternateListPath<Type, TPathType>>(m_list->m_paths).root };
+        return m_list == nullptr;
     }
+
     template<typename T>
     template<typename TPathType>
-    inline typename AlternateList<T>::template ConstIterator<TPathType> AlternateList<T>::IteratorPath<TPathType>::begin() const
+    inline size_t AlternateList<T>::IteratorPath<TPathType>::GetSize() const
     {
-        return ConstIterator<TPathType>{ std::get<AlternateListPath<Type, TPathType>>(m_list->m_paths).root };
+        MOLTEN_DEBUG_ASSERT(IsEmpty() == false, "Cannot get size of empty iterator path.");
+        return m_list->GetSize<TPathType>();
+    }
+
+    template<typename T>
+    template<typename TPathType>
+    inline typename AlternateList<T>::template Iterator<TPathType> AlternateList<T>::IteratorPath<TPathType>::begin()
+    {
+        MOLTEN_DEBUG_ASSERT(IsEmpty() == false, "Cannot get begin iterator of empty iterator path.");
+        return Iterator<TPathType>{ std::get<AlternateListPath<Type, TPathType>>(m_list->m_paths).root };
     }
 
     template<typename T>
     template<typename TPathType>
     inline typename AlternateList<T>::template Iterator<TPathType> AlternateList<T>::IteratorPath<TPathType>::end()
     {
+        MOLTEN_DEBUG_ASSERT(IsEmpty() == false, "Cannot get end iterator of empty iterator path.");
         return Iterator<TPathType>{ std::get<AlternateListPath<Type, TPathType>>(m_list->m_paths).tail };
     }
+
+
+    // Alterante list const iterator path implementations.
     template<typename T>
     template<typename TPathType>
-    inline typename AlternateList<T>::template ConstIterator<TPathType> AlternateList<T>::IteratorPath<TPathType>::end() const
+    inline AlternateList<T>::ConstIteratorPath<TPathType>::ConstIteratorPath() :
+        m_list(nullptr)
+    { }
+
+    template<typename T>
+    template<typename TPathType>
+    inline AlternateList<T>::ConstIteratorPath<TPathType>::ConstIteratorPath(const AlternateList<Type>* list) :
+        m_list(list)
+    {}
+
+    template<typename T>
+    template<typename TPathType>
+    inline bool AlternateList<T>::ConstIteratorPath<TPathType>::IsEmpty() const
     {
+        return m_list == nullptr;
+    }
+
+    template<typename T>
+    template<typename TPathType>
+    inline size_t AlternateList<T>::ConstIteratorPath<TPathType>::GetSize() const
+    {
+        MOLTEN_DEBUG_ASSERT(IsEmpty() == false, "Cannot get size of empty const iterator path.");
+        return m_list->GetSize<TPathType>();
+    }
+
+    template<typename T>
+    template<typename TPathType>
+    inline typename AlternateList<T>::template ConstIterator<TPathType> AlternateList<T>::ConstIteratorPath<TPathType>::begin()
+    {
+        MOLTEN_DEBUG_ASSERT(IsEmpty() == false, "Cannot get begin iterator of empty const iterator path.");
+        return ConstIterator<TPathType>{ std::get<AlternateListPath<Type, TPathType>>(m_list->m_paths).root };
+    }
+
+    template<typename T>
+    template<typename TPathType>
+    inline typename AlternateList<T>::template ConstIterator<TPathType> AlternateList<T>::ConstIteratorPath<TPathType>::end()
+    {
+        MOLTEN_DEBUG_ASSERT(IsEmpty() == false, "Cannot get end iterator of empty const iterator path.");
         return ConstIterator<TPathType>{ std::get<AlternateListPath<Type, TPathType>>(m_list->m_paths).tail };
     }
 
@@ -232,25 +296,24 @@ namespace Molten
     template<typename T>
     inline AlternateList<T>::~AlternateList()
     {
-        auto& path = std::get<AlternateListPath<Type, MainPath>>(m_paths);
-        auto currentNode = path.root;
-        while (currentNode)
-        {
-            auto prevNode = currentNode;
-            currentNode = AlternateListPathTraits<MainPath>::GetNext(prevNode);
-            delete prevNode;
-        }
+        InternalDeleteAllNodes();
     }
 
     template<typename T>
-    inline AlternateList<T>::AlternateList(AlternateList&& list) :
+    inline AlternateList<T>::AlternateList(AlternateList&& list) noexcept :
+        m_endNode(list.m_endNode),
         m_paths(std::move(list.m_paths))
-    {}
+    {
+        list.m_endNode = nullptr;
+    }
 
     template<typename T>
-    inline AlternateList<T>& AlternateList<T>::operator =(AlternateList&& list)
+    inline AlternateList<T>& AlternateList<T>::operator =(AlternateList&& list) noexcept
     {
+        InternalDeleteAllNodes();
+
         m_paths = std::move(list.m_paths);
+        list.m_endNode = nullptr;
         return *this;
     }
 
@@ -281,9 +344,9 @@ namespace Molten
     }
     template<typename T>
     template<typename TPathType>
-    inline const typename AlternateList<T>::template IteratorPath<TPathType> AlternateList<T>::GetPath() const
+    inline typename AlternateList<T>::template ConstIteratorPath<TPathType> AlternateList<T>::GetPath() const
     {
-        return IteratorPath<TPathType>{ this };
+        return ConstIteratorPath<TPathType>{ this };
     }
 
     template<typename T>
@@ -292,9 +355,9 @@ namespace Molten
         return IteratorPath<MainPath>{ this };
     }
     template<typename T>
-    inline const typename AlternateList<T>::template IteratorPath<typename AlternateList<T>::MainPath> AlternateList<T>::GetMainPath() const
+    inline typename AlternateList<T>::template ConstIteratorPath<typename AlternateList<T>::MainPath> AlternateList<T>::GetMainPath() const
     {
-        return IteratorPath<MainPath>{ this };
+        return ConstIteratorPath<MainPath>{ this };
     }
 
     template<typename T>
@@ -303,9 +366,9 @@ namespace Molten
         return IteratorPath<SubPath>{ this };
     }
     template<typename T>
-    inline const typename AlternateList<T>::template IteratorPath<typename AlternateList<T>::SubPath> AlternateList<T>::GetSubPath() const
+    inline typename AlternateList<T>::template ConstIteratorPath<typename AlternateList<T>::SubPath> AlternateList<T>::GetSubPath() const
     {
-        return IteratorPath<SubPath>{ this };
+        return ConstIteratorPath<SubPath>{ this };
     }
 
     template<typename T>
@@ -362,6 +425,36 @@ namespace Molten
 
     template<typename T>
     template<typename TPathType>
+    inline typename AlternateList<T>::template Iterator<AlternateListMainPath> AlternateList<T>::Insert(Iterator<TPathType> position, const bool addSubPath, Type&& value)
+    {
+        MOLTEN_DEBUG_ASSERT(position.IsEmpty() == false, "Cannot insert with empty iterator as position.");
+
+        auto newNode = new AlternateListNode<T>(std::move(value));
+
+        InternalInsertMain(position, newNode);
+
+        if (addSubPath)
+        {
+            InternalInsertSub(position, newNode);
+        }
+
+        return Iterator<MainPath>(newNode);
+    }
+
+    template<typename T>
+    template<typename TPathType>
+    inline typename AlternateList<T>::template Iterator<AlternateListMainPath> AlternateList<T>::Insert(Iterator<TPathType> position, const bool addSubPath, const Type& value)
+    {
+        MOLTEN_DEBUG_ASSERT(position.IsEmpty() == false, "Cannot insert with empty iterator as position.");
+
+        auto newNode = new AlternateListNode<T>(value);
+        InternalInsertMain(position, newNode);
+
+        return Iterator<MainPath>(newNode);
+    }
+
+    template<typename T>
+    template<typename TPathType>
     inline typename AlternateList<T>::template Iterator<TPathType> AlternateList<T>::Erase(Iterator<TPathType> it)
     {
         auto* node = it.m_currentNode;
@@ -381,6 +474,32 @@ namespace Molten
 
         delete node;
         return Iterator<TPathType>{ nextPathNode };
+    }
+
+    template<typename T>
+    bool AlternateList<T>::InternalIsInSubPath(AlternateListNode<T>* node)
+    {
+        auto& path = std::get<AlternateListPath<Type, SubPath>>(m_paths);
+        auto* prev = AlternateListPathTraits<SubPath>::GetPrev(node);
+        auto* next = AlternateListPathTraits<SubPath>::GetNext(node);
+
+        return
+            path.root == node || path.tail == node ||
+            (prev && AlternateListPathTraits<SubPath>::GetNext(prev) == node) ||
+            (next && AlternateListPathTraits<SubPath>::GetPrev(next) == node);
+    }
+
+    template<typename T>
+    void AlternateList<T>::InternalDeleteAllNodes()
+    {
+        auto& path = std::get<AlternateListPath<Type, MainPath>>(m_paths);
+        auto currentNode = path.root;
+        while (currentNode)
+        {
+            auto prevNode = currentNode;
+            currentNode = AlternateListPathTraits<MainPath>::GetNext(prevNode);
+            delete prevNode;
+        }
     }
 
     template<typename T>
@@ -422,6 +541,82 @@ namespace Molten
 
     template<typename T>
     template<typename TPathType>
+    inline void AlternateList<T>::InternalInsertMain(Iterator<TPathType> position, AlternateListNode<T>* node)
+    {
+        auto positionNode = position.m_currentNode;
+        auto prevNode = AlternateListPathTraits<MainPath>::GetPrev(positionNode);
+        auto& path = std::get<AlternateListPath<Type, MainPath>>(m_paths);
+
+        if (prevNode)
+        {
+            AlternateListPathTraits<MainPath>::SetNext(prevNode, node);
+            AlternateListPathTraits<MainPath>::SetPrev(node, prevNode);
+        }
+        else
+        {
+            path.root = node;
+        }
+
+        AlternateListPathTraits<MainPath>::SetNext(node, positionNode);
+        AlternateListPathTraits<MainPath>::SetPrev(positionNode, node);
+        
+        path.size++;
+    }
+
+    template<typename T>
+    template<typename TPathType>
+    inline void AlternateList<T>::InternalInsertSub(Iterator<TPathType> position, AlternateListNode<T>* node)
+    {
+        auto positionNode = position.m_currentNode;
+        auto& path = std::get<AlternateListPath<Type, SubPath>>(m_paths);
+
+        auto prevSub = AlternateListPathTraits<SubPath>::GetPrev(positionNode);
+        if (!prevSub)
+        {
+            prevSub = InternalFindPrevSubNode(positionNode);
+        }
+
+        if (prevSub)
+        {
+            auto nextSub = AlternateListPathTraits<SubPath>::GetNext(prevSub);
+
+            AlternateListPathTraits<SubPath>::SetNext(node, nextSub);
+            AlternateListPathTraits<SubPath>::SetPrev(node, prevSub);
+
+            AlternateListPathTraits<SubPath>::SetNext(prevSub, node);
+            AlternateListPathTraits<SubPath>::SetPrev(nextSub, node);
+        }
+        else
+        {
+            auto oldRoot = path.root;
+            path.root = node;
+            AlternateListPathTraits<SubPath>::SetNext(node, oldRoot);
+            AlternateListPathTraits<SubPath>::SetPrev(oldRoot, node);
+        }
+
+        path.size++;
+    }
+
+    template<typename T>
+    inline AlternateListNode<T>* AlternateList<T>::InternalFindPrevSubNode(AlternateListNode<T>* node)
+    {
+        auto currentNode = AlternateListPathTraits<MainPath>::GetPrev(node);
+        while(currentNode)
+        {   
+            auto nextSub = AlternateListPathTraits<SubPath>::GetNext(currentNode);
+            if (nextSub)
+            {
+                return currentNode;
+            }
+
+            currentNode = AlternateListPathTraits<MainPath>::GetPrev(currentNode);
+        };
+
+        return nullptr;
+    }
+
+    template<typename T>
+    template<typename TPathType>
     inline void AlternateList<T>::InternalErase(AlternateListNode<T>* node)
     {
        // Remove from main path.
@@ -449,19 +644,6 @@ namespace Molten
        path.size--;
     }
 
-    template<typename T>
-    bool AlternateList<T>::InternalIsInSubPath(AlternateListNode<T>* node)
-    {
-        auto& path = std::get<AlternateListPath<Type, SubPath>>(m_paths);
-        auto* prev = AlternateListPathTraits<SubPath>::GetPrev(node);
-        auto* next = AlternateListPathTraits<SubPath>::GetNext(node);
-
-        return 
-            path.root == node || path.tail == node || 
-            (prev && AlternateListPathTraits<SubPath>::GetNext(prev) == node) ||
-            (next && AlternateListPathTraits<SubPath>::GetPrev(next) == node);
-    }
-
 
     // Alterante list node implementations.
     template<typename T>
@@ -475,7 +657,7 @@ namespace Molten
 
     template<typename T>
     inline AlternateListNode<T>::AlternateListNode(const Type& valueCopy) :
-        content(new Content(valueMove)),
+        content(new Content(valueCopy)),
         prevMain(nullptr),
         prevSub(nullptr),
         nextMain(nullptr),
@@ -517,7 +699,7 @@ namespace Molten
     {}
 
     template<typename T, typename TPathType>
-    inline AlternateListPath<T, TPathType>::AlternateListPath(AlternateListPath<T, TPathType>&& path) :
+    inline AlternateListPath<T, TPathType>::AlternateListPath(AlternateListPath<T, TPathType>&& path) noexcept :
         root(path.root),
         tail(path.tail),
         size(path.size)
@@ -528,7 +710,7 @@ namespace Molten
     }
 
     template<typename T, typename TPathType>
-    inline AlternateListPath<T, TPathType>& AlternateListPath<T, TPathType>::operator =(AlternateListPath<T, TPathType>&& path)
+    inline AlternateListPath<T, TPathType>& AlternateListPath<T, TPathType>::operator =(AlternateListPath<T, TPathType>&& path) noexcept
     {
         root = path.root;
         tail = path.tail;
