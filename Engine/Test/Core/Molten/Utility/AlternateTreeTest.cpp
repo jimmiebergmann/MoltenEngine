@@ -187,6 +187,50 @@ namespace Molten
             
         }
     }
+
+    TEST(Utility, AlternateTree_InsertRoot)
+    {
+        using TreeType = AlternateTree<TestData1>;
+        using NodeType = AlternateTreeNode<TestData1>;
+
+        {
+            TreeType tree;
+            NodeType& root = tree.GetRoot();
+            auto path = root.GetMainPath();
+
+            root.Insert(path.begin(), true, TestData1{ 1 });
+            root.Insert(path.begin(), false, TestData1{ 2 });
+            root.Insert(path.begin(), true, TestData1{ 3 });
+            root.Insert(path.begin(), false, TestData1{ 4 });
+            root.Insert(path.begin(), true, TestData1{ 5 });
+            root.Insert(path.begin(), true, TestData1{ 6 });
+            root.Insert(path.begin(), false, TestData1{ 7 });
+            root.Insert(path.begin(), false, TestData1{ 8 });
+            root.Insert(path.begin(), true, TestData1{ 9 });
+
+            EXPECT_EQ(root.GetSize<AlternateListMainPath>(), size_t(9));
+            EXPECT_EQ(root.GetMainSize(), size_t(9));
+            EXPECT_EQ(root.GetSize<AlternateListSubPath>(), size_t(5));
+            EXPECT_EQ(root.GetSubSize(), size_t(5));
+
+            if (!CompareListContent<TestData1, AlternateListMainPath>(
+                root.GetPath<AlternateListMainPath>().begin(),
+                root.GetPath<AlternateListMainPath>().end(),
+                { {9}, {8}, {7}, {6}, {5}, {4}, {3}, {2}, {1} }))
+            {
+                ADD_FAILURE();
+            }
+
+            if (!CompareListContent<TestData1, AlternateListSubPath>(
+                root.GetPath<AlternateListSubPath>().begin(),
+                root.GetPath<AlternateListSubPath>().end(),
+                { {9}, {6}, {5}, {3}, {1} }))
+            {
+                ADD_FAILURE();
+            }
+
+        }
+    }
     
     TEST(Utility, AlternateTree_EraseAllMain)
     {

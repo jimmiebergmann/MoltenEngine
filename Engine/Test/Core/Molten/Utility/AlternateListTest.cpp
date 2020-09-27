@@ -284,15 +284,15 @@ namespace Molten
             auto mainPath = list.GetMainPath();
             auto subPath = list.GetSubPath();
 
-            auto it1 = list.Insert(mainPath.end(), false, TestData1{ 1 });
-            auto it2 = list.Insert(mainPath.end(), false, TestData1{ 2 });
+            list.Insert(mainPath.end(), false, TestData1{ 1 });
+            list.Insert(mainPath.end(), false, TestData1{ 2 });
             auto it3 = list.Insert(mainPath.end(), false, TestData1{ 3 });
-            auto it4 = list.Insert(mainPath.end(), false, TestData1{ 4 });
+            list.Insert(mainPath.end(), false, TestData1{ 4 });
 
             EXPECT_EQ(mainPath.GetSize(), size_t(4));
             EXPECT_EQ(subPath.GetSize(), size_t(0));
 
-            auto it5 = list.Insert(it3, true, TestData1{ 5 });
+            list.Insert(it3, true, TestData1{ 5 });
 
             EXPECT_EQ(mainPath.GetSize(), size_t(5));
             EXPECT_EQ(subPath.GetSize(), size_t(1));
@@ -318,15 +318,15 @@ namespace Molten
             auto mainPath = list.GetMainPath();
             auto subPath = list.GetSubPath();
 
-            auto it1 = list.Insert(mainPath.end(), true, TestData1{ 1 });
-            auto it2 = list.Insert(mainPath.end(), true, TestData1{ 2 });
+            list.Insert(mainPath.end(), true, TestData1{ 1 });
+            list.Insert(mainPath.end(), true, TestData1{ 2 });
             auto it3 = list.Insert(mainPath.end(), false, TestData1{ 3 });
-            auto it4 = list.Insert(mainPath.end(), false, TestData1{ 4 });
+            list.Insert(mainPath.end(), false, TestData1{ 4 });
 
             EXPECT_EQ(mainPath.GetSize(), size_t(4));
             EXPECT_EQ(subPath.GetSize(), size_t(2));
 
-            auto it5 = list.Insert(it3, true, TestData1{ 5 });
+            list.Insert(it3, true, TestData1{ 5 });
 
             EXPECT_EQ(mainPath.GetSize(), size_t(5));
             EXPECT_EQ(subPath.GetSize(), size_t(3));
@@ -352,15 +352,15 @@ namespace Molten
             auto mainPath = list.GetMainPath();
             auto subPath = list.GetSubPath();
 
-            auto it1 = list.Insert(mainPath.end(), false, TestData1{ 1 });
-            auto it2 = list.Insert(mainPath.end(), false, TestData1{ 2 });
+            list.Insert(mainPath.end(), false, TestData1{ 1 });
+            list.Insert(mainPath.end(), false, TestData1{ 2 });
             auto it3 = list.Insert(mainPath.end(), true, TestData1{ 3 });
-            auto it4 = list.Insert(mainPath.end(), true, TestData1{ 4 });
+            list.Insert(mainPath.end(), true, TestData1{ 4 });
 
             EXPECT_EQ(mainPath.GetSize(), size_t(4));
             EXPECT_EQ(subPath.GetSize(), size_t(2));
 
-            auto it5 = list.Insert(it3, true, TestData1{ 5 });
+            list.Insert(it3, true, TestData1{ 5 });
 
             EXPECT_EQ(mainPath.GetSize(), size_t(5));
             EXPECT_EQ(subPath.GetSize(), size_t(3));

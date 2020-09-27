@@ -263,9 +263,9 @@ namespace Molten
         void PushFront(const bool addSubPath, Type&& value);
 
         template<typename TPathType>
-        Iterator<MainPath> Insert(Iterator<TPathType> position, const bool addSubPath, Type&& value);
-        template<typename TPathType>
         Iterator<MainPath> Insert(Iterator<TPathType> position, const bool addSubPath, const Type& value);
+        template<typename TPathType>
+        Iterator<MainPath> Insert(Iterator<TPathType> position, const bool addSubPath, Type&& value);
 
         template<typename TPathType>
         Iterator<TPathType> Erase(Iterator<TPathType> it);

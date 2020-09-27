@@ -437,17 +437,17 @@ namespace Molten
 
     template<typename T>
     template<typename TPathType>
-    inline typename AlternateTreeNode<T>::template Iterator<AlternateListMainPath> AlternateTreeNode<T>::Insert(Iterator<TPathType> position, const bool addSubPath, Type&& value)
+    inline typename AlternateTreeNode<T>::template Iterator<AlternateListMainPath> AlternateTreeNode<T>::Insert(Iterator<TPathType> position, const bool addSubPath, const Type& value)
     {
-        auto insertIt = m_children.Insert(position.m_listIterator, addSubPath, std::move(value));
+        auto insertIt = m_children.Insert(position.m_listIterator, addSubPath, AlternateTreeNode(this, value));
         return Iterator<MainPath>{ this, insertIt };
     }
 
     template<typename T>
     template<typename TPathType>
-    inline typename AlternateTreeNode<T>::template Iterator<AlternateListMainPath> AlternateTreeNode<T>::Insert(Iterator<TPathType> position, const bool addSubPath, const Type& value)
+    inline typename AlternateTreeNode<T>::template Iterator<AlternateListMainPath> AlternateTreeNode<T>::Insert(Iterator<TPathType> position, const bool addSubPath, Type&& value)
     {
-        auto insertIt = m_children.Insert(position.m_listIterator, addSubPath, value);
+        auto insertIt = m_children.Insert(position.m_listIterator, addSubPath, AlternateTreeNode(this, std::move(value)));
         return Iterator<MainPath>{ this, insertIt };
     }
 

@@ -425,11 +425,11 @@ namespace Molten
 
     template<typename T>
     template<typename TPathType>
-    inline typename AlternateList<T>::template Iterator<AlternateListMainPath> AlternateList<T>::Insert(Iterator<TPathType> position, const bool addSubPath, Type&& value)
+    inline typename AlternateList<T>::template Iterator<AlternateListMainPath> AlternateList<T>::Insert(Iterator<TPathType> position, const bool addSubPath, const Type& value)
     {
         MOLTEN_DEBUG_ASSERT(position.IsEmpty() == false, "Cannot insert with empty iterator as position.");
 
-        auto newNode = new AlternateListNode<T>(std::move(value));
+        auto newNode = new AlternateListNode<T>(value);
 
         InternalInsertMain(position, newNode);
 
@@ -443,12 +443,18 @@ namespace Molten
 
     template<typename T>
     template<typename TPathType>
-    inline typename AlternateList<T>::template Iterator<AlternateListMainPath> AlternateList<T>::Insert(Iterator<TPathType> position, const bool addSubPath, const Type& value)
+    inline typename AlternateList<T>::template Iterator<AlternateListMainPath> AlternateList<T>::Insert(Iterator<TPathType> position, const bool addSubPath, Type&& value)
     {
         MOLTEN_DEBUG_ASSERT(position.IsEmpty() == false, "Cannot insert with empty iterator as position.");
 
-        auto newNode = new AlternateListNode<T>(value);
+        auto newNode = new AlternateListNode<T>(std::move(value));
+
         InternalInsertMain(position, newNode);
+
+        if (addSubPath)
+        {
+            InternalInsertSub(position, newNode);
+        }
 
         return Iterator<MainPath>(newNode);
     }
