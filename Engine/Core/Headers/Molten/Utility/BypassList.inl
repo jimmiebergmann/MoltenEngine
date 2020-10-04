@@ -133,21 +133,21 @@ namespace Molten
 
     template<bool IsConst, typename TLaneType, typename T>
     template<bool IsConstLane>
-    inline std::enable_if_t<!IsConstLane, typename BypassListLaneInterface<IsConst, TLaneType, T>::template Iterator> BypassListLaneInterface<IsConst, TLaneType, T>::begin()
+    inline std::enable_if_t<!IsConstLane, typename BypassListLaneInterface<IsConst, TLaneType, T>::Iterator> BypassListLaneInterface<IsConst, TLaneType, T>::begin()
     {
         MOLTEN_DEBUG_ASSERT(m_dataLanes != nullptr, "Cannot get begin iterator from empty bypass list lane.");
         return Iterator(std::get<DataLane<TLaneType>>(*m_dataLanes).root);
     }
     template<bool IsConst, typename TLaneType, typename T>
     template<bool IsConstLane>
-    inline std::enable_if_t < !IsConstLane, typename BypassListLaneInterface<IsConst, TLaneType, T>::template ConstIterator> BypassListLaneInterface<IsConst, TLaneType, T>::begin() const
+    inline std::enable_if_t < !IsConstLane, typename BypassListLaneInterface<IsConst, TLaneType, T>::ConstIterator> BypassListLaneInterface<IsConst, TLaneType, T>::begin() const
     {
         MOLTEN_DEBUG_ASSERT(m_dataLanes != nullptr, "Cannot get begin iterator from empty bypass list lane.");
         return ConstIterator(std::get<DataLane<TLaneType>>(*m_dataLanes).root);
     }
     template<bool IsConst, typename TLaneType, typename T>
     template<bool IsConstLane>
-    inline std::enable_if_t<IsConstLane, typename BypassListLaneInterface<IsConst, TLaneType, T>::template Iterator> BypassListLaneInterface<IsConst, TLaneType, T>::begin() const
+    inline std::enable_if_t<IsConstLane, typename BypassListLaneInterface<IsConst, TLaneType, T>::Iterator> BypassListLaneInterface<IsConst, TLaneType, T>::begin() const
     {
         MOLTEN_DEBUG_ASSERT(m_dataLanes != nullptr, "Cannot get begin const iterator from empty bypass list lane.");
         return Iterator(std::get<DataLane<TLaneType>>(*m_dataLanes).root);
@@ -155,21 +155,21 @@ namespace Molten
 
     template<bool IsConst, typename TLaneType, typename T>
     template<bool IsConstLane>
-    inline std::enable_if_t<!IsConstLane, typename BypassListLaneInterface<IsConst, TLaneType, T>::template Iterator> BypassListLaneInterface<IsConst, TLaneType, T>::end()
+    inline std::enable_if_t<!IsConstLane, typename BypassListLaneInterface<IsConst, TLaneType, T>::Iterator> BypassListLaneInterface<IsConst, TLaneType, T>::end()
     {
         MOLTEN_DEBUG_ASSERT(m_dataLanes != nullptr, "Cannot get end iterator from empty bypass list lane.");
         return Iterator(std::get<DataLane<TLaneType>>(*m_dataLanes).tail);
     }
     template<bool IsConst, typename TLaneType, typename T>
     template<bool IsConstLane>
-    inline std::enable_if_t<!IsConstLane, typename BypassListLaneInterface<IsConst, TLaneType, T>::template ConstIterator> BypassListLaneInterface<IsConst, TLaneType, T>::end() const
+    inline std::enable_if_t<!IsConstLane, typename BypassListLaneInterface<IsConst, TLaneType, T>::ConstIterator> BypassListLaneInterface<IsConst, TLaneType, T>::end() const
     {
         MOLTEN_DEBUG_ASSERT(m_dataLanes != nullptr, "Cannot get end iterator from empty bypass list lane.");
         return ConstIterator(std::get<DataLane<TLaneType>>(*m_dataLanes).tail);
     }
     template<bool IsConst, typename TLaneType, typename T>
     template<bool IsConstLane>
-    inline std::enable_if_t<IsConstLane, typename BypassListLaneInterface<IsConst, TLaneType, T>::template Iterator> BypassListLaneInterface<IsConst, TLaneType, T>::end() const
+    inline std::enable_if_t<IsConstLane, typename BypassListLaneInterface<IsConst, TLaneType, T>::Iterator> BypassListLaneInterface<IsConst, TLaneType, T>::end() const
     {
         MOLTEN_DEBUG_ASSERT(m_dataLanes != nullptr, "Cannot get end const iterator from empty bypass list lane.");
         return Iterator(std::get<DataLane<TLaneType>>(*m_dataLanes).tail);
@@ -235,7 +235,7 @@ namespace Molten
 
     template<bool IsConst, typename TLaneType, typename T>
     template<template <bool, typename, typename> class TIterator, bool IsItConst, typename TItLaneType>
-    inline typename BypassListLaneInterface<IsConst, TLaneType, T>::template Iterator 
+    inline typename BypassListLaneInterface<IsConst, TLaneType, T>::Iterator 
         BypassListLaneInterface<IsConst, TLaneType, T>::Insert(TIterator<IsItConst, TItLaneType, Type> position, const Type& value)
     {
         static_assert(!IsConst, "Cannot insert to const lane.");
@@ -255,7 +255,7 @@ namespace Molten
     }
     template<bool IsConst, typename TLaneType, typename T>
     template<template <bool, typename, typename> class TIterator, bool IsItConst, typename TItLaneType>
-    inline typename BypassListLaneInterface<IsConst, TLaneType, T>::template Iterator 
+    inline typename BypassListLaneInterface<IsConst, TLaneType, T>::Iterator 
         BypassListLaneInterface<IsConst, TLaneType, T>::Insert(TIterator<IsItConst, TItLaneType, Type> position, Type&& value)
     {
         static_assert(!IsConst, "Cannot insert to const lane.");
@@ -416,7 +416,7 @@ namespace Molten
     }
 
     template<bool IsConst, typename TLaneType, typename T>
-    inline typename BypassListLaneInterface<IsConst, TLaneType, T>::template Item* 
+    inline typename BypassListLaneInterface<IsConst, TLaneType, T>::Item* 
         BypassListLaneInterface<IsConst, TLaneType, T>::InternalFindPrevPartialItem(Item* item)
     {
         auto* currentItem = BypassListLaneTraits<NormalLaneType>::GetPrev(item);
@@ -496,7 +496,7 @@ namespace Molten
 
     template<bool IsConst, typename TLaneType, typename T>
     template<bool IsConstIterator>
-    inline std::enable_if_t<!IsConstIterator, typename BypassListIteratorInterface<IsConst, TLaneType, T>::template Reference> BypassListIteratorInterface<IsConst, TLaneType, T>::operator *()
+    inline std::enable_if_t<!IsConstIterator, typename BypassListIteratorInterface<IsConst, TLaneType, T>::Reference> BypassListIteratorInterface<IsConst, TLaneType, T>::operator *()
     {
         MOLTEN_DEBUG_ASSERT(m_currentItem != nullptr, "Cannot dereference iterator of nullptr item.");
         MOLTEN_DEBUG_ASSERT(m_currentItem->content != nullptr, "Cannot dereference iterator of nullptr item content.");
@@ -505,7 +505,7 @@ namespace Molten
 
     template<bool IsConst, typename TLaneType, typename T>
     template<bool IsConstIterator>
-    inline std::enable_if_t<IsConstIterator, typename BypassListIteratorInterface<IsConst, TLaneType, T>::template Reference> BypassListIteratorInterface<IsConst, TLaneType, T>::operator *() const
+    inline std::enable_if_t<IsConstIterator, typename BypassListIteratorInterface<IsConst, TLaneType, T>::Reference> BypassListIteratorInterface<IsConst, TLaneType, T>::operator *() const
     {
         MOLTEN_DEBUG_ASSERT(m_currentItem != nullptr, "Cannot dereference iterator of nullptr item.");
         MOLTEN_DEBUG_ASSERT(m_currentItem->content != nullptr, "Cannot dereference iterator of nullptr item content.");
@@ -513,7 +513,7 @@ namespace Molten
     }
 
     template<bool IsConst, typename TLaneType, typename T>
-    inline typename BypassListIteratorInterface<IsConst, TLaneType, T>::template Iterator& BypassListIteratorInterface<IsConst, TLaneType, T>::operator ++ () // Pre
+    inline typename BypassListIteratorInterface<IsConst, TLaneType, T>::Iterator& BypassListIteratorInterface<IsConst, TLaneType, T>::operator ++ () // Pre
     {
         MOLTEN_DEBUG_ASSERT(m_currentItem != nullptr, "Current bypass list item is nullptr.");
         m_currentItem = BypassListLaneTraits<TLaneType>::template GetNext<T>(m_currentItem);
@@ -522,7 +522,7 @@ namespace Molten
     }
 
     template<bool IsConst, typename TLaneType, typename T>
-    inline typename BypassListIteratorInterface<IsConst, TLaneType, T>::template Iterator& BypassListIteratorInterface<IsConst, TLaneType, T>::operator -- () // Pre
+    inline typename BypassListIteratorInterface<IsConst, TLaneType, T>::Iterator& BypassListIteratorInterface<IsConst, TLaneType, T>::operator -- () // Pre
     {
         MOLTEN_DEBUG_ASSERT(m_currentItem != nullptr, "Current bypass list item is nullptr.");
         m_currentItem = BypassListLaneTraits<TLaneType>::template GetPrev<T>(m_currentItem);
@@ -531,7 +531,7 @@ namespace Molten
     }
 
     template<bool IsConst, typename TLaneType, typename T>
-    inline typename BypassListIteratorInterface<IsConst, TLaneType, T>::template Iterator BypassListIteratorInterface<IsConst, TLaneType, T>::operator ++ (int) // Post
+    inline typename BypassListIteratorInterface<IsConst, TLaneType, T>::Iterator BypassListIteratorInterface<IsConst, TLaneType, T>::operator ++ (int) // Post
     {
         MOLTEN_DEBUG_ASSERT(m_currentItem != nullptr, "Current bypass list item is nullptr.");
         auto* previtem = m_currentItem;
@@ -541,7 +541,7 @@ namespace Molten
     }
     
     template<bool IsConst, typename TLaneType, typename T>
-    inline typename BypassListIteratorInterface<IsConst, TLaneType, T>::template Iterator BypassListIteratorInterface<IsConst, TLaneType, T>::operator -- (int) // Post
+    inline typename BypassListIteratorInterface<IsConst, TLaneType, T>::Iterator BypassListIteratorInterface<IsConst, TLaneType, T>::operator -- (int) // Post
     {
         MOLTEN_DEBUG_ASSERT(m_currentItem != nullptr, "Current bypass list item is nullptr.");
         auto* prevItem = m_currentItem;

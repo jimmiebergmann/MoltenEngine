@@ -511,7 +511,7 @@ namespace Molten
 
                 it = normalLane.begin();
                 auto it3 = normalLane.Erase(it);
-                EXPECT_EQ(it2, normalLane.end());
+                EXPECT_EQ(it3, normalLane.end());
 
                 EXPECT_EQ(list.GetSize(), size_t(0));
                 EXPECT_EQ(normalLane.GetSize(), size_t(0));
@@ -549,7 +549,7 @@ namespace Molten
 
                 it = normalLane.begin();
                 auto it3 = normalLane.Erase(it);
-                EXPECT_NE(it2, normalLane.end());
+                EXPECT_NE(it3, normalLane.end());
 
                 EXPECT_EQ(list.GetSize(), size_t(1));
                 EXPECT_EQ(normalLane.GetSize(), size_t(1));
@@ -834,18 +834,16 @@ namespace Molten
     TEST(Utility, BypassListIterator_LaneTypeCast)
     {
         ListType list;
-        NormalLane normalLane = list.GetLane<ListType::NormalLaneType>();
         PartialLane partialLane = list.GetLane<ListType::PartialLaneType>();
 
-        NormalLane::Iterator normalIt = normalLane.begin();
         PartialLane::Iterator partialIt = partialLane.begin();
 
-        NormalLane::Iterator normalIt2 = partialIt;
-        EXPECT_EQ(normalIt2, normalIt2);
+        NormalLane::Iterator normalIt1 = partialIt;
+        EXPECT_EQ(normalIt1, normalIt1);
 
-        NormalLane::Iterator normalIt3;
-        normalIt3 = partialIt;
-        EXPECT_EQ(normalIt3, normalIt3);   
+        NormalLane::Iterator normalIt2;
+        normalIt2 = partialIt;
+        EXPECT_EQ(normalIt2, normalIt2);   
     }
 
     TEST(Utility, BypassListIterator_Traverse)

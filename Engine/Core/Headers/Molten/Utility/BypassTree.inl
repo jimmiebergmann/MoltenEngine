@@ -48,23 +48,23 @@ namespace Molten
     template<typename TLaneType>
     inline typename BypassTree<T>::template Lane<TLaneType> BypassTree<T>::GetLane()
     {
-        return m_rootItem.GetLane<TLaneType>();
+        return m_rootItem.template GetLane<TLaneType>();
     }
     template<typename T>
     template<typename TLaneType>
     inline typename BypassTree<T>::template ConstLane<TLaneType> BypassTree<T>::GetLane() const
     {
-        return m_rootItem.GetLane<TLaneType>();
+        return m_rootItem.template GetLane<TLaneType>();
     }
 
     template<typename T>
-    inline typename BypassTree<T>::template Item& BypassTree<T>::GetItem()
+    inline typename BypassTree<T>::Item& BypassTree<T>::GetItem()
     {
         return m_rootItem;
     }
 
     template<typename T>
-    inline const typename BypassTree<T>::template Item& BypassTree<T>::GetItem() const
+    inline const typename BypassTree<T>::Item& BypassTree<T>::GetItem() const
     {
         return m_rootItem;
     }
@@ -127,7 +127,7 @@ namespace Molten
             auto& item = *state.current;
             callback(item.GetValue());
             
-            lane = item.GetLane<TLaneType>();
+            lane = item.template GetLane<TLaneType>();
             if (lane.begin() != lane.end())
             {
                 stack.push(State{ lane.begin(), lane.end() });
@@ -198,7 +198,7 @@ namespace Molten
 
     template<bool IsConst, typename TLaneType, typename T>
     template<template <bool, typename, typename> class TIterator, bool IsItConst, typename TItLaneType>
-    inline typename BypassTreeLaneInterface<IsConst, TLaneType, T>::template Iterator
+    inline typename BypassTreeLaneInterface<IsConst, TLaneType, T>::Iterator
         BypassTreeLaneInterface<IsConst, TLaneType, T>::Insert(TIterator<IsItConst, TItLaneType, Type> position, const Type& value)
     {
         static_assert(!IsConst, "Cannot insert to const lane.");
@@ -210,7 +210,7 @@ namespace Molten
     }
     template<bool IsConst, typename TLaneType, typename T>
     template<template <bool, typename, typename> class TIterator, bool IsItConst, typename TItLaneType>
-    inline typename BypassTreeLaneInterface<IsConst, TLaneType, T>::template Iterator
+    inline typename BypassTreeLaneInterface<IsConst, TLaneType, T>::Iterator
         BypassTreeLaneInterface<IsConst, TLaneType, T>::Insert(TIterator<IsItConst, TItLaneType, Type> position, Type&& value)
     {
         static_assert(!IsConst, "Cannot insert to const lane.");
@@ -223,21 +223,21 @@ namespace Molten
 
     template<bool IsConst, typename TLaneType, typename T>
     template<bool IsConstLane>
-    inline std::enable_if_t<!IsConstLane, typename BypassTreeLaneInterface<IsConst, TLaneType, T>::template Iterator> 
+    inline std::enable_if_t<!IsConstLane, typename BypassTreeLaneInterface<IsConst, TLaneType, T>::Iterator> 
         BypassTreeLaneInterface<IsConst, TLaneType, T>::begin()
     {
         return Iterator(m_item, m_listLane.begin());
     }
     template<bool IsConst, typename TLaneType, typename T>
     template<bool IsConstLane>
-    inline std::enable_if_t<!IsConstLane, typename BypassTreeLaneInterface<IsConst, TLaneType, T>::template ConstIterator> 
+    inline std::enable_if_t<!IsConstLane, typename BypassTreeLaneInterface<IsConst, TLaneType, T>::ConstIterator> 
         BypassTreeLaneInterface<IsConst, TLaneType, T>::begin() const
     {
         return ConstIterator(m_item, m_listLane.begin());
     }
     template<bool IsConst, typename TLaneType, typename T>
     template<bool IsConstLane>
-    inline std::enable_if_t<IsConstLane, typename BypassTreeLaneInterface<IsConst, TLaneType, T>::template Iterator> 
+    inline std::enable_if_t<IsConstLane, typename BypassTreeLaneInterface<IsConst, TLaneType, T>::Iterator> 
         BypassTreeLaneInterface<IsConst, TLaneType, T>::begin() const
     {
         return Iterator(m_item, m_listLane.begin());
@@ -245,21 +245,21 @@ namespace Molten
 
     template<bool IsConst, typename TLaneType, typename T>
     template<bool IsConstLane>
-    inline std::enable_if_t<!IsConstLane, typename BypassTreeLaneInterface<IsConst, TLaneType, T>::template Iterator>
+    inline std::enable_if_t<!IsConstLane, typename BypassTreeLaneInterface<IsConst, TLaneType, T>::Iterator>
         BypassTreeLaneInterface<IsConst, TLaneType, T>::end()
     {
         return Iterator(m_item, m_listLane.end());
     }
     template<bool IsConst, typename TLaneType, typename T>
     template<bool IsConstLane>
-    inline std::enable_if_t<!IsConstLane, typename BypassTreeLaneInterface<IsConst, TLaneType, T>::template ConstIterator>
+    inline std::enable_if_t<!IsConstLane, typename BypassTreeLaneInterface<IsConst, TLaneType, T>::ConstIterator>
         BypassTreeLaneInterface<IsConst, TLaneType, T>::end() const
     {
         return ConstIterator(m_item, m_listLane.end());
     }
     template<bool IsConst, typename TLaneType, typename T>
     template<bool IsConstLane>
-    inline std::enable_if_t<IsConstLane, typename BypassTreeLaneInterface<IsConst, TLaneType, T>::template Iterator>
+    inline std::enable_if_t<IsConstLane, typename BypassTreeLaneInterface<IsConst, TLaneType, T>::Iterator>
         BypassTreeLaneInterface<IsConst, TLaneType, T>::end() const
     {
         return Iterator(m_item, m_listLane.end());
@@ -302,40 +302,40 @@ namespace Molten
 
     template<bool IsConst, typename TLaneType, typename T>
     template<bool IsConstIterator>
-    inline std::enable_if_t<!IsConstIterator, typename BypassTreeIteratorInterface<IsConst, TLaneType, T>::template ItemReference> BypassTreeIteratorInterface<IsConst, TLaneType, T>::operator *()
+    inline std::enable_if_t<!IsConstIterator, typename BypassTreeIteratorInterface<IsConst, TLaneType, T>::ItemReference> BypassTreeIteratorInterface<IsConst, TLaneType, T>::operator *()
     {
         return *m_listIterator;
     }
     template<bool IsConst, typename TLaneType, typename T>
     template<bool IsConstIterator>
-    inline std::enable_if_t<IsConstIterator, typename BypassTreeIteratorInterface<IsConst, TLaneType, T>::template ItemReference> BypassTreeIteratorInterface<IsConst, TLaneType, T>::operator *() const
+    inline std::enable_if_t<IsConstIterator, typename BypassTreeIteratorInterface<IsConst, TLaneType, T>::ItemReference> BypassTreeIteratorInterface<IsConst, TLaneType, T>::operator *() const
     {
         return *m_listIterator;
     }
 
     template<bool IsConst, typename TLaneType, typename T>
-    inline typename BypassTreeIteratorInterface<IsConst, TLaneType, T>::template Iterator& BypassTreeIteratorInterface<IsConst, TLaneType, T>::operator ++ () // Pre
+    inline typename BypassTreeIteratorInterface<IsConst, TLaneType, T>::Iterator& BypassTreeIteratorInterface<IsConst, TLaneType, T>::operator ++ () // Pre
     {
         ++m_listIterator;
         return *this;
     }
 
     template<bool IsConst, typename TLaneType, typename T>
-    inline typename BypassTreeIteratorInterface<IsConst, TLaneType, T>::template Iterator& BypassTreeIteratorInterface<IsConst, TLaneType, T>::operator -- () // Pre
+    inline typename BypassTreeIteratorInterface<IsConst, TLaneType, T>::Iterator& BypassTreeIteratorInterface<IsConst, TLaneType, T>::operator -- () // Pre
     {
         --m_listIterator;
         return *this;
     }
 
     template<bool IsConst, typename TLaneType, typename T>
-    inline typename BypassTreeIteratorInterface<IsConst, TLaneType, T>::template Iterator BypassTreeIteratorInterface<IsConst, TLaneType, T>::operator ++ (int) // Post
+    inline typename BypassTreeIteratorInterface<IsConst, TLaneType, T>::Iterator BypassTreeIteratorInterface<IsConst, TLaneType, T>::operator ++ (int) // Post
     {
         auto oldIterator = m_listIterator++;
         return Iterator{ m_item, oldIterator };
     }
 
     template<bool IsConst, typename TLaneType, typename T>
-    inline typename BypassTreeIteratorInterface<IsConst, TLaneType, T>::template Iterator BypassTreeIteratorInterface<IsConst, TLaneType, T>::operator -- (int) // Post
+    inline typename BypassTreeIteratorInterface<IsConst, TLaneType, T>::Iterator BypassTreeIteratorInterface<IsConst, TLaneType, T>::operator -- (int) // Post
     {
         auto oldIterator = m_listIterator--;
         return Iterator{ m_item, oldIterator };
@@ -389,12 +389,12 @@ namespace Molten
     }
 
     template<typename T>
-    inline typename BypassTreeItem<T>::template Type& BypassTreeItem<T>::GetValue()
+    inline typename BypassTreeItem<T>::Type& BypassTreeItem<T>::GetValue()
     {
         return m_value;
     }
     template<typename T>
-    inline const typename BypassTreeItem<T>::template Type& BypassTreeItem<T>::GetValue() const
+    inline const typename BypassTreeItem<T>::Type& BypassTreeItem<T>::GetValue() const
     {
         return m_value;
     }
@@ -406,12 +406,12 @@ namespace Molten
     }
 
     template<typename T>
-    inline typename BypassTreeItem<T>::template Item& BypassTreeItem<T>::GetParent()
+    inline typename BypassTreeItem<T>::Item& BypassTreeItem<T>::GetParent()
     {
         return *m_parent;
     }
     template<typename T>
-    inline const typename BypassTreeItem<T>::template Item& BypassTreeItem<T>::GetParent() const
+    inline const typename BypassTreeItem<T>::Item& BypassTreeItem<T>::GetParent() const
     {
         return *m_parent;
     }

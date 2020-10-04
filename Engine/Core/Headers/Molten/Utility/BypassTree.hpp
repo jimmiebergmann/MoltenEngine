@@ -218,6 +218,7 @@ namespace Molten
         ListIterator m_listIterator;
 
         friend class BypassTree<T>;
+        template<bool IsConst2, typename TLaneType2, typename T2>
         friend class BypassTreeIteratorInterface;
         template<bool IsConst2, typename TLaneType2, typename T2>
         friend class BypassTreeLaneInterface;
@@ -264,7 +265,7 @@ namespace Molten
         Type m_value;
 
         friend class BypassTree<T>;
-        template<bool IsConst, typename TLaneType, typename T>
+        template<bool IsConst, typename TLaneType, typename T2>
         friend class BypassTreeLaneInterface;
 
     };
@@ -282,8 +283,8 @@ namespace Molten
     template<typename T>
     struct AlternateTreeNodeData;
 
-    /* This is a tree container, based of AlternateList. */
-   /* template<typename T>
+    // This is a tree container, based of AlternateList.
+    template<typename T>
     class AlternateTree
     {
 

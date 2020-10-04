@@ -255,6 +255,7 @@ namespace Molten
 
         Item* m_currentItem;
 
+        template<bool IsConst2, typename TLaneType2, typename T2>
         friend class BypassListIteratorInterface;
         template<bool IsConst2, typename TLaneType2, typename T2>
         friend class BypassListLaneInterface;

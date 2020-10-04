@@ -532,18 +532,16 @@ namespace Molten
     TEST(Utility, BypassTreeIterator_LaneTypeCast)
     {
         TreeType tree;
-        NormalLane normalLane = tree.GetLane<TreeType::NormalLaneType>();
         PartialLane partialLane = tree.GetLane<TreeType::PartialLaneType>();
 
-        NormalLane::Iterator normalIt = normalLane.begin();
         PartialLane::Iterator partialIt = partialLane.begin();
 
-        NormalLane::Iterator normalIt2 = partialIt;
-        EXPECT_EQ(normalIt2, normalIt2);
+        NormalLane::Iterator normalIt1 = partialIt;
+        EXPECT_EQ(normalIt1, normalIt1);
 
-        NormalLane::Iterator normalIt3;
-        normalIt3 = partialIt;
-        EXPECT_EQ(normalIt3, normalIt3);
+        NormalLane::Iterator normalIt2;
+        normalIt2 = partialIt;
+        EXPECT_EQ(normalIt2, normalIt2);
     }
 
     TEST(Utility, BypassTreeIterator_Traverse)
