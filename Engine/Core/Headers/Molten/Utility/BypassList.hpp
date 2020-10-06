@@ -139,6 +139,12 @@ namespace Molten
     class BypassListLaneInterface
     {
 
+    private:
+
+        struct InvalidCopyType1 {};
+        struct InvalidCopyType2 {};
+        struct InvalidCopyType3 {};
+
     public:
 
         using LaneType = TLaneType;
@@ -156,6 +162,40 @@ namespace Molten
 
         BypassListLaneInterface();
         BypassListLaneInterface(DataLanes* dataLanes);
+
+        /** Lane interface from lane interface copy and assignment. */
+        BypassListLaneInterface(
+            typename std::conditional<
+            !IsConst, const BypassListLaneInterface<false, LaneType, Type>, const InvalidCopyType1>::
+            type& lane);
+
+        BypassListLaneInterface& operator = (
+            typename std::conditional<
+            !IsConst, const BypassListLaneInterface<false, LaneType, Type>, const InvalidCopyType1>::
+            type& lane);
+
+        /** Const lane interface from lane interface copy and assignment. */
+        BypassListLaneInterface(
+            typename std::conditional<
+            IsConst, const BypassListLaneInterface<false, LaneType, Type>, const InvalidCopyType2>::
+            type& lane);
+
+        BypassListLaneInterface& operator = (
+            typename std::conditional<
+            IsConst, const BypassListLaneInterface<false, LaneType, Type>, const InvalidCopyType2>::
+            type& lane);
+
+        /** Const lane interface to const lane interface copy and assignment. */
+        BypassListLaneInterface(
+            typename std::conditional<
+            IsConst, const BypassListLaneInterface<true, LaneType, Type>, const InvalidCopyType3>::
+            type& lane);
+
+        BypassListLaneInterface& operator = (
+            typename std::conditional<
+            IsConst, const BypassListLaneInterface<true, LaneType, Type>, const InvalidCopyType3>::
+            type& lane);
+
 
         bool IsEmpty() const;
 
@@ -210,6 +250,9 @@ namespace Molten
         void InternalErase(Item* node);
 
         DataLanes* m_dataLanes;
+
+        template<bool IsConst2, typename TLaneType2, typename T2>
+        friend class BypassListLaneInterface;
 
     };
 

@@ -119,6 +119,60 @@ namespace Molten
     {}
 
     template<bool IsConst, typename TLaneType, typename T>
+    inline BypassListLaneInterface<IsConst, TLaneType, T>::BypassListLaneInterface(
+        typename std::conditional<
+        !IsConst, const BypassListLaneInterface<false, LaneType, Type>, const InvalidCopyType1>::
+        type& lane
+    ) :
+        m_dataLanes(lane.m_dataLanes)
+    {}
+    template<bool IsConst, typename TLaneType, typename T>
+    inline BypassListLaneInterface<IsConst, TLaneType, T>& BypassListLaneInterface<IsConst, TLaneType, T>::operator = (
+        typename std::conditional<
+        !IsConst, const BypassListLaneInterface<false, LaneType, Type>, const InvalidCopyType1>::
+        type& lane)
+    {
+        m_dataLanes = lane.m_dataLanes;
+        return *this;
+    }
+
+    template<bool IsConst, typename TLaneType, typename T>
+    inline BypassListLaneInterface<IsConst, TLaneType, T>::BypassListLaneInterface(
+        typename std::conditional<
+        IsConst, const BypassListLaneInterface<false, LaneType, Type>, const InvalidCopyType2>::
+        type& lane
+    ) :
+        m_dataLanes(lane.m_dataLanes)
+    {}
+    template<bool IsConst, typename TLaneType, typename T>
+    inline BypassListLaneInterface<IsConst, TLaneType, T>& BypassListLaneInterface<IsConst, TLaneType, T>::operator = (
+        typename std::conditional<
+        IsConst, const BypassListLaneInterface<false, LaneType, Type>, const InvalidCopyType2>::
+        type& lane)
+    {
+        m_dataLanes = lane.m_dataLanes;
+        return *this;
+    }
+
+    template<bool IsConst, typename TLaneType, typename T>
+    inline BypassListLaneInterface<IsConst, TLaneType, T>::BypassListLaneInterface(
+        typename std::conditional<
+        IsConst, const BypassListLaneInterface<true, LaneType, Type>, const InvalidCopyType3>::
+        type& lane
+    ) :
+        m_dataLanes(lane.m_dataLanes)
+    {}
+    template<bool IsConst, typename TLaneType, typename T>
+    inline BypassListLaneInterface<IsConst, TLaneType, T>& BypassListLaneInterface<IsConst, TLaneType, T>::operator = (
+        typename std::conditional<
+        IsConst, const BypassListLaneInterface<true, LaneType, Type>, const InvalidCopyType3>::
+        type& lane)
+    {
+        m_dataLanes = lane.m_dataLanes;
+        return *this;
+    }
+
+    template<bool IsConst, typename TLaneType, typename T>
     inline bool BypassListLaneInterface<IsConst, TLaneType, T>::IsEmpty() const
     {
         return m_dataLanes == nullptr;

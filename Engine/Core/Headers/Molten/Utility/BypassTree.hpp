@@ -107,6 +107,8 @@ namespace Molten
 
         template<typename TLaneType, typename TCallback>
         void ForEachPreorder(TCallback&& callback);
+        template<typename TLaneType, typename TCallback, typename TPostCallback>
+        void ForEachPreorder(TCallback&& preCallback, TPostCallback&& postCallback);
 
     private:
 
@@ -118,6 +120,12 @@ namespace Molten
     template<bool IsConst, typename TLaneType, typename T>
     class BypassTreeLaneInterface
     {
+
+    private:
+
+        struct InvalidCopyType1 {};
+        struct InvalidCopyType2 {};
+        struct InvalidCopyType3 {};
 
     public:
 
@@ -134,6 +142,40 @@ namespace Molten
 
         BypassTreeLaneInterface();
         BypassTreeLaneInterface(Item* item, ListLane listLane);
+           
+        /** Lane interface from lane interface copy and assignment. */
+        BypassTreeLaneInterface(
+            typename std::conditional<
+            !IsConst, const BypassTreeLaneInterface<false, LaneType, Type>, const InvalidCopyType1>::
+            type& lane);
+
+        BypassTreeLaneInterface& operator = (
+            typename std::conditional<
+            !IsConst, const BypassTreeLaneInterface<false, LaneType, Type>, const InvalidCopyType1>::
+            type& lane);
+
+        /** Const lane interface from lane interface copy and assignment. */
+        BypassTreeLaneInterface(
+            typename std::conditional<
+            IsConst, const BypassTreeLaneInterface<false, LaneType, Type>, const InvalidCopyType2>::
+            type& lane);
+
+        BypassTreeLaneInterface& operator = (
+            typename std::conditional<
+            IsConst, const BypassTreeLaneInterface<false, LaneType, Type>, const InvalidCopyType2>::
+            type& lane);
+
+        /** Const lane interface to const lane interface copy and assignment. */
+        BypassTreeLaneInterface(
+            typename std::conditional<
+            IsConst, const BypassTreeLaneInterface<true, LaneType, Type>, const InvalidCopyType3>::
+            type& lane);
+
+        BypassTreeLaneInterface& operator = (
+            typename std::conditional<
+            IsConst, const BypassTreeLaneInterface<true, LaneType, Type>, const InvalidCopyType3>::
+            type& lane);
+
 
         bool IsEmpty() const;
 
@@ -168,6 +210,9 @@ namespace Molten
 
         Item* m_item;
         ListLane m_listLane;
+
+        template<bool IsConst2, typename TLaneType2, typename T2>
+        friend class BypassTreeLaneInterface;
 
     };
 
@@ -270,278 +315,6 @@ namespace Molten
 
     };
 
-
-
-
-    /*
-    template<typename T>
-    class AlternateTree;
-
-    template<typename T>
-    class AlternateTreeNode;
-
-    template<typename T>
-    struct AlternateTreeNodeData;
-
-    // This is a tree container, based of AlternateList.
-    template<typename T>
-    class AlternateTree
-    {
-
-    public:
-
-        using Type = T;
-        using List = AlternateList<AlternateTreeNode<Type>>;
-        using MainPath = AlternateListMainPath;
-        using SubPath = AlternateListSubPath;
-        template<typename TPathType>
-        using ListIteratorPath = typename List::template IteratorPath<TPathType>;
-        template<typename TPathType>
-        using ListConstIteratorPath = typename List::template ConstIteratorPath<TPathType>;
-        template<typename TPathType>
-        using ListIterator = typename List::template Iterator<TPathType>;
-        template<typename TPathType>
-        using ListConstIterator = typename List::template ConstIterator<TPathType>;
-
-
-        template<typename TPathType>
-        class Iterator
-        {
-
-        public:
-
-            using iterator_category = std::bidirectional_iterator_tag;
-            using value_type = AlternateTreeNode<Type>;
-            using difference_type = std::ptrdiff_t;
-            using pointer = AlternateTreeNode<Type>*;
-            using reference = AlternateTreeNode<Type>&;
-
-            Iterator();
-            Iterator(AlternateTreeNode<Type> * node, ListIterator<TPathType> listIterator);
-
-            bool IsEmpty() const;
-
-            Type& GetValue() const;
-
-            AlternateTreeNode<Type>& operator *() const;
-            Iterator& operator ++ ();
-            Iterator& operator -- ();
-            Iterator operator ++ (int);
-            Iterator operator -- (int);
-            bool operator == (const Iterator& rhs) const;
-            bool operator != (const Iterator& rhs) const;
-
-        private:
-
-            AlternateTreeNode<Type>* m_node;
-            ListIterator<TPathType> m_listIterator;
-
-            friend class AlternateTree<T>;
-            friend class AlternateTreeNode<T>;
-
-        };
-
-
-        template<typename TPathType>
-        class ConstIterator
-        {
-
-        public:
-
-            using iterator_category = std::bidirectional_iterator_tag;
-            using value_type = AlternateTreeNode<Type>;
-            using difference_type = std::ptrdiff_t;
-            using pointer = const AlternateTreeNode<Type>*;
-            using reference = const AlternateTreeNode<Type>&;
-
-            ConstIterator();
-            ConstIterator(const AlternateTreeNode<Type>* node, ListConstIterator<TPathType> listIterator);
-
-            bool IsEmpty() const;
-
-            const Type& GetValue() const;
-
-            const AlternateTreeNode<Type>& operator *() const;
-            ConstIterator& operator ++ ();
-            ConstIterator& operator -- ();
-            ConstIterator operator ++ (int);
-            ConstIterator operator -- (int);
-            bool operator == (const ConstIterator& rhs) const;
-            bool operator != (const ConstIterator& rhs) const;
-
-        private:
-
-            const AlternateTreeNode<Type>* m_node;
-            ListConstIterator<TPathType> m_listIterator;
-
-            friend class AlternateTree<T>;
-            friend class AlternateTreeNode<T>;
-
-        };
-
-
-        template<typename TPathType>
-        class IteratorPath
-        {
-
-        public:
-
-            IteratorPath();
-            IteratorPath(AlternateTreeNode<Type>* node, ListIteratorPath<TPathType> path);
-
-            bool IsEmpty() const;
-
-            size_t GetSize() const;
-
-            AlternateTreeNode<Type>& GetNode();
-
-            Iterator<TPathType> begin();
-            Iterator<TPathType> end();
-
-        private:
-
-            AlternateTreeNode<Type>* m_node;
-            ListIteratorPath<TPathType> m_path;
-
-            friend class AlternateTree<T>;
-            friend class AlternateTreeNode<T>;
-
-        };
-
-
-        template<typename TPathType>
-        class ConstIteratorPath
-        {
-
-        public:
-
-            ConstIteratorPath();
-            ConstIteratorPath(const AlternateTreeNode<Type>* node, ListConstIteratorPath<TPathType> path);
-
-            bool IsEmpty() const;
-
-            size_t GetSize() const;
-
-            const AlternateTreeNode<Type>& GetNode() const;
-
-            ConstIterator<TPathType> begin();
-            ConstIterator<TPathType> end();
-
-        private:
-
-            const AlternateTreeNode<Type>* m_node;
-            ListConstIteratorPath<TPathType> m_path;
-
-            friend class AlternateTree<T>;
-            friend class AlternateTreeNode<T>;
-
-        };
-
-
-        AlternateTree();
-        ~AlternateTree();
-
-        //List& GetRoot();
-        //const List& GetRoot() const;
-
-        template<typename TPathType>
-        Iterator<MainPath> Insert(Iterator<TPathType> position, const bool addSubPath, const Type& value);
-        template<typename TPathType>
-        Iterator<MainPath> Insert(Iterator<TPathType> position, const bool addSubPath, Type&& value);
-
-        template<typename TPathType>
-        Iterator<TPathType> Erase(Iterator<TPathType> it);
-
-        template<typename TPathType, typename TCallback>
-        void ForEachPreorder(TCallback && callback);
-
-    private:
-
-        AlternateTree(const AlternateTree&) = delete;
-        AlternateTree(AlternateTree&&) = delete;
-        AlternateTree& operator =(const AlternateTree&) = delete;
-        AlternateTree& operator =(AlternateTree&&) = delete;
-
-        List m_children;
-
-    };
-
-
-    template<typename T>
-    class AlternateTreeNode
-    {
-
-    public:
-
-        using Type = T;
-        using List = AlternateList<AlternateTreeNode<Type>>;
-        using MainPath = AlternateListMainPath;
-        using SubPath = AlternateListSubPath;
-
-        template<typename TPathType>
-        using Iterator = typename AlternateTree<T>::template Iterator<TPathType>;
-        template<typename TPathType>
-        using IteratorPath = typename AlternateTree<T>::template IteratorPath<TPathType>;
-        template<typename TPathType>
-        using ConstIteratorPath = typename AlternateTree<T>::template ConstIteratorPath<TPathType>;
-
-        ~AlternateTreeNode();
-        AlternateTreeNode(AlternateTreeNode&& node) noexcept;
-
-        AlternateTreeNode& operator =(AlternateTreeNode&& node) noexcept;
-
-        Type& GetValue();
-        const Type& GetValue() const;
-
-        bool HasParent() const;
-
-        template<typename TPathType>
-        size_t GetSize() const;
-        size_t GetMainSize() const;
-        size_t GetSubSize() const;
-
-        template<typename TPathType>
-        IteratorPath<TPathType> GetPath();
-        template<typename TPathType>
-        ConstIteratorPath<TPathType> GetPath() const;
-
-        IteratorPath<MainPath> GetMainPath();
-        ConstIteratorPath<MainPath> GetMainPath() const;
-        
-        IteratorPath<SubPath> GetSubPath();
-        ConstIteratorPath<SubPath> GetSubPath() const;
-
-        void PushBack(const bool addSubPath, const Type& value);
-        void PushBack(const bool addSubPath, Type&& value);
-        
-        void PushFront(const bool addSubPath, const Type& value);
-        void PushFront(const bool addSubPath, Type&& value);
-
-        template<typename TPathType>
-        Iterator<MainPath> Insert(Iterator<TPathType> position, const bool addSubPath, const Type& value);
-        template<typename TPathType>
-        Iterator<MainPath> Insert(Iterator<TPathType> position, const bool addSubPath, Type&& value);
-
-        template<typename TPathType>
-        Iterator<TPathType> Erase(Iterator<TPathType> it);
-
-    private:
-
-        AlternateTreeNode(AlternateTreeNode* parent);
-        AlternateTreeNode(AlternateTreeNode* parent, const Type& value);
-        AlternateTreeNode(AlternateTreeNode* parent, Type&& value);
-
-        AlternateTreeNode(const AlternateTreeNode&) = delete;
-        AlternateTreeNode& operator =(const AlternateTreeNode&) = delete;
-
-        Type m_value;
-        AlternateTreeNode* m_parent;
-        List m_children;
-
-        friend class AlternateTree<T>;
-
-    };
-    */
 }
 
 #include "Molten/Utility/BypassTree.inl"
