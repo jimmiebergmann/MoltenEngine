@@ -119,55 +119,28 @@ namespace Molten
     {}
 
     template<bool IsConst, typename TLaneType, typename T>
-    inline BypassListLaneInterface<IsConst, TLaneType, T>::BypassListLaneInterface(
-        typename std::conditional<
-        !IsConst, const BypassListLaneInterface<false, LaneType, Type>, const InvalidCopyType1>::
-        type& lane
-    ) :
+    template<bool IsOtherConst, typename TLaneTypeOther>
+    inline BypassListLaneInterface<IsConst, TLaneType, T>::BypassListLaneInterface(const BypassListLaneInterface<IsOtherConst, TLaneTypeOther, Type>& lane) :
         m_dataLanes(lane.m_dataLanes)
-    {}
-    template<bool IsConst, typename TLaneType, typename T>
-    inline BypassListLaneInterface<IsConst, TLaneType, T>& BypassListLaneInterface<IsConst, TLaneType, T>::operator = (
-        typename std::conditional<
-        !IsConst, const BypassListLaneInterface<false, LaneType, Type>, const InvalidCopyType1>::
-        type& lane)
     {
-        m_dataLanes = lane.m_dataLanes;
-        return *this;
+        static_assert(IsConst || !IsOtherConst,
+            "Cannot construct from const to non-const bypass list lane.");
+
+        static_assert(std::is_same_v<TLaneType, TLaneTypeOther> || std::is_same_v<TLaneTypeOther, BypassListPartialLane>,
+            "Cannot construct from normal to partial bypass list lane.");
     }
 
     template<bool IsConst, typename TLaneType, typename T>
-    inline BypassListLaneInterface<IsConst, TLaneType, T>::BypassListLaneInterface(
-        typename std::conditional<
-        IsConst, const BypassListLaneInterface<false, LaneType, Type>, const InvalidCopyType2>::
-        type& lane
-    ) :
-        m_dataLanes(lane.m_dataLanes)
-    {}
-    template<bool IsConst, typename TLaneType, typename T>
-    inline BypassListLaneInterface<IsConst, TLaneType, T>& BypassListLaneInterface<IsConst, TLaneType, T>::operator = (
-        typename std::conditional<
-        IsConst, const BypassListLaneInterface<false, LaneType, Type>, const InvalidCopyType2>::
-        type& lane)
+    template<bool IsOtherConst, typename TLaneTypeOther>
+    inline BypassListLaneInterface<IsConst, TLaneType, T>&
+        BypassListLaneInterface<IsConst, TLaneType, T>::operator = (const BypassListLaneInterface<IsOtherConst, TLaneTypeOther, Type>& lane)
     {
-        m_dataLanes = lane.m_dataLanes;
-        return *this;
-    }
+        static_assert(IsConst || !IsOtherConst,
+            "Cannot assign from const to non-const bypass list lane.");
 
-    template<bool IsConst, typename TLaneType, typename T>
-    inline BypassListLaneInterface<IsConst, TLaneType, T>::BypassListLaneInterface(
-        typename std::conditional<
-        IsConst, const BypassListLaneInterface<true, LaneType, Type>, const InvalidCopyType3>::
-        type& lane
-    ) :
-        m_dataLanes(lane.m_dataLanes)
-    {}
-    template<bool IsConst, typename TLaneType, typename T>
-    inline BypassListLaneInterface<IsConst, TLaneType, T>& BypassListLaneInterface<IsConst, TLaneType, T>::operator = (
-        typename std::conditional<
-        IsConst, const BypassListLaneInterface<true, LaneType, Type>, const InvalidCopyType3>::
-        type& lane)
-    {
+        static_assert(std::is_same_v<TLaneType, TLaneTypeOther> || std::is_same_v<TLaneTypeOther, BypassListPartialLane>,
+            "Cannot assign from normal to partial bypass list lane.");
+
         m_dataLanes = lane.m_dataLanes;
         return *this;
     }
@@ -531,13 +504,28 @@ namespace Molten
     {}
 
     template<bool IsConst, typename TLaneType, typename T>
-    inline BypassListIteratorInterface<IsConst, TLaneType, T>::BypassListIteratorInterface(const BypassListIteratorInterface<IsConst, BypassListPartialLane, Type>& it) :
+    template<bool IsOtherConst, typename TLaneTypeOther>
+    inline BypassListIteratorInterface<IsConst, TLaneType, T>::BypassListIteratorInterface(const BypassListIteratorInterface<IsOtherConst, TLaneTypeOther, Type>& it) :
         m_currentItem(it.m_currentItem)
-    {}
+    {
+        static_assert(IsConst || !IsOtherConst,
+            "Cannot construct from const to non-const bypass list iterator.");
+
+        static_assert(std::is_same_v<TLaneType, TLaneTypeOther> || std::is_same_v<TLaneTypeOther, BypassListPartialLane>,
+            "Cannot construct from normal to partial bypass list iterator.");
+    }
 
     template<bool IsConst, typename TLaneType, typename T>
-    inline BypassListIteratorInterface<IsConst, TLaneType, T>& BypassListIteratorInterface<IsConst, TLaneType, T>::operator =(const BypassListIteratorInterface<IsConst, BypassListPartialLane, Type>& it)
+    template<bool IsOtherConst, typename TLaneTypeOther>
+    inline BypassListIteratorInterface<IsConst, TLaneType, T>&
+        BypassListIteratorInterface<IsConst, TLaneType, T>::operator = (const BypassListIteratorInterface<IsOtherConst, TLaneTypeOther, Type>& it)
     {
+        static_assert(IsConst || !IsOtherConst,
+            "Cannot assign from const to non-const bypass list iterator.");
+
+        static_assert(std::is_same_v<TLaneType, TLaneTypeOther> || std::is_same_v<TLaneTypeOther, BypassListPartialLane>,
+            "Cannot assign from normal to partial bypass list iterator.");
+
         m_currentItem = it.m_currentItem;
         return *this;
     }

@@ -139,11 +139,7 @@ namespace Molten
     class BypassListLaneInterface
     {
 
-    private:
-
-        struct InvalidCopyType1 {};
-        struct InvalidCopyType2 {};
-        struct InvalidCopyType3 {};
+        static_assert(std::is_same_v<TLaneType, BypassListNormalLane> || std::is_same_v<TLaneType, BypassListPartialLane>, "Invalid bypass lane type.");
 
     public:
 
@@ -163,39 +159,11 @@ namespace Molten
         BypassListLaneInterface();
         BypassListLaneInterface(DataLanes* dataLanes);
 
-        /** Lane interface from lane interface copy and assignment. */
-        BypassListLaneInterface(
-            typename std::conditional<
-            !IsConst, const BypassListLaneInterface<false, LaneType, Type>, const InvalidCopyType1>::
-            type& lane);
+        template<bool IsOtherConst, typename TLaneTypeOther>
+        BypassListLaneInterface(const BypassListLaneInterface<IsOtherConst, TLaneTypeOther, Type>& lane);
 
-        BypassListLaneInterface& operator = (
-            typename std::conditional<
-            !IsConst, const BypassListLaneInterface<false, LaneType, Type>, const InvalidCopyType1>::
-            type& lane);
-
-        /** Const lane interface from lane interface copy and assignment. */
-        BypassListLaneInterface(
-            typename std::conditional<
-            IsConst, const BypassListLaneInterface<false, LaneType, Type>, const InvalidCopyType2>::
-            type& lane);
-
-        BypassListLaneInterface& operator = (
-            typename std::conditional<
-            IsConst, const BypassListLaneInterface<false, LaneType, Type>, const InvalidCopyType2>::
-            type& lane);
-
-        /** Const lane interface to const lane interface copy and assignment. */
-        BypassListLaneInterface(
-            typename std::conditional<
-            IsConst, const BypassListLaneInterface<true, LaneType, Type>, const InvalidCopyType3>::
-            type& lane);
-
-        BypassListLaneInterface& operator = (
-            typename std::conditional<
-            IsConst, const BypassListLaneInterface<true, LaneType, Type>, const InvalidCopyType3>::
-            type& lane);
-
+        template<bool IsOtherConst, typename TLaneTypeOther>
+        BypassListLaneInterface& operator =(const BypassListLaneInterface<IsOtherConst, TLaneTypeOther, Type>& lane);
 
         bool IsEmpty() const;
 
@@ -261,6 +229,8 @@ namespace Molten
     class BypassListIteratorInterface
     {
 
+        static_assert(std::is_same_v<TLaneType, BypassListNormalLane> || std::is_same_v<TLaneType, BypassListPartialLane>, "Invalid bypass lane type.");
+
     public:
 
         using iterator_category = std::bidirectional_iterator_tag;
@@ -277,8 +247,12 @@ namespace Molten
 
         BypassListIteratorInterface();
         BypassListIteratorInterface(Item* item);
-        BypassListIteratorInterface(const BypassListIteratorInterface<IsConst, BypassListPartialLane, Type>& it);
-        BypassListIteratorInterface& operator = (const BypassListIteratorInterface<IsConst, BypassListPartialLane, Type>& it);
+
+        template<bool IsOtherConst, typename TLaneTypeOther>
+        BypassListIteratorInterface(const BypassListIteratorInterface<IsOtherConst, TLaneTypeOther, Type>& it);
+
+        template<bool IsOtherConst, typename TLaneTypeOther>
+        BypassListIteratorInterface& operator =(const BypassListIteratorInterface<IsOtherConst, TLaneTypeOther, Type>& it);
 
         bool IsEmpty() const;
 

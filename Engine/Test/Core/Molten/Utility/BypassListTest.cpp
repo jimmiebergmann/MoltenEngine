@@ -28,6 +28,8 @@
 #include "Test.hpp"
 #include "Molten/Utility/BypassList.hpp"
 #include <vector>
+#include <thread>
+#include <chrono>
 
 struct TestData1
 {
@@ -90,13 +92,28 @@ bool CompareListContent(
     return true;
 }
 
+template<typename TBegin, typename TEnd>
+size_t CountIteratorToEnd(TBegin begin, TEnd end)
+{
+    size_t count = 0;
+    for (auto it = begin; it != end; it++)
+    {
+        ++count;
+    }
+    return count;
+};
+
 namespace Molten
 {
     using ListType = BypassList<TestData1>;
     using NormalLane = ListType::NormalLane;
-    using PartialLane = ListType::PartialLane;
     using NormalConstLane = ListType::NormalConstLane;
+    using NormalIterator = ListType::Iterator<ListType::NormalLaneType>;
+    using NormalConstIterator = ListType::ConstIterator<ListType::NormalLaneType>;
+    using PartialLane = ListType::PartialLane;
     using PartialConstLane = ListType::PartialConstLane;
+    using PartialIterator = ListType::Iterator<ListType::PartialLaneType>;
+    using PartialConstIterator = ListType::ConstIterator<ListType::PartialLaneType>;
 
     TEST(Utility, BypassList_Empty)
     {    
@@ -668,6 +685,97 @@ namespace Molten
             }
         }
     }
+
+    TEST(Utility, BypassList_Benchmark)
+    {
+        auto stdListTest = [&](const size_t loops)
+        {
+            struct Data
+            {
+                Data(const size_t data, const bool enabled) :
+                    data(data),
+                    enabled(enabled)
+                { }
+
+                size_t data;
+                bool enabled;
+            };
+
+            std::list<std::shared_ptr<Data>> list;
+
+            for (size_t i = 0; i < loops; i++)
+            {
+                list.push_back(std::make_shared<Data>(i, static_cast<bool>(i % 2)));
+            }
+
+            size_t sum = 0;
+
+            Clock clock;
+            for (auto& item : list)
+            {
+                if (item->enabled)
+                {
+                    sum += item->data;
+                }
+            }
+            auto time = clock.GetTime().AsNanoseconds<uint64_t>();
+
+            Molten::Test::PrintInfo("std::list<std::shared_ptr<Data>>: " + std::to_string(time) + " ns.  Sum: " + std::to_string(sum));
+        };
+
+        auto bypassListTest = [&](const size_t loops)
+        {
+            struct Data
+            {
+                Data(const size_t data) :
+                    data(data)
+                { }
+
+                size_t data;
+            };
+
+            BypassList<Data> list;
+
+            auto normalLane = list.GetLane<BypassList<Data>::NormalLaneType>();
+            auto partialLane = list.GetLane<BypassList<Data>::PartialLaneType>();
+            for (size_t i = 0; i < loops; i++)
+            {
+                if (i % 2)
+                {
+                    partialLane.PushBack(Data{ i });
+                }
+                else
+                {
+                    normalLane.PushBack(Data{ i });
+                }
+            }
+
+            size_t sum = 0;
+
+            Clock clock;
+            for (auto& item : partialLane)
+            {
+                sum += item.data;
+            }
+            auto time = clock.GetTime().AsNanoseconds<uint64_t>();
+
+            Molten::Test::PrintInfo("BypassList<Data>: " + std::to_string(time) + " ns.                  Sum: " + std::to_string(sum));
+        };
+
+        const size_t loops = 1000;
+        Molten::Test::PrintInfo("------------------");
+
+    #if defined(MOLTEN_BUILD_DEBUG)
+        Molten::Test::PrintInfo("BypassList iterate - Debug - Unoptimized.");
+    #elif defined(MOLTEN_BUILD_RELEASE)
+        Molten::Test::PrintInfo("BypassList iterate - Release - Optimized.");
+    #endif
+
+        EXPECT_NO_THROW(stdListTest(loops));
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        EXPECT_NO_THROW(bypassListTest(loops));
+        Molten::Test::PrintInfo("------------------");
+    }
    
     TEST(Utility, BypassList_EraseSomePartial)
     {
@@ -766,84 +874,114 @@ namespace Molten
         }
     }
 
-    TEST(Utility, BypassListIterator_IsEmpty)
-    {
-        {
-            ListType::Iterator<ListType::NormalLaneType> it1;
-            EXPECT_TRUE(it1.IsEmpty());
-
-            ListType::Iterator<ListType::PartialLaneType> it2;
-            EXPECT_TRUE(it2.IsEmpty());
-
-            ListType::ConstIterator<ListType::NormalLaneType> it3;
-            EXPECT_TRUE(it3.IsEmpty());
-
-            ListType::ConstIterator<ListType::PartialLaneType> it4;
-            EXPECT_TRUE(it4.IsEmpty());
-        }
-        {
-            ListType list;
-            NormalLane normalLane = list.GetLane<ListType::NormalLaneType>();
-            EXPECT_FALSE(normalLane.begin().IsEmpty());
-            EXPECT_FALSE(normalLane.end().IsEmpty());
-            EXPECT_FALSE(normalLane.begin().IsEmpty());
-            EXPECT_FALSE(normalLane.end().IsEmpty());
-
-            const ListType& constList = list;
-            NormalConstLane constNormalLane = constList.GetLane<ListType::NormalLaneType>();
-            EXPECT_FALSE(constNormalLane.begin().IsEmpty());
-            EXPECT_FALSE(constNormalLane.end().IsEmpty());
-            EXPECT_FALSE(constNormalLane.begin().IsEmpty());
-            EXPECT_FALSE(constNormalLane.end().IsEmpty());
-
-        }
-    }
-
-    TEST(Utility, BypassListIterator_Copy)
-    {
-        {
-            ListType list;
-            NormalLane normalLane = list.GetLane<ListType::NormalLaneType>();
-
-            NormalLane::Iterator it = normalLane.begin();
-
-            NormalLane::Iterator it2 = it;
-            EXPECT_EQ(it2, it2);
-
-            NormalLane::Iterator it3;
-            it3 = it;
-
-            EXPECT_EQ(it3, it3);
-        }
-        {
-            ListType list;
-            PartialLane partialLane = list.GetLane<ListType::PartialLaneType>();
-
-            PartialLane::Iterator it = partialLane.begin();
-
-            PartialLane::Iterator it2 = it;
-            EXPECT_EQ(it2, it2);
-
-            PartialLane::Iterator it3;
-            it3 = it;
-
-            EXPECT_EQ(it3, it3);
-        }
-    }
-
-    TEST(Utility, BypassListIterator_LaneTypeCast)
+    TEST(Utility, BypassListLane_LaneCopy)
     {
         ListType list;
+        NormalLane normalLane = list.GetLane<ListType::NormalLaneType>();
         PartialLane partialLane = list.GetLane<ListType::PartialLaneType>();
 
-        PartialLane::Iterator partialIt = partialLane.begin();
+        normalLane.PushBack(TestData1{ 1 });
+        partialLane.PushBack(TestData1{ 2 });
+        normalLane.PushBack(TestData1{ 3 });
+        partialLane.PushBack(TestData1{ 4 });
+        normalLane.PushBack(TestData1{ 5 });
 
-        NormalLane::Iterator normalIt1 = partialIt;
-        EXPECT_EQ(normalIt1, normalIt1);
+        // Non-const -> Non-const.
+        NormalLane normalLane2;
+        normalLane2 = normalLane;
+        PartialLane partialLane2;
+        partialLane2 = partialLane;
 
-        NormalLane::Iterator normalIt2;
-        normalIt2 = partialIt;
-        EXPECT_EQ(normalIt2, normalIt2);   
+        EXPECT_EQ(normalLane2.GetSize(), size_t(5));
+        EXPECT_EQ(partialLane2.GetSize(), size_t(2));
+
+        // non-const -> const
+        NormalConstLane normalConstLane2 = normalLane2;
+        PartialConstLane partialConstLane2 = partialLane2;
+
+        EXPECT_EQ(normalConstLane2.GetSize(), size_t(5));
+        EXPECT_EQ(partialConstLane2.GetSize(), size_t(2));
+
+        NormalConstLane normalConstLane4;
+        normalConstLane4 = normalLane;
+        PartialConstLane partialConstLane4;
+        partialConstLane4 = partialLane;
+        EXPECT_EQ(normalConstLane4.GetSize(), size_t(5));
+        EXPECT_EQ(partialConstLane4.GetSize(), size_t(2));
+
+        // const -> const
+        NormalConstLane normalConstLane3 = normalConstLane2;
+        PartialConstLane partialConstLane3 = partialConstLane2;
+
+        EXPECT_EQ(normalConstLane3.GetSize(), size_t(5));
+        EXPECT_EQ(partialConstLane3.GetSize(), size_t(2));
+
+        NormalConstLane normalConstLane5;
+        normalConstLane5 = normalConstLane4;
+        PartialConstLane partialConstLane5;
+        partialConstLane5 = partialConstLane4;
+
+        EXPECT_EQ(normalConstLane5.GetSize(), size_t(5));
+        EXPECT_EQ(partialConstLane5.GetSize(), size_t(2));
+    }
+
+    TEST(Utility, BypassListIterator_LaneCopy)
+    {
+        ListType list;
+        NormalLane normalLane = list.GetLane<ListType::NormalLaneType>();
+        PartialLane partialLane = list.GetLane<ListType::PartialLaneType>();
+
+        normalLane.PushBack(TestData1{ 1 });
+        partialLane.PushBack(TestData1{ 2 });
+        normalLane.PushBack(TestData1{ 3 });
+        partialLane.PushBack(TestData1{ 4 });
+        normalLane.PushBack(TestData1{ 5 });
+
+        // Non-const -> Non-const.
+        NormalIterator normalIt = normalLane.begin();
+        PartialIterator partialIt = partialLane.begin();
+
+        EXPECT_EQ(CountIteratorToEnd(normalIt, normalLane.end()), size_t(5));
+        EXPECT_EQ(CountIteratorToEnd(partialIt, partialLane.end()), size_t(2));
+
+        NormalIterator normalIt2;
+        normalIt2 = normalIt;
+        PartialIterator partialIt2;
+        partialIt2 = partialIt;
+
+        EXPECT_EQ(CountIteratorToEnd(normalIt2, normalLane.end()), size_t(5));
+        EXPECT_EQ(CountIteratorToEnd(partialIt2, partialLane.end()), size_t(2));
+
+        // non-const -> const
+        NormalConstIterator normalConstIt2 = normalIt;
+        PartialConstIterator partialConstIt2 = partialIt;
+
+        EXPECT_EQ(CountIteratorToEnd(normalConstIt2, normalLane.end()), size_t(5));
+        EXPECT_EQ(CountIteratorToEnd(partialConstIt2, partialLane.end()), size_t(2));
+
+        NormalConstIterator normalConstIt3;
+        normalConstIt3 = normalIt;
+        PartialConstIterator partialConstIt3;
+        partialConstIt3 = partialIt;
+
+        EXPECT_EQ(CountIteratorToEnd(normalConstIt3, normalLane.end()), size_t(5));
+        EXPECT_EQ(CountIteratorToEnd(partialConstIt3, partialLane.end()), size_t(2));
+
+
+        // const -> const
+        NormalConstIterator normalConstIt4 = normalConstIt3;
+        PartialConstIterator partialConstIt4 = partialConstIt3;
+
+        EXPECT_EQ(CountIteratorToEnd(normalConstIt4, normalLane.end()), size_t(5));
+        EXPECT_EQ(CountIteratorToEnd(partialConstIt4, partialLane.end()), size_t(2));
+
+        NormalConstIterator normalConstIt5;
+        normalConstIt5 = normalConstIt3;
+        PartialConstIterator partialConstIt5;
+        partialConstIt5 = partialConstIt3;
+
+        EXPECT_EQ(CountIteratorToEnd(normalConstIt5, normalLane.end()), size_t(5));
+        EXPECT_EQ(CountIteratorToEnd(partialConstIt5, partialLane.end()), size_t(2));
     }
 
     TEST(Utility, BypassListIterator_Traverse)

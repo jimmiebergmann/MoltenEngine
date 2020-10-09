@@ -199,6 +199,35 @@ namespace Molten
     {}
 
     template<bool IsConst, typename TLaneType, typename T>
+    template<bool IsOtherConst, typename TLaneTypeOther>
+    inline BypassTreeLaneInterface<IsConst, TLaneType, T>::BypassTreeLaneInterface(const BypassTreeLaneInterface<IsOtherConst, TLaneTypeOther, Type>& lane) :
+        m_item(lane.m_item),
+        m_listLane(lane.m_listLane)
+    {
+        static_assert(IsConst || !IsOtherConst,
+            "Cannot construct from const to non-const bypass tree lane.");
+
+        static_assert(std::is_same_v<TLaneType, TLaneTypeOther> || std::is_same_v<TLaneTypeOther, BypassTreePartialLane>,
+            "Cannot construct from normal to partial bypass tree lane.");
+    }
+
+    template<bool IsConst, typename TLaneType, typename T>
+    template<bool IsOtherConst, typename TLaneTypeOther>
+    inline BypassTreeLaneInterface<IsConst, TLaneType, T>&
+        BypassTreeLaneInterface<IsConst, TLaneType, T>::operator = (const BypassTreeLaneInterface<IsOtherConst, TLaneTypeOther, Type>& lane)
+    {
+        static_assert(IsConst || !IsOtherConst,
+            "Cannot assign from const to non-const bypass tree lane.");
+
+        static_assert(std::is_same_v<TLaneType, TLaneTypeOther> || std::is_same_v<TLaneTypeOther, BypassTreePartialLane>,
+            "Cannot assign from normal to partial bypass tree lane.");
+
+        m_item = lane.m_item;
+        m_listLane = lane.m_listLane;
+        return *this;
+    }
+
+    /*template<bool IsConst, typename TLaneType, typename T>
     inline BypassTreeLaneInterface<IsConst, TLaneType, T>::BypassTreeLaneInterface(
         typename std::conditional<
         !IsConst, const BypassTreeLaneInterface<false, LaneType, Type>, const InvalidCopyType1>::
@@ -256,7 +285,7 @@ namespace Molten
         m_item = lane.m_item;
         m_listLane = lane.m_listLane;
         return *this;
-    }
+    }*/
 
     template<bool IsConst, typename TLaneType, typename T>
     inline bool BypassTreeLaneInterface<IsConst, TLaneType, T>::IsEmpty() const
@@ -386,17 +415,31 @@ namespace Molten
         m_item(item),
         m_listIterator(listIterator)
     {}
-    
-    template<bool IsConst, typename TLaneType, typename T>
-    inline BypassTreeIteratorInterface<IsConst, TLaneType, T>::BypassTreeIteratorInterface(const BypassTreeIteratorInterface<IsConst, BypassTreePartialLane, Type>& it) :
-        m_item(it.m_item),
-        m_listIterator(it.m_listIterator)
-    {}
 
     template<bool IsConst, typename TLaneType, typename T>
-    inline BypassTreeIteratorInterface<IsConst, TLaneType, T>& 
-        BypassTreeIteratorInterface<IsConst, TLaneType, T>::operator = (const BypassTreeIteratorInterface<IsConst, BypassTreePartialLane, Type>& it)
+    template<bool IsOtherConst, typename TLaneTypeOther>
+    inline BypassTreeIteratorInterface<IsConst, TLaneType, T>::BypassTreeIteratorInterface(const BypassTreeIteratorInterface<IsOtherConst, TLaneTypeOther, Type>& it) :
+        m_item(it.m_item),
+        m_listIterator(it.m_listIterator)
     {
+        static_assert(IsConst || !IsOtherConst,
+            "Cannot construct from const to non-const bypass tree iterator.");
+        
+        static_assert(std::is_same_v<TLaneType, TLaneTypeOther> || std::is_same_v<TLaneTypeOther, BypassTreePartialLane>,
+            "Cannot construct from normal to partial bypass tree iterator.");
+    }
+
+    template<bool IsConst, typename TLaneType, typename T>
+    template<bool IsOtherConst, typename TLaneTypeOther>
+    inline BypassTreeIteratorInterface<IsConst, TLaneType, T>& 
+        BypassTreeIteratorInterface<IsConst, TLaneType, T>::operator = (const BypassTreeIteratorInterface<IsOtherConst, TLaneTypeOther, Type>& it)
+    {
+        static_assert(IsConst || !IsOtherConst,
+            "Cannot assign from const to non-const bypass tree iterator.");
+
+        static_assert(std::is_same_v<TLaneType, TLaneTypeOther> || std::is_same_v<TLaneTypeOther, BypassTreePartialLane>,
+            "Cannot assign from normal to partial bypass tree iterator.");
+
         m_item = it.m_item;
         m_listIterator = it.m_listIterator;
         return *this;

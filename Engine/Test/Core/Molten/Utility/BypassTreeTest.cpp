@@ -88,13 +88,28 @@ bool CompareListContent(
     return true;
 }
 
+template<typename TBegin, typename TEnd>
+size_t CountIteratorToEnd(TBegin begin, TEnd end)
+{
+    size_t count = 0;
+    for (auto it = begin; it != end; it++)
+    {
+        ++count;
+    }
+    return count;
+};
+
 namespace Molten
 {
     using TreeType = BypassTree<TestData1>;
     using NormalLane = TreeType::NormalLane;
-    using PartialLane = TreeType::PartialLane;
     using NormalConstLane = TreeType::NormalConstLane;
+    using NormalIterator = TreeType::Iterator<TreeType::NormalLaneType>;
+    using NormalConstIterator = TreeType::ConstIterator<TreeType::NormalLaneType>;
+    using PartialLane = TreeType::PartialLane;
     using PartialConstLane = TreeType::PartialConstLane;
+    using PartialIterator = TreeType::Iterator<TreeType::PartialLaneType>;
+    using PartialConstIterator = TreeType::ConstIterator<TreeType::PartialLaneType>;
 
     TEST(Utility, BypassTree_Empty)
     {
@@ -465,6 +480,57 @@ namespace Molten
         }
     }
 
+    TEST(Utility, BypassTreeLane_LaneCopy)
+    {
+        TreeType tree;
+        NormalLane normalLane = tree.GetLane<TreeType::NormalLaneType>();
+        PartialLane partialLane = tree.GetLane<TreeType::PartialLaneType>();
+
+        normalLane.PushBack(TestData1{ 1 });
+        partialLane.PushBack(TestData1{ 2 });
+        normalLane.PushBack(TestData1{ 3 });
+        partialLane.PushBack(TestData1{ 4 });
+        normalLane.PushBack(TestData1{ 5 });
+
+        // Non-const -> Non-const.
+        NormalLane normalLane2;
+        normalLane2 = normalLane;
+        PartialLane partialLane2;
+        partialLane2 = partialLane;
+
+        EXPECT_EQ(normalLane2.GetSize(), size_t(5));
+        EXPECT_EQ(partialLane2.GetSize(), size_t(2));
+
+        // non-const -> const
+        NormalConstLane normalConstLane2 = normalLane2;
+        PartialConstLane partialConstLane2 = partialLane2;
+
+        EXPECT_EQ(normalConstLane2.GetSize(), size_t(5));
+        EXPECT_EQ(partialConstLane2.GetSize(), size_t(2));
+
+        NormalConstLane normalConstLane4;
+        normalConstLane4 = normalLane;
+        PartialConstLane partialConstLane4;
+        partialConstLane4 = partialLane;
+        EXPECT_EQ(normalConstLane4.GetSize(), size_t(5));
+        EXPECT_EQ(partialConstLane4.GetSize(), size_t(2));
+
+        // const -> const
+        NormalConstLane normalConstLane3 = normalConstLane2;
+        PartialConstLane partialConstLane3 = partialConstLane2;
+
+        EXPECT_EQ(normalConstLane3.GetSize(), size_t(5));
+        EXPECT_EQ(partialConstLane3.GetSize(), size_t(2));
+
+        NormalConstLane normalConstLane5;
+        normalConstLane5 = normalConstLane4;
+        PartialConstLane partialConstLane5;
+        partialConstLane5 = partialConstLane4;
+
+        EXPECT_EQ(normalConstLane5.GetSize(), size_t(5));
+        EXPECT_EQ(partialConstLane5.GetSize(), size_t(2));
+    }
+
     TEST(Utility, BypassTreeIterator_IsEmpty)
     {
         {
@@ -529,19 +595,63 @@ namespace Molten
         }
     }
 
-    TEST(Utility, BypassTreeIterator_LaneTypeCast)
+    TEST(Utility, BypassTreeIterator_LaneCopy)
     {
         TreeType tree;
+        NormalLane normalLane = tree.GetLane<TreeType::NormalLaneType>();
         PartialLane partialLane = tree.GetLane<TreeType::PartialLaneType>();
 
-        PartialLane::Iterator partialIt = partialLane.begin();
+        normalLane.PushBack(TestData1{ 1 });
+        partialLane.PushBack(TestData1{ 2 });
+        normalLane.PushBack(TestData1{ 3 });
+        partialLane.PushBack(TestData1{ 4 });
+        normalLane.PushBack(TestData1{ 5 });
 
-        NormalLane::Iterator normalIt1 = partialIt;
-        EXPECT_EQ(normalIt1, normalIt1);
+        // Non-const -> Non-const.
+        NormalIterator normalIt = normalLane.begin();
+        PartialIterator partialIt = partialLane.begin();
 
-        NormalLane::Iterator normalIt2;
-        normalIt2 = partialIt;
-        EXPECT_EQ(normalIt2, normalIt2);
+        EXPECT_EQ(CountIteratorToEnd(normalIt, normalLane.end()), size_t(5));
+        EXPECT_EQ(CountIteratorToEnd(partialIt, partialLane.end()), size_t(2));
+        
+        NormalIterator normalIt2;
+        normalIt2 = normalIt;
+        PartialIterator partialIt2;
+        partialIt2 = partialIt;
+
+        EXPECT_EQ(CountIteratorToEnd(normalIt2, normalLane.end()), size_t(5));
+        EXPECT_EQ(CountIteratorToEnd(partialIt2, partialLane.end()), size_t(2));
+
+        // non-const -> const
+        NormalConstIterator normalConstIt2 = normalIt;
+        PartialConstIterator partialConstIt2 = partialIt;
+
+        EXPECT_EQ(CountIteratorToEnd(normalConstIt2, normalLane.end()), size_t(5));
+        EXPECT_EQ(CountIteratorToEnd(partialConstIt2, partialLane.end()), size_t(2));
+
+        NormalConstIterator normalConstIt3;
+        normalConstIt3 = normalIt;
+        PartialConstIterator partialConstIt3;
+        partialConstIt3 = partialIt;
+
+        EXPECT_EQ(CountIteratorToEnd(normalConstIt3, normalLane.end()), size_t(5));
+        EXPECT_EQ(CountIteratorToEnd(partialConstIt3, partialLane.end()), size_t(2));
+
+
+        // const -> const
+        NormalConstIterator normalConstIt4 = normalConstIt3;
+        PartialConstIterator partialConstIt4 = partialConstIt3;
+
+        EXPECT_EQ(CountIteratorToEnd(normalConstIt4, normalLane.end()), size_t(5));
+        EXPECT_EQ(CountIteratorToEnd(partialConstIt4, partialLane.end()), size_t(2));
+
+        NormalConstIterator normalConstIt5;
+        normalConstIt5 = normalConstIt3;
+        PartialConstIterator partialConstIt5;
+        partialConstIt5 = partialConstIt3;
+
+        EXPECT_EQ(CountIteratorToEnd(normalConstIt5, normalLane.end()), size_t(5));
+        EXPECT_EQ(CountIteratorToEnd(partialConstIt5, partialLane.end()), size_t(2));
     }
 
     TEST(Utility, BypassTreeIterator_Traverse)
