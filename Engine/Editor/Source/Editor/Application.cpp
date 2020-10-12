@@ -27,13 +27,16 @@
 #include "Editor/Application.hpp"
 #include "Molten/Window/Window.hpp"
 #include "Molten/Renderer/Renderer.hpp"
-#include "Molten/Gui/Behaviors/KeyboardListenerWidget.hpp"
-#include "Molten/Gui/Behaviors/MouseListenerWidget.hpp"
-#include "Molten/Gui/WidgetTemplates.hpp"
+#include "Molten/Renderer/Shader/Generator/VulkanShaderGenerator.hpp"
+#include "Molten/Gui/CanvasRenderer.hpp"
+#include "Molten/Gui/Layers/RootLayer.hpp"
+#include "Molten/Gui/Widget.hpp"
+#include "Molten/Gui/Widgets/ButtonWidget.hpp"
+#include "Molten/Gui/Widgets/PaddingWidget.hpp"
+#include "Molten/Gui/Widgets/VerticalGridWidget.hpp"
 #include <chrono>
 #include <thread>
 
-#include "Molten/Renderer/Shader/Generator/VulkanShaderGenerator.hpp"
 
 namespace Molten
 {
@@ -50,8 +53,8 @@ namespace Molten
             m_colorPushLocation(0),
             m_color2PushLocation(0),
             m_programTime(0.0f),
-            m_deltaTime(0.0f),
-            m_guiCanvas()
+            m_deltaTime(0.0f)//,
+            //m_guiCanvas()
         { }
 
         Application::~Application()
@@ -126,36 +129,42 @@ namespace Molten
             m_camera.SetProjectionType(Scene::Camera::ProjectionType::Perspective);
             m_camera.SetFieldOfView(Degrees(60));
             m_camera.SetWindowSize(m_window->GetSize());
+
             m_window->OnResize.Connect([&](Vector2ui32 size)
             {
                 m_camera.SetWindowSize(size);
+                m_canvas->SetSize(size);
             });
 
             LoadGui();
         }
 
-
         void Application::LoadGui()
         {
-            m_guiCanvas.Load(m_renderer.get(), &m_logger);
+            m_canvasRenderer = Gui::CanvasRenderer::Create(*m_renderer, &m_logger);
+            m_canvas = Gui::Canvas::Create(m_canvasRenderer);
 
-            auto grid = m_guiCanvas.Add<Gui::VerticalGrid>(m_guiCanvas.GetRoot());
-            auto button1 = m_guiCanvas.Add<Gui::Button, Gui::MouseListener>(grid);
-            auto padding = m_guiCanvas.Add<Gui::Padding, Gui::MouseListener>(grid, 10.0f, 20.0f, 30.0f, 40.0f);
-            auto button2 = m_guiCanvas.Add<Gui::Button, Gui::MouseListener>(padding);
-
-            button1->GetComponent<Gui::MouseListener>()->OnClick = 
-                [&](Mouse::Button /*button*/, const Vector2f32& pos)
+            auto layer = Gui::Canvas::CreateChild<Gui::RootLayer>(m_canvas, Gui::LayerPosition::Top);
+            auto grid = Gui::Layer::CreateChild<Gui::VerticalGrid>(layer, 
+                10.0f, Gui::PaddingData{ 10.0f, 20.0f, 30.0f, 40.0f }, Gui::PaddingData{ 10.0f, 20.0f, 30.0f, 40.0f });
+            auto button1 = Gui::Widget::CreateChild<Gui::Button>(grid);
+            //auto padding2 = Gui::Widget::CreateChild<Gui::Padding>(grid, 10.0f, 20.0f, 30.0f, 40.0f);
+            auto button2 = Gui::Widget::CreateChild<Gui::Button>(grid);
+            button2->margin = Gui::MarginData{ 10.0f, 20.0f, 30.0f, 40.0f };
+            auto button3 = Gui::Widget::CreateChild<Gui::Button>(grid);
+            
+            button1->onPress.Connect(
+                [&](int)
             {
-                m_logger.Write(Logger::Severity::Info, "Pressed button 1 at: " + std::to_string(pos.x) + ", " + std::to_string(pos.y));
-            };
+                m_logger.Write(Logger::Severity::Info, "Pressed button 1");
+            });
 
-            button2->GetComponent<Gui::MouseListener>()->OnClick =
-                [&](Mouse::Button /*button*/, const Vector2f32& pos)
+            button2->onPress.Connect(
+                [&](int)
             {
-                m_logger.Write(Logger::Severity::Info, "Pressed button 2 at: " + std::to_string(pos.x) + ", " + std::to_string(pos.y));
-            };
-
+                m_logger.Write(Logger::Severity::Info, "Pressed button 2");
+            });
+            
         }
 
         void Application::LoadPipeline()
@@ -353,7 +362,7 @@ namespace Molten
 
         void Application::Unload()
         {
-            m_guiCanvas.Unload();
+            m_canvasRenderer->Close();
 
             if (m_renderer)
             {
@@ -481,7 +490,9 @@ namespace Molten
 
             m_camera.PostProcess();
 
-            m_guiCanvas.Update();
+            m_canvas->SetSize(m_window->GetSize());
+            m_canvas->SetScale(m_window->GetScale());
+            m_canvas->Update(Seconds(m_deltaTime));
 
             return true;
         }
@@ -531,7 +542,7 @@ namespace Molten
             /*m_renderer->BindUniformBlock(m_uniformBlock, 256);
             m_renderer->DrawVertexBuffer(m_indexBuffer, m_vertexBuffer);*/
 
-            m_guiCanvas.Draw();
+            m_canvas->Draw();
 
             m_renderer->EndDraw();
         }

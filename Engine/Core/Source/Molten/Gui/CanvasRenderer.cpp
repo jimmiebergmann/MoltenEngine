@@ -23,7 +23,7 @@
 *
 */
 
-#include "Molten/Gui/GuiRenderer.hpp"
+#include "Molten/Gui/CanvasRenderer.hpp"
 #include "Molten/Renderer/Renderer.hpp"
 #include "Molten/Renderer/Pipeline.hpp"
 #include "Molten/Renderer/Shader/Visual/VisualShaderScript.hpp"
@@ -32,50 +32,79 @@
 namespace Molten::Gui
 {
 
-    Renderer::Renderer(Logger* logger) :
-        m_backendRenderer(nullptr),
-        m_logger(logger)
-    {}
-
-    Renderer::~Renderer()
+    CanvasRendererPointer CanvasRenderer::Create(Molten::Renderer& renderer, Logger* logger, const Vector2f32& size)
     {
-        Close();
+        return std::make_shared<CanvasRenderer>(renderer, logger, size);
     }
 
-    void Renderer::Open(Molten::Renderer* backendRenderer)
+    CanvasRenderer::CanvasRenderer(Molten::Renderer& renderer, Logger* logger, const Vector2f32& size) :
+        m_logger(logger),
+        m_backendRenderer(renderer)
     {
-        Close();
-
-        m_backendRenderer = backendRenderer;
-        m_projection = Matrix4x4f32::Orthographic(0.0f, 800.0f, 600.0f, 0.0f, 1.0f, -1.0f);
-
+        if (size.x != 0.0f && size.y != 0.0f)
+        {
+            m_projection = Matrix4x4f32::Orthographic(0.0f, size.x, size.y, 0.0f, 1.0f, -1.0f);
+        }
+        
         LoadRectRenderInstance();
     }
 
-    void Renderer::Close()
+    CanvasRenderer::~CanvasRenderer()
     {
-        if (!m_backendRenderer)
-        {
-            return;
-        }
+        Close();
+    }
 
+    void CanvasRenderer::Close()
+    {
         DestroyRenderInstance(m_rectInstance);
-        m_backendRenderer = nullptr;
     }
 
-    void Renderer::DrawRect(const Vector2f32& position, const Vector2f32& size, const Vector4f32& color)
+    void CanvasRenderer::Resize(const Vector2f32& size)
     {
-        m_backendRenderer->BindPipeline(m_rectInstance.pipeline);
-
-        m_backendRenderer->PushConstant(m_rectInstance.projectionLocation, m_projection);
-        m_backendRenderer->PushConstant(m_rectInstance.positionLocation, position);
-        m_backendRenderer->PushConstant(m_rectInstance.sizeLocation, size);
-        m_backendRenderer->PushConstant(m_rectInstance.colorLocation, color);
-
-        m_backendRenderer->DrawVertexBuffer(m_rectInstance.indexBuffer, m_rectInstance.vertexBuffer);
+        m_projection = Matrix4x4f32::Orthographic(0.0f, size.x, size.y, 0.0f, 1.0f, -1.0f);
     }
 
-    Renderer::RenderInstance::RenderInstance() :
+    void CanvasRenderer::BeginDraw()
+    {
+        while (!m_positionStack.empty())
+        {
+            m_positionStack.pop();
+        }
+        m_positionStack.push({ 0.0f, 0.0f });
+    }
+
+    void CanvasRenderer::PushPosition(const Vector2f32& position)
+    {
+        Vector2f32 newPosition = (!m_positionStack.empty() ? m_positionStack.top() : Vector2f32{ 0.0f, 0.0f }) + position;
+        m_positionStack.push(newPosition);
+    }
+
+    void CanvasRenderer::PopPosition()
+    {
+        if (!m_positionStack.empty())
+        {
+            m_positionStack.pop();
+        }
+    }
+
+    void CanvasRenderer::DrawRect(const Vector2f32& size, const Vector4f32& color)
+    {
+        Vector2f32 position = m_positionStack.top();
+
+        m_backendRenderer.BindPipeline(m_rectInstance.pipeline);
+
+        m_backendRenderer.PushConstant(m_rectInstance.projectionLocation, m_projection);
+        m_backendRenderer.PushConstant(m_rectInstance.positionLocation, position);
+        m_backendRenderer.PushConstant(m_rectInstance.sizeLocation, size);
+        m_backendRenderer.PushConstant(m_rectInstance.colorLocation, color);
+
+        m_backendRenderer.DrawVertexBuffer(m_rectInstance.indexBuffer, m_rectInstance.vertexBuffer);
+    }
+
+    void CanvasRenderer::EndDraw()
+    {}
+
+    CanvasRenderer::RenderInstance::RenderInstance() :
         pipeline(nullptr),
         vertexBuffer(nullptr),
         indexBuffer(nullptr),
@@ -87,7 +116,7 @@ namespace Molten::Gui
         colorLocation(0)
     { }
 
-    void Renderer::LoadRectRenderInstance()
+    void CanvasRenderer::LoadRectRenderInstance()
     {
         const std::array<Vector2f32, 4> vertexData =
         {
@@ -107,7 +136,7 @@ namespace Molten::Gui
         vertexPositionBufferDesc.vertexCount = static_cast<uint32_t>(vertexData.size());
         vertexPositionBufferDesc.vertexSize = sizeof(Vector2f32);
         vertexPositionBufferDesc.data = static_cast<const void*>(vertexData.data());
-        m_rectInstance.vertexBuffer = m_backendRenderer->CreateVertexBuffer(vertexPositionBufferDesc);
+        m_rectInstance.vertexBuffer = m_backendRenderer.CreateVertexBuffer(vertexPositionBufferDesc);
         if (!m_rectInstance.vertexBuffer)
         {
             throw Exception("Failed to create position vertex buffer.");
@@ -117,7 +146,7 @@ namespace Molten::Gui
         indexBufferDesc.indexCount = static_cast<uint32_t>(indices.size());
         indexBufferDesc.data = static_cast<const void*>(indices.data());
         indexBufferDesc.dataType = IndexBuffer::DataType::Uint16;
-        m_rectInstance.indexBuffer = m_backendRenderer->CreateIndexBuffer(indexBufferDesc);
+        m_rectInstance.indexBuffer = m_backendRenderer.CreateIndexBuffer(indexBufferDesc);
         if (!m_rectInstance.indexBuffer)
         {
             throw Exception("Failed to create index buffer.");
@@ -206,37 +235,34 @@ namespace Molten::Gui
         pipelineDesc.frontFace = Pipeline::FrontFace::Clockwise;   
         pipelineDesc.vertexScript = m_rectInstance.vertexScript;
         pipelineDesc.fragmentScript = m_rectInstance.fragmentScript;
-        m_rectInstance.pipeline = m_backendRenderer->CreatePipeline(pipelineDesc);
+        m_rectInstance.pipeline = m_backendRenderer.CreatePipeline(pipelineDesc);
         if (!m_rectInstance.pipeline)
         {
             throw Exception("Failed to create gui pipeline");
         }
 
-        m_rectInstance.projectionLocation = m_backendRenderer->GetPushConstantLocation(m_rectInstance.pipeline, 1);
-        m_rectInstance.positionLocation = m_backendRenderer->GetPushConstantLocation(m_rectInstance.pipeline, 2);
-        m_rectInstance.sizeLocation = m_backendRenderer->GetPushConstantLocation(m_rectInstance.pipeline, 3);
-        m_rectInstance.colorLocation = m_backendRenderer->GetPushConstantLocation(m_rectInstance.pipeline, 4);
+        m_rectInstance.projectionLocation = m_backendRenderer.GetPushConstantLocation(m_rectInstance.pipeline, 1);
+        m_rectInstance.positionLocation = m_backendRenderer.GetPushConstantLocation(m_rectInstance.pipeline, 2);
+        m_rectInstance.sizeLocation = m_backendRenderer.GetPushConstantLocation(m_rectInstance.pipeline, 3);
+        m_rectInstance.colorLocation = m_backendRenderer.GetPushConstantLocation(m_rectInstance.pipeline, 4);
     }
 
-    void Renderer::DestroyRenderInstance(RenderInstance& instance)
+    void CanvasRenderer::DestroyRenderInstance(RenderInstance& instance)
     {
-        if (m_backendRenderer)
+        if (instance.pipeline)
         {
-            if (instance.pipeline)
-            {
-                m_backendRenderer->DestroyPipeline(instance.pipeline);
-                instance.pipeline = nullptr;
-            }
-            if (instance.vertexBuffer)
-            {
-                m_backendRenderer->DestroyVertexBuffer(instance.vertexBuffer);
-                instance.vertexBuffer = nullptr;
-            }
-            if (instance.indexBuffer)
-            {
-                m_backendRenderer->DestroyIndexBuffer(instance.indexBuffer);
-                instance.indexBuffer = nullptr;
-            }
+            m_backendRenderer.DestroyPipeline(instance.pipeline);
+            instance.pipeline = nullptr;
+        }
+        if (instance.vertexBuffer)
+        {
+            m_backendRenderer.DestroyVertexBuffer(instance.vertexBuffer);
+            instance.vertexBuffer = nullptr;
+        }
+        if (instance.indexBuffer)
+        {
+            m_backendRenderer.DestroyIndexBuffer(instance.indexBuffer);
+            instance.indexBuffer = nullptr;
         }
 
         delete instance.vertexScript;

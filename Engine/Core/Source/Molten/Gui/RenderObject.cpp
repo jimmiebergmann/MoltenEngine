@@ -22,14 +22,14 @@
 * SOFTWARE.
 *
 */
-
+/*
 #include "Molten/Gui/RenderObject.hpp"
 #include "Molten/Gui/GuiRenderer.hpp"
-
+*/
 namespace Molten::Gui
 {
 
-    RenderObject::RenderObject(Renderer * renderer) :
+    /*RenderObject::RenderObject(Renderer * renderer) :
         m_renderer(renderer)
     { }
 
@@ -41,7 +41,7 @@ namespace Molten::Gui
     {
         for (auto& object : m_objects)
         {
-            m_renderer->DrawRect(object.position, object.size, Vector4f32(1.0f, 0.0f, 0.0f, 1.0f));
+            m_renderer->DrawRect(m_position + object.position, object.size, Vector4f32(1.0f, 0.0f, 0.0f, 1.0f));
         }
     }
 
@@ -58,6 +58,6 @@ namespace Molten::Gui
     void RenderObject::SetPosition(const Vector2f32& position)
     {
         m_position = position;
-    }
+    }*/
 
 }

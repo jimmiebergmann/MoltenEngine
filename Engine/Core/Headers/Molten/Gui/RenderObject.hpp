@@ -26,20 +26,14 @@
 #ifndef MOLTEN_CORE_GUI_RENDEROBJECT_HPP
 #define MOLTEN_CORE_GUI_RENDEROBJECT_HPP
 
-#include "Molten/Math/Vector.hpp"
-#include <memory>
+//#include "Molten/Math/Vector.hpp"
+//#include <memory>
 
-/*namespace Molten
-{
-    class Renderer;
-    class VertexBuffer;
-    class IndexBuffer;
-}*/
 
 namespace Molten::Gui
 {
         
-    class Renderer;
+    /*class Renderer;
 
     class MOLTEN_API RenderObject
     {
@@ -65,19 +59,11 @@ namespace Molten::Gui
             Vector2f32 size;
         };
 
-        /*struct Object
-        {
-            VertexBuffer* vertexBuffer;
-            IndexBuffer* indexBuffer;
-            Vector2f32 position;
-            Vector2f32 size;
-        };*/
-
         Renderer* m_renderer;
         Vector2f32 m_position;
         std::vector<SubObject> m_objects;
 
-    };
+    };*/
 
 }
 

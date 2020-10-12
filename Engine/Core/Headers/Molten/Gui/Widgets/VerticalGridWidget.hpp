@@ -23,46 +23,40 @@
 *
 */
 
-#ifndef MOLTEN_CORE_GUI_SYSTEMS_MOUSEWIDGETSYSTEM_HPP
-#define MOLTEN_CORE_GUI_SYSTEMS_MOUSEWIDGETSYSTEM_HPP
+#ifndef MOLTEN_CORE_GUI_WIDGETS_VERTICALGRIDWIDGET_HPP
+#define MOLTEN_CORE_GUI_WIDGETS_VERTICALGRIDWIDGET_HPP
 
-#include "Molten/Gui/WidgetSystem.hpp"
 #include "Molten/Gui/Widget.hpp"
-#include "Molten/Gui/Behaviors/MouseListenerWidget.hpp"
-#include "Molten/Logger.hpp"
 
 namespace Molten::Gui
 {
 
-    class MOLTEN_API MouseSystem : public WidgetSystem<MouseSystem, MouseListener>
+    class MOLTEN_API VerticalGrid : public Widget
     {
 
     public:
 
-        explicit MouseSystem(Logger& logger) :
-            m_logger(logger)
-        { }
+        VerticalGrid(
+            const float spacing = 0.0f,
+            const PaddingData& outerPadding = PaddingData(),
+            const PaddingData& innerPadding = PaddingData());
 
-        void OnRegister() override
-        {
-            m_logger.Write(Logger::Severity::Info, "Creating mouse system, number of widgets: " + std::to_string(GetEntityCount()));
+        float spacing;
+        PaddingData outerPadding;
+        PaddingData innerPadding;
 
-        }
+        virtual void Update(const Time& deltaTime) override;
 
-        void OnCreateEntity(WidgetEntity /*widget*/) override
-        {
-            m_logger.Write(Logger::Severity::Info, "Added widget to mouse system, number of widgets: " + std::to_string(GetEntityCount()));
-        }
+        virtual void Draw(CanvasRenderer& renderer) override;
 
-        void OnDestroyEntity(WidgetEntity /*widget*/) override
-        {
-        }
+        virtual Vector2f32 CalculateSize(const Vector2f32& grantedSize) override;
 
-        void Process(const Time& /*deltaTime*/) override
-        {
-        }
+        virtual void CalculateChildrenGrantedSize(
+            WidgetTreeData::Tree::ConstLane<WidgetTreeData::Tree::PartialLaneType> children) override;
 
-        Logger& m_logger;
+    private:
+
+        virtual bool OnAddChild(WidgetPointer widget) override;
 
     };
 

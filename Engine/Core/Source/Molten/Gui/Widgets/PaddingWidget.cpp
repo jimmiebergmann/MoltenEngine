@@ -23,40 +23,43 @@
 *
 */
 
-#ifndef MOLTEN_CORE_GUI_WIDGETDESCRIPTOR_HPP
-#define MOLTEN_CORE_GUI_WIDGETDESCRIPTOR_HPP
-
-#include "Molten/Math/Vector.hpp"
+#include "Molten/Gui/Widgets/PaddingWidget.hpp"
 
 namespace Molten::Gui
 {
 
-    using WidgetFlagsType = uint32_t;
+    Padding::Padding(
+        const float left,
+        const float top,
+        const float right,
+        const float bottom
+    ) :
+        PaddingData(left, top, right, bottom)
+    {}
 
-    enum class WidgetFlags : WidgetFlagsType
+    void Padding::Update(const Time& deltaTime)
     {
-        None            = 0 << 0,
-        FitChildren     = 0 << 1,
-        FitParent       = 0 << 2
-    };
-
-    inline WidgetFlagsType operator| (const WidgetFlags lhs, const WidgetFlags rhs)
-    {
-        return static_cast<WidgetFlagsType>(lhs) | static_cast<WidgetFlagsType>(rhs);
-    }
-    inline WidgetFlagsType operator& (const WidgetFlags lhs, const WidgetFlags rhs)
-    {
-        return static_cast<WidgetFlagsType>(lhs) & static_cast<WidgetFlagsType>(rhs);
     }
 
-    struct MOLTEN_API WidgetDescriptor
+    void Padding::Draw(CanvasRenderer& renderer)
     {
-        size_t maxChildrenCount;
-        Vector2f32 maxSize;
-        Vector2f32 minSize;
-        WidgetFlagsType flags;
-    };
+    }
+
+    Vector2f32 Padding::CalculateSize(const Vector2f32& grantedSize)
+    {
+        return grantedSize;
+    }
+
+    void Padding::CalculateChildrenGrantedSize(WidgetTreeData::Tree::ConstLane<WidgetTreeData::Tree::PartialLaneType> children)
+    {
+        Vector2f32 childSize = GetGrantedSize() - (low + high);
+
+        SetRenderData(children.begin(), low, childSize);
+    }
+
+    bool Padding::OnAddChild(WidgetPointer widget)
+    {
+        return true;
+    }
 
 }
-
-#endif

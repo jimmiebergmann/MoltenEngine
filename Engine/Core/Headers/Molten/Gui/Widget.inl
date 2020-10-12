@@ -26,22 +26,16 @@
 namespace Molten::Gui
 {
 
-    template<typename ... Components>
-    inline void Widget::AddComponents()
+    template<typename TWidgetType, typename ... TArgs>
+    inline WidgetTypePointer<TWidgetType> Widget::CreateChild(WidgetPointer parent, TArgs ... args)
     {
-        m_entity.AddComponents<Components...>();
-    }
+        static_assert(std::is_base_of<Gui::Widget, TWidgetType>::value, "TWidgetType is not base of Layer.");
 
-    template<typename ... Components>
-    inline void Widget::RemoveComponents()
-    {
-        m_entity.RemoveComponents<Components...>();
-    }
+        auto widget = std::make_shared<TWidgetType>(args...);
 
-    template<typename Component>
-    inline Component* Widget::GetComponent()
-    {
-        return m_entity.GetComponent<Component>();
+        Layer::AddChild(parent, widget);
+
+        return widget;
     }
 
 }

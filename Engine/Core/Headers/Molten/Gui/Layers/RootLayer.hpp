@@ -23,59 +23,47 @@
 *
 */
 
-#ifndef MOLTEN_CORE_GUI_TEMPLATES_PADDING_HPP
-#define MOLTEN_CORE_GUI_TEMPLATES_PADDING_HPP
+#ifndef MOLTEN_CORE_GUI_ROOTLAYER_HPP
+#define MOLTEN_CORE_GUI_ROOTLAYER_HPP
 
-#include "Molten/Gui/WidgetTemplate.hpp"
+#include "Molten/Gui/GuiTypes.hpp"
+#include "Molten/Gui/Layer.hpp"
+#include "Molten/Gui/WidgetData.hpp"
+#include "Molten/Gui/Widget.hpp"
+#include "Molten/Math/Vector.hpp"
+#include "Molten/System/Time.hpp"
 
 namespace Molten::Gui
 {
 
-    struct Padding
+    class MOLTEN_API RootLayer : public Layer
     {
-        Padding(
-            const float left = 0.0f,
-            const float right = 0.0f,
-            const float top = 0.0f,
-            const float bottom = 0.0f)
-            :
-            left(left), right(right), top(top), bottom(bottom)
-        { }
 
-        float left;
-        float right;
-        float top;
-        float bottom;
+    public:
+
+        RootLayer(Canvas& canvas);
+
+        ~RootLayer() = default;
+
+        virtual void Update(const Time& deltaTime) override;
+
+        virtual void Draw(CanvasRenderer & renderer) override;
+
+        virtual void Resize(const Vector2f32& size) override;
+
+        virtual void SetScale(const Vector2f32& scale) override;
+
+        virtual bool OnAddChild(WidgetPointer parent, WidgetPointer child) override;
+
+    private:        
+
+        WidgetTreeData::Tree m_widgetTree;
+        Vector2f32 m_size;
+        Vector2f32 m_scale;
+
     };
 
 }
 
-namespace Molten::Gui::Template
-{
-
-    template<>
-    inline const WidgetDescriptor Descriptor<Padding> =
-    {
-        1, // maxChildCount
-        Vector2f32(), // maxSize
-        Vector2f32(), // minSize
-        (uint32_t)WidgetFlags::FitParent // flags
-    };
-
-    template<>
-    inline const auto CalculateWidgetSize<Padding> =
-        [](TemplatedWidget<Padding>& /*padding*/, const Vector2f32& /*grantedSize*/)
-    {
-
-    };
-
-    template<>
-    inline const auto LoadRenderObject<Padding> =
-        [](RenderObject& renderObject)
-    {
-        renderObject.AddRect({ 300.0f, 300.0f }, { 100.0f, 100.0f });
-    };
-
-}
 
 #endif

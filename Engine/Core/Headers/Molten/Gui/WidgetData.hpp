@@ -23,19 +23,33 @@
 *
 */
 
+#ifndef MOLTEN_CORE_GUI_WIDGETDATA_HPP
+#define MOLTEN_CORE_GUI_WIDGETDATA_HPP
+
+#include "Molten/Gui/GuiTypes.hpp"
+#include "Molten/Utility/BypassTree.hpp"
+#include "Molten/Math/Vector.hpp"
+
 namespace Molten::Gui
 {
+    struct WidgetTreeData
+    {
 
-    template<typename TemplateType>
-    template<typename ... ConstructorArgs>
-    TemplatedWidget<TemplateType>::TemplatedWidget(
-        WidgetEntity entity,
-        const WidgetDescriptor& descriptor,
-        std::unique_ptr<RenderObject> renderObject,
-        ConstructorArgs ... constructorArgs)
-    :
-        Widget(entity, descriptor, std::move(renderObject)),
-        TemplateType(constructorArgs...)
-    { }
+        using Tree = typename BypassTree<WidgetPointer>;
+        
+        LayerWeakPointer layer;
+        WidgetPointer widget;
+        Tree::Iterator<Tree::NormalLaneType> iterator;
+        Tree::Item* item;
+    };
+
+    struct WidgetRenderData
+    {
+        Vector2f32 grantedSize;
+        Vector2f32 position;
+        Vector2f32 size;
+    };
 
 }
+
+#endif

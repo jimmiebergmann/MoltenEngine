@@ -23,12 +23,27 @@
 *
 */
 
-#ifndef MOLTEN_CORE_GUI_WIDGETTEMPLATES_HPP
-#define MOLTEN_CORE_GUI_WIDGETTEMPLATES_HPP
+namespace Molten::Gui
+{
+
+    template<typename TLayerType, typename ... TArgs>
+    inline static LayerTypePointer<TLayerType> Layer::Create(Canvas& canvas, TArgs ... args)
+    {
+        static_assert(std::is_base_of<Gui::Layer, TLayerType>::value, "TLayerType is not base of Layer.");
+
+        auto layer = std::make_shared<TLayerType>(canvas, args...);
+        return layer;
+    }
 
 
-#include "Molten/Gui/Templates/Button.hpp"
-#include "Molten/Gui/Templates/Padding.hpp"
-#include "Molten/Gui/Templates/VerticalGrid.hpp"
+    template<typename TWidgetType, typename ... TArgs>
+    inline static WidgetTypePointer<TWidgetType> Layer::CreateChild(LayerPointer parent, TArgs ... args)
+    {
+        static_assert(std::is_base_of<Gui::Widget, TWidgetType>::value, "TWidgetType is not base of Widget.");
 
-#endif
+        auto widget = std::make_shared<TWidgetType>(args...);
+        Layer::AddChild(parent, widget);
+        return widget;
+    }
+   
+}

@@ -16,4 +16,4 @@ cd MoltenEngine/Build
 cmake ..
 cmake --build . --config Release
 ```
-See [CMake/README](https://github.com/jimmiebergmann/MoltenEngine/blob/master/CMake/CMake.md) for available build options.
+See [Engine/CMake/README](https://github.com/jimmiebergmann/MoltenEngine/blob/master/Engine/CMake/CMake.md) for available build options.

@@ -24,162 +24,81 @@
 */
 
 #include "Molten/Gui/Canvas.hpp"
-#include "Molten/Gui/GuiRenderer.hpp"
-#include "Molten/Gui/Templates/Padding.hpp"
-#include "Molten/Logger.hpp"
-
-#define MOLTEN_CANVAS_LOG(severity, message) if(m_logger){ m_logger->Write(severity, message); }
+#include "Molten/Gui/CanvasRenderer.hpp"
 
 namespace Molten::Gui
 {
 
-    Canvas::Canvas() :
-        m_renderer(nullptr),
-        m_logger(nullptr),
-        m_rootWidget(nullptr)
-    { }
+    Canvas::Canvas(CanvasRendererPointer renderer) :
+        m_renderer(renderer),
+        m_size(0.0f, 0.0f),
+        m_scale(1.0f, 1.0f)
+    {}
 
     Canvas::~Canvas()
+    {}
+
+    void Canvas::SetRenderer(CanvasRendererPointer renderer)
     {
-        Unload();
+        m_renderer = renderer;
     }
 
-    bool Canvas::Load(Molten::Renderer* backendRenderer, Logger* logger)
+    CanvasRendererPointer Canvas::GetRenderer()
     {
-        m_logger = logger;
-
-        m_renderer = new Renderer(m_logger);
-        m_renderer->Open(backendRenderer);
-
-        m_context = std::make_unique<Private::Context>(Ecs::ContextDescriptor(64000));
-        m_keyboardSystem = std::make_unique<KeyboardSystem>(*m_logger);
-        m_mouseSystem = std::make_unique<MouseSystem>(*m_logger);
-
-        m_context->RegisterSystem(*m_keyboardSystem.get());
-        m_context->RegisterSystem(*m_mouseSystem.get());
-
-        using RootType = Padding;
-
-        auto rootWidget = m_context->CreateEntity<BaseWidget>();
-        auto renderObject = std::make_unique<RenderObject>(m_renderer);
-        Template::LoadRenderObject<RootType>(*renderObject);
-        auto widgetPointer = new Widget(
-            rootWidget, 
-            Template::Descriptor<RootType>,
-            std::move(renderObject));
-        m_rootWidget = std::shared_ptr<Widget>(widgetPointer);
-        rootWidget.GetComponent<BaseWidget>()->widget = m_rootWidget;
-
-        return true;
+        return m_renderer;
+    }
+    const CanvasRendererPointer Canvas::GetRenderer() const
+    {
+        return m_renderer;
     }
 
-    void Canvas::Unload()
+    void Canvas::Update(const Time& deltaTime)
     {
-        delete m_renderer;
-        m_renderer = nullptr;
-        m_keyboardSystem.reset();
-        m_mouseSystem.reset();     
-        m_rootWidget.reset();
-        m_context.reset();
-    }
-
-    void Canvas::Update()
-    {
-        m_keyboardSystem->Process(Seconds(0.0f));
-        m_mouseSystem->Process(Seconds(0.0f));
-
-        TraversalWidgetSizeUpdate(m_rootWidget);
+        for (auto& layers : m_activeLayers)
+        {
+            layers->Update(deltaTime);
+        }
     }
 
     void Canvas::Draw()
     {
-        DrawChild(*m_rootWidget);
-    }
-
-    bool Canvas::Move(WidgetPointer widget, WidgetPointer parent)
-    {
-        if (!widget || !parent || !parent->AllowsMoreChildren())
+        if (!m_renderer)
         {
-            return false;
+            return;
         }
 
-        auto oldParent = widget->m_parent.lock();
-        if (oldParent == parent)
+        m_renderer->BeginDraw();
+        for (auto& layers : m_activeLayers)
         {
-            return true;
+            layers->Draw(*m_renderer);
         }
-
-        auto it = std::find(oldParent->m_children.begin(), oldParent->m_children.end(), widget);
-        if (it == oldParent->m_children.end())
-        {
-#if defined(MOLTEN_BUILD_DEBUG)
-            MOLTEN_CANVAS_LOG(Logger::Severity::Error, "Widget move: Child is missing in parent Widget.");
-#endif
-            return false;
-        }
-        oldParent->m_children.erase(it);
-
-        widget->m_parent = parent;
-        parent->m_children.push_back(widget);
-
-        return true;
+        m_renderer->EndDraw();
     }
 
-    WidgetPointer Canvas::GetRoot()
+    void Canvas::SetSize(const Vector2f32& size)
     {
-        return m_rootWidget;
-    }
-
-    void Canvas::TraversalWidgetSizeUpdate(WidgetPointer startWidget)
-    {
-        struct Stack
+        if (size != m_size && size.x != 0.0f && size.y != 0.0f)
         {
-            std::vector<WidgetPointer>::iterator current;
-            std::vector<WidgetPointer>::iterator last;
-        };
-
-        std::vector<Stack> stack =
-        { 
-            Stack
+            m_renderer->Resize(size);
+            for (auto& layers : m_activeLayers)
             {
-                startWidget->m_children.begin(),
-                startWidget->m_children.end()
+                layers->Resize(size);
             }
-        };
-
-        while (stack.size())
-        {
-            auto& top = stack.back();
-            if (top.current == top.last)
-            {
-                stack.pop_back();
-                continue;
-            }
-
-            auto current = *top.current;
-            top.current++;
-
-            if (!current->m_children.size())
-            {
-                continue;
-            }
-
-            stack.push_back(Stack{
-                current->m_children.begin(),
-                current->m_children.end()
-            });
         }
-
+        m_size = size;
+    }
+    void Canvas::SetScale(const Vector2f32& scale)
+    {
+        m_scale = scale;
     }
 
-    void Canvas::DrawChild(Widget& widget)
+    const Vector2f32& Canvas::GetSize() const
     {
-        widget.m_renderObject->Draw();
-
-        for (auto& child : widget.m_children)
-        {
-            DrawChild(*child);
-        }
+        return m_size;
+    }
+    const Vector2f32& Canvas::GetScale() const
+    {
+        return m_scale;
     }
 
 }

@@ -23,21 +23,29 @@
 *
 */
 
-#ifndef MOLTEN_CORE_GUI_GUICONTEXT_HPP
-#define MOLTEN_CORE_GUI_GUICONTEXT_HPP
+#include "Molten/Gui/Data/OutlineData.hpp"
 
-#include "Molten/Ecs/EcsContext.hpp"
-
-namespace Molten::Gui::Private
+namespace Molten::Gui
 {
-     
-    struct MOLTEN_API Context : Ecs::Context<Context>
-    {
-        explicit Context(const Ecs::ContextDescriptor & descriptor) :
-            Ecs::Context<Context>(descriptor)
-        {}
-    };
+
+    OutlineData::OutlineData() :
+        left(0.0f),
+        top(0.0f),
+        right(0.0f),
+        bottom(0.0f)
+    {}
+
+    OutlineData::OutlineData(
+        const float left,
+        const float top,
+        const float right,
+        const float bottom
+    ) :
+        left(left),
+        top(top),
+        right(right),
+        bottom(bottom)
+    {}
+
 
 }
-
-#endif

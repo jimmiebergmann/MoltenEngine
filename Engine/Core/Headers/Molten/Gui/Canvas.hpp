@@ -26,14 +26,13 @@
 #ifndef MOLTEN_CORE_GUI_CANVAS_HPP
 #define MOLTEN_CORE_GUI_CANVAS_HPP
 
-#include "Molten/Gui/Context.hpp"
-#include "Molten/Gui/TemplatedWidget.hpp"
-#include "Molten/Gui/WidgetTemplate.hpp"
-#include "Molten/Gui/Behaviors/BaseWidget.hpp"
-#include "Molten/Gui/Systems/MouseWidgetSystem.hpp"
-#include "Molten/Gui/Systems/KeyboardWidgetSystem.hpp"
+#include "Molten/Gui/GuiTypes.hpp"
+#include "Molten/Gui/Layer.hpp"
+#include "Molten/Math/Vector.hpp"
+#include "Molten/System/Time.hpp"
 #include <memory>
-#include <vector>
+#include <list>
+#include <set>
 
 namespace Molten
 {
@@ -51,26 +50,33 @@ namespace Molten::Gui
 
     public:
 
-        Canvas();
+        template<typename ... TArgs>
+        static CanvasPointer Create(TArgs ... args);
+
+        template<typename TLayerType>
+        static LayerTypePointer<TLayerType> CreateChild(CanvasPointer parent);
+        template<typename TLayerType>
+        static LayerTypePointer<TLayerType> CreateChild(CanvasPointer parent, LayerPosition position);
+
+        //static bool AddChild(CanvasPointer parent, LayerPointer child);
+        //static bool AddChild(CanvasPointer parent, LayerPointer child, LayerPosition position);
+
+        Canvas(CanvasRendererPointer renderer = nullptr);
         ~Canvas();
 
-        bool Load(Molten::Renderer* backendRenderer, Logger* logger = nullptr);
+        void SetRenderer(CanvasRendererPointer renderer);
+        CanvasRendererPointer GetRenderer();
+        const CanvasRendererPointer GetRenderer() const;
 
-        void Unload();
-
-        void Update();
+        void Update(const Time& deltaTime);
 
         void Draw();
 
-        template<typename System>
-        void RegisterSystem(System& system);
+        void SetSize(const Vector2f32& size);
+        void SetScale(const Vector2f32& scale);
 
-        template<typename TemplateType, typename ... Behaviors, typename ... ConstructorArgs>
-        TemplatedWidgetPointer<TemplateType> Add(WidgetPointer parent, ConstructorArgs ... args);
-
-        bool Move(WidgetPointer widget, WidgetPointer parent);
-
-        WidgetPointer GetRoot();
+        const Vector2f32& GetSize() const;
+        const Vector2f32& GetScale() const;
 
     private:
 
@@ -79,16 +85,20 @@ namespace Molten::Gui
         Canvas& operator= (Canvas&&) = delete;
         Canvas& operator= (const Canvas&) = delete;
 
-        void TraversalWidgetSizeUpdate(WidgetPointer startWidget);
+        //void OnAddChild(LayerPointer layer);
+       // void OnAddChild(LayerPointer layer, LayerPosition position);
 
-        void DrawChild(Widget& widget);
+        using LayerPointerList = std::list<LayerPointer>;
+        using LayerPointerSet = std::set<LayerPointer>;
 
-        Renderer* m_renderer;
-        Logger* m_logger;
-        std::unique_ptr<Private::Context> m_context;
-        std::unique_ptr<KeyboardSystem> m_keyboardSystem;
-        std::unique_ptr<MouseSystem> m_mouseSystem;
-        WidgetPointer m_rootWidget;
+        LayerPointerSet m_allLayers;
+        LayerPointerList m_activeLayers;
+        LayerPointerSet m_inactiveLayers;       
+
+        CanvasRendererPointer m_renderer;
+        Vector2f32 m_size;
+        Vector2f32 m_scale;
+
     };
 
 }

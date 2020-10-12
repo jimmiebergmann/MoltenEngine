@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2020 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,25 +23,34 @@
 *
 */
 
-#ifndef MOLTEN_CORE_GUI_CONSTANTS_HPP
-#define MOLTEN_CORE_GUI_CONSTANTS_HPP
+#include "Molten/Gui/Widgets/ButtonWidget.hpp"
+#include "Molten/Gui/CanvasRenderer.hpp"
 
-#include "Molten/Math/Vector.hpp"
-#include <limits>
-
-namespace Molten::Gui::Constants
+namespace Molten::Gui
 {
 
-    constexpr size_t AnyCount = std::numeric_limits<size_t>::max();
+    void Button::Update(const Time& deltaTime)
+    {
+    }
 
-    constexpr Vector2f32 MaxSize = {
-        std::numeric_limits<Vector2f32::Type>::max(),
-        std::numeric_limits<Vector2f32::Type>::max()
-    };
+    void Button::Draw(CanvasRenderer& renderer)
+    {
+        renderer.DrawRect(GetRenderData().size, Vector4f32{ 1.0f, 0.0f, 0.0f, 1.0f });
+    }
 
-    constexpr Vector2f32 MinSize = { 0.0f, 0.0f };
+    Vector2f32 Button::CalculateSize(const Vector2f32& grantedSize)
+    {
+        return grantedSize;
+    }
+
+    void Button::CalculateChildrenGrantedSize(WidgetTreeData::Tree::ConstLane<WidgetTreeData::Tree::PartialLaneType> children)
+    {
+        SetRenderData(children.begin(), { 0.0f, 0.0f }, GetGrantedSize());
+    }
+
+    bool Button::OnAddChild(WidgetPointer widget)
+    {
+        return true;
+    }
 
 }
-
-
-#endif

@@ -23,37 +23,60 @@
 *
 */
 
+#include <type_traits>
+
 namespace Molten::Gui
 {
 
-    template<typename System>
-    inline void Canvas::RegisterSystem(System& system)
+    template<typename ... TArgs>
+    inline CanvasPointer Canvas::Create(TArgs ... args)
     {
-        m_context->RegisterSystem(system);
+        auto canvas = std::make_shared<Canvas>(args...);
+        return canvas;
     }
 
-    template<typename TemplateType, typename ... Behaviors, typename ... ConstructorArgs>
-    inline TemplatedWidgetPointer<TemplateType> Canvas::Add(WidgetPointer parent, ConstructorArgs ... args)
+    template<typename TLayerType>
+    inline LayerTypePointer<TLayerType> Canvas::CreateChild(CanvasPointer parent)
     {
-        if (!parent || !parent->AllowsMoreChildren())
+        static_assert(std::is_base_of<Gui::Layer, TLayerType>::value, "TLayerType is not base of Layer.");
+
+        if (!parent)
         {
             return nullptr;
         }
 
-        auto widgetEntity = m_context->CreateEntity<BaseWidget, Behaviors...>();
-        auto renderObject = std::make_unique<RenderObject>(m_renderer);
-        Template::LoadRenderObject<TemplateType>(*renderObject);
-        auto widgetPointer = new TemplatedWidget<TemplateType>(
-            widgetEntity,
-            Template::Descriptor<TemplateType>,
-            std::move(renderObject),
-            args...);
-        auto widget = TemplatedWidgetPointer<TemplateType>(widgetPointer);
-        widgetEntity.template GetComponent<BaseWidget>()->widget = widget;
+        auto layer = std::make_shared<TLayerType>(*parent);
 
-        parent->m_children.push_back(widget);
-        widget->m_parent = parent;
-        return widget;
+        parent->m_allLayers.insert(layer);
+        parent->m_inactiveLayers.insert(layer);
+
+        return layer;
+    }
+
+    template<typename TLayerType>
+    inline LayerTypePointer<TLayerType> Canvas::CreateChild(CanvasPointer parent, LayerPosition position)
+    {
+        static_assert(std::is_base_of<Gui::Layer, TLayerType>::value, "TLayerType is not base of Layer.");
+
+        if (!parent)
+        {
+            return nullptr;
+        }
+
+        auto layer = std::make_shared<TLayerType>(*parent);
+
+        parent->m_allLayers.insert(layer);
+
+        if (position == LayerPosition::Top)
+        {
+            parent->m_activeLayers.push_back(layer);
+        }
+        else
+        {
+            parent->m_activeLayers.push_front(layer);
+        }
+
+        return layer;
     }
 
 }

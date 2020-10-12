@@ -26,73 +26,68 @@
 #ifndef MOLTEN_CORE_GUI_WIDGET_HPP
 #define MOLTEN_CORE_GUI_WIDGET_HPP
 
-#include "Molten/Gui/WidgetDescriptor.hpp"
-#include "Molten/Gui/RenderObject.hpp"
-#include "Molten/Ecs/EcsEntity.hpp"
-#include "Molten/Gui/Context.hpp"
+#include "Molten/Gui/GuiTypes.hpp"
+#include "Molten/Gui/WidgetData.hpp"
+#include "Molten/Gui/Data/OutlineData.hpp"
+#include "Molten/Math/Vector.hpp"
+#include "Molten/System/Time.hpp"
 #include <memory>
 
 namespace Molten::Gui
 {
-    class Canvas;
-    class Widget;
 
-    using WidgetPointer = std::shared_ptr<Widget>;
-    using WidgetPointerWeak = std::weak_ptr<Widget>;
-    using WidgetEntity = Ecs::Entity<Ecs::Context<Private::Context>>;
-
-    struct MOLTEN_API WidgetCache
-    {
-        Vector2f32 assignedSize;
-    };
-
-    /*
-        * @breif
-        * @tparam T Widget data type.
-    */
-    class MOLTEN_API Widget : public WidgetDescriptor
+    class MOLTEN_API Widget
     {
 
     public:
 
-        ~Widget();
+        template<typename TWidgetType, typename ... TArgs>
+        static WidgetTypePointer<TWidgetType> CreateChild(WidgetPointer parent, TArgs ... args);
 
-        template<typename ... Components>
-        void AddComponents();
+        Widget();
 
-        template<typename ... Components>
-        void RemoveComponents();
+        virtual ~Widget() = default;
 
-        template<typename Component>
-        Component* GetComponent();
+        MarginData margin;
 
-        bool AllowsMoreChildren();
+        virtual void Update(const Time& deltaTime);
 
-        const WidgetCache& GetCache() const;
+        virtual void Draw(CanvasRenderer& renderer);
+
+        virtual Vector2f32 CalculateSize(const Vector2f32& grantedSize);
+
+        virtual void CalculateChildrenGrantedSize(WidgetTreeData::Tree::ConstLane<WidgetTreeData::Tree::PartialLaneType> children);
 
     protected:
 
-        Widget(
-            WidgetEntity entity,
-            const WidgetDescriptor& descriptor,
-            std::unique_ptr<RenderObject> renderObject);
+        const WidgetRenderData& GetRenderData() const;
+        const Vector2f32& GetGrantedSize() const;
+
+        void SetRenderData(
+            WidgetTreeData::Tree::ConstIterator< WidgetTreeData::Tree::PartialLaneType> it,
+            const Vector2f32& position,
+            const Vector2f32& grantedSize);
 
     private:
 
-        friend class Canvas;
+        virtual bool OnAddChild(WidgetPointer widget); // OLD
 
-        Widget(const Widget&) = delete;
+        //void SetTreeIterator(WidgetTreeIterator iterator);
+        WidgetTreeData& GetWidgetTreeData();
+        WidgetRenderData& GetWidgetRenderData();
+
         Widget(Widget&&) = delete;
-        Widget& operator = (const Widget&) = delete;
-        Widget& operator = (Widget&&) = delete;
+        Widget(const Widget&) = delete;
+        Widget& operator= (Widget) = delete;
+        Widget& operator= (const Widget&) = delete;
 
-        WidgetEntity m_entity;
-        std::unique_ptr<RenderObject> m_renderObject;
-        WidgetPointerWeak m_parent;
-        std::vector<WidgetPointer> m_children;
-        WidgetCache m_cache;
+        WidgetTreeData m_treeData;
+        WidgetRenderData m_renderData;
+
+        friend class Layer;
 
     };
+
 
 }
 

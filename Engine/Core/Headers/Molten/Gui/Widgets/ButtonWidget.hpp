@@ -23,30 +23,37 @@
 *
 */
 
-#ifndef MOLTEN_CORE_GUI_WIDGETTEMPLATE_HPP
-#define MOLTEN_CORE_GUI_WIDGETTEMPLATE_HPP
+#ifndef MOLTEN_CORE_GUI_WIDGETS_BUTTONWIDGET_HPP
+#define MOLTEN_CORE_GUI_WIDGETS_BUTTONWIDGET_HPP
 
+#include "Molten/Gui/Widget.hpp"
+#include "Molten/System/Signal.hpp"
 
-#include "Molten/Gui/TemplatedWidget.hpp"
-#include "Molten/Gui/Constants.hpp"
-#include "Molten/Gui/WidgetDescriptor.hpp"
-#include "Molten/Gui/RenderObject.hpp"
-#include <functional>
-
-namespace Molten::Gui::Template
+namespace Molten::Gui
 {
 
-    template<typename TemplateType>
-    inline const WidgetDescriptor Descriptor = {};
+    class MOLTEN_API Button : public Widget
+    {
 
-    template<typename TemplateType>
-    inline const auto CalculateWidgetSize = [](TemplatedWidget<TemplateType>&, const Vector2f32&) {};
+    public:
 
-    template<typename TemplateType>
-    using CalculateWidgetSizeFunction = decltype(CalculateWidgetSize<TemplateType>);
+        Button() = default;
 
-    template<typename TemplateType>
-    inline const auto LoadRenderObject = [](RenderObject&) {};
+        Signal<int> onPress;
+
+        virtual void Update(const Time& deltaTime) override;
+
+        virtual void Draw(CanvasRenderer& renderer) override;
+
+        virtual Vector2f32 CalculateSize(const Vector2f32& grantedSize) override;
+
+        virtual void CalculateChildrenGrantedSize(WidgetTreeData::Tree::ConstLane<WidgetTreeData::Tree::PartialLaneType> children) override;
+
+    private:
+
+        virtual bool OnAddChild(WidgetPointer) override;
+
+    };
 
 }
 

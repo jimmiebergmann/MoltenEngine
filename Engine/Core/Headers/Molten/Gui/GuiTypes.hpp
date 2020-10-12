@@ -23,39 +23,34 @@
 *
 */
 
-#ifndef MOLTEN_CORE_GUI_BEHAVIOR_BASEWIDGET_HPP
-#define MOLTEN_CORE_GUI_BEHAVIOR_BASEWIDGET_HPP
+#ifndef MOLTEN_CORE_GUI_GUITYPES_HPP
+#define MOLTEN_CORE_GUI_GUITYPES_HPP
 
-#include "Molten/Gui/WidgetBehavior.hpp"
+#include "Molten/Types.hpp"
+#include <memory>
 
 namespace Molten::Gui
 {
 
+    class Canvas;
+    using CanvasPointer = std::shared_ptr<Canvas>;
+
+    class CanvasRenderer;
+    using CanvasRendererPointer = std::shared_ptr<CanvasRenderer>;
+
+    class Layer;
+    using LayerPointer = std::shared_ptr<Layer>;
+    using LayerWeakPointer = std::weak_ptr<Layer>;
+    
+    template<typename TLayerType>
+    using LayerTypePointer = std::shared_ptr<TLayerType>;
+
     class Widget;
+    using WidgetPointer = std::shared_ptr<Widget>;
+    using WidgetWeakPointer = std::shared_ptr<Widget>;
 
-    struct MOLTEN_API BaseWidget : WidgetBehavior<BaseWidget>
-    {
-           
-        /*BaseWidget() = default;
-        BaseWidget(const size_t maxChildCount,
-                    const Vector2f32& maxSize = Constants::MaxSize,
-                    const Vector2f32& minSize = Constants::MinSize) :
-            maxChildCount(maxChildCount),
-            maxSize(maxSize),
-            minSize(minSize)
-        { }
-
-        size_t maxChildCount;
-        Vector2f32 maxSize;
-        Vector2f32 minSize;*/
-
-        std::weak_ptr<Widget> widget;
-            
-            
-        //Vector2f32 size;
-        //std::unique_ptr<RenderObject> renderObject;
-
-    };
+    template<typename TWidgetType>
+    using WidgetTypePointer = std::shared_ptr<TWidgetType>;
 
 }
 

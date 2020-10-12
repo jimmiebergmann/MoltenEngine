@@ -23,11 +23,13 @@
 *
 */
 
-#ifndef MOLTEN_CORE_GUI_GUIRENDERER_HPP
-#define MOLTEN_CORE_GUI_GUIRENDERER_HPP
+#ifndef MOLTEN_CORE_GUI_CANVASRENDERER_HPP
+#define MOLTEN_CORE_GUI_CANVASRENDERER_HPP
 
+#include "Molten/Gui/GuiTypes.hpp"
 #include "Molten/Math/Vector.hpp"
 #include "Molten/Math/Matrix.hpp"
+#include <stack>
 
 namespace Molten
 {
@@ -47,25 +49,36 @@ namespace Molten::Shader::Visual
 namespace Molten::Gui
 {
 
-    class MOLTEN_API Renderer
+    class MOLTEN_API CanvasRenderer
     {
 
     public:
 
-        Renderer(Logger* logger = nullptr);
-        ~Renderer();
+        static CanvasRendererPointer Create(Molten::Renderer& renderer, Logger * logger = nullptr, const Vector2f32& size = { 0.0f, 0.0f });
 
-        void Open(Molten::Renderer* backendRenderer);
+        CanvasRenderer(Molten::Renderer& renderer, Logger* logger = nullptr, const Vector2f32& size = {0.0f, 0.0f});
+        ~CanvasRenderer();
+
         void Close();
 
-        void DrawRect(const Vector2f32& position, const Vector2f32& size, const Vector4f32& color);
+        void Resize(const Vector2f32& size);
+
+        void BeginDraw();
+
+        void PushPosition(const Vector2f32& position);
+
+        void PopPosition();
+
+        void DrawRect(const Vector2f32& size, const Vector4f32& color);
+
+        void EndDraw();
 
     private:
 
-        Renderer(const Renderer&) = delete;
-        Renderer(Renderer&&) = delete;
-        Renderer& operator =(const Renderer&) = delete;
-        Renderer& operator =(Renderer&&) = delete;
+        CanvasRenderer(const CanvasRenderer&) = delete;
+        CanvasRenderer(CanvasRenderer&&) = delete;
+        CanvasRenderer& operator =(const CanvasRenderer&) = delete;
+        CanvasRenderer& operator =(CanvasRenderer&&) = delete;
 
         struct RenderInstance
         {
@@ -85,10 +98,14 @@ namespace Molten::Gui
         void LoadRectRenderInstance();
         void DestroyRenderInstance(RenderInstance& instance);
 
-        Molten::Renderer* m_backendRenderer;
+        using PositionStack = std::stack<Vector2f32>;
+
         Logger* m_logger;
+        Molten::Renderer& m_backendRenderer;
         Matrix4x4f32 m_projection;
         RenderInstance m_rectInstance;
+
+        PositionStack m_positionStack;
 
     };
 

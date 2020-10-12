@@ -89,7 +89,10 @@ namespace Molten::Editor
 
         Scene::Camera m_camera;
 
-        Gui::Canvas m_guiCanvas;
+        //Gui::Canvas m_guiCanvas;
+
+        Gui::CanvasRendererPointer m_canvasRenderer;
+        Gui::CanvasPointer m_canvas;
 
 
     };

@@ -23,42 +23,37 @@
 *
 */
 
-#ifndef MOLTEN_CORE_GUI_TEMPLATES_BUTTON_HPP
-#define MOLTEN_CORE_GUI_TEMPLATES_BUTTON_HPP
+#ifndef MOLTEN_CORE_GUI_WIDGETS_PADDINGWIDGET_HPP
+#define MOLTEN_CORE_GUI_WIDGETS_PADDINGWIDGET_HPP
 
-#include "Molten/Gui/WidgetTemplate.hpp"
+#include "Molten/Gui/Widget.hpp"
 
 namespace Molten::Gui
 {
 
-    struct Button {};
-
-}
-
-namespace Molten::Gui::Template
-{
-
-    template<>
-    inline const WidgetDescriptor Descriptor<Button> = 
+    class MOLTEN_API Padding : public Widget, public PaddingData
     {
-        1, // maxChildCount
-        Vector2f32(), // maxSize
-        Vector2f32(), // minSize
-        WidgetFlags::FitChildren | WidgetFlags::FitParent // flags
-    };
 
-    template<>
-    inline const auto CalculateWidgetSize<Button> = 
-        [](TemplatedWidget<Button>& /*button*/, const Vector2f32& /*grantedSize*/) 
-    {
-        //button.GetCache();
-    };
+    public:
 
-    template<>
-    inline const auto LoadRenderObject<Button> = 
-        [](RenderObject& renderObject)
-    {
-        renderObject.AddRect({ 100.0f, 100.0f }, { 100.0f, 100.0f });
+        Padding(
+            const float left = 0.0f,
+            const float top = 0.0f,
+            const float right = 0.0f,
+            const float bottom = 0.0f);
+
+        virtual void Update(const Time& deltaTime) override;
+
+        virtual void Draw(CanvasRenderer& renderer) override;
+
+        virtual Vector2f32 CalculateSize(const Vector2f32& grantedSize) override;
+
+        virtual void CalculateChildrenGrantedSize(WidgetTreeData::Tree::ConstLane<WidgetTreeData::Tree::PartialLaneType> children) override;
+
+    private:
+
+        virtual bool OnAddChild(WidgetPointer) override;
+
     };
 
 }

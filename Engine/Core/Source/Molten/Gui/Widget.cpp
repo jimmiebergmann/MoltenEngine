@@ -24,33 +24,72 @@
 */
 
 #include "Molten/Gui/Widget.hpp"
+#include "Molten/Gui/Layer.hpp"
+#include <algorithm>
 
 namespace Molten::Gui
 {
 
-    Widget::~Widget()
+    Widget::Widget()
+    {}
+
+    void Widget::Update(const Time&)
+    {}
+
+    void Widget::Draw(CanvasRenderer& )
+    {}
+
+    Vector2f32 Widget::CalculateSize(const Vector2f32& grantedSize)
     {
-        m_entity.Destroy();
+        return grantedSize;
     }
 
-    bool Widget::AllowsMoreChildren()
+    void Widget::CalculateChildrenGrantedSize(WidgetTreeData::Tree::ConstLane<WidgetTreeData::Tree::PartialLaneType> /*children*/)
     {
-        return m_children.size() < maxChildrenCount;
     }
 
-    const WidgetCache& Widget::GetCache() const
+    const WidgetRenderData& Widget::GetRenderData() const
     {
-        return m_cache;
+        return m_renderData;
     }
 
-    Widget::Widget(
-        WidgetEntity entity, 
-        const WidgetDescriptor& descriptor, 
-        std::unique_ptr<RenderObject> renderObject) 
-        :
-        WidgetDescriptor(descriptor),
-        m_entity(entity), 
-        m_renderObject(std::move(renderObject))
-    { }
+    const Vector2f32& Widget::GetGrantedSize() const
+    {
+        return m_renderData.grantedSize;
+    }
+
+    void Widget::SetRenderData(
+        WidgetTreeData::Tree::ConstIterator< WidgetTreeData::Tree::PartialLaneType> it,
+        const Vector2f32& position,
+        const Vector2f32& grantedSize)
+    {
+        const auto& parentGrantedSize = GetGrantedSize();
+        auto& childRenderData = (*it).GetValue()->GetWidgetRenderData();
+
+        childRenderData.position = {
+            std::clamp(position.x, 0.0f, parentGrantedSize.x),
+            std::clamp(position.y, 0.0f, parentGrantedSize.y)
+        };
+
+        childRenderData.grantedSize = {
+            std::clamp(grantedSize.x, 0.0f, parentGrantedSize.x - childRenderData.position.x),
+            std::clamp(grantedSize.y, 0.0f, parentGrantedSize.y - childRenderData.position.y)
+        };
+    }
+
+    bool Widget::OnAddChild(WidgetPointer)
+    {
+        return false;
+    }
+
+    WidgetTreeData& Widget::GetWidgetTreeData()
+    {
+        return m_treeData;
+    }
+
+    WidgetRenderData& Widget::GetWidgetRenderData()
+    {
+        return m_renderData;
+    }
 
 }
