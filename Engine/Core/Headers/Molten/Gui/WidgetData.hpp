@@ -35,12 +35,17 @@ namespace Molten::Gui
     struct WidgetTreeData
     {
 
-        using Tree = typename BypassTree<WidgetPointer>;
+        using Tree = typename Molten::BypassTree<WidgetPointer>; 
+        using NormalIterator = typename Tree::template Iterator<typename Tree::NormalLaneType>;
+        using NormalConstIterator = typename Tree::template ConstIterator<typename Tree::NormalLaneType>;
+        using PartialIterator = typename Tree::template Iterator<typename Tree::PartialLaneType>;
+        using PartialConstIterator = typename Tree::template ConstIterator<typename Tree::PartialLaneType>;
+        using Item = typename Tree::Item;
         
         LayerWeakPointer layer;
         WidgetPointer widget;
-        Tree::Iterator<Tree::NormalLaneType> iterator;
-        Tree::Item* item;
+        NormalIterator iterator;
+        Item* item;
     };
 
     struct WidgetRenderData

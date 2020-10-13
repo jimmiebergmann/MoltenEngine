@@ -27,7 +27,7 @@ namespace Molten::Gui
 {
 
     template<typename TLayerType, typename ... TArgs>
-    inline static LayerTypePointer<TLayerType> Layer::Create(Canvas& canvas, TArgs ... args)
+    inline LayerTypePointer<TLayerType> Layer::Create(Canvas& canvas, TArgs ... args)
     {
         static_assert(std::is_base_of<Gui::Layer, TLayerType>::value, "TLayerType is not base of Layer.");
 
@@ -37,7 +37,7 @@ namespace Molten::Gui
 
 
     template<typename TWidgetType, typename ... TArgs>
-    inline static WidgetTypePointer<TWidgetType> Layer::CreateChild(LayerPointer parent, TArgs ... args)
+    inline WidgetTypePointer<TWidgetType> Layer::CreateChild(LayerPointer parent, TArgs ... args)
     {
         static_assert(std::is_base_of<Gui::Widget, TWidgetType>::value, "TWidgetType is not base of Widget.");
 

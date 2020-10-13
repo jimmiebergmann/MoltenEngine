@@ -56,7 +56,7 @@ namespace Molten::Gui
             widgetRenderData.size = size;
 
             auto& widgetTreeData = Layer::GetWidgetTreeData(*widget);
-            auto childLane = widgetTreeData.item->GetLane<WidgetTreeData::Tree::PartialLaneType>();
+            auto childLane = widgetTreeData.item->template GetLane<WidgetTreeData::Tree::PartialLaneType>();
             if (childLane.begin() != childLane.end())
             {
                 widget->CalculateChildrenGrantedSize(childLane);
