@@ -60,6 +60,8 @@ namespace Molten::Gui
 
     protected:
 
+        virtual bool OnAddChild(WidgetPointer widget);
+
         const WidgetRenderData& GetRenderData() const;
         const Vector2f32& GetGrantedSize() const;
 
@@ -70,7 +72,7 @@ namespace Molten::Gui
 
     private:
 
-        virtual bool OnAddChild(WidgetPointer widget); // OLD
+        static bool AddChild(WidgetPointer parent, WidgetPointer child);
 
         //void SetTreeIterator(WidgetTreeIterator iterator);
         WidgetTreeData& GetWidgetTreeData();

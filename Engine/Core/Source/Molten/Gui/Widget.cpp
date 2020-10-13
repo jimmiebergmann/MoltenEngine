@@ -48,6 +48,11 @@ namespace Molten::Gui
     {
     }
 
+    bool Widget::OnAddChild(WidgetPointer)
+    {
+        return false;
+    }
+
     const WidgetRenderData& Widget::GetRenderData() const
     {
         return m_renderData;
@@ -77,9 +82,9 @@ namespace Molten::Gui
         };
     }
 
-    bool Widget::OnAddChild(WidgetPointer)
+    bool Widget::AddChild(WidgetPointer parent, WidgetPointer child)
     {
-        return false;
+        return Layer::AddChild(parent, child);
     }
 
     WidgetTreeData& Widget::GetWidgetTreeData()

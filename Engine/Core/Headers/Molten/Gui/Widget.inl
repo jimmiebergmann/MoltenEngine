@@ -33,7 +33,7 @@ namespace Molten::Gui
 
         auto widget = std::make_shared<TWidgetType>(args...);
 
-        Layer::AddChild(parent, widget);
+        Widget::AddChild(parent, widget);
 
         return widget;
     }
