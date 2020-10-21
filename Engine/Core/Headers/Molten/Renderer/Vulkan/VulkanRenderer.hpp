@@ -30,7 +30,8 @@
 #include "Molten/Renderer/Shader/Visual/VisualShaderStructure.hpp"
 
 #if defined(MOLTEN_ENABLE_VULKAN)
-#include "Molten/Renderer/Vulkan/Vulkan.hpp"
+#include "Molten/Renderer/Vulkan/VulkanTypes.hpp"
+#include "Molten/Renderer/Vulkan/VulkanDebugMessenger.hpp"
 #include "Molten/Renderer/Vulkan/VulkanPipeline.hpp"
 
 MOLTEN_UNSCOPED_ENUM_BEGIN
@@ -50,28 +51,25 @@ namespace Molten
 
         VulkanRenderer();
 
-        /**
-         * Constructs and creates renderer.
+        /** Constructs and creates renderer.
          *
          * @param window[in] Render target window.
          */
-        VulkanRenderer(const Window& window, const Version& version, Logger* logger = nullptr);
+        VulkanRenderer(RenderTarget& renderTarget, const Version& version, Logger* logger = nullptr);
 
         ~VulkanRenderer();
 
-        /**
-         * Opens renderer by loading and attaching renderer to provided window.
+        /** Opens renderer by loading and attaching renderer to provided window.
          *
          * @param window Render target window.
          */
-        virtual bool Open(const Window& window, const Version& version = Version::None, Logger* logger = nullptr) override;
+        virtual bool Open(RenderTarget& renderTarget, const Version& version = Version::None, Logger* logger = nullptr) override;
 
-        /**  Closing renderer. */
+        /** Closing renderer. */
         virtual void Close() override;
 
-        /**
-         * Resize the framebuffers.
-         * Execute this function as soon as the render target's work area is resized.
+        /** Resize the framebuffers.
+         *  Execute this function as soon as the render target's work area is resized.
          */
         virtual void Resize(const Vector2ui32& size) override;
 
@@ -95,7 +93,7 @@ namespace Molten
         virtual Pipeline* CreatePipeline(const PipelineDescriptor& descriptor) override;
 
         /** Create texture object. */
-        virtual Texture* CreateTexture() override;
+        virtual Texture* CreateTexture(const TextureDescriptor& descriptor) override;
 
         /** Create uniform buffer object. */
         virtual UniformBlock* CreateUniformBlock(const UniformBlockDescriptor& descriptor) override;
@@ -145,9 +143,8 @@ namespace Molten
         /** Draw indexed vertex buffer, using the current bound pipeline. */
         virtual void DrawVertexBuffer(IndexBuffer* indexBuffer, VertexBuffer* vertexBuffer) override;
 
-        /**
-         * Push constant values to shader stage.
-         * This function call has no effect if provided id argument is greater than the number of push constants in pipeline.
+        /** Push constant values to shader stage.
+         *  This function call has no effect if provided id argument is greater than the number of push constants in pipeline.
          *
          * @param id Id of push constant to update. This id can be shared between multiple shader stages.
          */
@@ -174,24 +171,14 @@ namespace Molten
 
     private:
 
-        struct DebugMessenger
-        {
-            DebugMessenger();
-            void Clear();
-
-            VkDebugUtilsMessengerEXT messenger;
-            PFN_vkCreateDebugUtilsMessengerEXT CreateDebugUtilsMessengerEXT;
-            PFN_vkDestroyDebugUtilsMessengerEXT DestroyDebugUtilsMessengerEXT;
-        };
-
-        struct SwapChainSupport
+        struct SwapChainSupport // Should be old
         {
             VkSurfaceCapabilitiesKHR capabilities;
             std::vector<VkSurfaceFormatKHR> formats;
             std::vector<VkPresentModeKHR> presentModes;
         };
 
-        struct PhysicalDevice
+        struct PhysicalDevice // Should be old
         {
             PhysicalDevice();
             explicit PhysicalDevice(VkPhysicalDevice device);
@@ -204,16 +191,15 @@ namespace Molten
             SwapChainSupport swapChainSupport;
         };
 
-        PFN_vkVoidFunction GetVulkanFunction(const char* functionName) const;
-        bool LoadInstance(const Version& version);
-        bool GetRequiredExtensions(std::vector<std::string>& extensions, const bool requestDebugger) const;
-        bool LoadDebugger(VkInstanceCreateInfo& instanceInfo, VkDebugUtilsMessengerCreateInfoEXT& debugMessageInfo);
+        bool LoadInstanceExtensions();
+        bool LoadInstance(const Version& version);      
         bool LoadSurface();
-        bool LoadPhysicalDevice();
-        bool ScorePhysicalDevice(PhysicalDevice& physicalDevice, uint32_t & score);
-        bool CheckDeviceExtensionSupport(PhysicalDevice & physicalDevice);
-        bool FetchSwapChainSupport(PhysicalDevice& physicalDevice);
-        bool LoadLogicalDevice();
+
+        bool LoadPhysicalDevice(); // Should be old
+        bool ScorePhysicalDevice(PhysicalDevice& physicalDevice, uint32_t & score); // Should be old
+        bool CheckDeviceExtensionSupport(PhysicalDevice & physicalDevice); // Vulkan::FetchDeviceExtensionProperties and Vulkan::CheckRequiredExtensions
+        bool FetchSwapChainSupport(PhysicalDevice& physicalDevice); // Vulkan::FetchSurfaceCapabilities
+        bool LoadLogicalDevice(); // Vulkan::CreateLogicalDevice
         bool LoadSwapChain();
         bool LoadImageViews();
         bool LoadRenderPass();
@@ -223,14 +209,15 @@ namespace Molten
         bool LoadSyncObjects();
         bool RecreateSwapChain();
         void UnloadSwapchain();
-        bool FindPhysicalDeviceMemoryType(uint32_t& index, const uint32_t filter, const VkMemoryPropertyFlags properties);
-        bool CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& memory);
-        void CopyBuffer(VkBuffer source, VkBuffer destination, VkDeviceSize size);
+        bool FindPhysicalDeviceMemoryType(uint32_t& index, const uint32_t filter, const VkMemoryPropertyFlags properties); // Vulkan::FilterMemoryTypesByPropertyFlags and Vulkan::FilterMemoryTypesByPropertyFlags 
+        bool CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& memory); // Vulkan::CreateBuffer
+        void CopyBuffer(VkBuffer source, VkBuffer destination, VkDeviceSize size); // Should be old
+        bool CreateImage(const Vector2ui32& dimensions, VkFormat format, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& memory); // Should be old
         bool CreateVertexInputAttributes(const Shader::Visual::InputStructure& inputs, std::vector<VkVertexInputAttributeDescription>& attributes, uint32_t& stride);
-        bool CreateDescriptorSetLayouts(const std::vector<Shader::Visual::Script*>& visualScripts, std::vector<VkDescriptorSetLayout>& setLayouts);      
+        bool CreateDescriptorSetLayouts(const std::vector<Shader::Visual::Script*>& visualScripts, Vulkan::DescriptorSetLayouts& setLayouts);
         bool LoadShaderStages(
             const std::vector<Shader::Visual::Script*>& visualScripts,
-            std::vector<VkShaderModule> & shaderModules,
+            Vulkan::ShaderModules& shaderModules,
             std::vector<VkPipelineShaderStageCreateInfo>& shaderStageCreateInfos,
             PushConstantLocations& pushConstantLocations,
             PushConstantOffsets& pushConstantOffsets,
@@ -240,31 +227,36 @@ namespace Molten
         template<typename T>
         void InternalPushConstant(const uint32_t location, const T& value);
 
+        ///< NEW vvvv
+        Vulkan::ExtensionProperties m_instanceExtensions;
+        std::vector<std::string> m_requiredInstanceExtensions;
+        ///< NEW ^^^^
+
+
         Logger* m_logger;
         Version m_version;
-        const Window* m_renderTarget;
+        RenderTarget* m_renderTarget;
         VkInstance m_instance;
-        std::vector<const char*> m_validationLayers;
         std::vector<const char*> m_deviceExtensions;
-        DebugMessenger m_debugMessenger;
-        VkSurfaceKHR m_surface;
+        Vulkan::DebugMessenger m_debugMessenger;
+        VkSurfaceKHR m_surface; // should be old
         PhysicalDevice m_physicalDevice;
         VkDevice m_logicalDevice;
         VkQueue m_graphicsQueue;
         VkQueue m_presentQueue;       
-        VkSwapchainKHR m_swapChain;
+        VkSwapchainKHR m_swapChain; // Should be old.
         VkFormat m_swapChainImageFormat;
         VkExtent2D m_swapChainExtent;
-        std::vector<VkImage> m_swapChainImages;
-        std::vector<VkImageView> m_swapChainImageViews;
+        Vulkan::Images m_swapChainImages;
+        Vulkan::ImageViews m_swapChainImageViews;
         VkRenderPass m_renderPass;
         std::vector<VulkanFramebuffer*> m_presentFramebuffers;
         VkCommandPool m_commandPool;
         std::vector<VkCommandBuffer> m_commandBuffers;
-        std::vector<VkSemaphore> m_imageAvailableSemaphores;
-        std::vector<VkSemaphore> m_renderFinishedSemaphores;
-        std::vector<VkFence> m_inFlightFences;
-        std::vector<VkFence> m_imagesInFlight;
+        Vulkan::Semaphores m_imageAvailableSemaphores;
+        Vulkan::Semaphores m_renderFinishedSemaphores;
+        Vulkan::Fences m_inFlightFences;
+        Vulkan::Fences m_imagesInFlight;
         size_t m_maxFramesInFlight;
         size_t m_currentFrame;
 

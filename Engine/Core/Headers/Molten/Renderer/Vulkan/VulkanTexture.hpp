@@ -29,7 +29,7 @@
 #include "Molten/Renderer/Texture.hpp"
 
 #if defined(MOLTEN_ENABLE_VULKAN)
-#include "Molten/Renderer/Vulkan/Vulkan.hpp"
+#include "Molten/Renderer/Vulkan/VulkanHeaders.hpp"
 
 namespace Molten
 {
@@ -41,8 +41,12 @@ namespace Molten
 
     private:
 
-        VulkanTexture() = default;
-        ~VulkanTexture() = default;
+        VulkanTexture(
+            VkImage image,
+            VkDeviceMemory imageMemory);
+
+        VkImage image;
+        VkDeviceMemory imageMemory;
 
         friend class VulkanRenderer;
 

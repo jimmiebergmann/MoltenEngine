@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2020 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,55 +23,10 @@
 *
 */
 
-#ifndef MOLTEN_CORE_PLATFORM_WIN32HEADERS_HPP
-#define MOLTEN_CORE_PLATFORM_WIN32HEADERS_HPP
+#ifndef MOLTEN_CORE_PLATFORM_HPP
+#define MOLTEN_CORE_PLATFORM_HPP
 
-#include "Molten/Core.hpp"
-
-#if MOLTEN_PLATFORM == MOLTEN_PLATFORM_WINDOWS
-
-#include <Windows.h>
-#include <Windowsx.h>
-
-#define MOLTEN_PLATFORM_WINDOWS_SUPPORT_MULTI_MONITOR_DPI NTDDI_VERSION >= 0x06030000
-#if(MOLTEN_PLATFORM_WINDOWS_SUPPORT_MULTI_MONITOR_DPI)
-#include <shellscalingapi.h>
-#endif
-
-// Getting rid of conflicting Windows macros.
-#ifdef GetMessage
-    #undef GetMessage
-#endif
-#ifdef max
-    #undef max
-#endif
-#ifdef min
-    #undef min
-#endif
-#ifdef DeleteFile
-    #undef DeleteFile
-#endif
-#ifdef far
-    #undef far
-#endif
-#ifdef near
-    #undef near
-#endif
-
-#ifdef CreateSemaphore
-    #undef CreateSemaphore
-#endif
-
-
-// Getting rid of conflicting Windows X macros.
-#ifdef IsMinimized
-    #undef IsMinimized
-#endif
-#ifdef IsMaximized
-    #undef IsMaximized
-#endif
-
-
-#endif
+#include "Molten/Platform/Win32Headers.hpp"
+#include "Molten/Platform/X11Headers.hpp"
 
 #endif

@@ -26,6 +26,15 @@
 namespace Molten
 {
 
+    inline void Logger::Write(Logger* logger, const Severity severity,  const std::string& message)
+    {
+        if (logger == nullptr)
+        {
+            return;
+        }
+        logger->Write(severity, message);
+    }
+
     inline void Logger::WriteInfo(Logger * logger, const std::string& message)
     {
         if(logger == nullptr)

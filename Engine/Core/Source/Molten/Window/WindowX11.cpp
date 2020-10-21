@@ -260,12 +260,20 @@ namespace Molten
         return m_userInput;
     }
 
-    ::Display * WindowX11::GetX11DisplayDevice() const
+    ::Display* WindowX11::GetX11DisplayDevice() = 0
+    {
+        return m_display;
+    }
+    const ::Display* WindowX11::GetX11DisplayDevice() const
     {
         return m_display;
     }
 
-    ::Window WindowX11::GetX11WindowDevice() const
+    ::Window WindowX11::GetX11WindowDevice()
+    {
+        return m_window;
+    }
+    const ::Window WindowX11::GetX11WindowDevice() const
     {
         return m_window;
     }
@@ -274,7 +282,6 @@ namespace Molten
     {
         return m_screen;
     }
-
 
 }
 

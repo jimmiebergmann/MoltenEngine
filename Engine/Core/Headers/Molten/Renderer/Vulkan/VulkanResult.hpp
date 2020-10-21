@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2020 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,54 +23,34 @@
 *
 */
 
-#ifndef MOLTEN_CORE_PLATFORM_WIN32HEADERS_HPP
-#define MOLTEN_CORE_PLATFORM_WIN32HEADERS_HPP
+#ifndef MOLTEN_CORE_RENDERER_VULKAN_VULKANRESULT_HPP
+#define MOLTEN_CORE_RENDERER_VULKAN_VULKANRESULT_HPP
 
-#include "Molten/Core.hpp"
+#include "Molten/Types.hpp"
 
-#if MOLTEN_PLATFORM == MOLTEN_PLATFORM_WINDOWS
+#if defined(MOLTEN_ENABLE_VULKAN)
+#include "Molten/Renderer/Vulkan/VulkanTypes.hpp"
+#include <string>
 
-#include <Windows.h>
-#include <Windowsx.h>
+MOLTEN_UNSCOPED_ENUM_BEGIN
 
-#define MOLTEN_PLATFORM_WINDOWS_SUPPORT_MULTI_MONITOR_DPI NTDDI_VERSION >= 0x06030000
-#if(MOLTEN_PLATFORM_WINDOWS_SUPPORT_MULTI_MONITOR_DPI)
-#include <shellscalingapi.h>
-#endif
+namespace Molten
+{
 
-// Getting rid of conflicting Windows macros.
-#ifdef GetMessage
-    #undef GetMessage
-#endif
-#ifdef max
-    #undef max
-#endif
-#ifdef min
-    #undef min
-#endif
-#ifdef DeleteFile
-    #undef DeleteFile
-#endif
-#ifdef far
-    #undef far
-#endif
-#ifdef near
-    #undef near
-#endif
+    struct MOLTEN_API VulkanResult
+    {
 
-#ifdef CreateSemaphore
-    #undef CreateSemaphore
-#endif
+        VulkanResult();
+        VulkanResult(VkResult result);
 
+        const std::string& name;
+        const std::string& description;
 
-// Getting rid of conflicting Windows X macros.
-#ifdef IsMinimized
-    #undef IsMinimized
-#endif
-#ifdef IsMaximized
-    #undef IsMaximized
-#endif
+    };
 
+}
+
+MOLTEN_UNSCOPED_ENUM_END
 
 #endif
 

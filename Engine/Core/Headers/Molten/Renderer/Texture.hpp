@@ -27,10 +27,12 @@
 #define MOLTEN_CORE_RENDERER_TEXTURE_HPP
 
 #include "Molten/Types.hpp"
+#include "Molten/Math/Vector.hpp"
 
 namespace Molten
 {
 
+    /** Texture resource object. */
     class MOLTEN_API Texture
     {
 
@@ -47,8 +49,21 @@ namespace Molten
         Texture& operator =(Texture&&) = delete;
         
 
-        //uint64_t id;
+    };
 
+    /** Descriptor class of texture class. */
+    class MOLTEN_API TextureDescriptor
+    {
+
+    public:
+
+        TextureDescriptor();
+        TextureDescriptor(
+            const Vector2ui32& dimensions,
+            const void* data);
+
+        Vector2ui32 dimensions;
+        const void* data;
 
     };
 

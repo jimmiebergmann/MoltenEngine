@@ -94,6 +94,7 @@ namespace Molten
          * The funktion returns immediately if logger == nullptr.
          */
         /**@{*/
+        static void Write(Logger* logger, const Severity severity, const std::string& message);
         static void WriteInfo(Logger * logger, const std::string& message);
         static void WriteDebug(Logger * logger, const std::string& message);
         static void WriteWarning(Logger * logger, const std::string& message);

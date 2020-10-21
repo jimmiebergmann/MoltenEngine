@@ -48,7 +48,7 @@ namespace Molten::Gui
         auto layer = std::make_shared<TLayerType>(*parent);
 
         parent->m_allLayers.insert(layer);
-        parent->m_inactiveLayers.insert(layer);
+        parent->m_activeLayers.push_back(layer);
 
         return layer;
     }

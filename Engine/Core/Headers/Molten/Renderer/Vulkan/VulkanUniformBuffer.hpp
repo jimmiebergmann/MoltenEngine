@@ -29,7 +29,7 @@
 #include "Molten/Renderer/UniformBuffer.hpp"
 
 #if defined(MOLTEN_ENABLE_VULKAN)
-#include "Molten/Renderer/Vulkan/Vulkan.hpp"
+#include "Molten/Renderer/Vulkan/VulkanHeaders.hpp"
 #include <vector>
 
 namespace Molten

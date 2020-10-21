@@ -40,10 +40,10 @@ namespace Molten
     {
     }
 
-    OpenGLX11Renderer::OpenGLX11Renderer(const Window& window, const Version& version, Logger* logger) :
+    OpenGLX11Renderer::OpenGLX11Renderer(RenderTarget& renderTarget, const Version& version, Logger* logger) :
         OpenGLX11Renderer()
     {
-        Open(window, version, logger);
+        Open(renderTarget, version, logger);
     }
 
     OpenGLX11Renderer::~OpenGLX11Renderer()
@@ -51,7 +51,7 @@ namespace Molten
         Close();
     }
 
-    bool OpenGLX11Renderer::Open(const Window& /*window*/, const Version& /*version*/, Logger* /*logger*/)
+    bool OpenGLX11Renderer::Open(RenderTarget& /*renderTarget*/, const Version& /*version*/, Logger* /*logger*/)
     {
         /*HGLRC temporaryContext = NULL;
 
@@ -200,7 +200,7 @@ namespace Molten
         return nullptr;
     }
 
-    Texture* OpenGLX11Renderer::CreateTexture()
+    Texture* OpenGLX11Renderer::CreateTexture(const TextureDescriptor&)
     {
         return nullptr;
     }

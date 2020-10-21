@@ -29,7 +29,7 @@
 #include "Molten/Renderer/Framebuffer.hpp"
 
 #if defined(MOLTEN_ENABLE_VULKAN)
-#include "Molten/Renderer/Vulkan/Vulkan.hpp"
+#include "Molten/Renderer/Vulkan/VulkanHeaders.hpp"
 
 namespace Molten
 {
@@ -41,9 +41,8 @@ namespace Molten
 
     private:
 
-        VulkanFramebuffer() = default;
-        ~VulkanFramebuffer() = default;
-
+        VulkanFramebuffer(VkFramebuffer framebuffer);
+ 
         VkFramebuffer framebuffer;
 
         friend class VulkanRenderer;

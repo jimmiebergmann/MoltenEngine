@@ -29,7 +29,7 @@
 #include "Molten/Renderer/UniformBlock.hpp"
 
 #if defined(MOLTEN_ENABLE_VULKAN)
-#include "Molten/Renderer/Vulkan/Vulkan.hpp"
+#include "Molten/Renderer/Vulkan/VulkanTypes.hpp"
 #include <vector>
 
 namespace Molten
@@ -42,12 +42,15 @@ namespace Molten
 
     private:
 
-        VulkanUniformBlock() = default;
-        ~VulkanUniformBlock() = default;
+        VulkanUniformBlock(
+            VkPipelineLayout pipelineLayout,
+            VkDescriptorPool descriptorPool,
+            Vulkan::DescriptorSets&& descriptorSets,
+            const uint32_t set);
 
         VkPipelineLayout pipelineLayout;
         VkDescriptorPool descriptorPool;
-        std::vector<VkDescriptorSet> descriptorSets;
+        Vulkan::DescriptorSets descriptorSets;
         uint32_t set;
 
         friend class VulkanRenderer;

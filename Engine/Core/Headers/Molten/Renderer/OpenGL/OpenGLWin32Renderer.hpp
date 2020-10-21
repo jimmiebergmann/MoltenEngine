@@ -47,28 +47,25 @@ namespace Molten
 
         OpenGLWin32Renderer();
 
-        /**
-         * Constructs and creates renderer.
+        /** Constructs and creates renderer.
          *
          * @param window[in] Render target window.
          */
-        OpenGLWin32Renderer(const Window& window, const Version& version, Logger* logger = nullptr);
+        OpenGLWin32Renderer(RenderTarget& renderTarget, const Version& version, Logger* logger = nullptr);
 
         ~OpenGLWin32Renderer();
 
-        /**
-         * Opens renderer by loading and attaching renderer to provided window.
+        /** Opens renderer by loading and attaching renderer to provided window.
          *
          * @param window Render target window.
          */
-        virtual bool Open(const Window& window, const Version& version = Version::None, Logger* logger = nullptr) override;
+        virtual bool Open(RenderTarget& renderTarget, const Version& version = Version::None, Logger* logger = nullptr) override;
 
         /**  Closing renderer. */
         virtual void Close() override;
 
-        /**
-         * Resize the framebuffers.
-         * Execute this function as soon as the render target's work area is resized.
+        /** Resize the framebuffers.
+         *  Execute this function as soon as the render target's work area is resized.
          */
         virtual void Resize(const Vector2ui32& size) override;
 
@@ -92,7 +89,7 @@ namespace Molten
         virtual Pipeline* CreatePipeline(const PipelineDescriptor& descriptor) override;
 
         /** Create texture object. */
-        virtual Texture* CreateTexture() override;
+        virtual Texture* CreateTexture(const TextureDescriptor& descriptor) override;
 
         /** Create uniform buffer object. */
         virtual UniformBlock* CreateUniformBlock(const UniformBlockDescriptor& descriptor) override;
@@ -142,13 +139,12 @@ namespace Molten
         /** Draw indexed vertex buffer, using the current bound pipeline. */
         virtual void DrawVertexBuffer(IndexBuffer* indexBuffer, VertexBuffer* vertexBuffer) override;
 
-        /**
-         * Push constant values to shader stage.
-         * This function call has no effect if provided id argument is greater than the number of push constants in pipeline.
+        /** Push constant values to shader stage.
+         *  This function call has no effect if provided id argument is greater than the number of push constants in pipeline.
          *
          * @param id Id of push constant to update. This id can be shared between multiple shader stages.
          */
-         /**@{*/
+        /**@{*/
         virtual void PushConstant(const uint32_t location, const bool& value) override;
         virtual void PushConstant(const uint32_t location, const int32_t& value) override;
         virtual void PushConstant(const uint32_t location, const float& value) override;
@@ -170,22 +166,20 @@ namespace Molten
 
     private:
 
-        /**
-        * @brief Open opengl context by provided version.
-        *
-        * @param version[in] Opened version.
-        *
-        * @throw Exception If failed to open provided version.
-        */
+        /** Open opengl context by provided version.
+         *
+         * @param version[in] Opened version.
+         *
+         * @throw Exception If failed to open provided version.
+         */
         bool OpenVersion(HDC deviceContext, const Version& version);
 
-        /**
-        * @brief Open the best available opengl context.
-        *
-        * @param version[out] Opened version.
-        *
-        * @throw Exception If failed to open any opengl context.
-        */
+        /** Open the best available opengl context.
+         *
+         * @param version[out] Opened version.
+         *
+         * @throw Exception If failed to open any opengl context.
+         */
         void OpenBestVersion(HDC deviceContext, Version& version);
 
         Version m_version;

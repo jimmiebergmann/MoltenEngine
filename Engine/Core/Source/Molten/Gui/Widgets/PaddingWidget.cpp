@@ -37,7 +37,7 @@ namespace Molten::Gui
         PaddingData(left, top, right, bottom)
     {}
 
-    void Padding::Update(const Time& deltaTime)
+    void Padding::Update(const Time& /*deltaTime*/)
     {
     }
 
@@ -57,7 +57,7 @@ namespace Molten::Gui
         SetRenderData(children.begin(), low, childSize);
     }
 
-    bool Padding::OnAddChild(WidgetPointer widget)
+    bool Padding::OnAddChild(WidgetPointer /*widget*/)
     {
         return true;
     }

@@ -152,6 +152,16 @@ namespace Molten::Gui
             throw Exception("Failed to create index buffer.");
         }
 
+        static const uint8_t textureData[4][4] = {
+            { 255, 0, 0, 255 }, { 0, 255, 0, 255 },
+            { 0, 0, 255, 255 }, { 255, 255, 255, 255 }
+        };
+
+        TextureDescriptor textureDesc;
+        textureDesc.dimensions = {2, 2};
+        textureDesc.data = textureData;
+        m_rectInstance.texture = m_backendRenderer.CreateTexture(textureDesc);
+
         m_rectInstance.vertexScript = new Shader::Visual::VertexScript();
         m_rectInstance.fragmentScript = new Shader::Visual::FragmentScript();
 
@@ -253,6 +263,11 @@ namespace Molten::Gui
         {
             m_backendRenderer.DestroyPipeline(instance.pipeline);
             instance.pipeline = nullptr;
+        }
+        if (instance.texture)
+        {
+            m_backendRenderer.DestroyTexture(instance.texture);
+            instance.texture = nullptr;
         }
         if (instance.vertexBuffer)
         {

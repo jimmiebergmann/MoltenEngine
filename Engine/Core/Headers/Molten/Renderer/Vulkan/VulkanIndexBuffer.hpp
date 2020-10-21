@@ -29,7 +29,7 @@
 #include "Molten/Renderer/IndexBuffer.hpp"
 
 #if defined(MOLTEN_ENABLE_VULKAN)
-#include "Molten/Renderer/Vulkan/Vulkan.hpp"
+#include "Molten/Renderer/Vulkan/VulkanHeaders.hpp"
 
 namespace Molten
 {
@@ -41,8 +41,11 @@ namespace Molten
 
     private:
 
-        VulkanIndexBuffer() = default;
-        ~VulkanIndexBuffer() = default;
+        VulkanIndexBuffer(
+            VkBuffer buffer,
+            VkDeviceMemory memory,
+            const size_t indexCount,
+            const DataType dataType);
 
         VkBuffer buffer;
         VkDeviceMemory memory;

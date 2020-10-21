@@ -27,6 +27,7 @@
 #define MOLTEN_CORE_RENDERER_RENDERER_HPP
 
 #include "Molten/Memory/Reference.hpp"
+#include "Molten/Renderer/RenderTarget.hpp"
 #include "Molten/Renderer/Framebuffer.hpp"
 #include "Molten/Renderer/IndexBuffer.hpp"
 #include "Molten/Renderer/Pipeline.hpp"
@@ -46,7 +47,6 @@ namespace Molten::Shader::Visual
 namespace Molten
 {
 
-    class Window;
     class Logger;
 
 
@@ -63,9 +63,8 @@ namespace Molten
             Vulkan
         };
 
-        /**
-         * Static function for creating any renderer by Type.
-         * Make sure to open the renderer before using it.
+        /** Static function for creating any renderer by Type.
+         *  Make sure to open the renderer before using it.
          *
          * @return Pointer to renderer, nullptr if the type of renderer is unavailable.
          */
@@ -74,12 +73,11 @@ namespace Molten
         /** Virtual destructor. */
         virtual ~Renderer();
 
-        /**
-         * Opens renderer by loading and attaching renderer to provided window.
+        /** Opens renderer by loading and attaching renderer to provided window.
          *
          * @param window Render target window.
          */
-        virtual bool Open(const Window& window, const Version& version = Version::None, Logger * logger = nullptr) = 0;
+        virtual bool Open(RenderTarget& renderTarget, const Version& version = Version::None, Logger * logger = nullptr) = 0;
 
         /**  Closing renderer. */
         virtual void Close() = 0;
@@ -110,7 +108,7 @@ namespace Molten
         virtual Pipeline* CreatePipeline(const PipelineDescriptor& descriptor) = 0;
 
         /** Create texture object. */
-        virtual Texture* CreateTexture() = 0;
+        virtual Texture* CreateTexture(const TextureDescriptor& descriptor) = 0;
 
         /** Create uniform buffer object. */
         virtual UniformBlock* CreateUniformBlock(const UniformBlockDescriptor& descriptor) = 0;
@@ -160,9 +158,8 @@ namespace Molten
         /** Draw indexed vertex buffer, using the current bound pipeline. */
         virtual void DrawVertexBuffer(IndexBuffer* indexBuffer, VertexBuffer* vertexBuffer) = 0;
 
-        /** 
-         * Push constant values to shader stage.
-         * This function call has no effect if provided id argument is greater than the number of push constants in pipeline.
+        /** Push constant values to shader stage.
+         *  This function call has no effect if provided id argument is greater than the number of push constants in pipeline.
          *
          * @param id Id of push constant to update. This id can be shared between multiple shader stages.
          */

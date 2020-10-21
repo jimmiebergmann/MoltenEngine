@@ -465,19 +465,31 @@ namespace Molten
         return m_userInput;
     }
 
-    HWND WindowWin32::GetWin32Window() const
+    HWND WindowWin32::GetWin32Window()
+    {
+        return m_window;
+    }
+    const HWND WindowWin32::GetWin32Window() const
     {
         return m_window;
     }
 
-    HINSTANCE WindowWin32::GetWin32Instance() const
+    HDC WindowWin32::GetWin32DeviceContext()
+    {
+        return m_deviceContext;
+    }
+    const HDC WindowWin32::GetWin32DeviceContext() const
+    {
+        return m_deviceContext;
+    }
+
+    HINSTANCE WindowWin32::GetWin32Instance()
     {
         return m_instance;
     }
-
-    HDC WindowWin32::GetWin32DeviceContext() const
+    const HINSTANCE WindowWin32::GetWin32Instance() const
     {
-        return m_deviceContext;
+        return m_instance;
     }
 
     LRESULT WindowWin32::WindowProcStatic(HWND window, UINT message, WPARAM wParam, LPARAM lParam)

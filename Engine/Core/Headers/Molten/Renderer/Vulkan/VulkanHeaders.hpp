@@ -30,6 +30,8 @@
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 
+MOLTEN_UNSCOPED_ENUM_BEGIN
+
 #define VK_DEFINE_NON_DISPATCHABLE_HANDLE(object) typedef uint64_t object;
 #include "vulkan/vulkan.h"
 
@@ -41,32 +43,7 @@
 #include "vulkan/vulkan_xlib.h"
 #endif
 
-#include <vector>
-
-namespace Molten
-{
-
-    namespace Vulkan
-    {
-
-       VkSwapchainKHR MOLTEN_API CreateSwapchain(VkPhysicalDevice physicalDevice, VkDevice logicalDevice,
-                                               VkSurfaceKHR surface, VkSurfaceFormatKHR surfaceFormat, VkPresentModeKHR presentMode,
-                                               const VkSurfaceCapabilitiesKHR & capabilities, uint32_t imageCount,
-                                               uint32_t graphicsQueueIndex, uint32_t presentQueueIndex,
-                                               VkSwapchainKHR oldSwapchain = VK_NULL_HANDLE);
-
-
-         void MOLTEN_API DestroySemaphores(VkDevice logicalDevice, std::vector<VkSemaphore>& semaphores);
-
-         void MOLTEN_API DestroyFences(VkDevice logicalDevice, std::vector<VkFence>& fences);
-
-         void MOLTEN_API DestroyImageViews(VkDevice logicalDevice, std::vector<VkImageView>& imageViews);
-
-         void MOLTEN_API GetSwapchainImages(VkDevice logicalDevice, VkSwapchainKHR swapchain, std::vector<VkImage>& images);
-
-    }
-
-}
+MOLTEN_UNSCOPED_ENUM_END
 
 #endif
 

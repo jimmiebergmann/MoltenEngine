@@ -38,7 +38,7 @@ namespace Molten::Gui
         innerPadding(innerPadding)
     {}
 
-    void VerticalGrid::Update(const Time& deltaTime)
+    void VerticalGrid::Update(const Time& /*deltaTime*/)
     {
     }
 
@@ -75,7 +75,7 @@ namespace Molten::Gui
         }
     }
 
-    bool VerticalGrid::OnAddChild(WidgetPointer widget)
+    bool VerticalGrid::OnAddChild(WidgetPointer /*widget*/)
     {
         return true;
     }

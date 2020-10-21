@@ -29,7 +29,7 @@
 namespace Molten::Gui
 {
 
-    void Button::Update(const Time& deltaTime)
+    void Button::Update(const Time& /*deltaTime*/)
     {
     }
 
@@ -48,7 +48,7 @@ namespace Molten::Gui
         SetRenderData(children.begin(), { 0.0f, 0.0f }, GetGrantedSize());
     }
 
-    bool Button::OnAddChild(WidgetPointer widget)
+    bool Button::OnAddChild(WidgetPointer /*widget*/)
     {
         return true;
     }

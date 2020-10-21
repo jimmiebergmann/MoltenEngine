@@ -52,7 +52,7 @@ namespace Molten
          *
          * @param window[in] Render target window.
          */
-        OpenGLX11Renderer(const Window& window, const Version& version, Logger* logger = nullptr);
+        OpenGLX11Renderer(RenderTarget& renderTarget, const Version& version, Logger* logger = nullptr);
 
         ~OpenGLX11Renderer();
 
@@ -61,7 +61,7 @@ namespace Molten
          *
          * @param window Render target window.
          */
-        virtual bool Open(const Window& window, const Version& version = Version::None, Logger* logger = nullptr) override;
+        virtual bool Open(RenderTarget& renderTarget, const Version& version = Version::None, Logger* logger = nullptr) override;
 
         /**  Closing renderer. */
         virtual void Close() override;
@@ -92,7 +92,7 @@ namespace Molten
         virtual Pipeline* CreatePipeline(const PipelineDescriptor& descriptor) override;
 
         /** Create texture object. */
-        virtual Texture* CreateTexture() override;
+        virtual Texture* CreateTexture(const TextureDescriptor& descriptor) override;
 
         /** Create uniform buffer object. */
         virtual UniformBlock* CreateUniformBlock(const UniformBlockDescriptor& descriptor) override;

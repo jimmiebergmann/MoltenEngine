@@ -37,6 +37,7 @@ namespace Molten
     class Pipeline;  
     class VertexBuffer;
     class IndexBuffer;
+    class Texture;
     class Logger;
 }
 
@@ -87,6 +88,7 @@ namespace Molten::Gui
             Pipeline* pipeline;
             VertexBuffer* vertexBuffer;
             IndexBuffer* indexBuffer;
+            Texture* texture;
             Shader::Visual::VertexScript* vertexScript;
             Shader::Visual::FragmentScript* fragmentScript;
             uint32_t projectionLocation;

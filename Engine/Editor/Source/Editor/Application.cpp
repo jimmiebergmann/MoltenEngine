@@ -34,6 +34,7 @@
 #include "Molten/Gui/Widgets/ButtonWidget.hpp"
 #include "Molten/Gui/Widgets/PaddingWidget.hpp"
 #include "Molten/Gui/Widgets/VerticalGridWidget.hpp"
+#include "Molten/Gui/Widgets/SpacerWidget.hpp"
 #include <chrono>
 #include <thread>
 
@@ -147,11 +148,15 @@ namespace Molten
             auto layer = Gui::Canvas::CreateChild<Gui::RootLayer>(m_canvas, Gui::LayerPosition::Top);
             auto grid = Gui::Layer::CreateChild<Gui::VerticalGrid>(layer, 
                 10.0f, Gui::PaddingData{ 10.0f, 20.0f, 30.0f, 40.0f }, Gui::PaddingData{ 10.0f, 20.0f, 30.0f, 40.0f });
+            
+            Gui::Widget::CreateChild<Gui::Spacer>(grid);
+            Gui::Widget::CreateChild<Gui::Spacer>(grid);
+            Gui::Widget::CreateChild<Gui::Spacer>(grid);
             auto button1 = Gui::Widget::CreateChild<Gui::Button>(grid);
             //auto padding2 = Gui::Widget::CreateChild<Gui::Padding>(grid, 10.0f, 20.0f, 30.0f, 40.0f);
-            auto button2 = Gui::Widget::CreateChild<Gui::Button>(grid);
-            button2->margin = Gui::MarginData{ 10.0f, 20.0f, 30.0f, 40.0f };
-            auto button3 = Gui::Widget::CreateChild<Gui::Button>(grid);
+            //auto button2 = Gui::Widget::CreateChild<Gui::Button>(grid);
+            //button2->margin = Gui::MarginData{ 10.0f, 20.0f, 30.0f, 40.0f };
+            //auto button3 = Gui::Widget::CreateChild<Gui::Button>(grid);
             
             button1->onPress.Connect(
                 [&](int)
@@ -159,11 +164,11 @@ namespace Molten
                 m_logger.Write(Logger::Severity::Info, "Pressed button 1");
             });
 
-            button2->onPress.Connect(
+            /*button2->onPress.Connect(
                 [&](int)
             {
                 m_logger.Write(Logger::Severity::Info, "Pressed button 2");
-            });
+            });*/
             
         }
 
@@ -418,7 +423,8 @@ namespace Molten
 
         bool Application::Update()
         {
-            constexpr float cameraSpeed = 4.0f;
+            constexpr float lookSpeed = 0.5f;
+            constexpr float movementSpeed = 4.0f;
             static Vector2i32 lastPosition{ 0, 0 };
 
             m_window->Update();
@@ -437,7 +443,7 @@ namespace Molten
                 {
                     if (Mouse::IsDown(Mouse::Button::Right))
                     {
-                        auto posDiff = event.mouseMoveEvent.position - lastPosition;
+                        auto posDiff = Vector2f32(event.mouseMoveEvent.position - lastPosition) * lookSpeed;
                         if (posDiff.x != 0)
                         {
                             m_camera.AddYaw(Degrees(-posDiff.x));
@@ -454,12 +460,12 @@ namespace Molten
                 {
                     switch (event.keyboardEvent.key)
                     {
-                    case Keyboard::Key::A: m_camera.SetPosition(m_camera.GetPosition() - (m_camera.GetRightDirection() * cameraSpeed * m_deltaTime)); break;
-                    case Keyboard::Key::D: m_camera.SetPosition(m_camera.GetPosition() + (m_camera.GetRightDirection() * cameraSpeed * m_deltaTime)); break;
-                    case Keyboard::Key::W: m_camera.SetPosition(m_camera.GetPosition() + (m_camera.GetForwardDirection() * cameraSpeed * m_deltaTime)); break;
-                    case Keyboard::Key::S: m_camera.SetPosition(m_camera.GetPosition() - (m_camera.GetForwardDirection() * cameraSpeed * m_deltaTime)); break;
-                    case Keyboard::Key::Q: m_camera.SetPosition(m_camera.GetPosition() + (m_camera.GetUpDirection() * cameraSpeed * m_deltaTime)); break;
-                    case Keyboard::Key::E: m_camera.SetPosition(m_camera.GetPosition() - (m_camera.GetUpDirection() * cameraSpeed * m_deltaTime)); break;
+                    case Keyboard::Key::A: m_camera.SetPosition(m_camera.GetPosition() - (m_camera.GetRightDirection() * movementSpeed * m_deltaTime)); break;
+                    case Keyboard::Key::D: m_camera.SetPosition(m_camera.GetPosition() + (m_camera.GetRightDirection() * movementSpeed * m_deltaTime)); break;
+                    case Keyboard::Key::W: m_camera.SetPosition(m_camera.GetPosition() + (m_camera.GetForwardDirection() * movementSpeed * m_deltaTime)); break;
+                    case Keyboard::Key::S: m_camera.SetPosition(m_camera.GetPosition() - (m_camera.GetForwardDirection() * movementSpeed * m_deltaTime)); break;
+                    case Keyboard::Key::Q: m_camera.SetPosition(m_camera.GetPosition() + (m_camera.GetUpDirection() * movementSpeed * m_deltaTime)); break;
+                    case Keyboard::Key::E: m_camera.SetPosition(m_camera.GetPosition() - (m_camera.GetUpDirection() * movementSpeed * m_deltaTime)); break;
                     case Keyboard::Key::Up: m_camera.SetFieldOfView(m_camera.GetFieldOfView() - Degrees(40.0f * m_deltaTime)); break;
                     case Keyboard::Key::Down: m_camera.SetFieldOfView(m_camera.GetFieldOfView() + Degrees(10.0f * m_deltaTime)); break;
                     case Keyboard::Key::Left: m_camera.AddRoll(Degrees(-50.0f * m_deltaTime)); break;

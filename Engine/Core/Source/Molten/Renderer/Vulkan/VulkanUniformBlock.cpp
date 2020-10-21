@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2020 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,55 +23,25 @@
 *
 */
 
-#ifndef MOLTEN_CORE_PLATFORM_WIN32HEADERS_HPP
-#define MOLTEN_CORE_PLATFORM_WIN32HEADERS_HPP
+#include "Molten/Renderer/Vulkan/VulkanUniformBlock.hpp"
 
-#include "Molten/Core.hpp"
+#if defined(MOLTEN_ENABLE_VULKAN)
 
-#if MOLTEN_PLATFORM == MOLTEN_PLATFORM_WINDOWS
+namespace Molten
+{
 
-#include <Windows.h>
-#include <Windowsx.h>
+    VulkanUniformBlock::VulkanUniformBlock(
+        VkPipelineLayout pipelineLayout,
+        VkDescriptorPool descriptorPool,
+        Vulkan::DescriptorSets&& descriptorSets,
+        const uint32_t set
+    ) :
+        pipelineLayout(pipelineLayout),
+        descriptorPool(descriptorPool),
+        descriptorSets(std::move(descriptorSets)),
+        set(set)
+    {}
 
-#define MOLTEN_PLATFORM_WINDOWS_SUPPORT_MULTI_MONITOR_DPI NTDDI_VERSION >= 0x06030000
-#if(MOLTEN_PLATFORM_WINDOWS_SUPPORT_MULTI_MONITOR_DPI)
-#include <shellscalingapi.h>
-#endif
-
-// Getting rid of conflicting Windows macros.
-#ifdef GetMessage
-    #undef GetMessage
-#endif
-#ifdef max
-    #undef max
-#endif
-#ifdef min
-    #undef min
-#endif
-#ifdef DeleteFile
-    #undef DeleteFile
-#endif
-#ifdef far
-    #undef far
-#endif
-#ifdef near
-    #undef near
-#endif
-
-#ifdef CreateSemaphore
-    #undef CreateSemaphore
-#endif
-
-
-// Getting rid of conflicting Windows X macros.
-#ifdef IsMinimized
-    #undef IsMinimized
-#endif
-#ifdef IsMaximized
-    #undef IsMaximized
-#endif
-
-
-#endif
+}
 
 #endif
