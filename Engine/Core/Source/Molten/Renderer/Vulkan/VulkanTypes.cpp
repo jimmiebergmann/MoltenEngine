@@ -32,19 +32,200 @@ MOLTEN_UNSCOPED_ENUM_BEGIN
 namespace Molten::Vulkan
 {
 
-    // Surface implementations.
-    Surface::Surface() :
-        handle(VK_NULL_HANDLE),
-        capabilities{}
+    // Extension implementations.
+    Extension::Extension() :
+        name(""),
+        version(0)
+    {}
+
+    Extension::Extension(const std::string& name) :
+        name(name),
+        version(0)
+    {}
+
+    Extension::Extension(
+        const std::string& name,
+        const uint32_t version
+    ) :
+        name(name),
+        version(version)
+    {}
+
+    Extension::Extension(
+        const VkExtensionProperties& extensionProperties
+    ) :
+        name(extensionProperties.extensionName),
+        version(extensionProperties.specVersion)
+    {}
+
+    Extension::Extension(const Extension& extension) :
+        name(extension.name),
+        version(extension.version)
+    {}
+
+    Extension::Extension(Extension&& extension) noexcept :
+        name(std::move(extension.name)),
+        version(extension.version)
+    {
+        extension.version = 0;
+    }
+    Extension& Extension::operator =(const Extension& extension)
+    {
+        name = extension.name;
+        version = extension.version;
+        return *this;
+    }
+
+    Extension& Extension::operator =(Extension&& extension) noexcept
+    {
+        name = std::move(extension.name);
+        version = extension.version;
+        extension.version = 0;
+        return *this;
+    }
+
+
+    // Filtered memory type implementations.
+    FilteredMemoryType::FilteredMemoryType() :
+        index(0),
+        propertyFlags(0)
+    {}
+
+    FilteredMemoryType::FilteredMemoryType(
+        const uint32_t index,
+        const VkMemoryPropertyFlags propertyFlags
+    ) :
+        index(index),
+        propertyFlags(propertyFlags)
     {}
 
 
-    // Physical device implementations.
-    PhysicalDevice::PhysicalDevice() :
-        capabilities{},
+    // Layer implementations.
+    Layer::Layer(const std::string& name) :
+        name(name),
+        version(0),
+        vulkanVersion(0, 0, 0)
+    {}
+
+    Layer::Layer() :
+        name(""),
+        version(0),
+        vulkanVersion(0, 0, 0)
+    {}
+
+    Layer::Layer(
+        const std::string& name,
+        const uint32_t version,
+        const Version vulkanVersion
+    ) :
+        name(name),
+        version(version),
+        vulkanVersion(vulkanVersion)
+    {}
+
+    Layer::Layer(
+        const VkLayerProperties& layerProperties
+    ) :
+        name(layerProperties.layerName),
+        version(layerProperties.implementationVersion),
+        vulkanVersion(
+            VK_VERSION_MAJOR(layerProperties.specVersion),
+            VK_VERSION_MINOR(layerProperties.specVersion),
+            VK_VERSION_PATCH(layerProperties.specVersion))
+    {}
+
+    Layer::Layer(const Layer& layer) :
+        name(layer.name),
+        version(layer.version),
+        vulkanVersion(layer.vulkanVersion)
+    {}
+
+    Layer::Layer(Layer&& layer) noexcept :
+        name(std::move(layer.name)),
+        version(layer.version),
+        vulkanVersion(layer.vulkanVersion)
+    {
+        layer.version = 0;
+        layer.vulkanVersion = {};
+    }
+    Layer& Layer::operator =(const Layer& layer)
+    {
+        name = layer.name;
+        version = layer.version;
+        vulkanVersion = layer.vulkanVersion;
+        return *this;
+    }
+
+    Layer& Layer::operator =(Layer&& layer) noexcept
+    {
+        name = std::move(layer.name);
+        version = layer.version;
+        vulkanVersion = layer.vulkanVersion;
+        layer.version = 0;
+        layer.vulkanVersion = {};
+        return *this;
+    }
+
+
+    // Instance implementations.
+    Instance::Instance() :
+        handle(VK_NULL_HANDLE),
+        extensions{},
+        layers{}
+    {}
+
+
+    // Logical device implementations.
+    LogicalDevice::LogicalDevice() :
         device(VK_NULL_HANDLE),
-        graphicsQueueIndex(0),
-        presentQueueIndex(0)
+        graphicsQueue(VK_NULL_HANDLE),
+        presentQueue(VK_NULL_HANDLE)
+    {}
+
+
+    // Physical device Surface capabilities implementations.
+    PhysicalDeviceSurfaceCapabilities::PhysicalDeviceSurfaceCapabilities() :
+        capabilities{},
+        formats{},
+        presentModes{}
+    {}
+
+
+    // Physical device capabilities implementations.
+    PhysicalDeviceCapabilities::PhysicalDeviceCapabilities() :
+        properties{},
+        features{},
+        extensions{},
+        hasPresentSupport(false),
+        surfaceCapabilities{},
+        queueFamilies{}
+    {}
+
+    // Physical device features with name implementations.
+    PhysicalDeviceFeatureWithName::PhysicalDeviceFeatureWithName(
+        VkBool32 VkPhysicalDeviceFeatures::* memberPointer,
+        const std::string& name
+    ) :
+        memberPointer(memberPointer),
+        name(name)
+    {}
+
+
+    // Physical device with capabilities implementations.
+    PhysicalDeviceWithCapabilities::PhysicalDeviceWithCapabilities() :
+        device(VK_NULL_HANDLE),
+        capabilities{},
+        graphicsQueueIndex(std::numeric_limits<uint32_t>::max()),
+        presentQueueIndex(std::numeric_limits<uint32_t>::max())
+    {}
+
+    PhysicalDeviceWithCapabilities::PhysicalDeviceWithCapabilities(
+        VkPhysicalDevice device
+    ) :
+        device(device),
+        capabilities{},
+        graphicsQueueIndex(std::numeric_limits<uint32_t>::max()),
+        presentQueueIndex(std::numeric_limits<uint32_t>::max())
     {}
 
 }

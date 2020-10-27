@@ -49,6 +49,7 @@ namespace Molten
 
     public:
 
+        /** Constructor. */
         VulkanRenderer();
 
         /** Constructs and creates renderer.
@@ -57,7 +58,8 @@ namespace Molten
          */
         VulkanRenderer(RenderTarget& renderTarget, const Version& version, Logger* logger = nullptr);
 
-        ~VulkanRenderer();
+        /** Virtual destructor. */
+        virtual ~VulkanRenderer();
 
         /** Opens renderer by loading and attaching renderer to provided window.
          *
@@ -67,6 +69,9 @@ namespace Molten
 
         /** Closing renderer. */
         virtual void Close() override;
+
+        /** Checks if renderer is open Same value returned as last call to Open. */
+        virtual bool IsOpen() const override;
 
         /** Resize the framebuffers.
          *  Execute this function as soon as the render target's work area is resized.
@@ -171,35 +176,16 @@ namespace Molten
 
     private:
 
-        struct SwapChainSupport // Should be old
-        {
-            VkSurfaceCapabilitiesKHR capabilities;
-            std::vector<VkSurfaceFormatKHR> formats;
-            std::vector<VkPresentModeKHR> presentModes;
-        };
-
-        struct PhysicalDevice // Should be old
-        {
-            PhysicalDevice();
-            explicit PhysicalDevice(VkPhysicalDevice device);
-            PhysicalDevice(VkPhysicalDevice device, uint32_t graphicsQueueIndex, uint32_t presentQueueIndex);
-            void Clear();
-
-            VkPhysicalDevice device;
-            uint32_t graphicsQueueIndex;
-            uint32_t presentQueueIndex;
-            SwapChainSupport swapChainSupport;
-        };
-
-        bool LoadInstanceExtensions();
+        /** Renderer creation function. */
+        /**@{*/
+        bool LoadRequirements();
         bool LoadInstance(const Version& version);      
         bool LoadSurface();
+        bool LoadPhysicalDevice();
+        bool LoadLogicalDevice();
+        /**@}*/
 
-        bool LoadPhysicalDevice(); // Should be old
-        bool ScorePhysicalDevice(PhysicalDevice& physicalDevice, uint32_t & score); // Should be old
-        bool CheckDeviceExtensionSupport(PhysicalDevice & physicalDevice); // Vulkan::FetchDeviceExtensionProperties and Vulkan::CheckRequiredExtensions
-        bool FetchSwapChainSupport(PhysicalDevice& physicalDevice); // Vulkan::FetchSurfaceCapabilities
-        bool LoadLogicalDevice(); // Vulkan::CreateLogicalDevice
+        
         bool LoadSwapChain();
         bool LoadImageViews();
         bool LoadRenderPass();
@@ -227,23 +213,36 @@ namespace Molten
         template<typename T>
         void InternalPushConstant(const uint32_t location, const T& value);
 
-        ///< NEW vvvv
-        Vulkan::ExtensionProperties m_instanceExtensions;
-        std::vector<std::string> m_requiredInstanceExtensions;
-        ///< NEW ^^^^
-
-
-        Logger* m_logger;
-        Version m_version;
+        /** Renderer creation variables. */
+        /**@{*/
         RenderTarget* m_renderTarget;
-        VkInstance m_instance;
-        std::vector<const char*> m_deviceExtensions;
+        Version m_version;
+        Logger* m_logger;     
+        /**@}*/
+
+        /** Requirements variables. */
+        /**@{*/
+        Vulkan::Extensions m_requiredInstanceExtensions;
+        Vulkan::Layers m_requiredInstanceLayers;      
+        Vulkan::Extensions m_requiredDeviceExtensions;
+        VkPhysicalDeviceFeatures m_requiredDeviceFeatures;
+        /**@}*/
+
+        /** Vulkan context variables. */
+        /**@{*/
+        bool m_isOpen;
+        bool m_enableDebugMessenger;
+        Vulkan::Extensions m_debugInstanceExtensions;
+        Vulkan::Layers m_debugInstanceLayers;
+        Vulkan::Instance m_instance;
         Vulkan::DebugMessenger m_debugMessenger;
-        VkSurfaceKHR m_surface; // should be old
-        PhysicalDevice m_physicalDevice;
-        VkDevice m_logicalDevice;
-        VkQueue m_graphicsQueue;
-        VkQueue m_presentQueue;       
+        VkSurfaceKHR m_surface;
+        Vulkan::PhysicalDeviceWithCapabilities m_physicalDevice;
+        Vulkan::LogicalDevice m_logicalDevice;
+        /**@}*/
+
+        ///< NEW ^^^^  
+
         VkSwapchainKHR m_swapChain; // Should be old.
         VkFormat m_swapChainImageFormat;
         VkExtent2D m_swapChainExtent;

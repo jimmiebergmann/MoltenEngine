@@ -160,6 +160,11 @@ namespace Molten
         }*/
     }
 
+    bool OpenGLX11Renderer::IsOpen() const
+    {
+        return false;
+    }
+
     void OpenGLX11Renderer::Resize(const Vector2ui32& /*size*/)
     {
     }

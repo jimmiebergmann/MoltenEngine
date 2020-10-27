@@ -72,7 +72,6 @@ namespace Molten
             ~DebugMessenger();
 
             PrepareDebugMessengerResult Prepare(
-                VkInstanceCreateInfo& instanceInfo,
                 const uint32_t severityFlags,
                 Callback callback);
 
@@ -82,7 +81,7 @@ namespace Molten
 
             bool IsCreated() const;
 
-            const std::vector<const char*>& GetValidationLayers() const;
+            const VkDebugUtilsMessengerCreateInfoEXT& GetCreateInfo() const;
 
         private:
 
@@ -93,7 +92,6 @@ namespace Molten
 
             bool m_prepared;
             bool m_created;
-            std::vector<const char*> m_validationLayers;
             VkDebugUtilsMessengerCreateInfoEXT m_messengerCreateInfo;
             PFN_vkCreateDebugUtilsMessengerEXT m_createDebugUtilsMessengerFunction;
             PFN_vkDestroyDebugUtilsMessengerEXT m_destroyDebugUtilsMessengerFunction;

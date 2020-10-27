@@ -367,11 +367,17 @@ namespace Molten
 
         void Application::Unload()
         {
-            m_canvasRenderer->Close();
+            if (m_canvasRenderer)
+            {
+                m_canvasRenderer->Close();
+            }
 
             if (m_renderer)
             {
-                m_renderer->WaitForDevice();
+                if (m_renderer->IsOpen())
+                {
+                    m_renderer->WaitForDevice();
+                }
 
                 if (m_uniformBlock)
                 {

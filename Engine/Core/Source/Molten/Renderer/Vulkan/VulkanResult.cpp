@@ -34,8 +34,7 @@ MOLTEN_UNSCOPED_ENUM_BEGIN
 
 static const std::pair<std::string, std::string> g_text_empty = { "", "" };
 
-#define MOLTEN_VULKAN_TEXT_Q(x) #x
-#define MOLTEN_VULKAN_TEXT_QUOTE(x) MOLTEN_VULKAN_TEXT_Q(x)
+#define MOLTEN_VULKAN_TEXT_QUOTE(x) #x
 #define MOLTEN_VULKAN_TEXT_DEFINITION(result, description) \
     static const std::pair<std::string, std::string> g_text_VK_##result = { MOLTEN_VULKAN_TEXT_QUOTE(VK_##result), description }
 
@@ -63,7 +62,6 @@ MOLTEN_VULKAN_TEXT_DEFINITION(ERROR_INCOMPATIBLE_DRIVER, "The requested version 
 MOLTEN_VULKAN_TEXT_DEFINITION(ERROR_TOO_MANY_OBJECTS, "Too many objects of the type have already been created.");
 MOLTEN_VULKAN_TEXT_DEFINITION(ERROR_FORMAT_NOT_SUPPORTED, "A requested format is not supported on this device.");
 MOLTEN_VULKAN_TEXT_DEFINITION(ERROR_FRAGMENTED_POOL, "A pool allocation has failed due to fragmentation of the pool’s memory.");
-
 MOLTEN_VULKAN_TEXT_DEFINITION(ERROR_SURFACE_LOST_KHR, "A surface is no longer available.");
 MOLTEN_VULKAN_TEXT_DEFINITION(ERROR_NATIVE_WINDOW_IN_USE_KHR, "The requested window is already in use by Vulkan or another API in a manner which prevents it from being used again.");
 MOLTEN_VULKAN_TEXT_DEFINITION(ERROR_OUT_OF_DATE_KHR, "A surface has changed in such a way that it is no longer compatible with the swapchain, and further presentation requests using the swapchain will fail.");

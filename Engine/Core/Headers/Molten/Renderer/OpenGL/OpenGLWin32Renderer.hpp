@@ -45,6 +45,7 @@ namespace Molten
 
     public:
 
+        /** Constructor. */
         OpenGLWin32Renderer();
 
         /** Constructs and creates renderer.
@@ -53,7 +54,8 @@ namespace Molten
          */
         OpenGLWin32Renderer(RenderTarget& renderTarget, const Version& version, Logger* logger = nullptr);
 
-        ~OpenGLWin32Renderer();
+        /** Virtual destructor. */
+        virtual ~OpenGLWin32Renderer();
 
         /** Opens renderer by loading and attaching renderer to provided window.
          *
@@ -61,8 +63,11 @@ namespace Molten
          */
         virtual bool Open(RenderTarget& renderTarget, const Version& version = Version::None, Logger* logger = nullptr) override;
 
-        /**  Closing renderer. */
+        /** Closing renderer. */
         virtual void Close() override;
+
+        /** Checks if renderer is open Same value returned as last call to Open. */
+        virtual bool IsOpen() const override;
 
         /** Resize the framebuffers.
          *  Execute this function as soon as the render target's work area is resized.

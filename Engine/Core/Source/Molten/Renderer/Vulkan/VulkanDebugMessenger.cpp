@@ -45,7 +45,6 @@ namespace Molten
         DebugMessenger::DebugMessenger() :
             m_prepared(false),
             m_created(false),
-            m_validationLayers{ "VK_LAYER_KHRONOS_validation" },
             m_messengerCreateInfo{},
             m_createDebugUtilsMessengerFunction(nullptr),
             m_destroyDebugUtilsMessengerFunction(nullptr),
@@ -61,7 +60,6 @@ namespace Molten
         }
 
         PrepareDebugMessengerResult DebugMessenger::Prepare(
-            VkInstanceCreateInfo& instanceInfo,
             const uint32_t severityFlags,
             Callback callback)
         {
@@ -72,7 +70,7 @@ namespace Molten
 
             m_callback = callback;
 
-            uint32_t availableLayersCount = 0;
+            /*uint32_t availableLayersCount = 0;
             vkEnumerateInstanceLayerProperties(&availableLayersCount, nullptr);
             if (!availableLayersCount)
             {
@@ -93,17 +91,16 @@ namespace Molten
             if (missingLayers.size() != 0)
             {
                 return PrepareDebugMessengerResult::MissingValidationLayers;
-            }
+            }*/
 
             VkDebugUtilsMessageSeverityFlagsEXT vulkanSeverityFlags = 0;
             vulkanSeverityFlags |= (severityFlags & static_cast<uint32_t>(Logger::Severity::Info)) ? VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT : 0;
+            vulkanSeverityFlags |= (severityFlags & static_cast<uint32_t>(Logger::Severity::Debug)) ? VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT : 0;
             vulkanSeverityFlags |= (severityFlags & static_cast<uint32_t>(Logger::Severity::Warning)) ? VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT : 0;
             vulkanSeverityFlags |= (severityFlags & static_cast<uint32_t>(Logger::Severity::Error)) ? VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT : 0;
 
             m_messengerCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-            m_messengerCreateInfo.messageSeverity =
-                VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
-                vulkanSeverityFlags;
+            m_messengerCreateInfo.messageSeverity = vulkanSeverityFlags;
             m_messengerCreateInfo.messageType =
                 VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
                 VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
@@ -123,6 +120,7 @@ namespace Molten
                         switch (vulkanSeverity)
                         {
                         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT: return Logger::Severity::Info;
+                        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT: return Logger::Severity::Debug;
                         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT: return Logger::Severity::Warning;
                         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT: return Logger::Severity::Error;
                         default: break;
@@ -135,11 +133,6 @@ namespace Molten
                 }
                 return VK_FALSE;
             };
-
-            instanceInfo.enabledLayerCount = static_cast<uint32_t>(m_validationLayers.size());
-            instanceInfo.ppEnabledLayerNames = m_validationLayers.data();
-            auto& instanceInfoLastNext = FindLastBaseOutStructure(reinterpret_cast<VkBaseOutStructure&>(instanceInfo));
-            instanceInfoLastNext.pNext = reinterpret_cast<VkBaseOutStructure*>(&m_messengerCreateInfo);
 
             m_prepared = true;
             return PrepareDebugMessengerResult::Successful;
@@ -203,9 +196,9 @@ namespace Molten
             return m_created;
         }
 
-        const std::vector<const char*>& DebugMessenger::GetValidationLayers() const
+        const VkDebugUtilsMessengerCreateInfoEXT& DebugMessenger::GetCreateInfo() const
         {
-            return m_validationLayers;
+            return m_messengerCreateInfo;
         }
 
     }

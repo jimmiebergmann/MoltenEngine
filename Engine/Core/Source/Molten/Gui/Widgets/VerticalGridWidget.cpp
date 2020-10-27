@@ -42,7 +42,7 @@ namespace Molten::Gui
     {
     }
 
-    void VerticalGrid::Draw(CanvasRenderer& renderer)
+    void VerticalGrid::Draw(CanvasRenderer& /*renderer*/)
     {
     }
 

@@ -79,8 +79,11 @@ namespace Molten
          */
         virtual bool Open(RenderTarget& renderTarget, const Version& version = Version::None, Logger * logger = nullptr) = 0;
 
-        /**  Closing renderer. */
+        /** Closing renderer. */
         virtual void Close() = 0;
+
+        /** Checks if renderer is open Same value returned as last call to Open. */
+        virtual bool IsOpen() const = 0;
 
         /**
          * Resize the framebuffers.

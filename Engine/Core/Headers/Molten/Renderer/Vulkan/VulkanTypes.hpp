@@ -30,8 +30,10 @@
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 #include "Molten/Renderer/Vulkan/VulkanHeaders.hpp"
+#include "Molten/System/Version.hpp"
 #include <vector>
 #include <set>
+#include <string>
 
 MOLTEN_UNSCOPED_ENUM_BEGIN
 
@@ -39,69 +41,146 @@ namespace Molten::Vulkan
 {
     using DescriptorSetLayouts = std::vector<VkDescriptorSetLayout>;
     using DescriptorSets = std::vector<VkDescriptorSet>;
-    using ExtensionProperties = std::vector<VkExtensionProperties>;
     using Fences = std::vector<VkFence>;
     using Images = std::vector<VkImage>;
     using ImageViews = std::vector<VkImageView>;
+    using PhysicalDevices = std::vector<VkPhysicalDevice>;
     using PresentModes = std::vector<VkPresentModeKHR>;
+    using QueueFamilyProperties = std::vector<VkQueueFamilyProperties>;
     using Semaphores = std::vector<VkSemaphore>;
     using ShaderModules = std::vector<VkShaderModule>;
     using SurfaceFormats = std::vector<VkSurfaceFormatKHR>;   
     using UniqueQueueFamilyIds = std::set<uint32_t>;
+    
+    /** A more c++ friendly version of VkExtensionProperties. */
+    struct MOLTEN_API Extension
+    {
+        Extension();
+        explicit Extension(const std::string& name);
+        Extension(
+            const std::string& name,
+            const uint32_t version);
+        Extension(
+            const VkExtensionProperties& extensionProperties);
+
+        Extension(const Extension& extension);
+        Extension(Extension&& extension) noexcept;
+        Extension& operator =(const Extension& extension);
+        Extension& operator =(Extension&& extension) noexcept;
+
+        std::string name;
+        uint32_t version;
+    };
+
+    using Extensions = std::vector<Extension>;
 
     /** Single memory type, returned as vector by FilterMemoryTypesByPropertyFlags. */
-    struct FilteredMemoryType
+    struct MOLTEN_API FilteredMemoryType
     {
+        FilteredMemoryType();
+        FilteredMemoryType(
+            const uint32_t index,
+            const VkMemoryPropertyFlags propertyFlags);
+
         uint32_t index; ///< This is the index of this memory propery from the original VkPhysicalDeviceMemoryProperties object.
         VkMemoryPropertyFlags propertyFlags; // Bitmask of supported memory properies for this memory type.
     };
 
     using FilteredMemoryTypes = std::vector<FilteredMemoryType>;
 
-    /** Object for storing physical device capabilities. */
-    struct PhysicalDeviceCapabilities
+    /** A more c++ friendly version of VkLayerProperties. */
+    struct MOLTEN_API Layer
     {
+        Layer();
+        explicit Layer(const std::string& name);
+        Layer(
+            const std::string& name,
+            const uint32_t version,
+            const Version vulkanVersion);
+        Layer(
+            const VkLayerProperties& layerProperties);
 
+        Layer(const Layer& layer);
+        Layer(Layer&& layer) noexcept;
+        Layer& operator =(const Layer& layer);
+        Layer& operator =(Layer&& layer) noexcept;
+
+        std::string name;
+        uint32_t version;
+        Version vulkanVersion;
     };
 
-    /** Object for storing swap chain capabilities. */
-    /* struct SwapChainCapabilities
+    using Layers = std::vector<Layer>;
+
+    /** Vulkan instance. */
+    struct MOLTEN_API Instance
     {
-        //ExtensionProperties extensions;
-        PresentModes presentModes;
-    };*/
+        Instance();
+
+        VkInstance handle;
+        Extensions extensions;
+        Layers layers;
+    };
+
+    /** Logical device data. */
+    struct MOLTEN_API LogicalDevice
+    {
+        LogicalDevice();
+
+        VkDevice device;
+        VkQueue graphicsQueue;
+        VkQueue presentQueue;
+    };
 
     /** Object for storing surface capabilities. */
-    struct SurfaceCapabilities
+    struct MOLTEN_API PhysicalDeviceSurfaceCapabilities
     {
+        PhysicalDeviceSurfaceCapabilities();
+
         VkSurfaceCapabilitiesKHR capabilities;
         SurfaceFormats formats;
         PresentModes presentModes;
     };
 
-    /** Object for storing surface data. */
-    struct Surface
+    /** Object for storing physical device capabilities. */
+    struct MOLTEN_API PhysicalDeviceCapabilities
     {
-        Surface();
+        PhysicalDeviceCapabilities();
 
-        VkSurfaceKHR handle;
-        SurfaceCapabilities capabilities;
-
+        VkPhysicalDeviceProperties properties;
+        VkPhysicalDeviceFeatures features;
+        Vulkan::Extensions extensions;
+        VkBool32 hasPresentSupport;
+        PhysicalDeviceSurfaceCapabilities surfaceCapabilities;
+        QueueFamilyProperties queueFamilies;
     };
 
-    /** Physical device. */
-    struct PhysicalDevice
+    struct MOLTEN_API PhysicalDeviceFeatureWithName
     {
-        PhysicalDevice();
+        PhysicalDeviceFeatureWithName(
+            VkBool32 VkPhysicalDeviceFeatures::* memberPointer,
+            const std::string& name);
 
-        PhysicalDeviceCapabilities capabilities;
+        VkBool32 VkPhysicalDeviceFeatures::* memberPointer;
+        const std::string& name;
+    };
+
+    using PhysicalDeviceFeaturesWithName = std::vector<PhysicalDeviceFeatureWithName>;
+
+    /** Physical device with its capabilities. */
+    struct MOLTEN_API PhysicalDeviceWithCapabilities
+    {
+        PhysicalDeviceWithCapabilities();
+        PhysicalDeviceWithCapabilities(
+            VkPhysicalDevice device);
+
         VkPhysicalDevice device;
+        PhysicalDeviceCapabilities capabilities;      
         uint32_t graphicsQueueIndex;
         uint32_t presentQueueIndex;
-        //SwapChainCapabilities swapChainCapabilities;          
     };
 
-    using PhysicalDevices = std::vector< PhysicalDevice>;
+    using PhysicalDevicesWithCapabilities = std::vector<PhysicalDeviceWithCapabilities>;
 
 }
 

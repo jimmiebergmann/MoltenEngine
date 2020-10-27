@@ -199,18 +199,27 @@ namespace Molten
     }
 
     
-
     // Vulkan renderer class implementations.
     VulkanRenderer::VulkanRenderer() :
-        m_logger(nullptr),
-        m_version(0, 0, 0),
         m_renderTarget(nullptr),
-        m_instance(VK_NULL_HANDLE),
+        m_version(0, 0, 0),
+        m_logger(nullptr), 
+        m_requiredInstanceExtensions{},
+        m_requiredInstanceLayers{},
+        m_requiredDeviceExtensions{},
+        m_requiredDeviceFeatures{},
+        m_isOpen(false),
+        m_enableDebugMessenger(false),
+        m_debugInstanceExtensions{},
+        m_debugInstanceLayers{},
+        m_instance{},
+        m_debugMessenger{},
         m_surface(VK_NULL_HANDLE),
-        m_physicalDevice(),
-        m_logicalDevice(VK_NULL_HANDLE),
-        m_graphicsQueue(VK_NULL_HANDLE),
-        m_presentQueue(VK_NULL_HANDLE),
+        m_physicalDevice{},
+        m_logicalDevice{},
+
+        //  vvvvvvvv
+        
         m_swapChain(VK_NULL_HANDLE),
         m_swapChainImageFormat(VK_FORMAT_UNDEFINED),
         m_swapChainExtent{0, 0},
@@ -245,12 +254,17 @@ namespace Molten
         m_renderTarget = &renderTarget;
         m_logger = logger;
 
+    #if MOLTEN_BUILD == MOLTEN_BUILD_DEBUG
+        m_enableDebugMessenger = true;
+    #endif
+
         bool loaded =
+            LoadRequirements() &&
             LoadInstance(version) &&
             LoadSurface() &&
             LoadPhysicalDevice() &&
+
             LoadLogicalDevice() &&
-            FetchSwapChainSupport(m_physicalDevice) &&
             LoadSwapChain() &&
             LoadImageViews() &&
             LoadRenderPass() &&
@@ -258,55 +272,61 @@ namespace Molten
             LoadCommandPool() &&
             LoadSyncObjects();
 
+        m_isOpen = loaded;
         return loaded;   
     }
 
     void VulkanRenderer::Close()
-    {   
-        if (m_logicalDevice)
+    {
+        if (m_logicalDevice.device)
         {
-            vkDeviceWaitIdle(m_logicalDevice);  
+            vkDeviceWaitIdle(m_logicalDevice.device);
 
             if (m_commandPool)
             {
-                vkDestroyCommandPool(m_logicalDevice, m_commandPool, nullptr);
+                vkDestroyCommandPool(m_logicalDevice.device, m_commandPool, nullptr);
             }
-  
+
             if (m_renderPass)
             {
-                vkDestroyRenderPass(m_logicalDevice, m_renderPass, nullptr);
+                vkDestroyRenderPass(m_logicalDevice.device, m_renderPass, nullptr);
             }
 
             UnloadSwapchain();
-            vkDestroyDevice(m_logicalDevice, nullptr);
+            vkDestroyDevice(m_logicalDevice.device, nullptr);
         }
-        if (m_instance)
-        {
-            m_debugMessenger.Destroy();
 
+        m_debugMessenger.Destroy();
+
+        if (m_instance.handle)
+        {
             if (m_surface)
             {
-                vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
-                
+                vkDestroySurfaceKHR(m_instance.handle, m_surface, nullptr);
+
             }
 
-            vkDestroyInstance(m_instance, nullptr);
+            vkDestroyInstance(m_instance.handle, nullptr);
         }
-        
-        m_logger = nullptr;
-        m_version = { 0, 0, 0 };
+
         m_renderTarget = nullptr;
-        m_instance = VK_NULL_HANDLE;
+        m_version = { 0, 0, 0 };
+        m_logger = nullptr;
+        m_requiredInstanceExtensions = {};
+        m_requiredInstanceLayers = {};
+        m_requiredDeviceExtensions = {};
+        m_isOpen = false;
+        m_debugInstanceExtensions = {};
+        m_debugInstanceLayers = {};
+        m_instance = {};
         m_surface = VK_NULL_HANDLE;
-        m_logicalDevice = VK_NULL_HANDLE;
-        m_graphicsQueue = VK_NULL_HANDLE;
-        m_presentQueue = VK_NULL_HANDLE;
+        m_physicalDevice = {};
+        m_logicalDevice = {};
+
         m_swapChain = VK_NULL_HANDLE;
         m_swapChainImageFormat = VK_FORMAT_UNDEFINED;
         m_swapChainExtent = { 0, 0 };
         m_swapChainImages.clear();
-        m_physicalDevice.Clear();
-        m_deviceExtensions.clear();
         m_swapChainImageViews.clear();
         m_renderPass = VK_NULL_HANDLE;
         m_presentFramebuffers.clear();
@@ -323,6 +343,11 @@ namespace Molten
         m_currentCommandBuffer = nullptr;
         m_currentFramebuffer = VK_NULL_HANDLE;
         m_currentPipeline = nullptr;
+    }
+
+    bool VulkanRenderer::IsOpen() const
+    {
+        return m_isOpen;
     }
 
     void VulkanRenderer::Resize(const Vector2ui32& size)
@@ -385,14 +410,14 @@ namespace Molten
 
         SmartFunction stagingDestroyer = [&]()
         {
-            vkDestroyBuffer(m_logicalDevice, stagingBuffer, nullptr);
-            vkFreeMemory(m_logicalDevice, stagingMemory, nullptr);
+            vkDestroyBuffer(m_logicalDevice.device, stagingBuffer, nullptr);
+            vkFreeMemory(m_logicalDevice.device, stagingMemory, nullptr);
         };
 
         void* data;
-        vkMapMemory(m_logicalDevice, stagingMemory, 0, bufferSize, 0, &data);
+        vkMapMemory(m_logicalDevice.device, stagingMemory, 0, bufferSize, 0, &data);
         std::memcpy(data, descriptor.data, (size_t)bufferSize);
-        vkUnmapMemory(m_logicalDevice, stagingMemory);
+        vkUnmapMemory(m_logicalDevice.device, stagingMemory);
 
         VkBuffer indexBuffer;
         VkDeviceMemory indexMemory;
@@ -559,7 +584,7 @@ namespace Molten
         pipelineLayoutInfo.pPushConstantRanges = (pushConstantRange.size > 0) ? &pushConstantRange : nullptr;
 
         VkPipelineLayout pipelineLayout;
-        if (vkCreatePipelineLayout(m_logicalDevice, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
+        if (vkCreatePipelineLayout(m_logicalDevice.device, &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
         {
             Logger::WriteError(m_logger, "Failed to create pipeline layout.");
             return nullptr;
@@ -585,9 +610,9 @@ namespace Molten
         pipelineInfo.basePipelineIndex = -1;
 
         VkPipeline graphicsPipeline;
-        if (vkCreateGraphicsPipelines(m_logicalDevice, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS)
+        if (vkCreateGraphicsPipelines(m_logicalDevice.device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS)
         {
-            vkDestroyPipelineLayout(m_logicalDevice, pipelineLayout, nullptr);
+            vkDestroyPipelineLayout(m_logicalDevice.device, pipelineLayout, nullptr);
             Logger::WriteError(m_logger, "Failed to create pipeline.");
             return nullptr;
         }
@@ -617,14 +642,14 @@ namespace Molten
 
         SmartFunction stagingDestroyer = [&]()
         {
-            vkDestroyBuffer(m_logicalDevice, stagingBuffer, nullptr);
-            vkFreeMemory(m_logicalDevice, stagingMemory, nullptr);
+            vkDestroyBuffer(m_logicalDevice.device, stagingBuffer, nullptr);
+            vkFreeMemory(m_logicalDevice.device, stagingMemory, nullptr);
         };
 
         void* data;
-        vkMapMemory(m_logicalDevice, stagingMemory, 0, bufferSize, 0, &data);
+        vkMapMemory(m_logicalDevice.device, stagingMemory, 0, bufferSize, 0, &data);
         std::memcpy(data, descriptor.data, (size_t)bufferSize);
-        vkUnmapMemory(m_logicalDevice, stagingMemory);
+        vkUnmapMemory(m_logicalDevice.device, stagingMemory);
 
         VkImage image;
         VkDeviceMemory imageMemory;
@@ -654,7 +679,7 @@ namespace Molten
         imageInfo.flags = 0;
 
         VkImage textureImage;
-        if (vkCreateImage(m_logicalDevice, &imageInfo, nullptr, &textureImage) != VK_SUCCESS)
+        if (vkCreateImage(m_logicalDevice.device, &imageInfo, nullptr, &textureImage) != VK_SUCCESS)
         {
             Logger::WriteError(m_logger, "Failed to crteate vulkan image.");
             return nullptr;
@@ -693,7 +718,7 @@ namespace Molten
         {
             if (descriptorPool)
             {
-                vkDestroyDescriptorPool(m_logicalDevice, descriptorPool, nullptr);
+                vkDestroyDescriptorPool(m_logicalDevice.device, descriptorPool, nullptr);
             }
         };
 
@@ -708,7 +733,7 @@ namespace Molten
         poolInfo.maxSets = static_cast<uint32_t>(m_swapChainImages.size());
         poolInfo.flags = 0;
 
-        if (vkCreateDescriptorPool(m_logicalDevice, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)
+        if (vkCreateDescriptorPool(m_logicalDevice.device, &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)
         {
             Logger::WriteError(m_logger, "Failed to create descriptor pool.");
             return nullptr;
@@ -722,7 +747,7 @@ namespace Molten
         allocInfo.pSetLayouts = layouts.data(); 
 
         Vulkan::DescriptorSets descriptorSets(m_swapChainImages.size(), VK_NULL_HANDLE);
-        if (vkAllocateDescriptorSets(m_logicalDevice, &allocInfo, descriptorSets.data()) != VK_SUCCESS)
+        if (vkAllocateDescriptorSets(m_logicalDevice.device, &allocInfo, descriptorSets.data()) != VK_SUCCESS)
         {
             Logger::WriteError(m_logger, "Failed to create descriptor sets.");
             return nullptr;
@@ -744,7 +769,7 @@ namespace Molten
             descWrite.descriptorCount = 1;
             descWrite.pBufferInfo = &bufferInfo;
 
-            vkUpdateDescriptorSets(m_logicalDevice, 1, &descWrite, 0, nullptr);
+            vkUpdateDescriptorSets(m_logicalDevice.device, 1, &descWrite, 0, nullptr);
         }
 
         descriptorPoolDestroyer.Release();
@@ -765,11 +790,11 @@ namespace Molten
             {
                 if (frame.buffer != VK_NULL_HANDLE)
                 {
-                    vkDestroyBuffer(m_logicalDevice, frame.buffer, nullptr);
+                    vkDestroyBuffer(m_logicalDevice.device, frame.buffer, nullptr);
                 }
                 if ( frame.memory != VK_NULL_HANDLE)
                 {
-                    vkFreeMemory(m_logicalDevice, frame.memory, nullptr);
+                    vkFreeMemory(m_logicalDevice.device, frame.memory, nullptr);
                 }
             }    
         };
@@ -804,14 +829,14 @@ namespace Molten
 
         SmartFunction stagingDestroyer = [&]()
         {
-            vkDestroyBuffer(m_logicalDevice, stagingBuffer, nullptr);
-            vkFreeMemory(m_logicalDevice, stagingMemory, nullptr);
+            vkDestroyBuffer(m_logicalDevice.device, stagingBuffer, nullptr);
+            vkFreeMemory(m_logicalDevice.device, stagingMemory, nullptr);
         };
 
         void* data;
-        vkMapMemory(m_logicalDevice, stagingMemory, 0, bufferSize, 0, &data);
+        vkMapMemory(m_logicalDevice.device, stagingMemory, 0, bufferSize, 0, &data);
         std::memcpy(data, descriptor.data, (size_t)bufferSize);
-        vkUnmapMemory(m_logicalDevice, stagingMemory);
+        vkUnmapMemory(m_logicalDevice.device, stagingMemory);
 
         VkBuffer vertexBuffer;
         VkDeviceMemory vertexMemory;
@@ -829,15 +854,15 @@ namespace Molten
     void VulkanRenderer::DestroyFramebuffer(Framebuffer* framebuffer)
     {
         VulkanFramebuffer* vulkanFramebuffer = static_cast<VulkanFramebuffer*>(framebuffer);
-        vkDestroyFramebuffer(m_logicalDevice, vulkanFramebuffer->framebuffer, nullptr);
+        vkDestroyFramebuffer(m_logicalDevice.device, vulkanFramebuffer->framebuffer, nullptr);
         delete vulkanFramebuffer;
     }
 
     void VulkanRenderer::DestroyIndexBuffer(IndexBuffer* indexBuffer)
     {
         VulkanIndexBuffer* vulkanIndexBuffer = static_cast<VulkanIndexBuffer*>(indexBuffer);
-        vkDestroyBuffer(m_logicalDevice, vulkanIndexBuffer->buffer, nullptr);
-        vkFreeMemory(m_logicalDevice, vulkanIndexBuffer->memory, nullptr);
+        vkDestroyBuffer(m_logicalDevice.device, vulkanIndexBuffer->buffer, nullptr);
+        vkFreeMemory(m_logicalDevice.device, vulkanIndexBuffer->memory, nullptr);
         delete vulkanIndexBuffer;
     }
 
@@ -847,20 +872,20 @@ namespace Molten
 
         if (vulkanPipeline->graphicsPipeline)
         {
-            vkDeviceWaitIdle(m_logicalDevice);
-            vkDestroyPipeline(m_logicalDevice, vulkanPipeline->graphicsPipeline, nullptr);
+            vkDeviceWaitIdle(m_logicalDevice.device);
+            vkDestroyPipeline(m_logicalDevice.device, vulkanPipeline->graphicsPipeline, nullptr);
         }
         if (vulkanPipeline->pipelineLayout)
         {
-            vkDestroyPipelineLayout(m_logicalDevice, vulkanPipeline->pipelineLayout, nullptr);
+            vkDestroyPipelineLayout(m_logicalDevice.device, vulkanPipeline->pipelineLayout, nullptr);
         }
         for (auto& setLayout : vulkanPipeline->descriptionSetLayouts)
         {
-            vkDestroyDescriptorSetLayout(m_logicalDevice, setLayout, nullptr);
+            vkDestroyDescriptorSetLayout(m_logicalDevice.device, setLayout, nullptr);
         }
         for (auto& shaderModule : vulkanPipeline->shaderModules)
         {
-            vkDestroyShaderModule(m_logicalDevice, shaderModule, nullptr);
+            vkDestroyShaderModule(m_logicalDevice.device, shaderModule, nullptr);
         }
 
         delete vulkanPipeline;
@@ -876,7 +901,7 @@ namespace Molten
         VulkanUniformBlock* vulkanUniformBlock = static_cast<VulkanUniformBlock*>(uniformBlock);
         if(vulkanUniformBlock->descriptorPool != VK_NULL_HANDLE)
         {
-            vkDestroyDescriptorPool(m_logicalDevice, vulkanUniformBlock->descriptorPool, nullptr);
+            vkDestroyDescriptorPool(m_logicalDevice.device, vulkanUniformBlock->descriptorPool, nullptr);
         }
         delete vulkanUniformBlock;
     }
@@ -887,8 +912,8 @@ namespace Molten
 
         for (auto& frame : vulkanUniformBuffer->frames)
         {
-            vkDestroyBuffer(m_logicalDevice, frame.buffer, nullptr);
-            vkFreeMemory(m_logicalDevice, frame.memory, nullptr);
+            vkDestroyBuffer(m_logicalDevice.device, frame.buffer, nullptr);
+            vkFreeMemory(m_logicalDevice.device, frame.memory, nullptr);
         }
 
         delete vulkanUniformBuffer;
@@ -897,8 +922,8 @@ namespace Molten
     void VulkanRenderer::DestroyVertexBuffer(VertexBuffer* vertexBuffer)
     {
         VulkanVertexBuffer* vulkanVertexBuffer = static_cast<VulkanVertexBuffer*>(vertexBuffer);
-        vkDestroyBuffer(m_logicalDevice, vulkanVertexBuffer->buffer, nullptr);
-        vkFreeMemory(m_logicalDevice, vulkanVertexBuffer->memory, nullptr);
+        vkDestroyBuffer(m_logicalDevice.device, vulkanVertexBuffer->buffer, nullptr);
+        vkFreeMemory(m_logicalDevice.device, vulkanVertexBuffer->memory, nullptr);
         delete vulkanVertexBuffer;
     }
 
@@ -924,10 +949,10 @@ namespace Molten
             return;
         }
       
-        vkWaitForFences(m_logicalDevice, 1, &m_inFlightFences[m_currentFrame], VK_TRUE, std::numeric_limits<uint64_t>::max());
+        vkWaitForFences(m_logicalDevice.device, 1, &m_inFlightFences[m_currentFrame], VK_TRUE, std::numeric_limits<uint64_t>::max());
        
         MOLTEN_UNSCOPED_ENUM_BEGIN
-        VkResult result = vkAcquireNextImageKHR(m_logicalDevice, m_swapChain, std::numeric_limits<uint64_t>::max(), 
+        VkResult result = vkAcquireNextImageKHR(m_logicalDevice.device, m_swapChain, std::numeric_limits<uint64_t>::max(), 
             m_imageAvailableSemaphores[m_currentFrame], VK_NULL_HANDLE, &m_currentImageIndex);
         MOLTEN_UNSCOPED_ENUM_END
 
@@ -946,7 +971,7 @@ namespace Molten
 
         if (m_imagesInFlight[m_currentImageIndex] != VK_NULL_HANDLE)
         {
-            vkWaitForFences(m_logicalDevice, 1, &m_imagesInFlight[m_currentImageIndex], VK_TRUE, std::numeric_limits<uint64_t>::max());
+            vkWaitForFences(m_logicalDevice.device, 1, &m_imagesInFlight[m_currentImageIndex], VK_TRUE, std::numeric_limits<uint64_t>::max());
         }
         m_imagesInFlight[m_currentImageIndex] = m_inFlightFences[m_currentFrame];
 
@@ -1083,8 +1108,8 @@ namespace Molten
         submitInfo.signalSemaphoreCount = 1;
         submitInfo.pSignalSemaphores = renderSemaphores;
 
-        vkResetFences(m_logicalDevice, 1, &m_inFlightFences[m_currentFrame]);
-        if (vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, m_inFlightFences[m_currentFrame]) != VK_SUCCESS)
+        vkResetFences(m_logicalDevice.device, 1, &m_inFlightFences[m_currentFrame]);
+        if (vkQueueSubmit(m_logicalDevice.graphicsQueue, 1, &submitInfo, m_inFlightFences[m_currentFrame]) != VK_SUCCESS)
         {
             Logger::WriteError(m_logger, "Failed to submit draw command buffer.");
             return;
@@ -1100,7 +1125,7 @@ namespace Molten
         presentInfo.pSwapchains = swapChains;
         presentInfo.pImageIndices = &m_currentImageIndex;
 
-        vkQueuePresentKHR(m_presentQueue, &presentInfo);
+        vkQueuePresentKHR(m_logicalDevice.presentQueue, &presentInfo);
 
         m_currentFrame = (m_currentFrame + 1) % m_maxFramesInFlight;
         m_beginDraw = false;
@@ -1108,7 +1133,7 @@ namespace Molten
 
     void VulkanRenderer::WaitForDevice()
     {
-        vkDeviceWaitIdle(m_logicalDevice);
+        vkDeviceWaitIdle(m_logicalDevice.device);
     }
 
     void VulkanRenderer::UpdateUniformBuffer(UniformBuffer* uniformBuffer, const size_t offset, const size_t size, const void* data)
@@ -1118,99 +1143,117 @@ namespace Molten
         auto& frame = vulkanUniformBuffer->frames[m_currentImageIndex];
 
         void* dataMap;
-        vkMapMemory(m_logicalDevice, frame.memory, offset, size, 0, &dataMap);
+        vkMapMemory(m_logicalDevice.device, frame.memory, offset, size, 0, &dataMap);
         std::memcpy(dataMap, data, size);
-        vkUnmapMemory(m_logicalDevice, frame.memory);
+        vkUnmapMemory(m_logicalDevice.device, frame.memory);
     }
 
-
-    // DebugMessenger implementations.
-    /*VulkanRenderer::DebugMessenger::DebugMessenger() :
-        messenger(VK_NULL_HANDLE),
-        CreateDebugUtilsMessengerEXT(nullptr),
-        DestroyDebugUtilsMessengerEXT(nullptr)
-    { }
-
-    void VulkanRenderer::DebugMessenger::Clear()
+    bool VulkanRenderer::LoadRequirements()
     {
-        messenger = VK_NULL_HANDLE;
-        CreateDebugUtilsMessengerEXT = nullptr;
-        DestroyDebugUtilsMessengerEXT = nullptr;      
-    }*/
+        // Debug extensions and layers
+        m_debugInstanceExtensions = { Vulkan::Extension{ VK_EXT_DEBUG_UTILS_EXTENSION_NAME } };
+        m_debugInstanceLayers = { Vulkan::Layer{ "VK_LAYER_KHRONOS_validation" } };
 
-    VulkanRenderer::PhysicalDevice::PhysicalDevice() :
-        device(VK_NULL_HANDLE),
-        graphicsQueueIndex(0),
-        presentQueueIndex(0)
-    { }
 
-    VulkanRenderer::PhysicalDevice::PhysicalDevice(VkPhysicalDevice device) :
-        device(device),
-        graphicsQueueIndex(0),
-        presentQueueIndex(0)
-    { }
+        // Instance extensions.
+        m_requiredInstanceExtensions = { Vulkan::Extension{ "VK_KHR_surface", 0 } };
 
-    VulkanRenderer::PhysicalDevice::PhysicalDevice(VkPhysicalDevice device, uint32_t graphicsQueueIndex, uint32_t presentQueueIndex) :
-        device(device),
-        graphicsQueueIndex(graphicsQueueIndex),
-        presentQueueIndex(presentQueueIndex)
-    { }
-
-    void VulkanRenderer::PhysicalDevice::Clear()
-    {
-        device = VK_NULL_HANDLE;
-        graphicsQueueIndex = 0;
-        presentQueueIndex = 0;
-    }
-
-    bool VulkanRenderer::LoadInstanceExtensions()
-    {
-        VkResult result = VkResult::VK_SUCCESS;
-        if ((result = Vulkan::FetchInstanceExtensionProperties(m_instanceExtensions)) != VK_SUCCESS)
-        {
-            Vulkan::Log(m_logger, "Failed to fetch instance extensions", result);
-            return false;
-        }
-
-        m_requiredInstanceExtensions = {
-            VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
-            "VK_KHR_surface"
-        };
         auto& platformSurfaceExtension = Vulkan::GetPlatformSurfaceExtensionName();
         if (platformSurfaceExtension.size() != 0)
         {
-            m_requiredInstanceExtensions.push_back(platformSurfaceExtension);
+            m_requiredInstanceExtensions.push_back(Vulkan::Extension{ platformSurfaceExtension });
         }
 
-        std::vector<std::string> missingExtensions;
+        if (m_enableDebugMessenger)
+        {
+            m_requiredInstanceExtensions.insert(
+                m_requiredInstanceExtensions.end(), 
+                m_debugInstanceExtensions.begin(), 
+                m_debugInstanceExtensions.end());
+        }
+
+       /* Vulkan::Extensions missingExtensions;
         if (!Vulkan::CheckRequiredExtensions(missingExtensions, m_requiredInstanceExtensions, m_instanceExtensions))
         {
-            Logger::WriteError(m_logger, "Missing extensions: ...");
+            std::string errorMessage = "Missing instance extensions: ";
+            if (missingExtensions.size())
+            {
+                auto it = missingExtensions.begin(), last = std::prev(missingExtensions.end());
+                for (; it != last; it++)
+                {
+                    errorMessage += (*it).name + "(" + std::to_string((*it).version) + "), ";
+                }
+                errorMessage += (*it).name + "(" + std::to_string((*it).version) + ").";
+            }
+
+            Logger::WriteError(m_logger, errorMessage);
             return false;
+        }*/
+
+        // Instance Layers
+        m_requiredInstanceLayers = {}; 
+        if (m_enableDebugMessenger)
+        {
+            m_requiredInstanceLayers.insert(
+                m_requiredInstanceLayers.end(),
+                m_debugInstanceLayers.begin(),
+                m_debugInstanceLayers.end());
         }
+
+        // Device extensions.
+        m_requiredDeviceExtensions = { Vulkan::Extension{ VK_KHR_SWAPCHAIN_EXTENSION_NAME } };
+
+        // Physical device features
+        m_requiredDeviceFeatures = {};
+        m_requiredDeviceFeatures.fillModeNonSolid = true;
+        m_requiredDeviceFeatures.geometryShader = true;
 
         return true;
     }
 
     bool VulkanRenderer::LoadInstance(const Version& version)
     {
-        if (!LoadInstanceExtensions())
-        {
-            return false;
-        }
-
         VkResult result = VkResult::VK_SUCCESS;
 
-        const uint32_t debugSeverityFlags = m_logger ? m_logger->GetSeverityFlags() : 0;
-        auto debugCallback = [&](Logger::Severity severity, const char* message)
+        // Prepare instance and prepare debugger if avilable.
+        if ((result = Vulkan::PrepareInstance(m_instance)) != VK_SUCCESS)
         {
-            Logger::Write(m_logger, severity, message);
-        };
-        VkInstanceCreateInfo instanceInfo = {};
-        auto debuggerResult = m_debugMessenger.Prepare(instanceInfo, debugSeverityFlags, debugCallback);
+            Vulkan::LogError(m_logger, "Failed prepare instance", result);
+            return false;
+        }     
 
+        Vulkan::DebugMessenger* debugMessengerPtr = nullptr;    
+        if (m_enableDebugMessenger)
+        {
+            const uint32_t debugSeverityFlags = m_logger ? m_logger->GetSeverityFlags() : 0;
+            if (debugSeverityFlags != 0)
+            {
+                auto debugCallback = [&](Logger::Severity severity, const char* message)
+                {
+                    Logger::Write(m_logger, severity, message);
+                };
+
+                auto debuggerResult = Vulkan::PrepareDebugMessengerResult::Successful;
+
+                if ((debuggerResult = m_debugMessenger.Prepare(debugSeverityFlags, debugCallback)) == Vulkan::PrepareDebugMessengerResult::Successful)
+                {
+                    debugMessengerPtr = &m_debugMessenger;
+                }
+                else
+                {
+                    Logger::WriteWarning(m_logger, "Failed to prepare vulkan debugger messenger.");
+                }
+            }
+        }
+
+        if (!debugMessengerPtr)
+        {
+            Vulkan::RemoveExtensions(m_requiredInstanceExtensions, m_debugInstanceExtensions);
+            Vulkan::RemoveLayers(m_requiredInstanceLayers, m_debugInstanceLayers);      
+        }
+        
         const Version vulkanVersion = version != Version::None ? version : Version(1, 1);
-        if((result = Vulkan::CreateInstance(
+        if ((result = Vulkan::CreateInstance(
             m_instance,
             vulkanVersion,
             "Molten Engine",
@@ -1218,18 +1261,18 @@ namespace Molten
             "Molten Engine Application",
             Version(1, 0, 0),
             m_requiredInstanceExtensions,
-            instanceInfo)) != VK_SUCCESS)
+            m_requiredInstanceLayers,
+            debugMessengerPtr)) != VK_SUCCESS)
         {
-            Vulkan::Log(m_logger, "Failed create instance(vulkan version " + vulkanVersion.AsString() + ")", result);
+            Vulkan::LogError(m_logger, "Failed create instance(vulkan version " + vulkanVersion.AsString() + ")", result);
             return false;
         }
 
-        if (debuggerResult == Vulkan::PrepareDebugMessengerResult::Successful)
+        if(debugMessengerPtr)
         {
-            if (m_debugMessenger.Create(m_instance) != Vulkan::CreateDebugMessengerResult::Successful)
+            if (m_debugMessenger.Create(m_instance.handle) != Vulkan::CreateDebugMessengerResult::Successful)
             {
-                Logger::WriteError(m_logger, "Failed to create vulkan debugger messenger.");
-                return true;
+                Logger::WriteWarning(m_logger, "Failed to create vulkan debugger messenger.");
             }
         }
 
@@ -1237,11 +1280,12 @@ namespace Molten
     }
 
     bool VulkanRenderer::LoadSurface()
-    {       
-        VkResult result = Vulkan::CreatePlatformSurface(m_surface, m_instance, *m_renderTarget);
-        if (result != VkResult::VK_SUCCESS)
+    {
+        VkResult result = VkResult::VK_SUCCESS;
+
+        if ((result = Vulkan::CreatePlatformSurface(m_surface, m_instance, *m_renderTarget)) != VkResult::VK_SUCCESS)
         {
-            Vulkan::Log(m_logger, "Failed create surface", result);
+            Vulkan::LogError(m_logger, "Failed create surface", result);
             return false;
         }
 
@@ -1250,227 +1294,84 @@ namespace Molten
 
     bool VulkanRenderer::LoadPhysicalDevice()
     {
-        uint32_t deviceCount = 0;
-        vkEnumeratePhysicalDevices(m_instance, &deviceCount, nullptr);
-        if (!deviceCount)
+        VkResult result = VkResult::VK_SUCCESS;
+
+        Vulkan::PhysicalDevices physicalDevices;
+        if ((result = Vulkan::FetchPhysicalDevices(physicalDevices, m_instance)) != VkResult::VK_SUCCESS)
         {
-            Logger::WriteError(m_logger, "Failed to find any physical device supporting Vulkan.");
+            Vulkan::LogError(m_logger, "Failed create surface", result);
             return false;
         }
-        std::vector<VkPhysicalDevice> devices(deviceCount);
-        vkEnumeratePhysicalDevices(m_instance, &deviceCount, devices.data());
 
-        m_deviceExtensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+        Vulkan::PhysicalDevicesWithCapabilities physicalDevicesWithCapabilities;
+        std::copy(physicalDevices.begin(), physicalDevices.end(), std::back_inserter(physicalDevicesWithCapabilities));
 
-        std::multimap<uint32_t, PhysicalDevice> scoredDevices;
-        for (auto& device : devices)
-        {              
-            PhysicalDevice physicalDevice(device);
-            uint32_t score = 0;
-            if (!ScorePhysicalDevice(physicalDevice, score))
+        Vulkan::PhysicalDevicesWithCapabilities physicalDevicesCandidates;
+        Vulkan::FilterPhysicalDevicesWithRenderCapabilities(
+            physicalDevicesCandidates,
+            physicalDevicesWithCapabilities,
+            m_requiredDeviceExtensions,
+            m_requiredDeviceFeatures,
+            m_surface,
+            m_logger);
+
+        if(!physicalDevicesCandidates.size())
+        {
+            Logger::WriteError(m_logger, "Found no suitable physical devices.");
+            return false;
+        }
+
+        physicalDevicesCandidates.push_back(physicalDevicesCandidates[0]);
+
+        bool foundDevice = Vulkan::ScorePhysicalDevices(m_physicalDevice, physicalDevicesCandidates,
+            [&](const Vulkan::PhysicalDeviceWithCapabilities& physicalDevice) -> int32_t
+        {
+            int32_t score = 0;
+            auto& properties = physicalDevice.capabilities.properties;
+
+            if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
             {
-                continue;
+                score += 2000000;
             }
-            scoredDevices.insert({ score, physicalDevice });
-        }
-
-        if (!scoredDevices.size())
-        {
-            Logger::WriteError(m_logger, "Failed to find any physical device supporting the requirements.");
-            return false;
-        }
-
-        m_physicalDevice = scoredDevices.rbegin()->second;
-        return true;
-    }
-
-    bool VulkanRenderer::ScorePhysicalDevice(PhysicalDevice& physicalDevice, uint32_t& score)
-    {
-        score = 0;
-        VkPhysicalDevice device = physicalDevice.device;
-
-        VkPhysicalDeviceProperties deviceProps;
-        VkPhysicalDeviceFeatures deviceFeatures;
-        vkGetPhysicalDeviceProperties(device, &deviceProps);
-        vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
-
-        if (!deviceFeatures.fillModeNonSolid ||
-            !deviceFeatures.geometryShader ||
-            !CheckDeviceExtensionSupport(physicalDevice) ||
-            !FetchSwapChainSupport(physicalDevice))
-        {
-            return false;
-        }
-
-        uint32_t queueFamilyCount = 0;
-        vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
-        if (!queueFamilyCount)
-        {
-            return false;
-        }
-        std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
-        vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
-
-        uint32_t graphicsQueueIndex = 0;
-        uint32_t presentQueueIndex = 0;;
-        bool graphicsFamilySupport = false;
-        bool presentFamilySupport = false;
-        uint32_t queueIndex = 0;
-        for (const auto& queueFamily : queueFamilies)
-        {
-            if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
+            else if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU)
             {
-                graphicsFamilySupport = true;
-                graphicsQueueIndex = queueIndex;
+                score += 1000000;
             }
 
-            VkBool32 presentSupport = false;
-            vkGetPhysicalDeviceSurfaceSupportKHR(device, queueIndex, m_surface, &presentSupport);
-            if (presentSupport)
-            {
-                presentFamilySupport = true;
-                presentQueueIndex = queueIndex;
-            }
+            score += (properties.limits.maxFramebufferWidth / 1000) *
+                (properties.limits.maxFramebufferHeight / 1000);
 
-            if (graphicsFamilySupport && presentFamilySupport)
-            {
-                continue;
-            }
+            return score;
+        });
 
-            queueIndex++;
-        }
-        if (!graphicsFamilySupport || !presentFamilySupport)
+        if (!foundDevice)
         {
+            Logger::WriteError(m_logger, "Found no physical devices with suitable score.");
             return false;
         }
 
-        
-        if (deviceProps.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
-        {
-            score += 2000000;
-        }
-        else if (deviceProps.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU)
-        {
-            score += 1000000;
-        }
-
-        score += (deviceProps.limits.maxFramebufferWidth / 1000) *
-                       (deviceProps.limits.maxFramebufferHeight / 1000);
-
-        //VkPhysicalDeviceMemoryProperties memoryProps;
-        //vkGetPhysicalDeviceMemoryProperties(physicalDevice.device, &memoryProps);
-
-        physicalDevice.graphicsQueueIndex = graphicsQueueIndex;
-        physicalDevice.presentQueueIndex = presentQueueIndex;
-        return true;
-    }
-
-    bool VulkanRenderer::CheckDeviceExtensionSupport(PhysicalDevice& physicalDevice)
-    {
-        if (!m_deviceExtensions.size())
-        {
-            return true;
-        }
-
-        VkPhysicalDevice device = physicalDevice.device;
-
-        uint32_t extensionCount;
-        vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
-        
-        if (!extensionCount)
-        {
-            Logger::WriteError(m_logger, "Failed to find any device extensions.");
-            return false;
-        }
-
-        std::vector<VkExtensionProperties> availableExtensions(extensionCount);
-        vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions.data());
-
-        std::set<std::string> missingExtensions(m_deviceExtensions.begin(), m_deviceExtensions.end());
-        for (auto& extension : availableExtensions)
-        {
-            missingExtensions.erase(extension.extensionName);
-        }
-  
-        return missingExtensions.size() == 0;
-    }
-
-    bool VulkanRenderer::FetchSwapChainSupport(PhysicalDevice& physicalDevice)
-    {
-        VkPhysicalDevice device = physicalDevice.device;
-        SwapChainSupport& support = physicalDevice.swapChainSupport;
-        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, m_surface, &support.capabilities);
-
-        uint32_t formatCount;
-        vkGetPhysicalDeviceSurfaceFormatsKHR(device, m_surface, &formatCount, nullptr);
-        if (!formatCount)
-        {
-            return false;
-        }
-
-        support.formats.resize(formatCount);
-        vkGetPhysicalDeviceSurfaceFormatsKHR(device, m_surface, &formatCount, support.formats.data());
-
-        uint32_t presentModeCount;
-        vkGetPhysicalDeviceSurfacePresentModesKHR(device, m_surface, &presentModeCount, nullptr);
-
-        if (!presentModeCount)
-        {
-            return false;
-        }
-        
-        support.presentModes.resize(presentModeCount);
-        vkGetPhysicalDeviceSurfacePresentModesKHR(device, m_surface, &presentModeCount, support.presentModes.data());
-        
         return true;
     }
 
     bool VulkanRenderer::LoadLogicalDevice()
     {
-        std::vector<VkDeviceQueueCreateInfo> queueInfos;
 
-        std::set<uint32_t> uniqueFamilies = { m_physicalDevice.graphicsQueueIndex, m_physicalDevice.presentQueueIndex };
-        float queuePriority = 1.0f;
+        VkResult result = VkResult::VK_SUCCESS;
 
-        for (auto family : uniqueFamilies)
+        if ((result = Vulkan::CreateLogicalDevice(
+            m_logicalDevice,
+            m_physicalDevice,
+            m_requiredInstanceLayers,
+            m_requiredDeviceExtensions,
+            m_requiredDeviceFeatures)) != VkResult::VK_SUCCESS)
         {
-            VkDeviceQueueCreateInfo queueInfo = {};
-            queueInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-            queueInfo.queueFamilyIndex = family;
-            queueInfo.queueCount = 1;
-            queueInfo.pQueuePriorities = &queuePriority;
-            queueInfos.push_back(queueInfo);
-        }
-
-        VkPhysicalDeviceFeatures deviceFeatures = {};
-        deviceFeatures.fillModeNonSolid = VK_TRUE;
-
-        VkDeviceCreateInfo deviceInfo = {};
-        deviceInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-        deviceInfo.queueCreateInfoCount = static_cast<uint32_t>(queueInfos.size());
-        deviceInfo.pQueueCreateInfos = queueInfos.data();
-        deviceInfo.pEnabledFeatures = &deviceFeatures;
-        deviceInfo.enabledExtensionCount = static_cast<uint32_t>(m_deviceExtensions.size());
-        deviceInfo.ppEnabledExtensionNames = m_deviceExtensions.data();
-
-        deviceInfo.enabledLayerCount = 0;
-        if (m_debugMessenger.IsCreated() != VK_NULL_HANDLE)
-        {
-            auto& validationlayers = m_debugMessenger.GetValidationLayers();
-            deviceInfo.enabledLayerCount = static_cast<uint32_t>(validationlayers.size());
-            deviceInfo.ppEnabledLayerNames = validationlayers.data();
-        }
-
-        if (vkCreateDevice(m_physicalDevice.device, &deviceInfo, nullptr, &m_logicalDevice) != VK_SUCCESS)
-        {
-            Logger::WriteError(m_logger, "Failed to create logical device.");
+            Vulkan::LogError(m_logger, "Failed to create logical device", result);
             return false;
         }
 
-        vkGetDeviceQueue(m_logicalDevice, m_physicalDevice.graphicsQueueIndex, 0, &m_graphicsQueue);
-        vkGetDeviceQueue(m_logicalDevice, m_physicalDevice.presentQueueIndex, 0, &m_presentQueue);
         return true;
     }
+
 
     bool VulkanRenderer::LoadSwapChain()
     {
@@ -1478,7 +1379,7 @@ namespace Molten
 
         VkSurfaceFormatKHR surfaceFormat = {};
         bool foundSurfaceFormat = false;
-        for (auto& format : m_physicalDevice.swapChainSupport.formats)
+        for (auto& format : m_physicalDevice.capabilities.surfaceCapabilities.formats)
         {
             if (format.format == VkFormat::VK_FORMAT_B8G8R8A8_UNORM &&
                 format.colorSpace == VkColorSpaceKHR::VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
@@ -1498,7 +1399,7 @@ namespace Molten
         MOLTEN_UNSCOPED_ENUM_BEGIN
         VkPresentModeKHR presentMode = VkPresentModeKHR::VK_PRESENT_MODE_FIFO_KHR;
         MOLTEN_UNSCOPED_ENUM_END
-        for (auto& mode : m_physicalDevice.swapChainSupport.presentModes)
+        for (auto& mode : m_physicalDevice.capabilities.surfaceCapabilities.presentModes)
         {
             if (mode == VkPresentModeKHR::VK_PRESENT_MODE_MAILBOX_KHR)
             {  
@@ -1507,8 +1408,9 @@ namespace Molten
             }
         }
 
-        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_physicalDevice.device, m_surface, &m_physicalDevice.swapChainSupport.capabilities);
-        VkSurfaceCapabilitiesKHR& capabilities = m_physicalDevice.swapChainSupport.capabilities;
+        // We need to get the physical device surface capabilities once again, because the surface may have changed due to resize.
+        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_physicalDevice.device, m_surface, &m_physicalDevice.capabilities.surfaceCapabilities.capabilities);
+        VkSurfaceCapabilitiesKHR& capabilities = m_physicalDevice.capabilities.surfaceCapabilities.capabilities;
         
         if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
         {
@@ -1520,18 +1422,22 @@ namespace Molten
         }
         m_swapChainExtent = capabilities.currentExtent;
 
-        const uint32_t imageCount = std::min(capabilities.minImageCount + 1, capabilities.maxImageCount);
+        uint32_t imageCount = capabilities.minImageCount + 1;
+        if (capabilities.maxImageCount > 0 && imageCount > capabilities.maxImageCount)
+        {
+            imageCount = capabilities.maxImageCount;
+        }
 
         result = Vulkan::CreateSwapchain(
             m_swapChain,
-            m_logicalDevice, 
+            m_logicalDevice.device, 
             m_surface, 
             surfaceFormat,
             presentMode, 
             capabilities, 
             imageCount, 
-            m_physicalDevice.graphicsQueueIndex, 
-            m_physicalDevice.presentQueueIndex, 
+            m_physicalDevice.graphicsQueueIndex,
+            m_physicalDevice.presentQueueIndex,
             m_swapChain);
 
         if(result != VkResult::VK_SUCCESS || m_swapChain == VK_NULL_HANDLE)
@@ -1540,10 +1446,10 @@ namespace Molten
             return false;
         }
 
-        result = Vulkan::GetSwapchainImages(m_swapChainImages, m_logicalDevice, m_swapChain);
+        result = Vulkan::GetSwapchainImages(m_swapChainImages, m_logicalDevice.device, m_swapChain);
         if(result != VkResult::VK_SUCCESS || m_swapChainImages.size() != imageCount)
         {
-            vkDestroySwapchainKHR(m_logicalDevice, m_swapChain, nullptr);
+            vkDestroySwapchainKHR(m_logicalDevice.device, m_swapChain, nullptr);
             Logger::WriteError(m_logger, "Failed to create the requested number of swap chain images.");
             return false;
         }
@@ -1572,7 +1478,7 @@ namespace Molten
             imageViewInfo.subresourceRange.baseArrayLayer = 0;
             imageViewInfo.subresourceRange.layerCount = 1;
 
-            if (vkCreateImageView(m_logicalDevice, &imageViewInfo, nullptr, &m_swapChainImageViews[i]) != VK_SUCCESS)
+            if (vkCreateImageView(m_logicalDevice.device, &imageViewInfo, nullptr, &m_swapChainImageViews[i]) != VK_SUCCESS)
             {
                 Logger::WriteError(m_logger, "Failed create image view " + std::to_string(i) + ".");
                 return false;
@@ -1620,7 +1526,7 @@ namespace Molten
         renderPassInfo.dependencyCount = 1;
         renderPassInfo.pDependencies = &dependency;
 
-        if (vkCreateRenderPass(m_logicalDevice, &renderPassInfo, nullptr, &m_renderPass) != VK_SUCCESS)
+        if (vkCreateRenderPass(m_logicalDevice.device, &renderPassInfo, nullptr, &m_renderPass) != VK_SUCCESS)
         {
             Logger::WriteError(m_logger, "Failed to create render pass.");
             return false;
@@ -1663,7 +1569,7 @@ namespace Molten
         framebufferInfo.layers = 1;
 
         VkFramebuffer framebuffer;
-        if (vkCreateFramebuffer(m_logicalDevice, &framebufferInfo, nullptr, &framebuffer) != VK_SUCCESS)
+        if (vkCreateFramebuffer(m_logicalDevice.device, &framebufferInfo, nullptr, &framebuffer) != VK_SUCCESS)
         {
             Logger::WriteError(m_logger, "Failed to create framebuffer.");
             return nullptr;
@@ -1680,7 +1586,7 @@ namespace Molten
         commandPoolInfo.queueFamilyIndex = m_physicalDevice.graphicsQueueIndex;
         commandPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
-        if (vkCreateCommandPool(m_logicalDevice, &commandPoolInfo, nullptr, &m_commandPool) != VK_SUCCESS)
+        if (vkCreateCommandPool(m_logicalDevice.device, &commandPoolInfo, nullptr, &m_commandPool) != VK_SUCCESS)
         {
             Logger::WriteError(m_logger, "Failed to create command pool.");
             return false;
@@ -1694,9 +1600,9 @@ namespace Molten
         commandBufferInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
         commandBufferInfo.commandBufferCount = static_cast<uint32_t>(m_commandBuffers.size());
 
-        if (vkAllocateCommandBuffers(m_logicalDevice, &commandBufferInfo, m_commandBuffers.data()) != VK_SUCCESS)
+        if (vkAllocateCommandBuffers(m_logicalDevice.device, &commandBufferInfo, m_commandBuffers.data()) != VK_SUCCESS)
         {
-            vkDestroyCommandPool(m_logicalDevice, m_commandPool, nullptr);
+            vkDestroyCommandPool(m_logicalDevice.device, m_commandPool, nullptr);
             Logger::WriteError(m_logger, "Failed to allocate command buffers.");
             return false;
         }
@@ -1708,9 +1614,9 @@ namespace Molten
     {
         m_imagesInFlight.resize(m_swapChainImages.size(), VK_NULL_HANDLE);
 
-        if (Vulkan::CreateSemaphores(m_imageAvailableSemaphores, m_logicalDevice, m_maxFramesInFlight) != VkResult::VK_SUCCESS ||
-            Vulkan::CreateSemaphores(m_renderFinishedSemaphores, m_logicalDevice, m_maxFramesInFlight) != VkResult::VK_SUCCESS ||
-            Vulkan::CreateFences(m_inFlightFences, m_logicalDevice, VK_FENCE_CREATE_SIGNALED_BIT, m_maxFramesInFlight) != VkResult::VK_SUCCESS)
+        if (Vulkan::CreateSemaphores(m_imageAvailableSemaphores, m_logicalDevice.device, m_maxFramesInFlight) != VkResult::VK_SUCCESS ||
+            Vulkan::CreateSemaphores(m_renderFinishedSemaphores, m_logicalDevice.device, m_maxFramesInFlight) != VkResult::VK_SUCCESS ||
+            Vulkan::CreateFences(m_inFlightFences, m_logicalDevice.device, VK_FENCE_CREATE_SIGNALED_BIT, m_maxFramesInFlight) != VkResult::VK_SUCCESS)
         {
             Logger::WriteError(m_logger, "Failed to create semaphores and fences.");
             return false;
@@ -1721,13 +1627,13 @@ namespace Molten
 
     bool VulkanRenderer::RecreateSwapChain()
     {
-        vkDeviceWaitIdle(m_logicalDevice);
+        vkDeviceWaitIdle(m_logicalDevice.device);
 
         if (m_swapChain)
         {
-            Vulkan::DestroySemaphores(m_logicalDevice, m_imageAvailableSemaphores);
-            Vulkan::DestroySemaphores(m_logicalDevice, m_renderFinishedSemaphores);
-            Vulkan::DestroyFences(m_logicalDevice, m_inFlightFences);
+            Vulkan::DestroySemaphores(m_logicalDevice.device, m_imageAvailableSemaphores);
+            Vulkan::DestroySemaphores(m_logicalDevice.device, m_renderFinishedSemaphores);
+            Vulkan::DestroyFences(m_logicalDevice.device, m_inFlightFences);
 
             m_imagesInFlight.clear();
 
@@ -1737,7 +1643,7 @@ namespace Molten
             }
             m_presentFramebuffers.clear();
 
-            Vulkan::DestroyImageViews(m_logicalDevice, m_swapChainImageViews);
+            Vulkan::DestroyImageViews(m_logicalDevice.device, m_swapChainImageViews);
         }
 
 
@@ -1752,9 +1658,9 @@ namespace Molten
 
     void VulkanRenderer::UnloadSwapchain()
     {
-        Vulkan::DestroySemaphores(m_logicalDevice, m_imageAvailableSemaphores);
-        Vulkan::DestroySemaphores(m_logicalDevice, m_renderFinishedSemaphores);
-        Vulkan::DestroyFences(m_logicalDevice, m_inFlightFences);
+        Vulkan::DestroySemaphores(m_logicalDevice.device, m_imageAvailableSemaphores);
+        Vulkan::DestroySemaphores(m_logicalDevice.device, m_renderFinishedSemaphores);
+        Vulkan::DestroyFences(m_logicalDevice.device, m_inFlightFences);
 
         m_imagesInFlight.clear();
 
@@ -1764,11 +1670,11 @@ namespace Molten
         }
         m_presentFramebuffers.clear();
 
-        Vulkan::DestroyImageViews(m_logicalDevice, m_swapChainImageViews);
+        Vulkan::DestroyImageViews(m_logicalDevice.device, m_swapChainImageViews);
 
         if (m_swapChain)
         {
-            vkDestroySwapchainKHR(m_logicalDevice, m_swapChain, nullptr);
+            vkDestroySwapchainKHR(m_logicalDevice.device, m_swapChain, nullptr);
             m_swapChain = VK_NULL_HANDLE;
         }      
     }
@@ -1800,19 +1706,19 @@ namespace Molten
         bufferInfo.usage = usage;
         bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-        if (vkCreateBuffer(m_logicalDevice, &bufferInfo, nullptr, &buffer) != VK_SUCCESS)
+        if (vkCreateBuffer(m_logicalDevice.device, &bufferInfo, nullptr, &buffer) != VK_SUCCESS)
         {
             Logger::WriteError(m_logger, "Failed to create vertex buffer.");
             return false;
         }
 
         VkMemoryRequirements memoryReq;
-        vkGetBufferMemoryRequirements(m_logicalDevice, buffer, &memoryReq);
+        vkGetBufferMemoryRequirements(m_logicalDevice.device, buffer, &memoryReq);
 
         uint32_t memoryTypeIndex = 0;
         if (!FindPhysicalDeviceMemoryType(memoryTypeIndex, memoryReq.memoryTypeBits, properties))
         {
-            vkDestroyBuffer(m_logicalDevice, buffer, nullptr);
+            vkDestroyBuffer(m_logicalDevice.device, buffer, nullptr);
             Logger::WriteError(m_logger, "Failed to find matching memory type for vertex buffer.");
             return false;
         }
@@ -1822,17 +1728,17 @@ namespace Molten
         memoryAllocateInfo.allocationSize = memoryReq.size;
         memoryAllocateInfo.memoryTypeIndex = memoryTypeIndex;
 
-        if (vkAllocateMemory(m_logicalDevice, &memoryAllocateInfo, nullptr, &memory) != VK_SUCCESS)
+        if (vkAllocateMemory(m_logicalDevice.device, &memoryAllocateInfo, nullptr, &memory) != VK_SUCCESS)
         {
-            vkDestroyBuffer(m_logicalDevice, buffer, nullptr);
+            vkDestroyBuffer(m_logicalDevice.device, buffer, nullptr);
             Logger::WriteError(m_logger, "Failed to allocate vertex buffer memory.");
             return false;
         }
 
-        if (vkBindBufferMemory(m_logicalDevice, buffer, memory, 0) != VK_SUCCESS)
+        if (vkBindBufferMemory(m_logicalDevice.device, buffer, memory, 0) != VK_SUCCESS)
         {
-            vkDestroyBuffer(m_logicalDevice, buffer, nullptr);
-            vkFreeMemory(m_logicalDevice, memory, nullptr);
+            vkDestroyBuffer(m_logicalDevice.device, buffer, nullptr);
+            vkFreeMemory(m_logicalDevice.device, memory, nullptr);
             Logger::WriteError(m_logger, "Failed to bind memory to vertex buffer.");
             return false;
         }
@@ -1849,7 +1755,7 @@ namespace Molten
         commandBufferInfo.commandBufferCount = 1;
 
         VkCommandBuffer commandBuffer;
-        vkAllocateCommandBuffers(m_logicalDevice, &commandBufferInfo, &commandBuffer);
+        vkAllocateCommandBuffers(m_logicalDevice.device, &commandBufferInfo, &commandBuffer);
 
         VkCommandBufferBeginInfo beginInfo = {};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -1868,10 +1774,10 @@ namespace Molten
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = &commandBuffer;
         // USE FENCE?
-        vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
-        vkQueueWaitIdle(m_graphicsQueue);
+        vkQueueSubmit(m_logicalDevice.graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
+        vkQueueWaitIdle(m_logicalDevice.graphicsQueue);
 
-        vkFreeCommandBuffers(m_logicalDevice, m_commandPool, 1, &commandBuffer);
+        vkFreeCommandBuffers(m_logicalDevice.device, m_commandPool, 1, &commandBuffer);
     }
 
     bool VulkanRenderer::CreateImage(const Vector2ui32& dimensions, VkFormat format, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& memory)
@@ -1892,13 +1798,13 @@ namespace Molten
         imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
         imageInfo.flags = 0;
 
-        if (vkCreateImage(m_logicalDevice, &imageInfo, nullptr, &image) != VK_SUCCESS)
+        if (vkCreateImage(m_logicalDevice.device, &imageInfo, nullptr, &image) != VK_SUCCESS)
         {
             return nullptr;
         }
 
         VkMemoryRequirements memoryReq;
-        vkGetBufferMemoryRequirements(m_logicalDevice, image, &memoryReq);
+        vkGetBufferMemoryRequirements(m_logicalDevice.device, image, &memoryReq);
 
         uint32_t memoryTypeIndex = 0;
         if (!FindPhysicalDeviceMemoryType(memoryTypeIndex, memoryReq.memoryTypeBits, properties))
@@ -1911,13 +1817,13 @@ namespace Molten
         memoryAllocateInfo.allocationSize = memoryReq.size;
         memoryAllocateInfo.memoryTypeIndex = memoryTypeIndex;
 
-        if (vkAllocateMemory(m_logicalDevice, &memoryAllocateInfo, nullptr, &memory) != VK_SUCCESS)
+        if (vkAllocateMemory(m_logicalDevice.device, &memoryAllocateInfo, nullptr, &memory) != VK_SUCCESS)
         {
             Logger::WriteError(m_logger, "Failed to allocate image memory.");
             return false;
         }
 
-        if (vkBindImageMemory(m_logicalDevice, image, memory, 0) != VK_SUCCESS)
+        if (vkBindImageMemory(m_logicalDevice.device, image, memory, 0) != VK_SUCCESS)
         {
             Logger::WriteError(m_logger, "Failed to bind memory to image.");
             return false;
@@ -2011,7 +1917,7 @@ namespace Molten
             descriptorSetLayoutInfo.pBindings = &binding;
 
             VkDescriptorSetLayout descriptorSetLayout;
-            if (vkCreateDescriptorSetLayout(m_logicalDevice, &descriptorSetLayoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS)
+            if (vkCreateDescriptorSetLayout(m_logicalDevice.device, &descriptorSetLayoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS)
             {
                 Logger::WriteError(m_logger, "Failed to create descriptor set layout.");
                 return false;
@@ -2103,7 +2009,7 @@ namespace Molten
         shaderModuleInfo.pCode = reinterpret_cast<const uint32_t*>(spirvCode.data());
 
         VkShaderModule shaderModule;
-        if (vkCreateShaderModule(m_logicalDevice, &shaderModuleInfo, nullptr, &shaderModule) != VK_SUCCESS)
+        if (vkCreateShaderModule(m_logicalDevice.device, &shaderModuleInfo, nullptr, &shaderModule) != VK_SUCCESS)
         {
             Logger::WriteError(m_logger, "Failed to create shader module.");
             return VK_NULL_HANDLE;

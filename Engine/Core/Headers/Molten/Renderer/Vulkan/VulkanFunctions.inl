@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2019 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,43 +23,16 @@
 *
 */
 
-#include "Molten/Gui/Widgets/PaddingWidget.hpp"
 
-namespace Molten::Gui
+#if defined(MOLTEN_ENABLE_VULKAN)
+
+MOLTEN_UNSCOPED_ENUM_BEGIN
+
+namespace Molten::Vulkan
 {
 
-    Padding::Padding(
-        const float left,
-        const float top,
-        const float right,
-        const float bottom
-    ) :
-        PaddingData(left, top, right, bottom)
-    {}
-
-    void Padding::Update(const Time& /*deltaTime*/)
-    {
-    }
-
-    void Padding::Draw(CanvasRenderer& /*renderer*/)
-    {
-    }
-
-    Vector2f32 Padding::CalculateSize(const Vector2f32& grantedSize)
-    {
-        return grantedSize;
-    }
-
-    void Padding::CalculateChildrenGrantedSize(WidgetTreeData::Tree::ConstLane<WidgetTreeData::Tree::PartialLaneType> children)
-    {
-        Vector2f32 childSize = GetGrantedSize() - (low + high);
-
-        SetRenderData(children.begin(), low, childSize);
-    }
-
-    bool Padding::OnAddChild(WidgetPointer /*widget*/)
-    {
-        return true;
-    }
-
 }
+
+MOLTEN_UNSCOPED_ENUM_END
+
+#endif

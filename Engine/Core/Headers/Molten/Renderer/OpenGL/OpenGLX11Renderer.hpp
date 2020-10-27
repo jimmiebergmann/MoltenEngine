@@ -45,6 +45,7 @@ namespace Molten
 
     public:
 
+        /** Constructor. */
         OpenGLX11Renderer();
 
         /**
@@ -54,7 +55,8 @@ namespace Molten
          */
         OpenGLX11Renderer(RenderTarget& renderTarget, const Version& version, Logger* logger = nullptr);
 
-        ~OpenGLX11Renderer();
+        /** Virtual destructor. */
+        virtual ~OpenGLX11Renderer();
 
         /**
          * Opens renderer by loading and attaching renderer to provided window.
@@ -63,8 +65,11 @@ namespace Molten
          */
         virtual bool Open(RenderTarget& renderTarget, const Version& version = Version::None, Logger* logger = nullptr) override;
 
-        /**  Closing renderer. */
+        /** Closing renderer. */
         virtual void Close() override;
+
+        /** Checks if renderer is open Same value returned as last call to Open. */
+        virtual bool IsOpen() const override;
 
         /**
          * Resize the framebuffers.

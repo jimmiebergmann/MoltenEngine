@@ -29,30 +29,124 @@
 
 #include "Molten/Renderer/Vulkan/VulkanResult.hpp"
 #include "Molten/Logger.hpp"
+#include <algorithm>
+#include <map>
+#include <set>
 
 MOLTEN_UNSCOPED_ENUM_BEGIN
+
+#define CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME_QUOTE(x) #x
+#define CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(feature) {  &VkPhysicalDeviceFeatures::##feature, CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME_QUOTE(##feature) }
 
 namespace Molten::Vulkan
 {  
 
+    struct InternalPhysicalDeviceFeatureWithName
+    {
+        VkBool32 VkPhysicalDeviceFeatures::* memberPointer;
+        const std::string name;
+    };
+
+    // Static data
+    static const std::vector<InternalPhysicalDeviceFeatureWithName> g_allPhysicalDeviceFeatures = {
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(robustBufferAccess),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(fullDrawIndexUint32),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(imageCubeArray),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(independentBlend),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(geometryShader),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(tessellationShader),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(sampleRateShading),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(dualSrcBlend),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(logicOp),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(multiDrawIndirect),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(drawIndirectFirstInstance),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(depthClamp),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(depthBiasClamp),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(fillModeNonSolid),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(depthBounds),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(wideLines),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(largePoints),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(alphaToOne),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(multiViewport),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(samplerAnisotropy),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(textureCompressionETC2),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(textureCompressionASTC_LDR),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(textureCompressionBC),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(occlusionQueryPrecise),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(pipelineStatisticsQuery),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(vertexPipelineStoresAndAtomics),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(fragmentStoresAndAtomics),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(shaderTessellationAndGeometryPointSize),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(shaderImageGatherExtended),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(shaderStorageImageExtendedFormats),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(shaderStorageImageMultisample),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(shaderStorageImageReadWithoutFormat),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(shaderStorageImageWriteWithoutFormat),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(shaderUniformBufferArrayDynamicIndexing),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(shaderSampledImageArrayDynamicIndexing),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(shaderStorageBufferArrayDynamicIndexing),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(shaderStorageImageArrayDynamicIndexing),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(shaderClipDistance),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(shaderCullDistance),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(shaderFloat64),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(shaderInt64),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(shaderInt16),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(shaderResourceResidency),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(shaderResourceMinLod),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(sparseBinding),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(sparseResidencyBuffer),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(sparseResidencyImage2D),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(sparseResidencyImage3D),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(sparseResidency2Samples),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(sparseResidency4Samples),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(sparseResidency8Samples),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(sparseResidency16Samples),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(sparseResidencyAliased),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(variableMultisampleRate),
+        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(inheritedQueries)
+    };
+
+
+
     // Vulkan functions implementations.
     bool CheckRequiredExtensions(
-        std::vector<std::string>& missingExtensionNames,
-        const std::vector<std::string>& requiredExtensionNames,
-        const ExtensionProperties availableExtensions)
+        Extensions& missingExtensions,
+        const Extensions& requiredExtensions,
+        const Extensions& availableExtensions)
     {
-        missingExtensionNames = requiredExtensionNames;
+        missingExtensions = requiredExtensions;
 
         for (const auto& availableExtension : availableExtensions)
         {
-            auto it = std::find(missingExtensionNames.begin(), missingExtensionNames.end(), availableExtension.extensionName);
-            if (it != missingExtensionNames.end())
+            auto it = std::find_if(missingExtensions.begin(), missingExtensions.end(),
+                [&](auto& extension) {return availableExtension.name == extension.name && availableExtension.version >= extension.version; });
+            if (it != missingExtensions.end())
             {
-                missingExtensionNames.erase(it);
+                missingExtensions.erase(it);
             }
         }
 
-        return missingExtensionNames.size() == 0;
+        return missingExtensions.size() == 0;
+    }
+
+    bool CheckRequiredDeviceFeatures(
+        PhysicalDeviceFeaturesWithName& missingFeatures,
+        const VkPhysicalDeviceFeatures& requiredFeatures,
+        const VkPhysicalDeviceFeatures& availableFeatures)
+    {
+        bool failed = false;
+
+        for (auto& feature : g_allPhysicalDeviceFeatures)
+        {
+            if (requiredFeatures.*(feature.memberPointer) &&
+                requiredFeatures.*(feature.memberPointer) != availableFeatures.*(feature.memberPointer))
+            {
+                failed = true;
+                missingFeatures.push_back({ feature.memberPointer, feature.name }); 
+            }
+        }
+
+        return !failed;
     }
 
     VkResult CreateBuffer(
@@ -127,14 +221,15 @@ namespace Molten::Vulkan
     }
 
     VkResult CreateInstance(
-        VkInstance& instance,
+        Instance& instance,
         const Version& vulkanVersion,
         const std::string& engineName,
         const Version& engineVersion,
         const std::string& applicationName,
         const Version& applicationVersion,
-        const std::vector<std::string>& enabledExtensions,
-        const VkInstanceCreateInfo& preparedInstanceInfo)
+        const Extensions& enabledExtensions,
+        const Layers& enabledLayers,
+        DebugMessenger* debugMessenger)
     {
         VkResult result = VkResult::VK_SUCCESS;
 
@@ -144,7 +239,13 @@ namespace Molten::Vulkan
         std::vector<const char*> ptrExtensions(enabledExtensions.size(), nullptr);
         for (size_t i = 0; i < enabledExtensions.size(); i++)
         {
-            ptrExtensions[i] = enabledExtensions[i].c_str();
+            ptrExtensions[i] = enabledExtensions[i].name.c_str();
+        }
+
+        std::vector<const char*> ptrEnabledLayers(enabledLayers.size(), nullptr);
+        for (size_t i = 0; i < enabledLayers.size(); i++)
+        {
+            ptrEnabledLayers[i] = enabledLayers[i].name.c_str();
         }
 
         // Create instance.
@@ -156,35 +257,57 @@ namespace Molten::Vulkan
         appInfo.engineVersion = engineVersionVulkan;
         appInfo.apiVersion = vulkanVersionVulkan;
 
-        VkInstanceCreateInfo instanceInfo = preparedInstanceInfo;
+        VkInstanceCreateInfo instanceInfo = {};
         instanceInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
         instanceInfo.enabledLayerCount = 0;
         instanceInfo.pNext = nullptr; 
         instanceInfo.pApplicationInfo = &appInfo;
         instanceInfo.enabledExtensionCount = static_cast<uint32_t>(ptrExtensions.size());
         instanceInfo.ppEnabledExtensionNames = ptrExtensions.data();
+        instanceInfo.enabledLayerCount = static_cast<uint32_t>(ptrEnabledLayers.size());
+        instanceInfo.ppEnabledLayerNames = ptrEnabledLayers.data();
 
-        if ((result = vkCreateInstance(&instanceInfo, nullptr, &instance)) != VkResult::VK_SUCCESS)
+        if (debugMessenger)
+        {
+            instanceInfo.pNext = reinterpret_cast<const VkBaseOutStructure*>(&debugMessenger->GetCreateInfo());
+        }
+
+        if ((result = vkCreateInstance(&instanceInfo, nullptr, &instance.handle)) != VkResult::VK_SUCCESS)
         {
             return result;
         }
+
+        /*if ((result = Vulkan::FetchInstanceExtensions(instance.extensions)) != VK_SUCCESS)
+        {
+            return result;
+        }
+
+        if ((result = Vulkan::FetchInstanceLayers(instance.layers)) != VK_SUCCESS)
+        {
+            return result;
+        }*/
 
         return result;
     }
 
     VkResult CreateLogicalDevice(
-        VkDevice& logicalDevice,
-        UniqueQueueFamilyIds familyIds,
-        VkPhysicalDevice physicalDevice,
-        const VkPhysicalDeviceFeatures enabledPhysicalDeviceFeatures,
-        const std::vector<std::string> enabledExtensions,
-        const std::vector<std::string> enabledLayers)
+        LogicalDevice& logicalDevice,
+        PhysicalDeviceWithCapabilities& physicalDeviceWithCapabilities,
+        const Layers& enabledInstanceLayers,
+        const Extensions& enabledDeviceExtensions,
+        const VkPhysicalDeviceFeatures& enabledDeviceFeatures)
     {
         VkResult result = VkResult::VK_SUCCESS;
 
-        const float queuePriority = 1.0f;
+        const std::set<uint32_t> uniqueFamilyIds = {
+            physicalDeviceWithCapabilities.graphicsQueueIndex,
+            physicalDeviceWithCapabilities.presentQueueIndex
+        };
+        
         std::vector<VkDeviceQueueCreateInfo> queueInfos;
-        for (auto familyId : familyIds)
+        const float queuePriority = 1.0f;
+
+        for (auto familyId : uniqueFamilyIds)
         {
             VkDeviceQueueCreateInfo queueInfo = {};
             queueInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
@@ -194,38 +317,42 @@ namespace Molten::Vulkan
             queueInfos.push_back(queueInfo);
         }
 
-        std::vector<const char*> ptrEnabledExtensions(enabledExtensions.size(), nullptr);
-        for(size_t i = 0; i < enabledExtensions.size() ; i++)
+        std::vector<const char*> ptrEnabledExtensions(enabledDeviceExtensions.size(), nullptr);
+        for(size_t i = 0; i < enabledDeviceExtensions.size() ; i++)
         {
-            ptrEnabledExtensions[i] = enabledExtensions[i].c_str();
+            ptrEnabledExtensions[i] = enabledDeviceExtensions[i].name.c_str();
         }
-        std::vector<const char*> ptrEnabledLayers(enabledLayers.size(), nullptr);
-        for (size_t i = 0; i < enabledLayers.size(); i++)
+        std::vector<const char*> ptrEnabledLayers(enabledInstanceLayers.size(), nullptr);
+        for (size_t i = 0; i < enabledInstanceLayers.size(); i++)
         {
-            ptrEnabledLayers[i] = enabledLayers[i].c_str();
+            ptrEnabledLayers[i] = enabledInstanceLayers[i].name.c_str();
         }
 
         VkDeviceCreateInfo deviceInfo = {};
         deviceInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
         deviceInfo.queueCreateInfoCount = static_cast<uint32_t>(queueInfos.size());
         deviceInfo.pQueueCreateInfos = queueInfos.data();
-        deviceInfo.pEnabledFeatures = &enabledPhysicalDeviceFeatures;
+        deviceInfo.pEnabledFeatures = &enabledDeviceFeatures;
         deviceInfo.enabledExtensionCount = static_cast<uint32_t>(ptrEnabledExtensions.size());
         deviceInfo.ppEnabledExtensionNames = ptrEnabledExtensions.data();
         deviceInfo.enabledLayerCount = static_cast<uint32_t>(ptrEnabledLayers.size());
         deviceInfo.ppEnabledLayerNames = ptrEnabledLayers.data();
         
-        if ((result = vkCreateDevice(physicalDevice, &deviceInfo, nullptr, &logicalDevice)) != VK_SUCCESS)
+        auto& physicalDevice = physicalDeviceWithCapabilities.device;
+        if ((result = vkCreateDevice(physicalDevice, &deviceInfo, nullptr, &logicalDevice.device)) != VK_SUCCESS)
         {
             return result;
         }
+
+        vkGetDeviceQueue(logicalDevice.device, physicalDeviceWithCapabilities.graphicsQueueIndex, 0, &logicalDevice.graphicsQueue);
+        vkGetDeviceQueue(logicalDevice.device, physicalDeviceWithCapabilities.presentQueueIndex, 0, &logicalDevice.presentQueue);
        
         return result;
     }
 
     VkResult CreatePlatformSurface(
         VkSurfaceKHR& surface,
-        VkInstance& instance,
+        Instance& instance,
         RenderTarget& renderTarget)
     {
     #if MOLTEN_PLATFORM == MOLTEN_PLATFORM_WINDOWS
@@ -237,7 +364,7 @@ namespace Molten::Vulkan
         surfaceInfo.hwnd = renderTarget.GetWin32Window();
         surfaceInfo.hinstance = renderTarget.GetWin32Instance();
 
-        if ((result = vkCreateWin32SurfaceKHR(instance, &surfaceInfo, nullptr, &surface)) != VK_SUCCESS)
+        if ((result = vkCreateWin32SurfaceKHR(instance.handle, &surfaceInfo, nullptr, &surface)) != VK_SUCCESS)
         {
             return result;
         }
@@ -363,12 +490,11 @@ namespace Molten::Vulkan
         }
     }
 
-
-    VkResult FetchDeviceExtensionProperties(
-        ExtensionProperties& extensionProperties,
+    VkResult FetchDeviceExtensions(
+        Extensions& extensions,
         VkPhysicalDevice physicalDevice)
     {
-        extensionProperties.clear();
+        extensions.clear();
 
         VkResult result = VkResult::VK_SUCCESS;
 
@@ -383,19 +509,20 @@ namespace Molten::Vulkan
             return result;
         }
 
-        extensionProperties.resize(extensionCount);
+        std::vector<VkExtensionProperties> extensionProperties(extensionCount, VkExtensionProperties{});
         if ((result = vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionCount, extensionProperties.data())) != VkResult::VK_SUCCESS)
         {
             return result;
         }
 
+        std::copy(extensionProperties.begin(), extensionProperties.end(), std::back_inserter(extensions));
         return result;
     }
 
-    VkResult FetchInstanceExtensionProperties(
-        ExtensionProperties& extensionProperties)
+    VkResult FetchInstanceExtensions(
+        Extensions& extensions)
     {
-        extensionProperties.clear();
+        extensions.clear();
 
         VkResult result = VkResult::VK_SUCCESS;
 
@@ -410,50 +537,93 @@ namespace Molten::Vulkan
             return result;
         }
 
-        extensionProperties.resize(extensionCount);
+        std::vector<VkExtensionProperties> extensionProperties(extensionCount, VkExtensionProperties{});
         if ((result = vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensionProperties.data())) != VkResult::VK_SUCCESS)
         {
             return result;
         }
-            
+        
+        std::copy(extensionProperties.begin(), extensionProperties.end(), std::back_inserter(extensions));
         return result;
     }
 
-    VkResult FetchPhysicalDevices(
-        PhysicalDevices& physicalDevices,
-        VkInstance instance)
+    VkResult FetchInstanceLayers(
+        Layers& layers)
     {
+        layers.clear();
+
         VkResult result = VkResult::VK_SUCCESS;
 
-        uint32_t deviceCount = 0;
-        if ((result = vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr)) != VkResult::VK_SUCCESS)
+        uint32_t layerCount = 0;
+        if ((result = vkEnumerateInstanceLayerProperties(&layerCount, nullptr)) != VkResult::VK_SUCCESS)
+        {
+            return result;
+        }
+
+        if (!layerCount)
+        {
+            return result;
+        }
+
+        std::vector<VkLayerProperties> layerProperties(layerCount, VkLayerProperties{});
+        if ((result = vkEnumerateInstanceLayerProperties(&layerCount, layerProperties.data())) != VkResult::VK_SUCCESS)
+        {
+            return result;
+        }
+
+        std::copy(layerProperties.begin(), layerProperties.end(), std::back_inserter(layers));
+        return result;
+    }
+
+
+    MOLTEN_API void FetchQueueFamilyProperties(
+        QueueFamilyProperties& queueFamilyProperties,
+        VkPhysicalDevice physicalDevice)
+    {
+        queueFamilyProperties.clear();
+
+        uint32_t queueFamilyCount = 0;
+        vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, nullptr);
+        if (!queueFamilyCount)
+        {
+            return;
+        }
+
+        queueFamilyProperties.resize(queueFamilyCount);
+        vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, queueFamilyProperties.data());
+    }
+
+
+    VkResult FetchPhysicalDevices(
+        PhysicalDevices& physicalDevices,
+        Instance& instance)
+    {
+        physicalDevices.clear();
+
+        VkResult result = VkResult::VK_SUCCESS;
+
+        uint32_t physicalDeviceCount = 0;
+        if ((result = vkEnumeratePhysicalDevices(instance.handle, &physicalDeviceCount, nullptr)) != VkResult::VK_SUCCESS)
         {
             return result;
         }
             
-        if (!deviceCount)
+        if (!physicalDeviceCount)
         {
             return VkResult::VK_SUCCESS;
         }
 
-        std::vector<VkPhysicalDevice> devices(deviceCount);
-        if ((result = vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data())) != VkResult::VK_SUCCESS)
+        physicalDevices.resize(physicalDeviceCount);
+        if ((result = vkEnumeratePhysicalDevices(instance.handle, &physicalDeviceCount, physicalDevices.data())) != VkResult::VK_SUCCESS)
         {
             return result;
-        }
-
-        for (uint32_t i = 0; i < deviceCount; i++)
-        {
-            auto& physicalDevice = physicalDevices[i];
-            auto& device = devices[i];
-            physicalDevice.device = device;
         }
 
         return result;
     }
 
-    VkResult FetchSurfaceCapabilities(
-        SurfaceCapabilities& surfaceCababilities,
+    VkResult FetchPhysicalDeviceSurfaceCapabilities(
+        PhysicalDeviceSurfaceCapabilities& surfaceCababilities,
         VkPhysicalDevice physicalDevice,
         VkSurfaceKHR surface)
     {
@@ -495,6 +665,205 @@ namespace Molten::Vulkan
         return result;
     }
 
+    void FilterMemoryTypesByPropertyFlags(
+        FilteredMemoryTypes& filteredMemorytypes,
+        const VkPhysicalDeviceMemoryProperties& physicalDeviceMemoryProperies,
+        const uint32_t propertyFlags)
+    {
+        filteredMemorytypes.clear();
+
+        for (uint32_t i = 0; i < physicalDeviceMemoryProperies.memoryTypeCount; i++)
+        {
+            auto& memoryType = physicalDeviceMemoryProperies.memoryTypes[i];
+            if ((memoryType.propertyFlags & propertyFlags) == propertyFlags)
+            {
+                filteredMemorytypes.push_back(FilteredMemoryType{ i, memoryType.propertyFlags });
+            }
+        }
+    }
+
+    void FilterPhysicalDevicesWithRenderCapabilities(
+        PhysicalDevicesWithCapabilities& filteredPhysicalDeviceWithCapabilities,
+        PhysicalDevicesWithCapabilities& physicalDeviceWithCapabilities,
+        const Vulkan::Extensions& requiredExtensions,
+        const VkPhysicalDeviceFeatures& requiredDeviceFeatures,
+        VkSurfaceKHR surface,
+        Logger* logger)
+    {
+        filteredPhysicalDeviceWithCapabilities.clear();
+
+        PhysicalDevicesWithCapabilities physicalDevicesCandidates;
+        std::copy_if(physicalDeviceWithCapabilities.begin(), physicalDeviceWithCapabilities.end(), std::back_inserter(filteredPhysicalDeviceWithCapabilities),
+            [&](PhysicalDeviceWithCapabilities& physicalDevice)
+        {
+            VkResult result = VkResult::VK_SUCCESS;
+
+            VkPhysicalDevice& device = physicalDevice.device;
+
+            Extensions& availableExtensions = physicalDevice.capabilities.extensions;
+            if ((result = FetchDeviceExtensions(availableExtensions, physicalDevice.device)) != VkResult::VK_SUCCESS)
+            {
+                LogError(logger, "Failed to fetch device extensions", result);
+                return false;
+            }
+
+
+            Extensions missingExtensions;
+            if (!CheckRequiredExtensions(missingExtensions, requiredExtensions, availableExtensions))
+            {
+                return false;
+            }
+
+            VkPhysicalDeviceFeatures& features = physicalDevice.capabilities.features;
+            vkGetPhysicalDeviceFeatures(device, &features);
+            Vulkan::PhysicalDeviceFeaturesWithName missingFeatures;
+            if(!Vulkan::CheckRequiredDeviceFeatures(missingFeatures, requiredDeviceFeatures, features))
+            {
+                return false;
+            }
+
+            PhysicalDeviceSurfaceCapabilities& surfaceCapabilities = physicalDevice.capabilities.surfaceCapabilities;
+            if ((result = FetchPhysicalDeviceSurfaceCapabilities(surfaceCapabilities, physicalDevice.device, surface)) != VkResult::VK_SUCCESS)
+            {
+                LogError(logger, "Failed to fetch surface capabilities", result);
+                return false;
+            }
+
+            if (!surfaceCapabilities.formats.size() ||
+                !surfaceCapabilities.presentModes.size())
+            {
+                return false;
+            }
+
+            QueueFamilyProperties& queueFamilies = physicalDevice.capabilities.queueFamilies;
+            FetchQueueFamilyProperties(queueFamilies, device);
+
+            bool foundQueueIndicies = FindSuitableQueueIndices(
+                physicalDevice.graphicsQueueIndex,
+                physicalDevice.presentQueueIndex,
+                device,
+                surface,
+                queueFamilies);
+
+            if (!foundQueueIndicies)
+            {
+                return false;
+            }
+
+            VkPhysicalDeviceProperties& properties = physicalDevice.capabilities.properties;
+            vkGetPhysicalDeviceProperties(device, &properties);
+
+            return true;
+        });
+    }
+
+    const VkBaseInStructure& FindLastBaseInStructure(VkBaseInStructure& baseInStructure)
+    {
+        const auto* currentStructure = &baseInStructure;
+        while (currentStructure->pNext != nullptr)
+        {
+            currentStructure = currentStructure->pNext;
+        }
+
+        return *currentStructure;
+    }
+
+    VkBaseOutStructure& FindLastBaseOutStructure(VkBaseOutStructure& baseOutStructure)
+    {
+        auto* currentStructure = &baseOutStructure;
+        while (currentStructure->pNext != nullptr)
+        {
+            currentStructure = currentStructure->pNext;
+        }
+
+        return *currentStructure;
+    }
+
+    Layers::iterator FindLayer(Layers& layers, const std::string& name)
+    {
+        return std::find_if(layers.begin(), layers.end(), 
+            [&](Layer& layer)
+        {
+            return layer.name == name;
+        });
+    }
+
+    Extensions::iterator FindExtension(Extensions& extensions, const std::string& name)
+    {
+        return std::find_if(extensions.begin(), extensions.end(),
+            [&](Extension& extension)
+        {
+            return extension.name == name;
+        });
+    }
+
+    bool FindMemoryTypeIndex(
+        uint32_t& index,
+        const FilteredMemoryTypes& filteredMemoryTypes,
+        const uint32_t requiredMemoryTypeFlags)
+    {
+        for (auto& filteredMemoryType : filteredMemoryTypes)
+        {
+            if (requiredMemoryTypeFlags & (1 << filteredMemoryType.index))
+            {
+                index = filteredMemoryType.index;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    bool FindSuitableQueueIndices(
+        uint32_t& graphicsQueueIndex,
+        uint32_t& presentQueueIndex,
+        VkPhysicalDevice physicalDevice,
+        VkSurfaceKHR surface,
+        const QueueFamilyProperties& queueFamilies,
+        const VkQueueFlags requiredQueueFlags)
+    {
+        graphicsQueueIndex = std::numeric_limits<uint32_t>::max();
+        presentQueueIndex = std::numeric_limits<uint32_t>::max();
+
+        uint32_t finalGraphicsQueueIndex = 0;
+        uint32_t finalPresentQueueIndex = 0;
+
+        bool graphicsFamilySupport = false;
+        bool presentFamilySupport = false;
+
+        for(uint32_t i = 0; i < queueFamilies.size(); i++)
+        {
+            auto& queueFamily = queueFamilies[i];
+
+            if (queueFamily.queueFlags & (VK_QUEUE_GRAPHICS_BIT | requiredQueueFlags))
+            {
+                graphicsFamilySupport = true;
+                finalGraphicsQueueIndex = i;
+            }
+
+            VkBool32 presentSupport = false;
+            vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, surface, &presentSupport);
+            if (presentSupport)
+            {
+                presentFamilySupport = true;
+                finalPresentQueueIndex = i;
+            }
+
+            if (graphicsFamilySupport && presentFamilySupport)
+            {
+                break;
+            }
+        }
+        if (!graphicsFamilySupport || !presentFamilySupport)
+        {
+            return false;
+        }
+
+        graphicsQueueIndex = finalGraphicsQueueIndex;
+        presentQueueIndex = finalPresentQueueIndex;
+        return true;
+    }
+
     const std::string& GetPlatformSurfaceExtensionName()
     {
     #if MOLTEN_PLATFORM == MOLTEN_PLATFORM_WINDOWS
@@ -529,64 +898,40 @@ namespace Molten::Vulkan
         return result;
     }
 
-    FilteredMemoryTypes FilterMemoryTypesByPropertyFlags(
-        const VkPhysicalDeviceMemoryProperties& physicalDeviceMemoryProperies,
-        const uint32_t propertyFlags)
+    void LogInfo(Logger* logger, const std::string& message, VkResult result)
     {
-        FilteredMemoryTypes filteredMemorytypes;
-
-        for (uint32_t i = 0; i < physicalDeviceMemoryProperies.memoryTypeCount; i++)
+        if (logger == nullptr)
         {
-            auto& memoryType = physicalDeviceMemoryProperies.memoryTypes[i];
-            if ((memoryType.propertyFlags & propertyFlags) == propertyFlags)
-            {
-                filteredMemorytypes.push_back(FilteredMemoryType{ i, memoryType.propertyFlags });
-            }
-        }
-            
-        return filteredMemorytypes;
-    }
-
-    bool FindMemoryTypeIndex(
-        const FilteredMemoryTypes& filteredMemoryTypes,
-        const uint32_t requiredMemoryTypeFlags,
-        uint32_t& index)
-    {
-        for (auto& filteredMemoryType : filteredMemoryTypes)
-        {
-            if (requiredMemoryTypeFlags & (1 << filteredMemoryType.index))
-            {
-                index = filteredMemoryType.index;
-                return true;
-            }
+            return;
         }
 
-        return false;
-    }
+        VulkanResult parsedResult(result);
 
-    const VkBaseInStructure& FindLastBaseInStructure(VkBaseInStructure& baseInStructure)
+        Logger::WriteInfo(logger, message + ": (" + parsedResult.name + "): " + parsedResult.description);
+    }
+    void LogDebug(Logger* logger, const std::string& message, VkResult result)
     {
-        const auto* currentStructure = &baseInStructure;
-        while (currentStructure->pNext != nullptr)
+        if (logger == nullptr)
         {
-            currentStructure = currentStructure->pNext;
+            return;
         }
 
-        return *currentStructure;
-    }
+        VulkanResult parsedResult(result);
 
-    VkBaseOutStructure& FindLastBaseOutStructure(VkBaseOutStructure& baseOutStructure)
+        Logger::WriteDebug(logger, message + ": (" + parsedResult.name + "): " + parsedResult.description);
+    }
+    void LogWarning(Logger* logger, const std::string& message, VkResult result)
     {
-        auto* currentStructure = &baseOutStructure;
-        while (currentStructure->pNext != nullptr)
+        if (logger == nullptr)
         {
-            currentStructure = currentStructure->pNext;
+            return;
         }
 
-        return *currentStructure;
-    }
+        VulkanResult parsedResult(result);
 
-    void Log(Logger* logger, const std::string& message, VkResult result)
+        Logger::WriteWarning(logger, message + ": (" + parsedResult.name + "): " + parsedResult.description);
+    }
+    void LogError(Logger* logger, const std::string& message, VkResult result)
     {
         if (logger == nullptr)
         {
@@ -596,6 +941,102 @@ namespace Molten::Vulkan
         VulkanResult parsedResult(result);
 
         Logger::WriteError(logger, message + ": (" + parsedResult.name + "): " + parsedResult.description);
+    }
+
+    VkResult PrepareInstance(
+        Instance& instance)
+    {
+        VkResult result = VkResult::VK_SUCCESS;
+
+        if ((result = Vulkan::FetchInstanceExtensions(instance.extensions)) != VK_SUCCESS)
+        {
+            return result;
+        }
+
+        if ((result = Vulkan::FetchInstanceLayers(instance.layers)) != VK_SUCCESS)
+        {
+            return result;
+        }
+
+        return result;
+    }
+
+    void RemoveLayers(Layers& layers, const Layers& excludes)
+    {
+        auto findLayer = [](const Layers& layers, const Layer& layer)
+        {
+            for (auto& currentLayer : layers)
+            {
+                if (currentLayer.name == layer.name)
+                {
+                    return true;
+                }
+            }
+            return false;
+        };
+        auto it = std::remove_if(layers.begin(), layers.end(),
+            [&](auto& extension)
+        { 
+            return findLayer(excludes, extension);
+        });
+
+        layers.erase(it);
+    }
+
+    void RemoveExtensions(Extensions& extensions, const Extensions& excludes)
+    {
+        auto findExtension = [](const Extensions& extensions, const Extension& extension)
+        {
+            for (auto& currentExtension : extensions)
+            {
+                if (currentExtension.name == extension.name)
+                {
+                    return true;
+                }
+            }
+            return false;
+        };
+        auto it = std::remove_if(extensions.begin(), extensions.end(),
+            [&](auto& extension)
+        {
+            return findExtension(excludes, extension);
+        });
+
+        extensions.erase(it);
+    }
+
+    bool ScorePhysicalDevices(
+        PhysicalDeviceWithCapabilities& winningPhysicalDeviceWithCapabilities,
+        const PhysicalDevicesWithCapabilities& physicalDevicesWithCapabilities,
+        const ScorePhysicalDevicesCallback& callback)
+    {
+        std::multimap< int32_t, size_t> scoredDevicesIndices;
+
+        for (size_t i = 0; i < physicalDevicesWithCapabilities.size(); i++)
+        {
+            auto& physicalDevice = physicalDevicesWithCapabilities[i];
+
+            const int32_t score = callback(physicalDevice);
+
+            if (score >= 0)
+            {
+                scoredDevicesIndices.insert({ score, i });
+            }
+        }
+
+        if (!scoredDevicesIndices.size())
+        {
+            return false;
+        }
+
+        auto& highestScoreIndex = scoredDevicesIndices.rbegin()->second;
+        if (highestScoreIndex < 0)
+        {
+            return false;
+        }
+
+        winningPhysicalDeviceWithCapabilities = physicalDevicesWithCapabilities[highestScoreIndex];
+        return true;
     }
 
 }

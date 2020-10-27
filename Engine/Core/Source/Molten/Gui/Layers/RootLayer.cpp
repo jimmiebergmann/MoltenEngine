@@ -25,6 +25,7 @@
 
 #include "Molten/Gui/Layers/RootLayer.hpp"
 #include "Molten/Gui/CanvasRenderer.hpp"
+#include <algorithm>
 
 namespace Molten::Gui
 {

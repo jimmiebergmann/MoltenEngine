@@ -163,6 +163,11 @@ namespace Molten
         }
     }
 
+    bool OpenGLWin32Renderer::IsOpen() const
+    {
+        return false;
+    }
+
     void OpenGLWin32Renderer::Resize(const Vector2ui32& /*size*/)
     {
     }

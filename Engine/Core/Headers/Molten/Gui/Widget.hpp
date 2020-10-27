@@ -77,11 +77,11 @@ namespace Molten::Gui
         //void SetTreeIterator(WidgetTreeIterator iterator);
         WidgetTreeData& GetWidgetTreeData();
         WidgetRenderData& GetWidgetRenderData();
-
-        Widget(Widget&&) = delete;
+        
         Widget(const Widget&) = delete;
-        Widget& operator= (Widget) = delete;
+        Widget(Widget&&) = delete;
         Widget& operator= (const Widget&) = delete;
+        Widget& operator= (Widget&&) = delete;
 
         WidgetTreeData m_treeData;
         WidgetRenderData m_renderData;
