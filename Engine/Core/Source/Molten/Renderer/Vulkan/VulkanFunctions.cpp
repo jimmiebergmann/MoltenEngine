@@ -27,7 +27,7 @@
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 
-#include "Molten/Renderer/Vulkan/VulkanResult.hpp"
+#include "Molten/Renderer/Vulkan/VulkanResultOld.hpp"
 #include "Molten/Logger.hpp"
 #include <algorithm>
 #include <map>
@@ -272,7 +272,8 @@ namespace Molten::Vulkan
             instanceInfo.pNext = reinterpret_cast<const VkBaseOutStructure*>(&debugMessenger->GetCreateInfo());
         }
 
-        if ((result = vkCreateInstance(&instanceInfo, nullptr, &instance.handle)) != VkResult::VK_SUCCESS)
+        VkInstance instanceHandle = VK_NULL_HANDLE;
+        if ((result = vkCreateInstance(&instanceInfo, nullptr, &instanceHandle)) != VkResult::VK_SUCCESS)
         {
             return result;
         }
@@ -292,16 +293,18 @@ namespace Molten::Vulkan
 
     VkResult CreateLogicalDevice(
         LogicalDevice& logicalDevice,
-        PhysicalDeviceWithCapabilities& physicalDeviceWithCapabilities,
+        PhysicalDevice& physicalDeviceWithCapabilities,
         const Layers& enabledInstanceLayers,
         const Extensions& enabledDeviceExtensions,
         const VkPhysicalDeviceFeatures& enabledDeviceFeatures)
     {
         VkResult result = VkResult::VK_SUCCESS;
 
+        auto& deviceQueues = physicalDeviceWithCapabilities.GetDeviceQueues();
+
         const std::set<uint32_t> uniqueFamilyIds = {
-            physicalDeviceWithCapabilities.graphicsQueueIndex,
-            physicalDeviceWithCapabilities.presentQueueIndex
+            deviceQueues.graphicsQueue,
+            deviceQueues.presentQueue
         };
         
         std::vector<VkDeviceQueueCreateInfo> queueInfos;
@@ -338,14 +341,13 @@ namespace Molten::Vulkan
         deviceInfo.enabledLayerCount = static_cast<uint32_t>(ptrEnabledLayers.size());
         deviceInfo.ppEnabledLayerNames = ptrEnabledLayers.data();
         
-        auto& physicalDevice = physicalDeviceWithCapabilities.device;
-        if ((result = vkCreateDevice(physicalDevice, &deviceInfo, nullptr, &logicalDevice.device)) != VK_SUCCESS)
+        if ((result = vkCreateDevice(physicalDeviceWithCapabilities.GetHandle(), &deviceInfo, nullptr, &logicalDevice.handle)) != VK_SUCCESS)
         {
             return result;
         }
 
-        vkGetDeviceQueue(logicalDevice.device, physicalDeviceWithCapabilities.graphicsQueueIndex, 0, &logicalDevice.graphicsQueue);
-        vkGetDeviceQueue(logicalDevice.device, physicalDeviceWithCapabilities.presentQueueIndex, 0, &logicalDevice.presentQueue);
+        vkGetDeviceQueue(logicalDevice.handle, deviceQueues.graphicsQueue, 0, &logicalDevice.graphicsQueue);
+        vkGetDeviceQueue(logicalDevice.handle, deviceQueues.presentQueue, 0, &logicalDevice.presentQueue);
        
         return result;
     }
@@ -364,7 +366,7 @@ namespace Molten::Vulkan
         surfaceInfo.hwnd = renderTarget.GetWin32Window();
         surfaceInfo.hinstance = renderTarget.GetWin32Instance();
 
-        if ((result = vkCreateWin32SurfaceKHR(instance.handle, &surfaceInfo, nullptr, &surface)) != VK_SUCCESS)
+        if ((result = vkCreateWin32SurfaceKHR(instance.GetHandle(), &surfaceInfo, nullptr, &surface)) != VK_SUCCESS)
         {
             return result;
         }
@@ -404,19 +406,19 @@ namespace Molten::Vulkan
         return result;
     }
 
-    VkResult CreateSwapchain(
-        VkSwapchainKHR& swapchain,
-        VkDevice logicalDevice,
+    VkResult CreateSwapChain(
+        SwapChain& swapChain,
+        LogicalDevice& logicalDevice,
+        PhysicalDevice& physicalDeviceWithCapabilities,
         const VkSurfaceKHR surface,
         const VkSurfaceFormatKHR& surfaceFormat,
         const VkPresentModeKHR presentMode,
-        const VkSurfaceCapabilitiesKHR& capabilities,
-        const uint32_t imageCount,
-        const uint32_t graphicsQueueIndex,
-        const uint32_t presentQueueIndex,
-        VkSwapchainKHR oldSwapchain)
+        const VkSurfaceCapabilitiesKHR& surfaceCapabilities,
+        const uint32_t imageCount)
     {
         VkResult result = VkResult::VK_SUCCESS;
+
+        auto oldSwapChainHandle = swapChain.handle;
 
         VkSwapchainCreateInfoKHR swapchainInfo = {};
         swapchainInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
@@ -426,14 +428,19 @@ namespace Molten::Vulkan
         swapchainInfo.minImageCount = imageCount;
         swapchainInfo.imageFormat = surfaceFormat.format;
         swapchainInfo.imageColorSpace = surfaceFormat.colorSpace;
-        swapchainInfo.imageExtent = capabilities.currentExtent;
+        swapchainInfo.imageExtent = surfaceCapabilities.currentExtent;
         swapchainInfo.imageArrayLayers = 1;
         swapchainInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-        swapchainInfo.preTransform = capabilities.currentTransform;
+        swapchainInfo.preTransform = surfaceCapabilities.currentTransform;
         swapchainInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-        swapchainInfo.oldSwapchain = oldSwapchain;
+        swapchainInfo.oldSwapchain = oldSwapChainHandle;
 
-        const uint32_t queueFamilies[2] = { graphicsQueueIndex, presentQueueIndex };
+        auto& deviceQueues = physicalDeviceWithCapabilities.GetDeviceQueues();
+        const uint32_t queueFamilies[2] = {
+            deviceQueues.graphicsQueue,
+            deviceQueues.presentQueue
+        };
+
         if (queueFamilies[0] != queueFamilies[1])
         {
             swapchainInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
@@ -447,16 +454,16 @@ namespace Molten::Vulkan
             swapchainInfo.pQueueFamilyIndices = nullptr;
         }
 
-        if ((result = vkCreateSwapchainKHR(logicalDevice, &swapchainInfo, nullptr, &swapchain)) != VkResult::VK_SUCCESS)
+        if ((result = vkCreateSwapchainKHR(logicalDevice.handle, &swapchainInfo, nullptr, &swapChain.handle)) != VkResult::VK_SUCCESS)
         {
             return result;
         }
 
-        if (oldSwapchain)
+        if (oldSwapChainHandle)
         {
-            vkDestroySwapchainKHR(logicalDevice, oldSwapchain, nullptr);
+            vkDestroySwapchainKHR(logicalDevice.handle, oldSwapChainHandle, nullptr);
         }
-
+        
         return result;
     }
 
@@ -519,7 +526,7 @@ namespace Molten::Vulkan
         return result;
     }
 
-    VkResult FetchInstanceExtensions(
+  /*  VkResult FetchInstanceExtensions(
         Extensions& extensions)
     {
         extensions.clear();
@@ -545,7 +552,7 @@ namespace Molten::Vulkan
         
         std::copy(extensionProperties.begin(), extensionProperties.end(), std::back_inserter(extensions));
         return result;
-    }
+    }*/
 
     VkResult FetchInstanceLayers(
         Layers& layers)
@@ -602,8 +609,10 @@ namespace Molten::Vulkan
 
         VkResult result = VkResult::VK_SUCCESS;
 
+        auto instanceHandle = instance.GetHandle();
+
         uint32_t physicalDeviceCount = 0;
-        if ((result = vkEnumeratePhysicalDevices(instance.handle, &physicalDeviceCount, nullptr)) != VkResult::VK_SUCCESS)
+        if ((result = vkEnumeratePhysicalDevices(instanceHandle, &physicalDeviceCount, nullptr)) != VkResult::VK_SUCCESS)
         {
             return result;
         }
@@ -613,11 +622,18 @@ namespace Molten::Vulkan
             return VkResult::VK_SUCCESS;
         }
 
-        physicalDevices.resize(physicalDeviceCount);
-        if ((result = vkEnumeratePhysicalDevices(instance.handle, &physicalDeviceCount, physicalDevices.data())) != VkResult::VK_SUCCESS)
+        std::vector<VkPhysicalDevice> handles(physicalDeviceCount, VK_NULL_HANDLE);
+        if ((result = vkEnumeratePhysicalDevices(instanceHandle, &physicalDeviceCount, handles.data())) != VkResult::VK_SUCCESS)
         {
             return result;
         }
+
+        physicalDevices.resize(handles.size());
+        for (size_t i = 0; i < handles.size(); i++)
+        {
+            physicalDevices[i].Create(handles[i]);
+        }
+
 
         return result;
     }
@@ -683,8 +699,8 @@ namespace Molten::Vulkan
     }
 
     void FilterPhysicalDevicesWithRenderCapabilities(
-        PhysicalDevicesWithCapabilities& filteredPhysicalDeviceWithCapabilities,
-        PhysicalDevicesWithCapabilities& physicalDeviceWithCapabilities,
+        PhysicalDevices& filteredPhysicalDeviceWithCapabilities,
+        PhysicalDevices& physicalDeviceWithCapabilities,
         const Vulkan::Extensions& requiredExtensions,
         const VkPhysicalDeviceFeatures& requiredDeviceFeatures,
         VkSurfaceKHR surface,
@@ -692,16 +708,16 @@ namespace Molten::Vulkan
     {
         filteredPhysicalDeviceWithCapabilities.clear();
 
-        PhysicalDevicesWithCapabilities physicalDevicesCandidates;
+        PhysicalDevices physicalDevicesCandidates;
         std::copy_if(physicalDeviceWithCapabilities.begin(), physicalDeviceWithCapabilities.end(), std::back_inserter(filteredPhysicalDeviceWithCapabilities),
-            [&](PhysicalDeviceWithCapabilities& physicalDevice)
+            [&](PhysicalDevice& physicalDevice)
         {
             VkResult result = VkResult::VK_SUCCESS;
 
-            VkPhysicalDevice& device = physicalDevice.device;
+            VkPhysicalDevice& handle = physicalDevice.GetHandle();
 
-            Extensions& availableExtensions = physicalDevice.capabilities.extensions;
-            if ((result = FetchDeviceExtensions(availableExtensions, physicalDevice.device)) != VkResult::VK_SUCCESS)
+            Extensions& availableExtensions = physicalDevice.GetCapabilities().extensions;
+            if ((result = FetchDeviceExtensions(availableExtensions, handle)) != VkResult::VK_SUCCESS)
             {
                 LogError(logger, "Failed to fetch device extensions", result);
                 return false;
@@ -714,16 +730,17 @@ namespace Molten::Vulkan
                 return false;
             }
 
-            VkPhysicalDeviceFeatures& features = physicalDevice.capabilities.features;
-            vkGetPhysicalDeviceFeatures(device, &features);
+            auto& capabilities = physicalDevice.GetCapabilities();
+            VkPhysicalDeviceFeatures& features = capabilities.features;
+            vkGetPhysicalDeviceFeatures(handle, &features);
             Vulkan::PhysicalDeviceFeaturesWithName missingFeatures;
             if(!Vulkan::CheckRequiredDeviceFeatures(missingFeatures, requiredDeviceFeatures, features))
             {
                 return false;
             }
 
-            PhysicalDeviceSurfaceCapabilities& surfaceCapabilities = physicalDevice.capabilities.surfaceCapabilities;
-            if ((result = FetchPhysicalDeviceSurfaceCapabilities(surfaceCapabilities, physicalDevice.device, surface)) != VkResult::VK_SUCCESS)
+            PhysicalDeviceSurfaceCapabilities& surfaceCapabilities = capabilities.surfaceCapabilities;
+            if ((result = FetchPhysicalDeviceSurfaceCapabilities(surfaceCapabilities, handle, surface)) != VkResult::VK_SUCCESS)
             {
                 LogError(logger, "Failed to fetch surface capabilities", result);
                 return false;
@@ -735,13 +752,15 @@ namespace Molten::Vulkan
                 return false;
             }
 
-            QueueFamilyProperties& queueFamilies = physicalDevice.capabilities.queueFamilies;
-            FetchQueueFamilyProperties(queueFamilies, device);
+            QueueFamilyProperties& queueFamilies = capabilities.queueFamilies;
+            FetchQueueFamilyProperties(queueFamilies, handle);
+
+            auto& deviceQueues = physicalDevice.GetDeviceQueues();
 
             bool foundQueueIndicies = FindSuitableQueueIndices(
-                physicalDevice.graphicsQueueIndex,
-                physicalDevice.presentQueueIndex,
-                device,
+                deviceQueues.graphicsQueue,
+                deviceQueues.presentQueue,
+                handle,
                 surface,
                 queueFamilies);
 
@@ -750,8 +769,8 @@ namespace Molten::Vulkan
                 return false;
             }
 
-            VkPhysicalDeviceProperties& properties = physicalDevice.capabilities.properties;
-            vkGetPhysicalDeviceProperties(device, &properties);
+            VkPhysicalDeviceProperties& properties = capabilities.properties;
+            vkGetPhysicalDeviceProperties(handle, &properties);
 
             return true;
         });
@@ -905,7 +924,7 @@ namespace Molten::Vulkan
             return;
         }
 
-        VulkanResult parsedResult(result);
+        VulkanResultOld parsedResult(result);
 
         Logger::WriteInfo(logger, message + ": (" + parsedResult.name + "): " + parsedResult.description);
     }
@@ -916,7 +935,7 @@ namespace Molten::Vulkan
             return;
         }
 
-        VulkanResult parsedResult(result);
+        VulkanResultOld parsedResult(result);
 
         Logger::WriteDebug(logger, message + ": (" + parsedResult.name + "): " + parsedResult.description);
     }
@@ -927,7 +946,7 @@ namespace Molten::Vulkan
             return;
         }
 
-        VulkanResult parsedResult(result);
+        VulkanResultOld parsedResult(result);
 
         Logger::WriteWarning(logger, message + ": (" + parsedResult.name + "): " + parsedResult.description);
     }
@@ -938,7 +957,7 @@ namespace Molten::Vulkan
             return;
         }
 
-        VulkanResult parsedResult(result);
+        VulkanResultOld parsedResult(result);
 
         Logger::WriteError(logger, message + ": (" + parsedResult.name + "): " + parsedResult.description);
     }
@@ -946,17 +965,17 @@ namespace Molten::Vulkan
     VkResult PrepareInstance(
         Instance& instance)
     {
-        VkResult result = VkResult::VK_SUCCESS;
+        VkResult result = VkResult::VK_ERROR_UNKNOWN;//VkResult::VK_SUCCESS;
 
-        if ((result = Vulkan::FetchInstanceExtensions(instance.extensions)) != VK_SUCCESS)
+        /*if ((result = Vulkan::FetchInstanceExtensions(instance.GetExtensions())) != VK_SUCCESS)
         {
             return result;
         }
 
-        if ((result = Vulkan::FetchInstanceLayers(instance.layers)) != VK_SUCCESS)
+        if ((result = Vulkan::FetchInstanceLayers(instance.GetLayers())) != VK_SUCCESS)
         {
             return result;
-        }
+        }*/
 
         return result;
     }
@@ -1006,8 +1025,8 @@ namespace Molten::Vulkan
     }
 
     bool ScorePhysicalDevices(
-        PhysicalDeviceWithCapabilities& winningPhysicalDeviceWithCapabilities,
-        const PhysicalDevicesWithCapabilities& physicalDevicesWithCapabilities,
+        PhysicalDevice& winningPhysicalDeviceWithCapabilities,
+        const PhysicalDevices& physicalDevicesWithCapabilities,
         const ScorePhysicalDevicesCallback& callback)
     {
         std::multimap< int32_t, size_t> scoredDevicesIndices;

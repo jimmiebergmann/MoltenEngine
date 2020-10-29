@@ -23,30 +23,44 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_VULKAN_VULKANRESULT_HPP
-#define MOLTEN_CORE_RENDERER_VULKAN_VULKANRESULT_HPP
+#ifndef MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANLAYER_HPP
+#define MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANLAYER_HPP
 
-#include "Molten/Types.hpp"
+#include "Molten/Core.hpp"
 
 #if defined(MOLTEN_ENABLE_VULKAN)
-#include "Molten/Renderer/Vulkan/VulkanTypes.hpp"
+#include "Molten/Renderer/Vulkan/Utility/VulkanTypes.hpp"
+#include "Molten/System/Version.hpp"
 #include <string>
 
 MOLTEN_UNSCOPED_ENUM_BEGIN
 
-namespace Molten
+namespace Molten::Vulkan
 {
 
-    struct MOLTEN_API VulkanResult
+    /** A more c++ friendly version of VkLayerProperties. */
+    struct MOLTEN_API Layer
     {
+        Layer();
+        explicit Layer(const std::string& name);
+        Layer(
+            const std::string& name,
+            const uint32_t version,
+            const Version vulkanVersion);
+        Layer(
+            const VkLayerProperties& layerProperties);
 
-        VulkanResult();
-        VulkanResult(VkResult result);
+        Layer(const Layer& layer);
+        Layer(Layer&& layer) noexcept;
+        Layer& operator =(const Layer& layer);
+        Layer& operator =(Layer&& layer) noexcept;
 
-        const std::string& name;
-        const std::string& description;
-
+        std::string name;
+        uint32_t version;
+        Version vulkanVersion;
     };
+
+    using Layers = std::vector<Layer>;
 
 }
 

@@ -33,6 +33,10 @@
 #include "Molten/Renderer/Vulkan/VulkanTypes.hpp"
 #include "Molten/Renderer/Vulkan/VulkanDebugMessenger.hpp"
 #include "Molten/Renderer/Vulkan/VulkanPipeline.hpp"
+#include "Molten/Renderer/Vulkan/Utility/VulkanInstance.hpp"
+#include "Molten/Renderer/Vulkan/Utility/VulkanPhysicalDevice.hpp"
+#include "Molten/Renderer/Vulkan/Utility/VulkanLogicalDevice.hpp"
+#include "Molten/Renderer/Vulkan/Utility/VulkanSwapChain.hpp"
 
 MOLTEN_UNSCOPED_ENUM_BEGIN
 
@@ -153,7 +157,7 @@ namespace Molten
          *
          * @param id Id of push constant to update. This id can be shared between multiple shader stages.
          */
-         /**@{*/
+        /**@{*/
         virtual void PushConstant(const uint32_t location, const bool& value) override;
         virtual void PushConstant(const uint32_t location, const int32_t& value) override;
         virtual void PushConstant(const uint32_t location, const float& value) override;
@@ -192,8 +196,8 @@ namespace Molten
         bool LoadPresentFramebuffer();
         Framebuffer* CreateFramebuffer(const VkImageView& imageView, const Vector2ui32 size);
         bool LoadCommandPool();
-        bool LoadSyncObjects();
-        bool RecreateSwapChain();
+        bool LoadSyncObjects(); //< This is fine
+        bool RecreateSwapChain();  //< This is fine
         void UnloadSwapchain();
         bool FindPhysicalDeviceMemoryType(uint32_t& index, const uint32_t filter, const VkMemoryPropertyFlags properties); // Vulkan::FilterMemoryTypesByPropertyFlags and Vulkan::FilterMemoryTypesByPropertyFlags 
         bool CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& memory); // Vulkan::CreateBuffer
@@ -237,13 +241,14 @@ namespace Molten
         Vulkan::Instance m_instance;
         Vulkan::DebugMessenger m_debugMessenger;
         VkSurfaceKHR m_surface;
-        Vulkan::PhysicalDeviceWithCapabilities m_physicalDevice;
+        Vulkan::PhysicalDevice m_physicalDevice;
         Vulkan::LogicalDevice m_logicalDevice;
+        Vulkan::SwapChain m_swapChain;
         /**@}*/
 
         ///< NEW ^^^^  
 
-        VkSwapchainKHR m_swapChain; // Should be old.
+        //VkSwapchainKHR m_swapChain; // Should be old.
         VkFormat m_swapChainImageFormat;
         VkExtent2D m_swapChainExtent;
         Vulkan::Images m_swapChainImages;

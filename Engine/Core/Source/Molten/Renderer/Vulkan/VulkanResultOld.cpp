@@ -24,7 +24,7 @@
 */
 
 
-#include "Molten/Renderer/Vulkan/VulkanResult.hpp"
+#include "Molten/Renderer/Vulkan/VulkanResultOld.hpp"
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 
@@ -139,12 +139,12 @@ namespace Molten
 
 
     // Vulkan result implementations.
-    VulkanResult::VulkanResult() :
+    VulkanResultOld::VulkanResultOld() :
         name(g_text_empty.first),
         description(g_text_empty.second)
     {}
 
-    VulkanResult::VulkanResult(VkResult result) :
+    VulkanResultOld::VulkanResultOld(VkResult result) :
         name(GetName(result)),
         description(GetDecription(result))
     {}

@@ -32,58 +32,6 @@ MOLTEN_UNSCOPED_ENUM_BEGIN
 namespace Molten::Vulkan
 {
 
-    // Extension implementations.
-    Extension::Extension() :
-        name(""),
-        version(0)
-    {}
-
-    Extension::Extension(const std::string& name) :
-        name(name),
-        version(0)
-    {}
-
-    Extension::Extension(
-        const std::string& name,
-        const uint32_t version
-    ) :
-        name(name),
-        version(version)
-    {}
-
-    Extension::Extension(
-        const VkExtensionProperties& extensionProperties
-    ) :
-        name(extensionProperties.extensionName),
-        version(extensionProperties.specVersion)
-    {}
-
-    Extension::Extension(const Extension& extension) :
-        name(extension.name),
-        version(extension.version)
-    {}
-
-    Extension::Extension(Extension&& extension) noexcept :
-        name(std::move(extension.name)),
-        version(extension.version)
-    {
-        extension.version = 0;
-    }
-    Extension& Extension::operator =(const Extension& extension)
-    {
-        name = extension.name;
-        version = extension.version;
-        return *this;
-    }
-
-    Extension& Extension::operator =(Extension&& extension) noexcept
-    {
-        name = std::move(extension.name);
-        version = extension.version;
-        extension.version = 0;
-        return *this;
-    }
-
 
     // Filtered memory type implementations.
     FilteredMemoryType::FilteredMemoryType() :
@@ -101,7 +49,7 @@ namespace Molten::Vulkan
 
 
     // Layer implementations.
-    Layer::Layer(const std::string& name) :
+    /*Layer::Layer(const std::string& name) :
         name(name),
         version(0),
         vulkanVersion(0, 0, 0)
@@ -164,42 +112,42 @@ namespace Molten::Vulkan
         layer.version = 0;
         layer.vulkanVersion = {};
         return *this;
-    }
+    }*/
 
 
     // Instance implementations.
-    Instance::Instance() :
+    /*Instance::Instance() :
         handle(VK_NULL_HANDLE),
         extensions{},
         layers{}
-    {}
+    {}*/
 
 
     // Logical device implementations.
     LogicalDevice::LogicalDevice() :
-        device(VK_NULL_HANDLE),
+        handle(VK_NULL_HANDLE),
         graphicsQueue(VK_NULL_HANDLE),
         presentQueue(VK_NULL_HANDLE)
     {}
 
 
     // Physical device Surface capabilities implementations.
-    PhysicalDeviceSurfaceCapabilities::PhysicalDeviceSurfaceCapabilities() :
+    /*PhysicalDeviceSurfaceCapabilities::PhysicalDeviceSurfaceCapabilities() :
         capabilities{},
         formats{},
         presentModes{}
-    {}
+    {}*/
 
 
     // Physical device capabilities implementations.
-    PhysicalDeviceCapabilities::PhysicalDeviceCapabilities() :
+    /*PhysicalDeviceCapabilities::PhysicalDeviceCapabilities() :
         properties{},
         features{},
         extensions{},
         hasPresentSupport(false),
         surfaceCapabilities{},
         queueFamilies{}
-    {}
+    {}*/
 
     // Physical device features with name implementations.
     PhysicalDeviceFeatureWithName::PhysicalDeviceFeatureWithName(
@@ -211,9 +159,55 @@ namespace Molten::Vulkan
     {}
 
 
+
+
+
+    /* Experimental type for result. */
+
+    /* Experimental class for physical device, providing an interface for accessing it's underlying handle and capabilities. */
+    /*PhysicalDevice::PhysicalDevice() :
+        m_handle{ VK_NULL_HANDLE },
+        m_capabilities{}
+    {}
+
+    Result<> PhysicalDevice::Create(VkPhysicalDevice physicalDeviceHandle)
+    {
+        VkResult result = VkResult::VK_SUCCESS;
+
+        Extensions& extensions = m_capabilities.extensions;
+        if ((result = FetchDeviceExtensions(availableExtensions, physicalDevice.handle)) != VkResult::VK_SUCCESS)
+        {
+            LogError(logger, "Failed to fetch device extensions", result);
+            return result;
+        }
+
+        return result;
+    }
+
+    VkPhysicalDevice& PhysicalDevice::GetHandle()
+    {
+        return m_handle;
+    }
+    const VkPhysicalDevice& PhysicalDevice::GetHandle() const
+    {
+        return m_handle;
+    }
+
+    PhysicalDeviceCapabilities& PhysicalDevice::GetCapabilities()
+    {
+        return m_capabilities;
+    }
+    const PhysicalDeviceCapabilities& PhysicalDevice::GetCapabilities() const
+    {
+        return m_capabilities;
+    }*/
+
+
+
+
     // Physical device with capabilities implementations.
-    PhysicalDeviceWithCapabilities::PhysicalDeviceWithCapabilities() :
-        device(VK_NULL_HANDLE),
+    /*PhysicalDeviceWithCapabilities::PhysicalDeviceWithCapabilities() :
+        handle(VK_NULL_HANDLE),
         capabilities{},
         graphicsQueueIndex(std::numeric_limits<uint32_t>::max()),
         presentQueueIndex(std::numeric_limits<uint32_t>::max())
@@ -222,10 +216,27 @@ namespace Molten::Vulkan
     PhysicalDeviceWithCapabilities::PhysicalDeviceWithCapabilities(
         VkPhysicalDevice device
     ) :
-        device(device),
+        handle(device),
         capabilities{},
         graphicsQueueIndex(std::numeric_limits<uint32_t>::max()),
         presentQueueIndex(std::numeric_limits<uint32_t>::max())
+    {}*/
+
+
+    // Swapchain implementations.
+    SwapChain::SwapChain() :
+        handle(VK_NULL_HANDLE),
+        imageFormat(VkFormat::VK_FORMAT_UNDEFINED),
+        extent{ 0, 0 },
+        images{},
+        imageViews{},
+        //framebuffers{},
+        imageAvailableSemaphores{},
+        renderFinishedSemaphores{},
+        inFlightFences{},
+        imagesInFlight{},
+        maxFramesInFlight(0),
+        currentFrame(0)
     {}
 
 }

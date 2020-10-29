@@ -28,12 +28,22 @@
 
 #include "Molten/Core.hpp"
 
+#include "Molten/Renderer/Vulkan/Utility/VulkanTypes.hpp" // TEMPORARY
+#include "Molten/Renderer/Vulkan/Utility/VulkanPhysicalDevice.hpp" // TEMPORARY
+#include "Molten/Renderer/Vulkan/Utility/VulkanExtension.hpp" // TEMPORARY
+#include "Molten/Renderer/Vulkan/Utility/VulkanLayer.hpp" // TEMPORARY
+#include "Molten/Renderer/Vulkan/Utility/VulkanInstance.hpp" // TEMPORARY
+#include "Molten/Renderer/Vulkan/Utility/VulkanLogicalDevice.hpp" // TEMPORARY
+#include "Molten/Renderer/Vulkan/Utility/VulkanSwapChain.hpp" // TEMPORARY
+
+
 #if defined(MOLTEN_ENABLE_VULKAN)
 #include "Molten/Renderer/Vulkan/VulkanHeaders.hpp"
 #include "Molten/System/Version.hpp"
 #include <vector>
 #include <set>
 #include <string>
+#include <variant>
 
 MOLTEN_UNSCOPED_ENUM_BEGIN
 
@@ -44,35 +54,12 @@ namespace Molten::Vulkan
     using Fences = std::vector<VkFence>;
     using Images = std::vector<VkImage>;
     using ImageViews = std::vector<VkImageView>;
-    using PhysicalDevices = std::vector<VkPhysicalDevice>;
-    using PresentModes = std::vector<VkPresentModeKHR>;
-    using QueueFamilyProperties = std::vector<VkQueueFamilyProperties>;
     using Semaphores = std::vector<VkSemaphore>;
     using ShaderModules = std::vector<VkShaderModule>;
-    using SurfaceFormats = std::vector<VkSurfaceFormatKHR>;   
+ 
     using UniqueQueueFamilyIds = std::set<uint32_t>;
     
-    /** A more c++ friendly version of VkExtensionProperties. */
-    struct MOLTEN_API Extension
-    {
-        Extension();
-        explicit Extension(const std::string& name);
-        Extension(
-            const std::string& name,
-            const uint32_t version);
-        Extension(
-            const VkExtensionProperties& extensionProperties);
 
-        Extension(const Extension& extension);
-        Extension(Extension&& extension) noexcept;
-        Extension& operator =(const Extension& extension);
-        Extension& operator =(Extension&& extension) noexcept;
-
-        std::string name;
-        uint32_t version;
-    };
-
-    using Extensions = std::vector<Extension>;
 
     /** Single memory type, returned as vector by FilterMemoryTypesByPropertyFlags. */
     struct MOLTEN_API FilteredMemoryType
@@ -89,7 +76,7 @@ namespace Molten::Vulkan
     using FilteredMemoryTypes = std::vector<FilteredMemoryType>;
 
     /** A more c++ friendly version of VkLayerProperties. */
-    struct MOLTEN_API Layer
+   /* struct MOLTEN_API Layer
     {
         Layer();
         explicit Layer(const std::string& name);
@@ -110,40 +97,40 @@ namespace Molten::Vulkan
         Version vulkanVersion;
     };
 
-    using Layers = std::vector<Layer>;
+    using Layers = std::vector<Layer>;*/
 
     /** Vulkan instance. */
-    struct MOLTEN_API Instance
+    /*struct MOLTEN_API Instance
     {
         Instance();
 
         VkInstance handle;
         Extensions extensions;
         Layers layers;
-    };
+    };*/
 
     /** Logical device data. */
     struct MOLTEN_API LogicalDevice
     {
         LogicalDevice();
 
-        VkDevice device;
+        VkDevice handle;
         VkQueue graphicsQueue;
         VkQueue presentQueue;
     };
 
     /** Object for storing surface capabilities. */
-    struct MOLTEN_API PhysicalDeviceSurfaceCapabilities
+    /*struct MOLTEN_API PhysicalDeviceSurfaceCapabilities
     {
         PhysicalDeviceSurfaceCapabilities();
 
         VkSurfaceCapabilitiesKHR capabilities;
         SurfaceFormats formats;
         PresentModes presentModes;
-    };
+    };*/
 
     /** Object for storing physical device capabilities. */
-    struct MOLTEN_API PhysicalDeviceCapabilities
+    /*struct MOLTEN_API PhysicalDeviceCapabilities
     {
         PhysicalDeviceCapabilities();
 
@@ -153,7 +140,7 @@ namespace Molten::Vulkan
         VkBool32 hasPresentSupport;
         PhysicalDeviceSurfaceCapabilities surfaceCapabilities;
         QueueFamilyProperties queueFamilies;
-    };
+    };*/
 
     struct MOLTEN_API PhysicalDeviceFeatureWithName
     {
@@ -167,20 +154,28 @@ namespace Molten::Vulkan
 
     using PhysicalDeviceFeaturesWithName = std::vector<PhysicalDeviceFeatureWithName>;
 
-    /** Physical device with its capabilities. */
-    struct MOLTEN_API PhysicalDeviceWithCapabilities
+
+
+    
+
+    /* Swapchain data structure. */
+    struct MOLTEN_API SwapChain
     {
-        PhysicalDeviceWithCapabilities();
-        PhysicalDeviceWithCapabilities(
-            VkPhysicalDevice device);
+        SwapChain();
 
-        VkPhysicalDevice device;
-        PhysicalDeviceCapabilities capabilities;      
-        uint32_t graphicsQueueIndex;
-        uint32_t presentQueueIndex;
+        VkSwapchainKHR handle;
+        VkFormat imageFormat;
+        VkExtent2D extent;
+        Images images;
+        ImageViews imageViews;
+        //std::vector<VulkanFramebuffer*> framebuffers;
+        Semaphores imageAvailableSemaphores;
+        Semaphores renderFinishedSemaphores;
+        Fences inFlightFences;
+        Fences imagesInFlight;
+        size_t maxFramesInFlight;
+        size_t currentFrame;
     };
-
-    using PhysicalDevicesWithCapabilities = std::vector<PhysicalDeviceWithCapabilities>;
 
 }
 

@@ -95,11 +95,10 @@ namespace Molten::Vulkan
     /** Create logical device from physical device with other provided properties. */
     MOLTEN_API VkResult CreateLogicalDevice(
         LogicalDevice& logicalDevice,
-        PhysicalDeviceWithCapabilities& physicalDeviceWithCapabilities,
+        PhysicalDevice& physicalDeviceWithCapabilities,
         const Layers& enabledInstanceLayers = {},
         const Extensions& enabledDeviceExtensions = {},
-        const VkPhysicalDeviceFeatures& enabledDeviceFeatures = {}
-        );
+        const VkPhysicalDeviceFeatures& enabledDeviceFeatures = {});
 
     /** Create platform specific surface. */
     MOLTEN_API VkResult CreatePlatformSurface(
@@ -113,18 +112,18 @@ namespace Molten::Vulkan
         VkDevice logicalDevice,
         const size_t count);
 
+
     /** Create swapchain with a surface, graphics and present queue. */
-    MOLTEN_API VkResult CreateSwapchain(
-        VkSwapchainKHR& swapchain,
-        VkDevice logicalDevice,                                            
+    MOLTEN_API VkResult CreateSwapChain(
+        SwapChain& swapChain,
+        LogicalDevice& logicalDevice,
+        PhysicalDevice& physicalDeviceWithCapabilities,
         const VkSurfaceKHR surface, 
         const VkSurfaceFormatKHR& surfaceFormat,
         const VkPresentModeKHR presentMode,
-        const VkSurfaceCapabilitiesKHR & capabilities, 
-        const uint32_t imageCount,
-        const uint32_t graphicsQueueIndex,
-        const uint32_t presentQueueIndex,
-        VkSwapchainKHR oldSwapchain = VK_NULL_HANDLE);
+        const VkSurfaceCapabilitiesKHR& surfaceCapabilities, 
+        const uint32_t imageCount);
+    
 
     /** Create Vulkan version(uint32_t) from Molten version,*/
     MOLTEN_API uint32_t CreateVersion(const Version& version);
@@ -152,8 +151,8 @@ namespace Molten::Vulkan
         VkPhysicalDevice physicalDevice);
 
     /** Fetch instance extension names. */
-    MOLTEN_API VkResult FetchInstanceExtensions(
-        Extensions& extensions);
+    /*MOLTEN_API VkResult FetchInstanceExtensions(
+        Extensions& extensions);*/
 
     /** Fetch instance layers. */
     MOLTEN_API VkResult FetchInstanceLayers(
@@ -163,7 +162,10 @@ namespace Molten::Vulkan
         QueueFamilyProperties& queueFamilyProperties,
         VkPhysicalDevice physicalDevice);
 
-    /** Fetch physical devices from vulkan instance. */
+    /** Fetch physical devices from vulkan instance.
+     * Provide filters to ignore certain physical devices. 
+     */
+
     MOLTEN_API VkResult FetchPhysicalDevices(
         PhysicalDevices& physicalDevices,
         Instance& instance);
@@ -184,8 +186,8 @@ namespace Molten::Vulkan
 
     /***/
     MOLTEN_API void FilterPhysicalDevicesWithRenderCapabilities(
-        PhysicalDevicesWithCapabilities& filteredPhysicalDeviceWithCapabilities,
-        PhysicalDevicesWithCapabilities& physicalDeviceWithCapabilities,
+        PhysicalDevices& filteredPhysicalDeviceWithCapabilities,
+        PhysicalDevices& physicalDeviceWithCapabilities,
         const Vulkan::Extensions& requiredExtensions,
         const VkPhysicalDeviceFeatures& requiredDeviceFeatures,
         VkSurfaceKHR surface,
@@ -267,11 +269,11 @@ namespace Molten::Vulkan
      * @return true if any device with positive score is found, else false.
      */
     /**@{*/
-    using ScorePhysicalDevicesCallback = std::function<int32_t(const PhysicalDeviceWithCapabilities&)>;
+    using ScorePhysicalDevicesCallback = std::function<int32_t(const PhysicalDevice&)>;
     
     MOLTEN_API bool ScorePhysicalDevices(
-        PhysicalDeviceWithCapabilities& winningPhysicalDeviceWithCapabilities,
-        const PhysicalDevicesWithCapabilities& physicalDevicesWithCapabilities,
+        PhysicalDevice& winningPhysicalDeviceWithCapabilities,
+        const PhysicalDevices& physicalDevicesWithCapabilities,
         const ScorePhysicalDevicesCallback& callback);
     /**@}*/
 

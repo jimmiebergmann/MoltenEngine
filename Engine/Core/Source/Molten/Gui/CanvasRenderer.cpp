@@ -108,6 +108,7 @@ namespace Molten::Gui
         pipeline(nullptr),
         vertexBuffer(nullptr),
         indexBuffer(nullptr),
+        texture(nullptr),
         vertexScript(nullptr),
         fragmentScript(nullptr),
         projectionLocation(0),
