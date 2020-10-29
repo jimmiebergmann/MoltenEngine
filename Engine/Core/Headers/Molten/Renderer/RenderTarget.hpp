@@ -74,10 +74,7 @@ namespace Molten
         /**@}*/
 
         /** Get X11 window Device. Only available on Linux. */
-        /**@{*/
-        virtual ::Window GetX11WindowDevice() = 0;
-        virtual const ::Window GetX11WindowDevice() const = 0;
-        /**@}*/
+        virtual ::Window GetX11WindowDevice() const = 0;
 
         /** Get X11 screen Device. Only available on Linux. */
         virtual int GetX11ScreenDevice() const = 0;

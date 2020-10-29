@@ -154,10 +154,7 @@ namespace Molten
         /**@}*/
 
         /** Get X11 window Device. Only available on Linux. */
-        /**@{*/
-        virtual ::Window GetX11WindowDevice() override;
-        virtual const ::Window GetX11WindowDevice() const override;
-        /**@}*/
+        virtual ::Window GetX11WindowDevice() const override;
 
         /** Get X11 screen Device. Only available on Linux. */
         virtual int GetX11ScreenDevice() const override;
