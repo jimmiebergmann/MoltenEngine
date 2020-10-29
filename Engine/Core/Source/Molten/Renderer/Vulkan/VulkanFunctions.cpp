@@ -631,7 +631,8 @@ namespace Molten::Vulkan
         physicalDevices.resize(handles.size());
         for (size_t i = 0; i < handles.size(); i++)
         {
-            physicalDevices[i].Create(handles[i]);
+            auto result2 = physicalDevices[i].Create(handles[i]);
+            result2.Get<0>() = VkResult::VK_ERROR_UNKNOWN;
         }
 
 

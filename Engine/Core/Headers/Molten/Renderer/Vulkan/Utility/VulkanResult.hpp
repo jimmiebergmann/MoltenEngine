@@ -40,12 +40,12 @@ namespace Molten::Vulkan
 {
 
     template<typename TCustomResult = VkResult>
-    class Result;
+    class [[nodiscard]] Result;
 
 
     /**Result type, returned by vulkan utility functionsand methods. */
     template<typename TCustomResult>
-    class Result : private std::variant<VkResult, TCustomResult>
+    class [[nodiscard]] Result : private std::variant<VkResult, TCustomResult>
     {
 
     public:
@@ -95,20 +95,20 @@ namespace Molten::Vulkan
         /** Get value from result by index. 0 or 1 is accepted indicies. */
         /**@{*/
         template<size_t Index>
-        typename ResultValue<Index>::Type& Get();
+        [[nodiscard]] typename ResultValue<Index>::Type& Get();
 
         template<size_t Index>
-        const typename ResultValue<Index>::Type& Get() const;
+        [[nodiscard]] const typename ResultValue<Index>::Type& Get() const;
         /**@}*/
 
         /** Get type index. Returns 0 if underlying type is VkResult, else 1. */
-        size_t GetTypeIndex() const;
+        [[nodiscard]] size_t GetTypeIndex() const;
 
         /** Check if underlying value is equal to any of the provided arguments. */
-        bool ExpectAny(VkResult vulkanResult, const TCustomResult& customResult);
+        [[nodiscard]] bool ExpectAny(VkResult vulkanResult, const TCustomResult& customResult);
 
         /** Check if underlying value is equal to VkResult::VK_SUCCESS or provided argument. */
-        bool ExpectSuccessOr(const TCustomResult& customResult);
+        [[nodiscard]] bool ExpectSuccessOr(const TCustomResult& customResult);
 
     };
 
@@ -117,7 +117,7 @@ namespace Molten::Vulkan
      * This is a special case, where only one result should be available if TCustomResult is VkResult.
      */
     template<>
-    class Result<VkResult>
+    class [[nodiscard]] Result<VkResult>
     {
 
     public:
@@ -131,22 +131,22 @@ namespace Molten::Vulkan
         /** Get value from result by index. 0 is the only accepted index. */
         /**@{*/
         template<size_t Index>
-        VkResult& Get();
+        [[nodiscard]] VkResult& Get();
 
         template<size_t Index>
-        const VkResult& Get() const;
+        [[nodiscard]] const VkResult& Get() const;
 
-        VkResult& Get();
-        const VkResult& Get() const;
+        [[nodiscard]] VkResult& Get();
+        [[nodiscard]] const VkResult& Get() const;
         /**@}*/
 
         /** Get type index. Always returns 0. */
-        size_t GetTypeIndex() const;
+        [[nodiscard]] size_t GetTypeIndex() const;
 
         /** Check if underlying vulkan result is equal or not to VkResult::VK_SUCCESS. */
         /**@{*/
-        operator bool() const;
-        bool operator!() const;
+        [[nodiscard]] operator bool() const;
+        [[nodiscard]] bool operator!() const;
         /**@}*/
 
     private:
