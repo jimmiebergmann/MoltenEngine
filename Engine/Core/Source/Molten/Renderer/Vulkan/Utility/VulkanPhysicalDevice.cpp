@@ -42,7 +42,7 @@ namespace Molten::Vulkan
         m_deviceQueues{}
     {}
 
-    /*Result<>*/ VkResult PhysicalDevice::Create(VkPhysicalDevice physicalDeviceHandle)
+    Result<> PhysicalDevice::Create(VkPhysicalDevice physicalDeviceHandle)
     {
         return VkResult::VK_ERROR_FRAGMENTATION;
     }
@@ -75,7 +75,7 @@ namespace Molten::Vulkan
     }
 
     // Static functions.
-    /*Result<>*/VkResult FetchAndCreatePhysicalDevices(
+    Result<> FetchAndCreatePhysicalDevices(
         PhysicalDevices& physicalDevices,
         Instance& instance,
         PhysicalDeviceFilters filters)

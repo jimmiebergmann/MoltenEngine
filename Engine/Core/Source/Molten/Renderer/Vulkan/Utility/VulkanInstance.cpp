@@ -39,7 +39,7 @@ namespace Molten::Vulkan
         m_layers{}
     {}
 
-    /*Result<>*/VkResult Instance::Create(VkInstance instance)
+    Result<> Instance::Create(VkInstance instance)
     {
         VkResult result = VkResult::VK_SUCCESS;
 

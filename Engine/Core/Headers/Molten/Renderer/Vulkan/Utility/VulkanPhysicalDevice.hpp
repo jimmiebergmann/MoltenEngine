@@ -50,7 +50,7 @@ namespace Molten::Vulkan
 
        PhysicalDevice();
 
-       /*Result<>*/VkResult Create(VkPhysicalDevice physicalDeviceHandle);
+       Result<> Create(VkPhysicalDevice physicalDeviceHandle);
 
        VkPhysicalDevice& GetHandle();
        const VkPhysicalDevice& GetHandle() const;
@@ -79,7 +79,7 @@ namespace Molten::Vulkan
    /** Fetch and create physical devices from vulkan instance.
     * Provide filters to ignore certain physical devices.
     */
-   MOLTEN_API /*Result<>*/VkResult FetchAndCreatePhysicalDevices(
+   MOLTEN_API Result<> FetchAndCreatePhysicalDevices(
        PhysicalDevices& physicalDevices,
        Instance& instance,
        PhysicalDeviceFilters filters = {});

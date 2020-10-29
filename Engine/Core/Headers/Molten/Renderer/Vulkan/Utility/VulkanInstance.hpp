@@ -46,7 +46,7 @@ namespace Molten::Vulkan
 
         Instance();
 
-        /*Result<>*/VkResult Create(VkInstance instance);
+        Result<> Create(VkInstance instance);
 
         VkInstance& GetHandle();
         const VkInstance& GetHandle() const;
