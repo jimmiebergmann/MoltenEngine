@@ -59,6 +59,17 @@ namespace Molten::Formats::Bmp
 
         Header();
 
+        uint16_t& GetSignature();
+        uint16_t GetSignature() const;
+
+        uint32_t& GetFileSize();
+        uint32_t GetFileSize() const;
+
+        uint32_t& GetReserved();
+        uint32_t GetReserved() const;
+
+        uint32_t& GetDataOffset();
+        uint32_t GetDataOffset() const;
 
     private:
 

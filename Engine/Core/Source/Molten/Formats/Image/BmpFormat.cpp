@@ -37,6 +37,43 @@ namespace Molten::Formats::Bmp
         m_dataOffset(0)
     {}
 
+    uint16_t& Header::GetSignature()
+    {
+        return m_signature;
+    }
+    uint16_t Header::GetSignature() const
+    {
+        return m_signature;
+    }
+
+    uint32_t& Header::GetFileSize()
+    {
+        return m_fileSize;
+    }
+    uint32_t Header::GetFileSize() const
+    {
+        return m_fileSize;
+    }
+
+    uint32_t& Header::GetReserved()
+    {
+        return m_reserved;
+    }
+    uint32_t Header::GetReserved() const
+    {
+        return m_reserved;
+    }
+
+    uint32_t& Header::GetDataOffset()
+    {
+        return m_dataOffset;
+    }
+    uint32_t Header::GetDataOffset() const
+    {
+        return m_dataOffset;
+    }
+
+
     // File implementations.
     File::File() :
         m_header{},
