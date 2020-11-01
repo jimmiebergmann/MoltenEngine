@@ -28,7 +28,7 @@
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 
-#include "Molten/Renderer/Vulkan/VulkanFunctions.hpp"
+#include "Molten/Renderer/Vulkan/Utility/VulkanFunctions.hpp"
 
 MOLTEN_UNSCOPED_ENUM_BEGIN
 
