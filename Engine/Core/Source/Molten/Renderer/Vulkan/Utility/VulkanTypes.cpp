@@ -32,21 +32,6 @@ MOLTEN_UNSCOPED_ENUM_BEGIN
 namespace Molten::Vulkan
 {
 
-
-    // Filtered memory type implementations.
-    FilteredMemoryType::FilteredMemoryType() :
-        index(0),
-        propertyFlags(0)
-    {}
-
-    FilteredMemoryType::FilteredMemoryType(
-        const uint32_t index,
-        const VkMemoryPropertyFlags propertyFlags
-    ) :
-        index(index),
-        propertyFlags(propertyFlags)
-    {}
-
     // Physical device features with name implementations.
     PhysicalDeviceFeatureWithName::PhysicalDeviceFeatureWithName(
         VkBool32 VkPhysicalDeviceFeatures::* memberPointer,

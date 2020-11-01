@@ -107,15 +107,6 @@ namespace Molten::Vulkan
         Semaphores& semaphores);
 
 
-    /** Filter provided physical device memory properies by filter flags.
-      *  Returns vector of provided memory properties that contains all filter flags.
-      */
-    MOLTEN_API void FilterMemoryTypesByPropertyFlags(
-        FilteredMemoryTypes& filteredMemorytypes,
-        const VkPhysicalDeviceMemoryProperties& physicalDeviceMemoryProperies,
-        const uint32_t propertyFlags);
-
-
     /** Search for the last in structure, where pNext == nullptr. */
     MOLTEN_API const VkBaseInStructure& FindLastBaseInStructure(VkBaseInStructure& baseInStructure);
 
@@ -128,27 +119,6 @@ namespace Molten::Vulkan
     /** Find layer in vector of extensions, by name. Returns iterator of found extension, else extensions.end(). */
     MOLTEN_API Extensions::iterator FindExtension(Extensions& extensions, const std::string& name);
 
-    /** Find first index of device memory propery with required memory type flags. */
-    MOLTEN_API bool FindMemoryTypeIndex(
-        uint32_t& index,
-        const FilteredMemoryTypes& filteredMemoryTypes,
-        const uint32_t requiredMemoryTypeFlags);
-
-    /** Find suitable pair of queue indices for rendering to a surface.
-     * 
-     * @requiredQueueFlags VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT is explicitly required.
-     */
-    MOLTEN_API bool FindSuitableQueueIndices(
-        uint32_t& graphicsQueueIndex,
-        uint32_t& presentQueueIndex,
-        VkPhysicalDevice physicalDevice,
-        VkSurfaceKHR surface,
-        const QueueFamilyProperties& queueFamilies,
-        const VkQueueFlags requiredQueueFlags = 0);
-
-
-    /** Get platform specific surface extension name. */
-    MOLTEN_API const std::string& GetPlatformSurfaceExtensionName();
 
     /** Get vector of images in swapchain. */
     MOLTEN_API VkResult GetSwapchainImages(

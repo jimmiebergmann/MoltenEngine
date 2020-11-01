@@ -29,12 +29,25 @@
 #if defined(MOLTEN_ENABLE_VULKAN)
 
 #include "Molten/Renderer/Vulkan/Utility/VulkanInstance.hpp"
+#include "Molten/Renderer/Vulkan/Utility/VulkanExtension.hpp"
 #include "Molten/Renderer/RenderTarget.hpp"
 
 MOLTEN_UNSCOPED_ENUM_BEGIN
 
 namespace Molten::Vulkan
 {
+
+    const Extension& Surface::GetPlatformExtension()
+    {
+    #if MOLTEN_PLATFORM == MOLTEN_PLATFORM_WINDOWS
+        static const auto surfaceExtension = Extension{ "VK_KHR_win32_surface" };
+#   elif MOLTEN_PLATFORM == MOLTEN_PLATFORM_LINUX
+        static const auto surfaceExtension = Extension{ "VK_KHR_xlib_surface" };
+    #else
+        static const auto surfaceExtension = Extension{ "" };
+    #endif
+        return surfaceExtension;
+    }
 
     Surface::Surface() :
         m_handle(VK_NULL_HANDLE),

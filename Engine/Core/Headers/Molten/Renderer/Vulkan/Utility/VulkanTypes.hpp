@@ -51,21 +51,6 @@ namespace Molten::Vulkan
     using SurfaceFormats = std::vector<VkSurfaceFormatKHR>;
 
 
-    /** Single memory type, returned as vector by FilterMemoryTypesByPropertyFlags. */
-    struct MOLTEN_API FilteredMemoryType
-    {
-        FilteredMemoryType();
-        FilteredMemoryType(
-            const uint32_t index,
-            const VkMemoryPropertyFlags propertyFlags);
-
-        uint32_t index; ///< This is the index of this memory propery from the original VkPhysicalDeviceMemoryProperties object.
-        VkMemoryPropertyFlags propertyFlags; // Bitmask of supported memory properies for this memory type.
-    };
-
-    using FilteredMemoryTypes = std::vector<FilteredMemoryType>;
-
-
     struct MOLTEN_API PhysicalDeviceFeatureWithName
     {
         PhysicalDeviceFeatureWithName(

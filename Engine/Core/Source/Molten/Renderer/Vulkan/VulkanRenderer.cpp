@@ -255,6 +255,7 @@ namespace Molten
             LoadSurface() &&
             LoadPhysicalDevice() &&
             LoadLogicalDevice() &&
+            LoadMemoryTypes() &&
             LoadRenderPass() &&
             LoadSwapChain() &&
             LoadCommandPool();
@@ -365,7 +366,7 @@ namespace Molten
         VkBuffer stagingBuffer;
         VkDeviceMemory stagingMemory;        
 
-        if (!CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingMemory))
+        if (!CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, m_memoryTypesHostVisibleOrCoherent, stagingBuffer, stagingMemory))
         {
             return nullptr;
         }
@@ -383,7 +384,7 @@ namespace Molten
 
         VkBuffer indexBuffer;
         VkDeviceMemory indexMemory;
-        if (!CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffer, indexMemory))
+        if (!CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, m_memoryTypesDeviceLocal, indexBuffer, indexMemory))
         {
             return nullptr;
         }
@@ -597,7 +598,7 @@ namespace Molten
         VkBuffer stagingBuffer;
         VkDeviceMemory stagingMemory;
 
-        if (!CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingMemory))
+        if (!CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, m_memoryTypesHostVisibleOrCoherent, stagingBuffer, stagingMemory))
         {
             return nullptr;
         }
@@ -765,7 +766,7 @@ namespace Molten
 
         for (auto& frame : frames)
         {
-            if (!CreateBuffer(descriptor.size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, frame.buffer, frame.memory))
+            if (!CreateBuffer(descriptor.size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, m_memoryTypesHostVisibleOrCoherent, frame.buffer, frame.memory))
             {
                 destroyBuffers();
                 return nullptr;
@@ -786,7 +787,7 @@ namespace Molten
         VkBuffer stagingBuffer;
         VkDeviceMemory stagingMemory;
 
-        if (!CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingMemory))
+        if (!CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, m_memoryTypesHostVisibleOrCoherent, stagingBuffer, stagingMemory))
         {
             return nullptr;
         }
@@ -804,7 +805,7 @@ namespace Molten
 
         VkBuffer vertexBuffer;
         VkDeviceMemory vertexMemory;
-        if (!CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer, vertexMemory))
+        if (!CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, m_memoryTypesDeviceLocal, vertexBuffer, vertexMemory))
         {
             return nullptr;
         }
@@ -1068,13 +1069,10 @@ namespace Molten
     bool VulkanRenderer::LoadRequirements()
     {
         // Instance extensions.
-        m_requiredInstanceExtensions = { Vulkan::Extension{ "VK_KHR_surface", 0 } };
-
-        auto& platformSurfaceExtension = Vulkan::GetPlatformSurfaceExtensionName();
-        if (platformSurfaceExtension.size() != 0)
-        {
-            m_requiredInstanceExtensions.push_back(Vulkan::Extension{ platformSurfaceExtension });
-        }
+        m_requiredInstanceExtensions = { 
+            Vulkan::Extension{ "VK_KHR_surface", 0 },
+            Vulkan::Surface::GetPlatformExtension()
+        };
 
         // Instance Layers
         m_requiredInstanceLayers = {};
@@ -1180,20 +1178,6 @@ namespace Molten
                 {
                     return false;
                 }
-                /*bool foundFormats = false;
-                for (auto& format : surfaceCapabilities.formats)
-                {
-                    if (format.format == m_surfaceFormat.format &&
-                        format.colorSpace == m_surfaceFormat.colorSpace)
-                    {
-                        foundFormats = true;
-                        break;
-                    }
-                }
-                if (!foundFormats)
-                {
-                    return false;
-                }*/
 
                 return true;
             }
@@ -1264,6 +1248,39 @@ namespace Molten
             return false;
         }
 
+        return true;
+    }
+
+    bool VulkanRenderer::LoadMemoryTypes()
+    {
+        m_memoryTypesHostVisibleOrCoherent.clear();
+        m_memoryTypesDeviceLocal.clear();
+
+        VkPhysicalDeviceMemoryProperties physicalDeviceMemoryProperies;
+        vkGetPhysicalDeviceMemoryProperties(m_physicalDevice.GetHandle(), &physicalDeviceMemoryProperies);
+
+        Vulkan::FilterMemoryTypesByPropertyFlags(
+            m_memoryTypesHostVisibleOrCoherent,
+            physicalDeviceMemoryProperies,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+        if (!m_memoryTypesHostVisibleOrCoherent.size())
+        {
+            Logger::WriteError(m_logger, "Failed to find filtered memory types of host visible or coherent.");
+            return false;
+        }
+
+        Vulkan::FilterMemoryTypesByPropertyFlags(
+            m_memoryTypesDeviceLocal,
+            physicalDeviceMemoryProperies,
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+        if (!m_memoryTypesDeviceLocal.size())
+        {
+            Logger::WriteError(m_logger, "Failed to find filtered memory types of device local.");
+            return false;
+        }
+        
         return true;
     }
 
@@ -1373,26 +1390,12 @@ namespace Molten
         return true;
     }
 
-    bool VulkanRenderer::FindPhysicalDeviceMemoryType(uint32_t& index, const uint32_t filter, const VkMemoryPropertyFlags properties)
-    {
-        /// < MOVE THIS CODE TO ScorePhysicalDevice....
-        VkPhysicalDeviceMemoryProperties memProperties;
-        vkGetPhysicalDeviceMemoryProperties(m_physicalDevice.GetHandle(), &memProperties);
-        /// < MOVE THIS CODE TO ScorePhysicalDevice....
-
-        for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
-        {
-            if ((filter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
-            {
-                index = i;
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    bool VulkanRenderer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& memory)
+    bool VulkanRenderer::CreateBuffer(
+        const VkDeviceSize size,
+        const VkBufferUsageFlags usage,
+        const Vulkan::FilteredMemoryTypes& filteredMemoryTypes, 
+        VkBuffer& buffer, 
+        VkDeviceMemory& memory)
     {
         VkBufferCreateInfo bufferInfo = {};
         bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -1410,12 +1413,10 @@ namespace Molten
         vkGetBufferMemoryRequirements(m_logicalDevice.GetHandle(), buffer, &memoryReq);
 
         uint32_t memoryTypeIndex = 0;
-        if (!FindPhysicalDeviceMemoryType(memoryTypeIndex, memoryReq.memoryTypeBits, properties))
-        {
-            vkDestroyBuffer(m_logicalDevice.GetHandle(), buffer, nullptr);
-            Logger::WriteError(m_logger, "Failed to find matching memory type for vertex buffer.");
-            return false;
-        }
+        Vulkan::FindFilteredMemoryTypeIndex(
+            memoryTypeIndex,
+            filteredMemoryTypes,
+            memoryReq.memoryTypeBits);
 
         VkMemoryAllocateInfo memoryAllocateInfo = {};
         memoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;

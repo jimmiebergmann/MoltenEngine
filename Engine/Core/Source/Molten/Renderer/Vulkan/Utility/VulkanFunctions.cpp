@@ -312,23 +312,6 @@ namespace Molten::Vulkan
         }
     }
 
-    void FilterMemoryTypesByPropertyFlags(
-        FilteredMemoryTypes& filteredMemorytypes,
-        const VkPhysicalDeviceMemoryProperties& physicalDeviceMemoryProperies,
-        const uint32_t propertyFlags)
-    {
-        filteredMemorytypes.clear();
-
-        for (uint32_t i = 0; i < physicalDeviceMemoryProperies.memoryTypeCount; i++)
-        {
-            auto& memoryType = physicalDeviceMemoryProperies.memoryTypes[i];
-            if ((memoryType.propertyFlags & propertyFlags) == propertyFlags)
-            {
-                filteredMemorytypes.push_back(FilteredMemoryType{ i, memoryType.propertyFlags });
-            }
-        }
-    }
-
     const VkBaseInStructure& FindLastBaseInStructure(VkBaseInStructure& baseInStructure)
     {
         const auto* currentStructure = &baseInStructure;
@@ -367,85 +350,6 @@ namespace Molten::Vulkan
         {
             return extension.name == name;
         });
-    }
-
-    bool FindMemoryTypeIndex(
-        uint32_t& index,
-        const FilteredMemoryTypes& filteredMemoryTypes,
-        const uint32_t requiredMemoryTypeFlags)
-    {
-        for (auto& filteredMemoryType : filteredMemoryTypes)
-        {
-            if (requiredMemoryTypeFlags & (1 << filteredMemoryType.index))
-            {
-                index = filteredMemoryType.index;
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    bool FindSuitableQueueIndices(
-        uint32_t& graphicsQueueIndex,
-        uint32_t& presentQueueIndex,
-        VkPhysicalDevice physicalDevice,
-        VkSurfaceKHR surface,
-        const QueueFamilyProperties& queueFamilies,
-        const VkQueueFlags requiredQueueFlags)
-    {
-        graphicsQueueIndex = std::numeric_limits<uint32_t>::max();
-        presentQueueIndex = std::numeric_limits<uint32_t>::max();
-
-        uint32_t finalGraphicsQueueIndex = 0;
-        uint32_t finalPresentQueueIndex = 0;
-
-        bool graphicsFamilySupport = false;
-        bool presentFamilySupport = false;
-
-        for(uint32_t i = 0; i < queueFamilies.size(); i++)
-        {
-            auto& queueFamily = queueFamilies[i];
-
-            if (queueFamily.queueFlags & (VK_QUEUE_GRAPHICS_BIT | requiredQueueFlags))
-            {
-                graphicsFamilySupport = true;
-                finalGraphicsQueueIndex = i;
-            }
-
-            VkBool32 presentSupport = false;
-            vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, surface, &presentSupport);
-            if (presentSupport)
-            {
-                presentFamilySupport = true;
-                finalPresentQueueIndex = i;
-            }
-
-            if (graphicsFamilySupport && presentFamilySupport)
-            {
-                break;
-            }
-        }
-        if (!graphicsFamilySupport || !presentFamilySupport)
-        {
-            return false;
-        }
-
-        graphicsQueueIndex = finalGraphicsQueueIndex;
-        presentQueueIndex = finalPresentQueueIndex;
-        return true;
-    }
-
-    const std::string& GetPlatformSurfaceExtensionName()
-    {
-    #if MOLTEN_PLATFORM == MOLTEN_PLATFORM_WINDOWS
-        static const std::string surfaceExtensionName = "VK_KHR_win32_surface";
-    #elif MOLTEN_PLATFORM == MOLTEN_PLATFORM_LINUX
-        static const std::string surfaceExtensionName = "VK_KHR_xlib_surface";
-    #else
-        static const std::string surfaceExtensionName = "";
-    #endif
-        return surfaceExtensionName;
     }
 
     VkResult GetSwapchainImages(

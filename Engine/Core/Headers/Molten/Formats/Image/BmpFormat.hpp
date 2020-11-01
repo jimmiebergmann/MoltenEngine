@@ -57,6 +57,7 @@ namespace Molten::Formats::Bmp
 
     public:
 
+        Header();
 
 
     private:
@@ -94,6 +95,8 @@ namespace Molten::Formats::Bmp
     {
 
     public:
+
+        File();
 
         /** Get const or non-const reference to header data. */
         Header& GetHeader();

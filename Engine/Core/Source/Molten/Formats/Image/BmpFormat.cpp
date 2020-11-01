@@ -28,28 +28,23 @@
 namespace Molten::Formats::Bmp
 {
 
-    // Reader result implementations.
-    bool ReaderResult::IsSuccessful() const
-    {
-        return m_resultCode == ResultCode::Successful;
-    }
-
-    ResultCode ReaderResult::GetCode() const
-    {
-        return m_resultCode;
-    }
-
-    File& ReaderResult::GetFile()
-    {
-        return m_file;
-    }
-    const File& ReaderResult::GetFile() const
-    {
-        return m_file;
-    }
-
+ 
+    // Header implementations
+    Header::Header() :
+        m_signature(0),
+        m_fileSize(0),
+        m_reserved(0),
+        m_dataOffset(0)
+    {}
 
     // File implementations.
+    File::File() :
+        m_header{},
+        m_infoHeader{},
+        m_colorTable{},
+        m_data{}
+    {}
+
     Header& File::GetHeader()
     {
         return m_header;
@@ -97,6 +92,26 @@ namespace Molten::Formats::Bmp
 
     // Color table implementations.
 
+
+      // Reader result implementations.
+    bool ReaderResult::IsSuccessful() const
+    {
+        return m_resultCode == ResultCode::Successful;
+    }
+
+    ResultCode ReaderResult::GetCode() const
+    {
+        return m_resultCode;
+    }
+
+    File& ReaderResult::GetFile()
+    {
+        return m_file;
+    }
+    const File& ReaderResult::GetFile() const
+    {
+        return m_file;
+    }
 
 
     // Reader implementations.

@@ -42,11 +42,15 @@ namespace Molten::Vulkan
 {
 
     class Instance;
+    struct Extension;
+
 
     class MOLTEN_API Surface
     {
 
     public:
+
+        static const Extension& GetPlatformExtension();
 
         Surface();
         ~Surface();

@@ -36,6 +36,7 @@
 #include "Molten/Renderer/Vulkan/Utility/VulkanPhysicalDevice.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanLogicalDevice.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanSwapChain.hpp"
+#include "Molten/Renderer/Vulkan/Utility/VulkanMemoryType.hpp"
 
 MOLTEN_UNSCOPED_ENUM_BEGIN
 
@@ -179,20 +180,28 @@ namespace Molten
 
     private:
 
-        /** Renderer creation function. */
+        /** Renderer creation functions. */
         /**@{*/
         bool LoadRequirements();
         bool LoadInstance(const Version& version);      
         bool LoadSurface();
         bool LoadPhysicalDevice();
         bool LoadLogicalDevice();
+        bool LoadMemoryTypes();
         bool LoadRenderPass();
         bool LoadSwapChain();
         bool LoadCommandPool();
         /**@}*/
 
-        bool FindPhysicalDeviceMemoryType(uint32_t& index, const uint32_t filter, const VkMemoryPropertyFlags properties); // Vulkan::FilterMemoryTypesByPropertyFlags and Vulkan::FilterMemoryTypesByPropertyFlags 
-        bool CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& memory); // Vulkan::CreateBuffer
+        /** Resource creation and manipulation functions. */
+        /**@{*/
+        bool CreateBuffer(
+            const VkDeviceSize size, 
+            const VkBufferUsageFlags usage, 
+            const Vulkan::FilteredMemoryTypes& filteredMemoryTypes,
+            VkBuffer& buffer,
+            VkDeviceMemory& memory);
+        
         void CopyBuffer(VkBuffer source, VkBuffer destination, VkDeviceSize size); // Should be old
         bool CreateImage(const Vector2ui32& dimensions, VkFormat format, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& memory); // Should be old
         bool CreateVertexInputAttributes(const Shader::Visual::InputStructure& inputs, std::vector<VkVertexInputAttributeDescription>& attributes, uint32_t& stride);
@@ -208,6 +217,8 @@ namespace Molten
 
         template<typename T>
         void InternalPushConstant(const uint32_t location, const T& value);
+        /**@}*/
+
 
         /** Renderer creation variables. */
         /**@{*/
@@ -242,6 +253,12 @@ namespace Molten
         VkCommandBuffer* m_currentCommandBuffer;
         bool m_beginDraw;
         VulkanPipeline* m_currentPipeline;
+        /**@}*/
+
+        /** Pre-filtered memory types. */
+        /**@{*/
+        Vulkan::FilteredMemoryTypes m_memoryTypesHostVisibleOrCoherent;
+        Vulkan::FilteredMemoryTypes m_memoryTypesDeviceLocal;
         /**@}*/
            
     };
