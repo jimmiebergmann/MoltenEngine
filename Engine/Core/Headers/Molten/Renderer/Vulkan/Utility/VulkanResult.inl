@@ -157,6 +157,23 @@ namespace Molten::Vulkan
         return m_value != VkResult::VK_SUCCESS;
     }
 
+    inline bool Result<VkResult>::operator ==(const Result<VkResult> result) const
+    {
+        return m_value == result.m_value;
+    }
+    inline bool Result<VkResult>::operator ==(const VkResult result) const
+    {
+        return m_value == result;
+    }
+    inline bool Result<VkResult>::operator !=(const Result<VkResult> result) const
+    {
+        return m_value != result.m_value;
+    }
+    inline bool Result<VkResult>::operator !=(const VkResult result) const
+    {
+        return m_value != result;
+    }
+
 
     // Result type info implementations.
     inline ResultTypeInfo::ResultTypeInfo() :

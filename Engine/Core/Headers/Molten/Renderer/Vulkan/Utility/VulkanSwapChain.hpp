@@ -30,23 +30,83 @@
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 #include "Molten/Renderer/Vulkan/Utility/VulkanTypes.hpp"
+#include "Molten/Renderer/Vulkan/Utility/VulkanResult.hpp"
 
 MOLTEN_UNSCOPED_ENUM_BEGIN
 
 namespace Molten::Vulkan
 {
 
-    /*class MOLTEN_API SwapChain
+    class LogicalDevice;
+
+    class MOLTEN_API SwapChain
     {
 
     public:
 
         SwapChain();
+        ~SwapChain();
+
+        Result<> Create(
+            LogicalDevice& logicalDevice,
+            const VkRenderPass renderPass,
+            const VkSurfaceFormatKHR& surfaceFormat,
+            const VkPresentModeKHR presentMode,
+            const uint32_t imageCount);
+
+        Result<> Recreate();
+
+        void Destroy();
+
+        bool IsCreated();
+
+        Result<> BeginDraw();
+        Result<> EndDraw(VkCommandBuffer& commandBuffer);
+
+        VkSwapchainKHR GetHandle() const;
+
+        VkExtent2D GetExtent() const;
+
+        VkPresentModeKHR GetPresentMode() const;
+
+        VkSurfaceFormatKHR GetSurfaceFormat() const;
+
+        uint32_t GetImageCount() const;
+
+        uint32_t GetCurrentImageIndex() const;
+        uint32_t GetCurrentFrameIndex()  const;
+        VkFramebuffer GetCurrentFramebuffer()  const;
+
+        void SetExtent(VkExtent2D extent);
 
     private:
 
+        Result<> Load();
 
-    };*/
+        Result<> LoadAssociatedObjects();
+        void UnloadAssociatedObjects();
+
+        VkSwapchainKHR m_handle;
+        LogicalDevice* m_logicalDevice;
+        VkRenderPass m_renderPass;
+        VkExtent2D m_extent;
+        VkExtent2D m_oldExtent;
+        VkPresentModeKHR m_presentMode;
+        VkSurfaceFormatKHR m_surfaceFormat;
+
+        uint32_t m_imageCount;
+        Images m_images;
+        ImageViews m_imageViews;
+        FrameBuffers m_framebuffers;
+        uint32_t m_maxFramesInFlight;
+        Semaphores m_imageAvailableSemaphores;
+        Semaphores m_renderFinishedSemaphores;
+        Fences m_inFlightFences;
+        Fences m_imagesInFlight;
+        uint32_t m_currentFrameIndex;
+        uint32_t m_currentImageIndex;
+        
+    };
 
 
 }

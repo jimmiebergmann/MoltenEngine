@@ -30,10 +30,9 @@
 #include "Molten/Renderer/Shader/Visual/VisualShaderStructure.hpp"
 
 #if defined(MOLTEN_ENABLE_VULKAN)
-#include "Molten/Renderer/Vulkan/VulkanTypes.hpp"
-#include "Molten/Renderer/Vulkan/VulkanDebugMessenger.hpp"
 #include "Molten/Renderer/Vulkan/VulkanPipeline.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanInstance.hpp"
+#include "Molten/Renderer/Vulkan/Utility/VulkanSurface.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanPhysicalDevice.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanLogicalDevice.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanSwapChain.hpp"
@@ -187,18 +186,11 @@ namespace Molten
         bool LoadSurface();
         bool LoadPhysicalDevice();
         bool LoadLogicalDevice();
+        bool LoadRenderPass();
+        bool LoadSwapChain();
+        bool LoadCommandPool();
         /**@}*/
 
-        
-        bool LoadSwapChain();
-        bool LoadImageViews();
-        bool LoadRenderPass();
-        bool LoadPresentFramebuffer();
-        Framebuffer* CreateFramebuffer(const VkImageView& imageView, const Vector2ui32 size);
-        bool LoadCommandPool();
-        bool LoadSyncObjects(); //< This is fine
-        bool RecreateSwapChain();  //< This is fine
-        void UnloadSwapchain();
         bool FindPhysicalDeviceMemoryType(uint32_t& index, const uint32_t filter, const VkMemoryPropertyFlags properties); // Vulkan::FilterMemoryTypesByPropertyFlags and Vulkan::FilterMemoryTypesByPropertyFlags 
         bool CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& memory); // Vulkan::CreateBuffer
         void CopyBuffer(VkBuffer source, VkBuffer destination, VkDeviceSize size); // Should be old
@@ -236,40 +228,21 @@ namespace Molten
         /**@{*/
         bool m_isOpen;
         bool m_enableDebugMessenger;
-        Vulkan::Extensions m_debugInstanceExtensions;
         Vulkan::Layers m_debugInstanceLayers;
         Vulkan::Instance m_instance;
-        Vulkan::DebugMessenger m_debugMessenger;
-        VkSurfaceKHR m_surface;
+        Vulkan::Surface m_surface;
         Vulkan::PhysicalDevice m_physicalDevice;
         Vulkan::LogicalDevice m_logicalDevice;
-        Vulkan::SwapChain m_swapChain;
-        /**@}*/
-
-        ///< NEW ^^^^  
-
-        //VkSwapchainKHR m_swapChain; // Should be old.
-        VkFormat m_swapChainImageFormat;
-        VkExtent2D m_swapChainExtent;
-        Vulkan::Images m_swapChainImages;
-        Vulkan::ImageViews m_swapChainImageViews;
         VkRenderPass m_renderPass;
-        std::vector<VulkanFramebuffer*> m_presentFramebuffers;
+        Vulkan::SwapChain m_swapChain;
+        VkSurfaceFormatKHR m_surfaceFormat;
+        VkPresentModeKHR m_presentMode;
         VkCommandPool m_commandPool;
         std::vector<VkCommandBuffer> m_commandBuffers;
-        Vulkan::Semaphores m_imageAvailableSemaphores;
-        Vulkan::Semaphores m_renderFinishedSemaphores;
-        Vulkan::Fences m_inFlightFences;
-        Vulkan::Fences m_imagesInFlight;
-        size_t m_maxFramesInFlight;
-        size_t m_currentFrame;
-
-        bool m_resized;
-        bool m_beginDraw;
-        uint32_t m_currentImageIndex;
         VkCommandBuffer* m_currentCommandBuffer;
-        VkFramebuffer m_currentFramebuffer;
-        VulkanPipeline * m_currentPipeline;
+        bool m_beginDraw;
+        VulkanPipeline* m_currentPipeline;
+        /**@}*/
            
     };
 

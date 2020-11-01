@@ -29,24 +29,56 @@
 #include "Molten/Core.hpp"
 
 #if defined(MOLTEN_ENABLE_VULKAN)
-#include "Molten/Renderer/Vulkan/Utility/VulkanTypes.hpp"
+#include "Molten/Renderer/Vulkan/Utility/VulkanDeviceQueues.hpp"
+#include "Molten/Renderer/Vulkan/Utility/VulkanLayer.hpp"
+#include "Molten/Renderer/Vulkan/Utility/VulkanExtension.hpp"
+#include "Molten/Renderer/Vulkan/Utility/VulkanResult.hpp"
 
 MOLTEN_UNSCOPED_ENUM_BEGIN
 
 namespace Molten::Vulkan
 {
 
-    /*class MOLTEN_API LogicalDevice
+    class PhysicalDevice;
+
+    class MOLTEN_API LogicalDevice
     {
 
     public:
 
         LogicalDevice();
+        ~LogicalDevice();
+
+        Result<> Create(
+            PhysicalDevice& physicalDevice,
+            const Layers& enabledInstanceLayers,
+            const Extensions& enabledDeviceExtensions,
+            const VkPhysicalDeviceFeatures& enabledDeviceFeatures);
+
+        void Destroy();
+
+        void WaitIdle();
+
+        bool IsCreated() const;
+
+        VkDevice& GetHandle();
+        const VkDevice& GetHandle() const;
+
+        DeviceQueues& GetDeviceQueues();
+        const DeviceQueues& GetDeviceQueues() const;
+
+        PhysicalDevice& GetPhysicalDevice();
+        const PhysicalDevice& GetPhysicalDevice() const;
+
+        bool HasPhysicalDevice() const;
 
     private:
 
+        VkDevice m_handle;
+        DeviceQueues m_deviceQueues;
+        PhysicalDevice* m_physicalDevice;
 
-    };*/
+    };
 
 }
 

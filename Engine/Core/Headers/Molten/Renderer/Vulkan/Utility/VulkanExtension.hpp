@@ -38,6 +38,9 @@ MOLTEN_UNSCOPED_ENUM_BEGIN
 namespace Molten::Vulkan
 {
 
+    class PhysicalDevice;
+
+
     /** A more c++ friendly version of VkExtensionProperties. */
     struct MOLTEN_API Extension
     {
@@ -46,27 +49,31 @@ namespace Molten::Vulkan
         Extension(
             const std::string& name,
             const uint32_t version);
-        Extension(
-            const VkExtensionProperties& extensionProperties);
+        Extension(const VkExtensionProperties& extensionProperties);
 
         Extension(const Extension& extension);
         Extension(Extension&& extension) noexcept;
         Extension& operator =(const Extension& extension);
         Extension& operator =(Extension&& extension) noexcept;
 
+        bool operator ==(const std::string& name) const;
+        bool operator !=(const std::string& name) const;
+
         std::string name;
         uint32_t version;
+        
     };
 
     using Extensions = std::vector<Extension>;
 
+
     /** Fetch available device extensions. */
-    /*MOLTEN_API Result<> FetchDeviceExtensions(
-        Extensions& extensions);*/
+    MOLTEN_API Result<> FetchDeviceExtensions(
+        Extensions& extensions,
+        const VkPhysicalDevice physicalDevice);
 
     /** Fetch available instance extensions. */
-    MOLTEN_API /*Result<>*/VkResult FetchInstanceExtensions(
-        Extensions& extensions);
+    MOLTEN_API Result<> FetchInstanceExtensions(Extensions& extensions);
 
 }
 

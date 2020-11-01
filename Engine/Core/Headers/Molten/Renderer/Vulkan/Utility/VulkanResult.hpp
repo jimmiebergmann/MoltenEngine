@@ -149,6 +149,14 @@ namespace Molten::Vulkan
         [[nodiscard]] bool operator!() const;
         /**@}*/
 
+        /* Compare operators. */
+        /**@{*/
+        [[nodiscard]] bool operator ==(const Result<VkResult> result) const;
+        [[nodiscard]] bool operator ==(const VkResult result) const;
+        [[nodiscard]] bool operator !=(const Result<VkResult> result) const;
+        [[nodiscard]] bool operator !=(const VkResult result) const; 
+        /**@}*/
+
     private:
 
         VkResult m_value;

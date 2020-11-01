@@ -41,6 +41,7 @@ namespace Molten::Vulkan
 {
 
     class Instance;
+    class Surface;
 
    /** Vulkan physical device.*/
    class MOLTEN_API PhysicalDevice
@@ -50,7 +51,11 @@ namespace Molten::Vulkan
 
        PhysicalDevice();
 
-       Result<> Create(VkPhysicalDevice physicalDeviceHandle);
+       Result<> Create(
+           VkPhysicalDevice physicalDeviceHandle,
+           Surface& surface);
+
+       bool IsCreated() const;
 
        VkPhysicalDevice& GetHandle();
        const VkPhysicalDevice& GetHandle() const;
@@ -58,14 +63,20 @@ namespace Molten::Vulkan
        PhysicalDeviceCapabilities& GetCapabilities();
        const PhysicalDeviceCapabilities& GetCapabilities() const;
 
-       DeviceQueues& GetDeviceQueues();
-       const DeviceQueues& GetDeviceQueues() const;
+       DeviceQueueIndices& GetDeviceQueueIndices();
+       const DeviceQueueIndices& GetDeviceQueueIndices() const;
+
+       Surface& GetSurface();
+       const Surface& GetSurface() const;
+
+       bool HasSurface() const;
 
    private:
 
        VkPhysicalDevice m_handle;
        PhysicalDeviceCapabilities m_capabilities;
-       DeviceQueues m_deviceQueues;
+       DeviceQueueIndices m_deviceQueueIndices;
+       Surface* m_surface;
 
    };
 
@@ -73,7 +84,7 @@ namespace Molten::Vulkan
 
 
    /** Filter for fetching and creating physical devices. */
-   using PhysicalDeviceFilter = std::function<bool(const PhysicalDeviceCapabilities&)>;
+   using PhysicalDeviceFilter = std::function<bool(const Vulkan::PhysicalDevice&)>;
    using PhysicalDeviceFilters = std::vector<PhysicalDeviceFilter>;
 
    /** Fetch and create physical devices from vulkan instance.
@@ -82,7 +93,22 @@ namespace Molten::Vulkan
    MOLTEN_API Result<> FetchAndCreatePhysicalDevices(
        PhysicalDevices& physicalDevices,
        Instance& instance,
+       Surface& surface,
        PhysicalDeviceFilters filters = {});
+
+
+   /** Filter for scoring physical devices. */
+   using ScoringCallback = std::function<int32_t(const PhysicalDevice&)>;
+
+   /** Score physical devices by iterating a list of physical devices and returns the device with highest score.
+    *  Callback function should return a positive interger if the device is considered as suitable.
+    *
+    * @return true if any device with positive score is found, else false.
+    */
+   MOLTEN_API bool ScorePhysicalDevices(
+       PhysicalDevice& winningPhysicalDevice,
+       const PhysicalDevices& physicalDevices,
+       const ScoringCallback& scoringCallback);
 
 }
 

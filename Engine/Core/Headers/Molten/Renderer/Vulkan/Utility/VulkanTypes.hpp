@@ -31,15 +31,54 @@
 #if defined(MOLTEN_ENABLE_VULKAN)
 #include "Molten/Renderer/Vulkan/VulkanHeaders.hpp"
 #include <vector>
+#include <string>
 
 MOLTEN_UNSCOPED_ENUM_BEGIN
 
 namespace Molten::Vulkan
 {
-    
+
+    using DescriptorSetLayouts = std::vector<VkDescriptorSetLayout>;
+    using DescriptorSets = std::vector<VkDescriptorSet>;
+    using Fences = std::vector<VkFence>;
+    using FrameBuffers = std::vector<VkFramebuffer>;
+    using Images = std::vector<VkImage>;
+    using ImageViews = std::vector<VkImageView>;
     using PresentModes = std::vector<VkPresentModeKHR>;
     using QueueFamilyProperties = std::vector<VkQueueFamilyProperties>;
+    using Semaphores = std::vector<VkSemaphore>;
+    using ShaderModules = std::vector<VkShaderModule>;
     using SurfaceFormats = std::vector<VkSurfaceFormatKHR>;
+
+
+    /** Single memory type, returned as vector by FilterMemoryTypesByPropertyFlags. */
+    struct MOLTEN_API FilteredMemoryType
+    {
+        FilteredMemoryType();
+        FilteredMemoryType(
+            const uint32_t index,
+            const VkMemoryPropertyFlags propertyFlags);
+
+        uint32_t index; ///< This is the index of this memory propery from the original VkPhysicalDeviceMemoryProperties object.
+        VkMemoryPropertyFlags propertyFlags; // Bitmask of supported memory properies for this memory type.
+    };
+
+    using FilteredMemoryTypes = std::vector<FilteredMemoryType>;
+
+
+    struct MOLTEN_API PhysicalDeviceFeatureWithName
+    {
+        PhysicalDeviceFeatureWithName(
+            VkBool32 VkPhysicalDeviceFeatures::* memberPointer,
+            const std::string& name);
+
+        VkBool32 VkPhysicalDeviceFeatures::* memberPointer;
+        const std::string& name;
+    };
+
+    using PhysicalDeviceFeaturesWithName = std::vector<PhysicalDeviceFeatureWithName>;
+
+
 
 }
 

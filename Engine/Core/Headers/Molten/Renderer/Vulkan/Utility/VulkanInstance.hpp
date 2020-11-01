@@ -32,11 +32,27 @@
 #include "Molten/Renderer/Vulkan/Utility/VulkanResult.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanExtension.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanLayer.hpp"
+#include "Molten/System/Version.hpp"
+#include "Molten/Logger.hpp"
+#include <string>
 
 MOLTEN_UNSCOPED_ENUM_BEGIN
 
 namespace Molten::Vulkan
 {
+
+    struct MOLTEN_API DebugCallbackDescriptor
+    {
+        using Callback = std::function<void(Molten::Logger::Severity, const char*)>;
+
+        DebugCallbackDescriptor();
+        DebugCallbackDescriptor(
+            uint32_t severityFlags,
+            Callback callback);
+
+        uint32_t severityFlags;
+        Callback callback;
+    };
 
     /** Vulkan instance class. */
     class MOLTEN_API Instance
@@ -45,8 +61,19 @@ namespace Molten::Vulkan
     public:
 
         Instance();
+        ~Instance();
 
-        Result<> Create(VkInstance instance);
+        Result<> Create(
+            const Version& vulkanVersion,
+            const std::string& engineName,
+            const Version& engineVersion,
+            const std::string& applicationName,
+            const Version& applicationVersion,
+            const Extensions& enabledExtensions,
+            const Layers& enabledLayers,
+            DebugCallbackDescriptor debugCallbackDescriptor = {});
+
+        void Destroy();
 
         VkInstance& GetHandle();
         const VkInstance& GetHandle() const;
@@ -62,6 +89,11 @@ namespace Molten::Vulkan
         VkInstance m_handle;
         Extensions m_extensions;
         Layers m_layers;
+
+        VkDebugUtilsMessengerEXT m_debugHandle;
+        DebugCallbackDescriptor m_debugCallbackDesc;     
+        PFN_vkCreateDebugUtilsMessengerEXT m_createDebugUtilsMessengerFunction;
+        PFN_vkDestroyDebugUtilsMessengerEXT m_destroyDebugUtilsMessengerFunction;
 
     };
 

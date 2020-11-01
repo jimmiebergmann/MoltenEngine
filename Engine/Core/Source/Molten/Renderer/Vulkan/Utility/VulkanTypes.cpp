@@ -23,35 +23,41 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_VULKAN_VULKANRESULT_HPP
-#define MOLTEN_CORE_RENDERER_VULKAN_VULKANRESULT_HPP
-
-#include "Molten/Types.hpp"
+#include "Molten/Renderer/Vulkan/Utility/VulkanTypes.hpp"
 
 #if defined(MOLTEN_ENABLE_VULKAN)
-#include "Molten/Renderer/Vulkan/VulkanTypes.hpp"
-#include <string>
 
 MOLTEN_UNSCOPED_ENUM_BEGIN
 
-namespace Molten
+namespace Molten::Vulkan
 {
 
-    struct MOLTEN_API VulkanResultOld
-    {
 
-        VulkanResultOld();
-        VulkanResultOld(VkResult result);
+    // Filtered memory type implementations.
+    FilteredMemoryType::FilteredMemoryType() :
+        index(0),
+        propertyFlags(0)
+    {}
 
-        const std::string& name;
-        const std::string& description;
+    FilteredMemoryType::FilteredMemoryType(
+        const uint32_t index,
+        const VkMemoryPropertyFlags propertyFlags
+    ) :
+        index(index),
+        propertyFlags(propertyFlags)
+    {}
 
-    };
+    // Physical device features with name implementations.
+    PhysicalDeviceFeatureWithName::PhysicalDeviceFeatureWithName(
+        VkBool32 VkPhysicalDeviceFeatures::* memberPointer,
+        const std::string& name
+    ) :
+        memberPointer(memberPointer),
+        name(name)
+    {}
 
 }
 
 MOLTEN_UNSCOPED_ENUM_END
-
-#endif
 
 #endif

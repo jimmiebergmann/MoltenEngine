@@ -23,28 +23,21 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_VULKAN_VULKANFUNCTIONS_HPP
-#define MOLTEN_CORE_RENDERER_VULKAN_VULKANFUNCTIONS_HPP
+#ifndef MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANFUNCTIONS_HPP
+#define MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANFUNCTIONS_HPP
 
 #include "Molten/Core.hpp"
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 
-#include "Molten/Renderer/Vulkan/VulkanTypes.hpp"
-#include "Molten/Renderer/Vulkan/VulkanDebugMessenger.hpp"
-#include "Molten/Renderer/RenderTarget.hpp"
+#include "Molten/Renderer/Vulkan/Utility/VulkanTypes.hpp"
+#include "Molten/Renderer/Vulkan/Utility/VulkanExtension.hpp"
+#include "Molten/Renderer/Vulkan/Utility/VulkanLayer.hpp"
+#include "Molten/Math/Vector.hpp"
 #include "Molten/System/Version.hpp"
-#include "Molten/Logger.hpp"
 #include <string>
-#include <functional>
-#include <memory>
 
 MOLTEN_UNSCOPED_ENUM_BEGIN
-
-namespace Molten
-{
-    class Logger;
-}
 
 namespace Molten::Vulkan
 {
@@ -78,33 +71,11 @@ namespace Molten::Vulkan
         const VkFenceCreateFlagBits createFlags,
         const size_t count);
 
-    /** Create instance, by optionally providing prepared instanceInfo, which should be done by debug messenger. 
-     *  Make sure to call PrepareInstance before CreateInstance.
-     */
-    MOLTEN_API VkResult CreateInstance(
-        Instance& instance,
-        const Version& vulkanVersion,
-        const std::string& engineName,
-        const Version& engineVersion,
-        const std::string& applicationName,
-        const Version& applicationVersion,
-        const Extensions& enabledExtensions,
-        const Layers& enabledLayers,
-        DebugMessenger* debugMessenger = nullptr);
-
-    /** Create logical device from physical device with other provided properties. */
-    MOLTEN_API VkResult CreateLogicalDevice(
-        LogicalDevice& logicalDevice,
-        PhysicalDevice& physicalDeviceWithCapabilities,
-        const Layers& enabledInstanceLayers = {},
-        const Extensions& enabledDeviceExtensions = {},
-        const VkPhysicalDeviceFeatures& enabledDeviceFeatures = {});
-
-    /** Create platform specific surface. */
-    MOLTEN_API VkResult CreatePlatformSurface(
-        VkSurfaceKHR& surface,
-        Instance& instance,
-        RenderTarget& renderTarget);
+    MOLTEN_API VkFramebuffer CreateFramebuffer(
+        VkDevice logicalDevice, 
+        VkRenderPass renderpass, 
+        const VkImageView& imageView, 
+        const Vector2ui32 size);
 
     /** Create N number of semaphores. */
     MOLTEN_API VkResult CreateSemaphores(
@@ -112,21 +83,12 @@ namespace Molten::Vulkan
         VkDevice logicalDevice,
         const size_t count);
 
-
-    /** Create swapchain with a surface, graphics and present queue. */
-    MOLTEN_API VkResult CreateSwapChain(
-        SwapChain& swapChain,
-        LogicalDevice& logicalDevice,
-        PhysicalDevice& physicalDeviceWithCapabilities,
-        const VkSurfaceKHR surface, 
-        const VkSurfaceFormatKHR& surfaceFormat,
-        const VkPresentModeKHR presentMode,
-        const VkSurfaceCapabilitiesKHR& surfaceCapabilities, 
-        const uint32_t imageCount);
-    
-
     /** Create Vulkan version(uint32_t) from Molten version,*/
     MOLTEN_API uint32_t CreateVersion(const Version& version);
+
+
+    MOLTEN_API bool ExtentIsSame(const VkExtent2D& first, const VkExtent2D& second);
+    MOLTEN_API bool ExtentIsSame(const VkExtent3D& first, const VkExtent3D& second);
 
 
     /** Destroy all fences in vector. */
@@ -145,37 +107,6 @@ namespace Molten::Vulkan
         Semaphores& semaphores);
 
 
-    /** Fetch avilable extension properties from physical device. */
-    MOLTEN_API VkResult FetchDeviceExtensions(
-        Extensions& extensions,
-        VkPhysicalDevice physicalDevice);
-
-    /** Fetch instance extension names. */
-    /*MOLTEN_API VkResult FetchInstanceExtensions(
-        Extensions& extensions);*/
-
-    /** Fetch instance layers. */
-    MOLTEN_API VkResult FetchInstanceLayers(
-        Layers& layers);
-
-    MOLTEN_API void FetchQueueFamilyProperties(
-        QueueFamilyProperties& queueFamilyProperties,
-        VkPhysicalDevice physicalDevice);
-
-    /** Fetch physical devices from vulkan instance.
-     * Provide filters to ignore certain physical devices. 
-     */
-
-    MOLTEN_API VkResult FetchPhysicalDevices(
-        PhysicalDevices& physicalDevices,
-        Instance& instance);
-
-    /** Fetch swap chain capabilities from physical device. */
-    MOLTEN_API VkResult FetchPhysicalDeviceSurfaceCapabilities(
-        PhysicalDeviceSurfaceCapabilities& surfaceCababilities,
-        VkPhysicalDevice physicalDevice,
-        VkSurfaceKHR surface);
-
     /** Filter provided physical device memory properies by filter flags.
       *  Returns vector of provided memory properties that contains all filter flags.
       */
@@ -183,16 +114,6 @@ namespace Molten::Vulkan
         FilteredMemoryTypes& filteredMemorytypes,
         const VkPhysicalDeviceMemoryProperties& physicalDeviceMemoryProperies,
         const uint32_t propertyFlags);
-
-    /***/
-    MOLTEN_API void FilterPhysicalDevicesWithRenderCapabilities(
-        PhysicalDevices& filteredPhysicalDeviceWithCapabilities,
-        PhysicalDevices& physicalDeviceWithCapabilities,
-        const Vulkan::Extensions& requiredExtensions,
-        const VkPhysicalDeviceFeatures& requiredDeviceFeatures,
-        VkSurfaceKHR surface,
-        Logger* logger = nullptr
-    );
 
 
     /** Search for the last in structure, where pNext == nullptr. */
@@ -236,22 +157,6 @@ namespace Molten::Vulkan
         const VkSwapchainKHR swapchain);
 
 
-    /** Log vulkan result */
-    /**@{*/
-    MOLTEN_API void LogInfo(Logger* logger, const std::string& message, VkResult result);
-    MOLTEN_API void LogDebug(Logger* logger, const std::string& message, VkResult result);
-    MOLTEN_API void LogWarning(Logger* logger, const std::string& message, VkResult result);
-    MOLTEN_API void LogError(Logger* logger, const std::string& message, VkResult result);
-    /**@}*/
-
-
-    /** Preparing instance for creation.
-     *  Make sure to call PrepareInstance before CreateInstance.
-     */
-    MOLTEN_API VkResult PrepareInstance(
-        Instance& instance);
-
-
     /** Removing layers by an exluding list of other layers.*/
     MOLTEN_API void RemoveLayers(
         Layers& layers,
@@ -262,26 +167,9 @@ namespace Molten::Vulkan
         Extensions& extensions,
         const Extensions& excludes);
 
-
-    /** Score physical device by iterating a list of physical devices and returns the device with highest score. 
-     *  Callback function should return a positive interger if the device is considered as suitable.
-     * 
-     * @return true if any device with positive score is found, else false.
-     */
-    /**@{*/
-    using ScorePhysicalDevicesCallback = std::function<int32_t(const PhysicalDevice&)>;
-    
-    MOLTEN_API bool ScorePhysicalDevices(
-        PhysicalDevice& winningPhysicalDeviceWithCapabilities,
-        const PhysicalDevices& physicalDevicesWithCapabilities,
-        const ScorePhysicalDevicesCallback& callback);
-    /**@}*/
-
 }
 
 MOLTEN_UNSCOPED_ENUM_END
-
-#include "Molten/Renderer/Vulkan/VulkanFunctions.inl"
 
 #endif
 

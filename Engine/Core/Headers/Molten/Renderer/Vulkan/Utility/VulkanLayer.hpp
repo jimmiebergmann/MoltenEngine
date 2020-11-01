@@ -30,6 +30,7 @@
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 #include "Molten/Renderer/Vulkan/Utility/VulkanTypes.hpp"
+#include "Molten/Renderer/Vulkan/Utility/VulkanResult.hpp"
 #include "Molten/System/Version.hpp"
 #include <string>
 
@@ -55,12 +56,19 @@ namespace Molten::Vulkan
         Layer& operator =(const Layer& layer);
         Layer& operator =(Layer&& layer) noexcept;
 
+        bool operator ==(const std::string& name) const;
+        bool operator !=(const std::string& name) const;
+
         std::string name;
         uint32_t version;
         Version vulkanVersion;
     };
 
     using Layers = std::vector<Layer>;
+
+
+    /** Fetch available instance extensions. */
+    MOLTEN_API Result<> FetchInstanceLayers(Layers& layers);
 
 }
 

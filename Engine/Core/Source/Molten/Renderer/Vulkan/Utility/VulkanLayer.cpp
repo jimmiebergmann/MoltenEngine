@@ -27,6 +27,7 @@
 #include "Molten/Renderer/Vulkan/Utility/VulkanLayer.hpp"
 
 #if defined(MOLTEN_ENABLE_VULKAN)
+#include <iterator>
 
 MOLTEN_UNSCOPED_ENUM_BEGIN
 
@@ -97,6 +98,45 @@ namespace Molten::Vulkan
         layer.version = 0;
         layer.vulkanVersion = {};
         return *this;
+    }
+
+    bool Layer::operator ==(const std::string& otherName) const
+    {
+        return name == otherName;
+    }
+
+    bool Layer::operator !=(const std::string& otherName) const
+    {
+        return name != otherName;
+    }
+
+
+    // Static implementations.
+    Result<> FetchInstanceLayers(Layers& layers)
+    {
+        layers.clear();
+
+        VkResult result = VkResult::VK_SUCCESS;
+
+        uint32_t layerCount = 0;
+        if ((result = vkEnumerateInstanceLayerProperties(&layerCount, nullptr)) != VkResult::VK_SUCCESS)
+        {
+            return result;
+        }
+
+        if (!layerCount)
+        {
+            return result;
+        }
+
+        std::vector<VkLayerProperties> layerProperties(layerCount, VkLayerProperties{});
+        if ((result = vkEnumerateInstanceLayerProperties(&layerCount, layerProperties.data())) != VkResult::VK_SUCCESS)
+        {
+            return result;
+        }
+
+        std::copy(layerProperties.begin(), layerProperties.end(), std::back_inserter(layers));
+        return result;
     }
 
 }

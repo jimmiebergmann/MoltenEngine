@@ -27,7 +27,7 @@
 #include "Molten/Renderer/Vulkan/Utility/VulkanExtension.hpp"
 
 #if defined(MOLTEN_ENABLE_VULKAN)
-
+#include "Molten/Renderer/Vulkan/Utility/VulkanPhysicalDevice.hpp"
 #include <iterator>
 
 MOLTEN_UNSCOPED_ENUM_BEGIN
@@ -54,9 +54,7 @@ namespace Molten::Vulkan
         version(version)
     {}
 
-    Extension::Extension(
-        const VkExtensionProperties& extensionProperties
-    ) :
+    Extension::Extension(const VkExtensionProperties& extensionProperties) :
         name(extensionProperties.extensionName),
         version(extensionProperties.specVersion)
     {}
@@ -87,9 +85,48 @@ namespace Molten::Vulkan
         return *this;
     }
 
+    bool Extension::operator ==(const std::string& otherName) const
+    {
+        return name == otherName;
+    }
+
+    bool Extension::operator !=(const std::string& otherName) const
+    {
+        return name != otherName;
+    }
+
+
     // Static implementations.
-    /*Result<>*/VkResult FetchInstanceExtensions(
-        Extensions& extensions)
+    Result<> FetchDeviceExtensions(
+        Extensions& extensions,
+        const VkPhysicalDevice physicalDevice)
+    {
+        extensions.clear();
+
+        VkResult result = VkResult::VK_SUCCESS;
+
+        uint32_t extensionCount = 0;
+        if ((result = vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionCount, nullptr)) != VkResult::VK_SUCCESS)
+        {
+            return result;
+        }
+
+        if (!extensionCount)
+        {
+            return result;
+        }
+
+        std::vector<VkExtensionProperties> extensionProperties(extensionCount, VkExtensionProperties{});
+        if ((result = vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &extensionCount, extensionProperties.data())) != VkResult::VK_SUCCESS)
+        {
+            return result;
+        }
+
+        std::copy(extensionProperties.begin(), extensionProperties.end(), std::back_inserter(extensions));
+        return result;
+    }
+
+    Result<> FetchInstanceExtensions(Extensions& extensions)
     {
          extensions.clear();
 

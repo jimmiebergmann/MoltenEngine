@@ -36,6 +36,8 @@ MOLTEN_UNSCOPED_ENUM_BEGIN
 
 namespace Molten::Vulkan
 {
+
+    class Surface;
   
 
     /** Vulkan physical device.*/
@@ -64,6 +66,21 @@ namespace Molten::Vulkan
         QueueFamilyProperties queueFamilies;
 
     };
+
+
+    /** Common function for fetching capabilities of physical device by handle and surface. 
+     * THis function also fetches surface capabilities.
+     */
+    MOLTEN_API Result<> FetchPhysicalDeviceCapabilities(
+        PhysicalDeviceCapabilities& capabilities,
+        const VkPhysicalDevice physicalDeviceHandle,
+        const VkSurfaceKHR surfaceHandle);
+
+    /** Common function for fetching surface capabilities of physical device by handle and surface. */
+    MOLTEN_API Result<> FetchPhysicalDeviceSurfaceCapabilities(
+        PhysicalDeviceSurfaceCapabilities& surfaceCababilities,
+        const VkPhysicalDevice physicalDeviceHandle,
+        const VkSurfaceKHR surfaceHandle);
 
 }
 

@@ -27,12 +27,15 @@
 #include "Molten/Renderer/Vulkan/Utility/VulkanPhysicalDeviceCapabilities.hpp"
 
 #if defined(MOLTEN_ENABLE_VULKAN)
+#include "Molten/Renderer/Vulkan/Utility/VulkanSurface.hpp"
+#include "Molten/Renderer/Vulkan/Utility/VulkanDeviceQueues.hpp"
 
 MOLTEN_UNSCOPED_ENUM_BEGIN
 
 namespace Molten::Vulkan
 {
 
+    // Physical device surface capabilities implementations.
     PhysicalDeviceSurfaceCapabilities::PhysicalDeviceSurfaceCapabilities() :
         capabilities{},
         formats{},
@@ -40,6 +43,7 @@ namespace Molten::Vulkan
     {}
 
 
+    // Physical device capabilities implementations.
     PhysicalDeviceCapabilities::PhysicalDeviceCapabilities() :
         properties{},
         features{},
@@ -48,6 +52,96 @@ namespace Molten::Vulkan
         surfaceCapabilities{},
         queueFamilies{}
     {}
+
+
+    // Static implementations.
+    Result<> FetchPhysicalDeviceCapabilities(
+        PhysicalDeviceCapabilities& capabilities,
+        const VkPhysicalDevice physicalDeviceHandle,
+        const VkSurfaceKHR surfaceHandle)
+    {
+        Result<> result;
+
+        if (!(result = FetchPhysicalDeviceSurfaceCapabilities(capabilities.surfaceCapabilities, physicalDeviceHandle, surfaceHandle)))
+        {
+            return result;
+        }
+
+        Extensions& extensions = capabilities.extensions;
+        if (!(result = FetchDeviceExtensions(extensions, physicalDeviceHandle)))
+        {
+            return result;
+        }
+
+        VkPhysicalDeviceFeatures& features = capabilities.features;
+        vkGetPhysicalDeviceFeatures(physicalDeviceHandle, &features);
+
+        QueueFamilyProperties& queueFamilies = capabilities.queueFamilies;
+        FetchQueueFamilyProperties(queueFamilies, physicalDeviceHandle);
+
+        VkPhysicalDeviceProperties& properties = capabilities.properties;
+        vkGetPhysicalDeviceProperties(physicalDeviceHandle, &properties);
+
+        /*
+        Extensions missingExtensions;
+        if (!CheckRequiredExtensions(missingExtensions, requiredExtensions, availableExtensions))
+        {
+            return false;
+        }*/
+
+        /*if(!Vulkan::CheckRequiredDeviceFeatures(missingFeatures, requiredDeviceFeatures, features))
+        {
+            return false;
+        }*/
+
+        return result;
+    }
+
+    Result<> FetchPhysicalDeviceSurfaceCapabilities(
+        PhysicalDeviceSurfaceCapabilities& surfaceCababilities,
+        const VkPhysicalDevice physicalDeviceHandle,
+        const VkSurfaceKHR surfaceHandle)
+    {
+        surfaceCababilities.formats.clear();
+        surfaceCababilities.presentModes.clear();
+
+        VkResult result = VkResult::VK_SUCCESS;
+
+        if ((result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDeviceHandle, surfaceHandle, &surfaceCababilities.capabilities)) != VkResult::VK_SUCCESS)
+        {
+            return result;
+        }
+
+        uint32_t formatCount = 0;
+        if ((result = vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDeviceHandle, surfaceHandle, &formatCount, nullptr)) != VkResult::VK_SUCCESS)
+        {
+            return result;
+        }
+        if (formatCount)
+        {
+            surfaceCababilities.formats.resize(formatCount);
+            if ((result = vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDeviceHandle, surfaceHandle, &formatCount, surfaceCababilities.formats.data())) != VkResult::VK_SUCCESS)
+            {
+                return result;
+            }
+        }
+
+        uint32_t presentModeCount = 0;
+        if ((result = vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDeviceHandle, surfaceHandle, &presentModeCount, nullptr)) != VkResult::VK_SUCCESS)
+        {
+            return result;
+        }
+        if (presentModeCount)
+        {
+            surfaceCababilities.presentModes.resize(presentModeCount);
+            if ((result = vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDeviceHandle, surfaceHandle, &presentModeCount, surfaceCababilities.presentModes.data())) != VkResult::VK_SUCCESS)
+            {
+                return result;
+            }
+        }
+
+        return result;
+    }
 
 }
 

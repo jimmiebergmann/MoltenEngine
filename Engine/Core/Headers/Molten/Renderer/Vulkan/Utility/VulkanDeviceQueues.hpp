@@ -30,21 +30,45 @@
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 #include "Molten/Renderer/Vulkan/Utility/VulkanTypes.hpp"
-#include <string>
+#include <optional>
 
 MOLTEN_UNSCOPED_ENUM_BEGIN
 
 namespace Molten::Vulkan
 {
 
+    class Surface;
+
+    struct MOLTEN_API DeviceQueueIndices
+    {
+        DeviceQueueIndices();
+
+        std::optional<uint32_t> graphicsQueue;
+        std::optional<uint32_t> presentQueue;
+
+    };
+
     struct MOLTEN_API DeviceQueues
     {
         DeviceQueues();
 
-        uint32_t graphicsQueue;
-        uint32_t presentQueue;
-
+        VkQueue graphicsQueue;
+        VkQueue presentQueue;
+        uint32_t graphicsQueueIndex;
+        uint32_t presentQueueIndex;
     };
+
+
+    MOLTEN_API void FetchQueueFamilyProperties(
+        QueueFamilyProperties& queueFamilyProperties,
+        VkPhysicalDevice physicalDevice);
+
+
+    MOLTEN_API bool FindRenderableDeviceQueueIndices(
+        DeviceQueueIndices& queueIndices,
+        VkPhysicalDevice physicalDevice,
+        const VkSurfaceKHR surface,
+        const QueueFamilyProperties& queueFamilies);
 
 }
 

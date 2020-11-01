@@ -33,10 +33,89 @@ MOLTEN_UNSCOPED_ENUM_BEGIN
 namespace Molten::Vulkan
 {
 
-    DeviceQueues::DeviceQueues() :
-        graphicsQueue(0),
-        presentQueue(0)
+    // Device queue indices implemenetations.
+    DeviceQueueIndices::DeviceQueueIndices() :
+        graphicsQueue{},
+        presentQueue{}
     {}
+
+
+    // Device queues implementations.
+    DeviceQueues::DeviceQueues() :
+        graphicsQueue(VK_NULL_HANDLE),
+        presentQueue(VK_NULL_HANDLE),
+        graphicsQueueIndex(0),
+        presentQueueIndex(0)
+    {}
+
+
+    // Static implementations.
+    void FetchQueueFamilyProperties(
+        QueueFamilyProperties& queueFamilyProperties,
+        VkPhysicalDevice physicalDevice)
+    {
+        queueFamilyProperties.clear();
+
+        uint32_t queueFamilyCount = 0;
+        vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, nullptr);
+        if (!queueFamilyCount)
+        {
+            return;
+        }
+
+        queueFamilyProperties.resize(queueFamilyCount);
+        vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, queueFamilyProperties.data());
+    }
+
+
+    bool FindRenderableDeviceQueueIndices(
+        DeviceQueueIndices& queueIndices,
+        VkPhysicalDevice physicalDevice,
+        const VkSurfaceKHR surface,
+        const QueueFamilyProperties& queueFamilies)
+    {
+        queueIndices.graphicsQueue.reset();
+        queueIndices.presentQueue.reset();
+
+        uint32_t finalGraphicsQueueIndex = 0;
+        uint32_t finalPresentQueueIndex = 0;
+
+        bool graphicsFamilySupport = false;
+        bool presentFamilySupport = false;
+
+        for (uint32_t i = 0; i < queueFamilies.size(); i++)
+        {
+            auto& queueFamily = queueFamilies[i];
+
+            if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
+            {
+                graphicsFamilySupport = true;
+                finalGraphicsQueueIndex = i;
+            }
+
+            VkBool32 presentSupport = false;
+            vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, surface, &presentSupport);
+            if (presentSupport)
+            {
+                presentFamilySupport = true;
+                finalPresentQueueIndex = i;
+            }
+
+            if (graphicsFamilySupport && presentFamilySupport)
+            {
+                break;
+            }
+        }
+        if (!graphicsFamilySupport || !presentFamilySupport)
+        {
+            return false;
+        }
+
+        queueIndices.graphicsQueue = finalGraphicsQueueIndex;
+        queueIndices.presentQueue = finalPresentQueueIndex;
+        return true;
+    }
+
 
 }
 

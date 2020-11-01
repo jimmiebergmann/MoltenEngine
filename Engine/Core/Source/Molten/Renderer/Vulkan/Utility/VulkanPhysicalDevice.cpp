@@ -29,7 +29,8 @@
 #if defined(MOLTEN_ENABLE_VULKAN)
 
 #include "Molten/Renderer/Vulkan/Utility/VulkanInstance.hpp"
-
+#include "Molten/Renderer/Vulkan/Utility/VulkanSurface.hpp"
+#include <map>
 MOLTEN_UNSCOPED_ENUM_BEGIN
 
 namespace Molten::Vulkan
@@ -39,12 +40,42 @@ namespace Molten::Vulkan
     PhysicalDevice::PhysicalDevice() :
         m_handle{ VK_NULL_HANDLE },
         m_capabilities{},
-        m_deviceQueues{}
+        m_deviceQueueIndices{},
+        m_surface(nullptr)
     {}
 
-    Result<> PhysicalDevice::Create(VkPhysicalDevice physicalDeviceHandle)
+    Result<> PhysicalDevice::Create(
+        VkPhysicalDevice physicalDeviceHandle,
+        Surface& surface)
     {
-        return VkResult::VK_ERROR_FRAGMENTATION;
+        m_handle = VK_NULL_HANDLE;
+        m_surface = nullptr;
+
+        Result<> result;
+
+        auto surfaceHandle = surface.GetHandle();
+
+        result = FetchPhysicalDeviceCapabilities(m_capabilities, physicalDeviceHandle, surfaceHandle);
+        if (!result)
+        {
+            return result;
+        }
+
+        FindRenderableDeviceQueueIndices(
+            m_deviceQueueIndices,
+            physicalDeviceHandle,
+            surfaceHandle,
+            m_capabilities.queueFamilies
+        );
+
+        m_surface = &surface;
+        m_handle = physicalDeviceHandle;
+        return result;
+    }
+
+    bool PhysicalDevice::IsCreated() const
+    {
+        return m_handle != VK_NULL_HANDLE;
     }
 
     VkPhysicalDevice& PhysicalDevice::GetHandle()
@@ -65,19 +96,35 @@ namespace Molten::Vulkan
         return m_capabilities;
     }
 
-    DeviceQueues& PhysicalDevice::GetDeviceQueues()
+    DeviceQueueIndices& PhysicalDevice::GetDeviceQueueIndices()
     {
-        return m_deviceQueues;
+        return m_deviceQueueIndices;
     }
-    const DeviceQueues& PhysicalDevice::GetDeviceQueues() const
+    const DeviceQueueIndices& PhysicalDevice::GetDeviceQueueIndices() const
     {
-        return m_deviceQueues;
+        return m_deviceQueueIndices;
     }
 
-    // Static functions.
+    Surface& PhysicalDevice::GetSurface()
+    {
+        return *m_surface;
+    }
+    const Surface& PhysicalDevice::GetSurface() const
+    {
+        return *m_surface;
+    }
+
+    bool PhysicalDevice::HasSurface() const
+    {
+        return m_surface != nullptr;
+    }
+
+
+    // Static implementations.
     Result<> FetchAndCreatePhysicalDevices(
         PhysicalDevices& physicalDevices,
         Instance& instance,
+        Surface& surface,
         PhysicalDeviceFilters filters)
     {
         physicalDevices.clear();
@@ -102,11 +149,11 @@ namespace Molten::Vulkan
             return result;
         }
 
-        auto checkFilters = [&](const PhysicalDeviceCapabilities& capabilities) -> bool
+        auto checkFilters = [&](const Vulkan::PhysicalDevice& physicalDevice) -> bool
         {
             for (auto& filter : filters)
             {
-                if (!filter(capabilities))
+                if (!filter(physicalDevice))
                 {
                     return false;
                 }
@@ -121,9 +168,9 @@ namespace Molten::Vulkan
         {
             auto& physicalDevice = *it;
 
-            bool createSucceeded = physicalDevice.Create(handle);
+            bool createSucceeded = physicalDevice.Create(handle, surface);
 
-            if (!createSucceeded || !checkFilters(physicalDevice.GetCapabilities()))
+            if (!createSucceeded || !checkFilters(physicalDevice))
             {
                 it = physicalDevices.erase(it);
                 break;
@@ -135,6 +182,40 @@ namespace Molten::Vulkan
         }
 
         return VkResult::VK_SUCCESS;
+    }
+
+    bool ScorePhysicalDevices(
+        PhysicalDevice& winningPhysicalDevice,
+        const PhysicalDevices& physicalDevices,
+        const ScoringCallback& scoringCallback)
+    {
+        std::multimap< int32_t, size_t> scoredDevicesIndices;
+
+        for (size_t i = 0; i < physicalDevices.size(); i++)
+        {
+            auto& physicalDevice = physicalDevices[i];
+
+            const int32_t score = scoringCallback(physicalDevice);
+
+            if (score >= 0)
+            {
+                scoredDevicesIndices.insert({ score, i });
+            }
+        }
+
+        if (!scoredDevicesIndices.size())
+        {
+            return false;
+        }
+
+        auto& highestScoreIndex = scoredDevicesIndices.rbegin()->second;
+        if (highestScoreIndex < 0)
+        {
+            return false;
+        }
+
+        winningPhysicalDevice = physicalDevices[highestScoreIndex];
+        return true;
     }
 
 }

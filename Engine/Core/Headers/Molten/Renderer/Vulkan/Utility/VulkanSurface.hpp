@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2020 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,16 +23,55 @@
 *
 */
 
+#ifndef MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANSURFACE_HPP
+#define MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANSURFACE_HPP
+
+#include "Molten/Core.hpp"
 
 #if defined(MOLTEN_ENABLE_VULKAN)
+#include "Molten/Renderer/Vulkan/Utility/VulkanResult.hpp"
 
 MOLTEN_UNSCOPED_ENUM_BEGIN
+
+namespace Molten
+{
+    class RenderTarget;
+}
 
 namespace Molten::Vulkan
 {
 
+    class Instance;
+
+    class MOLTEN_API Surface
+    {
+
+    public:
+
+        Surface();
+        ~Surface();
+
+        Result<> Create(Instance& instance, RenderTarget& renderTarget);
+
+        void Destroy();
+
+        bool IsCreated() const;
+
+        VkSurfaceKHR GetHandle() const;
+
+    private:
+
+        VkSurfaceKHR m_handle;
+        Instance* m_instance;
+        RenderTarget* m_renderTarget;
+
+    };
+
+
 }
 
 MOLTEN_UNSCOPED_ENUM_END
+
+#endif
 
 #endif
