@@ -260,7 +260,7 @@ namespace Molten
         return m_userInput;
     }
 
-    ::Display* WindowX11::GetX11DisplayDevice() = 0
+    ::Display* WindowX11::GetX11DisplayDevice()
     {
         return m_display;
     }
