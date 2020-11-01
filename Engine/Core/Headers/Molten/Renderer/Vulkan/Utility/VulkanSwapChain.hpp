@@ -91,14 +91,14 @@ namespace Molten::Vulkan
         Result<> LoadAssociatedObjects();
         void UnloadAssociatedObjects();
 
+        Result<> GetSwapchainImages(Images& images);
+
         VkSwapchainKHR m_handle;
         LogicalDevice* m_logicalDevice;
         VkRenderPass m_renderPass;
         VkExtent2D m_extent;
-        VkExtent2D m_oldExtent;
         VkPresentModeKHR m_presentMode;
         VkSurfaceFormatKHR m_surfaceFormat;
-
         uint32_t m_imageCount;
         Images m_images;
         ImageViews m_imageViews;
@@ -110,6 +110,7 @@ namespace Molten::Vulkan
         Fences m_imagesInFlight;
         uint32_t m_currentFrameIndex;
         uint32_t m_currentImageIndex;
+        bool m_resize;
         
     };
 

@@ -193,9 +193,17 @@ namespace Molten
         bool LoadCommandPool();
         /**@}*/
 
-        bool CreateImage(const Vector2ui32& dimensions, VkFormat format, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& memory); // Should be old
-        bool CreateVertexInputAttributes(const Shader::Visual::InputStructure& inputs, std::vector<VkVertexInputAttributeDescription>& attributes, uint32_t& stride);
-        bool CreateDescriptorSetLayouts(const std::vector<Shader::Visual::Script*>& visualScripts, Vulkan::DescriptorSetLayouts& setLayouts);
+        /** Shader creation and manipulation functions. */
+        /**@{*/
+        bool CreateVertexInputAttributes(
+            const Shader::Visual::InputStructure& inputs, 
+            std::vector<VkVertexInputAttributeDescription>& attributes, 
+            uint32_t& stride);
+
+        bool CreateDescriptorSetLayouts(
+            const std::vector<Shader::Visual::Script*>& visualScripts,
+            Vulkan::DescriptorSetLayouts& setLayouts);
+
         bool LoadShaderStages(
             const std::vector<Shader::Visual::Script*>& visualScripts,
             Vulkan::ShaderModules& shaderModules,
@@ -203,12 +211,12 @@ namespace Molten
             PushConstantLocations& pushConstantLocations,
             PushConstantOffsets& pushConstantOffsets,
             VkPushConstantRange& pushConstantRange);
+
         VkShaderModule CreateShaderModule(const std::vector<uint8_t>& spirvCode);
 
         template<typename T>
         void InternalPushConstant(const uint32_t location, const T& value);
         /**@}*/
-
 
         /** Renderer creation variables. */
         /**@{*/

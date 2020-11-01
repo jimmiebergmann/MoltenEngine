@@ -39,9 +39,6 @@
 #endif
 
 // Getting rid of conflicting Windows macros.
-#ifdef GetMessage
-    #undef GetMessage
-#endif
 #ifdef max
     #undef max
 #endif
@@ -58,8 +55,14 @@
     #undef near
 #endif
 
+#ifdef GetMessage
+    #undef GetMessage
+#endif
 #ifdef CreateSemaphore
     #undef CreateSemaphore
+#endif
+#ifdef LoadImage
+    #undef LoadImage
 #endif
 
 

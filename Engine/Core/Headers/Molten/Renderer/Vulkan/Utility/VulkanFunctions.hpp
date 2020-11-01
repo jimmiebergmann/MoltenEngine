@@ -42,6 +42,9 @@ MOLTEN_UNSCOPED_ENUM_BEGIN
 namespace Molten::Vulkan
 {
 
+    class LogicalDevice;
+
+
     /** Check if all required extensions are present in provided extension container.. */
     MOLTEN_API bool CheckRequiredExtensions(
         Extensions& missingExtensions,
@@ -53,16 +56,6 @@ namespace Molten::Vulkan
         const VkPhysicalDeviceFeatures& requiredFeatures,
         const VkPhysicalDeviceFeatures& availableFeatures);
 
-
-    /** Create buffer with given size and usage. */
-    MOLTEN_API VkResult CreateBuffer(
-        VkBuffer& buffer,
-        VkDeviceMemory& memory,
-        VkDevice logicalDevice,
-        const VkDeviceSize size,
-        const VkBufferUsageFlags usage,
-        const VkDeviceSize allocationSize,
-        const uint32_t memoryTypeIndex);
 
     /** Create N number of fences. */
     MOLTEN_API VkResult CreateFences(
@@ -85,10 +78,6 @@ namespace Molten::Vulkan
 
     /** Create Vulkan version(uint32_t) from Molten version,*/
     MOLTEN_API uint32_t CreateVersion(const Version& version);
-
-
-    MOLTEN_API bool ExtentIsSame(const VkExtent2D& first, const VkExtent2D& second);
-    MOLTEN_API bool ExtentIsSame(const VkExtent3D& first, const VkExtent3D& second);
 
 
     /** Destroy all fences in vector. */
@@ -120,13 +109,6 @@ namespace Molten::Vulkan
     MOLTEN_API Extensions::iterator FindExtension(Extensions& extensions, const std::string& name);
 
 
-    /** Get vector of images in swapchain. */
-    MOLTEN_API VkResult GetSwapchainImages(
-        Images& images,
-        VkDevice logicalDevice, 
-        const VkSwapchainKHR swapchain);
-
-
     /** Removing layers by an exluding list of other layers.*/
     MOLTEN_API void RemoveLayers(
         Layers& layers,
@@ -136,6 +118,29 @@ namespace Molten::Vulkan
     MOLTEN_API void RemoveExtensions(
         Extensions& extensions,
         const Extensions& excludes);
+
+    /** Functions for begining and ending single time commands. */
+    /**@{*/
+    MOLTEN_API Result<> BeginSingleTimeCommands(
+        VkCommandBuffer& commandBuffer,
+        LogicalDevice& logicalDevice,
+        VkCommandPool commandPool);
+
+    MOLTEN_API Result<> EndSingleTimeCommands(
+        VkCommandBuffer commandBuffer,
+        LogicalDevice& logicalDevice,
+        VkCommandPool commandPool);
+    /**@}*/
+
+
+    /** Function for changing layout of image. */
+    MOLTEN_API bool TransitionImageLayout(
+        VkCommandBuffer commandBuffer,
+        LogicalDevice& logicalDevice,
+        VkImage image,
+        VkFormat format,
+        VkImageLayout oldLayout,
+        VkImageLayout newLayout);
 
 }
 

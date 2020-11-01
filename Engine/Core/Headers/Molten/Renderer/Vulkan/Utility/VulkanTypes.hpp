@@ -50,7 +50,7 @@ namespace Molten::Vulkan
     using ShaderModules = std::vector<VkShaderModule>;
     using SurfaceFormats = std::vector<VkSurfaceFormatKHR>;
 
-
+    // Old and not in use?
     struct MOLTEN_API PhysicalDeviceFeatureWithName
     {
         PhysicalDeviceFeatureWithName(
@@ -62,8 +62,6 @@ namespace Molten::Vulkan
     };
 
     using PhysicalDeviceFeaturesWithName = std::vector<PhysicalDeviceFeatureWithName>;
-
-
 
 }
 

@@ -31,11 +31,11 @@ namespace Molten
 {
 
     VulkanTexture::VulkanTexture(
-        VkImage image,
-        VkDeviceMemory imageMemory
-    ):
-        image(image),
-        imageMemory(imageMemory)
+        Vulkan::Image&& image,
+        VkSampler sampler
+    ) :
+        image(std::move(image)),
+        sampler(sampler)
     {}
 
 }

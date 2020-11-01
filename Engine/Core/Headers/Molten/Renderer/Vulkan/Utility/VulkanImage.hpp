@@ -23,8 +23,8 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANBUFFER_HPP
-#define MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANBUFFER_HPP
+#ifndef MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANIMAGE_HPP
+#define MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANIMAGE_HPP
 
 #include "Molten/Core.hpp"
 
@@ -33,6 +33,7 @@
 #include "Molten/Renderer/Vulkan/Utility/VulkanTypes.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanResult.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanMemoryType.hpp"
+#include "Molten/Math/Vector.hpp"
 
 MOLTEN_UNSCOPED_ENUM_BEGIN
 
@@ -40,47 +41,61 @@ namespace Molten::Vulkan
 {
 
     class LogicalDevice;
+    class DeviceBuffer;
 
 
-    /** Vulkan buffer, backed by device memory. */
-    class MOLTEN_API DeviceBuffer
+    /** Vulkan image, backed by device memory. */
+    class MOLTEN_API Image
     {
 
     public:
 
-        DeviceBuffer();
-        ~DeviceBuffer();
+        Image();
+        ~Image();
 
-        DeviceBuffer(const DeviceBuffer&) = delete;
-        DeviceBuffer& operator = (const DeviceBuffer&) = delete;
-        
-        DeviceBuffer(DeviceBuffer&& deviceBuffer) noexcept;
-        DeviceBuffer& operator =(DeviceBuffer&& deviceBuffer) noexcept;
+        Image(const Image&) = delete;
+        Image& operator = (const Image&) = delete;
 
+        Image(Image&& image) noexcept;
+        Image& operator =(Image&& image) noexcept;
+
+        /** Create image. Device memory is allocated but not populated with anything. */
         Result<> Create(
             LogicalDevice& logicalDevice,
-            const VkDeviceSize size,
-            const VkBufferUsageFlags usage,
+            const Vector2ui32& imageDimensions,
+            const VkFormat imageFormat,
+            const Vulkan::FilteredMemoryTypes& filteredMemoryTypes);
+
+        /** Create image. Device memory is allocated and copied from staging buffer. */
+        Result<> Create(
+            LogicalDevice& logicalDevice,
+            DeviceBuffer& stagingBuffer,
+            const VkCommandPool commandPool,
+            const Vector2ui32& imageDimensions,
+            const VkFormat imageFormat,
             const Vulkan::FilteredMemoryTypes& filteredMemoryTypes);
 
         void Destroy();
 
         bool IsCreated() const;
 
-        Result<> MapMemory(
-            VkDeviceSize offset,
-            VkDeviceSize size,
-            const void* data,
-            VkMemoryMapFlags flags = 0);
-
         Result<> CopyFromBuffer(
             const VkCommandPool commandPool,
             const DeviceBuffer& source,
-            const VkDeviceSize& size);
+            const Vector2ui32 dimensions,
+            bool restoreLayout = false);
+
+        Result<> TransitionToLayout(
+            const VkCommandPool commandPool,
+            VkImageLayout layout);
 
         VkBuffer GetHandle() const;
 
         VkDeviceMemory GetMemory() const;
+
+        VkImageLayout GetLayout() const;
+
+        VkFormat GetFormat() const;
 
         LogicalDevice& GetLogicalDevice();
         const LogicalDevice& GetLogicalDevice() const;
@@ -89,10 +104,17 @@ namespace Molten::Vulkan
 
     private:
 
-        VkBuffer m_handle;
+        Result<> LoadImage(
+            const Vector2ui32& imageDimensions,
+            const VkFormat imageFormat,
+            const Vulkan::FilteredMemoryTypes& filteredMemoryTypes);
+
+        VkImage m_handle;
         VkDeviceMemory m_memory;
+        VkImageLayout m_layout;
+        VkFormat m_format;
         LogicalDevice* m_logicalDevice;
-    
+
     };
 
 }

@@ -46,13 +46,24 @@ namespace Molten
     {
 
         Application::Application() :
-            m_pipeline(nullptr),
-            m_vertexBuffer(nullptr),
-            m_indexBuffer(nullptr),
-            m_uniformBuffer(nullptr),
-            m_uniformBlock(nullptr),
-            m_colorPushLocation(0),
-            m_color2PushLocation(0),
+
+            m_gridPipeline(nullptr),
+            m_gridVertexBuffer(nullptr),
+            m_gridIndexBuffer(nullptr),
+            m_gridUniformBuffer(nullptr),
+            m_gridUniformBlock(nullptr),
+            m_gridColor1PushLocation(0),
+            m_gridColor2PushLocation(0),
+
+            m_objectPipeline(nullptr),
+            m_objectVertexBuffer(nullptr),
+            m_objectIndexBuffer(nullptr),
+            m_objectUniformBuffer(nullptr),
+            m_objectUniformBlock(nullptr),
+            m_objectPosPushLocation(0),
+            m_objectColorPushLocation(0),
+            m_objectTexture(nullptr),
+
             m_programTime(0.0f),
             m_deltaTime(0.0f)//,
             //m_guiCanvas()
@@ -123,7 +134,8 @@ namespace Molten
                 throw Exception("Failed to open Vulkan renderer.");
             }
 
-            LoadPipeline();
+            LoadGridPipeline();
+            LoadObjectPipeline();
 
             m_camera.SetPosition({ 0.0f, -3.0f, 0.0f });
             m_camera.SetDirection({ 0.3f, 1.0f, 0.0f });
@@ -172,20 +184,20 @@ namespace Molten
             
         }
 
-        void Application::LoadPipeline()
+        void Application::LoadGridPipeline()
         {
-            LoadShaders();
+            LoadGridShaders();
 
             PipelineDescriptor pipelineDesc;
             pipelineDesc.topology = Pipeline::Topology::LineList;
             pipelineDesc.polygonMode = Pipeline::PolygonMode::Fill;
             pipelineDesc.frontFace = Pipeline::FrontFace::Clockwise;
             pipelineDesc.cullMode = Pipeline::CullMode::None;
-            pipelineDesc.vertexScript = &m_vertexScript;
-            pipelineDesc.fragmentScript = &m_fragmentScript;
+            pipelineDesc.vertexScript = &m_gridVertexScript;
+            pipelineDesc.fragmentScript = &m_gridFragmentScript;
 
-            m_pipeline = m_renderer->CreatePipeline(pipelineDesc);
-            if (!m_pipeline)
+            m_gridPipeline = m_renderer->CreatePipeline(pipelineDesc);
+            if (!m_gridPipeline)
             {
                 throw Exception("Failed to create render pipeline.");
             }
@@ -197,7 +209,6 @@ namespace Molten
                 Vector4f32 color;
             };
 
-  
             std::vector<Vertex> vertexData =
             {
                 {{ 0.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f }}, {{ 1.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f }},
@@ -222,8 +233,8 @@ namespace Molten
             vertexPositionBufferDesc.vertexCount = static_cast<uint32_t>(vertexData.size());
             vertexPositionBufferDesc.vertexSize = sizeof(Vertex);
             vertexPositionBufferDesc.data = static_cast<const void*>(&vertexData[0]);
-            m_vertexBuffer = m_renderer->CreateVertexBuffer(vertexPositionBufferDesc);
-            if (!m_vertexBuffer)
+            m_gridVertexBuffer = m_renderer->CreateVertexBuffer(vertexPositionBufferDesc);
+            if (!m_gridVertexBuffer)
             {
                 throw Exception("Failed to create position vertex buffer.");
             }
@@ -232,39 +243,39 @@ namespace Molten
             indexBufferDesc.indexCount = static_cast<uint32_t>(indices.size());
             indexBufferDesc.data = static_cast<const void*>(&indices[0]);
             indexBufferDesc.dataType = IndexBuffer::DataType::Uint16;
-            m_indexBuffer = m_renderer->CreateIndexBuffer(indexBufferDesc);
-            if (!m_indexBuffer)
+            m_gridIndexBuffer = m_renderer->CreateIndexBuffer(indexBufferDesc);
+            if (!m_gridIndexBuffer)
             {
                 throw Exception("Failed to create index buffer.");
             }
 
             UniformBufferDescriptor uniformBufferDesc;
             uniformBufferDesc.size = 512;
-            m_uniformBuffer = m_renderer->CreateUniformBuffer(uniformBufferDesc);
-            if (!m_uniformBuffer)
+            m_gridUniformBuffer = m_renderer->CreateUniformBuffer(uniformBufferDesc);
+            if (!m_gridUniformBuffer)
             {
                 throw Exception("Failed to create uniform buffer.");
             }
 
             UniformBlockDescriptor uniformBlockDesc;
             uniformBlockDesc.id = 0;
-            uniformBlockDesc.buffer = m_uniformBuffer;
-            uniformBlockDesc.pipeline = m_pipeline;
-            m_uniformBlock = m_renderer->CreateUniformBlock(uniformBlockDesc);
-            if (!m_uniformBlock)
+            uniformBlockDesc.buffer = m_gridUniformBuffer;
+            uniformBlockDesc.pipeline = m_gridPipeline;
+            m_gridUniformBlock = m_renderer->CreateUniformBlock(uniformBlockDesc);
+            if (!m_gridUniformBlock)
             {
                 throw Exception("Failed to create uniform block.");
             }
 
-            m_colorPushLocation = m_renderer->GetPushConstantLocation(m_pipeline, 12345);
-            m_color2PushLocation = m_renderer->GetPushConstantLocation(m_pipeline, 123456);
+            m_gridColor1PushLocation = m_renderer->GetPushConstantLocation(m_gridPipeline, 12345);
+            m_gridColor2PushLocation = m_renderer->GetPushConstantLocation(m_gridPipeline, 123456);
         }
 
-        void Application::LoadShaders()
+        void Application::LoadGridShaders()
         {
             // Vertex script.
             {
-                auto& script = m_vertexScript;
+                auto& script = m_gridVertexScript;
 
                 auto& inputs = script.GetInputInterface();
                 auto inPos = inputs.AddMember<Vector3f32>();
@@ -303,7 +314,7 @@ namespace Molten
             }
             // Fragment script
             {
-                auto& script = m_fragmentScript;
+                auto& script = m_gridFragmentScript;
 
                 auto& inputs = script.GetInputInterface();
                 auto inColor = inputs.AddMember<Vector4f32>();
@@ -337,22 +348,195 @@ namespace Molten
                 cos->GetInputPin()->Connect(*const2->GetOutputPin());*/
             }
 
-
             Shader::VulkanGenerator::GlslTemplates glslTemplates;
-            std::vector<Shader::Visual::Script*> visualScripts = { &m_vertexScript, &m_fragmentScript };
+            std::vector<Shader::Visual::Script*> visualScripts = { &m_gridVertexScript, &m_gridFragmentScript };
             if (!Shader::VulkanGenerator::GenerateGlslTemplate(glslTemplates, visualScripts, &m_logger))
             {
                 return;
             }
 
+            // Debugging.
             Shader::VulkanGenerator::GlslStageTemplates stageTemplate;
             stageTemplate.pushConstantTemplate.blockSource = &glslTemplates.pushConstantTemplate.blockSource;
 
             stageTemplate.pushConstantTemplate.offsets = &glslTemplates.pushConstantTemplate.stageOffsets[0];
-            auto vertGlsl = Shader::VulkanGenerator::GenerateGlsl(m_vertexScript, &stageTemplate);
+            auto vertGlsl = Shader::VulkanGenerator::GenerateGlsl(m_gridVertexScript, &stageTemplate);
 
             stageTemplate.pushConstantTemplate.offsets = &glslTemplates.pushConstantTemplate.stageOffsets[1];
-            auto fragGlsl = Shader::VulkanGenerator::GenerateGlsl(m_fragmentScript, &stageTemplate);
+            auto fragGlsl = Shader::VulkanGenerator::GenerateGlsl(m_gridFragmentScript, &stageTemplate);
+
+            std::string vertStr(vertGlsl.begin(), vertGlsl.end());
+            std::string fragStr(fragGlsl.begin(), fragGlsl.end());
+
+            m_logger.Write(Logger::Severity::Info, "vert -------------------------------------");
+            m_logger.Write(Logger::Severity::Info, vertStr);
+            m_logger.Write(Logger::Severity::Info, "-------------------------------------");
+            m_logger.Write(Logger::Severity::Info, "frag -------------------------------------");
+            m_logger.Write(Logger::Severity::Info, fragStr);
+            m_logger.Write(Logger::Severity::Info, "-------------------------------------");
+        }
+
+        void Application::LoadObjectPipeline()
+        {
+            LoadObjectShaders();
+
+            PipelineDescriptor pipelineDesc;
+            pipelineDesc.topology = Pipeline::Topology::TriangleList;
+            pipelineDesc.polygonMode = Pipeline::PolygonMode::Fill;
+            pipelineDesc.frontFace = Pipeline::FrontFace::Clockwise;
+            pipelineDesc.cullMode = Pipeline::CullMode::Back;
+            pipelineDesc.vertexScript = &m_objectVertexScript;
+            pipelineDesc.fragmentScript = &m_objectFragmentScript;
+
+            m_objectPipeline = m_renderer->CreatePipeline(pipelineDesc);
+            if (!m_objectPipeline)
+            {
+                throw Exception("Failed to create render pipeline.");
+            }
+
+
+            struct Vertex
+            {
+                Vector3f32 position;
+            };
+
+            std::vector<Vertex> vertexData =
+            {
+                {{ 0.0f, 0.0f, 0.0f }}, 
+                {{ 0.0f, 0.0f, 1.0f }}, 
+                {{ 1.0f, 0.0f, 1.0f }}, 
+                {{ 1.0f, 0.0f, 0.0f }}
+            };
+
+            std::vector<uint16_t> indices = { 0, 1, 2, 0, 2, 3 };
+
+            VertexBufferDescriptor vertexPositionBufferDesc;
+            vertexPositionBufferDesc.vertexCount = static_cast<uint32_t>(vertexData.size());
+            vertexPositionBufferDesc.vertexSize = sizeof(Vertex);
+            vertexPositionBufferDesc.data = static_cast<const void*>(&vertexData[0]);
+            m_objectVertexBuffer = m_renderer->CreateVertexBuffer(vertexPositionBufferDesc);
+            if (!m_objectVertexBuffer)
+            {
+                throw Exception("Failed to create position vertex buffer.");
+            }
+
+            IndexBufferDescriptor indexBufferDesc;
+            indexBufferDesc.indexCount = static_cast<uint32_t>(indices.size());
+            indexBufferDesc.data = static_cast<const void*>(&indices[0]);
+            indexBufferDesc.dataType = IndexBuffer::DataType::Uint16;
+            m_objectIndexBuffer = m_renderer->CreateIndexBuffer(indexBufferDesc);
+            if (!m_objectIndexBuffer)
+            {
+                throw Exception("Failed to create index buffer.");
+            }
+
+            UniformBufferDescriptor uniformBufferDesc;
+            uniformBufferDesc.size = 512;
+            m_objectUniformBuffer = m_renderer->CreateUniformBuffer(uniformBufferDesc);
+            if (!m_objectUniformBuffer)
+            {
+                throw Exception("Failed to create uniform buffer.");
+            }
+
+            UniformBlockDescriptor uniformBlockDesc;
+            uniformBlockDesc.id = 0;
+            uniformBlockDesc.buffer = m_objectUniformBuffer;
+            uniformBlockDesc.pipeline = m_objectPipeline;
+            m_objectUniformBlock = m_renderer->CreateUniformBlock(uniformBlockDesc);
+            if (!m_objectUniformBlock)
+            {
+                throw Exception("Failed to create uniform block.");
+            }
+
+            m_objectPosPushLocation = m_renderer->GetPushConstantLocation(m_objectPipeline, 0);
+            m_objectColorPushLocation = m_renderer->GetPushConstantLocation(m_objectPipeline, 1);
+
+
+            const Vector2ui32 textureDimensions = { 2, 2 };
+            uint8_t textureData[2 * 2 * 4] = {
+                255, 0, 0, 255,     0, 255, 0, 255,
+                0, 0, 255, 255,     255, 0, 255, 255,
+            };
+
+            TextureDescriptor textureDesc = {};
+            textureDesc.dimensions = textureDimensions;
+            textureDesc.data = textureData;
+            m_objectTexture = m_renderer->CreateTexture(textureDesc);
+            if (!m_objectTexture)
+            {
+                throw Exception("Failed to create texture.");
+            }
+        }
+
+        void Application::LoadObjectShaders()
+        {
+            // Vertex script.
+            {
+                auto& script = m_objectVertexScript;
+
+                auto& inputs = script.GetInputInterface();
+                auto inPos = inputs.AddMember<Vector3f32>();
+
+                auto& pushConstants = script.GetPushConstantInterface();
+                auto pushPos = pushConstants.AddMember<Vector4f32>(0);
+                auto pushColor = pushConstants.AddMember<Vector4f32>(1);
+
+                auto& outputs = script.GetOutputInterface();
+                auto outColor = outputs.AddMember<Vector4f32>();
+                auto outPos = script.GetVertexOutputVariable();
+
+                auto uBlock = script.GetUniformInterfaces().AddInterface(0);
+                auto uProjView = uBlock->AddMember<Matrix4x4f32>();
+                auto uModel = uBlock->AddMember<Matrix4x4f32>();
+
+                auto inPosVec4 = script.CreateFunction<Shader::Visual::Functions::Vec3ToVec4f32>();
+                inPosVec4->GetInputPin(0)->Connect(*inPos->GetOutputPin());
+                static_cast<Shader::Visual::InputPin<float>*>(inPosVec4->GetInputPin(1))->SetDefaultValue(1.0f);
+
+                auto posAdd = script.CreateOperator<Shader::Visual::Operators::AddVec4f32>();
+                posAdd->GetInputPin(0)->Connect(*pushPos->GetOutputPin());
+                posAdd->GetInputPin(1)->Connect(*inPosVec4->GetOutputPin());
+
+                auto projModelmat = script.CreateOperator<Shader::Visual::Operators::MultMat4f32>();
+                projModelmat->GetInputPin(0)->Connect(*uProjView->GetOutputPin());
+                projModelmat->GetInputPin(1)->Connect(*uModel->GetOutputPin());
+
+                auto finalPos = script.CreateOperator<Shader::Visual::Operators::MultMat4Vec4f32>();
+                finalPos->GetInputPin(0)->Connect(*projModelmat->GetOutputPin());
+                finalPos->GetInputPin(1)->Connect(*posAdd->GetOutputPin());
+
+                outPos->GetInputPin()->Connect(*finalPos->GetOutputPin());
+                outColor->GetInputPin()->Connect(*pushColor->GetOutputPin());
+            }
+            // Fragment script
+            {
+                auto& script = m_objectFragmentScript;
+
+                auto& inputs = script.GetInputInterface();
+                auto inColor = inputs.AddMember<Vector4f32>();
+
+                auto& outputs = script.GetOutputInterface();
+                auto outColor = outputs.AddMember<Vector4f32>();
+
+                outColor->GetInputPin()->Connect(*inColor->GetOutputPin());
+            }
+
+            Shader::VulkanGenerator::GlslTemplates glslTemplates;
+            std::vector<Shader::Visual::Script*> visualScripts = { &m_objectVertexScript, &m_objectFragmentScript };
+            if (!Shader::VulkanGenerator::GenerateGlslTemplate(glslTemplates, visualScripts, &m_logger))
+            {
+                return;
+            }
+
+            // Debugging.
+            Shader::VulkanGenerator::GlslStageTemplates stageTemplate;
+            stageTemplate.pushConstantTemplate.blockSource = &glslTemplates.pushConstantTemplate.blockSource;
+
+            stageTemplate.pushConstantTemplate.offsets = &glslTemplates.pushConstantTemplate.stageOffsets[0];
+            auto vertGlsl = Shader::VulkanGenerator::GenerateGlsl(m_objectVertexScript, &stageTemplate);
+
+            stageTemplate.pushConstantTemplate.offsets = &glslTemplates.pushConstantTemplate.stageOffsets[1];
+            auto fragGlsl = Shader::VulkanGenerator::GenerateGlsl(m_objectFragmentScript, &stageTemplate);
 
             std::string vertStr(vertGlsl.begin(), vertGlsl.end());
             std::string fragStr(fragGlsl.begin(), fragGlsl.end());
@@ -379,31 +563,8 @@ namespace Molten
                     m_renderer->WaitForDevice();
                 }
 
-                if (m_uniformBlock)
-                {
-                    m_renderer->DestroyUniformBlock(m_uniformBlock);
-                    m_uniformBlock = nullptr;
-                }
-                if (m_uniformBuffer)
-                {
-                    m_renderer->DestroyUniformBuffer(m_uniformBuffer);
-                    m_uniformBuffer = nullptr;
-                }
-                if (m_indexBuffer)
-                {
-                    m_renderer->DestroyIndexBuffer(m_indexBuffer);
-                    m_indexBuffer = nullptr;
-                }
-                if (m_vertexBuffer)
-                {
-                    m_renderer->DestroyVertexBuffer(m_vertexBuffer);
-                    m_vertexBuffer = nullptr;
-                }
-                if (m_pipeline)
-                {
-                    m_renderer->DestroyPipeline(m_pipeline);
-                    m_pipeline = nullptr;
-                }
+                UnloadObjectPipeline();
+                UnloadGridPipeline();
 
                 m_renderer.reset();              
             }
@@ -411,6 +572,69 @@ namespace Molten
             if (m_window)
             {
                 m_window.reset();
+            }
+        }
+
+        void Application::UnloadGridPipeline()
+        {
+            if (m_gridUniformBlock)
+            {
+                m_renderer->DestroyUniformBlock(m_gridUniformBlock);
+                m_gridUniformBlock = nullptr;
+            }
+            if (m_gridUniformBuffer)
+            {
+                m_renderer->DestroyUniformBuffer(m_gridUniformBuffer);
+                m_gridUniformBuffer = nullptr;
+            }
+            if (m_gridIndexBuffer)
+            {
+                m_renderer->DestroyIndexBuffer(m_gridIndexBuffer);
+                m_gridIndexBuffer = nullptr;
+            }
+            if (m_gridVertexBuffer)
+            {
+                m_renderer->DestroyVertexBuffer(m_gridVertexBuffer);
+                m_gridVertexBuffer = nullptr;
+            }
+            if (m_gridPipeline)
+            {
+                m_renderer->DestroyPipeline(m_gridPipeline);
+                m_gridPipeline = nullptr;
+            }
+        }
+
+        void Application::UnloadObjectPipeline()
+        {
+            if (m_objectTexture)
+            {
+                m_renderer->DestroyTexture(m_objectTexture);
+                m_objectTexture = nullptr;
+            }
+            if (m_objectUniformBlock)
+            {
+                m_renderer->DestroyUniformBlock(m_objectUniformBlock);
+                m_objectUniformBlock = nullptr;
+            }
+            if (m_objectUniformBuffer)
+            {
+                m_renderer->DestroyUniformBuffer(m_objectUniformBuffer);
+                m_objectUniformBuffer = nullptr;
+            }
+            if (m_objectIndexBuffer)
+            {
+                m_renderer->DestroyIndexBuffer(m_objectIndexBuffer);
+                m_objectIndexBuffer = nullptr;
+            }
+            if (m_objectVertexBuffer)
+            {
+                m_renderer->DestroyVertexBuffer(m_objectVertexBuffer);
+                m_objectVertexBuffer = nullptr;
+            }
+            if (m_objectPipeline)
+            {
+                m_renderer->DestroyPipeline(m_objectPipeline);
+                m_objectPipeline = nullptr;
             }
         }
 
@@ -522,7 +746,7 @@ namespace Molten
 
             m_renderer->BeginDraw();
 
-            m_renderer->BindPipeline(m_pipeline);
+            m_renderer->BindPipeline(m_gridPipeline);
 
             const auto projViewMatrix = m_camera.GetProjectionMatrix() * m_camera.GetViewMatrix();
 
@@ -542,14 +766,23 @@ namespace Molten
             bufferData2.modelMatrix = Matrix4x4f32::Identity();
             bufferData2.modelMatrix.Translate({ 0.0f, std::cos(m_programTime * 3.0f) * 0.25f, 0.0f });*/
 
-            m_renderer->UpdateUniformBuffer(m_uniformBuffer, 0, sizeof(UniformBuffer), &bufferData1);
+            // Grid
+            m_renderer->UpdateUniformBuffer(m_gridUniformBuffer, 0, sizeof(UniformBuffer), &bufferData1);
             //m_renderer->UpdateUniformBuffer(m_uniformBuffer, 256, sizeof(UniformBuffer), &bufferData2);
 
-            m_renderer->BindUniformBlock(m_uniformBlock, 0);
+            m_renderer->BindUniformBlock(m_gridUniformBlock, 0);
 
-            m_renderer->PushConstant(m_colorPushLocation, { 0.4f, 0.8f, 0.7f, 1.0f });
-            m_renderer->PushConstant(m_color2PushLocation, { 0.5f, 0.5f, 0.5f, 1.0f });
-            m_renderer->DrawVertexBuffer(m_indexBuffer, m_vertexBuffer);
+            m_renderer->PushConstant(m_gridColor1PushLocation, { 0.4f, 0.8f, 0.7f, 1.0f });
+            m_renderer->PushConstant(m_gridColor2PushLocation, { 0.5f, 0.5f, 0.5f, 1.0f });
+            m_renderer->DrawVertexBuffer(m_gridIndexBuffer, m_gridVertexBuffer);
+
+            // Object
+            m_renderer->BindPipeline(m_objectPipeline);
+            m_renderer->UpdateUniformBuffer(m_objectUniformBuffer, 0, sizeof(UniformBuffer), &bufferData1);
+            m_renderer->BindUniformBlock(m_objectUniformBlock, 0);
+            m_renderer->PushConstant(m_objectPosPushLocation, { 0.0f, 0.0f, 0.0f, 1.0f });
+            m_renderer->PushConstant(m_objectColorPushLocation, { 1.0f, 1.0f, 1.0f, 1.0f });
+            m_renderer->DrawVertexBuffer(m_objectIndexBuffer, m_objectVertexBuffer);
 
             /*m_renderer->BindUniformBlock(m_uniformBlock, 256);
             m_renderer->DrawVertexBuffer(m_indexBuffer, m_vertexBuffer);*/

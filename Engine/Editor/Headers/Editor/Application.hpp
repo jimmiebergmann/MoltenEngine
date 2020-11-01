@@ -57,12 +57,16 @@ namespace Molten::Editor
     private:
 
         void Load();
+        
         void LoadGui();
-
-        void LoadPipeline();
-        void LoadShaders();
+        void LoadGridPipeline();
+        void LoadGridShaders();
+        void LoadObjectPipeline();
+        void LoadObjectShaders();
 
         void Unload();
+        void UnloadGridPipeline();
+        void UnloadObjectPipeline();
 
         void Tick();
 
@@ -73,15 +77,28 @@ namespace Molten::Editor
         Logger m_logger;
         std::unique_ptr<Window> m_window;
         std::unique_ptr <Renderer> m_renderer;
-        Pipeline* m_pipeline;
-        Shader::Visual::VertexScript m_vertexScript;
-        Shader::Visual::FragmentScript m_fragmentScript;
-        VertexBuffer* m_vertexBuffer;
-        IndexBuffer* m_indexBuffer;
-        UniformBuffer* m_uniformBuffer;
-        UniformBlock* m_uniformBlock;
-        uint32_t m_colorPushLocation;
-        uint32_t m_color2PushLocation;
+
+        Pipeline* m_gridPipeline;
+        Shader::Visual::VertexScript m_gridVertexScript;
+        Shader::Visual::FragmentScript m_gridFragmentScript;
+        VertexBuffer* m_gridVertexBuffer;
+        IndexBuffer* m_gridIndexBuffer;
+        UniformBuffer* m_gridUniformBuffer;
+        UniformBlock* m_gridUniformBlock;
+        uint32_t m_gridColor1PushLocation;
+        uint32_t m_gridColor2PushLocation;
+
+        Pipeline* m_objectPipeline;
+        Shader::Visual::VertexScript m_objectVertexScript;
+        Shader::Visual::FragmentScript m_objectFragmentScript;
+        VertexBuffer* m_objectVertexBuffer;
+        IndexBuffer* m_objectIndexBuffer;
+        UniformBuffer* m_objectUniformBuffer;
+        UniformBlock* m_objectUniformBlock;
+        uint32_t m_objectPosPushLocation;
+        uint32_t m_objectColorPushLocation;
+        Texture* m_objectTexture;
+  
         Clock m_programTimer;
         float m_programTime;
         Clock m_deltaTimer;

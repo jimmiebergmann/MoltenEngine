@@ -26,7 +26,7 @@
 #include "Molten/Renderer/Vulkan/Utility/VulkanFunctions.hpp"
 
 #if defined(MOLTEN_ENABLE_VULKAN)
-
+#include "Molten/Renderer/Vulkan/Utility/VulkanLogicalDevice.hpp"
 #include <algorithm>
 
 MOLTEN_UNSCOPED_ENUM_BEGIN
@@ -145,49 +145,6 @@ namespace Molten::Vulkan
         return !failed;
     }
 
-    VkResult CreateBuffer(
-        VkBuffer& buffer,
-        VkDeviceMemory& memory,
-        VkDevice logicalDevice,
-        const VkDeviceSize size,
-        const VkBufferUsageFlags usage,
-        const VkDeviceSize allocationSize,
-        const uint32_t memoryTypeIndex)
-    {
-        VkResult result = VkResult::VK_SUCCESS;
-
-        VkBufferCreateInfo bufferInfo = {};
-        bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-        bufferInfo.size = size;
-        bufferInfo.usage = usage;
-        bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-        if ((result = vkCreateBuffer(logicalDevice, &bufferInfo, nullptr, &buffer)) != VK_SUCCESS)
-        {
-            return result;
-        }
-
-        VkMemoryAllocateInfo memoryAllocateInfo = {};
-        memoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        memoryAllocateInfo.allocationSize = allocationSize;
-        memoryAllocateInfo.memoryTypeIndex = memoryTypeIndex;
-
-        if ((result = vkAllocateMemory(logicalDevice, &memoryAllocateInfo, nullptr, &memory)) != VK_SUCCESS)
-        {
-            vkDestroyBuffer(logicalDevice, buffer, nullptr);
-            return result;
-        }
-
-        if ((result = vkBindBufferMemory(logicalDevice, buffer, memory, 0)) != VK_SUCCESS)
-        {
-            vkDestroyBuffer(logicalDevice, buffer, nullptr);
-            vkFreeMemory(logicalDevice, memory, nullptr);
-            return result;
-        }
-
-        return result;
-    }
-
     VkResult CreateFences(
         Fences& fences,
         VkDevice logicalDevice,
@@ -274,20 +231,6 @@ namespace Molten::Vulkan
         return VK_MAKE_VERSION(version.Major, version.Minor, version.Patch);
     }
 
-    bool ExtentIsSame(const VkExtent2D& first, const VkExtent2D& second)
-    {
-        return 
-            first.width == second.width && 
-            first.height == second.height;
-    }
-    bool ExtentIsSame(const VkExtent3D& first, const VkExtent3D& second)
-    {
-        return
-            first.width == second.width &&
-            first.height == second.height &&
-            first.depth == second.depth;
-    }
-
     void DestroyFences(VkDevice logicalDevice, Fences& fences)
     {
         for (auto fence : fences)
@@ -352,28 +295,6 @@ namespace Molten::Vulkan
         });
     }
 
-    VkResult GetSwapchainImages(
-        Images& images,
-        VkDevice logicalDevice,
-        const VkSwapchainKHR swapchain)
-    {
-        VkResult result = VkResult::VK_SUCCESS;
-
-        uint32_t imageCount = 0;
-        if ((result = vkGetSwapchainImagesKHR(logicalDevice, swapchain, &imageCount, nullptr)) != VkResult::VK_SUCCESS)
-        {
-            return result;
-        }
-
-        images.resize(imageCount);
-        if ((result = vkGetSwapchainImagesKHR(logicalDevice, swapchain, &imageCount, images.data())) != VkResult::VK_SUCCESS)
-        {
-            return result;
-        }
-
-        return result;
-    }
-
     void RemoveLayers(Layers& layers, const Layers& excludes)
     {
         auto findLayer = [](const Layers& layers, const Layer& layer)
@@ -416,6 +337,135 @@ namespace Molten::Vulkan
         });
 
         extensions.erase(it);
+    }
+
+    Result<> BeginSingleTimeCommands(
+        VkCommandBuffer& commandBuffer,
+        LogicalDevice& logicalDevice,
+        VkCommandPool commandPool)
+    {
+        Result<> result;
+
+        commandBuffer = VK_NULL_HANDLE;
+
+        VkCommandBufferAllocateInfo commandBufferInfo = {};
+        commandBufferInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        commandBufferInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        commandBufferInfo.commandPool = commandPool;
+        commandBufferInfo.commandBufferCount = 1;
+
+        auto logicalDeviceHandle = logicalDevice.GetHandle();
+        if (!(result = vkAllocateCommandBuffers(logicalDeviceHandle, &commandBufferInfo, &commandBuffer)))
+        {
+            return result;
+        }
+
+        VkCommandBufferBeginInfo beginInfo = {};
+        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+        if (!(result = vkBeginCommandBuffer(commandBuffer, &beginInfo)))
+        {
+            return result;
+        }
+
+        return result;
+    }
+
+    Result<> EndSingleTimeCommands(
+        VkCommandBuffer commandBuffer,
+        LogicalDevice& logicalDevice,
+        VkCommandPool commandPool)
+    {
+        Result<> result;
+
+        if (!(result = vkEndCommandBuffer(commandBuffer)))
+        {
+            return result;
+        }
+
+        VkSubmitInfo submitInfo = {};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submitInfo.commandBufferCount = 1;
+        submitInfo.pCommandBuffers = &commandBuffer;
+
+        // Should we use a fence here? No? Yes?
+        auto& deviceQueues = logicalDevice.GetDeviceQueues();
+        if (!(result = vkQueueSubmit(deviceQueues.graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE)))
+        {
+            return result;
+        }
+        if (!(result = vkQueueWaitIdle(deviceQueues.graphicsQueue)))
+        {
+            return result;
+        }
+        
+        vkFreeCommandBuffers(logicalDevice.GetHandle(), commandPool, 1, &commandBuffer);
+
+        return result;
+    }
+
+    bool TransitionImageLayout(
+        VkCommandBuffer commandBuffer,
+        LogicalDevice& logicalDevice,
+        VkImage image,
+        VkFormat format,
+        VkImageLayout oldLayout,
+        VkImageLayout newLayout)
+    {
+        VkImageMemoryBarrier barrier = {};
+        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        barrier.oldLayout = oldLayout;
+        barrier.newLayout = newLayout;
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.image = image;
+        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        barrier.subresourceRange.baseMipLevel = 0;
+        barrier.subresourceRange.levelCount = 1;
+        barrier.subresourceRange.baseArrayLayer = 0;
+        barrier.subresourceRange.layerCount = 1;
+
+        VkPipelineStageFlags sourceStageMask;
+        VkPipelineStageFlags destStageMask;
+
+        if (oldLayout == VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED && 
+            newLayout == VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
+        {
+            barrier.srcAccessMask = 0;
+            barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+
+            sourceStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+            destStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT;
+        }
+        else if (
+            oldLayout == VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL &&
+            newLayout == VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+        {
+            barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+            sourceStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT;
+            destStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        }
+        else
+        {
+            return false;
+        }
+
+        vkCmdPipelineBarrier(
+            commandBuffer,
+            sourceStageMask,
+            destStageMask, 
+            0,
+            0,
+            nullptr,
+            0,
+            nullptr,
+            1,
+            &barrier
+        );
+
+        return true;
     }
 
 }

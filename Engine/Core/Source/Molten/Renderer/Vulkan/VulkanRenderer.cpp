@@ -41,6 +41,7 @@
 #include "Molten/Renderer/Vulkan/Utility/VulkanFunctions.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanResultLogger.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanBuffer.hpp"
+#include "Molten/Renderer/Vulkan/Utility/VulkanImage.hpp"
 #include "Molten/Window/Window.hpp"
 #include "Molten/Logger.hpp"
 #include "Molten/System/Exception.hpp"
@@ -386,7 +387,7 @@ namespace Molten
             return nullptr;
         }
 
-        if (!(result = stagingBuffer.Copy(m_commandPool, indexBuffer, bufferSize)))
+        if (!(result = indexBuffer.CopyFromBuffer(m_commandPool, stagingBuffer, bufferSize)))
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to copy from staging buffer to index buffer");
             return nullptr;
@@ -592,78 +593,48 @@ namespace Molten
 
     Texture* VulkanRenderer::CreateTexture(const TextureDescriptor& descriptor)
     {
-        /*const auto bufferSize = 
+        const auto bufferSize = 
             static_cast<VkDeviceSize>(descriptor.dimensions.x) * 
             static_cast<VkDeviceSize>(descriptor.dimensions.y) * 4;
 
-        VkBuffer stagingBuffer;
-        VkDeviceMemory stagingMemory;*/
+        Vulkan::DeviceBuffer stagingBuffer;
 
-        /*if (!CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, m_memoryTypesHostVisibleOrCoherent, stagingBuffer, stagingMemory))
+        Vulkan::Result<> result;
+        if (!(result = stagingBuffer.Create(m_logicalDevice, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, m_memoryTypesHostVisibleOrCoherent)))
         {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to create staging buffer for index buffer");
             return nullptr;
         }
 
-        SmartFunction stagingDestroyer = [&]()
+        if (!(result = stagingBuffer.MapMemory(0, bufferSize, descriptor.data)))
         {
-            vkDestroyBuffer(m_logicalDevice.GetHandle(), stagingBuffer, nullptr);
-            vkFreeMemory(m_logicalDevice.GetHandle(), stagingMemory, nullptr);
-        };
-
-        void* data;
-        vkMapMemory(m_logicalDevice.GetHandle(), stagingMemory, 0, bufferSize, 0, &data);
-        std::memcpy(data, descriptor.data, (size_t)bufferSize);
-        vkUnmapMemory(m_logicalDevice.GetHandle(), stagingMemory);
-
-        VkImage image;
-        VkDeviceMemory imageMemory;
-        if (!CreateImage(descriptor.dimensions, VK_FORMAT_R8G8B8A8_SRGB, 
-            VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-            image, imageMemory))
-        {
-            Logger::WriteError(m_logger, "Failed to create image.");
-            return nullptr;
-        }*/
-        
-
-        /*VkImageCreateInfo imageInfo = {};
-        imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-        imageInfo.imageType = VK_IMAGE_TYPE_2D;
-        imageInfo.extent.width = descriptor.dimensions.x;
-        imageInfo.extent.height = descriptor.dimensions.y;
-        imageInfo.extent.depth = 1;
-        imageInfo.mipLevels = 1;
-        imageInfo.arrayLayers = 1;
-        imageInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
-        imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-        imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        imageInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-        imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-        imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-        imageInfo.flags = 0;
-
-        VkImage textureImage;
-        if (vkCreateImage(m_logicalDevice.GetHandle(), &imageInfo, nullptr, &textureImage) != VK_SUCCESS)
-        {
-            Logger::WriteError(m_logger, "Failed to crteate vulkan image.");
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to map staging buffer for index buffer");
             return nullptr;
         }
 
-        VkDeviceMemory textureImageMemory;*/
-
-        /*
-        VkBuffer vertexBuffer;
-        VkDeviceMemory vertexMemory;
-        if (!CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer, vertexMemory))
+        Vulkan::Image image;
+        if (!(result = image.Create(
+            m_logicalDevice,
+            stagingBuffer,
+            m_commandPool,
+            descriptor.dimensions,
+            VkFormat::VK_FORMAT_R8G8B8A8_SRGB,
+            m_memoryTypesDeviceLocal)))
         {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to create image");
             return nullptr;
         }
 
-        CopyBuffer(stagingBuffer, vertexBuffer, bufferSize);*/
+        if (!(result = image.TransitionToLayout(
+            m_commandPool,
+            VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)))
+        {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed transition image to read only optional layout");
+            return nullptr;
+        }
 
-
-        //auto* texture = new VulkanTexture(image, imageMemory);
-        return nullptr; //texture;
+        auto* texture = new VulkanTexture(std::move(image), VK_NULL_HANDLE);
+        return texture;
     }
 
     UniformBlock* VulkanRenderer::CreateUniformBlock(const UniformBlockDescriptor& descriptor)
@@ -729,7 +700,7 @@ namespace Molten
             VkWriteDescriptorSet descWrite = {};
             descWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
             descWrite.dstSet = descriptorSets[i];
-            descWrite.dstBinding = 0;//descriptor.binding;
+            descWrite.dstBinding = 0;
             descWrite.dstArrayElement = 0;
             descWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
             descWrite.descriptorCount = 1;
@@ -793,7 +764,7 @@ namespace Molten
             return nullptr;
         }
 
-        if (!(result = stagingBuffer.Copy(m_commandPool, vertexBuffer, bufferSize)))
+        if (!(result = vertexBuffer.CopyFromBuffer(m_commandPool, stagingBuffer, bufferSize)))
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to copy from staging buffer to vertex buffer");
             return nullptr;
@@ -843,7 +814,8 @@ namespace Molten
 
     void VulkanRenderer::DestroyTexture(Texture* texture)
     {
-        delete static_cast<VulkanTexture*>(texture);
+        VulkanTexture* vulkanTexture = static_cast<VulkanTexture*>(texture);
+        delete vulkanTexture;
     }
 
     void VulkanRenderer::DestroyUniformBlock(UniformBlock* uniformBlock)
@@ -1148,10 +1120,16 @@ namespace Molten
                 auto& surfaceCapabilities = capabilities.surfaceCapabilities;
                 auto& surfaceFormats = surfaceCapabilities.formats;
                 if (std::find_if(surfaceFormats.begin(), surfaceFormats.end(), 
-                    [&](auto format) 
+                    [&](auto format)
                     {
                         return format.format == m_surfaceFormat.format && format.colorSpace == m_surfaceFormat.colorSpace;
                     }) == surfaceFormats.end())
+                {
+                    return false;
+                }
+
+                Vulkan::PhysicalDeviceFeaturesWithName missingFeatures;
+                if (!Vulkan::CheckRequiredDeviceFeatures(missingFeatures, m_requiredDeviceFeatures, capabilities.features))
                 {
                     return false;
                 }
@@ -1363,58 +1341,6 @@ namespace Molten
             Logger::WriteError(m_logger, "Failed to allocate command buffers.");
             return false;
         }
-
-        return true;
-    }
-
-    bool VulkanRenderer::CreateImage(const Vector2ui32& dimensions, VkFormat format, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& memory)
-    {
-        /*VkImageCreateInfo imageInfo = {};
-        imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-        imageInfo.imageType = VK_IMAGE_TYPE_2D;
-        imageInfo.extent.width = dimensions.x;
-        imageInfo.extent.height = dimensions.y;
-        imageInfo.extent.depth = 1;
-        imageInfo.mipLevels = 1;
-        imageInfo.arrayLayers = 1;
-        imageInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
-        imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-        imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        imageInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-        imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-        imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-        imageInfo.flags = 0;
-
-        if (vkCreateImage(m_logicalDevice.device, &imageInfo, nullptr, &image) != VK_SUCCESS)
-        {
-            return nullptr;
-        }
-
-        VkMemoryRequirements memoryReq;
-        vkGetBufferMemoryRequirements(m_logicalDevice.GetHandle(), image, &memoryReq);
-
-        uint32_t memoryTypeIndex = 0;
-        if (!FindPhysicalDeviceMemoryType(memoryTypeIndex, memoryReq.memoryTypeBits, properties))
-        {
-            return false;
-        }
-
-        VkMemoryAllocateInfo memoryAllocateInfo = {};
-        memoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        memoryAllocateInfo.allocationSize = memoryReq.size;
-        memoryAllocateInfo.memoryTypeIndex = memoryTypeIndex;
-
-        if (vkAllocateMemory(m_logicalDevice.GetHandle(), &memoryAllocateInfo, nullptr, &memory) != VK_SUCCESS)
-        {
-            Logger::WriteError(m_logger, "Failed to allocate image memory.");
-            return false;
-        }
-
-        if (vkBindImageMemory(m_logicalDevice.GetHandle(), image, memory, 0) != VK_SUCCESS)
-        {
-            Logger::WriteError(m_logger, "Failed to bind memory to image.");
-            return false;
-        }*/
 
         return true;
     }

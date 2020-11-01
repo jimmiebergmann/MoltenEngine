@@ -28,6 +28,7 @@
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 #include "Molten/Renderer/Vulkan/Utility/VulkanLogicalDevice.hpp"
+#include "Molten/Renderer/Vulkan/Utility/VulkanFunctions.hpp"
 #include "Molten/Utility/SmartFunction.hpp"
 
 MOLTEN_UNSCOPED_ENUM_BEGIN
@@ -158,7 +159,7 @@ namespace Molten::Vulkan
         VkMemoryMapFlags flags)
     {
         auto logicalDeviceHandle = m_logicalDevice->GetHandle();
-      
+
         Result<> result;
         void* mappedData = nullptr;
         if (!(result = vkMapMemory(logicalDeviceHandle, m_memory, 0, size, 0, &mappedData)))
@@ -171,58 +172,27 @@ namespace Molten::Vulkan
         return result;
     }
 
-    Result<> DeviceBuffer::Copy(
+    Result<> DeviceBuffer::CopyFromBuffer(
         const VkCommandPool commandPool,
-        DeviceBuffer& destination, 
-        VkDeviceSize size) const
+        const DeviceBuffer& source,
+        const VkDeviceSize& size)
     {
         Result<> result;
 
-        auto logicalDeviceHandle = m_logicalDevice->GetHandle();
-        
-        
-        VkCommandBufferAllocateInfo commandBufferInfo = {};
-        commandBufferInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        commandBufferInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        commandBufferInfo.commandPool = commandPool;
-        commandBufferInfo.commandBufferCount = 1;
-
-        VkCommandBuffer commandBuffer;
-        if (!(result = vkAllocateCommandBuffers(logicalDeviceHandle, &commandBufferInfo, &commandBuffer)))
+        VkCommandBuffer commandBuffer = VK_NULL_HANDLE;
+        if (!(result = Vulkan::BeginSingleTimeCommands(commandBuffer, *m_logicalDevice, commandPool)))
         {
             return result;
         }
 
-        VkCommandBufferBeginInfo beginInfo = {};
-        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-        if (!(result = vkBeginCommandBuffer(commandBuffer, &beginInfo)))
-        {
-            return result;
-        }
-        
         VkBufferCopy copy = {};
-        copy.srcOffset = 0;
-        copy.dstOffset = 0;
         copy.size = size;
-        vkCmdCopyBuffer(commandBuffer, m_handle, destination.m_handle, 1, &copy);
+        vkCmdCopyBuffer(commandBuffer, source.m_handle, m_handle, 1, &copy);
 
-        if (!(result = vkEndCommandBuffer(commandBuffer)))
+        if (!(result = Vulkan::EndSingleTimeCommands(commandBuffer, *m_logicalDevice, commandPool)))
         {
             return result;
         }
-
-        VkSubmitInfo submitInfo = {};
-        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = &commandBuffer;
-        
-        // USE FENCE?
-        auto& deviceQueues = m_logicalDevice->GetDeviceQueues();
-        vkQueueSubmit(deviceQueues.graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
-        vkQueueWaitIdle(deviceQueues.graphicsQueue);
-
-        vkFreeCommandBuffers(logicalDeviceHandle, commandPool, 1, &commandBuffer);
 
         return result;
     }

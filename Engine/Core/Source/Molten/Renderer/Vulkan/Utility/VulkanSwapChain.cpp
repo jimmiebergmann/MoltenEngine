@@ -55,7 +55,8 @@ namespace Molten::Vulkan
         m_inFlightFences{},
         m_imagesInFlight{},
         m_currentFrameIndex(0),
-        m_currentImageIndex(0)
+        m_currentImageIndex(0),
+        m_resize(false)
     {}
 
     SwapChain::~SwapChain()
@@ -99,8 +100,6 @@ namespace Molten::Vulkan
 
     Result<> SwapChain::Recreate()
     {
-        m_oldExtent = m_extent;
-
         m_logicalDevice->WaitIdle();
         UnloadAssociatedObjects();
         return Load();
@@ -110,7 +109,6 @@ namespace Molten::Vulkan
     {
         return m_handle != VK_NULL_HANDLE;
     }
-
 
     Result<> SwapChain::BeginDraw()
     {
@@ -126,7 +124,7 @@ namespace Molten::Vulkan
             VK_NULL_HANDLE,
             &m_currentImageIndex);
 
-        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || !ExtentIsSame(m_oldExtent, m_extent))
+        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || m_resize)
         {
             if (!(result = Recreate()))
             {
@@ -262,6 +260,10 @@ namespace Molten::Vulkan
 
     void SwapChain::SetExtent(VkExtent2D extent)
     {
+        if (extent.width != m_extent.width || extent.height != m_extent.height)
+        {
+            m_resize = true;
+        }
         m_extent = extent;
     }
 
@@ -337,6 +339,7 @@ namespace Molten::Vulkan
         }
 
         // Finalize.
+        m_resize = false;
         destroyer.Release();
         return result;
     }
@@ -349,7 +352,7 @@ namespace Molten::Vulkan
         auto logicalDeviceHandle = m_logicalDevice->GetHandle();
 
         // Get images from the swap chain.
-        if (!(result = GetSwapchainImages(m_images, logicalDeviceHandle, m_handle)))
+        if (!(result = GetSwapchainImages(m_images)))
         {
             return result;
         }
@@ -429,6 +432,27 @@ namespace Molten::Vulkan
         m_framebuffers.clear();
 
         Vulkan::DestroyImageViews(logicalDeviceHandle, m_imageViews);
+    }
+
+    Result<> SwapChain::GetSwapchainImages(Images& images)
+    {
+        Result<> result;
+
+        auto logicalDeviceHandle = m_logicalDevice->GetHandle();
+
+        uint32_t imageCount = 0;
+        if ((result = vkGetSwapchainImagesKHR(logicalDeviceHandle, m_handle, &imageCount, nullptr)) != VkResult::VK_SUCCESS)
+        {
+            return result;
+        }
+
+        images.resize(imageCount);
+        if ((result = vkGetSwapchainImagesKHR(logicalDeviceHandle, m_handle, &imageCount, images.data())) != VkResult::VK_SUCCESS)
+        {
+            return result;
+        }
+
+        return result;
     }
 
 }
