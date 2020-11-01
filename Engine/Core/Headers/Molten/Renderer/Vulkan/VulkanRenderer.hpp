@@ -193,16 +193,6 @@ namespace Molten
         bool LoadCommandPool();
         /**@}*/
 
-        /** Resource creation and manipulation functions. */
-        /**@{*/
-        bool CreateBuffer(
-            const VkDeviceSize size, 
-            const VkBufferUsageFlags usage, 
-            const Vulkan::FilteredMemoryTypes& filteredMemoryTypes,
-            VkBuffer& buffer,
-            VkDeviceMemory& memory);
-        
-        void CopyBuffer(VkBuffer source, VkBuffer destination, VkDeviceSize size); // Should be old
         bool CreateImage(const Vector2ui32& dimensions, VkFormat format, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& memory); // Should be old
         bool CreateVertexInputAttributes(const Shader::Visual::InputStructure& inputs, std::vector<VkVertexInputAttributeDescription>& attributes, uint32_t& stride);
         bool CreateDescriptorSetLayouts(const std::vector<Shader::Visual::Script*>& visualScripts, Vulkan::DescriptorSetLayouts& setLayouts);

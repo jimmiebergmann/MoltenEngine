@@ -246,6 +246,20 @@ namespace Molten::Vulkan
         return m_framebuffers[m_currentImageIndex];
     }
 
+    LogicalDevice& SwapChain::GetLogicalDevice()
+    {
+        return *m_logicalDevice;
+    }
+    const LogicalDevice& SwapChain::GetLogicalDevice() const
+    {
+        return *m_logicalDevice;
+    }
+
+    bool SwapChain::HasLogicalDevice() const
+    {
+        return m_logicalDevice != nullptr;
+    }
+
     void SwapChain::SetExtent(VkExtent2D extent)
     {
         m_extent = extent;

@@ -30,6 +30,7 @@
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 #include "Molten/Renderer/Vulkan/VulkanHeaders.hpp"
+#include "Molten/Renderer/Vulkan/Utility/VulkanBuffer.hpp"
 
 namespace Molten
 {
@@ -42,13 +43,11 @@ namespace Molten
     private:
 
         VulkanVertexBuffer(
-            VkBuffer buffer,
-            VkDeviceMemory memory,
+            Vulkan::DeviceBuffer&& buffer,
             const uint32_t vertexCount,
             const uint32_t vertexSize);
 
-        VkBuffer buffer;
-        VkDeviceMemory memory;
+        Vulkan::DeviceBuffer buffer;
         uint32_t vertexCount;
         uint32_t vertexSize;
 

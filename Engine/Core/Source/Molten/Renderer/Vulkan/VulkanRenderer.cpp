@@ -40,6 +40,7 @@
 #include "Molten/Renderer/Vulkan/VulkanVertexBuffer.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanFunctions.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanResultLogger.hpp"
+#include "Molten/Renderer/Vulkan/Utility/VulkanBuffer.hpp"
 #include "Molten/Window/Window.hpp"
 #include "Molten/Logger.hpp"
 #include "Molten/System/Exception.hpp"
@@ -363,35 +364,35 @@ namespace Molten
     {
         const auto bufferSize = static_cast<VkDeviceSize>(descriptor.indexCount) * GetIndexBufferDataTypeSize(descriptor.dataType);
 
-        VkBuffer stagingBuffer;
-        VkDeviceMemory stagingMemory;        
+        Vulkan::DeviceBuffer stagingBuffer;
 
-        if (!CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, m_memoryTypesHostVisibleOrCoherent, stagingBuffer, stagingMemory))
+        Vulkan::Result<> result;
+        if (!(result = stagingBuffer.Create(m_logicalDevice, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, m_memoryTypesHostVisibleOrCoherent)))
         {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to create staging buffer for index buffer");
             return nullptr;
         }
 
-        SmartFunction stagingDestroyer = [&]()
+        if (!(result = stagingBuffer.MapMemory(0, bufferSize, descriptor.data)))
         {
-            vkDestroyBuffer(m_logicalDevice.GetHandle(), stagingBuffer, nullptr);
-            vkFreeMemory(m_logicalDevice.GetHandle(), stagingMemory, nullptr);
-        };
-
-        void* data;
-        vkMapMemory(m_logicalDevice.GetHandle(), stagingMemory, 0, bufferSize, 0, &data);
-        std::memcpy(data, descriptor.data, (size_t)bufferSize);
-        vkUnmapMemory(m_logicalDevice.GetHandle(), stagingMemory);
-
-        VkBuffer indexBuffer;
-        VkDeviceMemory indexMemory;
-        if (!CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, m_memoryTypesDeviceLocal, indexBuffer, indexMemory))
-        {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to map staging buffer for index buffer");
             return nullptr;
         }
 
-        CopyBuffer(stagingBuffer, indexBuffer, bufferSize);
+        Vulkan::DeviceBuffer indexBuffer;
+        if (!(result = indexBuffer.Create(m_logicalDevice, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, m_memoryTypesDeviceLocal)))
+        {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to create index buffer");
+            return nullptr;
+        }
 
-        auto* buffer = new VulkanIndexBuffer(indexBuffer, indexMemory, descriptor.indexCount, descriptor.dataType);
+        if (!(result = stagingBuffer.Copy(m_commandPool, indexBuffer, bufferSize)))
+        {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to copy from staging buffer to index buffer");
+            return nullptr;
+        }
+
+        auto* buffer = new VulkanIndexBuffer(std::move(indexBuffer), descriptor.indexCount, descriptor.dataType);
         return buffer;
     }
 
@@ -591,14 +592,14 @@ namespace Molten
 
     Texture* VulkanRenderer::CreateTexture(const TextureDescriptor& descriptor)
     {
-        const auto bufferSize = 
+        /*const auto bufferSize = 
             static_cast<VkDeviceSize>(descriptor.dimensions.x) * 
             static_cast<VkDeviceSize>(descriptor.dimensions.y) * 4;
 
         VkBuffer stagingBuffer;
-        VkDeviceMemory stagingMemory;
+        VkDeviceMemory stagingMemory;*/
 
-        if (!CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, m_memoryTypesHostVisibleOrCoherent, stagingBuffer, stagingMemory))
+        /*if (!CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, m_memoryTypesHostVisibleOrCoherent, stagingBuffer, stagingMemory))
         {
             return nullptr;
         }
@@ -622,7 +623,7 @@ namespace Molten
         {
             Logger::WriteError(m_logger, "Failed to create image.");
             return nullptr;
-        }
+        }*/
         
 
         /*VkImageCreateInfo imageInfo = {};
@@ -661,8 +662,8 @@ namespace Molten
         CopyBuffer(stagingBuffer, vertexBuffer, bufferSize);*/
 
 
-        auto* texture = new VulkanTexture(image, imageMemory);
-        return texture;
+        //auto* texture = new VulkanTexture(image, imageMemory);
+        return nullptr; //texture;
     }
 
     UniformBlock* VulkanRenderer::CreateUniformBlock(const UniformBlockDescriptor& descriptor)
@@ -721,7 +722,7 @@ namespace Molten
         for (size_t i = 0; i < descriptorSets.size(); i++)
         {
             VkDescriptorBufferInfo bufferInfo = {};
-            bufferInfo.buffer = vulkanUniformBuffer->frames[i].buffer;
+            bufferInfo.buffer = vulkanUniformBuffer->frames[i].buffer.GetHandle();
             bufferInfo.offset = 0;
             bufferInfo.range = VK_WHOLE_SIZE;
 
@@ -749,32 +750,18 @@ namespace Molten
         std::vector<VulkanUniformBuffer::Frame> frames;
         frames.resize(m_swapChain.GetImageCount());
 
-        auto destroyBuffers = [&]()
-        {
-            for (auto& frame : frames)
-            {
-                if (frame.buffer != VK_NULL_HANDLE)
-                {
-                    vkDestroyBuffer(m_logicalDevice.GetHandle(), frame.buffer, nullptr);
-                }
-                if ( frame.memory != VK_NULL_HANDLE)
-                {
-                    vkFreeMemory(m_logicalDevice.GetHandle(), frame.memory, nullptr);
-                }
-            }    
-        };
-
         for (auto& frame : frames)
         {
-            if (!CreateBuffer(descriptor.size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, m_memoryTypesHostVisibleOrCoherent, frame.buffer, frame.memory))
+            Vulkan::Result<> result;
+            if (!(result = frame.buffer.Create(m_logicalDevice, descriptor.size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, m_memoryTypesHostVisibleOrCoherent)))
             {
-                destroyBuffers();
+                Vulkan::Logger::WriteError(m_logger, result, "Failed to create frame buffer for uniform buffer");
                 return nullptr;
-            }             
+            }          
         }
 
         auto vulkanUniformBuffer = new VulkanUniformBuffer;
-        vulkanUniformBuffer->frames = frames;
+        vulkanUniformBuffer->frames = std::move(frames);
         return vulkanUniformBuffer;
     }
 
@@ -784,35 +771,35 @@ namespace Molten
             static_cast<VkDeviceSize>(static_cast<VkDeviceSize>(descriptor.vertexCount) *
             static_cast<VkDeviceSize>(descriptor.vertexSize));
 
-        VkBuffer stagingBuffer;
-        VkDeviceMemory stagingMemory;
+        Vulkan::DeviceBuffer stagingBuffer;
 
-        if (!CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, m_memoryTypesHostVisibleOrCoherent, stagingBuffer, stagingMemory))
+        Vulkan::Result<> result;
+        if (!(result = stagingBuffer.Create(m_logicalDevice, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, m_memoryTypesHostVisibleOrCoherent)))
         {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to create staging buffer for vertex buffer");
             return nullptr;
         }
 
-        SmartFunction stagingDestroyer = [&]()
+        if (!(result = stagingBuffer.MapMemory(0, bufferSize, descriptor.data)))
         {
-            vkDestroyBuffer(m_logicalDevice.GetHandle(), stagingBuffer, nullptr);
-            vkFreeMemory(m_logicalDevice.GetHandle(), stagingMemory, nullptr);
-        };
-
-        void* data;
-        vkMapMemory(m_logicalDevice.GetHandle(), stagingMemory, 0, bufferSize, 0, &data);
-        std::memcpy(data, descriptor.data, (size_t)bufferSize);
-        vkUnmapMemory(m_logicalDevice.GetHandle(), stagingMemory);
-
-        VkBuffer vertexBuffer;
-        VkDeviceMemory vertexMemory;
-        if (!CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, m_memoryTypesDeviceLocal, vertexBuffer, vertexMemory))
-        {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to map staging buffer for vertex buffer");
             return nullptr;
         }
 
-        CopyBuffer(stagingBuffer, vertexBuffer, bufferSize);
+        Vulkan::DeviceBuffer vertexBuffer;
+        if (!(result = vertexBuffer.Create(m_logicalDevice, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, m_memoryTypesDeviceLocal)))
+        {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to create vertex buffer");
+            return nullptr;
+        }
 
-        auto* buffer = new VulkanVertexBuffer(vertexBuffer, vertexMemory, descriptor.vertexCount, descriptor.vertexSize);
+        if (!(result = stagingBuffer.Copy(m_commandPool, vertexBuffer, bufferSize)))
+        {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to copy from staging buffer to vertex buffer");
+            return nullptr;
+        }
+
+        auto* buffer = new VulkanVertexBuffer(std::move(vertexBuffer), descriptor.vertexCount, descriptor.vertexSize);
         return buffer;
     }
 
@@ -826,8 +813,6 @@ namespace Molten
     void VulkanRenderer::DestroyIndexBuffer(IndexBuffer* indexBuffer)
     {
         VulkanIndexBuffer* vulkanIndexBuffer = static_cast<VulkanIndexBuffer*>(indexBuffer);
-        vkDestroyBuffer(m_logicalDevice.GetHandle(), vulkanIndexBuffer->buffer, nullptr);
-        vkFreeMemory(m_logicalDevice.GetHandle(), vulkanIndexBuffer->memory, nullptr);
         delete vulkanIndexBuffer;
     }
 
@@ -874,21 +859,12 @@ namespace Molten
     void VulkanRenderer::DestroyUniformBuffer(UniformBuffer* uniformBuffer)
     {
         VulkanUniformBuffer* vulkanUniformBuffer = static_cast<VulkanUniformBuffer*>(uniformBuffer);
-
-        for (auto& frame : vulkanUniformBuffer->frames)
-        {
-            vkDestroyBuffer(m_logicalDevice.GetHandle(), frame.buffer, nullptr);
-            vkFreeMemory(m_logicalDevice.GetHandle(), frame.memory, nullptr);
-        }
-
         delete vulkanUniformBuffer;
     }
 
     void VulkanRenderer::DestroyVertexBuffer(VertexBuffer* vertexBuffer)
     {
         VulkanVertexBuffer* vulkanVertexBuffer = static_cast<VulkanVertexBuffer*>(vertexBuffer);
-        vkDestroyBuffer(m_logicalDevice.GetHandle(), vulkanVertexBuffer->buffer, nullptr);
-        vkFreeMemory(m_logicalDevice.GetHandle(), vulkanVertexBuffer->memory, nullptr);
         delete vulkanVertexBuffer;
     }
 
@@ -974,7 +950,7 @@ namespace Molten
     {
         VulkanVertexBuffer* vulkanVertexBuffer = static_cast<VulkanVertexBuffer*>(vertexBuffer);
 
-        VkBuffer vertexBuffers[] = { vulkanVertexBuffer->buffer };
+        VkBuffer vertexBuffers[] = { vulkanVertexBuffer->buffer.GetHandle() };
         const VkDeviceSize offsets[] = { 0 };
 
         vkCmdBindVertexBuffers(*m_currentCommandBuffer, 0, 1, vertexBuffers, offsets);
@@ -986,11 +962,11 @@ namespace Molten
         VulkanIndexBuffer* vulkanIndexBuffer = static_cast<VulkanIndexBuffer*>(indexBuffer);
         VulkanVertexBuffer* vulkanVertexBuffer = static_cast<VulkanVertexBuffer*>(vertexBuffer);
 
-        VkBuffer vertexBuffers[] = { vulkanVertexBuffer->buffer };
+        VkBuffer vertexBuffers[] = { vulkanVertexBuffer->buffer.GetHandle() };
         const VkDeviceSize offsets[] = { 0 };
 
         vkCmdBindVertexBuffers(*m_currentCommandBuffer, 0, 1, vertexBuffers, offsets);
-        vkCmdBindIndexBuffer(*m_currentCommandBuffer, vulkanIndexBuffer->buffer, 0, GetIndexBufferDataType(vulkanIndexBuffer->dataType));
+        vkCmdBindIndexBuffer(*m_currentCommandBuffer, vulkanIndexBuffer->buffer.GetHandle(), 0, GetIndexBufferDataType(vulkanIndexBuffer->dataType));
         vkCmdDrawIndexed(*m_currentCommandBuffer, static_cast<uint32_t>(vulkanIndexBuffer->indexCount), 1, 0, 0, 0);
     }
 
@@ -1060,10 +1036,11 @@ namespace Molten
 
         auto& frame = vulkanUniformBuffer->frames[m_swapChain.GetCurrentImageIndex()];
 
-        void* dataMap;
-        vkMapMemory(m_logicalDevice.GetHandle(), frame.memory, offset, size, 0, &dataMap);
-        std::memcpy(dataMap, data, size);
-        vkUnmapMemory(m_logicalDevice.GetHandle(), frame.memory);
+        Vulkan::Result<> result;
+        if (!(result = frame.buffer.MapMemory(offset, size, data, 0)))
+        {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to update uniform buffer");
+        }
     }
 
     bool VulkanRenderer::LoadRequirements()
@@ -1388,91 +1365,6 @@ namespace Molten
         }
 
         return true;
-    }
-
-    bool VulkanRenderer::CreateBuffer(
-        const VkDeviceSize size,
-        const VkBufferUsageFlags usage,
-        const Vulkan::FilteredMemoryTypes& filteredMemoryTypes, 
-        VkBuffer& buffer, 
-        VkDeviceMemory& memory)
-    {
-        VkBufferCreateInfo bufferInfo = {};
-        bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-        bufferInfo.size = size;
-        bufferInfo.usage = usage;
-        bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-        if (vkCreateBuffer(m_logicalDevice.GetHandle(), &bufferInfo, nullptr, &buffer) != VK_SUCCESS)
-        {
-            Logger::WriteError(m_logger, "Failed to create vertex buffer.");
-            return false;
-        }
-
-        VkMemoryRequirements memoryReq;
-        vkGetBufferMemoryRequirements(m_logicalDevice.GetHandle(), buffer, &memoryReq);
-
-        uint32_t memoryTypeIndex = 0;
-        Vulkan::FindFilteredMemoryTypeIndex(
-            memoryTypeIndex,
-            filteredMemoryTypes,
-            memoryReq.memoryTypeBits);
-
-        VkMemoryAllocateInfo memoryAllocateInfo = {};
-        memoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        memoryAllocateInfo.allocationSize = memoryReq.size;
-        memoryAllocateInfo.memoryTypeIndex = memoryTypeIndex;
-
-        if (vkAllocateMemory(m_logicalDevice.GetHandle(), &memoryAllocateInfo, nullptr, &memory) != VK_SUCCESS)
-        {
-            vkDestroyBuffer(m_logicalDevice.GetHandle(), buffer, nullptr);
-            Logger::WriteError(m_logger, "Failed to allocate vertex buffer memory.");
-            return false;
-        }
-
-        if (vkBindBufferMemory(m_logicalDevice.GetHandle(), buffer, memory, 0) != VK_SUCCESS)
-        {
-            vkDestroyBuffer(m_logicalDevice.GetHandle(), buffer, nullptr);
-            vkFreeMemory(m_logicalDevice.GetHandle(), memory, nullptr);
-            Logger::WriteError(m_logger, "Failed to bind memory to vertex buffer.");
-            return false;
-        }
-
-        return true;
-    }
-
-    void VulkanRenderer::CopyBuffer(VkBuffer source, VkBuffer destination, VkDeviceSize size)
-    {
-        VkCommandBufferAllocateInfo commandBufferInfo = {};
-        commandBufferInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        commandBufferInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        commandBufferInfo.commandPool = m_commandPool;
-        commandBufferInfo.commandBufferCount = 1;
-
-        VkCommandBuffer commandBuffer;
-        vkAllocateCommandBuffers(m_logicalDevice.GetHandle(), &commandBufferInfo, &commandBuffer);
-
-        VkCommandBufferBeginInfo beginInfo = {};
-        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-        vkBeginCommandBuffer(commandBuffer, &beginInfo);
-        VkBufferCopy copy = {};
-        copy.srcOffset = 0;
-        copy.dstOffset = 0;
-        copy.size = size;
-        vkCmdCopyBuffer(commandBuffer, source, destination, 1, &copy);
-        vkEndCommandBuffer(commandBuffer);
-
-        VkSubmitInfo submitInfo = {};
-        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = &commandBuffer;
-        // USE FENCE?
-        vkQueueSubmit(m_logicalDevice.GetDeviceQueues().graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
-        vkQueueWaitIdle(m_logicalDevice.GetDeviceQueues().graphicsQueue);
-
-        vkFreeCommandBuffers(m_logicalDevice.GetHandle(), m_commandPool, 1, &commandBuffer);
     }
 
     bool VulkanRenderer::CreateImage(const Vector2ui32& dimensions, VkFormat format, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& memory)

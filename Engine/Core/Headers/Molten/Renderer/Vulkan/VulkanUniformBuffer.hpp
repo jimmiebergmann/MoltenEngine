@@ -30,6 +30,7 @@
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 #include "Molten/Renderer/Vulkan/VulkanHeaders.hpp"
+#include "Molten/Renderer/Vulkan/Utility/VulkanBuffer.hpp"
 #include <vector>
 
 namespace Molten
@@ -47,13 +48,7 @@ namespace Molten
 
         struct Frame
         {
-            Frame() :
-                buffer(VK_NULL_HANDLE),
-                memory(VK_NULL_HANDLE)
-            { }
-
-            VkBuffer buffer;
-            VkDeviceMemory memory;
+            Vulkan::DeviceBuffer buffer;
         };
 
         std::vector<Frame> frames;

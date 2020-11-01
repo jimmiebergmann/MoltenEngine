@@ -77,6 +77,11 @@ namespace Molten::Vulkan
         uint32_t GetCurrentFrameIndex()  const;
         VkFramebuffer GetCurrentFramebuffer()  const;
 
+        LogicalDevice& GetLogicalDevice();
+        const LogicalDevice& GetLogicalDevice() const;
+
+        bool HasLogicalDevice() const;
+
         void SetExtent(VkExtent2D extent);
 
     private:

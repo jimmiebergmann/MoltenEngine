@@ -30,6 +30,7 @@
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 #include "Molten/Renderer/Vulkan/VulkanHeaders.hpp"
+#include "Molten/Renderer/Vulkan/Utility/VulkanBuffer.hpp"
 
 namespace Molten
 {
@@ -42,13 +43,11 @@ namespace Molten
     private:
 
         VulkanIndexBuffer(
-            VkBuffer buffer,
-            VkDeviceMemory memory,
+            Vulkan::DeviceBuffer&& buffer,
             const size_t indexCount,
             const DataType dataType);
 
-        VkBuffer buffer;
-        VkDeviceMemory memory;
+        Vulkan::DeviceBuffer buffer;
         size_t indexCount;
         DataType dataType;
 
