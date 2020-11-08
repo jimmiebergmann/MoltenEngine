@@ -26,10 +26,24 @@
 namespace Molten::Shader::Visual
 {
 
+    // Node with type implementations.
+    template<NodeType TypeOfNode>
+    inline NodeWithType<TypeOfNode>::NodeWithType(Script& script) :
+        Node(script)
+    {}
+
+    template<NodeType TypeOfNode>
+    inline NodeType NodeWithType<TypeOfNode>::GetType() const
+    {
+        return TypeOfNode;
+    }
+
+
     // Single Pin Node implementations.
     template<template<typename> typename TPinType, typename TPinDataType>
     inline SinglePinNode<TPinType, TPinDataType>::SinglePinNode(Script& script) :
-        Node(script)
+        Node(script),
+        m_pin(*this)
     {}
 
     template<template<typename> typename TPinType, typename TPinDataType>
@@ -173,6 +187,19 @@ namespace Molten::Shader::Visual
         {
             return {};
         }
+    }
+
+
+    // Single pin node with type implementations.
+    template<NodeType TypeOfNode, template<typename> typename TPinType, typename TPinDataType>
+    inline SinglePinNodeWithType<TypeOfNode, TPinType, TPinDataType>::SinglePinNodeWithType(Script& script) :
+        SinglePinNode(script)
+    {}
+
+    template<NodeType TypeOfNode, template<typename> typename TPinType, typename TPinDataType>
+    inline NodeType SinglePinNodeWithType<TypeOfNode, TPinType, TPinDataType>::GetType() const
+    {
+        return TypeOfNode;
     }
     
 }

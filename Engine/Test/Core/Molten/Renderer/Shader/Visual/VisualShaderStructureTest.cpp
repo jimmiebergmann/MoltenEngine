@@ -54,7 +54,7 @@ namespace Molten::Shader::Visual
         }
     };
 
-    TEST(Shader, VisualScript_InputStructure)
+    TEST(Shader, VisualShader_InputStructure)
     {
         FragmentScript script;
 
@@ -114,7 +114,7 @@ namespace Molten::Shader::Visual
         }
     }
     
-    TEST(Shader, VisualScript_OutputStructure)
+    TEST(Shader, VisualShader_OutputStructure)
     {
         FragmentScript script;
 
@@ -175,7 +175,7 @@ namespace Molten::Shader::Visual
         }
     }
 
-    TEST(Shader, VisualScript_Structure_Remove)
+    TEST(Shader, VisualShader_Structure_Remove)
     {
         FragmentScript script;
 

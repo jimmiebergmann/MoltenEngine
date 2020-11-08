@@ -44,12 +44,15 @@ namespace Molten::Shader::Visual
         Function,       ///< Built-in shader function.
         Operator,       ///< Operator node in local space.
         PushConstants,   ///< Push constant node, constants set by the client.
-        Uniform,        ///< Uniform node, single object being sent runtime from client.
 
         Variable,  ///< ???
 
-        DescriptorBinding,  /// NEW ???
-        UniformBuffer       /// NEW
+        Constant,           ///< NEW
+        Sampler,            /// NEW 
+        UniformBuffer,      /// NEW
+        VertexOutput,       /// NEW
+        OutputInterface,    /// NEW
+        InputInterface      /// NEW
     };
 
 
@@ -128,6 +131,25 @@ namespace Molten::Shader::Visual
     };
 
 
+    /** Helper class for creating a node with a type. */
+    template<NodeType TypeOfNode>
+    class NodeWithType : public Node
+    {
+
+    public:
+
+        /** Constructor. */
+        explicit NodeWithType(Script& script);
+
+        /** Destructor. */
+        virtual ~NodeWithType() = default;
+
+
+        /** Get type of node. */
+        NodeType GetType() const override;
+    };
+
+
     /** Helper class for constructing a single pin node. */
     template<template<typename> typename TPinType, typename TPinDataType>
     class SinglePinNode : public Node
@@ -188,6 +210,25 @@ namespace Molten::Shader::Visual
 
         PinType m_pin;
 
+    };
+
+
+    /** Helper class for creating a single pin node with a type. */
+    template<NodeType TypeOfNode, template<typename> typename TPinType, typename TPinDataType>
+    class SinglePinNodeWithType : public SinglePinNode<TPinType, TPinDataType>
+    {
+
+    public:
+
+        /** Constructor. */
+        explicit SinglePinNodeWithType(Script& script);
+
+        /** Destructor. */
+        virtual ~SinglePinNodeWithType() = default;
+
+
+        /** Get type of node. */
+        NodeType GetType() const override;
     };
 
 }

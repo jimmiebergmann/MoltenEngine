@@ -43,7 +43,7 @@ namespace Molten::Shader::Visual
         }
     };
 
-    TEST(Shader, VisualScript_InputPin)
+    TEST(Shader, VisualShader_InputPin)
     {
         FragmentScript script;
         MyInputStruct myStruct(script);
@@ -59,7 +59,7 @@ namespace Molten::Shader::Visual
         EXPECT_EQ(pin.GetConnections().size(), size_t(0));
     }
     
-    TEST(Shader, VisualScript_InputPin_DefaultValue)
+    TEST(Shader, VisualShader_InputPin_DefaultValue)
     {
         FragmentScript script;
         MyInputStruct myStruct(script);
@@ -79,7 +79,7 @@ namespace Molten::Shader::Visual
         EXPECT_EQ(pin.GetDefaultValue(), int32_t(5432));
     }
 
-    TEST(Shader, VisualScript_InputPin_DataType)
+    TEST(Shader, VisualShader_InputPin_DataType)
     {
         FragmentScript script;
         MyInputStruct myStruct(script);
@@ -117,7 +117,7 @@ namespace Molten::Shader::Visual
         }
     }
 
-    TEST(Shader, VisualScript_InputPin_Connection)
+    TEST(Shader, VisualShader_InputPin_Connection)
     {
         FragmentScript script;
         MyInputStruct myStruct1(script);
@@ -268,7 +268,7 @@ namespace Molten::Shader::Visual
         }
     }
 
-    TEST(Shader, VisualScript_OutputPin)
+    TEST(Shader, VisualShader_OutputPin)
     {
         FragmentScript script;
         MyInputStruct myStruct(script);
@@ -284,7 +284,7 @@ namespace Molten::Shader::Visual
         EXPECT_EQ(pin.GetConnections().size(), size_t(0));
     }
 
-    TEST(Shader, VisualScript_OutputPin_DataType)
+    TEST(Shader, VisualShader_OutputPin_DataType)
     {
         FragmentScript script;
         MyInputStruct myStruct(script);
@@ -322,7 +322,7 @@ namespace Molten::Shader::Visual
         }
     }
 
-    TEST(Shader, VisualScript_OutputPin_Connection)
+    TEST(Shader, VisualShader_OutputPin_Connection)
     {
         FragmentScript script;
         MyInputStruct myStruct1(script);

@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2020 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,43 +23,19 @@
 *
 */
 
-#ifndef MOLTEN_TEST_HPP
-#define MOLTEN_TEST_HPP
+#include "Molten/Renderer/Shader/Visual/VisualShaderConstant.hpp"
 
-#include "ThirdParty/googletest/googletest/include/gtest/gtest.h"
-#include "Molten/System/Clock.hpp"
-#include <string>
-
-namespace Molten::Test
+namespace Molten::Shader::Visual
 {
 
-    /** Googletest style info printer. */
-    void PrintInfo(const std::string& message);
+    // Constant implementations.
+    ConstantBase::ConstantBase(Script& script) :
+        Node(script)
+    {}
 
-    /** Googletest style time benchmarker class. This object will print the result at destruction. */
-    class Benchmarker
+    NodeType ConstantBase::GetType() const
     {
-
-    public:
-
-        explicit Benchmarker(const std::string& description);
-        ~Benchmarker();
-
-    private:
-
-        Benchmarker(const Benchmarker&) = delete;
-        Benchmarker(Benchmarker&&) = delete;
-        Benchmarker& operator= (const Benchmarker&) = delete;
-        Benchmarker& operator= (Benchmarker&&) = delete;
-
-        /** Get time as double and it's unit. Units are split up by multiples of 1000.*/
-        std::pair<double, std::string> GetConvertedTime(const Time& time);
-
-        std::string m_description;
-        Molten::Clock m_clock;
-
-    };
+        return NodeType::Constant;
+    }
 
 }
-
-#endif

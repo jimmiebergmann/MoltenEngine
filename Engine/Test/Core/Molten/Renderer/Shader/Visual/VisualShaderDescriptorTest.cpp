@@ -29,7 +29,7 @@
 namespace Molten::Shader::Visual
 {
 
-    TEST(Shader, VisualScript_DescriptorSet)
+    TEST(Shader, VisualShader_DescriptorSet)
     {
 
         FragmentScript script;
@@ -96,7 +96,7 @@ namespace Molten::Shader::Visual
 
     }
 
-    TEST(Shader, VisualScript_DescriptorBindings_Sampler)
+    TEST(Shader, VisualShader_DescriptorBindings_Sampler)
     {
         FragmentScript script;
         FragmentDescriptorSets descSets(script);
@@ -171,7 +171,7 @@ namespace Molten::Shader::Visual
         }
     }
 
-    TEST(Shader, VisualScript_DescriptorBindings_UniformBuffer)
+    TEST(Shader, VisualShader_DescriptorBindings_UniformBuffer)
     {
         FragmentScript script;
         FragmentDescriptorSets descSets(script);

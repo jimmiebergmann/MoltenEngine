@@ -29,27 +29,24 @@ namespace Molten::Shader::Visual
 {
 
     // Shader script implementations.
-    /*VertexOutputVariable* Script::GetVertexOutputVariable()
+    VertexOutput* Script::GetVertexOutput()
     {
         return nullptr;
     }
-    const VertexOutputVariable* Script::GetVertexOutputVariable() const
+    const VertexOutput* Script::GetVertexOutput() const
     {
         return nullptr;
-    }*/
+    }
 
 
     // Vertex shader script implementations.
     VertexScript::VertexScript() :
-        m_nodes{},
+        m_nodes{},   
         m_descriptorSets(*this),
-        m_pushConstants(*this)
-        /*
         m_inputInterface(*this),
         m_outputInterface(*this),
-        m_uniformInterfaces(*this),
-        m_pushConstantInterface(*this),
-        m_vertexOutputVariable(*this)*/
+        m_pushConstants(*this),
+        m_vertexOutput(*this)
     {}
 
     VertexScript::~VertexScript()
@@ -90,6 +87,15 @@ namespace Molten::Shader::Visual
         return { m_nodes.begin(), m_nodes.end() };
     }
 
+    VertexOutput* VertexScript::GetVertexOutput()
+    {
+        return &m_vertexOutput;
+    }
+    const VertexOutput* VertexScript::GetVertexOutput() const
+    {
+        return &m_vertexOutput;
+    }
+
     VertexDescriptorSets& VertexScript::GetDescriptorSets()
     {
         return m_descriptorSets;
@@ -105,6 +111,24 @@ namespace Molten::Shader::Visual
     const DescriptorSetsBase& VertexScript::GetDescriptorSetsBase() const
     {
         return m_descriptorSets;
+    }
+
+    InputInterface& VertexScript::GetInputInterface()
+    {
+        return m_inputInterface;
+    }
+    const InputInterface& VertexScript::GetInputInterface() const
+    {
+        return m_inputInterface;
+    }
+
+    OutputInterface& VertexScript::GetOutputInterface()
+    {
+        return m_outputInterface;
+    }
+    const OutputInterface& VertexScript::GetOutputInterface() const
+    {
+        return m_outputInterface;
     }
 
     VertexPushConstants& VertexScript::GetPushConstants()
@@ -124,63 +148,14 @@ namespace Molten::Shader::Visual
         return m_pushConstants;
     }
 
-    /*
-   InputInterface& VertexScript::GetInputInterface()
-    {
-        return m_inputInterface;
-    }
-    const InputInterface& VertexScript::GetInputInterface() const
-    {
-        return m_inputInterface;
-    }
-
-    OutputInterface& VertexScript::GetOutputInterface()
-    {
-        return m_outputInterface;
-    }
-    const OutputInterface& VertexScript::GetOutputInterface() const
-    {
-        return m_outputInterface;
-    }
-
-    UniformInterfaces& VertexScript::GetUniformInterfaces()
-    {
-        return m_uniformInterfaces;
-    }
-    const UniformInterfaces& VertexScript::GetUniformInterfaces() const
-    {
-        return m_uniformInterfaces;
-    }
-
-    PushConstantInterface& VertexScript::GetPushConstantInterface()
-    {
-        return m_pushConstantInterface;
-    }
-    const PushConstantInterface& VertexScript::GetPushConstantInterface() const
-    {
-        return m_pushConstantInterface;
-    }
-
-    VertexOutputVariable* VertexScript::GetVertexOutputVariable()
-    {
-        return &m_vertexOutputVariable;
-    }
-    const VertexOutputVariable* VertexScript::GetVertexOutputVariable() const
-    {
-        return &m_vertexOutputVariable;
-    }*/
-
 
     // Fragment shader script implementations.
     FragmentScript::FragmentScript() :
         m_nodes{},
         m_descriptorSets(*this),
-        m_pushConstants(*this)
-        /*
         m_inputInterface(*this),
         m_outputInterface(*this),
-        m_uniformInterfaces(*this),
-        m_pushConstantInterface(*this)*/
+        m_pushConstants(*this)
     {}
 
     FragmentScript::~FragmentScript()
@@ -238,24 +213,7 @@ namespace Molten::Shader::Visual
         return m_descriptorSets;
     }
 
-    FragmentPushConstants& FragmentScript::GetPushConstants()
-    {
-        return m_pushConstants;
-    }
-    const FragmentPushConstants& FragmentScript::GetPushConstants() const
-    {
-        return m_pushConstants;
-    }
-    PushConstantsBase& FragmentScript::GetPushConstantsBase()
-    {
-        return m_pushConstants;
-    }
-    const PushConstantsBase& FragmentScript::GetPushConstantsBase() const
-    {
-        return m_pushConstants;
-    }
-
-    /*InputInterface& FragmentScript::GetInputInterface()
+    InputInterface& FragmentScript::GetInputInterface()
     {
         return m_inputInterface;
     }
@@ -273,22 +231,21 @@ namespace Molten::Shader::Visual
         return m_outputInterface;
     }
 
-    UniformInterfaces& FragmentScript::GetUniformInterfaces()
+    FragmentPushConstants& FragmentScript::GetPushConstants()
     {
-        return m_uniformInterfaces;
+        return m_pushConstants;
     }
-    const UniformInterfaces& FragmentScript::GetUniformInterfaces() const
+    const FragmentPushConstants& FragmentScript::GetPushConstants() const
     {
-        return m_uniformInterfaces;
+        return m_pushConstants;
     }
-
-    PushConstantInterface& FragmentScript::GetPushConstantInterface()
+    PushConstantsBase& FragmentScript::GetPushConstantsBase()
     {
-        return m_pushConstantInterface;
+        return m_pushConstants;
     }
-    const PushConstantInterface& FragmentScript::GetPushConstantInterface() const
+    const PushConstantsBase& FragmentScript::GetPushConstantsBase() const
     {
-        return m_pushConstantInterface;
-    }*/
+        return m_pushConstants;
+    }
 
 }

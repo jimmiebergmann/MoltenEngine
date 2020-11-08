@@ -33,10 +33,9 @@
 namespace Molten::Shader::Visual
 {
 
-    /**
-     * Data structure container for visual shader scripts.
-     * This container can be used for interface blocks of unifom buffers, vertex data or push constants.
-     * Allowed types for template parameter TPinType are InputPin or OutputPin.
+    /** Data structure container for visual shader scripts.
+     *  This container can be used for interface blocks of unifom buffers, vertex data or push constants.
+     *  Allowed types for template parameter TPinType are InputPin or OutputPin.
      *
      * @see Script
      */
@@ -166,6 +165,41 @@ namespace Molten::Shader::Visual
         size_t m_sizeOf; ///< Total size of this structure, in bytes.
 
     };
+
+
+    /** Helper template for creating a strucutre with given NodeType.
+     *
+     * @see Structure
+     */
+    template<NodeType TypeOfNode, template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    class StructureWithNodeType : public Structure<TPinType, TAllowedDataTypes...>
+    {
+
+    public:
+
+        /** Constructor. */
+        explicit StructureWithNodeType(Script& script);
+
+        /** Destructor. */
+        virtual ~StructureWithNodeType() = default;
+
+
+        /** Get type of node. */
+        NodeType GetType() const override;
+
+    };
+
+    template<typename ... TAllowedDataTypes>
+    using InputStructure = Structure<InputPin, TAllowedDataTypes...>;
+
+    template<typename ... TAllowedDataTypes>
+    using OutputStructure = Structure<OutputPin, TAllowedDataTypes...>;
+
+    template<NodeType TypeOfNode, typename ... TAllowedDataTypes>
+    using InputStructureWithNodeType = StructureWithNodeType<TypeOfNode, InputPin, TAllowedDataTypes...>;
+
+    template<NodeType TypeOfNode, typename ... TAllowedDataTypes>
+    using OutputStructureWithNodeType = StructureWithNodeType<TypeOfNode, OutputPin, TAllowedDataTypes...>;
 
 }
 

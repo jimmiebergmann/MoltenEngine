@@ -345,4 +345,17 @@ namespace Molten::Shader::Visual
         return pins;
     }
 
+
+    // Structure with node type implementations.
+    template<NodeType TypeOfNode, template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline StructureWithNodeType<TypeOfNode, TPinType, TAllowedDataTypes...>::StructureWithNodeType(Script& script) :
+        Structure<TPinType, TAllowedDataTypes...>(script)
+    {}
+
+    template<NodeType TypeOfNode, template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline NodeType StructureWithNodeType<TypeOfNode, TPinType, TAllowedDataTypes...>::GetType() const
+    {
+        return TypeOfNode;
+    }
+
 }

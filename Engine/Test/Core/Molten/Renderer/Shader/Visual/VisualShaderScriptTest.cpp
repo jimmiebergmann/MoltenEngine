@@ -32,27 +32,58 @@ namespace Molten::Shader::Visual
 
     TEST(Shader, VisualShader_GenerateGlsl)
     {
-        /*FragmentScript script;
+        FragmentScript script;
 
-        auto output = script.GetOutputInterface().AddMember<Vector4f32>();
-        auto color = script.GetInputInterface().AddMember<Vector4f32>();
-        auto mult = script.CreateOperator<Shader::Visual::Operators::MultVec4f32>();
-        auto add = script.CreateOperator<Shader::Visual::Operators::AddVec4f32>();
-        auto var1 = script.CreateConstantVariable<Vector4f32>({ 0.0f, 0.0f, 0.3f, 0.0f });
-        auto var2 = script.CreateConstantVariable<Vector4f32>({ 1.0f, 0.5f, 0.0f, 1.0f });
-        script.GetPushConstantInterface().AddMember<Vector4f32>(123);
-        script.GetPushConstantInterface().AddMember<Vector2f32>(1234);
-        script.GetPushConstantInterface().AddMember<float>(12356);
+        auto& output = script.GetOutputInterface().AddPin<Vector4f32>();
+        auto& color = script.GetInputInterface().AddPin<Vector4f32>();
+        auto& mult = script.CreateOperator<Shader::Visual::Operators::MultVec4f32>();
+        auto& add = script.CreateOperator<Shader::Visual::Operators::AddVec4f32>();
+        auto& var1 = script.CreateConstant<Vector4f32>({ 0.0f, 0.0f, 0.3f, 0.0f });
+        auto& var2 = script.CreateConstant<Vector4f32>({ 1.0f, 0.5f, 0.0f, 1.0f });
+        script.GetPushConstants().AddPin<Vector4f32>();
+        script.GetPushConstants().AddPin<Vector2f32>();
+        script.GetPushConstants().AddPin<float>();
 
-        output->GetInputPin()->Connect(*add->GetOutputPin());
+        output.Connect(*add.GetOutputPin());
 
-        add.GetInputPin(0)->Connect(*mult->GetOutputPin());
-        add.GetInputPin(1)->Connect(*var1->GetOutputPin());
+        add.GetInputPin(0)->Connect(*mult.GetOutputPin());
+        add.GetInputPin(1)->Connect(*var1.GetOutputPin());
 
-        mult.GetInputPin(0)->Connect(*color->GetOutputPin());
-        mult.GetInputPin(1)->Connect(*var2->GetOutputPin());
+        mult.GetInputPin(0)->Connect(color);
+        mult.GetInputPin(1)->Connect(*var2.GetOutputPin());
 
-        std::vector<uint8_t> source;
+        std::vector<uint8_t> source;    
+        {
+            Molten::Test::Benchmarker bench1("GLSL generator");
+            source = VulkanGenerator::GenerateGlsl(script, nullptr);
+        }
+        
+        ASSERT_GT(source.size(), size_t(0));
+        const std::string sourceStr(source.begin(), source.end());
+
+        static const std::string expectedSource =
+            "#version 450\n"
+            "#extension GL_ARB_separate_shader_objects : enable\n"
+            "layout(location = 0) in vec4 in_0;\n"
+            "layout(std140, push_constant) uniform s_fragment_pc\n"
+            "{\n"
+            "layout(offset = 0) vec4 mem0;\n"
+            "layout(offset = 16) vec2 mem16;\n"
+            "layout(offset = 24) float mem24;\n"
+            "} pc;\n"
+            "layout(location = 0) out vec4 out_0;\n"
+            "void main()\n"
+            "{\n"
+            "vec4 vec4_0 = vec4(1, 0.5, 0, 1);\n"
+            "vec4 mul_1 = in_0 * vec4_0;\n"
+            "vec4 vec4_2 = vec4(0, 0, 0.3, 0);\n"
+            "vec4 add_3 = mul_1 + vec4_2;\n"
+            "out_0 = add_3;\n"
+            "}\n";
+
+        EXPECT_STREQ(sourceStr.c_str(), expectedSource.c_str());
+
+        /*std::vector<uint8_t> source;
         {
             VulkanGenerator::GlslTemplates glslTemplates;
             Molten::Test::Benchmarker bench1("GLSL generator");
@@ -67,7 +98,7 @@ namespace Molten::Shader::Visual
 
             source = VulkanGenerator::GenerateGlsl(script, &stageTemplates);
         }
-        EXPECT_GT(source.size(), size_t(0));
+        ASSERT_GT(source.size(), size_t(0));
         const std::string sourceStr(source.begin(), source.end());
 
         static const std::string expectedSource =

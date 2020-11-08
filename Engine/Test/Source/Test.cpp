@@ -42,11 +42,11 @@ namespace Molten::Test
     Benchmarker::~Benchmarker()
     {
         auto time = m_clock.GetTime();       
-        auto [convertedTime, convertedUnit] = GetFittingUnits(time);
+        auto [convertedTime, convertedUnit] = GetConvertedTime(time);
         PrintInfo("Benchmarked \"" + m_description + "\", took " + std::to_string(convertedTime) + " " + convertedUnit + ".");
     }
 
-    std::pair<double, std::string> Benchmarker::GetFittingUnits(const Time& time)
+    std::pair<double, std::string> Benchmarker::GetConvertedTime(const Time& time)
     {
         auto ns = time.AsNanoseconds<uint64_t>();
         if (ns >= 1000000000UL)

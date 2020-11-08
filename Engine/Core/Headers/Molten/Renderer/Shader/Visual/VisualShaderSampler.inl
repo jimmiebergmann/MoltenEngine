@@ -34,7 +34,7 @@ namespace Molten::Shader::Visual
 
     inline NodeType Sampler2D::GetType() const
     {
-        return NodeType::DescriptorBinding;
+        return NodeType::Sampler;
     }
 
 

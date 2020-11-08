@@ -39,7 +39,7 @@
 namespace Molten::Shader
 {
 
-   /* static const std::string g_emptyString = "";
+    static const std::string g_emptyString = "";
 
     // Data type names
     static const std::string g_glslDataTypeBool = "bool";
@@ -74,10 +74,10 @@ namespace Molten::Shader
     static const std::string g_glslArithOpNameMul = "mul";
     static const std::string g_glslArithOpNameSub = "sub";
 
-    // Common names
+    /*// Common names
     static const std::string g_glslPushConstantMemberPrefix = "mem";
     static const std::string g_glslVertexName = "vertex";
-    static const std::string g_glslFragmentName = "fragment";
+    static const std::string g_glslFragmentName = "fragment";*/
     
     
     static const std::string& GetGlslVariableDataType(const VariableDataType dataType)
@@ -96,6 +96,22 @@ namespace Molten::Shader
         throw Exception("GetGlslVariableDataType is missing return value for dataType = " + std::to_string(static_cast<size_t>(dataType)) + ".");
     }
 
+    static size_t GetGlslVariableOffset(const VariableDataType dataType)
+    {
+        switch (dataType)
+        {
+        case VariableDataType::Bool:         return 4;
+        case VariableDataType::Int32:        return 4;
+        case VariableDataType::Float32:      return 4;
+        case VariableDataType::Vector2f32:   return 8;
+        case VariableDataType::Vector3f32:   return 12;
+        case VariableDataType::Vector4f32:   return 16;
+        case VariableDataType::Matrix4x4f32: return 64;
+        case VariableDataType::Sampler2D: break;
+        }
+        throw Exception("GetGlslVariableOffset is missing return value for dataType = " + std::to_string(static_cast<size_t>(dataType)) + ".");
+    }
+   
     static const std::string& GetGlslArithmeticOperator(const Visual::ArithmeticOperatorType op)
     {
         switch (op)
@@ -119,7 +135,7 @@ namespace Molten::Shader
         }
         throw Exception("GetGlslArithmeticOperatorName is missing return value for op = " + std::to_string(static_cast<size_t>(op)) + ".");
     }
-
+    
     static std::string GetGlslFloatString(const float value)
     {
         std::string str = std::to_string(value);
@@ -127,7 +143,7 @@ namespace Molten::Shader
         str.erase(str.find_last_not_of('.') + 1, std::string::npos);
         return str;
     }
-
+    
     static std::string GetGlslDefaultValue(const Visual::Pin& pin)
     {
         if (pin.GetDirection() != Visual::PinDirection::In)
@@ -171,35 +187,35 @@ namespace Molten::Shader
 
         throw Exception("GetGlslDefaultValue is missing return value for pin.GetDataType() = " + std::to_string(static_cast<size_t>(pin.GetDataType())) + ".");
     }
-
-    static std::string GetGlslConstantValue(const Visual::VariableBase& constant)
+    
+    static std::string GetGlslConstantValue(const Visual::ConstantBase& constant)
     {
         switch (constant.GetDataType())
         {
             case VariableDataType::Bool:
-                return static_cast<const Visual::ConstantVariable<bool>&>(constant).GetValue() ? "true" : "false";
+                return static_cast<const Visual::Constant<bool>&>(constant).GetValue() ? "true" : "false";
             case VariableDataType::Int32:
-                return std::to_string(static_cast<const Visual::ConstantVariable<int32_t>&>(constant).GetValue());
+                return std::to_string(static_cast<const Visual::Constant<int32_t>&>(constant).GetValue());
             case VariableDataType::Float32:
-                return GetGlslFloatString(static_cast<const Visual::ConstantVariable<float>&>(constant).GetValue());
+                return GetGlslFloatString(static_cast<const Visual::Constant<float>&>(constant).GetValue());
             case VariableDataType::Vector2f32:
             {
-                const auto& vec = static_cast<const Visual::ConstantVariable<Vector2f32>&>(constant).GetValue();
+                const auto& vec = static_cast<const Visual::Constant<Vector2f32>&>(constant).GetValue();
                 return "vec2(" + GetGlslFloatString(vec.x) + ", " + GetGlslFloatString(vec.y) + ")";
             }
             case VariableDataType::Vector3f32:
             {
-                const auto& vec = static_cast<const Visual::ConstantVariable<Vector3f32>&>(constant).GetValue();
+                const auto& vec = static_cast<const Visual::Constant<Vector3f32>&>(constant).GetValue();
                 return "vec3(" + GetGlslFloatString(vec.x) + ", " + GetGlslFloatString(vec.y) + ", " + GetGlslFloatString(vec.z) + ")";
             }
             case VariableDataType::Vector4f32:
             {
-                const auto& vec = static_cast<const Visual::ConstantVariable<Vector4f32>&>(constant).GetValue();
+                const auto& vec = static_cast<const Visual::Constant<Vector4f32>&>(constant).GetValue();
                 return "vec4(" + GetGlslFloatString(vec.x) + ", " + GetGlslFloatString(vec.y) + ", " + GetGlslFloatString(vec.z) + ", " + GetGlslFloatString(vec.w) + ")";
             }
             case VariableDataType::Matrix4x4f32:
             {
-                const auto& mat = static_cast<const Visual::ConstantVariable<Matrix4x4f32>&>(constant).GetValue();
+                const auto& mat = static_cast<const Visual::Constant<Matrix4x4f32>&>(constant).GetValue();
                 return "mat4(" + GetGlslFloatString(mat.e[0]) + ", " +  GetGlslFloatString(mat.e[1]) + ", " +  GetGlslFloatString(mat.e[2]) + ", " +  GetGlslFloatString(mat.e[3]) + ", " +
                                     GetGlslFloatString(mat.e[4]) + ", " +  GetGlslFloatString(mat.e[5]) + ", " +  GetGlslFloatString(mat.e[6]) + ", " +  GetGlslFloatString(mat.e[7]) + ", " +
                                     GetGlslFloatString(mat.e[8]) + ", " +  GetGlslFloatString(mat.e[9]) + ", " +  GetGlslFloatString(mat.e[10]) + ", " + GetGlslFloatString(mat.e[11]) + ", " +
@@ -209,7 +225,7 @@ namespace Molten::Shader
         }
         throw Exception("GetGlslConstantValue is missing return value for constant.GetDataType() = " + std::to_string(static_cast<size_t>(constant.GetDataType())) + ".");
     }
-
+    
     static const std::string& GetGlslFunctionName(const Visual::FunctionType functionType)
     {
         switch (functionType)
@@ -232,7 +248,7 @@ namespace Molten::Shader
 
         throw Exception("GetGlslFunctionName is missing return value for functionType = " + std::to_string(static_cast<size_t>(functionType)) + ".");
     }
-
+    /*
     static const std::string& GetGlslShaderTypeName(const Shader::Type type)
     {
         switch (type)
@@ -334,7 +350,7 @@ namespace Molten::Shader
         const GlslStageTemplates* templateData,
         Logger* logger)
     {
-        /*struct Variable
+        struct Variable
         {
             Variable(const std::string& name, const Visual::Node* node, const Visual::Pin* pin) :
                 name(name), node(node), pin(pin)
@@ -389,7 +405,7 @@ namespace Molten::Shader
             size_t inputPinsLeft;
             std::vector<VariablePtr> inputVars;
         };
-
+        /*
         // Check for push constant block in template.
         bool useTemplates = templateData != nullptr;
         bool usePushConstants = false;
@@ -423,7 +439,7 @@ namespace Molten::Shader
                     return {};
                 }
             }
-        }
+        }*/
 
         // Calculate estimated code length.
         constexpr size_t estPreMainLength = 70;
@@ -436,43 +452,85 @@ namespace Molten::Shader
 
         auto& inputInterface = script.GetInputInterface();
         auto& outputInterface = script.GetOutputInterface();
-        auto& uniformInterfaces = script.GetUniformInterfaces();
-        const Visual::OutputVariable<Vector4f32>* vertexOutputNode =
-            (script.GetType() == Type::Vertex) ? static_cast<const Visual::VertexScript&>(script).GetVertexOutputVariable() : nullptr;        
+        auto& pushConstants = script.GetPushConstantsBase();
+        //auto& uniformInterfaces = script.GetUniformInterfaces();
+        const Visual::VertexOutput* vertexOutput =
+            (script.GetType() == Type::Vertex) ? static_cast<const Visual::VertexScript&>(script).GetVertexOutput() : nullptr;        
 
         const size_t estimatedSourceLength = estMainLength + estPreMainLength +
-            (inputInterface.GetMemberCount() * estInputLength) +
-            (outputInterface.GetMemberCount() * estOutputLength) +
-            (vertexOutputNode ? estVertOutputLength : 0) +
             (script.GetNodeCount() * estLocalLength) +
-            (usePushConstants ? estPushConstantVarLength + pushConstantSource->size() : 0);
+            (inputInterface.GetPinCount() * estInputLength) +
+            (outputInterface.GetPinCount() * estOutputLength) +
+            (pushConstants.GetOutputPinCount() * estPushConstantVarLength);
+            (vertexOutput ? estVertOutputLength : 0);
 
-        const auto& shaderTypeName = GetGlslShaderTypeName(script.GetType());
+        //const auto& shaderTypeName = GetGlslShaderTypeName(script.GetType());
 
         std::vector<uint8_t> source;
         source.reserve(estimatedSourceLength);
 
-        AppendToVector(source, "#version 450\n");
-        AppendToVector(source, "#extension GL_ARB_separate_shader_objects : enable\n");
+        auto AppendSource = [&source](const std::string& input)
+        {
+            std::copy(input.begin(), input.end(), std::back_inserter(source));
+        };
+
+        AppendSource("#version 450\n");
+        AppendSource("#extension GL_ARB_separate_shader_objects : enable\n");
 
         std::map<const Visual::Pin*, VariablePtr> visitedOutputPins;
-
-        // Input variables.
+        
+        // Input interface.
         size_t index = 0;
-        for (auto* member : inputInterface.GetMembers())
+        for (auto* pin : inputInterface.GetOutputPins())
         {
-            for (auto* pin : member->GetOutputPins())
-            {
-                const std::string name = "in_" + std::to_string(index);
-                AppendToVector(source,
-                    "layout(location = " + std::to_string(index) + ") in " +
-                    GetGlslVariableDataType(pin->GetDataType()) + " " + name + ";\n");
+            const std::string name = "in_" + std::to_string(index);
+            visitedOutputPins.insert({ pin, std::make_shared<Variable>(name, &inputInterface, pin) });
 
-                visitedOutputPins.insert({ pin, std::make_shared<Variable>(name, member, pin) });
-                index++;
-            }
+            AppendSource(
+                "layout(location = " + std::to_string(index) + ") in " +
+                GetGlslVariableDataType(pin->GetDataType()) + " " + name + ";\n");
+
+            index++;
         }
 
+        // Push constants
+        if (pushConstants.GetOutputPinCount())
+        {
+            AppendSource("layout(std140, push_constant) uniform s_fragment_pc\n{\n");
+            size_t offset = 0;
+            for (auto* pin : pushConstants.GetOutputPins())
+            {
+                std::string currentOffset = std::to_string(offset);
+                const std::string name = "mem" + currentOffset;
+                visitedOutputPins.insert({ pin, std::make_shared<Variable>(name, &pushConstants, pin) });
+
+                AppendSource("layout(offset = " + currentOffset +") " + GetGlslVariableDataType(pin->GetDataType()) +" " + name +";\n");
+                offset += GetGlslVariableOffset(pin->GetDataType());
+            }
+            AppendSource("} pc;\n");
+        }
+
+        // Output interface.
+        std::vector<VariablePtr> outputVars;
+        index = 0;
+
+        for (auto* pin : outputInterface.GetInputPins())
+        {
+            const std::string name = "out_" + std::to_string(index);
+            outputVars.push_back(std::make_shared<Variable>(name, &outputInterface, pin));
+
+            AppendSource(
+                "layout(location = " + std::to_string(index) + ") out " +
+                GetGlslVariableDataType(pin->GetDataType()) + " " + name + ";\n");
+
+            index++;
+        }
+        if (vertexOutput)
+        {
+            outputVars.push_back({ std::make_shared<Variable>("gl_Position", vertexOutput, vertexOutput->GetInputPin()) });
+        }
+
+/*
         // Uniform variables.
         index = 0;
         for (auto* uniformInterface : uniformInterfaces)
@@ -544,30 +602,12 @@ namespace Molten::Shader
             }
         }
 
-        // Output variables.
-        std::vector<VariablePtr> outputVars;
-        index = 0;
-        for (auto* member : outputInterface.GetMembers())
-        {
-            for (auto* pin : member->GetInputPins())
-            {
-                const std::string name = "out_" + std::to_string(index);
-                AppendToVector(source,
-                    "layout(location = " + std::to_string(index) + ") out " +
-                    GetGlslVariableDataType(pin->GetDataType()) + " " + name + ";\n");
-                outputVars.push_back(std::make_shared<Variable>(name, member, pin));
-                index++;
-            }
-        }
-        if (vertexOutputNode)
-        {
-            outputVars.push_back({ std::make_shared<Variable>("gl_Position", vertexOutputNode, vertexOutputNode->GetInputPin()) });
-        }
+*/
 
-        AppendToVector(source, "void main(){\n");
-
+        AppendSource("void main()\n{\n");
+        
         size_t localVariableIndex = 0;
-        auto GetNextIndexPostfix = [&localVariableIndex]() -> std::string
+        auto GetNextLocalVariablePostfix = [&localVariableIndex]() -> std::string
         {
             return "_" + std::to_string(localVariableIndex++);
         };
@@ -619,17 +659,29 @@ namespace Molten::Shader
                     stackObject.MoveToNextInputPin();
                     continue;
                 }
-
+                 
                 // All input pins of current node is travered, let's create the nodes output variable.
                 switch (node->GetType())
                 {
+                    case Visual::NodeType::Constant:
+                    {
+
+                        auto* constantBase = static_cast<const Visual::ConstantBase*>(stackObject.node);
+                        auto dataType = constantBase->GetDataType();
+                        auto& dataTypeName = GetGlslVariableDataType(dataType);
+                        stackObject.outputVar->name = dataTypeName + GetNextLocalVariablePostfix();
+
+                        AppendSource(
+                            dataTypeName + " " + stackObject.outputVar->name + " = " +
+                            GetGlslConstantValue(*constantBase) + ";\n");
+                    } break;
                     case Visual::NodeType::Function:
                     {
                         const Visual::FunctionBase* funcNode = static_cast<const Visual::FunctionBase*>(stackObject.node);
                         const std::string funcName = GetGlslFunctionName(funcNode->GetFunctionType());
-                        stackObject.outputVar->name = funcName + GetNextIndexPostfix();
+                        stackObject.outputVar->name = funcName + GetNextLocalVariablePostfix();
 
-                        AppendToVector(source,
+                        AppendSource(
                             GetGlslVariableDataType(funcNode->GetOutputPin()->GetDataType()) + " " + stackObject.outputVar->name + " = " +
                             GetGlslFunctionName(funcNode->GetFunctionType()) + "(");
 
@@ -638,12 +690,12 @@ namespace Molten::Shader
                         {
                             for (size_t i = 0; i < inputCount - 1; i++)
                             {
-                                AppendToVector(source, stackObject.inputVars[i]->name + ", ");
+                                AppendSource(stackObject.inputVars[i]->name + ", ");
                             }
-                            AppendToVector(source, stackObject.inputVars[inputCount - 1]->name);
+                            AppendSource(stackObject.inputVars[inputCount - 1]->name);
                         }
 
-                        AppendToVector(source, ");\n");
+                        AppendSource(");\n");
                     } break;
                     case Visual::NodeType::Operator:
                     {
@@ -660,43 +712,18 @@ namespace Molten::Shader
                                 }
 
                                 auto arithOperatorType = arithOpNode->GetArithmeticOperatorType();
-                                stackObject.outputVar->name = GetGlslArithmeticOperatorName(arithOperatorType) + GetNextIndexPostfix();
-                                AppendToVector(source,
+                                stackObject.outputVar->name = GetGlslArithmeticOperatorName(arithOperatorType) + GetNextLocalVariablePostfix();
+                                AppendSource(
                                     GetGlslVariableDataType(stackObject.outputVar->pin->GetDataType()) + " " + stackObject.outputVar->name + " = " +
                                     stackObject.inputVars[0]->name + GetGlslArithmeticOperator(arithOperatorType) + stackObject.inputVars[1]->name + ";\n");
                             } break;
                             default: break;
                         }
                     } break;
-                    case Visual::NodeType::Variable:
+                    case Visual::NodeType::VertexOutput:
+                    case Visual::NodeType::OutputInterface:
                     {
-                        auto* variableBase = static_cast<const Visual::VariableBase*>(stackObject.node);
-
-                        switch (variableBase->GetVariableType())
-                        {
-                        case Visual::VariableType::Constant:
-                        {
-                            auto* constVariableBase = static_cast<const Visual::VariableBase*>(stackObject.node);
-                            auto dataType = constVariableBase->GetDataType();
-                            auto& dataTypeName = GetGlslVariableDataType(dataType);
-                            stackObject.outputVar->name = dataTypeName + GetNextIndexPostfix();
-
-                            AppendToVector(source,
-                                dataTypeName + " " + stackObject.outputVar->name + " = " +
-                                GetGlslConstantValue(*constVariableBase) + ";\n");
-                        } break;
-                        case Visual::VariableType::Output:
-                        {
-                            if (stackObject.inputVars.size() != 1)
-                            {
-                                Logger::WriteError(logger, "Number of variables for varying out variable is " + std::to_string(stackObject.inputVars.size()) + ", expected 1.");
-                                return {};
-                            }
-
-                            AppendToVector(source, stackObject.outputVar->name + " = " + stackObject.inputVars[0]->name + ";\n");
-                        } break;
-                        default: break;
-                        }
+                        AppendSource(stackObject.outputVar->name + " = " + stackObject.inputVars[0]->name +";\n");
                     } break;
                     default: break;
                 }
@@ -705,18 +732,17 @@ namespace Molten::Shader
             }
         }
 
-        AppendToVector(source, "}\n");
+        AppendSource("}\n");
 
-        return source;*/
+        return source;
 
-        return { };
     }
 
 #if defined(MOLTEN_ENABLE_GLSLANG)
     std::vector<uint8_t> VulkanGenerator::ConvertGlslToSpriV(const std::vector<uint8_t>& code, Type shaderType, Logger* logger)
     {
         // Helper function for getting the shader type.
-        /*static auto GetEShShaderType = [](const Shader::Type type) -> EShLanguage
+        static auto GetEShShaderType = [](const Shader::Type type) -> EShLanguage
         {
             switch (type)
             {
@@ -911,13 +937,12 @@ namespace Molten::Shader
         std::vector<uint8_t> output(outputSize);
         std::memcpy(output.data(), spirv.data(), outputSize);
 
-        return output;*/
-        return {};
+        return output;
     }
 #else
     std::vector<uint8_t> VulkanGenerator::ConvertGlslToSpriV(const std::vector<uint8_t>&, Type, Logger* logger)
     {
-        //Logger::WriteError(logger, "Failed to convert GLSL code to SPIR-V. MOLTEN_ENABLE_GLSLANG is not enabled.");
+        Logger::WriteError(logger, "Failed to convert GLSL code to SPIR-V. MOLTEN_ENABLE_GLSLANG is not enabled.");
         return {};
     }
 #endif
