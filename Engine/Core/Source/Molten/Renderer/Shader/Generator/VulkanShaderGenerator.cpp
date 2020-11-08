@@ -39,7 +39,7 @@
 namespace Molten::Shader
 {
 
-    static const std::string g_emptyString = "";
+   /* static const std::string g_emptyString = "";
 
     // Data type names
     static const std::string g_glslDataTypeBool = "bool";
@@ -49,6 +49,9 @@ namespace Molten::Shader
     static const std::string g_glslDataTypeVec3 = "vec3";
     static const std::string g_glslDataTypeVec4 = "vec4";
     static const std::string g_glslDataTypeMat4 = "mat4";
+    static const std::string g_glslDataTypeSample2D = "sampler2D";
+
+    
 
     // Function names.
     static const std::string g_glslFunctionCos = "cos";
@@ -75,7 +78,8 @@ namespace Molten::Shader
     static const std::string g_glslPushConstantMemberPrefix = "mem";
     static const std::string g_glslVertexName = "vertex";
     static const std::string g_glslFragmentName = "fragment";
-
+    
+    
     static const std::string& GetGlslVariableDataType(const VariableDataType dataType)
     {
         switch (dataType)
@@ -87,6 +91,7 @@ namespace Molten::Shader
             case VariableDataType::Vector3f32:   return g_glslDataTypeVec3;
             case VariableDataType::Vector4f32:   return g_glslDataTypeVec4;
             case VariableDataType::Matrix4x4f32: return g_glslDataTypeMat4;
+            case VariableDataType::Sampler2D:    return g_glslDataTypeSample2D;
         }
         throw Exception("GetGlslVariableDataType is missing return value for dataType = " + std::to_string(static_cast<size_t>(dataType)) + ".");
     }
@@ -161,6 +166,7 @@ namespace Molten::Shader
                                     GetGlslFloatString(mat.e[8]) + ", " +  GetGlslFloatString(mat.e[9]) + ", " +  GetGlslFloatString(mat.e[10]) + ", " + GetGlslFloatString(mat.e[11]) + ", " +
                                     GetGlslFloatString(mat.e[12]) + ", " + GetGlslFloatString(mat.e[13]) + ", " + GetGlslFloatString(mat.e[14]) + ", " + GetGlslFloatString(mat.e[15]) + ")";
             }
+            case VariableDataType::Sampler2D: break;
         }
 
         throw Exception("GetGlslDefaultValue is missing return value for pin.GetDataType() = " + std::to_string(static_cast<size_t>(pin.GetDataType())) + ".");
@@ -199,6 +205,7 @@ namespace Molten::Shader
                                     GetGlslFloatString(mat.e[8]) + ", " +  GetGlslFloatString(mat.e[9]) + ", " +  GetGlslFloatString(mat.e[10]) + ", " + GetGlslFloatString(mat.e[11]) + ", " +
                                     GetGlslFloatString(mat.e[12]) + ", " + GetGlslFloatString(mat.e[13]) + ", " + GetGlslFloatString(mat.e[14]) + ", " + GetGlslFloatString(mat.e[15]) + ")";
             }
+            case VariableDataType::Sampler2D: break;
         }
         throw Exception("GetGlslConstantValue is missing return value for constant.GetDataType() = " + std::to_string(static_cast<size_t>(constant.GetDataType())) + ".");
     }
@@ -248,14 +255,14 @@ namespace Molten::Shader
     static void AppendToVector(std::vector<uint8_t>& output, const std::vector<uint8_t>& input)
     {
         std::copy(input.begin(), input.end(), std::back_inserter(output));
-    }
+    }*/
 
     bool VulkanGenerator::GenerateGlslTemplate(
         VulkanGenerator::GlslTemplates & glslTemplates,
         const std::vector<Visual::Script*>& scripts,
         Logger* logger)
     {
-        PushConstantOffsets pushConstantOffsets;
+        /*PushConstantOffsets pushConstantOffsets;
         PushConstantLocations pushConstantLocations;
         uint32_t nextByteOffset = 0;
 
@@ -318,7 +325,7 @@ namespace Molten::Shader
         pushConstantTemplate.blockByteCount = nextByteOffset;
         pushConstantTemplate.offsets = std::move(pushConstantOffsets);
         pushConstantTemplate.locations = std::move(pushConstantLocations);
-
+        */
         return true;
     }
 
@@ -327,7 +334,7 @@ namespace Molten::Shader
         const GlslStageTemplates* templateData,
         Logger* logger)
     {
-        struct Variable
+        /*struct Variable
         {
             Variable(const std::string& name, const Visual::Node* node, const Visual::Pin* pin) :
                 name(name), node(node), pin(pin)
@@ -484,24 +491,24 @@ namespace Molten::Shader
                     return {};
                 }
 
-                /*if (member->IsArray())
-                {
-                    const std::string name = "var_" + std::to_string(varIndex);
-                    AppendToVector(source, GetGlslVariableDataType(pins[0]->GetDataType()) + " " + name + "[" + std::to_string(pins.size()) + "];\n");              
-                    std::string fullName = blockName + "." + name;
-                        
-                    size_t arrayIndex = 0;
-                    for (auto* pin : pins)
-                    {
-                        const std::string fullIndexName = fullName + "[" + std::to_string(arrayIndex) + "]";
-                        visitedOutputPins.insert({ pin, std::make_shared<Variable>(fullIndexName, node, pin) });
-                        arrayIndex++;
-                    }
+               // if (member->IsArray())
+               // {
+               //     const std::string name = "var_" + std::to_string(varIndex);
+               //     AppendToVector(source, GetGlslVariableDataType(pins[0]->GetDataType()) + " " + name + "[" + std::to_string(pins.size()) + "];\n");              
+               //     std::string fullName = blockName + "." + name;
+               //         
+               //     size_t arrayIndex = 0;
+               //     for (auto* pin : pins)
+               //     {
+               //         const std::string fullIndexName = fullName + "[" + std::to_string(arrayIndex) + "]";
+               //         visitedOutputPins.insert({ pin, std::make_shared<Variable>(fullIndexName, node, pin) });
+               //         arrayIndex++;
+               //     }
 
-                    varIndex++;
-                }
-                else
-                {*/
+               //     varIndex++;
+               // }
+               // else
+               // {
                     for (auto* pin : pins)
                     {
                         const std::string name = "var_" + std::to_string(varIndex);
@@ -700,14 +707,16 @@ namespace Molten::Shader
 
         AppendToVector(source, "}\n");
 
-        return source;
+        return source;*/
+
+        return { };
     }
 
 #if defined(MOLTEN_ENABLE_GLSLANG)
     std::vector<uint8_t> VulkanGenerator::ConvertGlslToSpriV(const std::vector<uint8_t>& code, Type shaderType, Logger* logger)
     {
         // Helper function for getting the shader type.
-        static auto GetEShShaderType = [](const Shader::Type type) -> EShLanguage
+        /*static auto GetEShShaderType = [](const Shader::Type type) -> EShLanguage
         {
             switch (type)
             {
@@ -902,12 +911,13 @@ namespace Molten::Shader
         std::vector<uint8_t> output(outputSize);
         std::memcpy(output.data(), spirv.data(), outputSize);
 
-        return output;
+        return output;*/
+        return {};
     }
 #else
     std::vector<uint8_t> VulkanGenerator::ConvertGlslToSpriV(const std::vector<uint8_t>&, Type, Logger* logger)
     {
-        Logger::WriteError(logger, "Failed to convert GLSL code to SPIR-V. MOLTEN_ENABLE_GLSLANG is not enabled.");
+        //Logger::WriteError(logger, "Failed to convert GLSL code to SPIR-V. MOLTEN_ENABLE_GLSLANG is not enabled.");
         return {};
     }
 #endif

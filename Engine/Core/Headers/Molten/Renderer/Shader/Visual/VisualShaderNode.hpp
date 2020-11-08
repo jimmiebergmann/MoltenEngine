@@ -43,14 +43,19 @@ namespace Molten::Shader::Visual
     {
         Function,       ///< Built-in shader function.
         Operator,       ///< Operator node in local space.
-        PushConstant,   ///< Push constant node, constants set by the client.
+        PushConstants,   ///< Push constant node, constants set by the client.
         Uniform,        ///< Uniform node, single object being sent runtime from client.
 
-        Variable  ///< ???
+        Variable,  ///< ???
+
+        DescriptorBinding,  /// NEW ???
+        UniformBuffer       /// NEW
     };
 
 
-    /** Visual shader script node. This type is inherited by all script nodes.*/
+    /** Visual shader script node. This type is inherited by all script nodes.
+     *  A node contains 0 to N input or/an output pins.
+     */
     class MOLTEN_API Node
     {
 
@@ -122,6 +127,71 @@ namespace Molten::Shader::Visual
 
     };
 
+
+    /** Helper class for constructing a single pin node. */
+    template<template<typename> typename TPinType, typename TPinDataType>
+    class SinglePinNode : public Node
+    {
+
+        static_assert(PinTraits<TPinType>::isInputPin || PinTraits<TPinType>::isOutputPin,
+            "Provided TPinType is not of type InputPin or OutputPin");
+
+    public:
+
+        using Base = Node;
+        using PinType = TPinType<TPinDataType>;
+
+
+        SinglePinNode(Script& script);
+        virtual ~SinglePinNode() = default;
+
+
+        /** Get number of input pins. */
+        virtual size_t GetInputPinCount() const override;
+
+        /**  Get number of output pins.*/
+        virtual size_t GetOutputPinCount() const override;
+
+        /**
+         * Get input pin by index.
+         *
+         * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
+         */
+         /**@{*/
+        virtual Pin* GetInputPin(const size_t index = 0) override;
+        virtual const Pin* GetInputPin(const size_t index = 0) const override;
+        /**@}*/
+
+        /** Get all input pins, wrapped in a vector. */
+        /**@{*/
+        virtual std::vector<Pin*> GetInputPins() override;
+        virtual std::vector<const Pin*> GetInputPins() const override;
+        /**@}*/
+
+        /**
+         * Get output pin by index.
+         *
+         * @return Pointer of output pin at given index, nullptr if index is >= GetOutputPinCount().
+         */
+         /**@{*/
+        virtual Pin* GetOutputPin(const size_t index = 0) override;
+        virtual const Pin* GetOutputPin(const size_t index = 0) const override;
+        /**@}*/
+
+        /** Get all output pins, wrapped in a vector. */
+        /**@{*/
+        virtual std::vector<Pin*> GetOutputPins() override;
+        virtual std::vector<const Pin*> GetOutputPins() const override;
+        /**@}*/
+
+    protected:
+
+        PinType m_pin;
+
+    };
+
 }
+
+#include "Molten/Renderer/Shader/Visual/VisualShaderNode.inl"
 
 #endif

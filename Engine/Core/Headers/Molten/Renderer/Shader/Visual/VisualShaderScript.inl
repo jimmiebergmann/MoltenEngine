@@ -28,16 +28,16 @@ namespace Molten::Shader::Visual
 
     // Vertex shader script implementations.
     template<typename TDataType>
-    inline ConstantVariable<TDataType>* VertexScript::CreateConstantVariable(const TDataType& value)
+    inline ConstantVariable<TDataType>& VertexScript::CreateConstantVariable(const TDataType& value)
     {
         // CHECK TYPE.
         auto variable = new ConstantVariable<TDataType>(*this, value);
         m_allNodes.insert(variable);
-        return variable;
+        return *variable;
     }
 
     template<typename TFunction>
-    inline TFunction* VertexScript::CreateFunction()
+    inline TFunction& VertexScript::CreateFunction()
     {
         // CHECK FUNCTION TYPE.
         static_assert(std::is_base_of<FunctionBase, TFunction>::value,
@@ -45,32 +45,32 @@ namespace Molten::Shader::Visual
 
         auto func = new TFunction(*this);
         m_allNodes.insert(func);
-        return func;
+        return *func;
     }
 
     template<typename TOperator>
-    inline TOperator* VertexScript::CreateOperator()
+    inline TOperator& VertexScript::CreateOperator()
     {
         static_assert(Operators::Trait<TOperator>::Supported, "Passed operator node is not supported.");
 
         auto op = new TOperator(*this);
         m_allNodes.insert(op);
-        return op;
+        return *op;
     }
 
 
     // Fragment shader script implementations.
     template<typename TDataType>
-    inline ConstantVariable<TDataType>* FragmentScript::CreateConstantVariable(const TDataType& value)
+    inline ConstantVariable<TDataType>& FragmentScript::CreateConstantVariable(const TDataType& value)
     {
         // CHECK TYPE.
         auto variable = new ConstantVariable<TDataType>(*this, value);
         m_allNodes.insert(variable);
-        return variable;
+        return *variable;
     }
 
     template<typename TFunction>
-    inline TFunction* FragmentScript::CreateFunction()
+    inline TFunction& FragmentScript::CreateFunction()
     {
         // CHECK FUNCTION TYPE.
         static_assert(std::is_base_of<FunctionBase, TFunction>::value,
@@ -78,17 +78,17 @@ namespace Molten::Shader::Visual
 
         auto func = new TFunction(*this);
         m_allNodes.insert(func);
-        return func;
+        return *func;
     }
 
     template<typename TOperator>
-    inline TOperator* FragmentScript::CreateOperator()
+    inline TOperator& FragmentScript::CreateOperator()
     {
         static_assert(Operators::Trait<TOperator>::Supported, "Passed operator node is not supported.");
 
         auto op = new TOperator(*this);
         m_allNodes.insert(op);
-        return op;
+        return *op;
     }
 
 }

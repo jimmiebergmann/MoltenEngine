@@ -29,7 +29,7 @@
 namespace Molten::Shader::Visual
 {
 
-    TEST(Shader, VisualScript_Variable)
+    /*TEST(Shader, VisualScript_Variable)
     {
         FragmentScript script;
         Structure<InputVariable> vertexInput(script);
@@ -73,6 +73,6 @@ namespace Molten::Shader::Visual
         // What about samplers?
         // Sampler2D,
         // Sampler3D
-    }
+    }*/
 
 }

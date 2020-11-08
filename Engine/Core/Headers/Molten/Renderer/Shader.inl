@@ -96,5 +96,12 @@ namespace Molten::Shader
         inline static const size_t dataSize = 64;
         inline static const size_t paddedDataSize = 64;
     };
+    template<> struct VariableTrait<Sampler2DHandle>
+    {
+        inline static const bool supported = true;
+        inline static const VariableDataType dataType = VariableDataType::Sampler2D;
+    };
+
+    
 
 }

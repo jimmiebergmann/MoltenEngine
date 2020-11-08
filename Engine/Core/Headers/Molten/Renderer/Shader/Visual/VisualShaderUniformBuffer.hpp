@@ -23,37 +23,37 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANTYPES_HPP
-#define MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANTYPES_HPP
+#ifndef MOLTEN_CORE_RENDERER_SHADER_VISUAL_VISUALSHADERUNIFORMBUFFER_HPP
+#define MOLTEN_CORE_RENDERER_SHADER_VISUAL_VISUALSHADERUNIFORMBUFFER_HPP
 
-#include "Molten/Core.hpp"
+#include "Molten/Renderer/Shader/Visual/VisualShaderNode.hpp"
 
-#if defined(MOLTEN_ENABLE_VULKAN)
-#include "Molten/Renderer/Vulkan/VulkanHeaders.hpp"
-#include <vector>
-#include <string>
-
-MOLTEN_UNSCOPED_ENUM_BEGIN
-
-namespace Molten::Vulkan
+namespace Molten::Shader::Visual
 {
 
-    using DescriptorSetLayouts = std::vector<VkDescriptorSetLayout>;
-    using DescriptorSets = std::vector<VkDescriptorSet>;
-    using Fences = std::vector<VkFence>;
-    using FrameBuffers = std::vector<VkFramebuffer>;
-    using Images = std::vector<VkImage>;
-    using ImageViews = std::vector<VkImageView>;
-    using PresentModes = std::vector<VkPresentModeKHR>;
-    using QueueFamilyProperties = std::vector<VkQueueFamilyProperties>;
-    using Semaphores = std::vector<VkSemaphore>;
-    using ShaderModules = std::vector<VkShaderModule>;
-    using SurfaceFormats = std::vector<VkSurfaceFormatKHR>;
+
+    template<typename ... TAllowedDataTypes>
+    class UniformBuffer : public Node
+    {
+
+    public:
+
+        /** Constructor. */
+        UniformBuffer(Script& script);
+
+        /** Get type of node. */
+        NodeType GetType() const override;
+
+    private:
+
+    };
+
+
+    using FragmentUniformBuffer = UniformBuffer<bool, int32_t, float, Vector2f32, Vector3f32, Vector4f32, Matrix4x4f32>;
+    using VertexUniformBuffer = UniformBuffer<bool, int32_t, float, Vector2f32, Vector3f32, Vector4f32, Matrix4x4f32>;
 
 }
 
-MOLTEN_UNSCOPED_ENUM_END
-
-#endif
+#include "Molten/Renderer/Shader/Visual/VisualShaderUniformBuffer.inl"
 
 #endif

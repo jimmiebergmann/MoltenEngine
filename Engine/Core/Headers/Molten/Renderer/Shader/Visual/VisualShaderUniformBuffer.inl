@@ -23,47 +23,21 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_SHADER_VISUAL_VISUALSHADERPUSHCONSTANT_HPP
-#define MOLTEN_CORE_RENDERER_SHADER_VISUAL_VISUALSHADERPUSHCONSTANT_HPP
-
-#include "Molten/Renderer/Shader/Visual/VisualShaderStructure.hpp"
-#include <set>
+#include "Molten/Utility/Template.hpp"
 
 namespace Molten::Shader::Visual
 {
 
+    // Uniform buffer implementations.
+    template<typename ... TAllowedDataTypes>
+    inline UniformBuffer<TAllowedDataTypes...>::UniformBuffer(Script& script) :
+        Node(script)
+    {}
 
-    /** 
-     * Meta data related to push constant interface members.
-     * The only available meta data for push constant members is IDs.
-     */
-    class MOLTEN_API PushConstantMetaData
+    template<typename ... TAllowedDataTypes>
+    inline NodeType UniformBuffer<TAllowedDataTypes...>::GetType() const
     {
-
-    public:
-
-        explicit PushConstantMetaData(const uint32_t id);
-
-        uint32_t GetId() const;
-
-    private:
-
-        /** Copy and move operations are not allowed. */
-        /**@{*/
-        PushConstantMetaData(const PushConstantMetaData& copy) = delete;
-        PushConstantMetaData(const PushConstantMetaData&& move) = delete;
-        PushConstantMetaData& operator =(const PushConstantMetaData& copy) = delete;
-        PushConstantMetaData& operator =(const PushConstantMetaData&& move) = delete;
-        /**@*/
-
-        const uint32_t m_id;
-
-    };
-
-
-    /** Push constant interface type. */
-    using PushConstantInterface = Structure<InputVariable, PushConstantMetaData>;
+        return NodeType::UniformBuffer;
+    }
 
 }
-
-#endif

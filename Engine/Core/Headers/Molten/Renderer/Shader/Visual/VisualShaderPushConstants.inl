@@ -23,37 +23,19 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANTYPES_HPP
-#define MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANTYPES_HPP
-
-#include "Molten/Core.hpp"
-
-#if defined(MOLTEN_ENABLE_VULKAN)
-#include "Molten/Renderer/Vulkan/VulkanHeaders.hpp"
-#include <vector>
-#include <string>
-
-MOLTEN_UNSCOPED_ENUM_BEGIN
-
-namespace Molten::Vulkan
+namespace Molten::Shader::Visual
 {
 
-    using DescriptorSetLayouts = std::vector<VkDescriptorSetLayout>;
-    using DescriptorSets = std::vector<VkDescriptorSet>;
-    using Fences = std::vector<VkFence>;
-    using FrameBuffers = std::vector<VkFramebuffer>;
-    using Images = std::vector<VkImage>;
-    using ImageViews = std::vector<VkImageView>;
-    using PresentModes = std::vector<VkPresentModeKHR>;
-    using QueueFamilyProperties = std::vector<VkQueueFamilyProperties>;
-    using Semaphores = std::vector<VkSemaphore>;
-    using ShaderModules = std::vector<VkShaderModule>;
-    using SurfaceFormats = std::vector<VkSurfaceFormatKHR>;
+    // Push constants implementations.
+    template<typename ... TAllowedDataTypes>
+    inline PushConstants<TAllowedDataTypes...>::PushConstants(Script& script) :
+        PushConstantsStructure(script)
+    {}
+
+    template<typename ... TAllowedDataTypes>
+    inline NodeType PushConstants<TAllowedDataTypes...>::GetType() const
+    {
+        return NodeType::PushConstants;
+    }
 
 }
-
-MOLTEN_UNSCOPED_ENUM_END
-
-#endif
-
-#endif

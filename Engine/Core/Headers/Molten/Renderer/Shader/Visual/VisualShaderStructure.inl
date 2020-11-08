@@ -24,287 +24,325 @@
 */
 
 #include <type_traits>
+#include <algorithm>
 
 namespace Molten::Shader::Visual
 {
 
-    // Structure base implementations.
-    template<typename TMetaData>
-    template<typename ... TMetaDataParams>
-    inline StructureMetaBase<TMetaData>::StructureMetaBase(TMetaDataParams ... metaDataParameters) :
-        TMetaData(metaDataParameters...)
-    {}
-
-
     // Structure implementations.
-    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType, 
-        typename TVariableMetaData, typename TMetaData>
-    template<typename ... TMetaDataParams>
-    inline Structure<TVariableType, TVariableMetaData, TMetaData>::Structure(Script& script, TMetaDataParams ... metaDataParameters) :
-        StructureMetaBase<TMetaData>(metaDataParameters...),
+    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline Structure<TPinType, TAllowedDataTypes...>::Structure(Script& script) :
+        Node(script),
         m_script(script),
         m_sizeOf(0)
-    {}
-
-    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType,
-        typename TVariableMetaData, typename TMetaData>
-    inline Structure<TVariableType, TVariableMetaData, TMetaData>::~Structure()
     {
-        for (auto& member : m_members)
+    }
+
+    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline Structure<TPinType, TAllowedDataTypes...>::~Structure()
+    {
+        RemoveAllPins();
+    }
+
+    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline typename Structure<TPinType, TAllowedDataTypes...>::Iterator
+        Structure<TPinType, TAllowedDataTypes...>::begin()
+    {
+        return m_pinWrappers.begin();
+    }
+    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline typename Structure<TPinType, TAllowedDataTypes...>::ConstIterator
+        Structure<TPinType, TAllowedDataTypes...>::begin() const
+    {
+        return m_pinWrappers.begin();
+    }
+
+    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline typename Structure<TPinType, TAllowedDataTypes...>::Iterator
+        Structure<TPinType, TAllowedDataTypes...>::end()
+    {
+        return m_pinWrappers.end();
+    }
+    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline typename Structure<TPinType, TAllowedDataTypes...>::ConstIterator
+        Structure<TPinType, TAllowedDataTypes...>::end() const
+    {
+        return m_pinWrappers.end();
+    }
+
+    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline size_t Structure<TPinType, TAllowedDataTypes...>::GetInputPinCount() const
+    {
+        if constexpr (PinTraits<TPinType>::isInputPin == true)
         {
-            delete member;
+            return m_pinWrappers.size();
+        }
+        else
+        {
+            return 0;
         }
     }
 
-    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType,
-        typename TVariableMetaData, typename TMetaData>
-    inline typename Structure<TVariableType, TVariableMetaData, TMetaData>::VariableContainer::iterator 
-        Structure<TVariableType, TVariableMetaData, TMetaData>::begin()
+    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline size_t Structure<TPinType, TAllowedDataTypes...>::GetOutputPinCount() const
     {
-        return m_members.begin();
-    }
-    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType,
-        typename TVariableMetaData, typename TMetaData>
-    inline typename Structure<TVariableType, TVariableMetaData, TMetaData>::VariableContainer::const_iterator
-        Structure<TVariableType, TVariableMetaData, TMetaData>::begin() const
-    {
-        return m_members.begin();
+        if constexpr (PinTraits<TPinType>::isOutputPin == true)
+        {
+            return m_pinWrappers.size();
+        }
+        else
+        {
+            return 0;
+        }
     }
 
-    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType,
-        typename TVariableMetaData, typename TMetaData>
-    inline typename Structure<TVariableType, TVariableMetaData, TMetaData>::VariableContainer::iterator 
-        Structure<TVariableType, TVariableMetaData, TMetaData>::end()
+    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline Pin* Structure<TPinType, TAllowedDataTypes...>::GetInputPin(const size_t index)
     {
-        return m_members.end();
+        if constexpr (PinTraits<TPinType>::isInputPin == true)
+        {
+            if (index >= m_pinWrappers.size())
+            {
+                return nullptr;
+            }
+            return m_pinWrappers[index].pin;
+        }
+        else
+        {
+            return nullptr;
+        }
     }
-    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType,
-        typename TVariableMetaData, typename TMetaData>
-    inline typename Structure<TVariableType, TVariableMetaData, TMetaData>::VariableContainer::const_iterator 
-        Structure<TVariableType, TVariableMetaData, TMetaData>::end() const
+    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline const Pin* Structure<TPinType, TAllowedDataTypes...>::GetInputPin(const size_t index) const
     {
-        return m_members.end();
+        if constexpr (PinTraits<TPinType>::isInputPin == true)
+        {
+            if (index >= m_pinWrappers.size())
+            {
+                return nullptr;
+            }
+            return m_pinWrappers[index].pin;
+        }
+        else
+        {
+            return nullptr;
+        }
     }
 
-    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType,
-        typename TVariableMetaData, typename TMetaData>
-    template<typename TDataType, typename ... TMetaDataParams>
-    inline typename Structure<TVariableType, TVariableMetaData, TMetaData>::template VariableType<TDataType>*
-        Structure<TVariableType, TVariableMetaData, TMetaData>::AddMember(TMetaDataParams ... metaData)
+    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    template<typename TDataType>
+    inline InputPin<TDataType>* Structure<TPinType, TAllowedDataTypes...>::GetInputPin(const size_t index)
     {
-        auto* member = new VariableType<TDataType>(m_script, metaData...);
-        m_members.push_back(member);
-        m_sizeOf += member->GetSizeOf();
-        return member;
+        if constexpr (PinTraits<TPinType>::isInputPin == true)
+        {
+            return static_cast<InputPin<TDataType>*>(GetInputPin(index));
+        }
+        else
+        {
+            return nullptr;
+        }
+    }
+    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    template<typename TDataType>
+    inline const InputPin<TDataType>* Structure<TPinType, TAllowedDataTypes...>::GetInputPin(const size_t index) const
+    {
+        if constexpr (PinTraits<TPinType>::isInputPin == true)
+        {
+            return static_cast<const InputPin<TDataType>*>(GetInputPin(index));
+        }
+        else
+        {
+            return nullptr;
+        }
     }
 
-    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType,
-        typename TVariableMetaData, typename TMetaData>
-    inline void Structure<TVariableType, TVariableMetaData, TMetaData>::RemoveMember(const size_t index)
+    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline std::vector<Pin*> Structure<TPinType, TAllowedDataTypes...>::GetInputPins()
     {
-        if (index >= m_members.size())
+        if constexpr (PinTraits<TPinType>::isInputPin == true)
+        {
+            return CreatePinVector<Pin>();
+        }
+        else
+        {
+            return {};
+        }
+    }
+    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline std::vector<const Pin*> Structure<TPinType, TAllowedDataTypes...>::GetInputPins() const
+    {
+        if constexpr (PinTraits<TPinType>::isInputPin == true)
+        {
+            return CreatePinVector<const Pin>();
+        }
+        else
+        {
+            return {};
+        }
+    }
+
+    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline Pin* Structure<TPinType, TAllowedDataTypes...>::GetOutputPin(const size_t index)
+    {
+        if constexpr (PinTraits<TPinType>::isOutputPin == true)
+        {
+            if (index >= m_pinWrappers.size())
+            {
+                return nullptr;
+            }
+            return m_pinWrappers[index].pin;
+        }
+        else
+        {
+            return nullptr;
+        }
+    }
+    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline const Pin* Structure<TPinType, TAllowedDataTypes...>::GetOutputPin(const size_t index) const
+    {
+        if constexpr (PinTraits<TPinType>::isOutputPin == true)
+        {
+            if (index >= m_pinWrappers.size())
+            {
+                return nullptr;
+            }
+            return m_pinWrappers[index].pin;
+        }
+        else
+        {
+            return nullptr;
+        }
+    }
+
+    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    template<typename TDataType>
+    inline OutputPin<TDataType>* Structure<TPinType, TAllowedDataTypes...>::GetOutputPin(const size_t index)
+    {
+        if constexpr (PinTraits<TPinType>::isOutputPin == true)
+        {
+            return static_cast<OutputPin<TDataType>*>(GetOutputPin(index));
+        }
+        else
+        {
+            return nullptr;
+        }
+    }
+    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    template<typename TDataType>
+    inline const OutputPin<TDataType>* Structure<TPinType, TAllowedDataTypes...>::GetOutputPin(const size_t index) const
+    {
+        if constexpr (PinTraits<TPinType>::isOutputPin == true)
+        {
+            return static_cast<const OutputPin<TDataType>*>(GetOutputPin(index));
+        }
+        else
+        {
+            return nullptr;
+        }
+    }
+
+    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline std::vector<Pin*> Structure<TPinType, TAllowedDataTypes...>::GetOutputPins()
+    {
+        if constexpr (PinTraits<TPinType>::isOutputPin == true)
+        {
+            return CreatePinVector<Pin>();
+        }
+        else
+        {
+            return {};
+        }
+    }
+    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline std::vector<const Pin*> Structure<TPinType, TAllowedDataTypes...>::GetOutputPins() const
+    {
+        if constexpr (PinTraits<TPinType>::isOutputPin == true)
+        {
+            return CreatePinVector<const Pin>();
+        }
+        else
+        {
+            return {};
+        }
+    }
+
+    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    template<typename TDataType>
+    inline typename Structure<TPinType, TAllowedDataTypes...>::template PinType<TDataType>&
+        Structure<TPinType, TAllowedDataTypes...>::AddPin()
+    {
+        static_assert(TemplateArgumentsContains<TDataType, TAllowedDataTypes...>(),
+            "Provided TDataType is not allowed for this structure.");
+
+        auto pin = new PinType<TDataType>(*this);
+        m_pinWrappers.push_back({ pin, sizeof(TDataType) });
+        m_sizeOf += sizeof(TDataType);
+        return *pin;
+    }
+
+    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline void Structure<TPinType, TAllowedDataTypes...>::RemovePin(const size_t index)
+    {
+        if (index >= m_pinWrappers.size())
         {
             return;
         }
-        auto it = m_members.begin() + index;
-        auto* variablebase = *it;
-        m_sizeOf -= variablebase->GetSizeOf();
-        delete variablebase;
-        m_members.erase(it);
+
+        auto it = m_pinWrappers.begin() + index;
+        m_sizeOf -= it->dataTypeSize;
+        delete it->pin;
+        m_pinWrappers.erase(it);
+    }
+    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline void Structure<TPinType, TAllowedDataTypes...>::RemovePin(const Iterator it)
+    {
+        m_sizeOf -= it->dataTypeSize;
+        delete it->pin;
+        m_pinWrappers.erase(it);
+    }
+    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline void Structure<TPinType, TAllowedDataTypes...>::RemovePin(const ConstIterator it)
+    {
+        m_sizeOf -= it->dataTypeSize;
+        delete it->pin;
+        m_pinWrappers.erase(it);
     }
 
-    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType,
-        typename TVariableMetaData, typename TMetaData>
-    inline void Structure<TVariableType, TVariableMetaData, TMetaData>::RemoveAllMembers()
+    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline void Structure<TPinType, TAllowedDataTypes...>::RemoveAllPins()
     {
-        for (auto& member : m_members)
+        for (auto& pinWrapper : m_pinWrappers)
         {
-            delete member;
+            delete pinWrapper.pin;
         }
-        m_members.clear();
+        m_pinWrappers.clear();
         m_sizeOf = 0;
     }
 
-    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType,
-        typename TVariableMetaData, typename TMetaData>
-    inline size_t Structure<TVariableType, TVariableMetaData, TMetaData>::GetMemberCount() const
+    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline size_t Structure<TPinType, TAllowedDataTypes...>::GetPinCount() const
     {
-        return m_members.size();
+        return m_pinWrappers.size();
     }
 
-    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType,
-        typename TVariableMetaData, typename TMetaData>
-    template<typename TDataType>
-    inline typename Structure<TVariableType, TVariableMetaData, TMetaData>::template VariableType<TDataType>*
-        Structure<TVariableType, TVariableMetaData, TMetaData>::GetMember(const size_t index)
-    {
-        return static_cast<VariableType<TDataType>*>(GetMember(index));
-    }
-    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType,
-        typename TVariableMetaData, typename TMetaData>
-    template<typename TDataType>
-    inline const typename Structure<TVariableType, TVariableMetaData, TMetaData>::template VariableType<TDataType>*
-        Structure<TVariableType, TVariableMetaData, TMetaData>::GetMember(const size_t index) const
-    {
-        return static_cast<const VariableType<TDataType>*>(GetMember(index));
-    }
-    
-    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType,
-        typename TVariableMetaData, typename TMetaData>
-    inline typename Structure<TVariableType, TVariableMetaData, TMetaData>::VariableBaseType*
-        Structure<TVariableType, TVariableMetaData, TMetaData>::GetMember(const size_t index)
-    {
-        if (index >= m_members.size())
-        {
-            return nullptr;
-        }
-        return m_members[index];
-    }
-
-    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType,
-        typename TVariableMetaData, typename TMetaData>
-    inline const typename Structure<TVariableType, TVariableMetaData, TMetaData>::VariableBaseType*
-        Structure<TVariableType, TVariableMetaData, TMetaData>::GetMember(const size_t index) const
-    {
-        if (index >= m_members.size())
-        {
-            return nullptr;
-        }
-        return m_members[index];
-    }
-
-    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType,
-        typename TVariableMetaData, typename TMetaData>
-    inline typename Structure<TVariableType, TVariableMetaData, TMetaData>::VariableBaseType*
-        Structure<TVariableType, TVariableMetaData, TMetaData>::operator[](const size_t index)
-    {
-        return GetMember(index);
-    }
-    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType,
-        typename TVariableMetaData, typename TMetaData>
-    inline const typename Structure<TVariableType, TVariableMetaData, TMetaData>::VariableBaseType*
-        Structure<TVariableType, TVariableMetaData, TMetaData>::operator[](const size_t index) const
-    {
-        return GetMember(index);
-    }
-
-    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType,
-        typename TVariableMetaData, typename TMetaData>
-    inline typename Structure<TVariableType, TVariableMetaData, TMetaData>::VariableContainer
-        Structure<TVariableType, TVariableMetaData, TMetaData>::GetMembers()
-    {
-        return { m_members.begin(), m_members.end() };
-    }
-
-    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType,
-        typename TVariableMetaData, typename TMetaData>
-    inline typename Structure<TVariableType, TVariableMetaData, TMetaData>::ConstVariableContainer
-        Structure<TVariableType, TVariableMetaData, TMetaData>::GetMembers() const
-    {
-        return { m_members.begin(), m_members.end() };
-    }
-
-    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType,
-        typename TVariableMetaData, typename TMetaData>
-    inline size_t Structure<TVariableType, TVariableMetaData, TMetaData>::GetSizeOf() const
+    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline size_t Structure<TPinType, TAllowedDataTypes...>::GetSizeOf() const
     {
         return m_sizeOf;
     }
 
-    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType,
-        typename TVariableMetaData, typename TMetaData>
-    template<template<typename TOtherVariableTypeDataType, typename TOtherVariableTypeMetaData> typename TOtherVariableType,
-        typename TOtherVariableMetaData, typename TOtherMetaData>
-    bool Structure<TVariableType, TVariableMetaData, TMetaData>::
-        CheckCompability(const Structure<TOtherVariableType, TOtherVariableMetaData, TOtherMetaData>& other) const
+    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    template<typename T>
+    inline std::vector<T*> Structure<TPinType, TAllowedDataTypes...>::CreatePinVector() const
     {
-        
-        return Private::CheckStructureCompability(m_members, other.m_members);
-    }
-
-}
-
-namespace Molten::Shader::Visual::Private
-{
-
-    template<>
-    inline bool CheckStructureCompability(
-        const Structure<InputVariable>::VariableContainer& lhs, 
-        const Structure<OutputVariable>::VariableContainer& rhs)
-    {
-        if (lhs.size() != rhs.size())
-        {
-            return false;
-        }
-
-        for (size_t i = 0; i < lhs.size(); i++)
-        {
-            auto* memberA = lhs[i];
-            auto* memberB = rhs[i];
-
-            if (memberA->GetOutputPin()->GetDataType() != memberB->GetInputPin()->GetDataType())
+        std::vector<T*> pins(m_pinWrappers.size(), nullptr);
+        std::transform(m_pinWrappers.begin(), m_pinWrappers.end(), pins.begin(),
+            [](auto& pinWrapper) -> T*
             {
-                return false;
+                return pinWrapper.pin;
             }
-        }
-        
-        return true;
-    }
-
-    template<>
-    inline bool CheckStructureCompability(
-        const Structure<OutputVariable>::VariableContainer& lhs,
-        const Structure<InputVariable>::VariableContainer& rhs)
-    {
-        return CheckStructureCompability(rhs, lhs);
-    }
-
-    template<>
-    inline bool CheckStructureCompability(
-        const Structure<InputVariable>::VariableContainer& lhs,
-        const Structure<InputVariable>::VariableContainer& rhs)
-    {
-        if (lhs.size() != rhs.size())
-        {
-            return false;
-        }
-
-        for (size_t i = 0; i < lhs.size(); i++)
-        {
-            auto* memberA = lhs[i];
-            auto* memberB = rhs[i];
-
-            if (memberA->GetOutputPin()->GetDataType() != memberB->GetOutputPin()->GetDataType())
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    template<>
-    inline bool CheckStructureCompability(
-        const Structure<OutputVariable>::VariableContainer& lhs,
-        const Structure<OutputVariable>::VariableContainer& rhs)
-    {
-        if (lhs.size() != rhs.size())
-        {
-            return false;
-        }
-
-        for (size_t i = 0; i < lhs.size(); i++)
-        {
-            auto* memberA = lhs[i];
-            auto* memberB = rhs[i];
-
-            if (memberA->GetInputPin()->GetDataType() != memberB->GetInputPin()->GetDataType())
-            {
-                return false;
-            }
-        }
-
-        return true;
+        );
+        return pins;
     }
 
 }

@@ -26,9 +26,10 @@
 #ifndef MOLTEN_CORE_RENDERER_SHADER_VISUAL_VISUALSHADERSCRIPT_HPP
 #define MOLTEN_CORE_RENDERER_SHADER_VISUAL_VISUALSHADERSCRIPT_HPP
 
+#include "Molten/Renderer/Shader/Visual/VisualShaderDescriptorSet.hpp"
 #include "Molten/Renderer/Shader/Visual/VisualShaderStructure.hpp"
 #include "Molten/Renderer/Shader/Visual/VisualShaderUniform.hpp"
-#include "Molten/Renderer/Shader/Visual/VisualShaderPushConstant.hpp"
+#include "Molten/Renderer/Shader/Visual/VisualShaderPushConstants.hpp"
 #include "Molten/Renderer/Shader/Visual/VisualShaderFunctions.hpp"
 #include "Molten/Renderer/Shader/Visual/VisualShaderOperators.hpp"
 #include "Molten/Logger.hpp"
@@ -38,14 +39,14 @@
 namespace Molten::Shader::Visual
 {
 
-    using InputInterface = InputStructure; ///< Input interface structure block.
-    using OutputInterface = OutputStructure; ///< Output interface structure block.
+    //using InputInterface = InputStructure; ///< Input interface structure block.
+    //using OutputInterface = OutputStructure; ///< Output interface structure block.
 
-    /**
-     * Type definition of vertex output variable node.
-     * This type is only available and used by the vertex shader. 
-     */
-    using VertexOutputVariable = OutputVariable<Vector4f32>;
+    ///**
+    // * Type definition of vertex output variable node.
+    // * This type is only available and used by the vertex shader. 
+    // */
+    //using VertexOutputVariable = OutputVariable<Vector4f32>;
     
 
     /** Visual shader script class, used for generating shaders via visual node based system. */
@@ -66,28 +67,10 @@ namespace Molten::Shader::Visual
         /** Get number of nodes in this script. */
         virtual size_t GetNodeCount() const = 0;
 
-        /** Get all nodes of this script. */
+        /** Get all global nodes of this script. */
         /**@{*/
-        virtual std::vector<Node*> GetAllNodes() = 0;
-        virtual std::vector<const Node*> GetAllNodes() const = 0;
-        /**@}*/
-
-        /**
-         * Get interface block for input variables.
-         * Members of this block is sent from the previous shader stage or from the vertex buffer.
-         */
-        /**@{*/
-        virtual InputInterface& GetInputInterface() = 0;
-        virtual const InputInterface& GetInputInterface() const = 0;
-        /**@}*/
-
-        /**
-         * Get interface block for output variables.
-         * Data in this block is sent to the next shader stage or to the framebuffer.
-         */
-        /**@{*/
-        virtual OutputInterface& GetOutputInterface() = 0;
-        virtual const OutputInterface& GetOutputInterface() const = 0;
+        virtual std::vector<Node*> GetNodes() = 0;
+        virtual std::vector<const Node*> GetNodes() const = 0;
         /**@}*/
 
         /**
@@ -95,26 +78,65 @@ namespace Molten::Shader::Visual
          * This interface contains 0 or more uniform interfaces. UniformInterfaces is simply a container.
          * Data in these blocks are sent from client to any shader stage.
          */
-        /**@{*/
-        virtual UniformInterfaces& GetUniformInterfaces() = 0;
-        virtual const UniformInterfaces& GetUniformInterfaces() const = 0;
+         /**@{*/
+        //virtual DescriptorSets& GetDescriptorSets() = 0;
+        //virtual const DescriptorSets& GeDescriptorSets() const = 0;
         /**@}*/
 
         /**
-         * Get interface block for push constant variables.
-         * Data in this block is sent from client to any shader stage at runtime.
+         * Get interface block for input variables.
+         * Members of this block is sent from the previous shader stage or from the vertex buffer.
          */
-         /**@{*/
-        virtual PushConstantInterface& GetPushConstantInterface() = 0;
-        virtual const PushConstantInterface& GetPushConstantInterface() const = 0;
-        /**@}*/
-
-        /** Get vertex output variable. */
         /**@{*/
-        virtual VertexOutputVariable* GetVertexOutputVariable();
-        virtual const VertexOutputVariable* GetVertexOutputVariable() const;
+        //virtual InputInterface& GetInputInterface() = 0;
+        //virtual const InputInterface& GetInputInterface() const = 0;
+        ///**@}*/
+
+        ///**
+        // * Get interface block for output variables.
+        // * Data in this block is sent to the next shader stage or to the framebuffer.
+        // */
+        ///**@{*/
+        //virtual OutputInterface& GetOutputInterface() = 0;
+        //virtual const OutputInterface& GetOutputInterface() const = 0;
+        ///**@}*/
+
+        ///**
+        // * Get interface blocks for uniform variables.
+        // * This interface contains 0 or more uniform interfaces. UniformInterfaces is simply a container.
+        // * Data in these blocks are sent from client to any shader stage.
+        // */
+        ///**@{*/
+        //virtual UniformInterfaces& GetUniformInterfaces() = 0;
+        //virtual const UniformInterfaces& GetUniformInterfaces() const = 0;
+        ///**@}*/
+
+        ///**
+        // * Get interface block for push constant variables.
+        // * Data in this block is sent from client to any shader stage at runtime.
+        // */
+        // /**@{*/
+        //virtual PushConstantInterface& GetPushConstantInterface() = 0;
+        //virtual const PushConstantInterface& GetPushConstantInterface() const = 0;
+        ///**@}*/
+
+        ///** Get vertex output variable. */
+        ///**@{*/
+        //virtual VertexOutputVariable* GetVertexOutputVariable();
+        //virtual const VertexOutputVariable* GetVertexOutputVariable() const;
+        ///**@}*/
+
+        /** Get descriptor sets container. */
+        /**@{*/
+        virtual DescriptorSetsBase& GetDescriptorSetsBase() = 0;
+        virtual const DescriptorSetsBase& GetDescriptorSetsBase() const = 0;
         /**@}*/
 
+        /** Get push constants base container. */
+        /**@{*/
+        virtual PushConstantsBase& GetPushConstantsBase() = 0;
+        virtual const PushConstantsBase& GetPushConstantsBase() const = 0;
+        /**@}*/
     };
 
 
@@ -136,7 +158,7 @@ namespace Molten::Shader::Visual
          * @tparam TDataType Data type of variable node to create.
          */
         template<typename TDataType>
-        ConstantVariable<TDataType>* CreateConstantVariable(const TDataType& value = VariableTrait<TDataType>::DefaultValue);
+        ConstantVariable<TDataType>& CreateConstantVariable(const TDataType& value = VariableTrait<TDataType>::DefaultValue);
 
         /**
          * Create new function node and append it to this script.
@@ -144,7 +166,7 @@ namespace Molten::Shader::Visual
          * @tparam TFunction Function node object to create and data types for parameters.
          */
         template<typename TFunction>
-        TFunction* CreateFunction();
+        TFunction& CreateFunction();
 
         /**
          * Create new operator node and append it to the shader script.
@@ -152,21 +174,21 @@ namespace Molten::Shader::Visual
          * @tparam TOperator Operator node object to create.
          */
         template<typename TOperator>
-        TOperator* CreateOperator();
+        TOperator& CreateOperator();
 
         /** Get type of shader script. */
-        virtual Type GetType() const override;
+        Type GetType() const override;
 
         /** Removes node from script, disconnects all connections of node and deallocates the pointer. */
-        virtual void DestroyNode(Node* node) override;
+        void DestroyNode(Node* node) override;
 
         /** Get number of nodes in this script. */
-        virtual size_t GetNodeCount() const override;
+        size_t GetNodeCount() const override;
 
-        /** Get all nodes of this script. */
+        /** Get all global nodes of this script. */
         /**@{*/
-        virtual std::vector<Node*> GetAllNodes() override;
-        virtual std::vector<const Node*> GetAllNodes() const override;
+        std::vector<Node*> GetNodes() override;
+        std::vector<const Node*> GetNodes() const override;
         /**@}*/
 
         /**
@@ -174,52 +196,74 @@ namespace Molten::Shader::Visual
          * Members of this block is sent from the previous shader stage or from the vertex buffer.
          */
          /**@{*/
-        virtual InputInterface& GetInputInterface() override;
-        virtual const InputInterface& GetInputInterface() const override;
+        //virtual InputInterface& GetInputInterface() override;
+        //virtual const InputInterface& GetInputInterface() const override;
+        ///**@}*/
+
+        ///**
+        // * Get interface block for output variables.
+        // * Data in this block is sent to the next shader stage or to the framebuffer.
+        // */
+        // /**@{*/
+        //virtual OutputInterface& GetOutputInterface() override;
+        //virtual const OutputInterface& GetOutputInterface() const override;
+        ///**@}*/
+
+        ///**
+        // * Get interface blocks for uniform variables.
+        // * This interface contains 0 or more uniform interfaces. UniformInterfaces is simply a container.
+        // * Data in these blocks are sent from client to any shader stage.
+        // */
+        ///**@{*/
+        //virtual UniformInterfaces& GetUniformInterfaces() override;
+        //virtual const UniformInterfaces& GetUniformInterfaces() const override;
+        ///**@}*/
+
+        ///**
+        // * Get interface block for push constant variables.
+        // * Data in this block is sent from client to any shader stage at runtime.
+        // */
+        // /**@{*/
+        //virtual PushConstantInterface& GetPushConstantInterface() override;
+        //virtual const PushConstantInterface& GetPushConstantInterface() const override;
+        ///**@}*/
+
+        ///** Get vertex output variable. */
+        ///**@{*/
+        //virtual VertexOutputVariable* GetVertexOutputVariable() override;
+        //virtual const VertexOutputVariable* GetVertexOutputVariable() const override;
         /**@}*/
 
-        /**
-         * Get interface block for output variables.
-         * Data in this block is sent to the next shader stage or to the framebuffer.
-         */
-         /**@{*/
-        virtual OutputInterface& GetOutputInterface() override;
-        virtual const OutputInterface& GetOutputInterface() const override;
-        /**@}*/
 
-        /**
-         * Get interface blocks for uniform variables.
-         * This interface contains 0 or more uniform interfaces. UniformInterfaces is simply a container.
-         * Data in these blocks are sent from client to any shader stage.
-         */
+        /** Get descriptor sets container. */
         /**@{*/
-        virtual UniformInterfaces& GetUniformInterfaces() override;
-        virtual const UniformInterfaces& GetUniformInterfaces() const override;
+        VertexDescriptorSets& GetDescriptorSets();
+        const VertexDescriptorSets& GetDescriptorSets() const;
+        DescriptorSetsBase& GetDescriptorSetsBase() override;
+        const DescriptorSetsBase& GetDescriptorSetsBase() const override;
         /**@}*/
 
-        /**
-         * Get interface block for push constant variables.
-         * Data in this block is sent from client to any shader stage at runtime.
-         */
-         /**@{*/
-        virtual PushConstantInterface& GetPushConstantInterface() override;
-        virtual const PushConstantInterface& GetPushConstantInterface() const override;
-        /**@}*/
-
-        /** Get vertex output variable. */
+        /** Get push constants container. */
         /**@{*/
-        virtual VertexOutputVariable* GetVertexOutputVariable() override;
-        virtual const VertexOutputVariable* GetVertexOutputVariable() const override;
+        VertexPushConstants& GetPushConstants();
+        const VertexPushConstants& GetPushConstants() const;
+        PushConstantsBase& GetPushConstantsBase() override;
+        const PushConstantsBase& GetPushConstantsBase() const override;
         /**@}*/
 
     private:
 
-        std::set<Node*> m_allNodes;
-        InputInterface m_inputInterface;
+        using Nodes = std::set<Node*>;
+
+        Nodes m_nodes;
+        VertexDescriptorSets m_descriptorSets;
+        VertexPushConstants m_pushConstants;
+
+        /*InputInterface m_inputInterface;
         OutputInterface m_outputInterface;
         UniformInterfaces m_uniformInterfaces;
         PushConstantInterface m_pushConstantInterface;
-        VertexOutputVariable m_vertexOutputVariable;
+        VertexOutputVariable m_vertexOutputVariable;*/
     };
 
 
@@ -243,7 +287,7 @@ namespace Molten::Shader::Visual
          * @tparam TDataType Data type of variable node to create.
          */
         template<typename TDataType>
-        ConstantVariable<TDataType>* CreateConstantVariable(const TDataType& value = VariableTrait<TDataType>::DefaultValue);
+        ConstantVariable<TDataType>& CreateConstantVariable(const TDataType& value = VariableTrait<TDataType>::DefaultValue);
 
         /**
          * Create new function node and append it to this script.
@@ -251,7 +295,7 @@ namespace Molten::Shader::Visual
          * @tparam TFunction Function node object to create and data types for parameters.
          */
         template<typename TFunction>
-        TFunction* CreateFunction();
+        TFunction& CreateFunction();
 
         /**
          * Create new operator node and append it to the shader script.
@@ -259,21 +303,21 @@ namespace Molten::Shader::Visual
          * @tparam TOperator Operator node object to create.
          */
         template<typename TOperator>
-        TOperator* CreateOperator();
+        TOperator& CreateOperator();
 
         /** Get type of shader script. */
-        virtual Type GetType() const override;
+        Type GetType() const override;
 
         /** Removes node from script, disconnects all connections of node and deallocates the pointer. */
-        virtual void DestroyNode(Node* node) override;
+        void DestroyNode(Node* node) override;
 
         /** Get number of nodes in this script. */
-        virtual size_t GetNodeCount() const override;
+        size_t GetNodeCount() const override;
 
-        /** Get all nodes of this script. */
+        /** Get all global nodes of this script. */
         /**@{*/
-        virtual std::vector<Node*> GetAllNodes() override;
-        virtual std::vector<const Node*> GetAllNodes() const override;
+        std::vector<Node*> GetNodes() override;
+        std::vector<const Node*> GetNodes() const override;
         /**@}*/
 
         /**
@@ -281,47 +325,67 @@ namespace Molten::Shader::Visual
          * Members of this block is sent from the previous shader stage or from the vertex buffer.
          */
          /**@{*/
-        virtual InputInterface& GetInputInterface() override;
-        virtual const InputInterface& GetInputInterface() const override;
+        //virtual InputInterface& GetInputInterface() override;
+        //virtual const InputInterface& GetInputInterface() const override;
+        ///**@}*/
+
+        ///**
+        // * Get interface block for output variables.
+        // * Data in this block is sent to the next shader stage or to the framebuffer.
+        // */
+        // /**@{*/
+        //virtual OutputInterface& GetOutputInterface() override;
+        //virtual const OutputInterface& GetOutputInterface() const override;
+        ///**@}*/
+
+        ///**
+        // * Get interface blocks for uniform variables.
+        // * This interface contains 0 or more uniform interfaces. UniformInterfaces is simply a container.
+        // * Data in these blocks are sent from client to any shader stage.
+        // */
+        ///**@{*/
+        //virtual UniformInterfaces& GetUniformInterfaces() override;
+        //virtual const UniformInterfaces& GetUniformInterfaces() const override;
+        ///**@}*/
+
+        ///**
+        // * Get interface block for push constant variables.
+        // * Data in this block is sent from client to any shader stage at runtime.
+        // */
+        // /**@{*/
+        //virtual PushConstantInterface& GetPushConstantInterface() override;
+        //virtual const PushConstantInterface& GetPushConstantInterface() const override;
         /**@}*/
 
-        /**
-         * Get interface block for output variables.
-         * Data in this block is sent to the next shader stage or to the framebuffer.
-         */
-         /**@{*/
-        virtual OutputInterface& GetOutputInterface() override;
-        virtual const OutputInterface& GetOutputInterface() const override;
-        /**@}*/
-
-        /**
-         * Get interface blocks for uniform variables.
-         * This interface contains 0 or more uniform interfaces. UniformInterfaces is simply a container.
-         * Data in these blocks are sent from client to any shader stage.
-         */
+        /** Get descriptor sets container. */
         /**@{*/
-        virtual UniformInterfaces& GetUniformInterfaces() override;
-        virtual const UniformInterfaces& GetUniformInterfaces() const override;
+        FragmentDescriptorSets& GetDescriptorSets();
+        const FragmentDescriptorSets& GetDescriptorSets() const;
+        DescriptorSetsBase& GetDescriptorSetsBase() override;
+        const DescriptorSetsBase& GetDescriptorSetsBase() const override;
         /**@}*/
 
-        /**
-         * Get interface block for push constant variables.
-         * Data in this block is sent from client to any shader stage at runtime.
-         */
-         /**@{*/
-        virtual PushConstantInterface& GetPushConstantInterface() override;
-        virtual const PushConstantInterface& GetPushConstantInterface() const override;
+        /** Get push constants container. */
+        /**@{*/
+        FragmentPushConstants& GetPushConstants();
+        const FragmentPushConstants& GetPushConstants() const;
+        PushConstantsBase& GetPushConstantsBase() override;
+        const PushConstantsBase& GetPushConstantsBase() const override;
         /**@}*/
 
     private:
 
-        using Script::GetVertexOutputVariable;
+        //using Script::GetVertexOutputVariable;
 
-        std::set<Node*> m_allNodes;
-        InputInterface m_inputInterface;
+        using Nodes = std::set<Node*>;
+
+        Nodes m_nodes;
+        FragmentDescriptorSets m_descriptorSets;
+        FragmentPushConstants m_pushConstants;
+        /*InputInterface m_inputInterface;
         OutputInterface m_outputInterface;
         UniformInterfaces m_uniformInterfaces;
-        PushConstantInterface m_pushConstantInterface;
+        PushConstantInterface m_pushConstantInterface;*/
 
     };
 

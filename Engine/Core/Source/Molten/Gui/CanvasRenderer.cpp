@@ -166,7 +166,7 @@ namespace Molten::Gui
         m_rectInstance.vertexScript = new Shader::Visual::VertexScript();
         m_rectInstance.fragmentScript = new Shader::Visual::FragmentScript();
 
-        { // Vertex
+        /*{ // Vertex
             auto& script = *m_rectInstance.vertexScript;
 
             auto& inputs = script.GetInputInterface();
@@ -208,7 +208,7 @@ namespace Molten::Gui
             auto* outColor = outputs.AddMember<Vector4f32>();
 
             outColor->GetInputPin()->Connect(*vertexColor->GetOutputPin());
-        }
+        }*/
 
         // Debug
         {

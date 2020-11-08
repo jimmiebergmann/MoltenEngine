@@ -31,11 +31,23 @@
 namespace Molten::Shader::Visual
 {
 
-    TEST(Shader, InputPin)
+    struct MyInputStruct : Structure<InputPin, bool, int32_t, float, Vector2f32, Vector3f32, Vector4f32>
+    {
+        MyInputStruct(Script& script) :
+            Structure<InputPin, bool, int32_t, float, Vector2f32, Vector3f32, Vector4f32>(script)
+        {}
+
+        NodeType GetType() const override
+        {
+            return NodeType::Variable;
+        }
+    };
+
+    TEST(Shader, VisualScript_InputPin)
     {
         FragmentScript script;
-        Node* nodePtr = script.GetOutputInterface().AddMember<bool>();
-        Node& node = *nodePtr;
+        MyInputStruct myStruct(script);
+        Node& node = myStruct;
 
         InputPin<float> pin(node, "test name");
         EXPECT_STREQ(pin.GetName().c_str(), "test name");
@@ -46,12 +58,12 @@ namespace Molten::Shader::Visual
         EXPECT_EQ(pin.GetConnection(1), nullptr);
         EXPECT_EQ(pin.GetConnections().size(), size_t(0));
     }
-
-    TEST(Shader, InputPin_DefaultValue)
+    
+    TEST(Shader, VisualScript_InputPin_DefaultValue)
     {
         FragmentScript script;
-        Node* nodePtr = script.GetOutputInterface().AddMember<bool>();
-        Node& node = *nodePtr;
+        MyInputStruct myStruct(script);
+        Node& node = myStruct;
 
         InputPin<int32_t> pin(node, 1234, "test name");
         EXPECT_STREQ(pin.GetName().c_str(), "test name");
@@ -67,11 +79,11 @@ namespace Molten::Shader::Visual
         EXPECT_EQ(pin.GetDefaultValue(), int32_t(5432));
     }
 
-    TEST(Shader, InputPin_DataType)
+    TEST(Shader, VisualScript_InputPin_DataType)
     {
         FragmentScript script;
-        Node* nodePtr = script.GetOutputInterface().AddMember<bool>();
-        Node& node = *nodePtr;
+        MyInputStruct myStruct(script);
+        Node& node = myStruct;
 
         {
             InputPin<bool> pin(node);
@@ -105,13 +117,13 @@ namespace Molten::Shader::Visual
         }
     }
 
-    TEST(Shader, InputPin_Connection)
+    TEST(Shader, VisualScript_InputPin_Connection)
     {
         FragmentScript script;
-        Node* nodePtr1 = script.GetOutputInterface().AddMember<bool>();
-        Node* nodePtr2 = script.GetOutputInterface().AddMember<bool>();
-        Node& node1 = *nodePtr1;
-        Node& node2 = *nodePtr2;
+        MyInputStruct myStruct1(script);
+        MyInputStruct myStruct2(script);
+        Node& node1 = myStruct1;
+        Node& node2 = myStruct2;
 
         {
             InputPin<float> pin1(node1);
@@ -256,11 +268,11 @@ namespace Molten::Shader::Visual
         }
     }
 
-    TEST(Shader, OutputPin)
+    TEST(Shader, VisualScript_OutputPin)
     {
         FragmentScript script;
-        Node* nodePtr = script.GetOutputInterface().AddMember<bool>();
-        Node& node = *nodePtr;
+        MyInputStruct myStruct(script);
+        Node& node = myStruct;
 
         OutputPin<float> pin(node, "test name");
         EXPECT_STREQ(pin.GetName().c_str(), "test name");
@@ -272,11 +284,11 @@ namespace Molten::Shader::Visual
         EXPECT_EQ(pin.GetConnections().size(), size_t(0));
     }
 
-    TEST(Shader, OutputPin_DataType)
+    TEST(Shader, VisualScript_OutputPin_DataType)
     {
         FragmentScript script;
-        Node* nodePtr = script.GetOutputInterface().AddMember<bool>();
-        Node& node = *nodePtr;
+        MyInputStruct myStruct(script);
+        Node& node = myStruct;
 
         {
             OutputPin<bool> pin(node);
@@ -310,13 +322,13 @@ namespace Molten::Shader::Visual
         }
     }
 
-    TEST(Shader, OutputPin_Connection)
+    TEST(Shader, VisualScript_OutputPin_Connection)
     {
         FragmentScript script;
-        Node* nodePtr1 = script.GetOutputInterface().AddMember<bool>();
-        Node* nodePtr2 = script.GetOutputInterface().AddMember<bool>();
-        Node& node1 = *nodePtr1;
-        Node& node2 = *nodePtr2;
+        MyInputStruct myStruct1(script);
+        MyInputStruct myStruct2(script);
+        Node& node1 = myStruct1;
+        Node& node2 = myStruct2;
 
         {
             OutputPin<float> pin1(node1);
@@ -537,5 +549,5 @@ namespace Molten::Shader::Visual
             }
         }
     }
-
+    
 }

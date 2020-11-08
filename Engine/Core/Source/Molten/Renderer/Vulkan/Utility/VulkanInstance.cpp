@@ -23,7 +23,6 @@
 *
 */
 
-
 #include "Molten/Renderer/Vulkan/Utility/VulkanInstance.hpp"
 
 #if defined(MOLTEN_ENABLE_VULKAN)

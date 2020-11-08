@@ -23,7 +23,6 @@
 *
 */
 
-
 #include "Molten/Renderer/Vulkan/Utility/VulkanLogicalDevice.hpp"
 
 #if defined(MOLTEN_ENABLE_VULKAN)
@@ -38,6 +37,7 @@ namespace Molten::Vulkan
     // Logical device implementations.
     LogicalDevice::LogicalDevice() :
         m_handle(VK_NULL_HANDLE),
+        m_enabledFeatures{},
         m_deviceQueues{},
         m_physicalDevice(nullptr)
     {}
@@ -116,11 +116,12 @@ namespace Molten::Vulkan
             return VkResult::VK_ERROR_UNKNOWN;
         }
 
-        m_physicalDevice = &physicalDevice;
-
         vkGetDeviceQueue(m_handle, m_deviceQueues.graphicsQueueIndex, 0, &m_deviceQueues.graphicsQueue);
         vkGetDeviceQueue(m_handle, m_deviceQueues.presentQueueIndex, 0, &m_deviceQueues.presentQueue);
        
+        m_physicalDevice = &physicalDevice;
+        m_enabledFeatures = enabledDeviceFeatures;
+
         return result;
     }
 
@@ -151,6 +152,11 @@ namespace Molten::Vulkan
     const VkDevice& LogicalDevice::GetHandle() const
     {
         return m_handle;
+    }
+
+    const VkPhysicalDeviceFeatures& LogicalDevice::GetEnabledFeatures() const
+    {
+        return m_enabledFeatures;
     }
 
     DeviceQueues& LogicalDevice::GetDeviceQueues()

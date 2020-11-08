@@ -333,6 +333,15 @@ namespace Molten::Shader::Visual
 
     };
 
+
+    /** Type traits for checking if provided template parameter is an input or outpin pin. */
+    template<template<typename> typename TPinType>
+    struct PinTraits
+    {
+        static constexpr bool isInputPin = false;
+        static constexpr bool isOutputPin = false;
+    };
+
 }
 
 #include "Molten/Renderer/Shader/Visual/VisualShaderPin.inl"

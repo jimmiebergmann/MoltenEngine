@@ -64,6 +64,8 @@ namespace Molten::Vulkan
         VkDevice& GetHandle();
         const VkDevice& GetHandle() const;
 
+        const VkPhysicalDeviceFeatures& GetEnabledFeatures() const;
+
         DeviceQueues& GetDeviceQueues();
         const DeviceQueues& GetDeviceQueues() const;
 
@@ -75,6 +77,7 @@ namespace Molten::Vulkan
     private:
 
         VkDevice m_handle;
+        VkPhysicalDeviceFeatures m_enabledFeatures;
         DeviceQueues m_deviceQueues;
         PhysicalDevice* m_physicalDevice;
 

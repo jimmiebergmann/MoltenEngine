@@ -32,100 +32,100 @@
 namespace Molten::Shader::Visual
 {
 
-    // Forward declarations.
-    class Script;
-    class UniformMetaData;
+    //// Forward declarations.
+    //class Script;
+    //class UniformMetaData;
 
 
-    /** 
-     * Meta data related to uniform interfaces.
-     * The only available meta data for uniform interfaces is IDs.
-     */
-    class MOLTEN_API UniformMetaData
-    {
+    ///** 
+    // * Meta data related to uniform interfaces.
+    // * The only available meta data for uniform interfaces is IDs.
+    // */
+    //class MOLTEN_API UniformMetaData
+    //{
 
-    public:
+    //public:
 
-        explicit UniformMetaData(const uint32_t id);
+    //    explicit UniformMetaData(const uint32_t id);
 
-        uint32_t GetId() const;
+    //    uint32_t GetId() const;
 
-    private:
+    //private:
 
-        /** Copy and move operations are not allowed. */
-        /**@{*/
-        UniformMetaData(const UniformMetaData& copy) = delete;
-        UniformMetaData(const UniformMetaData&& move) = delete;
-        UniformMetaData& operator =(const UniformMetaData& copy) = delete;
-        UniformMetaData& operator =(const UniformMetaData&& move) = delete;
-        /**@*/
+    //    /** Copy and move operations are not allowed. */
+    //    /**@{*/
+    //    UniformMetaData(const UniformMetaData& copy) = delete;
+    //    UniformMetaData(const UniformMetaData&& move) = delete;
+    //    UniformMetaData& operator =(const UniformMetaData& copy) = delete;
+    //    UniformMetaData& operator =(const UniformMetaData&& move) = delete;
+    //    /**@*/
 
-        const uint32_t m_id;
+    //    const uint32_t m_id;
 
-    };
-
-
-    /** Uniform interface type. */
-    using UniformInterface = Structure<InputVariable, void, UniformMetaData>;
+    //};
 
 
-    /** Uniform interface container type. */
-    class MOLTEN_API UniformInterfaces
-    {
-
-    public:
-
-        using InterfaceContainer = std::vector<UniformInterface*>;
-
-        explicit UniformInterfaces(Script& script);
-        ~UniformInterfaces();
-
-        /** Interface iterators. */
-        /**@{*/
-        InterfaceContainer::iterator begin();
-        InterfaceContainer::const_iterator begin() const;
-
-        InterfaceContainer::iterator end();
-        InterfaceContainer::const_iterator end() const;
-        /**@}*/
-
-        /** Append new interface. */
-        UniformInterface* AddInterface(const uint32_t id);
-
-        /**
-         * Remove and destroy interface by index or iterator.
-         * Accessing removed interfaces is undefined behaviour.
-         */
-        /**@{*/
-        void RemoveInterface(const size_t index);
-        void RemoveInterface(InterfaceContainer::iterator it);
-        /**@}*/
+    ///** Uniform interface type. */
+    //using UniformInterface = Structure<InputVariable, void, UniformMetaData>;
 
 
-        /** Remove all interfaces in this container. */
-        void RemoveAllInterfaces();
+    ///** Uniform interface container type. */
+    //class MOLTEN_API UniformInterfaces
+    //{
 
-        /** Get interface by index. Returns nullptr if index >= GetInterfaceCount(). */
-        UniformInterface* GetInterface(const size_t index);
+    //public:
 
-        /** Get number of interfaces in this container. */
-        size_t GetInterfaceCount() const;
+    //    using InterfaceContainer = std::vector<UniformInterface*>;
+
+    //    explicit UniformInterfaces(Script& script);
+    //    ~UniformInterfaces();
+
+    //    /** Interface iterators. */
+    //    /**@{*/
+    //    InterfaceContainer::iterator begin();
+    //    InterfaceContainer::const_iterator begin() const;
+
+    //    InterfaceContainer::iterator end();
+    //    InterfaceContainer::const_iterator end() const;
+    //    /**@}*/
+
+    //    /** Append new interface. */
+    //    UniformInterface* AddInterface(const uint32_t id);
+
+    //    /**
+    //     * Remove and destroy interface by index or iterator.
+    //     * Accessing removed interfaces is undefined behaviour.
+    //     */
+    //    /**@{*/
+    //    void RemoveInterface(const size_t index);
+    //    void RemoveInterface(InterfaceContainer::iterator it);
+    //    /**@}*/
+
+
+    //    /** Remove all interfaces in this container. */
+    //    void RemoveAllInterfaces();
+
+    //    /** Get interface by index. Returns nullptr if index >= GetInterfaceCount(). */
+    //    UniformInterface* GetInterface(const size_t index);
+
+    //    /** Get number of interfaces in this container. */
+    //    size_t GetInterfaceCount() const;
  
-    private:
+    //private:
 
-        /** Copy and move operations are not allowed. */
-        /**@{*/
-        UniformInterfaces(const UniformInterfaces& copy) = delete;
-        UniformInterfaces(const UniformInterfaces&& move) = delete;
-        UniformInterfaces& operator =(const UniformInterfaces& copy) = delete;
-        UniformInterfaces& operator =(const UniformInterfaces&& move) = delete;
-        /**@*/
+    //    /** Copy and move operations are not allowed. */
+    //    /**@{*/
+    //    UniformInterfaces(const UniformInterfaces& copy) = delete;
+    //    UniformInterfaces(const UniformInterfaces&& move) = delete;
+    //    UniformInterfaces& operator =(const UniformInterfaces& copy) = delete;
+    //    UniformInterfaces& operator =(const UniformInterfaces&& move) = delete;
+    //    /**@*/
 
-        Script& m_script;
-        InterfaceContainer m_interfaces;
-        std::set<uint32_t> m_usedIds;
+    //    Script& m_script;
+    //    InterfaceContainer m_interfaces;
+    //    std::set<uint32_t> m_usedIds;
 
-    };
+    //};
 
 }
 

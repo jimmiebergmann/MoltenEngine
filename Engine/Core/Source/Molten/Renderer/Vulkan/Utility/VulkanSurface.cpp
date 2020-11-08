@@ -97,12 +97,16 @@ namespace Molten::Vulkan
 
     void Surface::Destroy()
     {
-        if (m_handle && m_instance->GetHandle())
+        if (m_instance)
         {
-            vkDestroySurfaceKHR(m_instance->GetHandle(), m_handle, nullptr);
-            m_handle = VK_NULL_HANDLE;
+            if (m_handle)
+            {
+                vkDestroySurfaceKHR(m_instance->GetHandle(), m_handle, nullptr);
+                m_handle = VK_NULL_HANDLE;
+            }
             m_instance = nullptr;
         }
+       
     }
 
     bool Surface::IsCreated() const

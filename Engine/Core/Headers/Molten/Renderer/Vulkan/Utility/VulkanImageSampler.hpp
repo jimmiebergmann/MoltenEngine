@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2019 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,26 +23,59 @@
 *
 */
 
-#include "Molten/Renderer/Vulkan/Utility/VulkanTypes.hpp"
+#ifndef MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANIMAGESAMPLER_HPP
+#define MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANIMAGESAMPLER_HPP
+#include "Molten/Core.hpp"
 
 #if defined(MOLTEN_ENABLE_VULKAN)
+
+#include "Molten/Renderer/Vulkan/Utility/VulkanTypes.hpp"
+#include "Molten/Renderer/Vulkan/Utility/VulkanResult.hpp"
+#include "Molten/Math/Vector.hpp"
 
 MOLTEN_UNSCOPED_ENUM_BEGIN
 
 namespace Molten::Vulkan
 {
 
-    // Physical device features with name implementations.
-    PhysicalDeviceFeatureWithName::PhysicalDeviceFeatureWithName(
-        VkBool32 VkPhysicalDeviceFeatures::* memberPointer,
-        const std::string& name
-    ) :
-        memberPointer(memberPointer),
-        name(name)
-    {}
+    class LogicalDevice;
+
+
+    /** Vulkan image sampler.*/
+    class MOLTEN_API ImageSampler
+    {
+
+    public:
+
+        ImageSampler();
+        ~ImageSampler();
+
+        ImageSampler(const ImageSampler&) = delete;
+        ImageSampler& operator = (const ImageSampler&) = delete;
+
+        ImageSampler(ImageSampler&& imageSampler) noexcept;
+        ImageSampler& operator =(ImageSampler&& imageSampler) noexcept;
+
+        Result<> Create(LogicalDevice& logicalDevice);
+
+        void Destroy();
+
+        LogicalDevice& GetLogicalDevice();
+        const LogicalDevice& GetLogicalDevice() const;
+
+        bool HasLogicalDevice() const;
+
+    private:
+
+        VkSampler m_handle;
+        LogicalDevice* m_logicalDevice;
+
+    };
 
 }
 
 MOLTEN_UNSCOPED_ENUM_END
+
+#endif
 
 #endif

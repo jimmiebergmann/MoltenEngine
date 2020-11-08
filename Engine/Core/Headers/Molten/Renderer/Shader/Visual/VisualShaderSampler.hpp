@@ -23,37 +23,45 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANTYPES_HPP
-#define MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANTYPES_HPP
+#ifndef MOLTEN_CORE_RENDERER_SHADER_VISUAL_VISUALSHADERSAMPLER_HPP
+#define MOLTEN_CORE_RENDERER_SHADER_VISUAL_VISUALSHADERSAMPLER_HPP
 
-#include "Molten/Core.hpp"
+#include "Molten/Renderer/Shader/Visual/VisualShaderNode.hpp"
 
-#if defined(MOLTEN_ENABLE_VULKAN)
-#include "Molten/Renderer/Vulkan/VulkanHeaders.hpp"
-#include <vector>
-#include <string>
-
-MOLTEN_UNSCOPED_ENUM_BEGIN
-
-namespace Molten::Vulkan
+namespace Molten::Shader::Visual
 {
 
-    using DescriptorSetLayouts = std::vector<VkDescriptorSetLayout>;
-    using DescriptorSets = std::vector<VkDescriptorSet>;
-    using Fences = std::vector<VkFence>;
-    using FrameBuffers = std::vector<VkFramebuffer>;
-    using Images = std::vector<VkImage>;
-    using ImageViews = std::vector<VkImageView>;
-    using PresentModes = std::vector<VkPresentModeKHR>;
-    using QueueFamilyProperties = std::vector<VkQueueFamilyProperties>;
-    using Semaphores = std::vector<VkSemaphore>;
-    using ShaderModules = std::vector<VkShaderModule>;
-    using SurfaceFormats = std::vector<VkSurfaceFormatKHR>;
+    class Sampler2D : public Node
+    {
+
+    public:
+
+        using Handle = Sampler2DHandle;
+
+        /** Constructor. */
+        Sampler2D(Script& script);
+
+        /** Get type of node. */
+        NodeType GetType() const override;
+
+
+
+        size_t GetOutputPinCount2() const;
+
+        OutputPin<Handle>* GetOutputPin2(const size_t index = 0);
+        const OutputPin<Handle>* GetOutputPin2(const size_t index = 0) const;
+
+        std::vector<OutputPin<Handle>*> GetOutputPins2();
+        std::vector<const OutputPin<Handle>*> GetOutputPins2() const;
+
+    private:
+
+        OutputPin<Handle> m_outputPin;
+
+    };
 
 }
 
-MOLTEN_UNSCOPED_ENUM_END
-
-#endif
+#include "Molten/Renderer/Shader/Visual/VisualShaderSampler.inl"
 
 #endif

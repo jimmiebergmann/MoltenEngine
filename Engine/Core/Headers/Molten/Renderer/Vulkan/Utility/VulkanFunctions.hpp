@@ -46,7 +46,7 @@ namespace Molten::Vulkan
 
 
     /** Check if all required extensions are present in provided extension container.. */
-    MOLTEN_API bool CheckRequiredExtensions(
+    /*MOLTEN_API bool CheckRequiredExtensions(
         Extensions& missingExtensions,
         const Extensions& requiredExtensions,
         const Extensions& availableExtensions);
@@ -54,7 +54,7 @@ namespace Molten::Vulkan
     MOLTEN_API bool CheckRequiredDeviceFeatures(
         PhysicalDeviceFeaturesWithName& missingFeatures,
         const VkPhysicalDeviceFeatures& requiredFeatures,
-        const VkPhysicalDeviceFeatures& availableFeatures);
+        const VkPhysicalDeviceFeatures& availableFeatures);*/
 
 
     /** Create N number of fences. */

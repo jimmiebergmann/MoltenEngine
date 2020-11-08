@@ -23,7 +23,6 @@
 *
 */
 
-
 #include "Molten/Renderer/Vulkan/Utility/VulkanImage.hpp"
 
 #if defined(MOLTEN_ENABLE_VULKAN)
@@ -37,7 +36,7 @@ MOLTEN_UNSCOPED_ENUM_BEGIN
 namespace Molten::Vulkan
 {
 
-    // Device buffer implementations.
+    // Image implementations.
     Image::Image() :
         m_handle(VK_NULL_HANDLE),
         m_memory(VK_NULL_HANDLE),
@@ -162,6 +161,8 @@ namespace Molten::Vulkan
                 vkFreeMemory(logicalDeviceHandle, m_memory, nullptr);
                 m_memory = VK_NULL_HANDLE;
             }
+
+            m_logicalDevice = nullptr;
         }
     }
 

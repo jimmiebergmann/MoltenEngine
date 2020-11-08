@@ -274,7 +274,7 @@ namespace Molten
         void Application::LoadGridShaders()
         {
             // Vertex script.
-            {
+           /* {
                 auto& script = m_gridVertexScript;
 
                 auto& inputs = script.GetInputInterface();
@@ -335,18 +335,18 @@ namespace Molten
                 mult2->GetInputPin(1)->Connect(*pcColor2->GetOutputPin());
 
 
-                /*auto add = script.CreateOperatorNode<Shader::Operator::AddVec4f32>();
-                auto const1 = script.CreateConstantNode<Vector4f32>({ 0.0f, 0.0f, 0.3f, 0.0f });
-                auto const2 = script.CreateConstantNode<Vector4f32>({ 1.0f, 0.5f, 0.0f, 1.0f });
-                auto cos = script.CreateFunctionNode<Shader::Function::CosVec4f32>();*/
+                //auto add = script.CreateOperatorNode<Shader::Operator::AddVec4f32>();
+                //auto const1 = script.CreateConstantNode<Vector4f32>({ 0.0f, 0.0f, 0.3f, 0.0f });
+                //auto const2 = script.CreateConstantNode<Vector4f32>({ 1.0f, 0.5f, 0.0f, 1.0f });
+                //auto cos = script.CreateFunctionNode<Shader::Function::CosVec4f32>();
 
                 outColor->GetInputPin()->Connect(*mult2->GetOutputPin());
-                /*add->GetInputPin(0)->Connect(*mult->GetOutputPin());
-                add->GetInputPin(1)->Connect(*const1->GetOutputPin());
-                mult->GetInputPin(0)->Connect(*inColor->GetOutputPin());
-                mult->GetInputPin(1)->Connect(*cos->GetOutputPin());
-                cos->GetInputPin()->Connect(*const2->GetOutputPin());*/
-            }
+                //add->GetInputPin(0)->Connect(*mult->GetOutputPin());
+                //add->GetInputPin(1)->Connect(*const1->GetOutputPin());
+                //mult->GetInputPin(0)->Connect(*inColor->GetOutputPin());
+                //mult->GetInputPin(1)->Connect(*cos->GetOutputPin());
+                //cos->GetInputPin()->Connect(*const2->GetOutputPin());
+            }*/
 
             Shader::VulkanGenerator::GlslTemplates glslTemplates;
             std::vector<Shader::Visual::Script*> visualScripts = { &m_gridVertexScript, &m_gridFragmentScript };
@@ -471,7 +471,7 @@ namespace Molten
         void Application::LoadObjectShaders()
         {
             // Vertex script.
-            {
+            /*{
                 auto& script = m_objectVertexScript;
 
                 auto& inputs = script.GetInputInterface();
@@ -519,7 +519,7 @@ namespace Molten
                 auto outColor = outputs.AddMember<Vector4f32>();
 
                 outColor->GetInputPin()->Connect(*inColor->GetOutputPin());
-            }
+            }*/
 
             Shader::VulkanGenerator::GlslTemplates glslTemplates;
             std::vector<Shader::Visual::Script*> visualScripts = { &m_objectVertexScript, &m_objectFragmentScript };

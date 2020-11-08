@@ -27,129 +27,118 @@
 #define MOLTEN_CORE_RENDERER_SHADER_VISUAL_VISUALSHADERSTRUCTURE_HPP
 
 #include "Molten/Renderer/Shader/Visual/VisualShaderVariable.hpp"
+#include "Molten/Utility/Template.hpp"
 #include <vector>
 
 namespace Molten::Shader::Visual
 {
 
-    // Forward declarations
-    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData = void> typename TVariableType, 
-             typename TVariableMetaData = void, typename TMetaData = void>
-    class Structure;
-
-
-    /** Structure base class, used for meta data initialization. */
-    template<typename TMetaData>
-    class StructureMetaBase : public TMetaData
-    {
-
-    public:
-        
-        template<typename ... TMetaDataParams>
-        explicit StructureMetaBase(TMetaDataParams ... metaDataParameters);
-        virtual ~StructureMetaBase() = default;
-
-    };
-
-    template<>
-    class StructureMetaBase<void>
-    {
-
-    public:
-
-        StructureMetaBase() = default;
-        virtual ~StructureMetaBase() = default;
-
-    };
-
-
     /**
      * Data structure container for visual shader scripts.
-     * This container can be used for interface blocks of unifoms, vertex data or push constants.
+     * This container can be used for interface blocks of unifom buffers, vertex data or push constants.
+     * Allowed types for template parameter TPinType are InputPin or OutputPin.
      *
      * @see Script
      */
-    template<template<typename TVariableTypeDataType, typename TVariableTypeMetaData> typename TVariableType, 
-        typename TVariableMetaData, typename TMetaData>
-    class Structure : public StructureMetaBase<TMetaData>
+    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    class Structure : public Node
     {
+
+        static_assert(PinTraits<TPinType>::isInputPin || PinTraits<TPinType>::isOutputPin,
+            "Provided TPinType is not of type InputPin or OutputPin");
 
     public:
 
+        using Base = Node;
         template<typename TDataType>
-        using VariableType = TVariableType<TDataType, TVariableMetaData>;
-        using VariableBaseType = typename TVariableType<float, TVariableMetaData>::Base;
-        using VariableContainer = std::vector<VariableBaseType*>;
-        using ConstVariableContainer = std::vector<const VariableBaseType*>;
+        using PinType = TPinType<TDataType>;
+        using Container = std::vector<Pin*>;
+        using ConstContainer = std::vector<const Pin*>;
+        using Iterator = typename Container::iterator;
+        using ConstIterator = typename Container::const_iterator;
 
-        /** Constructor, by providing meta data constructor parameters. */
-        template<typename ... TMetaDataParams>
-        explicit Structure(Script& script, TMetaDataParams ... metaDataParameters);
+        /** Constructor. */
+        explicit Structure(Script& script);
         virtual ~Structure();
 
-        /** Structure member iterators. */
-        /**@{*/
-        typename VariableContainer::iterator begin();
-        typename VariableContainer::const_iterator begin() const;
 
-        typename VariableContainer::iterator end();
-        typename VariableContainer::const_iterator end() const;
+        /** Structure iterators. */
+        /**@{*/
+        typename Iterator begin();
+        typename ConstIterator begin() const;
+
+        typename Iterator end();
+        typename ConstIterator end() const;
         /**@}*/
 
-        /** Append new data member to this structure. */
-        template<typename TDataType, typename ... TMetaDataParams>
-        VariableType<TDataType>* AddMember(TMetaDataParams ... metaData);
 
-        /** Remove and destroy all data members. Accessing any removed data member is undefined behaviour. */
-        void RemoveMember(const size_t index);
+        /** Get type of node. */
+        virtual NodeType GetType() const = 0;
 
-        /** Remove and destroy all data members. Accessing any removed data member is undefined behaviour. */
-        void RemoveAllMembers();
+        /** Get number of input pins. */
+        virtual size_t GetInputPinCount() const;
 
-        /** Get number of data members in this structure. */
-        size_t GetMemberCount() const;
+        /**  Get number of output pins.*/
+        virtual size_t GetOutputPinCount() const;
 
-        /**
-         * Get  data member by index and cast it to the currect variable type.
-         * 
-         * @param index must be less than GetMemberCount().
+        /** Get input pin by index.
+         *
+         * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
          */
         /**@{*/
+        virtual Pin* GetInputPin(const size_t index = 0) override;
+        virtual const Pin* GetInputPin(const size_t index = 0) const override;
+        
         template<typename TDataType>
-        VariableType<TDataType>* GetMember(const size_t index);
+        InputPin<TDataType>* GetInputPin(const size_t index = 0);
+
         template<typename TDataType>
-        const VariableType<TDataType>* GetMember(const size_t index) const;
+        const InputPin<TDataType>* GetInputPin(const size_t index = 0) const;
+        /**@}*/
+        /** Get all input pins, wrapped in a vector. */
+        /**@{*/
+        virtual std::vector<Pin*> GetInputPins() override;
+        virtual std::vector<const Pin*> GetInputPins() const override;
         /**@}*/
 
-        /**
-         * Get  data member by index.
+        /** Get output pin by index.
          *
-         * @param index must be less than GetMemberCount().
+         * @return Pointer of output pin at given index, nullptr if index is >= GetOutputPinCount().
          */
-        VariableBaseType* GetMember(const size_t index);
-        const VariableBaseType* GetMember(const size_t index) const;
+        /**@{*/
+        virtual Pin* GetOutputPin(const size_t index = 0) override;
+        virtual const Pin* GetOutputPin(const size_t index = 0) const override;
 
-        /**
-         * Operator for getting data member by index. Same as GetMember().
-         *
-         * @param index must be less than GetMemberCount().
-         */
-        VariableBaseType* operator[](const size_t index);
-        const VariableBaseType* operator[](const size_t index) const;
+        template<typename TDataType>
+        OutputPin<TDataType>* GetOutputPin(const size_t index = 0);
 
-        /**
-         * Get all data members in this structure.
-         * The returned container is not the original one, but a copy.
-         */
-        VariableContainer GetMembers();
-        ConstVariableContainer GetMembers() const;
+        template<typename TDataType>
+        const OutputPin<TDataType>* GetOutputPin(const size_t index = 0) const;
+        /**@}*/
 
-        /** Get sum of data member sizes in bytes. Kind of like sizeof(...). */
+        /** Get all output pins, wrapped in a vector. */
+        /**@{*/
+        virtual std::vector<Pin*> GetOutputPins() override;
+        virtual std::vector<const Pin*> GetOutputPins() const override;
+        /**@}*/
+
+        /** Append new pin to this structure. */
+        template<typename TDataType>
+        PinType<TDataType>& AddPin();
+
+        /** Remove and destroy all pins. Accessing any removed pin is undefined behaviour. */
+        void RemovePin(const size_t index);
+        void RemovePin(const Iterator it);
+        void RemovePin(const ConstIterator it);
+
+        /** Remove and destroy all pins. Accessing any removed pinr is undefined behaviour. */
+        void RemoveAllPins();
+
+        /** Get number of pins in this structure. */
+        size_t GetPinCount() const;
+
+        /** Get sum of pin data member sizes in bytes. Kind of like sizeof(...). */
         size_t GetSizeOf() const;
-
-        template<template<typename TOtherVariableTypeDataType, typename TOtherVariableTypeMetaData> typename TOtherVariableType, 
-            typename TOtherVariableMetaData, typename TOtherMetaData>
-        bool CheckCompability(const Structure<TOtherVariableType, TOtherVariableMetaData, TOtherMetaData>& other) const;
 
     private:
 
@@ -161,29 +150,22 @@ namespace Molten::Shader::Visual
         Structure& operator =(const Structure&& move) = delete;
         /**@*/
 
-        Script& m_script; ///< parent script.
-        VariableContainer m_members; ///< Container of data members.
-        size_t m_sizeOf;
+        template<typename T>
+        std::vector<T*> CreatePinVector() const;
 
-        //template<template<typename OtherDataType> typename OtherVariableType, typename TMetaData>
-        template<template<typename TOtherVariableTypeDataType, typename TOtherVariableTypeMetaData> typename TOtherVariableType,
-            typename TOtherVariableMetaData, typename TOtherMetaData>
-        friend class Structure;
+        struct PinWrapper
+        { 
+            Pin* pin;
+            size_t dataTypeSize;
+        };
+
+        using PinWrapperContainer = std::vector<PinWrapper>;
+
+        Script& m_script; ///< parent script.
+        PinWrapperContainer m_pinWrappers; ///< Container of data pins.
+        size_t m_sizeOf; ///< Total size of this structure, in bytes.
 
     };
-
-
-    using InputStructure = Structure<InputVariable>;
-    using OutputStructure = Structure<OutputVariable>;
-
-}
-
-namespace Molten::Shader::Visual::Private
-{
-
-    /** Helper function for comparing if two structures are compatible. */
-    template<typename TLeftBaseType, typename TRightBaseType>
-    static bool CheckStructureCompability(const TLeftBaseType& lhs, const TRightBaseType& rhs);
 
 }
 

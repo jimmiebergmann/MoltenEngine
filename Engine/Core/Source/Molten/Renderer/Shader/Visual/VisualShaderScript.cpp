@@ -29,28 +29,32 @@ namespace Molten::Shader::Visual
 {
 
     // Shader script implementations.
-    VertexOutputVariable* Script::GetVertexOutputVariable()
+    /*VertexOutputVariable* Script::GetVertexOutputVariable()
     {
         return nullptr;
     }
     const VertexOutputVariable* Script::GetVertexOutputVariable() const
     {
         return nullptr;
-    }
+    }*/
 
 
     // Vertex shader script implementations.
     VertexScript::VertexScript() :
+        m_nodes{},
+        m_descriptorSets(*this),
+        m_pushConstants(*this)
+        /*
         m_inputInterface(*this),
         m_outputInterface(*this),
         m_uniformInterfaces(*this),
         m_pushConstantInterface(*this),
-        m_vertexOutputVariable(*this)
+        m_vertexOutputVariable(*this)*/
     {}
 
     VertexScript::~VertexScript()
     {
-        for (auto* node : m_allNodes)
+        for (auto* node : m_nodes)
         {
             delete node;
         }
@@ -63,32 +67,65 @@ namespace Molten::Shader::Visual
 
     void VertexScript::DestroyNode(Node* node)
     {
-        auto itAll = m_allNodes.find(node);
-        if (itAll == m_allNodes.end())
+        auto it = m_nodes.find(node);
+        if (it == m_nodes.end())
         {
             return;
         }
-
-        m_allNodes.erase(itAll);
-
         delete node;
+        m_nodes.erase(it);
     }
 
-    size_t VertexScript::GetNodeCount() const
+     size_t VertexScript::GetNodeCount() const
     {
-        return m_allNodes.size();
+        return m_nodes.size();
     }
 
-    std::vector<Node*> VertexScript::GetAllNodes()
+    std::vector<Node*> VertexScript::GetNodes()
     {
-        return { m_allNodes.begin(), m_allNodes.end() };
+        return { m_nodes.begin(), m_nodes.end() };
     }
-    std::vector<const Node*> VertexScript::GetAllNodes() const
+    std::vector<const Node*> VertexScript::GetNodes() const
     {
-        return { m_allNodes.begin(), m_allNodes.end() };
+        return { m_nodes.begin(), m_nodes.end() };
     }
 
-    InputInterface& VertexScript::GetInputInterface()
+    VertexDescriptorSets& VertexScript::GetDescriptorSets()
+    {
+        return m_descriptorSets;
+    }
+    const VertexDescriptorSets& VertexScript::GetDescriptorSets() const
+    {
+        return m_descriptorSets;
+    }
+    DescriptorSetsBase& VertexScript::GetDescriptorSetsBase()
+    {
+        return m_descriptorSets;
+    }
+    const DescriptorSetsBase& VertexScript::GetDescriptorSetsBase() const
+    {
+        return m_descriptorSets;
+    }
+
+    VertexPushConstants& VertexScript::GetPushConstants()
+    {
+        return m_pushConstants;
+    }
+    const VertexPushConstants& VertexScript::GetPushConstants() const
+    {
+        return m_pushConstants;
+    }
+    PushConstantsBase& VertexScript::GetPushConstantsBase()
+    {
+        return m_pushConstants;
+    }
+    const PushConstantsBase& VertexScript::GetPushConstantsBase() const
+    {
+        return m_pushConstants;
+    }
+
+    /*
+   InputInterface& VertexScript::GetInputInterface()
     {
         return m_inputInterface;
     }
@@ -131,20 +168,24 @@ namespace Molten::Shader::Visual
     const VertexOutputVariable* VertexScript::GetVertexOutputVariable() const
     {
         return &m_vertexOutputVariable;
-    }
+    }*/
 
 
     // Fragment shader script implementations.
     FragmentScript::FragmentScript() :
+        m_nodes{},
+        m_descriptorSets(*this),
+        m_pushConstants(*this)
+        /*
         m_inputInterface(*this),
         m_outputInterface(*this),
         m_uniformInterfaces(*this),
-        m_pushConstantInterface(*this)
+        m_pushConstantInterface(*this)*/
     {}
 
     FragmentScript::~FragmentScript()
     {
-        for (auto* node : m_allNodes)
+        for (auto* node : m_nodes)
         {
             delete node;
         }
@@ -157,32 +198,64 @@ namespace Molten::Shader::Visual
 
     void FragmentScript::DestroyNode(Node* node)
     {
-        auto itAll = m_allNodes.find(node);
-        if (itAll == m_allNodes.end())
+        auto it = m_nodes.find(node);
+        if (it == m_nodes.end())
         {
             return;
         }
-
-        m_allNodes.erase(itAll);
-
         delete node;
+        m_nodes.erase(it);
     }
 
     size_t FragmentScript::GetNodeCount() const
     {
-        return m_allNodes.size();
+        return m_nodes.size();
     }
 
-    std::vector<Node*> FragmentScript::GetAllNodes()
+    std::vector<Node*> FragmentScript::GetNodes()
     {
-        return { m_allNodes.begin(), m_allNodes.end() };
+        return { m_nodes.begin(), m_nodes.end() };
     }
-    std::vector<const Node*> FragmentScript::GetAllNodes() const
+    std::vector<const Node*> FragmentScript::GetNodes() const
     {
-        return { m_allNodes.begin(), m_allNodes.end() };
+        return { m_nodes.begin(), m_nodes.end() };
     }
 
-    InputInterface& FragmentScript::GetInputInterface()
+    FragmentDescriptorSets& FragmentScript::GetDescriptorSets()
+    {
+        return m_descriptorSets;
+    }
+    const FragmentDescriptorSets& FragmentScript::GetDescriptorSets() const
+    {
+        return m_descriptorSets;
+    }
+    DescriptorSetsBase& FragmentScript::GetDescriptorSetsBase()
+    {
+        return m_descriptorSets;
+    }
+    const DescriptorSetsBase& FragmentScript::GetDescriptorSetsBase() const
+    {
+        return m_descriptorSets;
+    }
+
+    FragmentPushConstants& FragmentScript::GetPushConstants()
+    {
+        return m_pushConstants;
+    }
+    const FragmentPushConstants& FragmentScript::GetPushConstants() const
+    {
+        return m_pushConstants;
+    }
+    PushConstantsBase& FragmentScript::GetPushConstantsBase()
+    {
+        return m_pushConstants;
+    }
+    const PushConstantsBase& FragmentScript::GetPushConstantsBase() const
+    {
+        return m_pushConstants;
+    }
+
+    /*InputInterface& FragmentScript::GetInputInterface()
     {
         return m_inputInterface;
     }
@@ -216,6 +289,6 @@ namespace Molten::Shader::Visual
     const PushConstantInterface& FragmentScript::GetPushConstantInterface() const
     {
         return m_pushConstantInterface;
-    }
+    }*/
 
 }

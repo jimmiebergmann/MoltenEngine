@@ -34,6 +34,7 @@
 #include "Molten/Renderer/Vulkan/Utility/VulkanInstance.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanSurface.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanPhysicalDevice.hpp"
+#include "Molten/Renderer/Vulkan/Utility/VulkanPhysicalDeviceFeatures.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanLogicalDevice.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanSwapChain.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanMemoryType.hpp"
@@ -195,7 +196,7 @@ namespace Molten
 
         /** Shader creation and manipulation functions. */
         /**@{*/
-        bool CreateVertexInputAttributes(
+        /*bool CreateVertexInputAttributes(
             const Shader::Visual::InputStructure& inputs, 
             std::vector<VkVertexInputAttributeDescription>& attributes, 
             uint32_t& stride);
@@ -210,7 +211,7 @@ namespace Molten
             std::vector<VkPipelineShaderStageCreateInfo>& shaderStageCreateInfos,
             PushConstantLocations& pushConstantLocations,
             PushConstantOffsets& pushConstantOffsets,
-            VkPushConstantRange& pushConstantRange);
+            VkPushConstantRange& pushConstantRange);*/
 
         VkShaderModule CreateShaderModule(const std::vector<uint8_t>& spirvCode);
 
@@ -230,7 +231,8 @@ namespace Molten
         Vulkan::Extensions m_requiredInstanceExtensions;
         Vulkan::Layers m_requiredInstanceLayers;      
         Vulkan::Extensions m_requiredDeviceExtensions;
-        VkPhysicalDeviceFeatures m_requiredDeviceFeatures;
+        Vulkan::PhysicalDeviceFeaturePointers m_requiredDeviceFeatures;
+        Vulkan::PhysicalDeviceFeaturePointers m_optionalDeviceFeatures;
         /**@}*/
 
         /** Vulkan context variables. */

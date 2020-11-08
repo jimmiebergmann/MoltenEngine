@@ -58,7 +58,7 @@ namespace Molten
 {
 
     // Static helper functions.
-    static VkShaderStageFlagBits GetShaderProgramStageFlag(const Shader::Type type)
+    /*static VkShaderStageFlagBits GetShaderProgramStageFlag(const Shader::Type type)
     {
         MOLTEN_UNSCOPED_ENUM_BEGIN
         switch (type)
@@ -69,9 +69,9 @@ namespace Molten
 
         throw Exception("Provided shader type is not supported by the Vulkan renderer.");
         MOLTEN_UNSCOPED_ENUM_END
-    }
+    }*/
 
-    static VkPrimitiveTopology GetPrimitiveTopology(const Pipeline::Topology topology)
+    /*static VkPrimitiveTopology GetPrimitiveTopology(const Pipeline::Topology topology)
     {
         MOLTEN_UNSCOPED_ENUM_BEGIN
         switch (topology)
@@ -84,9 +84,9 @@ namespace Molten
         }
         throw Exception("Provided primitive topology is not supported by the Vulkan renderer.");
         MOLTEN_UNSCOPED_ENUM_END
-    }
+    }*/
 
-    static VkPolygonMode GetPrimitiveTopology(const Pipeline::PolygonMode polygonMode)
+    /*static VkPolygonMode GetPrimitiveTopology(const Pipeline::PolygonMode polygonMode)
     {
         MOLTEN_UNSCOPED_ENUM_BEGIN
         switch (polygonMode)
@@ -172,10 +172,14 @@ namespace Molten
                 formatSize = 64;
                 return true;
             }
+            case Shader::VariableDataType::Sampler2D:
+            {
+                return false;
+            }
         }
         return false;
         MOLTEN_UNSCOPED_ENUM_END
-    }
+    }*/
 
     static VkIndexType GetIndexBufferDataType(const IndexBuffer::DataType dataType)
     {
@@ -211,6 +215,7 @@ namespace Molten
         m_requiredInstanceLayers{},
         m_requiredDeviceExtensions{},
         m_requiredDeviceFeatures{},
+        m_optionalDeviceFeatures{},
         m_isOpen(false),
         m_enableDebugMessenger(false),
         m_debugInstanceLayers{},
@@ -399,7 +404,7 @@ namespace Molten
 
     Pipeline* VulkanRenderer::CreatePipeline(const PipelineDescriptor& descriptor)
     {
-        if (descriptor.vertexScript == nullptr)
+        /*if (descriptor.vertexScript == nullptr)
         {
             Logger::WriteError(m_logger, "Vertex script is missing for pipeline. (vertexScript == nullptr).");
             return nullptr;
@@ -447,11 +452,11 @@ namespace Molten
         uint32_t vertexBindingStride = 0;
         if (descriptor.vertexScript)
         {
-            auto& vertexInputs = descriptor.vertexScript->GetInputInterface();
-            if (!CreateVertexInputAttributes(vertexInputs, vertexInputAttributes, vertexBindingStride))
-            {
-                return nullptr;
-            }
+            //auto& vertexInputs = descriptor.vertexScript->GetInputInterface();
+            //if (!CreateVertexInputAttributes(vertexInputs, vertexInputAttributes, vertexBindingStride))
+            //{
+            //    return nullptr;
+            //}
         }
 
         VkVertexInputBindingDescription vertexBinding;
@@ -588,7 +593,8 @@ namespace Molten
             std::move(setLayouts),
             std::move(pushConstantLocations), 
             std::move(pushConstantOffsets),
-            std::move(shaderModules));
+            std::move(shaderModules));*/
+return nullptr;
     }
 
     Texture* VulkanRenderer::CreateTexture(const TextureDescriptor& descriptor)
@@ -633,7 +639,14 @@ namespace Molten
             return nullptr;
         }
 
-        auto* texture = new VulkanTexture(std::move(image), VK_NULL_HANDLE);
+        Vulkan::ImageSampler sampler;
+        if (!(result = sampler.Create(m_logicalDevice)))
+        {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to create image sampler");
+            return nullptr;
+        }
+
+        auto* texture = new VulkanTexture(std::move(image), std::move(sampler));
         return texture;
     }
 
@@ -1030,9 +1043,14 @@ namespace Molten
         m_requiredDeviceExtensions = { Vulkan::Extension{ VK_KHR_SWAPCHAIN_EXTENSION_NAME } };
 
         // Physical device features
-        m_requiredDeviceFeatures = {};
-        m_requiredDeviceFeatures.fillModeNonSolid = true;
-        m_requiredDeviceFeatures.geometryShader = true;
+        m_requiredDeviceFeatures = {
+            &VkPhysicalDeviceFeatures::fillModeNonSolid,
+            &VkPhysicalDeviceFeatures::geometryShader
+        };
+
+        m_optionalDeviceFeatures = {
+            &VkPhysicalDeviceFeatures::samplerAnisotropy
+        };
 
         // Debug extensions and layers
         if (m_enableDebugMessenger)
@@ -1129,7 +1147,7 @@ namespace Molten
                 }
 
                 Vulkan::PhysicalDeviceFeaturesWithName missingFeatures;
-                if (!Vulkan::CheckRequiredDeviceFeatures(missingFeatures, m_requiredDeviceFeatures, capabilities.features))
+                if (!Vulkan::CheckRequiredPhysicalDeviceFeatures(missingFeatures, capabilities.features, m_requiredDeviceFeatures))
                 {
                     return false;
                 }
@@ -1173,6 +1191,7 @@ namespace Molten
                 "Found no physical device, out of " + 
                 std::to_string(physicalDevices.size()) + 
                 " possible, with suitable render capabilities.");
+            return false;
         }
 
         // Get present mode.
@@ -1186,18 +1205,24 @@ namespace Molten
             }
         }
 
-        return foundDevice;
+        return true;
     }
 
     bool VulkanRenderer::LoadLogicalDevice()
     {
         Vulkan::Result<> result;
 
+        VkPhysicalDeviceFeatures enabledDeviceFeatures = {};
+        Vulkan::EnablePhysicalDeviceFeatures(enabledDeviceFeatures, m_requiredDeviceFeatures);
+
+        auto& availableDeviceFeatures = m_physicalDevice.GetCapabilities().features;
+        Vulkan::EnableOptionalPhysicalDeviceFeatures(enabledDeviceFeatures, availableDeviceFeatures, m_optionalDeviceFeatures);
+
         if (!(result = m_logicalDevice.Create(
             m_physicalDevice,
             m_requiredInstanceLayers,
             m_requiredDeviceExtensions,
-            m_requiredDeviceFeatures)))
+            enabledDeviceFeatures)))
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to create logical device");
             return false;
@@ -1345,7 +1370,7 @@ namespace Molten
         return true;
     }
 
-    bool VulkanRenderer::CreateVertexInputAttributes(
+    /*bool VulkanRenderer::CreateVertexInputAttributes(
         const Shader::Visual::InputStructure& inputs,
         std::vector<VkVertexInputAttributeDescription>& attributes, 
         uint32_t& stride)
@@ -1377,9 +1402,9 @@ namespace Molten
             }
         }
         return true;
-    }
+    }*/
 
-    bool VulkanRenderer::CreateDescriptorSetLayouts(
+    /*bool VulkanRenderer::CreateDescriptorSetLayouts(
         const std::vector<Shader::Visual::Script*>& visualScripts, 
         Vulkan::DescriptorSetLayouts& setLayouts)
     {
@@ -1439,9 +1464,9 @@ namespace Molten
             setLayouts.push_back(descriptorSetLayout);
         }
         return true;
-    }
+    }*/
 
-    bool VulkanRenderer::LoadShaderStages(
+    /*bool VulkanRenderer::LoadShaderStages(
         const std::vector<Shader::Visual::Script*>& visualScripts,
         Vulkan::ShaderModules& shaderModules,
         std::vector<VkPipelineShaderStageCreateInfo>& shaderStageCreateInfos,
@@ -1512,7 +1537,7 @@ namespace Molten
         pushConstantOffsets = std::move(pushConstantTemplate.offsets);
 
         return true;
-    }
+    }*/
 
     VkShaderModule VulkanRenderer::CreateShaderModule(const std::vector<uint8_t>& spirvCode)
     {

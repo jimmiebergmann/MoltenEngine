@@ -29,96 +29,96 @@
 namespace Molten::Shader::Visual
 {
     
-    // Uniform meta data implementations.
-    UniformMetaData::UniformMetaData(const uint32_t id) :
-        m_id(id)
-    {}
+    //// Uniform meta data implementations.
+    //UniformMetaData::UniformMetaData(const uint32_t id) :
+    //    m_id(id)
+    //{}
 
-    uint32_t UniformMetaData::GetId() const
-    {
-        return m_id;
-    }
+    //uint32_t UniformMetaData::GetId() const
+    //{
+    //    return m_id;
+    //}
 
 
-    // Uniform interfaces container implementations.
-    UniformInterfaces::UniformInterfaces(Script& script) :
-        m_script(script)
-    {}
+    //// Uniform interfaces container implementations.
+    //UniformInterfaces::UniformInterfaces(Script& script) :
+    //    m_script(script)
+    //{}
 
-    UniformInterfaces::~UniformInterfaces()
-    {
-        RemoveAllInterfaces();
-    }
+    //UniformInterfaces::~UniformInterfaces()
+    //{
+    //    RemoveAllInterfaces();
+    //}
  
-    UniformInterfaces::InterfaceContainer::iterator UniformInterfaces::begin()
-    {
-        return m_interfaces.begin();
-    }
-    UniformInterfaces::InterfaceContainer::const_iterator UniformInterfaces::begin() const
-    {
-        return m_interfaces.begin();
-    }
+    //UniformInterfaces::InterfaceContainer::iterator UniformInterfaces::begin()
+    //{
+    //    return m_interfaces.begin();
+    //}
+    //UniformInterfaces::InterfaceContainer::const_iterator UniformInterfaces::begin() const
+    //{
+    //    return m_interfaces.begin();
+    //}
 
-    UniformInterfaces::InterfaceContainer::iterator UniformInterfaces::end()
-    {
-        return m_interfaces.end();
-    }
-    UniformInterfaces::InterfaceContainer::const_iterator UniformInterfaces::end() const
-    {
-        return m_interfaces.end();
-    }
+    //UniformInterfaces::InterfaceContainer::iterator UniformInterfaces::end()
+    //{
+    //    return m_interfaces.end();
+    //}
+    //UniformInterfaces::InterfaceContainer::const_iterator UniformInterfaces::end() const
+    //{
+    //    return m_interfaces.end();
+    //}
 
-    UniformInterface* UniformInterfaces::AddInterface(const uint32_t id)
-    {
-        if (m_usedIds.find(id) != m_usedIds.end())
-        {
-            return nullptr;
-        }
+    //UniformInterface* UniformInterfaces::AddInterface(const uint32_t id)
+    //{
+    //    if (m_usedIds.find(id) != m_usedIds.end())
+    //    {
+    //        return nullptr;
+    //    }
 
-        auto* newInterface = new UniformInterface(m_script, id);
-        m_interfaces.push_back(newInterface);
-        m_usedIds.insert(id);
-        return newInterface;
-    }
+    //    auto* newInterface = new UniformInterface(m_script, id);
+    //    m_interfaces.push_back(newInterface);
+    //    m_usedIds.insert(id);
+    //    return newInterface;
+    //}
 
-    void UniformInterfaces::RemoveInterface(const size_t index)
-    {
-        if (index >= m_interfaces.size())
-        {
-            return;
-        }
-        auto it = m_interfaces.begin() + index;
-        m_usedIds.erase((*it)->GetId());
-        delete *it;
-        m_interfaces.erase(it);
-    }
-    void UniformInterfaces::RemoveInterface(InterfaceContainer::iterator it)
-    {
-        m_interfaces.erase(it);
-    }
+    //void UniformInterfaces::RemoveInterface(const size_t index)
+    //{
+    //    if (index >= m_interfaces.size())
+    //    {
+    //        return;
+    //    }
+    //    auto it = m_interfaces.begin() + index;
+    //    m_usedIds.erase((*it)->GetId());
+    //    delete *it;
+    //    m_interfaces.erase(it);
+    //}
+    //void UniformInterfaces::RemoveInterface(InterfaceContainer::iterator it)
+    //{
+    //    m_interfaces.erase(it);
+    //}
 
-    void UniformInterfaces::RemoveAllInterfaces()
-    {
-        for (auto* inter : m_interfaces)
-        {
-            delete inter;
-        }
-        m_interfaces.clear();
-        m_usedIds.clear();
-    }
+    //void UniformInterfaces::RemoveAllInterfaces()
+    //{
+    //    for (auto* inter : m_interfaces)
+    //    {
+    //        delete inter;
+    //    }
+    //    m_interfaces.clear();
+    //    m_usedIds.clear();
+    //}
 
-    UniformInterface* UniformInterfaces::GetInterface(const size_t index)
-    {
-        if (index >= m_interfaces.size())
-        {
-            return nullptr;
-        }
-        return m_interfaces[index];
-    }
+    //UniformInterface* UniformInterfaces::GetInterface(const size_t index)
+    //{
+    //    if (index >= m_interfaces.size())
+    //    {
+    //        return nullptr;
+    //    }
+    //    return m_interfaces[index];
+    //}
 
-    size_t UniformInterfaces::GetInterfaceCount() const
-    {
-        return m_interfaces.size();
-    }
+    //size_t UniformInterfaces::GetInterfaceCount() const
+    //{
+    //    return m_interfaces.size();
+    //}
 
 }

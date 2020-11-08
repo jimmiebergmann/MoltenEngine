@@ -23,7 +23,6 @@
 *
 */
 
-
 #include "Molten/Renderer/Vulkan/Utility/VulkanSwapChain.hpp"
 
 #if defined(MOLTEN_ENABLE_VULKAN)
@@ -88,14 +87,18 @@ namespace Molten::Vulkan
 
     void SwapChain::Destroy()
     {
-        if (m_handle != VK_NULL_HANDLE)
+        if (m_logicalDevice)
         {
-            UnloadAssociatedObjects();
-
-            vkDestroySwapchainKHR(m_logicalDevice->GetHandle(), m_handle, nullptr);
-            m_handle = VK_NULL_HANDLE;
+            if (m_handle != VK_NULL_HANDLE)
+            {
+                UnloadAssociatedObjects();
+                vkDestroySwapchainKHR(m_logicalDevice->GetHandle(), m_handle, nullptr);
+                m_handle = VK_NULL_HANDLE;
+                
+            }
             m_logicalDevice = nullptr;
         }
+        
     }
 
     Result<> SwapChain::Recreate()

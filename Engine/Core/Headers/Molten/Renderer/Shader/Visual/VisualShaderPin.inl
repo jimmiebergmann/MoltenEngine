@@ -345,4 +345,19 @@ namespace Molten::Shader::Visual
         m_connections.erase(it);
     }
 
+    
+    // Pin traits implementations.
+    template<>
+    struct PinTraits<InputPin>
+    {
+        static constexpr bool isInputPin = true;
+        static constexpr bool isOutputPin = false;
+    };
+    template<>
+    struct PinTraits<OutputPin>
+    {
+        static constexpr bool isInputPin = false;
+        static constexpr bool isOutputPin = true;
+    };
+
 }

@@ -30,14 +30,14 @@
 #include <algorithm>
 
 MOLTEN_UNSCOPED_ENUM_BEGIN
-
+/*
 #define CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME_QUOTE(x) #x
 #define CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(feature) {  &VkPhysicalDeviceFeatures::##feature, CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME_QUOTE(##feature) }
-
+*/
 namespace Molten::Vulkan
 {  
 
-    struct InternalPhysicalDeviceFeatureWithName
+    /*struct InternalPhysicalDeviceFeatureWithName
     {
         VkBool32 VkPhysicalDeviceFeatures::* memberPointer;
         const std::string name;
@@ -143,7 +143,7 @@ namespace Molten::Vulkan
         }
 
         return !failed;
-    }
+    }*/
 
     VkResult CreateFences(
         Fences& fences,

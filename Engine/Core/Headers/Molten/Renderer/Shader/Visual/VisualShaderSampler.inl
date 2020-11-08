@@ -23,20 +23,42 @@
 *
 */
 
-
-#include "Molten/Renderer/Shader/Visual/VisualShaderPushConstant.hpp"
-
 namespace Molten::Shader::Visual
 {
-    
-    // Push constant meta data implementations.
-    PushConstantMetaData::PushConstantMetaData(const uint32_t id) :
-        m_id(id)
+
+    // Sampler 2D implementations.
+    inline Sampler2D::Sampler2D(Script& script) :
+        Node(script),
+        m_outputPin(*this)
     {}
 
-    uint32_t PushConstantMetaData::GetId() const
+    inline NodeType Sampler2D::GetType() const
     {
-        return m_id;
+        return NodeType::DescriptorBinding;
+    }
+
+
+    inline size_t Sampler2D::GetOutputPinCount2() const
+    {
+        return 1;
+    }
+
+    inline OutputPin<typename Sampler2D::Handle>* Sampler2D::GetOutputPin2(const size_t index)
+    {
+        return &m_outputPin;
+    }
+    inline const OutputPin<typename Sampler2D::Handle>* Sampler2D::GetOutputPin2(const size_t index) const
+    {
+        return &m_outputPin;
+    }
+
+    inline std::vector<OutputPin<typename Sampler2D::Handle>*> Sampler2D::GetOutputPins2()
+    {
+        return { &m_outputPin };
+    }
+    inline std::vector<const OutputPin<typename Sampler2D::Handle>*> Sampler2D::GetOutputPins2() const
+    {
+        return { &m_outputPin };
     }
 
 }
