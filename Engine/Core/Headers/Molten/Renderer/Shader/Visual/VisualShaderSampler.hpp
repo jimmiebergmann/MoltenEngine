@@ -31,37 +31,63 @@
 namespace Molten::Shader::Visual
 {
 
-    class Sampler2D : public Node
+    //class Sampler2D : public Node
+    //{
+
+    //public:
+
+    //    using Handle = Sampler2DHandle;
+
+    //    /** Constructor. */
+    //    Sampler2D(Script& script);
+
+    //    /** Get type of node. */
+    //    NodeType GetType() const override;
+
+
+
+    //    size_t GetOutputPinCount2() const;
+
+    //    OutputPin<Handle>* GetOutputPin2(const size_t index = 0);
+    //    const OutputPin<Handle>* GetOutputPin2(const size_t index = 0) const;
+
+    //    std::vector<OutputPin<Handle>*> GetOutputPins2();
+    //    std::vector<const OutputPin<Handle>*> GetOutputPins2() const;
+
+    //private:
+
+    //    OutputPin<Handle> m_outputPin;
+
+    //};
+
+
+    /*struct Sampler2D
     {
+        struct Handle {};
+    };
 
-    public:
+    struct Sampler3D
+    {
+        struct Handle {};
+    };*/
 
+    struct Sampler1D 
+    {
+        using Handle = Sampler1DHandle;
+    };
+
+    struct Sampler2D
+    {
         using Handle = Sampler2DHandle;
+    };
 
-        /** Constructor. */
-        Sampler2D(Script& script);
-
-        /** Get type of node. */
-        NodeType GetType() const override;
-
-
-
-        size_t GetOutputPinCount2() const;
-
-        OutputPin<Handle>* GetOutputPin2(const size_t index = 0);
-        const OutputPin<Handle>* GetOutputPin2(const size_t index = 0) const;
-
-        std::vector<OutputPin<Handle>*> GetOutputPins2();
-        std::vector<const OutputPin<Handle>*> GetOutputPins2() const;
-
-    private:
-
-        OutputPin<Handle> m_outputPin;
-
+    struct Sampler3D
+    {
+        using Handle = Sampler3DHandle;
     };
 
 }
 
-#include "Molten/Renderer/Shader/Visual/VisualShaderSampler.inl"
+//#include "Molten/Renderer/Shader/Visual/VisualShaderSampler.inl"
 
 #endif

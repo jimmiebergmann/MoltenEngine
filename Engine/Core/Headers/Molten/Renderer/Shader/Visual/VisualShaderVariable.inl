@@ -27,7 +27,7 @@ namespace Molten::Shader::Visual
 {
 
     // Variable meta data base implementations.
-    template<typename TMetaData>
+    /*template<typename TMetaData>
     template<typename ... TMetaDataParams>
     inline VariableMetaBase<TMetaData>::VariableMetaBase(Script& script, TMetaDataParams ... metaDataParameters) :
         VariableBase(script),
@@ -293,6 +293,6 @@ namespace Molten::Shader::Visual
     inline void ConstantVariable<TDataType, TMetaData>::SetValue(DataType&& value)
     {
         m_value = std::move(value);
-    }
+    }*/
 
 }

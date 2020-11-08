@@ -31,29 +31,12 @@
 namespace Molten::Shader::Visual
 {
 
-
     template<typename ... TAllowedDataTypes>
-    class UniformBuffer : public Node
-    {
-
-    public:
-
-        /** Constructor. */
-        UniformBuffer(Script& script);
-
-        /** Get type of node. */
-        NodeType GetType() const override;
-
-    private:
-
-    };
-
+    class UniformBuffer {};
 
     using FragmentUniformBuffer = UniformBuffer<bool, int32_t, float, Vector2f32, Vector3f32, Vector4f32, Matrix4x4f32>;
     using VertexUniformBuffer = UniformBuffer<bool, int32_t, float, Vector2f32, Vector3f32, Vector4f32, Matrix4x4f32>;
 
 }
-
-#include "Molten/Renderer/Shader/Visual/VisualShaderUniformBuffer.inl"
 
 #endif

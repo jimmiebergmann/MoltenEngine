@@ -34,27 +34,47 @@ namespace Molten::Shader::Visual
     {
         FragmentScript script;
 
-        auto& output = script.GetOutputInterface().AddPin<Vector4f32>();
-        auto& color = script.GetInputInterface().AddPin<Vector4f32>();
+        auto& output1 = script.GetOutputInterface().AddPin<Vector4f32>();
+        auto& input1 = script.GetInputInterface().AddPin<Vector4f32>();
         auto& mult = script.CreateOperator<Shader::Visual::Operators::MultVec4f32>();
-        auto& add = script.CreateOperator<Shader::Visual::Operators::AddVec4f32>();
+        auto& add1 = script.CreateOperator<Shader::Visual::Operators::AddVec4f32>();
+        auto& add2 = script.CreateOperator<Shader::Visual::Operators::AddVec4f32>();
         auto& var1 = script.CreateConstant<Vector4f32>({ 0.0f, 0.0f, 0.3f, 0.0f });
         auto& var2 = script.CreateConstant<Vector4f32>({ 1.0f, 0.5f, 0.0f, 1.0f });
+        auto* set1 = script.GetDescriptorSets().AddSet(0);
+        auto* set2 = script.GetDescriptorSets().AddSet(1);
+        /*auto* sampler1 =*/ set1->AddBinding<Sampler1D>(0);
+        /*auto* sampler2 =*/ set1->AddBinding<Sampler2D>(1);
+        /*auto* sampler3 =*/ set2->AddBinding<Sampler3D>(0);
+        auto* ubo1 = set1->AddBinding<FragmentUniformBuffer>(2);
+        auto* ubo2 = set1->AddBinding<FragmentUniformBuffer>(3);
+        ubo1->AddPin<bool>();
+        ubo1->AddPin<int32_t>();
+        ubo1->AddPin<float>();
+        ubo1->AddPin<Vector2f32>();
+        ubo1->AddPin<Vector3f32>();
+        auto& ubo1_vec4 = ubo1->AddPin<Vector4f32>();
+        ubo1->AddPin<Matrix4x4f32>();
+        ubo2->AddPin<float>();
+
         script.GetPushConstants().AddPin<Vector4f32>();
         script.GetPushConstants().AddPin<Vector2f32>();
         script.GetPushConstants().AddPin<float>();
 
-        output.Connect(*add.GetOutputPin());
+        output1.Connect(*add2.GetOutputPin());
 
-        add.GetInputPin(0)->Connect(*mult.GetOutputPin());
-        add.GetInputPin(1)->Connect(*var1.GetOutputPin());
+        add1.GetInputPin(0)->Connect(ubo1_vec4);
+        add1.GetInputPin(1)->Connect(*var1.GetOutputPin());
 
-        mult.GetInputPin(0)->Connect(color);
+        add2.GetInputPin(0)->Connect(*mult.GetOutputPin());
+        add2.GetInputPin(1)->Connect(*add1.GetOutputPin());
+
+        mult.GetInputPin(0)->Connect(input1);
         mult.GetInputPin(1)->Connect(*var2.GetOutputPin());
 
         std::vector<uint8_t> source;    
         {
-            Molten::Test::Benchmarker bench1("GLSL generator");
+            Molten::Test::Benchmarker bench1("Generate GLSL");
             source = VulkanGenerator::GenerateGlsl(script, nullptr);
         }
         
@@ -65,62 +85,51 @@ namespace Molten::Shader::Visual
             "#version 450\n"
             "#extension GL_ARB_separate_shader_objects : enable\n"
             "layout(location = 0) in vec4 in_0;\n"
-            "layout(std140, push_constant) uniform s_fragment_pc\n"
+            "layout(std140, push_constant) uniform s_pc\n"
             "{\n"
             "layout(offset = 0) vec4 mem0;\n"
             "layout(offset = 16) vec2 mem16;\n"
             "layout(offset = 24) float mem24;\n"
             "} pc;\n"
+            "layout(set = 0, binding = 0) uniform sampler1D sampler_0;\n"
+            "layout(set = 0, binding = 1) uniform sampler2D sampler_1;\n"
+            "layout(std140, set = 0, binding=2) uniform s_ubo_0\n"
+            "{\n"
+            "bool val_0;\n"
+            "int val_1;\n"
+            "float val_2;\n"
+            "vec2 val_3;\n"
+            "vec3 val_4;\n"
+            "vec4 val_5;\n"
+            "mat4 val_6;\n"
+            "} ubo_0;\n"
+            "layout(std140, set = 0, binding=3) uniform s_ubo_1\n"
+            "{\n"
+            "float val_0;\n"
+            "} ubo_1;\n"
+            "layout(set = 1, binding = 0) uniform sampler3D sampler_2;\n"
             "layout(location = 0) out vec4 out_0;\n"
             "void main()\n"
             "{\n"
             "vec4 vec4_0 = vec4(1, 0.5, 0, 1);\n"
             "vec4 mul_1 = in_0 * vec4_0;\n"
             "vec4 vec4_2 = vec4(0, 0, 0.3, 0);\n"
-            "vec4 add_3 = mul_1 + vec4_2;\n"
-            "out_0 = add_3;\n"
+            "vec4 add_3 = ubo_0.val_5 + vec4_2;\n"
+            "vec4 add_4 = mul_1 + add_3;\n"
+            "out_0 = add_4;\n"
             "}\n";
 
         EXPECT_STREQ(sourceStr.c_str(), expectedSource.c_str());
 
-        /*std::vector<uint8_t> source;
+#if defined(MOLTEN_ENABLE_VULKAN)
+        std::vector<uint8_t> spirv;
         {
-            VulkanGenerator::GlslTemplates glslTemplates;
-            Molten::Test::Benchmarker bench1("GLSL generator");
-            {
-                Molten::Test::Benchmarker bench2("GLSL template generator");
-                EXPECT_TRUE(VulkanGenerator::GenerateGlslTemplate(glslTemplates, { &script }, nullptr));
-            }
-
-            VulkanGenerator::GlslStageTemplates stageTemplates;
-            stageTemplates.pushConstantTemplate.blockSource = &glslTemplates.pushConstantTemplate.blockSource;
-            stageTemplates.pushConstantTemplate.offsets = &glslTemplates.pushConstantTemplate.stageOffsets[0];
-
-            source = VulkanGenerator::GenerateGlsl(script, &stageTemplates);
+            Molten::Test::Benchmarker bench1("Generate SPIR-V");
+            spirv = VulkanGenerator::ConvertGlslToSpriV(source, Shader::Type::Fragment);
         }
-        ASSERT_GT(source.size(), size_t(0));
-        const std::string sourceStr(source.begin(), source.end());
-
-        static const std::string expectedSource =
-            "#version 450\n"
-            "#extension GL_ARB_separate_shader_objects : enable\n"
-            "layout(location = 0) in vec4 in_0;\n"         
-            "layout(std140, push_constant) uniform s_fragment_pc\n"
-            "{\n"
-            "layout(offset = 0) vec4 mem0;\n"
-            "layout(offset = 16) vec2 mem16;\n"
-            "layout(offset = 24) float mem24;\n"
-            "} pc;\n"
-            "layout(location = 0) out vec4 out_0;\n"
-            "void main(){\n"
-            "vec4 vec4_0 = vec4(1, 0.5, 0, 1);\n"
-            "vec4 mul_1 = in_0 * vec4_0;\n"
-            "vec4 vec4_2 = vec4(0, 0, 0.3, 0);\n"
-            "vec4 add_3 = mul_1 + vec4_2;\n"
-            "out_0 = add_3;\n"
-            "}\n";
-
-        EXPECT_STREQ(sourceStr.c_str(), expectedSource.c_str());*/
+        
+        EXPECT_GE(spirv.size(), size_t(0));
+#endif
     }
     /*
     TEST(Shader, VisualShader_DefaultPinValue)

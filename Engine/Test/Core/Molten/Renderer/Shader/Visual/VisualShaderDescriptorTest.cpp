@@ -111,9 +111,9 @@ namespace Molten::Shader::Visual
                 EXPECT_EQ(set.begin(), set.end());
                 EXPECT_EQ(constSet.begin(), constSet.end());
                 EXPECT_EQ(set.GetBindingCount(), size_t(0));
-
+                
                 auto binding1 = set.AddBinding<Sampler2D>(0);
-                ASSERT_NE(binding1, nullptr);
+                 ASSERT_NE(binding1, nullptr);
                 EXPECT_NE(set.begin(), set.end());
                 EXPECT_NE(constSet.begin(), constSet.end());
                 EXPECT_EQ(set.GetBindingCount(), size_t(1));

@@ -59,12 +59,15 @@ namespace Molten::Shader
         Vector3f32,
         Vector4f32,
         Matrix4x4f32,
-
-        Sampler2D
+        Sampler1D, 
+        Sampler2D, 
+        Sampler3D
     };
 
     /** Sample handle types. */
+    struct Sampler1DHandle {};
     struct Sampler2DHandle {};
+    struct Sampler3DHandle {};
 
 
     /** Helper wrapper class for aligning any data type by 16 bytes. */

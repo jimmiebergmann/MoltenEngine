@@ -32,7 +32,7 @@ namespace Molten::Shader::Visual
 {
 
     /** Enumerator of variable types. */
-    enum class VariableType : uint32_t
+    /*enum class VariableType : uint32_t
     {
         Constant,
         Input,
@@ -48,11 +48,11 @@ namespace Molten::Shader::Visual
     class OutputVariable;
 
     template<typename TDataType, typename TMetaData = void>
-    class ConstantVariable;
+    class ConstantVariable;*/
 
     
     /** Base class of all variable types. */
-    class MOLTEN_API VariableBase : public Node
+    /*class MOLTEN_API VariableBase : public Node
     {
 
     public:
@@ -60,21 +60,21 @@ namespace Molten::Shader::Visual
         explicit VariableBase(Script& script);
         virtual ~VariableBase() = default;
 
-        virtual NodeType GetType() const override; 
+        virtual NodeType GetType() const override; */
 
-        /** @brief Get data type of variable. */
-        virtual VariableDataType GetDataType() const = 0;
+        ///** @brief Get data type of variable. */
+        //virtual VariableDataType GetDataType() const = 0;
 
         /** @brief Get variable type. */
-        virtual VariableType GetVariableType() const = 0;
+        //virtual VariableType GetVariableType() const = 0;
 
         /** Get sizes of variable in bytes. Kind of like sizeof(...). */
-        virtual size_t GetSizeOf() const = 0;
+        //virtual size_t GetSizeOf() const = 0;
 
         /** Get sizes of variable in bytes, padded by 4 bytes. Kind of like sizeof(PaddedType<T>). */
-        virtual size_t GetPaddedSizeOf() const = 0;
+       // virtual size_t GetPaddedSizeOf() const = 0;
 
-    };
+    /*};
 
 
     template<typename TMetaData>
@@ -98,11 +98,11 @@ namespace Molten::Shader::Visual
         explicit VariableMetaBase(Script& script);
         virtual ~VariableMetaBase() = default;
 
-    };
+    };*/
 
 
     /** Base class of input variable type. */
-    template<typename TMetaData = void>
+   /* template<typename TMetaData = void>
     class InputVariableBase : public VariableMetaBase<TMetaData>
     {
 
@@ -118,11 +118,11 @@ namespace Molten::Shader::Visual
         using VariableBase::GetInputPins;
         using VariableBase::GetInputPinCount;
 
-    };
+    };*/
 
 
     /** Base class of ouput variable type. */
-    template<typename TMetaData = void>
+   /* template<typename TMetaData = void>
     class OutputVariableBase : public VariableMetaBase<TMetaData>
     {
 
@@ -138,11 +138,11 @@ namespace Molten::Shader::Visual
         using VariableBase::GetOutputPins;
         using VariableBase::GetOutputPinCount;
 
-    };
+    };*/
 
 
     /** Base class of constant variable type. */
-    template<typename TMetaData = void>
+   /* template<typename TMetaData = void>
     class ConstantVariableBase : public VariableMetaBase<TMetaData>
     {
 
@@ -161,14 +161,14 @@ namespace Molten::Shader::Visual
         using VariableBase::GetInputPins;
         using VariableBase::GetInputPinCount;
 
-    };
+    };*/
 
 
     /**
      * Visual shader script input variable node.
      * Input variables only consist of an output pin.
      */
-    template<typename TDataType, typename TMetaData>
+   /* template<typename TDataType, typename TMetaData>
     class InputVariable : public InputVariableBase<TMetaData>
     {
 
@@ -186,40 +186,40 @@ namespace Molten::Shader::Visual
         virtual Pin* GetOutputPin(const size_t index = 0) override;
         virtual const Pin* GetOutputPin(const size_t index = 0) const override;
         virtual std::vector<Pin*> GetOutputPins() override;
-        virtual std::vector<const Pin*> GetOutputPins() const override;
+        virtual std::vector<const Pin*> GetOutputPins() const override;*/
 
         /** @brief Get data type of variable. */
-        virtual VariableDataType GetDataType() const override;
+        //virtual VariableDataType GetDataType() const override;
 
         /** @brief Get variable type. */
-        virtual VariableType GetVariableType() const override;
+        //virtual VariableType GetVariableType() const override;
 
         /** Get sizes of variable in bytes. Kind of like sizeof(...). */
-        virtual size_t GetSizeOf() const override;
+        //virtual size_t GetSizeOf() const override;
 
         /** Get sizes of variable in bytes, padded by 4 bytes. Kind of like sizeof(PaddedType<T>). */
-        virtual size_t GetPaddedSizeOf() const override;
+        //virtual size_t GetPaddedSizeOf() const override;
 
-    private:
+   // private:
 
         /** Copy and move operations are not allowed. */
         /**@{*/
-        InputVariable(const InputVariable& copy) = delete;
+        /*InputVariable(const InputVariable& copy) = delete;
         InputVariable(const InputVariable&& move) = delete;
         InputVariable& operator =(const InputVariable& copy) = delete;
-        InputVariable& operator =(const InputVariable&& move) = delete;
+        InputVariable& operator =(const InputVariable&& move) = delete;*/
         /**@*/
 
-        OutputPin<DataType> m_outputPin;
+       /* OutputPin<DataType> m_outputPin;
 
-    };
+    };*/
 
 
     /** 
      * Visual shader script output variable node.
      * Output variables only consist of an input pin. 
      */
-    template<typename TDataType, typename TMetaData>
+    /*template<typename TDataType, typename TMetaData>
     class OutputVariable : public OutputVariableBase<TMetaData>
     {
 
@@ -236,33 +236,33 @@ namespace Molten::Shader::Visual
         virtual Pin* GetInputPin(const size_t index = 0) override;
         virtual const Pin* GetInputPin(const size_t index = 0) const override;
         virtual std::vector<Pin*> GetInputPins() override;
-        virtual std::vector<const Pin*> GetInputPins() const override;   
+        virtual std::vector<const Pin*> GetInputPins() const override;   */
 
         /** @brief Get data type of variable. */
-        virtual VariableDataType GetDataType() const override;
+        //virtual VariableDataType GetDataType() const override;
 
         /** @brief Get variable type. */
-        virtual VariableType GetVariableType() const override;
+        //virtual VariableType GetVariableType() const override;
 
         /** Get sizes of variable in bytes. Kind of like sizeof(...). */
-        virtual size_t GetSizeOf() const override;
+       // virtual size_t GetSizeOf() const override;
 
         /** Get sizes of variable in bytes, padded by 4 bytes. Kind of like sizeof(PaddedType<T>). */
-        virtual size_t GetPaddedSizeOf() const override;
+        //virtual size_t GetPaddedSizeOf() const override;
 
-    private:
+   // private:
 
         /** Copy and move operations are not allowed. */
         /**@{*/
-        OutputVariable(const OutputVariable& copy) = delete;
+      /*  OutputVariable(const OutputVariable& copy) = delete;
         OutputVariable(const OutputVariable&& move) = delete;
         OutputVariable& operator =(const OutputVariable& copy) = delete;
-        OutputVariable& operator =(const OutputVariable&& move) = delete;
+        OutputVariable& operator =(const OutputVariable&& move) = delete;*/
         /**@*/
 
-        InputPin<DataType> m_inputPin;
+        /*InputPin<DataType> m_inputPin;
 
-    };
+    };*/
 
 
     /**
@@ -270,7 +270,7 @@ namespace Molten::Shader::Visual
      * The stored value is not constant and can be changed at any time,
      * but it's used as a constant in the generated shader code.
      */
-    template<typename TDataType, typename TMetaData>
+   /* template<typename TDataType, typename TMetaData>
     class ConstantVariable : public ConstantVariableBase<TMetaData>
     {
 
@@ -290,45 +290,45 @@ namespace Molten::Shader::Visual
         virtual Pin* GetOutputPin(const size_t index = 0) override;
         virtual const Pin* GetOutputPin(const size_t index = 0) const override;
         virtual std::vector<Pin*> GetOutputPins() override;
-        virtual std::vector<const Pin*> GetOutputPins() const override;
+        virtual std::vector<const Pin*> GetOutputPins() const override;*/
 
         /** @brief Get data type of variable. */
-        virtual VariableDataType GetDataType() const override;
+      //  virtual VariableDataType GetDataType() const override;
 
         /** @brief Get variable type. */
-        virtual VariableType GetVariableType() const override;
+       // virtual VariableType GetVariableType() const override;
 
         /** Get sizes of variable in bytes. Kind of like sizeof(...). */
-        virtual size_t GetSizeOf() const override;
+       // virtual size_t GetSizeOf() const override;
 
         /** Get sizes of variable in bytes, padded by 4 bytes. Kind of like sizeof(PaddedType<T>). */
-        virtual size_t GetPaddedSizeOf() const override;
+       // virtual size_t GetPaddedSizeOf() const override;
 
         /** @brief Get constant value. */
-        const DataType& GetValue() const;
+        //const DataType& GetValue() const;
 
         /** @brief Set constant value. */
         /**@{*/
-        void SetValue(const DataType& value);
-        void SetValue(DataType&& value);
+        //void SetValue(const DataType& value);
+        //void SetValue(DataType&& value);
         /**@}*/
 
-    private:
+    //private:
 
         /** Copy and move operations are not allowed. */
         /**@{*/
-        ConstantVariable(const ConstantVariable& copy) = delete;
+        /*ConstantVariable(const ConstantVariable& copy) = delete;
         ConstantVariable(const ConstantVariable&& move) = delete;
         ConstantVariable& operator =(const ConstantVariable& copy) = delete;
-        ConstantVariable& operator =(const ConstantVariable&& move) = delete;
+        ConstantVariable& operator =(const ConstantVariable&& move) = delete;*/
         /**@*/
 
-        OutputPin<DataType> m_outputPin;
+       /* OutputPin<DataType> m_outputPin;
         DataType m_value;
-    };
+    };*/
 
 }
 
-#include "Molten/Renderer/Shader/Visual/VisualShaderVariable.inl"
+//#include "Molten/Renderer/Shader/Visual/VisualShaderVariable.inl"
 
 #endif

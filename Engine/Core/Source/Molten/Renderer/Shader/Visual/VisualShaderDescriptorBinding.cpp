@@ -23,21 +23,19 @@
 *
 */
 
-#include "Molten/Utility/Template.hpp"
+#include "Molten/Renderer/Shader/Visual/VisualShaderDescriptorBinding.hpp"
 
 namespace Molten::Shader::Visual
 {
 
-    // Uniform buffer implementations.
-    template<typename ... TAllowedDataTypes>
-    inline UniformBuffer<TAllowedDataTypes...>::UniformBuffer(Script& script) :
+    // Descriptor binding base implementations.
+    DescriptorBindingBase::DescriptorBindingBase(Script& script) :
         Node(script)
     {}
 
-    template<typename ... TAllowedDataTypes>
-    inline NodeType UniformBuffer<TAllowedDataTypes...>::GetType() const
+    NodeType DescriptorBindingBase::GetType() const
     {
-        return NodeType::UniformBuffer;
+        return NodeType::DescriptorBinding;
     }
 
 }

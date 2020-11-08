@@ -56,6 +56,15 @@ namespace Molten::Shader::Visual
         /** Get id of this set. */
         [[nodiscard]] virtual uint32_t GetId() const = 0;
 
+        /** Get descriptor binding by index. Returns nullptr if index >= GetBindingCount().*/
+        /**@{*/
+        [[nodiscard]] virtual DescriptorBindingBase* GetBindingBase(const size_t index) = 0;
+        [[nodiscard]] virtual const DescriptorBindingBase* GetBindingBase(const size_t index) const = 0;
+        /**@}*/
+
+        /** Get number of descriptor bindings in this container. */
+        [[nodiscard]] virtual size_t GetBindingCount() const = 0;
+
     private:
 
         template<typename ... TAllowedBindingTypes>
@@ -124,12 +133,12 @@ namespace Molten::Shader::Visual
         [[nodiscard]] DescriptorBinding<TBindingType>* GetBinding(const size_t index);
         template<typename TBindingType>
         [[nodiscard]] const DescriptorBinding<TBindingType>* GetBinding(const size_t index) const;
-        [[nodiscard]] DescriptorBindingBase* GetBindingBase(const size_t index);
-        [[nodiscard]] const DescriptorBindingBase* GetBindingBase(const size_t index) const;
+        [[nodiscard]] DescriptorBindingBase* GetBindingBase(const size_t index) override;
+        [[nodiscard]] const DescriptorBindingBase* GetBindingBase(const size_t index) const override;
         /**@}*/
 
         /** Get number of descriptor bindings in this container. */
-        [[nodiscard]] size_t GetBindingCount() const;
+        [[nodiscard]] size_t GetBindingCount() const override;
 
     private:
 
@@ -158,15 +167,13 @@ namespace Molten::Shader::Visual
 
     public:
 
-        using DescriptorSetBaseType = DescriptorSetBase;
-
         virtual ~DescriptorSetsBase() = default;
 
 
         /** Get descriptor set by index. Returns nullptr if index >= GetSetCount(). */
         /**@{*/
-        [[nodiscard]] virtual DescriptorSetBaseType* GetSetBase(const size_t index) = 0;
-        [[nodiscard]] virtual const DescriptorSetBaseType* GetSetBase(const size_t index) const = 0;
+        [[nodiscard]] virtual DescriptorSetBase* GetSetBase(const size_t index) = 0;
+        [[nodiscard]] virtual const DescriptorSetBase* GetSetBase(const size_t index) const = 0;
         /**@}*/
 
         /** Get number of descriptor sets in this container. */
@@ -233,8 +240,8 @@ namespace Molten::Shader::Visual
         /**@{*/
         [[nodiscard]] DescriptorSetType* GetSet(const size_t index);
         [[nodiscard]] const DescriptorSetType* GetSet(const size_t index) const;
-        [[nodiscard]] DescriptorSetBaseType* GetSetBase(const size_t index) override;
-        [[nodiscard]] const DescriptorSetBaseType* GetSetBase(const size_t index) const override;
+        [[nodiscard]] DescriptorSetBase* GetSetBase(const size_t index) override;
+        [[nodiscard]] const DescriptorSetBase* GetSetBase(const size_t index) const override;
         /**@}*/
 
         /** Get number of descriptor sets in this container. */
@@ -256,8 +263,10 @@ namespace Molten::Shader::Visual
 
     using FragmentDescriptorSets = 
         DescriptorSets<
+            DescriptorBinding<FragmentUniformBuffer>,
+            DescriptorBinding<Sampler1D>,
             DescriptorBinding<Sampler2D>,
-            DescriptorBinding<FragmentUniformBuffer>
+            DescriptorBinding<Sampler3D>
         >;
 
     using VertexDescriptorSets =

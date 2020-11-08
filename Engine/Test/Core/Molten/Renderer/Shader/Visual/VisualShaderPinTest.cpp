@@ -39,7 +39,7 @@ namespace Molten::Shader::Visual
 
         NodeType GetType() const override
         {
-            return NodeType::Variable;
+            return NodeType::Constant;
         }
     };
 

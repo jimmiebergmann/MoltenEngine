@@ -80,14 +80,14 @@ namespace Molten::Shader::Visual
     template<typename TBindingType>
     inline DescriptorBinding<TBindingType>* DescriptorSet<TAllowedBindingTypes...>::AddBinding(const uint32_t id)
     {
-        static_assert(TemplateArgumentsContains<DescriptorBinding<TBindingType>, TAllowedBindingTypes...>(), 
+       static_assert(TemplateArgumentsContains<DescriptorBinding<TBindingType>, TAllowedBindingTypes...>(), 
             "Provided TBindingType is not allowed for this set.");
 
         if (m_usedBindingIds.find(id) != m_usedBindingIds.end())
         {
             return nullptr;
         }
-
+ 
         auto binding = new DescriptorBinding<TBindingType>(m_script, id);
         m_bindings.push_back(binding);
         m_usedBindingIds.insert(id);
@@ -298,7 +298,7 @@ namespace Molten::Shader::Visual
     }
 
     template<typename ... TAllowedBindingTypes>
-    inline typename DescriptorSetsBase::DescriptorSetBaseType* DescriptorSets<TAllowedBindingTypes...>::GetSetBase(const size_t index)
+    inline typename DescriptorSetBase* DescriptorSets<TAllowedBindingTypes...>::GetSetBase(const size_t index)
     {
         if (index >= m_sets.size())
         {
@@ -307,7 +307,7 @@ namespace Molten::Shader::Visual
         return m_sets[index];
     }
     template<typename ... TAllowedBindingTypes>
-    inline const typename DescriptorSetsBase::DescriptorSetBaseType* DescriptorSets<TAllowedBindingTypes...>::GetSetBase(const size_t index) const
+    inline const typename DescriptorSetBase* DescriptorSets<TAllowedBindingTypes...>::GetSetBase(const size_t index) const
     {
         if (index >= m_sets.size())
         {

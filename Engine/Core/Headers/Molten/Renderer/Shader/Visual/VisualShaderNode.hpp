@@ -44,12 +44,8 @@ namespace Molten::Shader::Visual
         Function,       ///< Built-in shader function.
         Operator,       ///< Operator node in local space.
         PushConstants,   ///< Push constant node, constants set by the client.
-
-        Variable,  ///< ???
-
         Constant,           ///< NEW
-        Sampler,            /// NEW 
-        UniformBuffer,      /// NEW
+        DescriptorBinding,
         VertexOutput,       /// NEW
         OutputInterface,    /// NEW
         InputInterface      /// NEW

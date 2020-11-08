@@ -23,19 +23,19 @@
 *
 */
 
-#include "Molten/Renderer/Shader/Visual/VisualShaderVariable.hpp"
+//#include "Molten/Renderer/Shader/Visual/VisualShaderVariable.hpp"
 
 namespace Molten::Shader::Visual
 {
 
     // Variable base implementations.
-    VariableBase::VariableBase(Script& script) :
+   /* VariableBase::VariableBase(Script& script) :
         Node(script)
     {}
 
     NodeType VariableBase::GetType() const
     {
         return NodeType::Variable;
-    }
+    }*/
 
 }

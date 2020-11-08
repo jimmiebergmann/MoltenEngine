@@ -27,7 +27,7 @@ namespace Molten::Shader::Visual
 {
 
     // Sampler 2D implementations.
-    inline Sampler2D::Sampler2D(Script& script) :
+    /*inline Sampler2D::Sampler2D(Script& script) :
         Node(script),
         m_outputPin(*this)
     {}
@@ -59,6 +59,6 @@ namespace Molten::Shader::Visual
     inline std::vector<const OutputPin<typename Sampler2D::Handle>*> Sampler2D::GetOutputPins2() const
     {
         return { &m_outputPin };
-    }
+    }*/
 
 }

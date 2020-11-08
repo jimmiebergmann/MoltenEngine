@@ -49,9 +49,9 @@ namespace Molten::Shader
     static const std::string g_glslDataTypeVec3 = "vec3";
     static const std::string g_glslDataTypeVec4 = "vec4";
     static const std::string g_glslDataTypeMat4 = "mat4";
+    static const std::string g_glslDataTypeSample1D = "sampler1D";
     static const std::string g_glslDataTypeSample2D = "sampler2D";
-
-    
+    static const std::string g_glslDataTypeSample3D = "sampler3D";
 
     // Function names.
     static const std::string g_glslFunctionCos = "cos";
@@ -74,11 +74,6 @@ namespace Molten::Shader
     static const std::string g_glslArithOpNameMul = "mul";
     static const std::string g_glslArithOpNameSub = "sub";
 
-    /*// Common names
-    static const std::string g_glslPushConstantMemberPrefix = "mem";
-    static const std::string g_glslVertexName = "vertex";
-    static const std::string g_glslFragmentName = "fragment";*/
-    
     
     static const std::string& GetGlslVariableDataType(const VariableDataType dataType)
     {
@@ -91,7 +86,9 @@ namespace Molten::Shader
             case VariableDataType::Vector3f32:   return g_glslDataTypeVec3;
             case VariableDataType::Vector4f32:   return g_glslDataTypeVec4;
             case VariableDataType::Matrix4x4f32: return g_glslDataTypeMat4;
+            case VariableDataType::Sampler1D:    return g_glslDataTypeSample1D;
             case VariableDataType::Sampler2D:    return g_glslDataTypeSample2D;
+            case VariableDataType::Sampler3D:    return g_glslDataTypeSample3D;
         }
         throw Exception("GetGlslVariableDataType is missing return value for dataType = " + std::to_string(static_cast<size_t>(dataType)) + ".");
     }
@@ -107,7 +104,9 @@ namespace Molten::Shader
         case VariableDataType::Vector3f32:   return 12;
         case VariableDataType::Vector4f32:   return 16;
         case VariableDataType::Matrix4x4f32: return 64;
-        case VariableDataType::Sampler2D: break;
+        case VariableDataType::Sampler1D: 
+        case VariableDataType::Sampler2D: 
+        case VariableDataType::Sampler3D: break;
         }
         throw Exception("GetGlslVariableOffset is missing return value for dataType = " + std::to_string(static_cast<size_t>(dataType)) + ".");
     }
@@ -182,7 +181,9 @@ namespace Molten::Shader
                                     GetGlslFloatString(mat.e[8]) + ", " +  GetGlslFloatString(mat.e[9]) + ", " +  GetGlslFloatString(mat.e[10]) + ", " + GetGlslFloatString(mat.e[11]) + ", " +
                                     GetGlslFloatString(mat.e[12]) + ", " + GetGlslFloatString(mat.e[13]) + ", " + GetGlslFloatString(mat.e[14]) + ", " + GetGlslFloatString(mat.e[15]) + ")";
             }
-            case VariableDataType::Sampler2D: break;
+            case VariableDataType::Sampler1D: 
+            case VariableDataType::Sampler2D: 
+            case VariableDataType::Sampler3D: break;
         }
 
         throw Exception("GetGlslDefaultValue is missing return value for pin.GetDataType() = " + std::to_string(static_cast<size_t>(pin.GetDataType())) + ".");
@@ -221,7 +222,9 @@ namespace Molten::Shader
                                     GetGlslFloatString(mat.e[8]) + ", " +  GetGlslFloatString(mat.e[9]) + ", " +  GetGlslFloatString(mat.e[10]) + ", " + GetGlslFloatString(mat.e[11]) + ", " +
                                     GetGlslFloatString(mat.e[12]) + ", " + GetGlslFloatString(mat.e[13]) + ", " + GetGlslFloatString(mat.e[14]) + ", " + GetGlslFloatString(mat.e[15]) + ")";
             }
-            case VariableDataType::Sampler2D: break;
+            case VariableDataType::Sampler1D: 
+            case VariableDataType::Sampler2D: 
+            case VariableDataType::Sampler3D: break;
         }
         throw Exception("GetGlslConstantValue is missing return value for constant.GetDataType() = " + std::to_string(static_cast<size_t>(constant.GetDataType())) + ".");
     }
@@ -248,100 +251,52 @@ namespace Molten::Shader
 
         throw Exception("GetGlslFunctionName is missing return value for functionType = " + std::to_string(static_cast<size_t>(functionType)) + ".");
     }
-    /*
-    static const std::string& GetGlslShaderTypeName(const Shader::Type type)
+
+    static const size_t CalculateEstimatedScriptSize(const Visual::Script& script)
     {
-        switch (type)
+        // Calculate estimated code length.
+        constexpr size_t estPreMainLength = 70;
+        constexpr size_t estMainLength = 20;
+        constexpr size_t estInputInterfaceLength = 40;
+        constexpr size_t estOutputInterfaceLength = 40;
+        constexpr size_t estVertOutputLength = 35;
+        constexpr size_t estPushConstantLength = 50;
+        constexpr size_t estLocalVariableLength = 35;
+        constexpr size_t estSamplerLength = 55;
+        constexpr size_t estUniformBufferBlockLength = 60;
+        constexpr size_t estUniformBufferVariableLength = 15;
+
+        auto& descriptorSets = script.GetDescriptorSetsBase();
+        auto& inputInterface = script.GetInputInterface();
+        auto& outputInterface = script.GetOutputInterface();
+        auto& pushConstants = script.GetPushConstantsBase();
+
+        size_t estimatedDescriptorLength = descriptorSets.GetSetCount() * estUniformBufferBlockLength;
+        for (size_t i = 0; i < descriptorSets.GetSetCount(); i++)
         {
-            case Shader::Type::Vertex: return g_glslVertexName;
-            case Shader::Type::Fragment: return g_glslFragmentName;
+            auto* set = descriptorSets.GetSetBase(i);
+            estimatedDescriptorLength += set->GetBindingCount() * estUniformBufferVariableLength;
         }
-        throw Exception("GetGlslShaderTypeName is missing return value for type = " + std::to_string(static_cast<size_t>(type)) + ".");
-    }
 
-    static std::string CreateGlslPushConstantMemberName(const uint32_t offset)
-    {
-        return g_glslPushConstantMemberPrefix + std::to_string(offset);
-    }
+        const Visual::VertexOutput* vertexOutput =
+            (script.GetType() == Type::Vertex) ? static_cast<const Visual::VertexScript&>(script).GetVertexOutput() : nullptr;
 
-    static void AppendToVector(std::vector<uint8_t>& output, const std::string& input)
-    {
-        std::copy(input.begin(), input.end(), std::back_inserter(output));
+        size_t estimatedSourceLength = estMainLength + estPreMainLength + estimatedDescriptorLength +
+            (script.GetNodeCount() * estLocalVariableLength) +
+            (inputInterface.GetPinCount() * estInputInterfaceLength) +
+            (outputInterface.GetPinCount() * estOutputInterfaceLength) +
+            (pushConstants.GetOutputPinCount() * estPushConstantLength) +
+            (vertexOutput ? estVertOutputLength : 0);
+
+        return estimatedSourceLength;
     }
-    static void AppendToVector(std::vector<uint8_t>& output, const std::vector<uint8_t>& input)
-    {
-        std::copy(input.begin(), input.end(), std::back_inserter(output));
-    }*/
 
     bool VulkanGenerator::GenerateGlslTemplate(
         VulkanGenerator::GlslTemplates & glslTemplates,
         const std::vector<Visual::Script*>& scripts,
         Logger* logger)
     {
-        /*PushConstantOffsets pushConstantOffsets;
-        PushConstantLocations pushConstantLocations;
-        uint32_t nextByteOffset = 0;
 
-        auto& pushConstantTemplate = glslTemplates.pushConstantTemplate;
-        auto& pushConstantCode = glslTemplates.pushConstantTemplate.blockSource;
-
-        std::string variableName;
-        std::string blockSourceLine;
-
-        for (auto* script : scripts)
-        {
-            PushConstantOffsets stageOffsets;
-
-            for (auto* member : script->GetPushConstantInterface())
-            {
-                auto memberDataType = member->GetDataType();
-                PushConstantOffset* currentOffset = nullptr;
-
-                uint32_t id = member->GetId();
-                auto locationIt = pushConstantLocations.find(id);
-                if (locationIt == pushConstantLocations.end())
-                {
-                    uint32_t offsetId = static_cast<uint32_t>(pushConstantOffsets.size());
-                    uint32_t currentByteOffset = nextByteOffset;
-                    pushConstantOffsets.push_back(PushConstantOffset{ currentByteOffset, memberDataType });
-                    currentOffset = &pushConstantOffsets[offsetId];
-                    pushConstantLocations.insert({ id, offsetId });
-                    nextByteOffset += static_cast<uint32_t>(member->GetPaddedSizeOf());
-
-                    variableName = CreateGlslPushConstantMemberName(currentByteOffset);
-
-                    blockSourceLine = "layout(offset = ";
-                    blockSourceLine += std::to_string(currentByteOffset);
-                    blockSourceLine += ") ";
-                    blockSourceLine += GetGlslVariableDataType(memberDataType);
-                    blockSourceLine += " ";
-                    blockSourceLine += variableName;
-                    blockSourceLine += ";\n";
-
-                    AppendToVector(pushConstantCode, blockSourceLine);
-                }
-                else
-                {
-                    uint32_t offsetId = locationIt->second;
-                    currentOffset = &pushConstantOffsets[offsetId];
-
-                    if (currentOffset->dataType != memberDataType)
-                    {
-                        Logger::WriteError(logger, "Mismatching push constant data type.");
-                        return false;
-                    }
-                }
-
-                stageOffsets.push_back(*currentOffset);
-            }
-
-            pushConstantTemplate.stageOffsets.push_back(std::move(stageOffsets));
-        }
-
-        pushConstantTemplate.blockByteCount = nextByteOffset;
-        pushConstantTemplate.offsets = std::move(pushConstantOffsets);
-        pushConstantTemplate.locations = std::move(pushConstantLocations);
-        */
         return true;
     }
 
@@ -405,67 +360,8 @@ namespace Molten::Shader
             size_t inputPinsLeft;
             std::vector<VariablePtr> inputVars;
         };
-        /*
-        // Check for push constant block in template.
-        bool useTemplates = templateData != nullptr;
-        bool usePushConstants = false;
-        auto& pushConstantInterface = script.GetPushConstantInterface();
-        std::vector<uint8_t>* pushConstantSource = nullptr;
-        PushConstantOffsets* pushConstantOffsets = nullptr;
 
-        if (pushConstantInterface.GetMemberCount() > 0 && useTemplates)
-        {
-            pushConstantSource = templateData->pushConstantTemplate.blockSource;
-            pushConstantOffsets = templateData->pushConstantTemplate.offsets;
-            usePushConstants =
-                (pushConstantSource && pushConstantSource->size() > 0) ||
-                (pushConstantOffsets && pushConstantOffsets->size() > 0);
-
-            if (usePushConstants)
-            {
-                if (!pushConstantSource->size())
-                {
-                    Logger::WriteError(logger, "Push constant block source cannot be empty if offsets are provided.");
-                    return {};
-                }
-                if (!pushConstantOffsets->size())
-                {
-                    Logger::WriteError(logger, "Push constant offsets cannot be empty if block source is provided.");
-                    return {};
-                }
-                if (pushConstantOffsets->size() != pushConstantInterface.GetMemberCount())
-                {
-                    Logger::WriteError(logger, "Number of provided push constant offsets cannot be different from number of push constant interface members.");
-                    return {};
-                }
-            }
-        }*/
-
-        // Calculate estimated code length.
-        constexpr size_t estPreMainLength = 70;
-        constexpr size_t estMainLength = 20;
-        constexpr size_t estInputLength = 40;
-        constexpr size_t estOutputLength = 40;
-        constexpr size_t estVertOutputLength = 35;
-        constexpr size_t estPushConstantVarLength = 50;
-        constexpr size_t estLocalLength = 35;
-
-        auto& inputInterface = script.GetInputInterface();
-        auto& outputInterface = script.GetOutputInterface();
-        auto& pushConstants = script.GetPushConstantsBase();
-        //auto& uniformInterfaces = script.GetUniformInterfaces();
-        const Visual::VertexOutput* vertexOutput =
-            (script.GetType() == Type::Vertex) ? static_cast<const Visual::VertexScript&>(script).GetVertexOutput() : nullptr;        
-
-        const size_t estimatedSourceLength = estMainLength + estPreMainLength +
-            (script.GetNodeCount() * estLocalLength) +
-            (inputInterface.GetPinCount() * estInputLength) +
-            (outputInterface.GetPinCount() * estOutputLength) +
-            (pushConstants.GetOutputPinCount() * estPushConstantVarLength);
-            (vertexOutput ? estVertOutputLength : 0);
-
-        //const auto& shaderTypeName = GetGlslShaderTypeName(script.GetType());
-
+        const size_t estimatedSourceLength = CalculateEstimatedScriptSize(script);
         std::vector<uint8_t> source;
         source.reserve(estimatedSourceLength);
 
@@ -481,6 +377,7 @@ namespace Molten::Shader
         
         // Input interface.
         size_t index = 0;
+        auto& inputInterface = script.GetInputInterface();
         for (auto* pin : inputInterface.GetOutputPins())
         {
             const std::string name = "in_" + std::to_string(index);
@@ -494,15 +391,17 @@ namespace Molten::Shader
         }
 
         // Push constants
+        auto& pushConstants = script.GetPushConstantsBase();
         if (pushConstants.GetOutputPinCount())
         {
-            AppendSource("layout(std140, push_constant) uniform s_fragment_pc\n{\n");
+            AppendSource("layout(std140, push_constant) uniform s_pc\n{\n");
             size_t offset = 0;
             for (auto* pin : pushConstants.GetOutputPins())
             {
                 std::string currentOffset = std::to_string(offset);
                 const std::string name = "mem" + currentOffset;
-                visitedOutputPins.insert({ pin, std::make_shared<Variable>(name, &pushConstants, pin) });
+                const std::string pushConstantName = "pc." + name;
+                visitedOutputPins.insert({ pin, std::make_shared<Variable>(pushConstantName, &pushConstants, pin) });
 
                 AppendSource("layout(offset = " + currentOffset +") " + GetGlslVariableDataType(pin->GetDataType()) +" " + name +";\n");
                 offset += GetGlslVariableOffset(pin->GetDataType());
@@ -510,10 +409,62 @@ namespace Molten::Shader
             AppendSource("} pc;\n");
         }
 
+        // Descriptor sets.
+        size_t samplerIndex = 0;
+        size_t uboIndex = 0;
+        auto& descriptorSets = script.GetDescriptorSetsBase();
+        for (size_t i = 0; i < descriptorSets.GetSetCount(); i++)
+        {
+            auto* set = descriptorSets.GetSetBase(i);
+            const uint32_t setId = set->GetId();
+            for (size_t j = 0; j < set->GetBindingCount(); j++)
+            {
+                auto* binding = set->GetBindingBase(j);
+                const uint32_t bindingId = binding->GetId();
+                switch (binding->GetBindingType())
+                {
+                    case Visual::DescriptorBindingType::Sampler1D:
+                    case Visual::DescriptorBindingType::Sampler2D: 
+                    case Visual::DescriptorBindingType::Sampler3D: 
+                    {
+                        auto* pin = binding->GetOutputPin();
+                        const std::string name = "sampler_" + std::to_string(samplerIndex);
+                        visitedOutputPins.insert({ pin, std::make_shared<Variable>(name, binding, pin) });
+
+                        AppendSource("layout(set = " + std::to_string(setId) + ", binding = " + std::to_string(bindingId) +
+                            ") uniform " + GetGlslVariableDataType(pin->GetDataType()) + " " + name + ";\n");
+ 
+                        ++samplerIndex;
+                    } break;
+                    case Visual::DescriptorBindingType::UniformBuffer: 
+                    {                  
+                        const std::string blockName = "ubo_" + std::to_string(uboIndex);
+                        AppendSource("layout(std140, set = " + std::to_string(setId) + ", binding=" + std::to_string(bindingId) +
+                            ") uniform s_" + blockName + "\n{\n");
+
+                        size_t uboMemberIndex = 0;
+                        for (auto* pin : binding->GetOutputPins())
+                        {
+                            const std::string memberName = "val_" + std::to_string(uboMemberIndex);
+                            const std::string name = blockName + "." + memberName;
+                            visitedOutputPins.insert({ pin, std::make_shared<Variable>(name, binding, pin) });
+
+                            AppendSource(GetGlslVariableDataType(pin->GetDataType()) + " " + memberName + ";\n");
+                            ++uboMemberIndex;
+                        }
+
+                        AppendSource("} " + blockName +";\n");
+
+                        ++uboIndex;
+                    } break;
+                }
+            }
+        }
+
         // Output interface.
         std::vector<VariablePtr> outputVars;
         index = 0;
-
+        auto& outputInterface = script.GetOutputInterface();
         for (auto* pin : outputInterface.GetInputPins())
         {
             const std::string name = "out_" + std::to_string(index);
@@ -525,84 +476,13 @@ namespace Molten::Shader
 
             index++;
         }
+
+        const Visual::VertexOutput* vertexOutput =
+            (script.GetType() == Type::Vertex) ? static_cast<const Visual::VertexScript&>(script).GetVertexOutput() : nullptr;
         if (vertexOutput)
         {
             outputVars.push_back({ std::make_shared<Variable>("gl_Position", vertexOutput, vertexOutput->GetInputPin()) });
         }
-
-/*
-        // Uniform variables.
-        index = 0;
-        for (auto* uniformInterface : uniformInterfaces)
-        {
-            const std::string blockName = "ubo_" + std::to_string(index);
-            AppendToVector(source, "layout(std140, binding= 0, set = " + std::to_string(index) + ") uniform s_" + blockName + "\n{\n");
-            index++;
-
-            size_t varIndex = 0;
-            for (auto* member : *uniformInterface)
-            {
-                auto pins = member->GetOutputPins();
-                if (!pins.size())
-                {
-                    Logger::WriteError(logger, "Uniform interface variable doesn't have any output pins.");
-                    return {};
-                }
-
-               // if (member->IsArray())
-               // {
-               //     const std::string name = "var_" + std::to_string(varIndex);
-               //     AppendToVector(source, GetGlslVariableDataType(pins[0]->GetDataType()) + " " + name + "[" + std::to_string(pins.size()) + "];\n");              
-               //     std::string fullName = blockName + "." + name;
-               //         
-               //     size_t arrayIndex = 0;
-               //     for (auto* pin : pins)
-               //     {
-               //         const std::string fullIndexName = fullName + "[" + std::to_string(arrayIndex) + "]";
-               //         visitedOutputPins.insert({ pin, std::make_shared<Variable>(fullIndexName, node, pin) });
-               //         arrayIndex++;
-               //     }
-
-               //     varIndex++;
-               // }
-               // else
-               // {
-                    for (auto* pin : pins)
-                    {
-                        const std::string name = "var_" + std::to_string(varIndex);
-                        const std::string fullName = blockName + "." + name;
-
-                        AppendToVector(source, GetGlslVariableDataType(pin->GetDataType()) + " " + name + ";\n");
-
-                        visitedOutputPins.insert({ pin, std::make_shared<Variable>(fullName, member, pin) });
-                        varIndex++;
-                    }
-                //}
-                    
-            }
-            AppendToVector(source, "} " + blockName + ";\n");
-        }
-
-        if (usePushConstants)
-        {    
-            const std::string blockName = "pc";
-            AppendToVector(source, "layout(std140, push_constant) uniform s_" + shaderTypeName + '_' + blockName + "\n{\n");
-            AppendToVector(source, *pushConstantSource);
-            AppendToVector(source, "} " + blockName + ";\n");
-
-            for (size_t i = 0; i < pushConstantOffsets->size(); i++)
-            {
-                auto& currentOffset = (*pushConstantOffsets)[i];
-                auto * member = pushConstantInterface.GetMember(i);
-                auto* pin = member->GetOutputPin();
-
-                auto name = CreateGlslPushConstantMemberName(currentOffset.offset);
-                const std::string fullName = blockName + "." + name;
-                visitedOutputPins.insert({ pin, std::make_shared<Variable>(fullName, member, pin) });
-            }
-        }
-
-*/
 
         AppendSource("void main()\n{\n");
         
