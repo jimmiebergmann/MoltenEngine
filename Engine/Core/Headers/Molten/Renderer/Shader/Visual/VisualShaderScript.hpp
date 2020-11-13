@@ -39,11 +39,11 @@ namespace Molten::Shader::Visual
 {
 
     /** Type definition of shader stage inputs. */
-    using InputInterface = OutputStructureWithNodeType<NodeType::InputInterface, 
+    using InputInterface = OutputStructure<NodeType::Input, 
         bool, float, int32_t, Vector2f32, Vector3f32, Vector4f32, Matrix4x4f32>;
 
     /** Type definition of shader stage outputs. */
-    using OutputInterface = InputStructureWithNodeType<NodeType::OutputInterface,
+    using OutputInterface = InputStructure<NodeType::Output,
         bool, float, int32_t, Vector2f32, Vector3f32, Vector4f32, Matrix4x4f32>;
 
     /** Type definition of vertex output node.

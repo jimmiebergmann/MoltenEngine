@@ -355,7 +355,7 @@ namespace Molten
         auto it = locations.find(id);
         if (it == locations.end())
         {
-            return 10000000;
+            return std::numeric_limits<uint32_t>::max();
         }
 
         return it->second;
@@ -404,7 +404,7 @@ namespace Molten
 
     Pipeline* VulkanRenderer::CreatePipeline(const PipelineDescriptor& descriptor)
     {
-        /*if (descriptor.vertexScript == nullptr)
+        if (descriptor.vertexScript == nullptr)
         {
             Logger::WriteError(m_logger, "Vertex script is missing for pipeline. (vertexScript == nullptr).");
             return nullptr;
@@ -420,12 +420,14 @@ namespace Molten
         auto& vertexOutputs = vertexScript.GetOutputInterface();
         auto& fragmentInputs = fragmentScript.GetInputInterface();
 
-        if (!vertexOutputs.CheckCompability(fragmentInputs))
+        if (!vertexOutputs.CompareStructure(fragmentInputs))
         {
             Logger::WriteError(m_logger, "Vertex output structure is not compatible with fragment input structure.");
             return nullptr;
         }
 
+        return nullptr;
+        /*
         const std::vector<Shader::Visual::Script*> shaderScripts =
         {
             descriptor.vertexScript, descriptor.fragmentScript
@@ -594,7 +596,6 @@ namespace Molten
             std::move(pushConstantLocations), 
             std::move(pushConstantOffsets),
             std::move(shaderModules));*/
-return nullptr;
     }
 
     Texture* VulkanRenderer::CreateTexture(const TextureDescriptor& descriptor)

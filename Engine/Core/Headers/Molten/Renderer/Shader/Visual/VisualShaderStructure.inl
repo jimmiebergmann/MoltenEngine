@@ -30,52 +30,59 @@ namespace Molten::Shader::Visual
 {
 
     // Structure implementations.
-    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline Structure<TPinType, TAllowedDataTypes...>::Structure(Script& script) :
-        Node(script),
+    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline Structure<VNodeType, TPinType, TAllowedDataTypes...>::Structure(Script& script) :
+        StructureBase(script),
         m_script(script),
+        m_members{},
         m_sizeOf(0)
     {
     }
 
-    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline Structure<TPinType, TAllowedDataTypes...>::~Structure()
+    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline Structure<VNodeType, TPinType, TAllowedDataTypes...>::~Structure()
     {
-        RemoveAllPins();
+        RemoveAllMembers();
     }
 
-    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline typename Structure<TPinType, TAllowedDataTypes...>::Iterator
-        Structure<TPinType, TAllowedDataTypes...>::begin()
+    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline typename Structure<VNodeType, TPinType, TAllowedDataTypes...>::Iterator
+        Structure<VNodeType, TPinType, TAllowedDataTypes...>::begin()
     {
-        return m_pinWrappers.begin();
+        return m_members.begin();
     }
-    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline typename Structure<TPinType, TAllowedDataTypes...>::ConstIterator
-        Structure<TPinType, TAllowedDataTypes...>::begin() const
+    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline typename Structure<VNodeType, TPinType, TAllowedDataTypes...>::ConstIterator
+        Structure<VNodeType, TPinType, TAllowedDataTypes...>::begin() const
     {
-        return m_pinWrappers.begin();
-    }
-
-    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline typename Structure<TPinType, TAllowedDataTypes...>::Iterator
-        Structure<TPinType, TAllowedDataTypes...>::end()
-    {
-        return m_pinWrappers.end();
-    }
-    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline typename Structure<TPinType, TAllowedDataTypes...>::ConstIterator
-        Structure<TPinType, TAllowedDataTypes...>::end() const
-    {
-        return m_pinWrappers.end();
+        return m_members.begin();
     }
 
-    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline size_t Structure<TPinType, TAllowedDataTypes...>::GetInputPinCount() const
+    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline typename Structure<VNodeType, TPinType, TAllowedDataTypes...>::Iterator
+        Structure<VNodeType, TPinType, TAllowedDataTypes...>::end()
+    {
+        return m_members.end();
+    }
+    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline typename Structure<VNodeType, TPinType, TAllowedDataTypes...>::ConstIterator
+        Structure<VNodeType, TPinType, TAllowedDataTypes...>::end() const
+    {
+        return m_members.end();
+    }
+
+    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline NodeType Structure<VNodeType, TPinType, TAllowedDataTypes...>::GetType() const
+    {
+        return VNodeType;
+    }
+
+    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline size_t Structure<VNodeType, TPinType, TAllowedDataTypes...>::GetInputPinCount() const
     {
         if constexpr (PinTraits<TPinType>::isInputPin == true)
         {
-            return m_pinWrappers.size();
+            return m_members.size();
         }
         else
         {
@@ -83,45 +90,45 @@ namespace Molten::Shader::Visual
         }
     }
 
-    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline size_t Structure<TPinType, TAllowedDataTypes...>::GetOutputPinCount() const
+    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline size_t Structure<VNodeType, TPinType, TAllowedDataTypes...>::GetOutputPinCount() const
     {
         if constexpr (PinTraits<TPinType>::isOutputPin == true)
         {
-            return m_pinWrappers.size();
+            return m_members.size();
         }
         else
         {
             return 0;
         }
     }
-
-    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline Pin* Structure<TPinType, TAllowedDataTypes...>::GetInputPin(const size_t index)
+    
+    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline Pin* Structure<VNodeType, TPinType, TAllowedDataTypes...>::GetInputPin(const size_t index)
     {
         if constexpr (PinTraits<TPinType>::isInputPin == true)
         {
-            if (index >= m_pinWrappers.size())
+            if (index >= m_members.size())
             {
                 return nullptr;
             }
-            return m_pinWrappers[index].pin;
+            return m_members[index];
         }
         else
         {
             return nullptr;
         }
     }
-    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline const Pin* Structure<TPinType, TAllowedDataTypes...>::GetInputPin(const size_t index) const
+    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline const Pin* Structure<VNodeType, TPinType, TAllowedDataTypes...>::GetInputPin(const size_t index) const
     {
         if constexpr (PinTraits<TPinType>::isInputPin == true)
         {
-            if (index >= m_pinWrappers.size())
+            if (index >= m_members.size())
             {
                 return nullptr;
             }
-            return m_pinWrappers[index].pin;
+            return m_members[index];
         }
         else
         {
@@ -129,9 +136,9 @@ namespace Molten::Shader::Visual
         }
     }
 
-    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
     template<typename TDataType>
-    inline InputPin<TDataType>* Structure<TPinType, TAllowedDataTypes...>::GetInputPin(const size_t index)
+    inline InputPin<TDataType>* Structure<VNodeType, TPinType, TAllowedDataTypes...>::GetInputPin(const size_t index)
     {
         if constexpr (PinTraits<TPinType>::isInputPin == true)
         {
@@ -142,9 +149,9 @@ namespace Molten::Shader::Visual
             return nullptr;
         }
     }
-    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
     template<typename TDataType>
-    inline const InputPin<TDataType>* Structure<TPinType, TAllowedDataTypes...>::GetInputPin(const size_t index) const
+    inline const InputPin<TDataType>* Structure<VNodeType, TPinType, TAllowedDataTypes...>::GetInputPin(const size_t index) const
     {
         if constexpr (PinTraits<TPinType>::isInputPin == true)
         {
@@ -156,8 +163,8 @@ namespace Molten::Shader::Visual
         }
     }
 
-    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline std::vector<Pin*> Structure<TPinType, TAllowedDataTypes...>::GetInputPins()
+    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline std::vector<Pin*> Structure<VNodeType, TPinType, TAllowedDataTypes...>::GetInputPins()
     {
         if constexpr (PinTraits<TPinType>::isInputPin == true)
         {
@@ -168,8 +175,8 @@ namespace Molten::Shader::Visual
             return {};
         }
     }
-    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline std::vector<const Pin*> Structure<TPinType, TAllowedDataTypes...>::GetInputPins() const
+    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline std::vector<const Pin*> Structure<VNodeType, TPinType, TAllowedDataTypes...>::GetInputPins() const
     {
         if constexpr (PinTraits<TPinType>::isInputPin == true)
         {
@@ -180,33 +187,33 @@ namespace Molten::Shader::Visual
             return {};
         }
     }
-
-    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline Pin* Structure<TPinType, TAllowedDataTypes...>::GetOutputPin(const size_t index)
+    
+    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline Pin* Structure<VNodeType, TPinType, TAllowedDataTypes...>::GetOutputPin(const size_t index)
     {
         if constexpr (PinTraits<TPinType>::isOutputPin == true)
         {
-            if (index >= m_pinWrappers.size())
+            if (index >= m_members.size())
             {
                 return nullptr;
             }
-            return m_pinWrappers[index].pin;
+            return m_members[index];
         }
         else
         {
             return nullptr;
         }
     }
-    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline const Pin* Structure<TPinType, TAllowedDataTypes...>::GetOutputPin(const size_t index) const
+    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline const Pin* Structure<VNodeType, TPinType, TAllowedDataTypes...>::GetOutputPin(const size_t index) const
     {
         if constexpr (PinTraits<TPinType>::isOutputPin == true)
         {
-            if (index >= m_pinWrappers.size())
+            if (index >= m_members.size())
             {
                 return nullptr;
             }
-            return m_pinWrappers[index].pin;
+            return m_members[index];
         }
         else
         {
@@ -214,9 +221,9 @@ namespace Molten::Shader::Visual
         }
     }
 
-    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
     template<typename TDataType>
-    inline OutputPin<TDataType>* Structure<TPinType, TAllowedDataTypes...>::GetOutputPin(const size_t index)
+    inline OutputPin<TDataType>* Structure<VNodeType, TPinType, TAllowedDataTypes...>::GetOutputPin(const size_t index)
     {
         if constexpr (PinTraits<TPinType>::isOutputPin == true)
         {
@@ -227,9 +234,9 @@ namespace Molten::Shader::Visual
             return nullptr;
         }
     }
-    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
     template<typename TDataType>
-    inline const OutputPin<TDataType>* Structure<TPinType, TAllowedDataTypes...>::GetOutputPin(const size_t index) const
+    inline const OutputPin<TDataType>* Structure<VNodeType, TPinType, TAllowedDataTypes...>::GetOutputPin(const size_t index) const
     {
         if constexpr (PinTraits<TPinType>::isOutputPin == true)
         {
@@ -241,8 +248,8 @@ namespace Molten::Shader::Visual
         }
     }
 
-    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline std::vector<Pin*> Structure<TPinType, TAllowedDataTypes...>::GetOutputPins()
+    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline std::vector<Pin*> Structure<VNodeType, TPinType, TAllowedDataTypes...>::GetOutputPins()
     {
         if constexpr (PinTraits<TPinType>::isOutputPin == true)
         {
@@ -253,8 +260,8 @@ namespace Molten::Shader::Visual
             return {};
         }
     }
-    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline std::vector<const Pin*> Structure<TPinType, TAllowedDataTypes...>::GetOutputPins() const
+    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline std::vector<const Pin*> Structure<VNodeType, TPinType, TAllowedDataTypes...>::GetOutputPins() const
     {
         if constexpr (PinTraits<TPinType>::isOutputPin == true)
         {
@@ -266,96 +273,145 @@ namespace Molten::Shader::Visual
         }
     }
 
-    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
     template<typename TDataType>
-    inline typename Structure<TPinType, TAllowedDataTypes...>::template PinType<TDataType>&
-        Structure<TPinType, TAllowedDataTypes...>::AddPin()
+    inline typename Structure<VNodeType, TPinType, TAllowedDataTypes...>::template PinType<TDataType>&
+        Structure<VNodeType, TPinType, TAllowedDataTypes...>::AddMember()
     {
         static_assert(TemplateArgumentsContains<TDataType, TAllowedDataTypes...>(),
             "Provided TDataType is not allowed for this structure.");
 
-        auto pin = new PinType<TDataType>(*this);
-        m_pinWrappers.push_back({ pin, sizeof(TDataType) });
-        m_sizeOf += sizeof(TDataType);
-        return *pin;
+        auto member = new PinType<TDataType>(*this);
+        m_members.push_back(member);
+        m_sizeOf += member->GetSizeOfDataType();
+        return *member;
     }
 
-    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline void Structure<TPinType, TAllowedDataTypes...>::RemovePin(const size_t index)
+    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline void Structure<VNodeType, TPinType, TAllowedDataTypes...>::RemoveMember(const size_t index)
     {
-        if (index >= m_pinWrappers.size())
+        if (index >= m_members.size())
         {
             return;
         }
 
-        auto it = m_pinWrappers.begin() + index;
-        m_sizeOf -= it->dataTypeSize;
-        delete it->pin;
-        m_pinWrappers.erase(it);
+        auto it = m_members.begin() + index;
+        auto* member = *it;
+        m_sizeOf -= member->GetSizeOfDataType();
+        delete member;
+        m_members.erase(it);
     }
-    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline void Structure<TPinType, TAllowedDataTypes...>::RemovePin(const Iterator it)
+    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline void Structure<VNodeType, TPinType, TAllowedDataTypes...>::RemoveMember(const Iterator it)
     {
-        m_sizeOf -= it->dataTypeSize;
-        delete it->pin;
-        m_pinWrappers.erase(it);
+        auto* member = *it;
+        m_sizeOf -= member->GetSizeOf();
+        delete member;
+        m_members.erase(it);
     }
-    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline void Structure<TPinType, TAllowedDataTypes...>::RemovePin(const ConstIterator it)
+    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline void Structure<VNodeType, TPinType, TAllowedDataTypes...>::RemoveMember(const ConstIterator it)
     {
-        m_sizeOf -= it->dataTypeSize;
-        delete it->pin;
-        m_pinWrappers.erase(it);
+        auto* member = *it;
+        m_sizeOf -= member->GetSizeOfDataType();
+        delete member;
+        m_members.erase(it);
     }
 
-    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline void Structure<TPinType, TAllowedDataTypes...>::RemoveAllPins()
+    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline void Structure<VNodeType, TPinType, TAllowedDataTypes...>::RemoveAllMembers()
     {
-        for (auto& pinWrapper : m_pinWrappers)
+        for (auto* member : m_members)
         {
-            delete pinWrapper.pin;
+            delete member;
         }
-        m_pinWrappers.clear();
+        m_members.clear();
         m_sizeOf = 0;
     }
 
-    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline size_t Structure<TPinType, TAllowedDataTypes...>::GetPinCount() const
+    /*template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline MemberBase* Structure<VNodeType, TPinType, TAllowedDataTypes...>::GetMember(const size_t index)
     {
-        return m_pinWrappers.size();
+        if (index >= m_members.size())
+        {
+            return nullptr;
+        }
+        return m_members[index];
+    }
+    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline const MemberBase* Structure<VNodeType, TPinType, TAllowedDataTypes...>::GetMember(const size_t index) const
+    {
+        if (index >= m_members.size())
+        {
+            return nullptr;
+        }
+        return m_members[index];
+    }*/
+
+    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline Pin* Structure<VNodeType, TPinType, TAllowedDataTypes...>::GetMemberBase(const size_t index)
+    {
+        if (index >= m_members.size())
+        {
+            return nullptr;
+        }
+        return m_members[index];
+    }
+    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline const Pin* Structure<VNodeType, TPinType, TAllowedDataTypes...>::GetMemberBase(const size_t index) const
+    {
+        if (index >= m_members.size())
+        {
+            return nullptr;
+        }
+        return m_members[index];
     }
 
-    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline size_t Structure<TPinType, TAllowedDataTypes...>::GetSizeOf() const
+    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline size_t Structure<VNodeType, TPinType, TAllowedDataTypes...>::GetMemberCount() const
+    {
+        return m_members.size();
+    }
+
+    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    inline size_t Structure<VNodeType, TPinType, TAllowedDataTypes...>::GetSizeOf() const
     {
         return m_sizeOf;
     }
 
-    template<template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    template<typename T>
-    inline std::vector<T*> Structure<TPinType, TAllowedDataTypes...>::CreatePinVector() const
+    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    template<NodeType VOtherNodeType, template<typename> typename TOtherPinType, typename ... TOtherAllowedDataTypes>
+    bool Structure<VNodeType, TPinType, TAllowedDataTypes...>::CompareStructure(
+        const Structure<VOtherNodeType, TOtherPinType, TOtherAllowedDataTypes...>& other) const
     {
-        std::vector<T*> pins(m_pinWrappers.size(), nullptr);
-        std::transform(m_pinWrappers.begin(), m_pinWrappers.end(), pins.begin(),
-            [](auto& pinWrapper) -> T*
+        if (m_members.size() != other.m_members.size())
+        {
+            return false;
+        }
+
+        for (size_t i = 0; i < m_members.size(); i++)
+        {
+            if (m_members[i]->GetDataType() != other.m_members[i]->GetDataType())
             {
-                return pinWrapper.pin;
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    template<typename T>
+    inline std::vector<T*> Structure<VNodeType, TPinType, TAllowedDataTypes...>::CreatePinVector() const
+    {
+        std::vector<T*> pins(m_members.size(), nullptr);
+        std::transform(m_members.begin(), m_members.end(), pins.begin(),
+            [](auto& pin) -> T*
+            {
+                return pin;
             }
         );
         return pins;
-    }
-
-
-    // Structure with node type implementations.
-    template<NodeType TypeOfNode, template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline StructureWithNodeType<TypeOfNode, TPinType, TAllowedDataTypes...>::StructureWithNodeType(Script& script) :
-        Structure<TPinType, TAllowedDataTypes...>(script)
-    {}
-
-    template<NodeType TypeOfNode, template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline NodeType StructureWithNodeType<TypeOfNode, TPinType, TAllowedDataTypes...>::GetType() const
-    {
-        return TypeOfNode;
     }
 
 }

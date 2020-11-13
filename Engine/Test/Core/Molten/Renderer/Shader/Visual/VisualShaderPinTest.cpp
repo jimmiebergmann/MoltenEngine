@@ -31,16 +31,11 @@
 namespace Molten::Shader::Visual
 {
 
-    struct MyInputStruct : Structure<InputPin, bool, int32_t, float, Vector2f32, Vector3f32, Vector4f32>
+    /*struct MyInputStruct : Structure<NodeType::Constant, InputPin, bool, int32_t, float, Vector2f32, Vector3f32, Vector4f32>
     {
         MyInputStruct(Script& script) :
-            Structure<InputPin, bool, int32_t, float, Vector2f32, Vector3f32, Vector4f32>(script)
+            Structure<NodeType::Constant, InputPin, bool, int32_t, float, Vector2f32, Vector3f32, Vector4f32>(script)
         {}
-
-        NodeType GetType() const override
-        {
-            return NodeType::Constant;
-        }
     };
 
     TEST(Shader, VisualShader_InputPin)
@@ -115,6 +110,11 @@ namespace Molten::Shader::Visual
             EXPECT_EQ(pin.GetDirection(), PinDirection::In);
             EXPECT_EQ(pin.GetDataType(), VariableDataType::Vector4f32);
         }
+    }
+
+    TEST(Shader, VisualShader_InputPin_SizeOfDataType)
+    {
+        EXPECT_EQ(pin1.GetSizeOfDataType(), size_t(1));
     }
 
     TEST(Shader, VisualShader_InputPin_Connection)
@@ -548,6 +548,6 @@ namespace Molten::Shader::Visual
                 EXPECT_EQ(in1.GetConnections().size(), size_t(0));
             }
         }
-    }
+    }*/
     
 }

@@ -45,18 +45,6 @@ namespace Molten::Vulkan
     class LogicalDevice;
 
 
-    /** Check if all required extensions are present in provided extension container.. */
-    /*MOLTEN_API bool CheckRequiredExtensions(
-        Extensions& missingExtensions,
-        const Extensions& requiredExtensions,
-        const Extensions& availableExtensions);
-
-    MOLTEN_API bool CheckRequiredDeviceFeatures(
-        PhysicalDeviceFeaturesWithName& missingFeatures,
-        const VkPhysicalDeviceFeatures& requiredFeatures,
-        const VkPhysicalDeviceFeatures& availableFeatures);*/
-
-
     /** Create N number of fences. */
     MOLTEN_API VkResult CreateFences(
         Fences& fences,

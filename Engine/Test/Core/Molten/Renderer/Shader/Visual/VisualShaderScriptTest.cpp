@@ -30,12 +30,40 @@
 namespace Molten::Shader::Visual
 {
 
-    TEST(Shader, VisualShader_GenerateGlsl)
+    TEST(Shader, VisualShader_GenerateGlsl_LargeScript)
     {
         FragmentScript script;
+        
+        auto& compsToVec4_1 = script.CreateFunction<Shader::Visual::Functions::CompsToVec4f32>();
+        auto& const1 = script.CreateConstant<float>(4.0f);
+        
+        auto& sin1 = script.CreateFunction<Shader::Visual::Functions::Sinf32>();
+        auto& const2 = script.CreateConstant<float>(6.0f);
+        sin1.GetInputPin()->Connect(*const2.GetOutputPin());
 
-        auto& output1 = script.GetOutputInterface().AddPin<Vector4f32>();
-        auto& input1 = script.GetInputInterface().AddPin<Vector4f32>();
+        auto& input1 = script.GetInputInterface().AddMember<float>();
+
+        auto& pc1 = script.GetPushConstants().AddMember<float>();
+
+        compsToVec4_1.GetInputPin(0)->Connect(*const1.GetOutputPin());
+        compsToVec4_1.GetInputPin(1)->Connect(*sin1.GetOutputPin());
+        compsToVec4_1.GetInputPin(2)->Connect(input1);
+        compsToVec4_1.GetInputPin(2)->Connect(pc1);
+
+        auto* set1 = script.GetDescriptorSets().AddSet(0);
+        auto* ubo1 = set1->AddBinding<FragmentUniformBuffer>(0);
+        auto& ubo1_m1 = ubo1->AddPin<Vector4f32>();
+
+        auto& addVec4_1 = script.CreateOperator<Shader::Visual::Operators::AddVec4f32>();
+        addVec4_1.GetInputPin(0)->Connect(ubo1_m1);
+        addVec4_1.GetInputPin(1)->Connect(*compsToVec4_1.GetOutputPin());
+
+        auto& output1 = script.GetOutputInterface().AddMember<Vector4f32>();
+        output1.Connect(*addVec4_1.GetOutputPin());
+
+        /*auto& output2 = script.GetOutputInterface().AddMember<Vector4f32>();
+
+        auto& input1 = script.GetInputInterface().AddMember<Vector4f32>();
         auto& mult = script.CreateOperator<Shader::Visual::Operators::MultVec4f32>();
         auto& add1 = script.CreateOperator<Shader::Visual::Operators::AddVec4f32>();
         auto& add2 = script.CreateOperator<Shader::Visual::Operators::AddVec4f32>();
@@ -43,9 +71,9 @@ namespace Molten::Shader::Visual
         auto& var2 = script.CreateConstant<Vector4f32>({ 1.0f, 0.5f, 0.0f, 1.0f });
         auto* set1 = script.GetDescriptorSets().AddSet(0);
         auto* set2 = script.GetDescriptorSets().AddSet(1);
-        /*auto* sampler1 =*/ set1->AddBinding<Sampler1D>(0);
-        /*auto* sampler2 =*/ set1->AddBinding<Sampler2D>(1);
-        /*auto* sampler3 =*/ set2->AddBinding<Sampler3D>(0);
+        set1->AddBinding<Sampler1D>(0);
+        set1->AddBinding<Sampler2D>(1);
+        set2->AddBinding<Sampler3D>(0);
         auto* ubo1 = set1->AddBinding<FragmentUniformBuffer>(2);
         auto* ubo2 = set1->AddBinding<FragmentUniformBuffer>(3);
         ubo1->AddPin<bool>();
@@ -57,11 +85,12 @@ namespace Molten::Shader::Visual
         ubo1->AddPin<Matrix4x4f32>();
         ubo2->AddPin<float>();
 
-        script.GetPushConstants().AddPin<Vector4f32>();
-        script.GetPushConstants().AddPin<Vector2f32>();
-        script.GetPushConstants().AddPin<float>();
+        script.GetPushConstants().AddMember<Vector4f32>();
+        script.GetPushConstants().AddMember<Vector2f32>();
+        script.GetPushConstants().AddMember<float>();
 
         output1.Connect(*add2.GetOutputPin());
+        output2.Connect(*add1.GetOutputPin());
 
         add1.GetInputPin(0)->Connect(ubo1_vec4);
         add1.GetInputPin(1)->Connect(*var1.GetOutputPin());
@@ -70,7 +99,7 @@ namespace Molten::Shader::Visual
         add2.GetInputPin(1)->Connect(*add1.GetOutputPin());
 
         mult.GetInputPin(0)->Connect(input1);
-        mult.GetInputPin(1)->Connect(*var2.GetOutputPin());
+        mult.GetInputPin(1)->Connect(*var2.GetOutputPin());*/
 
         std::vector<uint8_t> source;    
         {
@@ -129,7 +158,7 @@ namespace Molten::Shader::Visual
         }
         
         EXPECT_GE(spirv.size(), size_t(0));
-#endif
+#endif*/
     }
     /*
     TEST(Shader, VisualShader_DefaultPinValue)

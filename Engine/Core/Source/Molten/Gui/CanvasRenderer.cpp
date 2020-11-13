@@ -212,7 +212,7 @@ namespace Molten::Gui
 
         // Debug
         {
-            Shader::VulkanGenerator::GlslTemplates glslTemplates;
+           /* Shader::VulkanGenerator::GlslTemplates glslTemplates;
             std::vector<Shader::Visual::Script*> visualScripts = { m_rectInstance.vertexScript, m_rectInstance.fragmentScript };
             if (!Shader::VulkanGenerator::GenerateGlslTemplate(glslTemplates, visualScripts, m_logger))
             {
@@ -220,13 +220,13 @@ namespace Molten::Gui
             }
 
             Shader::VulkanGenerator::GlslStageTemplates stageTemplate;
-            stageTemplate.pushConstantTemplate.blockSource = &glslTemplates.pushConstantTemplate.blockSource;
+            stageTemplate.pushConstantTemplate.blockSource = &glslTemplates.pushConstantTemplate.blockSource;*/
 
-            stageTemplate.pushConstantTemplate.offsets = &glslTemplates.pushConstantTemplate.stageOffsets[0];
-            auto vertGlsl = Shader::VulkanGenerator::GenerateGlsl(*m_rectInstance.vertexScript, &stageTemplate);
+            //stageTemplate.pushConstantTemplate.offsets = &glslTemplates.pushConstantTemplate.stageOffsets[0];
+            auto vertGlsl = Shader::VulkanGenerator::GenerateGlsl(*m_rectInstance.vertexScript/*, &stageTemplate*/);
 
-            stageTemplate.pushConstantTemplate.offsets = &glslTemplates.pushConstantTemplate.stageOffsets[1];
-            auto fragGlsl = Shader::VulkanGenerator::GenerateGlsl(*m_rectInstance.fragmentScript, &stageTemplate);
+            //stageTemplate.pushConstantTemplate.offsets = &glslTemplates.pushConstantTemplate.stageOffsets[1];
+            auto fragGlsl = Shader::VulkanGenerator::GenerateGlsl(*m_rectInstance.fragmentScript/*, &stageTemplate*/);
 
             std::string vertStr(vertGlsl.begin(), vertGlsl.end());
             std::string fragStr(fragGlsl.begin(), fragGlsl.end());

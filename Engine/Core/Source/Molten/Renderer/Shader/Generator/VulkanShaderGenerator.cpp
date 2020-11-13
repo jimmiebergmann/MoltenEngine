@@ -39,6 +39,123 @@
 namespace Molten::Shader
 {
 
+    struct OutputVariable;
+    using OutputVariablePointer = std::shared_ptr<OutputVariable>;
+
+    struct InputVariable;
+
+    class NodeObject;
+    using NodeObjectPointer = std::shared_ptr<NodeObject>;
+
+    struct OutputVariable
+    {
+        OutputVariable(const Visual::Pin* pin, std::string&& name = "") :
+            pin(pin), name(name)
+        {}
+
+        const Visual::Pin* pin;
+        std::string name;
+    };
+
+    struct InputVariable
+    {
+        InputVariable(const Visual::Pin& pin) :
+            pin(pin),
+            connection(nullptr)
+        {}
+
+        const Visual::Pin& pin;
+        OutputVariable* connection;
+    };
+
+    class NodeObject
+    {
+
+    public:
+
+        using InputVariableContainer = std::vector<InputVariable>;
+        using OutputVariablePointerContainer = std::vector<OutputVariablePointer>;
+        using InputVariableIterator = typename InputVariableContainer::iterator;
+
+        explicit NodeObject(const Visual::Node& node) :
+            m_node(node),
+            m_inputVariables(CreateInputVariables(node)),
+            m_inputVariableIterator{ m_inputVariables.begin() },
+            m_outputVariables(m_node.GetOutputPinCount(), nullptr)
+        {}
+
+        OutputVariablePointer CreateOutputVariable(const Visual::Pin* pin, std::string&& name = "")
+        {
+            auto outputPins = m_node.GetOutputPins();
+            for (size_t i = 0; i < outputPins.size(); i++)
+            {
+                if (pin == outputPins[i])
+                {
+                    auto outputVariable = std::make_shared<OutputVariable>(pin, std::move(name));
+                    m_outputVariables[i] = outputVariable;
+                    return outputVariable;
+                }
+            }
+
+            MOLTEN_DEBUG_ASSERT(false, "Passed pin is not contained by this node.");
+            return nullptr;
+        }
+
+        const Visual::Node& GetNode() const
+        {
+            return m_node;
+        }
+
+        const InputVariableContainer& GetInputVariables() const
+        {
+            return m_inputVariables;
+        }
+
+        const OutputVariablePointerContainer& GetOutputVariables() const
+        {
+            return m_outputVariables;
+        }
+
+        InputVariable* GetNextInputVariable()
+        {
+            if (m_inputVariableIterator != m_inputVariables.end())
+            {
+                InputVariable* inputVariable = &(*m_inputVariableIterator);
+                ++m_inputVariableIterator;
+                return inputVariable;
+            }
+            return nullptr;
+        }
+
+        void AddOutputPin(const Visual::Pin* pin, const std::string& name)
+        {
+            auto outputVariable = std::make_shared<OutputVariable>(pin, std::string(std::move(name)));
+            m_outputVariables.push_back(outputVariable);
+        }
+
+    private:
+
+        InputVariableContainer CreateInputVariables(const Visual::Node& node)
+        {
+            auto inputPins = node.GetInputPins();
+            InputVariableContainer inputVariables;
+            inputVariables.reserve(inputPins.size());
+            for (size_t i = 0; i < inputPins.size(); i++)
+            {
+                inputVariables.push_back({ *inputPins[i] });
+            }
+            return inputVariables;
+        }
+
+        const Visual::Node& m_node;
+        InputVariableContainer m_inputVariables;
+        InputVariableIterator m_inputVariableIterator;
+        OutputVariablePointerContainer m_outputVariables;
+
+    };
+
+
+
     static const std::string g_emptyString = "";
 
     // Data type names
@@ -252,6 +369,148 @@ namespace Molten::Shader
         throw Exception("GetGlslFunctionName is missing return value for functionType = " + std::to_string(static_cast<size_t>(functionType)) + ".");
     }
 
+    static bool CreateConstantVariableSource(std::string& source, NodeObjectPointer nodeObject)
+    {
+        auto& outputVariables = nodeObject->GetOutputVariables();
+        if (outputVariables.size() != 1)
+        {
+            return false;
+        }
+
+        auto& outputVariable = outputVariables.front();
+        if (outputVariable->name.size())
+        {
+            return true;
+        }
+
+        auto& constantBase = static_cast<const Visual::ConstantBase&>(nodeObject->GetNode());
+        auto dataType = constantBase.GetDataType();
+        auto& dataTypeName = GetGlslVariableDataType(dataType);
+
+        static size_t index = 0;
+        outputVariable->name =  dataTypeName + "_" + std::to_string(index++);
+ 
+        source = dataTypeName + " " + outputVariable->name + " = " + GetGlslConstantValue(constantBase) + ";\n";
+
+        return true;
+    }
+
+    static void GetInputNameOrDefault(std::string& source, const InputVariable& inputVariable)
+    {
+        auto* connection = inputVariable.connection;
+        if (!connection)
+        {
+            source += GetGlslDefaultValue(inputVariable.pin);
+        }
+        else
+        {
+            source += connection->name;
+        }
+    }
+
+    static bool CreateFunctionVariableSource(std::string& source, NodeObjectPointer nodeObject)
+    {
+        auto& outputVariables = nodeObject->GetOutputVariables();
+        if (outputVariables.size() != 1)
+        {
+            return false;
+        }
+
+        auto& outputVariable = outputVariables.front();
+        if (outputVariable->name.size())
+        {
+            return true;
+        }
+        
+        auto& functionBase = static_cast<const Visual::FunctionBase&>(nodeObject->GetNode());
+        const std::string& functionName = GetGlslFunctionName(functionBase.GetFunctionType());
+
+        static size_t index = 0;
+        outputVariable->name = functionName + "_" + std::to_string(index++);
+
+        auto* outputPin = outputVariable->pin;
+        source = GetGlslVariableDataType(outputPin->GetDataType()) + " " + outputVariable->name + " = " +
+            GetGlslFunctionName(functionBase.GetFunctionType()) + "(";
+
+        auto& inputVariables = nodeObject->GetInputVariables();
+        for (size_t i = 0; i < inputVariables.size() - 1; i++)
+        {
+            GetInputNameOrDefault(source, inputVariables[i]);
+            source += ", ";
+        }
+        GetInputNameOrDefault(source, inputVariables.back());
+
+        source += ");\n";
+
+        return true;
+    }
+
+    static bool CreateOperatorVariableSource(std::string& source, NodeObjectPointer nodeObject)
+    {
+        auto& outputVariables = nodeObject->GetOutputVariables();
+        if (outputVariables.size() != 1)
+        {
+            return false;
+        }
+
+        auto& outputVariable = outputVariables.front();
+        if (outputVariable->name.size())
+        {
+            return true;
+        }
+
+        auto& operatorBase = static_cast<const Visual::OperatorBase&>(nodeObject->GetNode());
+
+        switch (operatorBase.GetOperatorType())
+        {
+            case Visual::OperatorType::Arithmetic:
+            {
+                auto& inputVariables = nodeObject->GetInputVariables();
+                if (inputVariables.size() != 2)
+                {
+                    return false;
+                }
+
+                static size_t index = 0;
+
+                auto& arithmeticOperatorBase = static_cast<const Visual::ArithmeticOperatorBase&>(operatorBase);
+                auto arithmeticOperatorType = arithmeticOperatorBase.GetArithmeticOperatorType();
+                outputVariable->name = GetGlslArithmeticOperatorName(arithmeticOperatorType) + "_" + std::to_string(index++);
+          
+                auto* outputPin = outputVariable->pin;
+                source = GetGlslVariableDataType(outputPin->GetDataType()) + " " + outputVariable->name + " = ";
+                GetInputNameOrDefault(source, inputVariables[0]);
+                source += GetGlslArithmeticOperator(arithmeticOperatorType);
+                GetInputNameOrDefault(source, inputVariables[1]);
+                source += +";\n";
+            } break;
+            default: break;
+        }
+
+        return true;
+    }
+
+    static bool CreateOutputAssignmentSource(std::string& source, NodeObjectPointer nodeObject)
+    {
+        auto& outputVariables = nodeObject->GetOutputVariables();
+        auto& inputVariables = nodeObject->GetInputVariables();
+
+        if (outputVariables.size() != inputVariables.size())
+        {
+            return false;
+        }
+
+        source = "";
+        for (size_t i = 0; i < outputVariables.size(); i++)
+        {
+            source += outputVariables[i]->name + " = ";
+            GetInputNameOrDefault(source, inputVariables[i]);
+            source += ";\n";
+        }
+
+        return true;
+    }
+
     static const size_t CalculateEstimatedScriptSize(const Visual::Script& script)
     {
         // Calculate estimated code length.
@@ -283,84 +542,30 @@ namespace Molten::Shader
 
         size_t estimatedSourceLength = estMainLength + estPreMainLength + estimatedDescriptorLength +
             (script.GetNodeCount() * estLocalVariableLength) +
-            (inputInterface.GetPinCount() * estInputInterfaceLength) +
-            (outputInterface.GetPinCount() * estOutputInterfaceLength) +
-            (pushConstants.GetOutputPinCount() * estPushConstantLength) +
+            (inputInterface.GetMemberCount() * estInputInterfaceLength) +
+            (outputInterface.GetMemberCount() * estOutputInterfaceLength) +
+            (pushConstants.GetMemberCount() * estPushConstantLength) +
             (vertexOutput ? estVertOutputLength : 0);
 
         return estimatedSourceLength;
     }
 
-    bool VulkanGenerator::GenerateGlslTemplate(
+    /*bool VulkanGenerator::GenerateGlslTemplate(
         VulkanGenerator::GlslTemplates & glslTemplates,
         const std::vector<Visual::Script*>& scripts,
         Logger* logger)
     {
 
         return true;
-    }
+    }*/
+
+
 
     std::vector<uint8_t> VulkanGenerator::GenerateGlsl(
         const Visual::Script& script, 
-        const GlslStageTemplates* templateData,
+        //const GlslStageTemplates* templateData,
         Logger* logger)
     {
-        struct Variable
-        {
-            Variable(const std::string& name, const Visual::Node* node, const Visual::Pin* pin) :
-                name(name), node(node), pin(pin)
-            { }
-
-            std::string name;
-            const Visual::Node* node;
-            const Visual::Pin* pin;
-        };
-
-        using VariablePtr = std::shared_ptr<Variable>;
-
-        class NodeStackObject
-        {
-        public:
-
-            explicit NodeStackObject(VariablePtr variable) :
-                outputVar(variable),
-                node(variable->node),
-                currentInputPinIndex(0),
-                inputPinsLeft(variable->node->GetInputPinCount())
-            { }
-
-            const Visual::Pin* GetCurrentInputPin()
-            {
-                return node->GetInputPin(currentInputPinIndex);
-            }
-
-            size_t GetInputPinsLeftCount() const
-            {
-                return inputPinsLeft;
-            }
-
-            void MoveToNextInputPin()
-            {
-                if (!inputPinsLeft)
-                {
-                    return;
-                }
-                currentInputPinIndex++;
-                inputPinsLeft--;
-            }
-
-            void AddInputVariable(VariablePtr& variable)
-            {
-                inputVars.push_back(variable);
-            }
-
-            VariablePtr outputVar;
-            const Visual::Node* node;
-            size_t currentInputPinIndex;
-            size_t inputPinsLeft;
-            std::vector<VariablePtr> inputVars;
-        };
-
         const size_t estimatedSourceLength = CalculateEstimatedScriptSize(script);
         std::vector<uint8_t> source;
         source.reserve(estimatedSourceLength);
@@ -373,35 +578,50 @@ namespace Molten::Shader
         AppendSource("#version 450\n");
         AppendSource("#extension GL_ARB_separate_shader_objects : enable\n");
 
-        std::map<const Visual::Pin*, VariablePtr> visitedOutputPins;
+        std::map<const Visual::Pin*, OutputVariablePointer> visitedOutputVariables;
+        std::map<const Visual::Node*, NodeObjectPointer> visitedNodeObjects;
         
-        // Input interface.
         size_t index = 0;
+
+        // Input interface.
         auto& inputInterface = script.GetInputInterface();
-        for (auto* pin : inputInterface.GetOutputPins())
+        auto inputInterfaceOutputPins = inputInterface.GetOutputPins();
+        if (inputInterfaceOutputPins.size())
         {
-            const std::string name = "in_" + std::to_string(index);
-            visitedOutputPins.insert({ pin, std::make_shared<Variable>(name, &inputInterface, pin) });
+            auto nodeObject = std::make_shared<NodeObject>(inputInterface);
+            visitedNodeObjects.insert({ &inputInterface, nodeObject });
+            
+            for (auto* pin : inputInterfaceOutputPins)
+            {
+                std::string name = "in_" + std::to_string(index);
+                auto outputVariable = nodeObject->CreateOutputVariable(pin, std::move(name));
+                visitedOutputVariables.insert({ pin, outputVariable });
 
-            AppendSource(
-                "layout(location = " + std::to_string(index) + ") in " +
-                GetGlslVariableDataType(pin->GetDataType()) + " " + name + ";\n");
+                AppendSource(
+                    "layout(location = " + std::to_string(index) + ") in " +
+                    GetGlslVariableDataType(pin->GetDataType()) + " " + name + ";\n");
 
-            index++;
+                index++;
+            }
         }
 
         // Push constants
         auto& pushConstants = script.GetPushConstantsBase();
-        if (pushConstants.GetOutputPinCount())
+        auto pushConstantsOutputPins = pushConstants.GetOutputPins();
+        if (inputInterfaceOutputPins.size())
         {
+            auto nodeObject = std::make_shared<NodeObject>(pushConstants);
+            visitedNodeObjects.insert({ &pushConstants, nodeObject });
+
             AppendSource("layout(std140, push_constant) uniform s_pc\n{\n");
             size_t offset = 0;
-            for (auto* pin : pushConstants.GetOutputPins())
+            for (auto* pin : pushConstantsOutputPins)
             {
                 std::string currentOffset = std::to_string(offset);
-                const std::string name = "mem" + currentOffset;
-                const std::string pushConstantName = "pc." + name;
-                visitedOutputPins.insert({ pin, std::make_shared<Variable>(pushConstantName, &pushConstants, pin) });
+                std::string name = "mem" + currentOffset;
+                std::string pushConstantName = "pc." + name;
+                auto outputVariable = nodeObject->CreateOutputVariable(pin, std::move(pushConstantName));
+                visitedOutputVariables.insert({ pin, outputVariable });
 
                 AppendSource("layout(offset = " + currentOffset +") " + GetGlslVariableDataType(pin->GetDataType()) +" " + name +";\n");
                 offset += GetGlslVariableOffset(pin->GetDataType());
@@ -420,6 +640,9 @@ namespace Molten::Shader
             for (size_t j = 0; j < set->GetBindingCount(); j++)
             {
                 auto* binding = set->GetBindingBase(j);
+                auto nodeObject = std::make_shared<NodeObject>(*binding);
+                visitedNodeObjects.insert({ binding, nodeObject });
+
                 const uint32_t bindingId = binding->GetId();
                 switch (binding->GetBindingType())
                 {
@@ -428,8 +651,9 @@ namespace Molten::Shader
                     case Visual::DescriptorBindingType::Sampler3D: 
                     {
                         auto* pin = binding->GetOutputPin();
-                        const std::string name = "sampler_" + std::to_string(samplerIndex);
-                        visitedOutputPins.insert({ pin, std::make_shared<Variable>(name, binding, pin) });
+                        std::string name = "sampler_" + std::to_string(samplerIndex);
+                        auto outputVariable = nodeObject->CreateOutputVariable(pin, std::move(name));
+                        visitedOutputVariables.insert({ pin, outputVariable });
 
                         AppendSource("layout(set = " + std::to_string(setId) + ", binding = " + std::to_string(bindingId) +
                             ") uniform " + GetGlslVariableDataType(pin->GetDataType()) + " " + name + ";\n");
@@ -445,9 +669,10 @@ namespace Molten::Shader
                         size_t uboMemberIndex = 0;
                         for (auto* pin : binding->GetOutputPins())
                         {
-                            const std::string memberName = "val_" + std::to_string(uboMemberIndex);
-                            const std::string name = blockName + "." + memberName;
-                            visitedOutputPins.insert({ pin, std::make_shared<Variable>(name, binding, pin) });
+                            std::string memberName = "val_" + std::to_string(uboMemberIndex);
+                            std::string name = blockName + "." + memberName;
+                            auto outputVariable = nodeObject->CreateOutputVariable(pin, std::move(name));
+                            visitedOutputVariables.insert({ pin, outputVariable });
 
                             AppendSource(GetGlslVariableDataType(pin->GetDataType()) + " " + memberName + ";\n");
                             ++uboMemberIndex;
@@ -460,28 +685,39 @@ namespace Molten::Shader
                 }
             }
         }
-
+        
         // Output interface.
-        std::vector<VariablePtr> outputVars;
-        index = 0;
         auto& outputInterface = script.GetOutputInterface();
-        for (auto* pin : outputInterface.GetInputPins())
+        std::vector<NodeObjectPointer> outputNodes;
+
+        auto outputInterfaceInputPins = pushConstants.GetOutputPins();
+        if (outputInterfaceInputPins.size())
         {
-            const std::string name = "out_" + std::to_string(index);
-            outputVars.push_back(std::make_shared<Variable>(name, &outputInterface, pin));
+            auto nodeObject = std::make_shared<NodeObject>(outputInterface);
+            outputNodes.push_back(nodeObject);
 
-            AppendSource(
-                "layout(location = " + std::to_string(index) + ") out " +
-                GetGlslVariableDataType(pin->GetDataType()) + " " + name + ";\n");
+            index = 0;
+            for (auto* pin : outputInterfaceInputPins)
+            {
+                const std::string name = "out_" + std::to_string(index);
 
-            index++;
+                nodeObject->AddOutputPin(pin, name);
+
+                AppendSource(
+                    "layout(location = " + std::to_string(index) + ") out " +
+                    GetGlslVariableDataType(pin->GetDataType()) + " " + name + ";\n");
+
+                index++;
+            }
         }
 
-        const Visual::VertexOutput* vertexOutput =
-            (script.GetType() == Type::Vertex) ? static_cast<const Visual::VertexScript&>(script).GetVertexOutput() : nullptr;
+        const Visual::VertexOutput* vertexOutput = (script.GetType() == Type::Vertex) ? 
+            static_cast<const Visual::VertexScript&>(script).GetVertexOutput() : nullptr;
         if (vertexOutput)
         {
-            outputVars.push_back({ std::make_shared<Variable>("gl_Position", vertexOutput, vertexOutput->GetInputPin()) });
+            auto nodeObject = std::make_shared<NodeObject>(*vertexOutput);
+            outputNodes.push_back(nodeObject);
+            nodeObject->AddOutputPin(vertexOutput->GetInputPin(), "gl_Position");    
         }
 
         AppendSource("void main()\n{\n");
@@ -492,130 +728,117 @@ namespace Molten::Shader
             return "_" + std::to_string(localVariableIndex++);
         };
 
-        for (auto& outputVar : outputVars)
+        for (auto& outputNode : outputNodes)
         {
-            std::stack<NodeStackObject> nodeStack;
-            nodeStack.push(NodeStackObject{ outputVar });
+            std::stack<NodeObjectPointer> nodeObjectStack;
+            nodeObjectStack.push(outputNode);
 
-            while (nodeStack.size())
+            while (nodeObjectStack.size())
             {
-                auto& stackObject = nodeStack.top();
-                auto node = stackObject.node;
+                auto& nodeObject = nodeObjectStack.top();
 
-                if (stackObject.GetInputPinsLeftCount())
+                // Get next input variable of node.
+                auto* inputVariable = nodeObject->GetNextInputVariable();
+
+                // Is null if no more inputs are available and if we should skip to source code creation.
+                if (inputVariable)
                 {
-                    auto inputPin = stackObject.GetCurrentInputPin();
-                    if (!inputPin)
+                    auto* pinConnection = inputVariable->pin.GetConnection();
+                    
+                    // No connection(default value).
+                    if (!pinConnection)
                     {
-                        Logger::WriteError(logger, "Node pin is nullptr.");
-                        return {};
-                    }
-
-                    auto outputPin = inputPin->GetConnection();
-
-                    // Default value pin.
-                    if (!outputPin)
-                    {
-                        VariablePtr defaultVar = std::make_shared<Variable>(GetGlslDefaultValue(*inputPin), nullptr, nullptr);
-                        stackObject.AddInputVariable(defaultVar);
-                        stackObject.MoveToNextInputPin();
                         continue;
                     }
 
-                    // Already created variable.
-                    auto visitedIt = visitedOutputPins.find(outputPin);
-                    if (visitedIt != visitedOutputPins.end())
+                    // Already created output variable, reuse it.
+                    auto vovIt = visitedOutputVariables.find(pinConnection);
+                    if (vovIt != visitedOutputVariables.end())
                     {
-                        stackObject.AddInputVariable(visitedIt->second);
-                        stackObject.MoveToNextInputPin();
+                        inputVariable->connection = vovIt->second.get();
                         continue;
                     }
 
-                    // Create child node.
-                    VariablePtr childVar = std::make_shared<Variable>("", &outputPin->GetNode(), outputPin);
-                    stackObject.AddInputVariable(childVar);
-                    nodeStack.push(NodeStackObject{ childVar });
-                    visitedOutputPins.insert({ outputPin, childVar });
-                    stackObject.MoveToNextInputPin();
+                    // Get or create new node object if needed.
+                    NodeObjectPointer nodeObjectPointer;
+
+                    auto& node = pinConnection->GetNode();
+                    auto vnoIt = visitedNodeObjects.find(&node);
+                    if (vnoIt != visitedNodeObjects.end())
+                    {
+                        nodeObjectPointer = vnoIt->second;
+                    }
+                    else
+                    {
+                        nodeObjectPointer = std::make_shared<NodeObject>(node);
+                        visitedNodeObjects.insert({ &node, nodeObjectPointer });
+                    }
+
+                    // Create new output variable and connect it.
+                    auto outputVariable = nodeObjectPointer->CreateOutputVariable(pinConnection);
+                    inputVariable->connection = outputVariable.get();
+                    visitedOutputVariables.insert({ pinConnection, outputVariable });
+
+                    // Continue to new output object.
+                    nodeObjectStack.push(nodeObjectPointer);
                     continue;
                 }
-                 
-                // All input pins of current node is travered, let's create the nodes output variable.
-                switch (node->GetType())
+
+                // All input variables of current node is travered, let's build the source code.
+                auto& node = nodeObject->GetNode();
+                switch (node.GetType())
                 {
                     case Visual::NodeType::Constant:
                     {
-
-                        auto* constantBase = static_cast<const Visual::ConstantBase*>(stackObject.node);
-                        auto dataType = constantBase->GetDataType();
-                        auto& dataTypeName = GetGlslVariableDataType(dataType);
-                        stackObject.outputVar->name = dataTypeName + GetNextLocalVariablePostfix();
-
-                        AppendSource(
-                            dataTypeName + " " + stackObject.outputVar->name + " = " +
-                            GetGlslConstantValue(*constantBase) + ";\n");
+                        std::string declaration;
+                        if (!CreateConstantVariableSource(declaration, nodeObject))
+                        {
+                            Logger::WriteError(logger, "Failed to create write constant.");
+                            return {};
+                        }
+                        AppendSource(declaration);
                     } break;
                     case Visual::NodeType::Function:
                     {
-                        const Visual::FunctionBase* funcNode = static_cast<const Visual::FunctionBase*>(stackObject.node);
-                        const std::string funcName = GetGlslFunctionName(funcNode->GetFunctionType());
-                        stackObject.outputVar->name = funcName + GetNextLocalVariablePostfix();
-
-                        AppendSource(
-                            GetGlslVariableDataType(funcNode->GetOutputPin()->GetDataType()) + " " + stackObject.outputVar->name + " = " +
-                            GetGlslFunctionName(funcNode->GetFunctionType()) + "(");
-
-                        const size_t inputCount = stackObject.inputVars.size();
-                        if (inputCount)
+                        std::string declaration;
+                        if (!CreateFunctionVariableSource(declaration, nodeObject))
                         {
-                            for (size_t i = 0; i < inputCount - 1; i++)
-                            {
-                                AppendSource(stackObject.inputVars[i]->name + ", ");
-                            }
-                            AppendSource(stackObject.inputVars[inputCount - 1]->name);
+                            Logger::WriteError(logger, "Failed to create write function.");
+                            return {};
                         }
-
-                        AppendSource(");\n");
+                        AppendSource(declaration);
                     } break;
                     case Visual::NodeType::Operator:
                     {
-                        auto opNode = static_cast<const Visual::OperatorBase*>(stackObject.node);
-
-                        switch (opNode->GetOperatorType())
+                        std::string declaration;
+                        if (!CreateOperatorVariableSource(declaration, nodeObject))
                         {
-                            case Visual::OperatorType::Arithmetic:
-                            {
-                                auto arithOpNode = static_cast<const Visual::ArithmeticOperatorBase*>(opNode);
-                                if (stackObject.inputVars.size() != 2)
-                                {
-                                    throw Exception("Number of variables for operator variable is " + std::to_string(stackObject.inputVars.size()) + ", expected 2.");
-                                }
-
-                                auto arithOperatorType = arithOpNode->GetArithmeticOperatorType();
-                                stackObject.outputVar->name = GetGlslArithmeticOperatorName(arithOperatorType) + GetNextLocalVariablePostfix();
-                                AppendSource(
-                                    GetGlslVariableDataType(stackObject.outputVar->pin->GetDataType()) + " " + stackObject.outputVar->name + " = " +
-                                    stackObject.inputVars[0]->name + GetGlslArithmeticOperator(arithOperatorType) + stackObject.inputVars[1]->name + ";\n");
-                            } break;
-                            default: break;
+                            Logger::WriteError(logger, "Failed to create write operator.");
+                            return {};
                         }
+                        AppendSource(declaration);
                     } break;
                     case Visual::NodeType::VertexOutput:
-                    case Visual::NodeType::OutputInterface:
+                    case Visual::NodeType::Output:
                     {
-                        AppendSource(stackObject.outputVar->name + " = " + stackObject.inputVars[0]->name +";\n");
+                        std::string assignment;
+                        if (!CreateOutputAssignmentSource(assignment, nodeObject))
+                        {
+                            Logger::WriteError(logger, "Failed to create write output.");
+                            return {};
+                        }
+                        AppendSource(assignment);
                     } break;
                     default: break;
                 }
 
-                nodeStack.pop();
+                nodeObjectStack.pop();
             }
         }
 
         AppendSource("}\n");
 
         return source;
-
     }
 
 #if defined(MOLTEN_ENABLE_GLSLANG)

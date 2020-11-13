@@ -36,6 +36,7 @@ namespace Molten::Shader::Visual
     /** Type definition of push constant strucutre. */
     using PushConstantsStructure = 
         Structure<
+            NodeType::PushConstants,
             OutputPin, 
             bool, int32_t, float, Vector2f32, Vector3f32, Vector4f32, Matrix4x4f32
         >;
@@ -43,16 +44,13 @@ namespace Molten::Shader::Visual
 
     /** Push constant container node of visual script. */
     template<typename ... TAllowedDataTypes>
-    class PushConstants : public  Structure<OutputPin, TAllowedDataTypes...>
+    class PushConstants : public Structure<NodeType::PushConstants, OutputPin, TAllowedDataTypes...>
     {
 
     public:
 
         /** Constructor. */
         PushConstants(Script& script);
-
-        /** Get type of node. */
-        NodeType GetType() const override;
 
     };
 

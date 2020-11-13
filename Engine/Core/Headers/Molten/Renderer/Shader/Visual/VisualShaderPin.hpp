@@ -89,6 +89,9 @@ namespace Molten::Shader::Visual
         /** Get data type of pin. */
         virtual VariableDataType GetDataType() const = 0;
 
+        /** Get size of data type in bytes. */
+        virtual size_t GetSizeOfDataType() const = 0;
+
         /** Get direction of pin, in or out. */
         virtual PinDirection GetDirection() const = 0;
 
@@ -194,6 +197,9 @@ namespace Molten::Shader::Visual
         /** Get data type of pin. */
         virtual VariableDataType GetDataType() const override;
 
+        /** Get size of data type in bytes. */
+        virtual size_t GetSizeOfDataType() const override;
+
         /** Get direction of pin, in or out. */
         virtual PinDirection GetDirection() const override;
 
@@ -291,6 +297,9 @@ namespace Molten::Shader::Visual
 
         /** Get data type of pin. */
         virtual VariableDataType GetDataType() const override;
+
+        /** Get size of data type in bytes. */
+        virtual size_t GetSizeOfDataType() const override;
 
         /** Get direction of pin, in or out. */
         virtual PinDirection GetDirection() const override;

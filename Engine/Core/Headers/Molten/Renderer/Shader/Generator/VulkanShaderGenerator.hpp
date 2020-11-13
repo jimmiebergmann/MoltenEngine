@@ -57,7 +57,7 @@ namespace Molten::Shader
     public:
 
         /** Common push constant block data. */
-        struct PushConstantTemplate
+        /*struct PushConstantTemplate
         {
             
             std::vector<uint8_t> blockSource; ///< Common stage source code of push constant block.
@@ -65,35 +65,35 @@ namespace Molten::Shader
             std::vector<PushConstantOffsets> stageOffsets; ///< One item per passed script to GenerateGlslTemplate.
             PushConstantLocations locations; ///< Mapped push constant ids to offsets.
             PushConstantOffsets offsets; ///< List of all variable offsets.
-        };
+        };*/
 
         /** Structure for common GLSL data between multiple stages. */
-        struct GlslTemplates
+        /*struct GlslTemplates
         {
             PushConstantTemplate pushConstantTemplate;
-        };
+        };*/
 
         /** Input */
-        struct PushConstantStageTemplate
+        /*struct PushConstantStageTemplate
         {
             std::vector<uint8_t>* blockSource; ///< Common stage source code of push constant block. 
             PushConstantOffsets* offsets;
-        };
+        };*/
 
         /** 
          * Glsl templates of single stage. 
          * This struct is passed to GenerateGlsl and should be constructed from GlslTemplates 
          * which is provided by GenerateGlslTemplate. */
-        struct GlslStageTemplates
+        /*struct GlslStageTemplates
         {
             PushConstantStageTemplate pushConstantTemplate;
-        };
+        };*/
 
         /** Generate GLSL template data from visual shader scripts. */
-        static bool GenerateGlslTemplate(VulkanGenerator::GlslTemplates& glslTemplates, const std::vector<Visual::Script*>& scripts, Logger* logger);
+        //static bool GenerateGlslTemplate(VulkanGenerator::GlslTemplates& glslTemplates, const std::vector<Visual::Script*>& scripts, Logger* logger);
 
         /** Generate GLSL code, compatible with Spri-V, from a visual shader script. */
-        static std::vector<uint8_t> GenerateGlsl(const Visual::Script& script, const GlslStageTemplates* templateData, Logger* logger = nullptr);
+        static std::vector<uint8_t> GenerateGlsl(const Visual::Script& script/*, const GlslStageTemplates* templateData*/, Logger* logger = nullptr);
 
         /** Converting GLSL code into SPIR-V code. */
         static std::vector<uint8_t> ConvertGlslToSpriV(const std::vector<uint8_t>& code, Type shaderType, Logger* logger = nullptr);

@@ -348,7 +348,7 @@ namespace Molten
                 //cos->GetInputPin()->Connect(*const2->GetOutputPin());
             }*/
 
-            Shader::VulkanGenerator::GlslTemplates glslTemplates;
+           /* Shader::VulkanGenerator::GlslTemplates glslTemplates;
             std::vector<Shader::Visual::Script*> visualScripts = { &m_gridVertexScript, &m_gridFragmentScript };
             if (!Shader::VulkanGenerator::GenerateGlslTemplate(glslTemplates, visualScripts, &m_logger))
             {
@@ -357,13 +357,13 @@ namespace Molten
 
             // Debugging.
             Shader::VulkanGenerator::GlslStageTemplates stageTemplate;
-            stageTemplate.pushConstantTemplate.blockSource = &glslTemplates.pushConstantTemplate.blockSource;
+            stageTemplate.pushConstantTemplate.blockSource = &glslTemplates.pushConstantTemplate.blockSource;*/
 
-            stageTemplate.pushConstantTemplate.offsets = &glslTemplates.pushConstantTemplate.stageOffsets[0];
-            auto vertGlsl = Shader::VulkanGenerator::GenerateGlsl(m_gridVertexScript, &stageTemplate);
+            //stageTemplate.pushConstantTemplate.offsets = &glslTemplates.pushConstantTemplate.stageOffsets[0];
+            auto vertGlsl = Shader::VulkanGenerator::GenerateGlsl(m_gridVertexScript/*, &stageTemplate*/);
 
-            stageTemplate.pushConstantTemplate.offsets = &glslTemplates.pushConstantTemplate.stageOffsets[1];
-            auto fragGlsl = Shader::VulkanGenerator::GenerateGlsl(m_gridFragmentScript, &stageTemplate);
+            //stageTemplate.pushConstantTemplate.offsets = &glslTemplates.pushConstantTemplate.stageOffsets[1];
+            auto fragGlsl = Shader::VulkanGenerator::GenerateGlsl(m_gridFragmentScript/*, &stageTemplate*/);
 
             std::string vertStr(vertGlsl.begin(), vertGlsl.end());
             std::string fragStr(fragGlsl.begin(), fragGlsl.end());
@@ -521,7 +521,7 @@ namespace Molten
                 outColor->GetInputPin()->Connect(*inColor->GetOutputPin());
             }*/
 
-            Shader::VulkanGenerator::GlslTemplates glslTemplates;
+            /*Shader::VulkanGenerator::GlslTemplates glslTemplates;
             std::vector<Shader::Visual::Script*> visualScripts = { &m_objectVertexScript, &m_objectFragmentScript };
             if (!Shader::VulkanGenerator::GenerateGlslTemplate(glslTemplates, visualScripts, &m_logger))
             {
@@ -532,11 +532,11 @@ namespace Molten
             Shader::VulkanGenerator::GlslStageTemplates stageTemplate;
             stageTemplate.pushConstantTemplate.blockSource = &glslTemplates.pushConstantTemplate.blockSource;
 
-            stageTemplate.pushConstantTemplate.offsets = &glslTemplates.pushConstantTemplate.stageOffsets[0];
-            auto vertGlsl = Shader::VulkanGenerator::GenerateGlsl(m_objectVertexScript, &stageTemplate);
+            stageTemplate.pushConstantTemplate.offsets = &glslTemplates.pushConstantTemplate.stageOffsets[0];*/
+            auto vertGlsl = Shader::VulkanGenerator::GenerateGlsl(m_objectVertexScript/*, &stageTemplate*/);
 
-            stageTemplate.pushConstantTemplate.offsets = &glslTemplates.pushConstantTemplate.stageOffsets[1];
-            auto fragGlsl = Shader::VulkanGenerator::GenerateGlsl(m_objectFragmentScript, &stageTemplate);
+            //stageTemplate.pushConstantTemplate.offsets = &glslTemplates.pushConstantTemplate.stageOffsets[1];
+            auto fragGlsl = Shader::VulkanGenerator::GenerateGlsl(m_objectFragmentScript/*, &stageTemplate*/);
 
             std::string vertStr(vertGlsl.begin(), vertGlsl.end());
             std::string fragStr(fragGlsl.begin(), fragGlsl.end());

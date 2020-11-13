@@ -41,14 +41,14 @@ namespace Molten::Shader::Visual
     /** Enumerator of node types. */
     enum class NodeType : uint8_t
     {
-        Function,       ///< Built-in shader function.
-        Operator,       ///< Operator node in local space.
-        PushConstants,   ///< Push constant node, constants set by the client.
-        Constant,           ///< NEW
+        Function,           ///< Built-in shader function.
+        Operator,           ///< Operator node in local space.
+        PushConstants,      ///< Push constant node, constants set by the client.
+        Constant,           
         DescriptorBinding,
-        VertexOutput,       /// NEW
-        OutputInterface,    /// NEW
-        InputInterface      /// NEW
+        VertexOutput,
+        Output,
+        Input 
     };
 
 
@@ -205,6 +205,20 @@ namespace Molten::Shader::Visual
     protected:
 
         PinType m_pin;
+
+    };
+
+
+    template<NodeType VTypeOfNode, template<typename> typename TPinType, typename TPinDataType>
+    class NodeWithSinglePin : public Node, public TPinType<TPinDataType>
+    {
+
+    public:
+
+        NodeWithSinglePin(Script& script);
+
+        /** Get type of node. */
+        NodeType GetType() const override;
 
     };
 

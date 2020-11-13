@@ -119,7 +119,13 @@ namespace Molten::Shader::Visual
     VariableDataType InputPin<T>::GetDataType() const
     {
         return VariableTrait<T>::dataType;
-    }    
+    }
+
+    template<typename T>
+    inline size_t InputPin<T>::GetSizeOfDataType() const
+    {
+        return sizeof(T);
+    }
 
     template<typename T>
     inline PinDirection InputPin<T>::GetDirection() const
@@ -282,6 +288,12 @@ namespace Molten::Shader::Visual
     inline VariableDataType OutputPin<T>::GetDataType() const
     {
         return VariableTrait<T>::dataType;
+    }
+
+    template<typename T>
+    inline size_t OutputPin<T>::GetSizeOfDataType() const
+    {
+        return sizeof(T);
     }
 
     template<typename T>
