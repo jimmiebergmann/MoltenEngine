@@ -690,7 +690,7 @@ namespace Molten::Shader
         auto& outputInterface = script.GetOutputInterface();
         std::vector<NodeObjectPointer> outputNodes;
 
-        auto outputInterfaceInputPins = pushConstants.GetOutputPins();
+        auto outputInterfaceInputPins = outputInterface.GetInputPins();
         if (outputInterfaceInputPins.size())
         {
             auto nodeObject = std::make_shared<NodeObject>(outputInterface);
