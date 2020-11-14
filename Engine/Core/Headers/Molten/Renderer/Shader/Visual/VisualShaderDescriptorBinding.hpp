@@ -204,7 +204,7 @@ namespace Molten::Shader::Visual
         [[nodiscard]] DescriptorBindingType GetBindingType() const override;
 
         /**  Get number of output pins.*/
-        size_t GetOutputPinCount() const;
+        size_t GetOutputPinCount() const override;
 
         /** Get output pin by index.
          *
