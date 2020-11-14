@@ -29,7 +29,6 @@
 #include "Molten/Gui/GuiTypes.hpp"
 #include "Molten/Gui/Layer.hpp"
 #include "Molten/Gui/WidgetData.hpp"
-#include "Molten/Gui/Widget.hpp"
 #include "Molten/Math/Vector.hpp"
 #include "Molten/System/Time.hpp"
 

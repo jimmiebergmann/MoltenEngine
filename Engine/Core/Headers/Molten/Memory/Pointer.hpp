@@ -26,15 +26,8 @@
 #ifndef MOLTEN_CORE_MEMORY_POINTER_HPP
 #define MOLTEN_CORE_MEMORY_POINTER_HPP
 
-#include "Molten/System/Exception.hpp"
-#include <atomic>
-#include <utility>
-#include <type_traits>
-#include <functional>
-
 namespace Molten
 {
-
 
     /**
     * @brief Unique smart pointer class, making it possible to control an objects lifetime.

@@ -26,9 +26,6 @@
 #ifndef MOLTEN_CORE_MATH_HPP
 #define MOLTEN_CORE_MATH_HPP
 
-#include "Molten/Types.hpp"
-#include <cmath>
-
 namespace Molten::Constants
 {
     

@@ -27,7 +27,6 @@
 #define MOLTEN_EDITOR_APPLICATION_HPP
 
 #include "Molten/Logger.hpp"
-#include "Molten/Math/Vector.hpp"
 #include "Molten/Renderer/Renderer.hpp"
 #include "Molten/Renderer/Shader/Visual/VisualShaderScript.hpp"
 #include "Molten/Scene/Camera.hpp"

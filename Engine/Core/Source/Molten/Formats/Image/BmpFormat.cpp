@@ -130,7 +130,12 @@ namespace Molten::Formats::Bmp
     // Color table implementations.
 
 
-      // Reader result implementations.
+    // Reader result implementations.
+    ReaderResult::ReaderResult() :
+        m_file(),
+        m_resultCode(ResultCode::Successful)
+    {}
+
     bool ReaderResult::IsSuccessful() const
     {
         return m_resultCode == ResultCode::Successful;

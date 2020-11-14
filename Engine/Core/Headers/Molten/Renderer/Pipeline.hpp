@@ -27,7 +27,6 @@
 #define MOLTEN_CORE_RENDERER_PIPELINE_HPP
 
 #include "Molten/Renderer/Shader.hpp"
-#include <vector>
 
 namespace Molten::Shader::Visual
 {

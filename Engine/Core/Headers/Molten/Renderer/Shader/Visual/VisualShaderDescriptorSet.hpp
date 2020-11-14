@@ -29,8 +29,6 @@
 #include "Molten/Renderer/Shader/Visual/VisualShaderDescriptorBinding.hpp"
 #include "Molten/Renderer/Shader/Visual/VisualShaderUniformBuffer.hpp"
 #include "Molten/Renderer/Shader/Visual/VisualShaderSampler.hpp"
-#include "Molten/Math/Vector.hpp"
-#include "Molten/Math/Matrix.hpp"
 #include <set>
 #include <vector>
 
@@ -142,7 +140,7 @@ namespace Molten::Shader::Visual
 
     private:
 
-        template<typename ... TAllowedBindingTypes>
+        template<typename ... TOtherAllowedBindingTypes>
         friend class DescriptorSets;
 
         /** Private destructor. */

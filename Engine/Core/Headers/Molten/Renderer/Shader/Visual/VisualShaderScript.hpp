@@ -28,10 +28,7 @@
 
 #include "Molten/Renderer/Shader/Visual/VisualShaderConstant.hpp"
 #include "Molten/Renderer/Shader/Visual/VisualShaderDescriptorSet.hpp"
-#include "Molten/Renderer/Shader/Visual/VisualShaderFunctions.hpp"
-#include "Molten/Renderer/Shader/Visual/VisualShaderOperators.hpp"
 #include "Molten/Renderer/Shader/Visual/VisualShaderPushConstants.hpp"
-#include "Molten/Logger.hpp"
 #include <vector>
 #include <set>
 

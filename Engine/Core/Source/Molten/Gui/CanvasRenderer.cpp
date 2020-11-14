@@ -28,6 +28,8 @@
 #include "Molten/Renderer/Pipeline.hpp"
 #include "Molten/Renderer/Shader/Visual/VisualShaderScript.hpp"
 #include "Molten/Renderer/Shader/Generator/VulkanShaderGenerator.hpp"
+#include "Molten/Logger.hpp"
+#include <array>
 
 namespace Molten::Gui
 {

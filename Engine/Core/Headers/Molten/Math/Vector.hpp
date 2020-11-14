@@ -27,7 +27,6 @@
 #define MOLTEN_CORE_MATH_VECTOR_HPP
 
 #include "Molten/Types.hpp"
-#include <cmath>
 
 namespace Molten
 {

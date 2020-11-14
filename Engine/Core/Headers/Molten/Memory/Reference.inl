@@ -23,6 +23,9 @@
 *
 */
 
+#include "Molten/System/Exception.hpp"
+#include <type_traits>
+
 namespace Molten
 {
 

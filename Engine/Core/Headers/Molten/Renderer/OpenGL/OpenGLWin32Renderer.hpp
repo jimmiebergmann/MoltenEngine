@@ -48,19 +48,13 @@ namespace Molten
         /** Constructor. */
         OpenGLWin32Renderer();
 
-        /** Constructs and creates renderer.
-         *
-         * @param window[in] Render target window.
-         */
+        /** Constructs and creates renderer. */
         OpenGLWin32Renderer(RenderTarget& renderTarget, const Version& version, Logger* logger = nullptr);
 
         /** Virtual destructor. */
         virtual ~OpenGLWin32Renderer();
 
-        /** Opens renderer by loading and attaching renderer to provided window.
-         *
-         * @param window Render target window.
-         */
+        /** Opens renderer by loading and attaching renderer to provided window. */
         virtual bool Open(RenderTarget& renderTarget, const Version& version = Version::None, Logger* logger = nullptr) override;
 
         /** Closing renderer. */

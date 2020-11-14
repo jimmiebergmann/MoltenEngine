@@ -26,10 +26,7 @@
 #ifndef MOLTEN_CORE_MEMORY_REFERENCE_HPP
 #define MOLTEN_CORE_MEMORY_REFERENCE_HPP
 
-#include "Molten/System/Exception.hpp"
 #include <atomic>
-#include <utility>
-#include <type_traits>
 #include <functional>
 
 namespace Molten

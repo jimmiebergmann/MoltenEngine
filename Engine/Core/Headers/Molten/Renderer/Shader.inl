@@ -23,6 +23,8 @@
 *
 */
 
+#include "Molten/Math/Vector.hpp"
+#include "Molten/Math/Matrix.hpp"
 
 namespace Molten::Shader
 {

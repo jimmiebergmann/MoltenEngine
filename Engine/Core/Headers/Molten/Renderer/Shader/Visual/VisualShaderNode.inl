@@ -207,7 +207,7 @@ namespace Molten::Shader::Visual
     // Single pin node with type implementations.
     template<NodeType TypeOfNode, template<typename> typename TPinType, typename TPinDataType>
     inline SinglePinNodeWithType<TypeOfNode, TPinType, TPinDataType>::SinglePinNodeWithType(Script& script) :
-        SinglePinNode(script)
+        SinglePinNode<TPinType, TPinDataType>(script)
     {}
 
     template<NodeType TypeOfNode, template<typename> typename TPinType, typename TPinDataType>

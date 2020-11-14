@@ -26,9 +26,7 @@
 #ifndef MOLTEN_CORE_RENDERER_SHADER_HPP
 #define MOLTEN_CORE_RENDERER_SHADER_HPP
 
-#include "Molten/Core.hpp"
-#include "Molten/Math/Vector.hpp"
-#include "Molten/Math/Matrix.hpp"
+#include "Molten/Types.hpp"
 
 namespace Molten::Shader
 {

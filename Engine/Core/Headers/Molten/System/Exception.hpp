@@ -26,7 +26,6 @@
 #ifndef MOLTEN_CORE_SYSTEM_EXCEPTION_HPP
 #define MOLTEN_CORE_SYSTEM_EXCEPTION_HPP
 
-#include "Molten/Core.hpp"
 #include <stdexcept>
 #include <string>
 

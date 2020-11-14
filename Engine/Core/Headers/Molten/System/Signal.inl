@@ -23,6 +23,8 @@
 *
 */
 
+#include "Molten/Types.hpp"
+
 namespace Molten
 {
 

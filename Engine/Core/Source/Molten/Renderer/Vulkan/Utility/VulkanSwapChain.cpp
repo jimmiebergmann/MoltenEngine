@@ -41,6 +41,7 @@ namespace Molten::Vulkan
     SwapChain::SwapChain() :
         m_handle(VK_NULL_HANDLE),
         m_logicalDevice(nullptr),
+        m_renderPass{VK_NULL_HANDLE},
         m_extent{ 0, 0 },
         m_presentMode(VkPresentModeKHR::VK_PRESENT_MODE_MAX_ENUM_KHR),
         m_surfaceFormat{},

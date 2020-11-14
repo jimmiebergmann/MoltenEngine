@@ -23,6 +23,8 @@
 *
 */
 
+#include "Molten/Math.hpp"
+
 namespace Molten
 {
 

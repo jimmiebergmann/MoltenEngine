@@ -25,8 +25,6 @@
 
 #include "Test.hpp"
 #include "Molten/Math/Angle.hpp"
-#include <type_traits>
-
 
 namespace Molten
 {

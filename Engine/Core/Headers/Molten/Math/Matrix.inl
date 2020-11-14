@@ -23,6 +23,8 @@
 *
 */
 
+#include "Molten/System/Exception.hpp"
+
 namespace Molten
 {
 

@@ -27,7 +27,6 @@
 #define MOLTEN_CORE_RENDERER_SHADER_VISUAL_VISUALSHADERSTRUCTURE_HPP
 
 #include "Molten/Renderer/Shader/Visual/VisualShaderVariable.hpp"
-#include "Molten/Utility/Template.hpp"
 #include <vector>
 
 namespace Molten::Shader::Visual
@@ -92,11 +91,11 @@ namespace Molten::Shader::Visual
 
         /** Structure iterators. */
         /**@{*/
-        typename Iterator begin();
-        typename ConstIterator begin() const;
+        Iterator begin();
+        ConstIterator begin() const;
 
-        typename Iterator end();
-        typename ConstIterator end() const;
+        Iterator end();
+        ConstIterator end() const;
         /**@}*/
 
 

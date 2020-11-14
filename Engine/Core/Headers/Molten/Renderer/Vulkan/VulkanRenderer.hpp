@@ -57,19 +57,13 @@ namespace Molten
         /** Constructor. */
         VulkanRenderer();
 
-        /** Constructs and creates renderer.
-         *
-         * @param window[in] Render target window.
-         */
+        /** Constructs and creates renderer. */
         VulkanRenderer(RenderTarget& renderTarget, const Version& version, Logger* logger = nullptr);
 
         /** Virtual destructor. */
         virtual ~VulkanRenderer();
 
-        /** Opens renderer by loading and attaching renderer to provided window.
-         *
-         * @param window Render target window.
-         */
+        /** Opens renderer by loading and attaching renderer to provided window. */
         virtual bool Open(RenderTarget& renderTarget, const Version& version = Version::None, Logger* logger = nullptr) override;
 
         /** Closing renderer. */
@@ -156,7 +150,7 @@ namespace Molten
         /** Push constant values to shader stage.
          *  This function call has no effect if provided id argument is greater than the number of push constants in pipeline.
          *
-         * @param id Id of push constant to update. This id can be shared between multiple shader stages.
+         * @param location Id of push constant to update. This id can be shared between multiple shader stages.
          */
         /**@{*/
         virtual void PushConstant(const uint32_t location, const bool& value) override;

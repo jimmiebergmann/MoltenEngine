@@ -51,8 +51,4 @@ namespace Molten
         return nullptr;
     }
 
-    Renderer::~Renderer()
-    {
-    }
-
 }

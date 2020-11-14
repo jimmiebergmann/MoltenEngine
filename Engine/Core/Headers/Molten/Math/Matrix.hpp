@@ -26,10 +26,8 @@
 #ifndef MOLTEN_CORE_MATH_MATRIX_HPP
 #define MOLTEN_CORE_MATH_MATRIX_HPP
 
-#include "Molten/Math.hpp"
 #include "Molten/Math/Vector.hpp"
 #include "Molten/Math/Angle.hpp"
-#include "Molten/System/Exception.hpp"
 
 namespace Molten
 {

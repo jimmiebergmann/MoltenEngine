@@ -26,8 +26,6 @@
 #ifndef MOLTEN_EDITOR_PROJECT_HPP
 #define MOLTEN_EDITOR_PROJECT_HPP
 
-#include "Molten/Types.hpp"
-
 namespace MoltenEditor
 {
 

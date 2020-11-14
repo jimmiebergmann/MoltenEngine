@@ -26,8 +26,6 @@
 #ifndef MOLTEN_CORE_MATH_ANGLE_HPP
 #define MOLTEN_CORE_MATH_ANGLE_HPP
 
-#include "Molten/Math.hpp"
-
 namespace Molten
 {
 

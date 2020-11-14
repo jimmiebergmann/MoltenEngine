@@ -26,7 +26,6 @@
 #include "Test.hpp"
 #include "Molten/System/FileSystem.hpp"
 #include "Molten/Logger.hpp"
-#include <memory>
 #include <fstream>
 
 #if MOLTEN_PLATFORM == MOLTEN_PLATFORM_WINDOWS

@@ -26,7 +26,6 @@
 #ifndef MOLTEN_CORE_RENDERER_RENDERER_HPP
 #define MOLTEN_CORE_RENDERER_RENDERER_HPP
 
-#include "Molten/Memory/Reference.hpp"
 #include "Molten/Renderer/RenderTarget.hpp"
 #include "Molten/Renderer/Framebuffer.hpp"
 #include "Molten/Renderer/IndexBuffer.hpp"
@@ -36,7 +35,6 @@
 #include "Molten/Renderer/UniformBuffer.hpp"
 #include "Molten/Renderer/VertexBuffer.hpp"
 #include "Molten/System/Version.hpp"
-#include <functional>
 
 namespace Molten::Shader::Visual
 {
@@ -68,15 +66,12 @@ namespace Molten
          *
          * @return Pointer to renderer, nullptr if the type of renderer is unavailable.
          */
-        static Renderer * Create(const BackendApi renderApi);
+        static Renderer * Create(const BackendApi backendApi);
 
         /** Virtual destructor. */
-        virtual ~Renderer();
+        virtual ~Renderer() = default;
 
-        /** Opens renderer by loading and attaching renderer to provided window.
-         *
-         * @param window Render target window.
-         */
+        /** Opens renderer by loading and attaching renderer to provided window. */
         virtual bool Open(RenderTarget& renderTarget, const Version& version = Version::None, Logger * logger = nullptr) = 0;
 
         /** Closing renderer. */
@@ -164,7 +159,7 @@ namespace Molten
         /** Push constant values to shader stage.
          *  This function call has no effect if provided id argument is greater than the number of push constants in pipeline.
          *
-         * @param id Id of push constant to update. This id can be shared between multiple shader stages.
+         * @param location Id of push constant to update. This id can be shared between multiple shader stages.
          */
         /**@{*/
         virtual void PushConstant(const uint32_t location, const bool& value) = 0;

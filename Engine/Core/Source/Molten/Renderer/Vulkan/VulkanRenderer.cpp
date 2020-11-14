@@ -45,7 +45,6 @@
 #include "Molten/Window/Window.hpp"
 #include "Molten/Logger.hpp"
 #include "Molten/System/Exception.hpp"
-#include "Molten/System/FileSystem.hpp"
 #include "Molten/Utility/SmartFunction.hpp"
 #include <map>
 #include <set>

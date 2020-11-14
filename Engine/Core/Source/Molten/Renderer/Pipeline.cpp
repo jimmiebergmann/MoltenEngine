@@ -29,7 +29,6 @@
 namespace Molten
 {
 
-
     PipelineDescriptor::PipelineDescriptor() :
         topology(Pipeline::Topology::TriangleList),
         polygonMode(Pipeline::PolygonMode::Fill),

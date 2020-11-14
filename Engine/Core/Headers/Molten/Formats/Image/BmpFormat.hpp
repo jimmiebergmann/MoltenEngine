@@ -141,6 +141,9 @@ namespace Molten::Formats::Bmp
 
     public:
 
+        /** Constructor. */
+        ReaderResult();
+
         /** @return true if reader result is successful. */
         bool IsSuccessful() const;
 

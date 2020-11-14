@@ -27,9 +27,6 @@
 #define MOLTEN_CORE_RENDERER_SHADER_VULKANSHADERGENERATOR_HPP
 
 #include "Molten/Renderer/Shader.hpp"
-#include "Molten/Renderer/PushConstant.hpp"
-#include <vector>
-#include <map>
 #include <vector>
 
 namespace Molten

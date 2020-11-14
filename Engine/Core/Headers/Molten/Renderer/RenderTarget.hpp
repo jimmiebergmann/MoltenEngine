@@ -26,7 +26,6 @@
 #ifndef MOLTEN_CORE_RENDERER_PLATFORM_RENDERTARGET_HPP
 #define MOLTEN_CORE_RENDERER_PLATFORM_RENDERTARGET_HPP
 
-#include "Molten/Types.hpp"
 #include "Molten/Math/Vector.hpp"
 #include "Molten/Platform.hpp"
 

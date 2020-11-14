@@ -26,6 +26,7 @@
 #ifndef MOLTEN_CORE_ECS_ECS_HPP
 #define MOLTEN_CORE_ECS_ECS_HPP
 
+#include "Molten/Types.hpp"
 #include "Molten/Utility/Template.hpp"
 
 #define MOLTEN_ECS_MAX_COMPONENT_TYPES 512

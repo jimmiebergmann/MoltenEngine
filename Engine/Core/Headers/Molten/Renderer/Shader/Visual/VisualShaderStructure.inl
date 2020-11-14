@@ -23,7 +23,7 @@
 *
 */
 
-#include <type_traits>
+#include "Molten/Utility/Template.hpp"
 #include <algorithm>
 
 namespace Molten::Shader::Visual
@@ -305,7 +305,7 @@ namespace Molten::Shader::Visual
     inline void Structure<VNodeType, TPinType, TAllowedDataTypes...>::RemoveMember(const Iterator it)
     {
         auto* member = *it;
-        m_sizeOf -= member->GetSizeOf();
+        m_sizeOf -= member->GetSizeOfDataType();
         delete member;
         m_members.erase(it);
     }

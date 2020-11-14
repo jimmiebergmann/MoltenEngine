@@ -26,7 +26,8 @@
 #ifndef MOLTEN_CORE_RENDERER_SHADER_VISUAL_VISUALSHADERUNIFORMBUFFER_HPP
 #define MOLTEN_CORE_RENDERER_SHADER_VISUAL_VISUALSHADERUNIFORMBUFFER_HPP
 
-#include "Molten/Renderer/Shader/Visual/VisualShaderNode.hpp"
+#include "Molten/Math/Vector.hpp"
+#include "Molten/Math/Matrix.hpp"
 
 namespace Molten::Shader::Visual
 {

@@ -29,7 +29,6 @@
 #include "Molten/Types.hpp"
 #include "Molten/System/Exception.hpp"
 #include <array>
-#include <type_traits>
 
 namespace Molten
 {

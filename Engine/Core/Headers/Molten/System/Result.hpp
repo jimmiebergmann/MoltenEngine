@@ -26,7 +26,6 @@
 #ifndef MOLTEN_CORE_SYSTEM_RESULT_HPP
 #define MOLTEN_CORE_SYSTEM_RESULT_HPP
 
-#include "Molten/Core.hpp"
 #include <variant>
 #include <type_traits>
 

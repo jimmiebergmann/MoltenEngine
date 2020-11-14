@@ -26,8 +26,6 @@
 #ifndef MOLTEN_CORE_UTILITY_TEMPLATE_HPP
 #define MOLTEN_CORE_UTILITY_TEMPLATE_HPP
 
-#include "Molten/Types.hpp"
-
 namespace Molten
 {
 

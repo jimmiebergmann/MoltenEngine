@@ -44,19 +44,18 @@ namespace Molten
         /**
         * @brief Read file of given filename.
         *
-        * @param filename[in] Full path and name of file to read.
-        * @param dataSize[out] Output of raw data.
+        * @param filename Full path and name of file to read.
         *
         * @throw Exception if unable to open file.
         *
         * @return Raw pointer of data. User is responsible of deleting the pointer.
         *         nullptr is returned if file is empty.
         */
-        static std::vector<uint8_t> ReadFile(const std::string & filename);
+        static std::vector<uint8_t> ReadFile(const std::string& filename);
         
         /**
         * @brief Make directory, from current directory.
-        *        Recursive directoru creation is not yet supported.
+        *        Recursive directory creation is not yet supported.
         *        
         */
         static bool MakeDirectory(const std::string& directory);

@@ -129,7 +129,7 @@ namespace Molten::Shader
 
         void AddOutputPin(const Visual::Pin* pin, const std::string& name)
         {
-            auto outputVariable = std::make_shared<OutputVariable>(pin, std::string(std::move(name)));
+            auto outputVariable = std::make_shared<OutputVariable>(pin, std::string(name));
             m_outputVariables.push_back(outputVariable);
         }
 
@@ -721,12 +721,6 @@ namespace Molten::Shader
         }
 
         AppendSource("void main()\n{\n");
-        
-        size_t localVariableIndex = 0;
-        auto GetNextLocalVariablePostfix = [&localVariableIndex]() -> std::string
-        {
-            return "_" + std::to_string(localVariableIndex++);
-        };
 
         for (auto& outputNode : outputNodes)
         {

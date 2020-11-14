@@ -29,7 +29,7 @@ namespace Molten::Shader::Visual
     // Push constants implementations.
     template<typename ... TAllowedDataTypes>
     inline PushConstants<TAllowedDataTypes...>::PushConstants(Script& script) :
-        PushConstantsStructure(script)
+        Structure<NodeType::PushConstants, OutputPin, TAllowedDataTypes...>(script)
     {}
 
 }

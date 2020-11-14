@@ -23,6 +23,8 @@
 *
 */
 
+#include <cmath>
+
 namespace Molten
 {
 

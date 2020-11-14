@@ -57,11 +57,19 @@ namespace Molten::Shader::Visual
     template<typename TOutputType>
     Pin* DescriptorBindingSamplerBase<TOutputType>::GetOutputPin(const size_t index)
     {
+        if(index != 0)
+        {
+            return nullptr;
+        }
         return &m_pin;
     }
     template<typename TOutputType>
     const Pin* DescriptorBindingSamplerBase<TOutputType>::GetOutputPin(const size_t index) const
     {
+        if (index != 0)
+        {
+            return nullptr;
+        }
         return &m_pin;
     }
 

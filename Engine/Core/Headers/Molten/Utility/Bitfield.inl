@@ -23,6 +23,8 @@
 *
 */
 
+#include <type_traits>
+
 namespace Molten
 {
 

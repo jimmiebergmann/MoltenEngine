@@ -24,7 +24,6 @@
 */
 
 #include "Molten/System/Time.hpp"
-#include <iostream>
 
 namespace Molten
 {
@@ -33,8 +32,7 @@ namespace Molten
 
     Time::Time() :
         m_duration(0)
-    {
-    }
+    {}
 
     Time Time::operator + (const Time& time) const
     {
@@ -106,7 +104,6 @@ namespace Molten
 
     Time::Time(const std::chrono::nanoseconds nanoseconds) :
         m_duration(nanoseconds)
-    {
-    }
+    {}
 
 }

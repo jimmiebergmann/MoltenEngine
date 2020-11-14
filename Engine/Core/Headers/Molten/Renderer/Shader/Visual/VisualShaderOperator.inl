@@ -23,6 +23,8 @@
 *
 */
 
+#include <array>
+
 namespace Molten::Shader::Visual
 {
 

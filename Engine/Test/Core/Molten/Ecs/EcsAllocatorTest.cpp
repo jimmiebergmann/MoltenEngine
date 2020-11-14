@@ -27,7 +27,6 @@
 #include "Molten/Ecs/EcsAllocator.hpp"
 #include "Molten/System/Exception.hpp"
 #include <algorithm>
-#include <type_traits>
 
 namespace Molten
 {

@@ -26,7 +26,6 @@
 
 #include "Molten/System/UserInput.hpp"
 #include "Molten/Platform/Win32Headers.hpp"
-#include "Molten/System/Exception.hpp"
 
 namespace Molten
 {
