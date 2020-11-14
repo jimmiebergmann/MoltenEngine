@@ -164,7 +164,7 @@ namespace Molten::Shader::Visual
         }
         
         EXPECT_GE(spirv.size(), size_t(0));
-#endif*/
+#endif
     }
     /*
     TEST(Shader, VisualShader_DefaultPinValue)

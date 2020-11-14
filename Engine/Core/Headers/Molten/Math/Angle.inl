@@ -24,6 +24,7 @@
 */
 
 #include "Molten/Math.hpp"
+#include <cmath>
 
 namespace Molten
 {

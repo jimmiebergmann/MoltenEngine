@@ -53,11 +53,6 @@ namespace Molten::Shader::Visual
         /** Get sum of pin data member sizes in bytes. Kind of like sizeof(...). */
         virtual size_t GetSizeOf() const = 0;
 
-    protected:
-
-        /** Constructor. */
-        StructureBase() = default;
-
     };
 
 
@@ -103,10 +98,10 @@ namespace Molten::Shader::Visual
         NodeType GetType() const override;
 
         /** Get number of input pins. */
-        virtual size_t GetInputPinCount() const;
+        virtual size_t GetInputPinCount() const override;
 
         /**  Get number of output pins.*/
-        virtual size_t GetOutputPinCount() const;
+        virtual size_t GetOutputPinCount() const override;
 
         /** Get input pin of member by index.
          *

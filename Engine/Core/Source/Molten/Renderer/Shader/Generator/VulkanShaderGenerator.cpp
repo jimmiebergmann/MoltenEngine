@@ -511,7 +511,7 @@ namespace Molten::Shader
         return true;
     }
 
-    static const size_t CalculateEstimatedScriptSize(const Visual::Script& script)
+    static size_t CalculateEstimatedScriptSize(const Visual::Script& script)
     {
         // Calculate estimated code length.
         constexpr size_t estPreMainLength = 70;
@@ -521,7 +521,7 @@ namespace Molten::Shader
         constexpr size_t estVertOutputLength = 35;
         constexpr size_t estPushConstantLength = 50;
         constexpr size_t estLocalVariableLength = 35;
-        constexpr size_t estSamplerLength = 55;
+        //constexpr size_t estSamplerLength = 55;
         constexpr size_t estUniformBufferBlockLength = 60;
         constexpr size_t estUniformBufferVariableLength = 15;
 

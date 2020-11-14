@@ -224,7 +224,7 @@ namespace Molten::Shader::Visual
     }
 
     template<typename ... TAllowedBindingTypes>
-    inline typename DescriptorSets<TAllowedBindingTypes...>::template DescriptorSetType* DescriptorSets<TAllowedBindingTypes...>::AddSet(const uint32_t id)
+    inline typename DescriptorSets<TAllowedBindingTypes...>::DescriptorSetType* DescriptorSets<TAllowedBindingTypes...>::AddSet(const uint32_t id)
     {
         if (m_usedSetIds.find(id) != m_usedSetIds.end())
         {
@@ -279,7 +279,7 @@ namespace Molten::Shader::Visual
     }
 
     template<typename ... TAllowedBindingTypes>
-    inline typename DescriptorSets<TAllowedBindingTypes...>::template DescriptorSetType* DescriptorSets<TAllowedBindingTypes...>::GetSet(const size_t index)
+    inline typename DescriptorSets<TAllowedBindingTypes...>::DescriptorSetType* DescriptorSets<TAllowedBindingTypes...>::GetSet(const size_t index)
     {
         if (index >= m_sets.size())
         {
@@ -288,7 +288,7 @@ namespace Molten::Shader::Visual
         return m_sets[index];
     }
     template<typename ... TAllowedBindingTypes>
-    inline const typename DescriptorSets<TAllowedBindingTypes...>::template DescriptorSetType* DescriptorSets<TAllowedBindingTypes...>::GetSet(const size_t index) const
+    inline const typename DescriptorSets<TAllowedBindingTypes...>::DescriptorSetType* DescriptorSets<TAllowedBindingTypes...>::GetSet(const size_t index) const
     {
         if (index >= m_sets.size())
         {
@@ -298,7 +298,7 @@ namespace Molten::Shader::Visual
     }
 
     template<typename ... TAllowedBindingTypes>
-    inline typename DescriptorSetBase* DescriptorSets<TAllowedBindingTypes...>::GetSetBase(const size_t index)
+    inline DescriptorSetBase* DescriptorSets<TAllowedBindingTypes...>::GetSetBase(const size_t index)
     {
         if (index >= m_sets.size())
         {
@@ -307,7 +307,7 @@ namespace Molten::Shader::Visual
         return m_sets[index];
     }
     template<typename ... TAllowedBindingTypes>
-    inline const typename DescriptorSetBase* DescriptorSets<TAllowedBindingTypes...>::GetSetBase(const size_t index) const
+    inline const DescriptorSetBase* DescriptorSets<TAllowedBindingTypes...>::GetSetBase(const size_t index) const
     {
         if (index >= m_sets.size())
         {

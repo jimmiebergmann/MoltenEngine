@@ -27,6 +27,7 @@
 #define MOLTEN_CORE_RENDERER_SHADER_VISUAL_VISUALSHADERFUNCTION_HPP
 
 #include "Molten/Renderer/Shader/Visual/VisualShaderNode.hpp"
+#include <memory>
 #include <array>
 
 namespace Molten::Shader::Visual
