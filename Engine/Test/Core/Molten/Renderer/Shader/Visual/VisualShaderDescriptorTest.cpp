@@ -41,22 +41,22 @@ namespace Molten::Shader::Visual
             // Add
             EXPECT_EQ(descSets.begin(), descSets.end());
             EXPECT_EQ(constDescSets.begin(), constDescSets.end());
-            EXPECT_EQ(descSets.GetSetCount(), size_t(0));
+            EXPECT_EQ(descSets.GetSetCount(), size_t{ 0 });
 
             auto* set1 = descSets.AddSet(0);
             ASSERT_NE(set1, nullptr);
             EXPECT_EQ(set1->GetId(), uint32_t(0));
-            EXPECT_EQ(descSets.GetSetCount(), size_t(1));
+            EXPECT_EQ(descSets.GetSetCount(), size_t{ 1 });
             EXPECT_NE(constDescSets.begin(), constDescSets.end());
 
             auto* set2 = descSets.AddSet(0);
             ASSERT_EQ(set2, nullptr);
-            EXPECT_EQ(descSets.GetSetCount(), size_t(1));
+            EXPECT_EQ(descSets.GetSetCount(), size_t{ 1 });
 
             auto* set3 = descSets.AddSet(1);
             ASSERT_NE(set3, nullptr);
             EXPECT_EQ(set3->GetId(), uint32_t(1));
-            EXPECT_EQ(descSets.GetSetCount(), size_t(2));
+            EXPECT_EQ(descSets.GetSetCount(), size_t{ 2 });
 
             for (uint32_t j = 2; j < 32; j++)
             {
@@ -91,7 +91,7 @@ namespace Molten::Shader::Visual
 
             EXPECT_EQ(descSets.begin(), descSets.end());
             EXPECT_EQ(constDescSets.begin(), constDescSets.end());
-            EXPECT_EQ(descSets.GetSetCount(), size_t(0));
+            EXPECT_EQ(descSets.GetSetCount(), size_t{ 0 });
         }
 
     }
@@ -110,31 +110,31 @@ namespace Molten::Shader::Visual
                 // Add
                 EXPECT_EQ(set.begin(), set.end());
                 EXPECT_EQ(constSet.begin(), constSet.end());
-                EXPECT_EQ(set.GetBindingCount(), size_t(0));
+                EXPECT_EQ(set.GetBindingCount(), size_t{ 0 });
                 
                 auto binding1 = set.AddBinding<Sampler2D>(0);
-                 ASSERT_NE(binding1, nullptr);
+                ASSERT_NE(binding1, nullptr);
                 EXPECT_NE(set.begin(), set.end());
                 EXPECT_NE(constSet.begin(), constSet.end());
-                EXPECT_EQ(set.GetBindingCount(), size_t(1));
+                EXPECT_EQ(set.GetBindingCount(), size_t{ 1 });
 
                 auto binding2 = set.AddBinding<Sampler2D>(0);
                 ASSERT_EQ(binding2, nullptr);
                 EXPECT_NE(set.begin(), set.end());
                 EXPECT_NE(constSet.begin(), constSet.end());
-                EXPECT_EQ(set.GetBindingCount(), size_t(1));
+                EXPECT_EQ(set.GetBindingCount(), size_t{ 1 });
 
                 auto binding3 = set.AddBinding<Sampler2D>(1);
                 ASSERT_NE(binding3, nullptr);
                 EXPECT_NE(set.begin(), set.end());
                 EXPECT_NE(constSet.begin(), constSet.end());
-                EXPECT_EQ(set.GetBindingCount(), size_t(2));
+                EXPECT_EQ(set.GetBindingCount(), size_t{ 2 });
 
                 for (uint32_t j = 2; j < 32; j++)
                 {
                     set.AddBinding<Sampler2D>(j);
                 }
-                EXPECT_EQ(set.GetBindingCount(), size_t(32));
+                EXPECT_EQ(set.GetBindingCount(), size_t{ 32 });
 
                 // Remove
                 set.RemoveBinding(10);
@@ -142,22 +142,22 @@ namespace Molten::Shader::Visual
                 set.RemoveBinding(13);
                 set.RemoveBinding(15);
                 set.RemoveBinding(0);
-                EXPECT_EQ(set.GetBindingCount(), size_t(27));
+                EXPECT_EQ(set.GetBindingCount(), size_t{ 27 });
 
                 binding1 = set.GetBinding<Sampler2D>(0);
                 ASSERT_NE(binding1, nullptr);
-                EXPECT_EQ(binding1->GetId(), uint32_t(1));
+                EXPECT_EQ(binding1->GetId(), uint32_t{ 1 });
                 auto binding1base = set.GetBindingBase(0);
                 ASSERT_NE(binding1base, nullptr);
-                EXPECT_EQ(binding1base->GetId(), uint32_t(1));
+                EXPECT_EQ(binding1base->GetId(), uint32_t{ 1 });
 
                 set.RemoveBinding(set.begin());
                 set.RemoveBinding(constSet.begin());
-                EXPECT_EQ(set.GetBindingCount(), size_t(25));
+                EXPECT_EQ(set.GetBindingCount(), uint32_t{ 25 });
 
                 binding1 = set.GetBinding<Sampler2D>(0);
                 ASSERT_NE(binding1, nullptr);
-                EXPECT_EQ(binding1->GetId(), uint32_t(3));
+                EXPECT_EQ(binding1->GetId(), uint32_t{ 3 });
 
                 for (uint32_t j = 0; j < 25; j++)
                 {
@@ -166,7 +166,7 @@ namespace Molten::Shader::Visual
 
                 EXPECT_EQ(set.begin(), set.end());
                 EXPECT_EQ(constSet.begin(), constSet.end());
-                EXPECT_EQ(set.GetBindingCount(), size_t(0));
+                EXPECT_EQ(set.GetBindingCount(), size_t{ 0 });
             }
         }
     }

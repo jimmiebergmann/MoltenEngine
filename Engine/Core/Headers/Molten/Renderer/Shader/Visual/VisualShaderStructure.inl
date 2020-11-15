@@ -29,56 +29,91 @@
 namespace Molten::Shader::Visual
 {
 
+    // Structure member base implementations.
+    template<typename TMetaData>
+    template<typename ... TArgs>
+    inline StructureMemberBase<TMetaData>::StructureMemberBase(TArgs ... args) :
+        TMetaData(args...)
+    {}
+
+
+    // Structure member implementations.
+    template<typename TPinType, typename TMetaData>
+    template<typename ... TArgs>
+    inline StructureMember<TPinType, TMetaData>::StructureMember(Node& node, TArgs ... args) :
+        TPinType(node),
+        StructureMemberBase<TMetaData>(args...)
+    {}
+
+    template<typename TPinType, typename TMetaData>
+    Pin& StructureMember<TPinType, TMetaData>::GetPin()
+    {
+        return static_cast<Pin&>(*this);
+    }
+
+    template<typename TPinType, typename TMetaData>
+    const Pin& StructureMember<TPinType, TMetaData>::GetPin() const
+    {
+        return static_cast<const Pin&>(*this);
+    }
+
+
+    // Structure base implementations.
+    template<typename TMetaData>
+    inline StructureBase<TMetaData>::StructureBase(Script& script) :
+        Node(script)
+    {}
+
+
     // Structure implementations.
-    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline Structure<VNodeType, TPinType, TAllowedDataTypes...>::Structure(Script& script) :
-        StructureBase(script),
+    template<NodeType VNodeType, template<typename> typename TPinType, typename TMetaData, typename ... TAllowedDataTypes>
+    inline Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::Structure(Script& script) :
+        StructureBase<TMetaData>(script),
         m_script(script),
         m_members{},
         m_sizeOf(0)
-    {
-    }
-
-    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline Structure<VNodeType, TPinType, TAllowedDataTypes...>::~Structure()
+    {}
+    
+    template<NodeType VNodeType, template<typename> typename TPinType, typename TMetaData, typename ... TAllowedDataTypes>
+    inline Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::~Structure()
     {
         RemoveAllMembers();
     }
 
-    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline typename Structure<VNodeType, TPinType, TAllowedDataTypes...>::Iterator
-        Structure<VNodeType, TPinType, TAllowedDataTypes...>::begin()
+    template<NodeType VNodeType, template<typename> typename TPinType, typename TMetaData, typename ... TAllowedDataTypes>
+    inline typename Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::Iterator
+        Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::begin()
     {
         return m_members.begin();
     }
-    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline typename Structure<VNodeType, TPinType, TAllowedDataTypes...>::ConstIterator
-        Structure<VNodeType, TPinType, TAllowedDataTypes...>::begin() const
+    template<NodeType VNodeType, template<typename> typename TPinType, typename TMetaData, typename ... TAllowedDataTypes>
+    inline typename Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::ConstIterator
+        Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::begin() const
     {
         return m_members.begin();
     }
 
-    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline typename Structure<VNodeType, TPinType, TAllowedDataTypes...>::Iterator
-        Structure<VNodeType, TPinType, TAllowedDataTypes...>::end()
+    template<NodeType VNodeType, template<typename> typename TPinType, typename TMetaData, typename ... TAllowedDataTypes>
+    inline typename Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::Iterator
+        Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::end()
     {
         return m_members.end();
     }
-    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline typename Structure<VNodeType, TPinType, TAllowedDataTypes...>::ConstIterator
-        Structure<VNodeType, TPinType, TAllowedDataTypes...>::end() const
+    template<NodeType VNodeType, template<typename> typename TPinType, typename TMetaData, typename ... TAllowedDataTypes>
+    inline typename Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::ConstIterator
+        Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::end() const
     {
         return m_members.end();
     }
 
-    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline NodeType Structure<VNodeType, TPinType, TAllowedDataTypes...>::GetType() const
+    template<NodeType VNodeType, template<typename> typename TPinType, typename TMetaData, typename ... TAllowedDataTypes>
+    inline NodeType Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::GetType() const
     {
         return VNodeType;
     }
 
-    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline size_t Structure<VNodeType, TPinType, TAllowedDataTypes...>::GetInputPinCount() const
+    template<NodeType VNodeType, template<typename> typename TPinType, typename TMetaData, typename ... TAllowedDataTypes>
+    inline size_t Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::GetInputPinCount() const
     {
         if constexpr (PinTraits<TPinType>::isInputPin == true)
         {
@@ -90,8 +125,8 @@ namespace Molten::Shader::Visual
         }
     }
 
-    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline size_t Structure<VNodeType, TPinType, TAllowedDataTypes...>::GetOutputPinCount() const
+    template<NodeType VNodeType, template<typename> typename TPinType, typename TMetaData, typename ... TAllowedDataTypes>
+    inline size_t Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::GetOutputPinCount() const
     {
         if constexpr (PinTraits<TPinType>::isOutputPin == true)
         {
@@ -103,8 +138,8 @@ namespace Molten::Shader::Visual
         }
     }
     
-    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline Pin* Structure<VNodeType, TPinType, TAllowedDataTypes...>::GetInputPin(const size_t index)
+    template<NodeType VNodeType, template<typename> typename TPinType, typename TMetaData, typename ... TAllowedDataTypes>
+    inline Pin* Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::GetInputPin(const size_t index)
     {
         if constexpr (PinTraits<TPinType>::isInputPin == true)
         {
@@ -112,15 +147,15 @@ namespace Molten::Shader::Visual
             {
                 return nullptr;
             }
-            return m_members[index];
+            return &m_members[index]->GetPin();
         }
         else
         {
             return nullptr;
         }
     }
-    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline const Pin* Structure<VNodeType, TPinType, TAllowedDataTypes...>::GetInputPin(const size_t index) const
+    template<NodeType VNodeType, template<typename> typename TPinType, typename TMetaData, typename ... TAllowedDataTypes>
+    inline const Pin* Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::GetInputPin(const size_t index) const
     {
         if constexpr (PinTraits<TPinType>::isInputPin == true)
         {
@@ -128,7 +163,7 @@ namespace Molten::Shader::Visual
             {
                 return nullptr;
             }
-            return m_members[index];
+            return &m_members[index]->GetPin();
         }
         else
         {
@@ -136,9 +171,9 @@ namespace Molten::Shader::Visual
         }
     }
 
-    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    template<NodeType VNodeType, template<typename> typename TPinType, typename TMetaData, typename ... TAllowedDataTypes>
     template<typename TDataType>
-    inline InputPin<TDataType>* Structure<VNodeType, TPinType, TAllowedDataTypes...>::GetInputPin(const size_t index)
+    inline InputPin<TDataType>* Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::GetInputPin(const size_t index)
     {
         if constexpr (PinTraits<TPinType>::isInputPin == true)
         {
@@ -149,9 +184,9 @@ namespace Molten::Shader::Visual
             return nullptr;
         }
     }
-    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    template<NodeType VNodeType, template<typename> typename TPinType, typename TMetaData, typename ... TAllowedDataTypes>
     template<typename TDataType>
-    inline const InputPin<TDataType>* Structure<VNodeType, TPinType, TAllowedDataTypes...>::GetInputPin(const size_t index) const
+    inline const InputPin<TDataType>* Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::GetInputPin(const size_t index) const
     {
         if constexpr (PinTraits<TPinType>::isInputPin == true)
         {
@@ -163,8 +198,8 @@ namespace Molten::Shader::Visual
         }
     }
 
-    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline std::vector<Pin*> Structure<VNodeType, TPinType, TAllowedDataTypes...>::GetInputPins()
+    template<NodeType VNodeType, template<typename> typename TPinType, typename TMetaData, typename ... TAllowedDataTypes>
+    inline std::vector<Pin*> Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::GetInputPins()
     {
         if constexpr (PinTraits<TPinType>::isInputPin == true)
         {
@@ -175,8 +210,8 @@ namespace Molten::Shader::Visual
             return {};
         }
     }
-    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline std::vector<const Pin*> Structure<VNodeType, TPinType, TAllowedDataTypes...>::GetInputPins() const
+    template<NodeType VNodeType, template<typename> typename TPinType, typename TMetaData, typename ... TAllowedDataTypes>
+    inline std::vector<const Pin*> Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::GetInputPins() const
     {
         if constexpr (PinTraits<TPinType>::isInputPin == true)
         {
@@ -188,8 +223,8 @@ namespace Molten::Shader::Visual
         }
     }
     
-    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline Pin* Structure<VNodeType, TPinType, TAllowedDataTypes...>::GetOutputPin(const size_t index)
+    template<NodeType VNodeType, template<typename> typename TPinType, typename TMetaData, typename ... TAllowedDataTypes>
+    inline Pin* Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::GetOutputPin(const size_t index)
     {
         if constexpr (PinTraits<TPinType>::isOutputPin == true)
         {
@@ -197,15 +232,15 @@ namespace Molten::Shader::Visual
             {
                 return nullptr;
             }
-            return m_members[index];
+            return &m_members[index]->GetPin();
         }
         else
         {
             return nullptr;
         }
     }
-    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline const Pin* Structure<VNodeType, TPinType, TAllowedDataTypes...>::GetOutputPin(const size_t index) const
+    template<NodeType VNodeType, template<typename> typename TPinType, typename TMetaData, typename ... TAllowedDataTypes>
+    inline const Pin* Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::GetOutputPin(const size_t index) const
     {
         if constexpr (PinTraits<TPinType>::isOutputPin == true)
         {
@@ -213,7 +248,7 @@ namespace Molten::Shader::Visual
             {
                 return nullptr;
             }
-            return m_members[index];
+            return &m_members[index]->GetPin();
         }
         else
         {
@@ -221,9 +256,9 @@ namespace Molten::Shader::Visual
         }
     }
 
-    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    template<NodeType VNodeType, template<typename> typename TPinType, typename TMetaData, typename ... TAllowedDataTypes>
     template<typename TDataType>
-    inline OutputPin<TDataType>* Structure<VNodeType, TPinType, TAllowedDataTypes...>::GetOutputPin(const size_t index)
+    inline OutputPin<TDataType>* Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::GetOutputPin(const size_t index)
     {
         if constexpr (PinTraits<TPinType>::isOutputPin == true)
         {
@@ -234,9 +269,9 @@ namespace Molten::Shader::Visual
             return nullptr;
         }
     }
-    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    template<NodeType VNodeType, template<typename> typename TPinType, typename TMetaData, typename ... TAllowedDataTypes>
     template<typename TDataType>
-    inline const OutputPin<TDataType>* Structure<VNodeType, TPinType, TAllowedDataTypes...>::GetOutputPin(const size_t index) const
+    inline const OutputPin<TDataType>* Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::GetOutputPin(const size_t index) const
     {
         if constexpr (PinTraits<TPinType>::isOutputPin == true)
         {
@@ -248,8 +283,8 @@ namespace Molten::Shader::Visual
         }
     }
 
-    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline std::vector<Pin*> Structure<VNodeType, TPinType, TAllowedDataTypes...>::GetOutputPins()
+    template<NodeType VNodeType, template<typename> typename TPinType, typename TMetaData, typename ... TAllowedDataTypes>
+    inline std::vector<Pin*> Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::GetOutputPins()
     {
         if constexpr (PinTraits<TPinType>::isOutputPin == true)
         {
@@ -260,8 +295,8 @@ namespace Molten::Shader::Visual
             return {};
         }
     }
-    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline std::vector<const Pin*> Structure<VNodeType, TPinType, TAllowedDataTypes...>::GetOutputPins() const
+    template<NodeType VNodeType, template<typename> typename TPinType, typename TMetaData, typename ... TAllowedDataTypes>
+    inline std::vector<const Pin*> Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::GetOutputPins() const
     {
         if constexpr (PinTraits<TPinType>::isOutputPin == true)
         {
@@ -273,22 +308,22 @@ namespace Molten::Shader::Visual
         }
     }
 
-    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    template<typename TDataType>
-    inline typename Structure<VNodeType, TPinType, TAllowedDataTypes...>::template PinType<TDataType>&
-        Structure<VNodeType, TPinType, TAllowedDataTypes...>::AddMember()
+    template<NodeType VNodeType, template<typename> typename TPinType, typename TMetaData, typename ... TAllowedDataTypes>
+    template<typename TDataType, typename ... TArgs>
+    inline typename Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::template MemberType<TDataType>&
+        Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::AddMember(TArgs ... args)
     {
         static_assert(TemplateArgumentsContains<TDataType, TAllowedDataTypes...>(),
             "Provided TDataType is not allowed for this structure.");
 
-        auto member = new PinType<TDataType>(*this);
+        auto member = new MemberType<TDataType>(*this, args...);
         m_members.push_back(member);
         m_sizeOf += member->GetSizeOfDataType();
         return *member;
     }
 
-    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline void Structure<VNodeType, TPinType, TAllowedDataTypes...>::RemoveMember(const size_t index)
+    template<NodeType VNodeType, template<typename> typename TPinType, typename TMetaData, typename ... TAllowedDataTypes>
+    inline void Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::RemoveMember(const size_t index)
     {
         if (index >= m_members.size())
         {
@@ -297,29 +332,29 @@ namespace Molten::Shader::Visual
 
         auto it = m_members.begin() + index;
         auto* member = *it;
-        m_sizeOf -= member->GetSizeOfDataType();
+        m_sizeOf -= member->GetPin().GetSizeOfDataType();
         delete member;
         m_members.erase(it);
     }
-    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline void Structure<VNodeType, TPinType, TAllowedDataTypes...>::RemoveMember(const Iterator it)
+    template<NodeType VNodeType, template<typename> typename TPinType, typename TMetaData, typename ... TAllowedDataTypes>
+    inline void Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::RemoveMember(const Iterator it)
     {
         auto* member = *it;
-        m_sizeOf -= member->GetSizeOfDataType();
+        m_sizeOf -= member->GetPin().GetSizeOfDataType();
         delete member;
         m_members.erase(it);
     }
-    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline void Structure<VNodeType, TPinType, TAllowedDataTypes...>::RemoveMember(const ConstIterator it)
+    template<NodeType VNodeType, template<typename> typename TPinType, typename TMetaData, typename ... TAllowedDataTypes>
+    inline void Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::RemoveMember(const ConstIterator it)
     {
         auto* member = *it;
-        m_sizeOf -= member->GetSizeOfDataType();
+        m_sizeOf -= member->GetPin().GetSizeOfDataType();
         delete member;
         m_members.erase(it);
     }
 
-    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline void Structure<VNodeType, TPinType, TAllowedDataTypes...>::RemoveAllMembers()
+    template<NodeType VNodeType, template<typename> typename TPinType, typename TMetaData, typename ... TAllowedDataTypes>
+    inline void Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::RemoveAllMembers()
     {
         for (auto* member : m_members)
         {
@@ -329,8 +364,8 @@ namespace Molten::Shader::Visual
         m_sizeOf = 0;
     }
 
-    /*template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline MemberBase* Structure<VNodeType, TPinType, TAllowedDataTypes...>::GetMember(const size_t index)
+    /*template<NodeType VNodeType, template<typename> typename TPinType, typename TMetaData, typename ... TAllowedDataTypes>
+    inline MemberBase* Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::GetMember(const size_t index)
     {
         if (index >= m_members.size())
         {
@@ -338,8 +373,8 @@ namespace Molten::Shader::Visual
         }
         return m_members[index];
     }
-    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline const MemberBase* Structure<VNodeType, TPinType, TAllowedDataTypes...>::GetMember(const size_t index) const
+    template<NodeType VNodeType, template<typename> typename TPinType, typename TMetaData, typename ... TAllowedDataTypes>
+    inline const MemberBase* Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::GetMember(const size_t index) const
     {
         if (index >= m_members.size())
         {
@@ -348,8 +383,9 @@ namespace Molten::Shader::Visual
         return m_members[index];
     }*/
 
-    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline Pin* Structure<VNodeType, TPinType, TAllowedDataTypes...>::GetMemberBase(const size_t index)
+    template<NodeType VNodeType, template<typename> typename TPinType, typename TMetaData, typename ... TAllowedDataTypes>
+    inline typename Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::MemberBaseType*
+        Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::GetMemberBase(const size_t index)
     {
         if (index >= m_members.size())
         {
@@ -357,8 +393,9 @@ namespace Molten::Shader::Visual
         }
         return m_members[index];
     }
-    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline const Pin* Structure<VNodeType, TPinType, TAllowedDataTypes...>::GetMemberBase(const size_t index) const
+    template<NodeType VNodeType, template<typename> typename TPinType, typename TMetaData, typename ... TAllowedDataTypes>
+    inline const typename Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::MemberBaseType*
+        Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::GetMemberBase(const size_t index) const
     {
         if (index >= m_members.size())
         {
@@ -367,21 +404,21 @@ namespace Molten::Shader::Visual
         return m_members[index];
     }
 
-    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline size_t Structure<VNodeType, TPinType, TAllowedDataTypes...>::GetMemberCount() const
+    template<NodeType VNodeType, template<typename> typename TPinType, typename TMetaData, typename ... TAllowedDataTypes>
+    inline size_t Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::GetMemberCount() const
     {
         return m_members.size();
     }
 
-    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    inline size_t Structure<VNodeType, TPinType, TAllowedDataTypes...>::GetSizeOf() const
+    template<NodeType VNodeType, template<typename> typename TPinType, typename TMetaData, typename ... TAllowedDataTypes>
+    inline size_t Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::GetSizeOf() const
     {
         return m_sizeOf;
     }
 
-    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    template<NodeType VNodeType, template<typename> typename TPinType, typename TMetaData, typename ... TAllowedDataTypes>
     template<NodeType VOtherNodeType, template<typename> typename TOtherPinType, typename ... TOtherAllowedDataTypes>
-    bool Structure<VNodeType, TPinType, TAllowedDataTypes...>::CompareStructure(
+    bool Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::CompareStructure(
         const Structure<VOtherNodeType, TOtherPinType, TOtherAllowedDataTypes...>& other) const
     {
         if (m_members.size() != other.m_members.size())
@@ -391,7 +428,7 @@ namespace Molten::Shader::Visual
 
         for (size_t i = 0; i < m_members.size(); i++)
         {
-            if (m_members[i]->GetDataType() != other.m_members[i]->GetDataType())
+            if (m_members[i]->GetPin().GetDataType() != other.m_members[i]->GetPin().GetDataType())
             {
                 return false;
             }
@@ -400,18 +437,31 @@ namespace Molten::Shader::Visual
         return true;
     }
 
-    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
+    template<NodeType VNodeType, template<typename> typename TPinType, typename TMetaData, typename ... TAllowedDataTypes>
     template<typename T>
-    inline std::vector<T*> Structure<VNodeType, TPinType, TAllowedDataTypes...>::CreatePinVector() const
+    inline std::vector<T*> Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::CreatePinVector() const
     {
         std::vector<T*> pins(m_members.size(), nullptr);
         std::transform(m_members.begin(), m_members.end(), pins.begin(),
-            [](auto& pin) -> T*
+            [](auto& member) -> T*
             {
-                return pin;
+                return &member->GetPin();
             }
         );
         return pins;
+    }
+
+
+    // Meta data constant id implementations.
+    template<typename T>
+    inline MetaDataConstantId<T>::MetaDataConstantId(const Type id) :
+        m_id(id)
+    {}
+
+    template<typename T>
+    inline typename MetaDataConstantId<T>::Type MetaDataConstantId<T>::GetId() const
+    {
+        return m_id;
     }
 
 }

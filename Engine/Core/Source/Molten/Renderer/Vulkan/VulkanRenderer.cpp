@@ -57,7 +57,7 @@ namespace Molten
 {
 
     // Static helper functions.
-    /*static VkShaderStageFlagBits GetShaderProgramStageFlag(const Shader::Type type)
+    static VkShaderStageFlagBits GetShaderProgramStageFlag(const Shader::Type type)
     {
         MOLTEN_UNSCOPED_ENUM_BEGIN
         switch (type)
@@ -68,11 +68,11 @@ namespace Molten
 
         throw Exception("Provided shader type is not supported by the Vulkan renderer.");
         MOLTEN_UNSCOPED_ENUM_END
-    }*/
+    }
 
-    /*static VkPrimitiveTopology GetPrimitiveTopology(const Pipeline::Topology topology)
-    {
-        MOLTEN_UNSCOPED_ENUM_BEGIN
+    MOLTEN_UNSCOPED_ENUM_BEGIN
+    static VkPrimitiveTopology GetPrimitiveTopology(const Pipeline::Topology topology)
+    {     
         switch (topology)
         {
             case Pipeline::Topology::PointList:     return VkPrimitiveTopology::VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
@@ -81,13 +81,11 @@ namespace Molten
             case Pipeline::Topology::TriangleList:  return VkPrimitiveTopology::VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
             case Pipeline::Topology::TriangleStrip: return VkPrimitiveTopology::VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
         }
-        throw Exception("Provided primitive topology is not supported by the Vulkan renderer.");
-        MOLTEN_UNSCOPED_ENUM_END
-    }*/
+        throw Exception("Provided primitive topology is not supported by the Vulkan renderer.");      
+    }
 
-    /*static VkPolygonMode GetPrimitiveTopology(const Pipeline::PolygonMode polygonMode)
+    static VkPolygonMode GetPolygonMode(const Pipeline::PolygonMode polygonMode)
     {
-        MOLTEN_UNSCOPED_ENUM_BEGIN
         switch (polygonMode)
         {
             case Pipeline::PolygonMode::Point: return VkPolygonMode::VK_POLYGON_MODE_POINT;
@@ -95,24 +93,21 @@ namespace Molten
             case Pipeline::PolygonMode::Fill:  return VkPolygonMode::VK_POLYGON_MODE_FILL;
         }
         throw Exception("Provided polygon mode is not supported by the Vulkan renderer.");
-        MOLTEN_UNSCOPED_ENUM_END
-    }
 
+    }
+    
     static VkFrontFace GetFrontFace(const Pipeline::FrontFace frontFace)
     {
-        MOLTEN_UNSCOPED_ENUM_BEGIN
         switch (frontFace)
         {
             case Pipeline::FrontFace::Clockwise:        return VkFrontFace::VK_FRONT_FACE_CLOCKWISE;
             case Pipeline::FrontFace::Counterclockwise: return VkFrontFace::VK_FRONT_FACE_COUNTER_CLOCKWISE;
         }
         throw Exception("Provided front face is not supported by the Vulkan renderer.");
-        MOLTEN_UNSCOPED_ENUM_END
     }
 
     static VkCullModeFlagBits GetCullMode(const Pipeline::CullMode cullMode)
     {
-        MOLTEN_UNSCOPED_ENUM_BEGIN
         switch (cullMode)
         {
             case Pipeline::CullMode::None:         return VkCullModeFlagBits::VK_CULL_MODE_NONE;
@@ -121,12 +116,10 @@ namespace Molten
             case Pipeline::CullMode::FrontAndBack: return VkCullModeFlagBits::VK_CULL_MODE_FRONT_AND_BACK;
         }
         throw Exception("Provided cull mode is not supported by the Vulkan renderer.");
-        MOLTEN_UNSCOPED_ENUM_END
     }
-
+    
     static bool GetVertexAttributeFormatAndSize(const Shader::VariableDataType format, VkFormat & vulkanFormat, uint32_t & formatSize)
-    {
-        MOLTEN_UNSCOPED_ENUM_BEGIN
+    {       
         switch (format)
         {
             case Shader::VariableDataType::Bool:
@@ -171,27 +164,35 @@ namespace Molten
                 formatSize = 64;
                 return true;
             }
-            case Shader::VariableDataType::Sampler2D:
-            {
-                return false;
-            }
+            default: break;
         }
-        return false;
-        MOLTEN_UNSCOPED_ENUM_END
-    }*/
+        return false;     
+    }
 
     static VkIndexType GetIndexBufferDataType(const IndexBuffer::DataType dataType)
     {
-        MOLTEN_UNSCOPED_ENUM_BEGIN
         switch (dataType)
         {
             case IndexBuffer::DataType::Uint16: return VkIndexType::VK_INDEX_TYPE_UINT16;
             case IndexBuffer::DataType::Uint32: return VkIndexType::VK_INDEX_TYPE_UINT32;
         }
-        MOLTEN_UNSCOPED_ENUM_END
-
+        
         throw Exception("Provided data type is not supported as index buffer data type by the Vulkan renderer.");
     }
+  
+    static VkDescriptorType GetDescriptorType(const Shader::Visual::DescriptorBindingType bindingType)
+    {
+        switch(bindingType)
+        {
+            case Shader::Visual::DescriptorBindingType::Sampler1D:
+            case Shader::Visual::DescriptorBindingType::Sampler2D:
+            case Shader::Visual::DescriptorBindingType::Sampler3D: return VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            case Shader::Visual::DescriptorBindingType::UniformBuffer: return VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+        }
+        throw Exception("Provided provided binding type is not handled.");
+    }
+
+    MOLTEN_UNSCOPED_ENUM_END
 
     static VkDeviceSize GetIndexBufferDataTypeSize(const IndexBuffer::DataType dataType)
     {
@@ -424,27 +425,26 @@ namespace Molten
             Logger::WriteError(m_logger, "Vertex output structure is not compatible with fragment input structure.");
             return nullptr;
         }
-
-        return nullptr;
-        /*
+        
         const std::vector<Shader::Visual::Script*> shaderScripts =
         {
             descriptor.vertexScript, descriptor.fragmentScript
         };
 
-        std::vector<VkPipelineShaderStageCreateInfo> shaderStageCreateInfos;
-        Vulkan::ShaderModules shaderModules;
-        PushConstantLocations pushConstantLocations;
-        PushConstantOffsets pushConstantOffsets;
         VkPushConstantRange pushConstantRange;
+        if (!CreatePushConstantRange(
+            pushConstantRange,
+            shaderScripts))
+        {
+            return nullptr;
+        }
 
-        if (!LoadShaderStages(
-                shaderScripts,
-                shaderModules,
-                shaderStageCreateInfos,
-                pushConstantLocations,
-                pushConstantOffsets,
-                pushConstantRange))
+        std::vector<VkPipelineShaderStageCreateInfo> shaderStageCreateInfos;
+        Vulkan::ShaderModules shaderModules;    
+        if (!LoadShaderModules(
+            shaderModules,
+            shaderStageCreateInfos,
+            shaderScripts))
         {
             return nullptr;
         }
@@ -453,13 +453,13 @@ namespace Molten
         uint32_t vertexBindingStride = 0;
         if (descriptor.vertexScript)
         {
-            //auto& vertexInputs = descriptor.vertexScript->GetInputInterface();
-            //if (!CreateVertexInputAttributes(vertexInputs, vertexInputAttributes, vertexBindingStride))
-            //{
-            //    return nullptr;
-            //}
+            auto& vertexInputs = descriptor.vertexScript->GetInputInterface();
+            if (!CreateVertexInputAttributes(vertexInputs, vertexInputAttributes, vertexBindingStride))
+            {
+                return nullptr;
+            }
         }
-
+ 
         VkVertexInputBindingDescription vertexBinding;
         vertexBinding.binding = 0;
         vertexBinding.stride = vertexBindingStride;
@@ -488,7 +488,7 @@ namespace Molten
         rasterizerInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
         rasterizerInfo.depthClampEnable = VK_FALSE;
         rasterizerInfo.rasterizerDiscardEnable = VK_FALSE;
-        rasterizerInfo.polygonMode = GetPrimitiveTopology(descriptor.polygonMode);
+        rasterizerInfo.polygonMode = GetPolygonMode(descriptor.polygonMode);
         rasterizerInfo.lineWidth = 1.0f;
         rasterizerInfo.cullMode = GetCullMode(descriptor.cullMode);
         rasterizerInfo.frontFace = GetFrontFace(descriptor.frontFace);
@@ -505,7 +505,7 @@ namespace Molten
         multisamplingInfo.pSampleMask = nullptr;
         multisamplingInfo.alphaToOneEnable = VK_FALSE;
         multisamplingInfo.alphaToCoverageEnable = VK_FALSE;
-
+                
         //VkPipelineDepthStencilStateCreateInfo depthStencilStateInfo = {};
 
         VkPipelineColorBlendAttachmentState colorBlendAttachmentState = {};
@@ -540,13 +540,13 @@ namespace Molten
         dynamicStateInfo.pDynamicStates = dynamicStateEnables;
         dynamicStateInfo.dynamicStateCount = 2;
         dynamicStateInfo.flags = 0;
-
+        
         Vulkan::DescriptorSetLayouts setLayouts;
         if (!CreateDescriptorSetLayouts(shaderScripts, setLayouts))
         {
             return nullptr;
         }
-
+        return nullptr;/*
         VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(setLayouts.size());
@@ -819,7 +819,7 @@ namespace Molten
         }
         for (auto& shaderModule : vulkanPipeline->shaderModules)
         {
-            vkDestroyShaderModule(m_logicalDevice.GetHandle(), shaderModule, nullptr);
+            shaderModule.Destroy();
         }
 
         delete vulkanPipeline;
@@ -1370,8 +1370,8 @@ namespace Molten
         return true;
     }
 
-    /*bool VulkanRenderer::CreateVertexInputAttributes(
-        const Shader::Visual::InputStructure& inputs,
+    bool VulkanRenderer::CreateVertexInputAttributes(
+        const Shader::Visual::InputInterface& inputs,
         std::vector<VkVertexInputAttributeDescription>& attributes, 
         uint32_t& stride)
     {
@@ -1379,181 +1379,188 @@ namespace Molten
         size_t index = 0;
         uint32_t location = 0;
 
-        for (auto* inputNode : inputs.GetMembers())
+        const auto outputPins = inputs.GetOutputPins();
+        for (auto* pins : outputPins)
         {
-            for (auto* outputPin : inputNode->GetOutputPins())
+            VkFormat format;
+            uint32_t formatSize;
+            if (!GetVertexAttributeFormatAndSize(pins->GetDataType(), format, formatSize))
             {
-                VkFormat format;
-                uint32_t formatSize;
-                if (!GetVertexAttributeFormatAndSize(outputPin->GetDataType(), format, formatSize))
-                {
-                    Logger::WriteError(m_logger, "Failed to find attribute format.");
-                    return false;
-                }
-
-                auto& attribute = attributes[index++];
-                attribute.binding = 0;
-                attribute.location = location;
-                attribute.offset = stride;
-                attribute.format = format;
-
-                location++;
-                stride += formatSize;
-            }
-        }
-        return true;
-    }*/
-
-    /*bool VulkanRenderer::CreateDescriptorSetLayouts(
-        const std::vector<Shader::Visual::Script*>& visualScripts, 
-        Vulkan::DescriptorSetLayouts& setLayouts)
-    {
-        std::map<uint32_t, VkShaderStageFlags> uniformShaderStageFlags;
-        uint32_t highestSetId = 0;
-        for (auto script : visualScripts)
-        {
-            auto& uniformInterfaces = script->GetUniformInterfaces();
-
-            for (auto* uniformInterface : uniformInterfaces)
-            {
-                uint32_t setId = uniformInterface->GetId();
-                highestSetId = setId > highestSetId ? setId : highestSetId;
-
-                auto it = uniformShaderStageFlags.find(setId);
-                if (it != uniformShaderStageFlags.end())
-                {
-                    it->second |= GetShaderProgramStageFlag(script->GetType());
-                    continue;
-                }
-
-                uniformShaderStageFlags.insert({ setId , GetShaderProgramStageFlag(script->GetType()) });
-            }
-        }
-
-        if (highestSetId > static_cast<uint32_t>(uniformShaderStageFlags.size()))
-        {
-            Logger::WriteError(m_logger, "Uniform interface id is out of bound, expected " + 
-                std::to_string(uniformShaderStageFlags.size() - 1) + " to be the highest.");
-            return nullptr;
-        }
-
-        setLayouts.clear();
-        for (auto& pair : uniformShaderStageFlags)
-        {
-            auto stageFlags = pair.second;
-
-            VkDescriptorSetLayoutBinding binding;
-            binding.binding = 0;
-            binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-            binding.descriptorCount = 1;
-            binding.stageFlags = stageFlags;
-            binding.pImmutableSamplers = nullptr;
-
-            VkDescriptorSetLayoutCreateInfo descriptorSetLayoutInfo = {};
-            descriptorSetLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-            descriptorSetLayoutInfo.bindingCount = 1;
-            descriptorSetLayoutInfo.pBindings = &binding;
-
-            VkDescriptorSetLayout descriptorSetLayout;
-            if (vkCreateDescriptorSetLayout(m_logicalDevice.GetHandle(), &descriptorSetLayoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS)
-            {
-                Logger::WriteError(m_logger, "Failed to create descriptor set layout.");
+                Logger::WriteError(m_logger, "Failed to find vertex input attribute format.");
                 return false;
             }
 
-            setLayouts.push_back(descriptorSetLayout);
+            auto& attribute = attributes[index++];
+            attribute.binding = 0;
+            attribute.location = location;
+            attribute.offset = stride;
+            attribute.format = format;
+
+            location++;
+            stride += formatSize;
         }
         return true;
-    }*/
+    }
 
-    /*bool VulkanRenderer::LoadShaderStages(
-        const std::vector<Shader::Visual::Script*>& visualScripts,
+   bool VulkanRenderer::CreateDescriptorSetLayouts(
+        const std::vector<Shader::Visual::Script*>& visualScripts, 
+        Vulkan::DescriptorSetLayouts& setLayouts)
+    {
+       struct Sets
+       {
+           bool AddBindings(const Shader::Visual::DescriptorSetBase* set, Logger* logger)
+           {
+               const size_t bindingCount = set->GetBindingCount();
+               for (size_t i = 0; i < bindingCount; i++)
+               {
+                   const auto& binding = set->GetBindingBase(i);
+                   const auto bindingType = binding->GetBindingType();
+                   const uint32_t bindingId = binding->GetId();
+
+                   auto it = bindings.find(bindingId);
+                   if (it != bindings.end())
+                   {
+                       if (it->second != bindingType)
+                       {
+                           Logger::WriteError(logger, "Mismatching binding type of id " + std::to_string(bindingId) + ".");
+                           return false;
+                       } 
+                   }
+                   else
+                   {
+                       bindings.insert({ bindingId, bindingType });
+                   }
+               }
+               return true;
+           }
+
+           std::map<uint32_t, Shader::Visual::DescriptorBindingType> bindings;
+       };
+
+       std::map<uint32_t, Sets> setMap;
+
+       for (const auto* script : visualScripts)
+       {
+           const auto& descriptorSets = script->GetDescriptorSetsBase();
+           const size_t descriptorSetCount = descriptorSets.GetSetCount();
+           for (size_t i = 0; i < descriptorSetCount; i++)
+           {
+               const auto* descriptorSet = descriptorSets.GetSetBase(i);
+               const uint32_t setId = descriptorSet->GetId();
+               auto it = setMap.find(setId);
+               if (it == setMap.end())
+               {
+                   it = setMap.insert({ setId, {} }).first;
+               }
+
+               auto& set = it->second;
+
+               if (!set.AddBindings(descriptorSet, m_logger))
+               {
+                   return false;
+               }
+           }
+       }
+
+       for (auto& [_, set] : setMap)
+       {
+           const size_t bindingCount = set.bindings.size();
+           std::vector<VkDescriptorSetLayoutBinding> bindings(bindingCount);
+
+           size_t bindingIndex = 0;
+           for(auto& [bindingId, bindingType] : set.bindings)
+           {
+               auto& binding = bindings[bindingIndex++];
+               binding.binding = bindingId;
+               binding.descriptorType = GetDescriptorType(bindingType);
+               binding.descriptorCount = 1;
+               binding.stageFlags = VkShaderStageFlagBits::VK_SHADER_STAGE_ALL;
+               binding.pImmutableSamplers = nullptr;
+           }
+
+           VkDescriptorSetLayoutCreateInfo descriptorSetLayoutInfo = {};
+           descriptorSetLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+           descriptorSetLayoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
+           descriptorSetLayoutInfo.pBindings = bindings.data();
+
+           VkDescriptorSetLayout descriptorSetLayout;
+           if (vkCreateDescriptorSetLayout(m_logicalDevice.GetHandle(), &descriptorSetLayoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS)
+           {
+               Logger::WriteError(m_logger, "Failed to create descriptor set layout.");
+               return false;
+           }
+
+           setLayouts.push_back(descriptorSetLayout);
+       }
+
+       return true;
+    }
+
+   bool VulkanRenderer::CreatePushConstantRange(
+       VkPushConstantRange& pushConstantRange,
+       const std::vector<Shader::Visual::Script*>& visualScripts)
+    {
+
+       /*for (size_t i = 0; i < visualScripts.size(); i++)
+       {
+           const auto& script = visualScripts[i];
+
+       }*/
+
+       //offset += std::max(size_t{ 16 }, GetVariableByteOffset(pin->GetDataType()));
+
+        /*
+         
+        pushConstantRange.stageFlags = VK_SHADER_STAGE_ALL;
+        pushConstantRange.offset = 0;
+        pushConstantRange.size = highestPushConstantsByteSize;
+         */
+       return true;
+    }
+
+    bool VulkanRenderer::LoadShaderModules(
         Vulkan::ShaderModules& shaderModules,
         std::vector<VkPipelineShaderStageCreateInfo>& shaderStageCreateInfos,
-        PushConstantLocations& pushConstantLocations,
-        PushConstantOffsets& pushConstantOffsets,
-        VkPushConstantRange& pushConstantRange)
+        const std::vector<Shader::Visual::Script*>& visualScripts)
     {
-        pushConstantRange.size = 0;
-
-        Shader::VulkanGenerator::GlslTemplates glslTemplates;
-        if (!Shader::VulkanGenerator::GenerateGlslTemplate(glslTemplates, visualScripts, m_logger))
-        {
-            return false;
-        }
-
-        shaderStageCreateInfos.reserve(visualScripts.size());
-        shaderModules.reserve(visualScripts.size());
-
-        auto& pushConstantTemplate = glslTemplates.pushConstantTemplate;
+        shaderModules.resize(visualScripts.size());
 
         for(size_t i = 0; i < visualScripts.size(); i++)
         {
-            auto* script = visualScripts[i];
-            auto scriptType = script->GetType();
+            const auto& script = visualScripts[i];
 
-            Shader::VulkanGenerator::GlslStageTemplates stageTemplate;
-            stageTemplate.pushConstantTemplate.blockSource = &pushConstantTemplate.blockSource;
-            stageTemplate.pushConstantTemplate.offsets = &pushConstantTemplate.stageOffsets[i];
-
-            auto glslCode = Shader::VulkanGenerator::GenerateGlsl(*script, &stageTemplate, m_logger);
-            if (!glslCode.size())
+            auto glslCode = m_glslGenerator.Generate(*script, Shader::GlslGenerator::Compability::SpirV, m_logger);
+            if (glslCode.empty())
             {
                 Logger::WriteError(m_logger, "Failed to generate GLSL code.");
-                return nullptr;
+                return false;
             }
 
-            auto sprivCode = Shader::VulkanGenerator::ConvertGlslToSpriV(glslCode, scriptType, m_logger);
-            if (!sprivCode.size())
+            const auto scriptType = script->GetType();
+            auto sprivCode = Shader::GlslGenerator::ConvertGlslToSpriV(glslCode, scriptType, m_logger);
+            if (sprivCode.empty())
             {
                 Logger::WriteError(m_logger, "Failed to convert GLSL to SPIR-V.");
-                return nullptr;
+                return false;
             }
 
-            auto shaderModule = CreateShaderModule(sprivCode);
-            if (shaderModule == VK_NULL_HANDLE)
+            Vulkan::Result<> result;
+            auto& shaderModule = shaderModules[i];
+            if (!(result = shaderModule.Create(m_logicalDevice, sprivCode)))
             {
-                Logger::WriteError(m_logger, "Failed to create shader module.");
-                return nullptr;
+                Vulkan::Logger::WriteError(m_logger, result, "Failed to create shader module");
+                return false;
             }
-            shaderModules.push_back(shaderModule);
 
             VkPipelineShaderStageCreateInfo stageCreateInfo = {};
             stageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
             stageCreateInfo.pName = "main";
-            stageCreateInfo.module = shaderModule;
+            stageCreateInfo.module = shaderModule.GetHandle();
             stageCreateInfo.stage = GetShaderProgramStageFlag(scriptType);
             shaderStageCreateInfos.push_back(stageCreateInfo);
         }
 
-        if (pushConstantTemplate.blockByteCount)
-        {
-            pushConstantRange.stageFlags = VK_SHADER_STAGE_ALL;
-            pushConstantRange.offset = 0;
-            pushConstantRange.size = pushConstantTemplate.blockByteCount;
-        }
-
-        pushConstantLocations = std::move(pushConstantTemplate.locations);
-        pushConstantOffsets = std::move(pushConstantTemplate.offsets);
-
         return true;
-    }*/
-
-    VkShaderModule VulkanRenderer::CreateShaderModule(const std::vector<uint8_t>& spirvCode)
-    {
-        VkShaderModuleCreateInfo shaderModuleInfo = {};
-        shaderModuleInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-        shaderModuleInfo.codeSize = spirvCode.size();
-        shaderModuleInfo.pCode = reinterpret_cast<const uint32_t*>(spirvCode.data());
-
-        VkShaderModule shaderModule;
-        if (vkCreateShaderModule(m_logicalDevice.GetHandle(), &shaderModuleInfo, nullptr, &shaderModule) != VK_SUCCESS)
-        {
-            Logger::WriteError(m_logger, "Failed to create shader module.");
-            return VK_NULL_HANDLE;
-        }
-
-        return shaderModule;
     }
 
 }

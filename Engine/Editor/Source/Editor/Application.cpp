@@ -149,7 +149,7 @@ namespace Molten
                 m_canvas->SetSize(size);
             });
 
-            LoadGui();
+            //LoadGui();
         }
 
         void Application::LoadGui()
@@ -274,65 +274,68 @@ namespace Molten
         void Application::LoadGridShaders()
         {
             // Vertex script.
-           /* {
+            {
                 auto& script = m_gridVertexScript;
 
                 auto& inputs = script.GetInputInterface();
-                auto inPos = inputs.AddMember<Vector3f32>();
-                auto inColor = inputs.AddMember<Vector4f32>();
+                auto& inPos = inputs.AddMember<Vector3f32>();
+                auto& inColor = inputs.AddMember<Vector4f32>();
 
-                auto& pushConstants = script.GetPushConstantInterface();
+                auto& pushConstants = script.GetPushConstants();
                 //pushConstants.AddMember<Vector4f32>(12345);
-                auto pushPos = pushConstants.AddMember<Vector4f32>(12345);
+                auto& pushPos = pushConstants.AddMember<Vector4f32>(0);
 
                 auto& outputs = script.GetOutputInterface();
-                auto outColor = outputs.AddMember<Vector4f32>();
-                auto outPos = script.GetVertexOutputVariable();
+                auto& outColor = outputs.AddMember<Vector4f32>();
+                auto* outPos = script.GetVertexOutput();
 
-                auto uBlock = script.GetUniformInterfaces().AddInterface(0);
-                auto uProjView = uBlock->AddMember<Matrix4x4f32>();
-                auto uModel = uBlock->AddMember<Matrix4x4f32>();
+                auto& descSets = script.GetDescriptorSets();
+                auto* descSet = descSets.AddSet(0);
+                auto* ubo = descSet->AddBinding<Shader::Visual::VertexUniformBuffer>(0);
+                
+                auto& uProjView = ubo->AddPin<Matrix4x4f32>();
+                auto& uModelView = ubo->AddPin<Matrix4x4f32>();
 
-                auto inPosVec4 = script.CreateFunction<Shader::Visual::Functions::Vec3ToVec4f32>();
-                inPosVec4->GetInputPin(0)->Connect(*inPos->GetOutputPin());
-                static_cast<Shader::Visual::InputPin<float>*>(inPosVec4->GetInputPin(1))->SetDefaultValue(1.0f);
+                auto& inPosVec4 = script.CreateFunction<Shader::Visual::Functions::Vec3ToVec4f32>();
+                inPosVec4.GetInputPin(0)->Connect(inPos);
+                static_cast<Shader::Visual::InputPin<float>*>(inPosVec4.GetInputPin(1))->SetDefaultValue(1.0f);
 
-                auto posMult = script.CreateOperator<Shader::Visual::Operators::MultVec4f32>();
-                posMult->GetInputPin(0)->Connect(*pushPos->GetOutputPin());
-                posMult->GetInputPin(1)->Connect(*inPosVec4->GetOutputPin());
+                auto& posMult = script.CreateOperator<Shader::Visual::Operators::MultVec4f32>();
+                posMult.GetInputPin(0)->Connect(pushPos);
+                posMult.GetInputPin(1)->Connect(*inPosVec4.GetOutputPin());
 
-                auto projModelmat = script.CreateOperator<Shader::Visual::Operators::MultMat4f32>();
-                projModelmat->GetInputPin(0)->Connect(*uProjView->GetOutputPin());
-                projModelmat->GetInputPin(1)->Connect(*uModel->GetOutputPin());
+                auto& projModelmat = script.CreateOperator<Shader::Visual::Operators::MultMat4f32>();
+                projModelmat.GetInputPin(0)->Connect(uProjView);
+                projModelmat.GetInputPin(1)->Connect(uModelView);
 
-                auto finalPos = script.CreateOperator<Shader::Visual::Operators::MultMat4Vec4f32>();
-                finalPos->GetInputPin(0)->Connect(*projModelmat->GetOutputPin());
-                finalPos->GetInputPin(1)->Connect(*posMult->GetOutputPin());
+                auto& finalPos = script.CreateOperator<Shader::Visual::Operators::MultMat4Vec4f32>();
+                finalPos.GetInputPin(0)->Connect(*projModelmat.GetOutputPin());
+                finalPos.GetInputPin(1)->Connect(*posMult.GetOutputPin());
 
-                outPos->GetInputPin()->Connect(*finalPos->GetOutputPin());
-                outColor->GetInputPin()->Connect(*inColor->GetOutputPin());
+                outPos->GetInputPin()->Connect(*finalPos.GetOutputPin());
+                outColor.Connect(inColor);
             }
             // Fragment script
             {
                 auto& script = m_gridFragmentScript;
 
                 auto& inputs = script.GetInputInterface();
-                auto inColor = inputs.AddMember<Vector4f32>();
+                auto& inColor = inputs.AddMember<Vector4f32>();
 
-                auto& pushConstants = script.GetPushConstantInterface();
-                auto pcColor = pushConstants.AddMember<Vector4f32>(12345);
-                auto pcColor2 = pushConstants.AddMember<Vector4f32>(123456);
+                auto& pushConstants = script.GetPushConstants();
+                auto& pcColor = pushConstants.AddMember<Vector4f32>(0);
+                auto& pcColor2 = pushConstants.AddMember<Vector4f32>(1);
 
                 auto& outputs = script.GetOutputInterface();
-                auto outColor = outputs.AddMember<Vector4f32>();
+                auto& outColor = outputs.AddMember<Vector4f32>();
 
-                auto mult = script.CreateOperator<Shader::Visual::Operators::MultVec4f32>();
-                mult->GetInputPin(0)->Connect(*inColor->GetOutputPin());
-                mult->GetInputPin(1)->Connect(*pcColor->GetOutputPin());
+                auto& mult = script.CreateOperator<Shader::Visual::Operators::MultVec4f32>();
+                mult.GetInputPin(0)->Connect(inColor);
+                mult.GetInputPin(1)->Connect(pcColor);
 
-                auto mult2 = script.CreateOperator<Shader::Visual::Operators::MultVec4f32>();
-                mult2->GetInputPin(0)->Connect(*mult->GetOutputPin());
-                mult2->GetInputPin(1)->Connect(*pcColor2->GetOutputPin());
+                auto& mult2 = script.CreateOperator<Shader::Visual::Operators::MultVec4f32>();
+                mult2.GetInputPin(0)->Connect(*mult.GetOutputPin());
+                mult2.GetInputPin(1)->Connect(pcColor2);
 
 
                 //auto add = script.CreateOperatorNode<Shader::Operator::AddVec4f32>();
@@ -340,13 +343,13 @@ namespace Molten
                 //auto const2 = script.CreateConstantNode<Vector4f32>({ 1.0f, 0.5f, 0.0f, 1.0f });
                 //auto cos = script.CreateFunctionNode<Shader::Function::CosVec4f32>();
 
-                outColor->GetInputPin()->Connect(*mult2->GetOutputPin());
+                outColor.Connect(*mult2.GetOutputPin());
                 //add->GetInputPin(0)->Connect(*mult->GetOutputPin());
                 //add->GetInputPin(1)->Connect(*const1->GetOutputPin());
                 //mult->GetInputPin(0)->Connect(*inColor->GetOutputPin());
                 //mult->GetInputPin(1)->Connect(*cos->GetOutputPin());
                 //cos->GetInputPin()->Connect(*const2->GetOutputPin());
-            }*/
+            }
 
            /* Shader::VulkanGenerator::GlslTemplates glslTemplates;
             std::vector<Shader::Visual::Script*> visualScripts = { &m_gridVertexScript, &m_gridFragmentScript };
@@ -557,10 +560,10 @@ namespace Molten
 
         void Application::Unload()
         {
-            if (m_canvasRenderer)
+            /*if (m_canvasRenderer)
             {
                 m_canvasRenderer->Close();
-            }
+            }*/
 
             if (m_renderer)
             {
@@ -732,9 +735,9 @@ namespace Molten
 
             m_camera.PostProcess();
 
-            m_canvas->SetSize(m_window->GetSize());
+            /*m_canvas->SetSize(m_window->GetSize());
             m_canvas->SetScale(m_window->GetScale());
-            m_canvas->Update(Seconds(m_deltaTime));
+            m_canvas->Update(Seconds(m_deltaTime));*/
 
             return true;
         }
@@ -793,7 +796,7 @@ namespace Molten
             /*m_renderer->BindUniformBlock(m_uniformBlock, 256);
             m_renderer->DrawVertexBuffer(m_indexBuffer, m_vertexBuffer);*/
 
-            m_canvas->Draw();
+            //m_canvas->Draw();
 
             m_renderer->EndDraw();
         }

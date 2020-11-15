@@ -38,6 +38,9 @@
 #include "Molten/Renderer/Vulkan/Utility/VulkanLogicalDevice.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanSwapChain.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanMemoryType.hpp"
+#include "Molten/Renderer/Vulkan/Utility/VulkanShaderModule.hpp"
+#include "Molten/Renderer/Shader/Generator/GlslShaderGenerator.hpp"
+#include "Molten/Renderer/Shader/Visual/VisualShaderScript.hpp"
 
 MOLTEN_UNSCOPED_ENUM_BEGIN
 
@@ -190,24 +193,24 @@ namespace Molten
 
         /** Shader creation and manipulation functions. */
         /**@{*/
-        /*bool CreateVertexInputAttributes(
-            const Shader::Visual::InputStructure& inputs, 
+        bool CreateVertexInputAttributes(
+            const Shader::Visual::InputInterface& inputs,
             std::vector<VkVertexInputAttributeDescription>& attributes, 
             uint32_t& stride);
-
+        
         bool CreateDescriptorSetLayouts(
             const std::vector<Shader::Visual::Script*>& visualScripts,
             Vulkan::DescriptorSetLayouts& setLayouts);
 
-        bool LoadShaderStages(
-            const std::vector<Shader::Visual::Script*>& visualScripts,
+        bool CreatePushConstantRange(
+            VkPushConstantRange& pushConstantRange,
+            const std::vector<Shader::Visual::Script*>& visualScripts);
+
+        bool LoadShaderModules(
             Vulkan::ShaderModules& shaderModules,
             std::vector<VkPipelineShaderStageCreateInfo>& shaderStageCreateInfos,
-            PushConstantLocations& pushConstantLocations,
-            PushConstantOffsets& pushConstantOffsets,
-            VkPushConstantRange& pushConstantRange);*/
+            const std::vector<Shader::Visual::Script*>& visualScripts);
 
-        VkShaderModule CreateShaderModule(const std::vector<uint8_t>& spirvCode);
 
         template<typename T>
         void InternalPushConstant(const uint32_t location, const T& value);
@@ -247,6 +250,7 @@ namespace Molten
         VkCommandBuffer* m_currentCommandBuffer;
         bool m_beginDraw;
         VulkanPipeline* m_currentPipeline;
+        Shader::GlslGenerator m_glslGenerator;
         /**@}*/
 
         /** Pre-filtered memory types. */

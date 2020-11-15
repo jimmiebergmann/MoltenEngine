@@ -32,19 +32,86 @@
 namespace Molten::Shader::Visual
 {
 
-    /** Structure base class. */
-    class MOLTEN_API StructureBase : public Node
+    /** Structure member base class. */
+    template<typename TMetaData>
+    class StructureMemberBase : public TMetaData
     {
 
     public:
 
         /** Constructor. */
+        template<typename ... TArgs>
+        StructureMemberBase(TArgs ... args);
+
+        /** Virtual destructor. */
+        virtual ~StructureMemberBase() = default;
+
+        /** Get pin associated with this member. */
+        /**@{*/
+        virtual Pin& GetPin() = 0;
+        virtual const Pin& GetPin() const = 0;
+        /**@}*/
+
+    };
+
+    /** Special case template specialization of structure member base, where no meta data declared. */
+    template<>
+    class StructureMemberBase<void>
+    {
+
+    public:
+
+        /** Virtual destructor. */
+        virtual ~StructureMemberBase() = default;
+
+        /** Get pin associated with this member. */
+        /**@{*/
+        virtual Pin& GetPin() = 0;
+        virtual const Pin& GetPin() const = 0;
+        /**@}*/
+
+    };
+
+    /** Structure member class. */
+    template<typename TPinType, typename TMetaData>
+    class StructureMember : public StructureMemberBase<TMetaData>, public TPinType
+    {
+
+    public:
+
+        /** Constructor. */
+        template<typename ... TArgs>
+        StructureMember(Node& node, TArgs ... args);
+
+        /** Get pin associated with this member. */
+        /**@{*/
+        Pin& GetPin() override;
+        const Pin& GetPin() const override;
+        /**@}*/
+
+    };
+
+
+    /** Structure base class. */
+    template<typename TMetaData>
+    class StructureBase : public Node
+    {
+
+    public:
+
+        using MemberBaseType = StructureMemberBase<TMetaData>;
+
+        /** Constructor. */
         StructureBase(Script& script);
+
+        /** Virtual destructor. */
+        virtual ~StructureBase() = default;
+
 
         /** Get member by index. */
         /**@{*/
-        virtual Pin* GetMemberBase(const size_t index) = 0;
-        virtual const Pin* GetMemberBase(const size_t index) const = 0;
+        virtual MemberBaseType* GetMemberBase(const size_t index) = 0;
+        virtual const MemberBaseType* GetMemberBase(const size_t index) const = 0;
         /**@}*/
 
         /** Get number of pins in this structure. */
@@ -62,8 +129,8 @@ namespace Molten::Shader::Visual
      *
      * @see Script
      */
-    template<NodeType VNodeType, template<typename> typename TPinType, typename ... TAllowedDataTypes>
-    class Structure : public StructureBase
+    template<NodeType VNodeType, template<typename> typename TPinType, typename TMetaData, typename ... TAllowedDataTypes>
+    class Structure : public StructureBase<TMetaData>
     {
 
         static_assert(PinTraits<TPinType>::isInputPin || PinTraits<TPinType>::isOutputPin,
@@ -71,16 +138,21 @@ namespace Molten::Shader::Visual
 
     public:
 
-        using Base = StructureBase;
+        using Base = StructureBase<TMetaData>;
         template<typename TDataType>
         using PinType = TPinType<TDataType>;
-        using Container = std::vector<Pin*>;
-        using ConstContainer = std::vector<const Pin*>;
+        template<typename TDataType>
+        using MemberType = StructureMember<PinType<TDataType>, TMetaData>;
+        using MemberBaseType = StructureMemberBase<TMetaData>;
+        using Container = std::vector<MemberBaseType*>;
+        using ConstContainer = std::vector<const MemberBaseType*>;
         using Iterator = typename Container::iterator;
         using ConstIterator = typename Container::const_iterator;
 
         /** Constructor. */
         explicit Structure(Script& script);
+
+        /** Destructor. */
         virtual ~Structure();
 
 
@@ -145,8 +217,8 @@ namespace Molten::Shader::Visual
         /**@}*/
 
         /** Append new pin to this structure. */
-        template<typename TDataType>
-        PinType<TDataType>& AddMember();
+        template<typename TDataType, typename ... TArgs>
+        MemberType<TDataType>& AddMember(TArgs ... args);
 
         /** Remove and destroy all pins. Accessing any removed pin is undefined behaviour. */
         void RemoveMember(const size_t index);
@@ -158,8 +230,8 @@ namespace Molten::Shader::Visual
 
         /** Get member by index. */
         /**@{*/
-        Pin* GetMemberBase(const size_t index) override;
-        const Pin* GetMemberBase(const size_t index) const override;
+        MemberBaseType* GetMemberBase(const size_t index) override;
+        const MemberBaseType* GetMemberBase(const size_t index) const override;
         /**@}*/
 
         /** Get number of pins in this structure. */
@@ -174,7 +246,7 @@ namespace Molten::Shader::Visual
 
     private:
 
-        template<NodeType VOtherNodeType, template<typename> typename TOtherPinType, typename ... TOtherAllowedDataTypes>
+        template<NodeType VOtherNodeType, template<typename> typename TOtherPinType, typename TOtherMetaData, typename ... TOtherAllowedDataTypes>
         friend class Structure;
 
         /** Copy and move operations are not allowed. */
@@ -196,11 +268,33 @@ namespace Molten::Shader::Visual
     };
 
 
-    template<NodeType VNodeType, typename ... TAllowedDataTypes>
-    using InputStructure = Structure<VNodeType, InputPin, TAllowedDataTypes...>;
+    /** Meta data class for structures, only containing an constant id. */
+    template<typename T>
+    class MetaDataConstantId
+    {
 
-    template<NodeType VNodeType, typename ... TAllowedDataTypes>
-    using OutputStructure = Structure<VNodeType, OutputPin, TAllowedDataTypes...>;
+    public:
+
+        using Type = T;
+
+        /** Constructor. */
+        MetaDataConstantId(const Type id);
+
+        /** Get id. */
+        Type GetId() const;
+
+    private:
+
+        const Type m_id;
+
+    };
+
+
+    template<NodeType VNodeType, typename TMetaData, typename ... TAllowedDataTypes>
+    using InputStructure = Structure<VNodeType, InputPin, TMetaData, TAllowedDataTypes...>;
+
+    template<NodeType VNodeType, typename TMetaData, typename ... TAllowedDataTypes>
+    using OutputStructure = Structure<VNodeType, OutputPin, TMetaData, TAllowedDataTypes...>;
 
 }
 

@@ -1029,8 +1029,6 @@ namespace Molten::Shader
                     return false;
                 }
 
-                static size_t index = 0;
-
                 auto& arithmeticOperatorBase = static_cast<const Visual::ArithmeticOperatorBase&>(operatorBase);
 
                 auto arithmeticOperatorType = arithmeticOperatorBase.GetArithmeticOperatorType();

@@ -29,8 +29,8 @@ namespace Molten::Shader::Visual
 {
 
     // Structure base implementations.
-    StructureBase::StructureBase(Script& script) :
+    /*StructureBase::StructureBase(Script& script) :
         Node(script)
-    {}
+    {}*/
 
 }

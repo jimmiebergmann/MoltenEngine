@@ -37,14 +37,15 @@ namespace Molten::Shader::Visual
     using PushConstantsStructure = 
         Structure<
             NodeType::PushConstants,
-            OutputPin, 
+            OutputPin,
+            MetaDataConstantId<uint32_t>,
             bool, int32_t, float, Vector2f32, Vector3f32, Vector4f32, Matrix4x4f32
         >;
 
 
     /** Push constant container node of visual script. */
     template<typename ... TAllowedDataTypes>
-    class PushConstants : public Structure<NodeType::PushConstants, OutputPin, TAllowedDataTypes...>
+    class PushConstants : public Structure<NodeType::PushConstants, OutputPin, MetaDataConstantId<uint32_t>, TAllowedDataTypes...>
     {
 
     public:

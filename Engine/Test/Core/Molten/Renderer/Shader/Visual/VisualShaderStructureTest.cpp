@@ -30,22 +30,22 @@
 namespace Molten::Shader::Visual
 {
 
-    struct MyInputStruct : Structure<NodeType::Constant, InputPin, Vector2f32, Vector3f32, Vector4f32>
+    struct MyInputStruct : Structure<NodeType::Constant, InputPin, void, Vector2f32, Vector3f32, Vector4f32>
     {
         MyInputStruct(Script& script) :
-            Structure<NodeType::Constant, InputPin, Vector2f32, Vector3f32, Vector4f32>(script)
+            Structure<NodeType::Constant, InputPin, void, Vector2f32, Vector3f32, Vector4f32>(script)
         {}
     };
 
-    struct MyOutputStruct : Structure<NodeType::Constant, OutputPin, Vector2f32, Vector3f32, Vector4f32>
+    struct MyOutputStruct : Structure<NodeType::Constant, OutputPin, void, Vector2f32, Vector3f32, Vector4f32>
     {
         MyOutputStruct(Script& script) :
-            Structure<NodeType::Constant, OutputPin, Vector2f32, Vector3f32, Vector4f32>(script)
+            Structure<NodeType::Constant, OutputPin, void, Vector2f32, Vector3f32, Vector4f32>(script)
         {}
 
     };
 
-    /*TEST(Shader, VisualShader_InputStructure)
+    TEST(Shader, VisualShader_InputStructure)
     {
         FragmentScript script;
 
@@ -54,11 +54,10 @@ namespace Molten::Shader::Visual
             auto& m1 = myStruct.AddMember<Vector3f32>();
             auto& m2 = myStruct.AddMember<Vector2f32>();
             auto& m3 = myStruct.AddMember<Vector4f32>();
-            EXPECT_EQ(myStruct.GetPinCount(), size_t(3));
-            EXPECT_EQ(myStruct.GetInputPins().size(), size_t(3));
-            EXPECT_EQ(myStruct.GetOutputPins().size(), size_t(0));
-
-            ASSERT_EQ(myStruct.GetOutputPin(), nullptr);
+            EXPECT_EQ(myStruct.GetMemberCount(), size_t{ 3 });
+            EXPECT_EQ(myStruct.GetInputPins().size(), size_t{ 3 });
+            EXPECT_EQ(myStruct.GetOutputPins().size(), size_t{ 0 });
+;
             ASSERT_EQ(myStruct.GetOutputPin(0), nullptr);
             ASSERT_EQ(myStruct.GetOutputPin(1), nullptr);
             ASSERT_EQ(myStruct.GetOutputPin(2), nullptr);
@@ -67,8 +66,6 @@ namespace Molten::Shader::Visual
             EXPECT_EQ(myStruct.GetInputPins()[0], myStruct.GetInputPin(0));
             EXPECT_EQ(myStruct.GetInputPins()[1], myStruct.GetInputPin(1));
             EXPECT_EQ(myStruct.GetInputPins()[2], myStruct.GetInputPin(2));
-
-            EXPECT_EQ(myStruct.GetInputPin(), myStruct.GetInputPin(0));
 
             {
                 InputPin<Vector3f32>* pm1 = myStruct.GetInputPin<Vector3f32>(0);
@@ -111,15 +108,13 @@ namespace Molten::Shader::Visual
 
         {
             MyOutputStruct myStruct(script);
-            OutputPin<Vector3f32>& m1 = myStruct.AddPin<Vector3f32>();
-            OutputPin<Vector2f32>& m2 = myStruct.AddPin<Vector2f32>();
-            OutputPin<Vector4f32>& m3 = myStruct.AddPin<Vector4f32>();
-            EXPECT_EQ(myStruct.GetPinCount(), size_t(3));
-            EXPECT_EQ(myStruct.GetOutputPins().size(), size_t(3));
-            EXPECT_EQ(myStruct.GetInputPins().size(), size_t(0));
-            
+            OutputPin<Vector3f32>& m1 = myStruct.AddMember<Vector3f32>();
+            OutputPin<Vector2f32>& m2 = myStruct.AddMember<Vector2f32>();
+            OutputPin<Vector4f32>& m3 = myStruct.AddMember<Vector4f32>();
+            EXPECT_EQ(myStruct.GetMemberCount(), size_t{ 3 });
+            EXPECT_EQ(myStruct.GetOutputPins().size(), size_t{ 3 });
+            EXPECT_EQ(myStruct.GetInputPins().size(), size_t{ 0 });
 
-            ASSERT_EQ(myStruct.GetInputPin(), nullptr);
             ASSERT_EQ(myStruct.GetInputPin(0), nullptr);
             ASSERT_EQ(myStruct.GetInputPin(1), nullptr);
             ASSERT_EQ(myStruct.GetInputPin(2), nullptr);
@@ -128,8 +123,6 @@ namespace Molten::Shader::Visual
             EXPECT_EQ(myStruct.GetOutputPins()[0], myStruct.GetOutputPin(0));
             EXPECT_EQ(myStruct.GetOutputPins()[1], myStruct.GetOutputPin(1));
             EXPECT_EQ(myStruct.GetOutputPins()[2], myStruct.GetOutputPin(2));
-
-            EXPECT_EQ(myStruct.GetOutputPin(), myStruct.GetOutputPin(0));
 
             {
                 OutputPin<Vector3f32>* pm1 = myStruct.GetOutputPin<Vector3f32>(0);
@@ -172,38 +165,38 @@ namespace Molten::Shader::Visual
 
         {
             MyInputStruct myStruct(script);
-            myStruct.AddPin<Vector3f32>();
-            InputPin<Vector2f32>& m2 = myStruct.AddPin<Vector2f32>();
-            InputPin<Vector4f32>& m3 = myStruct.AddPin<Vector4f32>();
-            ASSERT_EQ(myStruct.GetPinCount(), size_t(3));
-            EXPECT_EQ(myStruct.GetSizeOf(), size_t(36));
+            myStruct.AddMember<Vector3f32>();
+            InputPin<Vector2f32>& m2 = myStruct.AddMember<Vector2f32>();
+            InputPin<Vector4f32>& m3 = myStruct.AddMember<Vector4f32>();
+            ASSERT_EQ(myStruct.GetMemberCount(), size_t{ 3 });
+            EXPECT_EQ(myStruct.GetSizeOf(), size_t{ 36 });
 
-            myStruct.RemovePin(0);
-            ASSERT_EQ(myStruct.GetPinCount(), size_t(2));
+            myStruct.RemoveMember(0);
+            ASSERT_EQ(myStruct.GetMemberCount(), size_t{ 2 });
             EXPECT_EQ(myStruct.GetInputPin(0), &m2);
             EXPECT_EQ(myStruct.GetInputPin(1), &m3);
-            EXPECT_EQ(myStruct.GetSizeOf(), size_t(24));
+            EXPECT_EQ(myStruct.GetSizeOf(), size_t{ 24 });
 
-            myStruct.RemovePin(1);
-            ASSERT_EQ(myStruct.GetPinCount(), size_t(1));
+            myStruct.RemoveMember(1);
+            ASSERT_EQ(myStruct.GetMemberCount(), size_t{ 1 });
             EXPECT_EQ(myStruct.GetInputPin(0), &m2);
-            EXPECT_EQ(myStruct.GetSizeOf(), size_t(8));
+            EXPECT_EQ(myStruct.GetSizeOf(), size_t{ 8 });
 
-            myStruct.RemovePin(0);
-            ASSERT_EQ(myStruct.GetPinCount(), size_t(0));
-            EXPECT_EQ(myStruct.GetSizeOf(), size_t(0));
+            myStruct.RemoveMember(0);
+            ASSERT_EQ(myStruct.GetMemberCount(), size_t{ 0 });
+            EXPECT_EQ(myStruct.GetSizeOf(), size_t{ 0 });
         }
         {
             MyInputStruct myStruct(script);
-            myStruct.AddPin<Vector3f32>();
-            myStruct.AddPin<Vector2f32>();
-            myStruct.AddPin<Vector4f32>();
-            ASSERT_EQ(myStruct.GetPinCount(), size_t(3));
-            EXPECT_EQ(myStruct.GetSizeOf(), size_t(36));
+            myStruct.AddMember<Vector3f32>();
+            myStruct.AddMember<Vector2f32>();
+            myStruct.AddMember<Vector4f32>();
+            ASSERT_EQ(myStruct.GetMemberCount(), size_t{ 3 });
+            EXPECT_EQ(myStruct.GetSizeOf(), size_t{ 36 });
 
-            myStruct.RemoveAllPins();
-            ASSERT_EQ(myStruct.GetPinCount(), size_t(0));
-            EXPECT_EQ(myStruct.GetSizeOf(), size_t(0));
+            myStruct.RemoveAllMembers();
+            ASSERT_EQ(myStruct.GetMemberCount(), size_t{ 0 });
+            EXPECT_EQ(myStruct.GetSizeOf(), size_t{ 0 });
         }
-    }*/
+    }
 }

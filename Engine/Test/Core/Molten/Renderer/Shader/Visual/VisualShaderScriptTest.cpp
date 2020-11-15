@@ -46,7 +46,7 @@ namespace Molten::Shader::Visual
 
         auto& input1 = script.GetInputInterface().AddMember<float>();
 
-        auto& pc1 = script.GetPushConstants().AddMember<float>();
+        auto& pc1 = script.GetPushConstants().AddMember<float>(0);
 
         compsToVec4_1.GetInputPin(0)->Connect(*const1.GetOutputPin());
         compsToVec4_1.GetInputPin(1)->Connect(*sin1.GetOutputPin());
@@ -61,7 +61,7 @@ namespace Molten::Shader::Visual
         addVec4_1.GetInputPin(0)->Connect(ubo1_m1);
         addVec4_1.GetInputPin(1)->Connect(*compsToVec4_1.GetOutputPin());
 
-        auto& pc2 = script.GetPushConstants().AddMember<Vector4f32>();
+        auto& pc2 = script.GetPushConstants().AddMember<Vector4f32>(1);
 
         auto& multVec4_1 = script.CreateOperator<Shader::Visual::Operators::MultVec4f32>();
         multVec4_1.GetInputPin(0)->Connect(pc2);

@@ -36,18 +36,18 @@ namespace Molten::Shader::Visual
 {
 
     /** Type definition of shader stage inputs. */
-    using InputInterface = OutputStructure<NodeType::Input, 
+    using InputInterface = OutputStructure<NodeType::Input, void,
         bool, float, int32_t, Vector2f32, Vector3f32, Vector4f32, Matrix4x4f32>;
 
     /** Type definition of shader stage outputs. */
-    using OutputInterface = InputStructure<NodeType::Output,
+    using OutputInterface = InputStructure<NodeType::Output, void,
         bool, float, int32_t, Vector2f32, Vector3f32, Vector4f32, Matrix4x4f32>;
 
     /** Type definition of vertex output node.
      *  This type is only available and used by the vertex script. 
      */
-    using VertexOutput = SinglePinNodeWithType<NodeType::VertexOutput, OutputPin, Vector4f32>;
-    
+    using VertexOutput = SinglePinNodeWithType<NodeType::VertexOutput, InputPin, Vector4f32>;
+
 
     /** Visual shader script class, used for generating shaders via visual node based system. */
     class MOLTEN_API Script

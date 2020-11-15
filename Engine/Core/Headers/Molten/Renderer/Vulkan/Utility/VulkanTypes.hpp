@@ -47,7 +47,6 @@ namespace Molten::Vulkan
     using PresentModes = std::vector<VkPresentModeKHR>;
     using QueueFamilyProperties = std::vector<VkQueueFamilyProperties>;
     using Semaphores = std::vector<VkSemaphore>;
-    using ShaderModules = std::vector<VkShaderModule>;
     using SurfaceFormats = std::vector<VkSurfaceFormatKHR>;
 
 }

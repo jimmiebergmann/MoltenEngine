@@ -31,10 +31,10 @@
 namespace Molten::Shader::Visual
 {
 
-    /*struct MyInputStruct : Structure<NodeType::Constant, InputPin, bool, int32_t, float, Vector2f32, Vector3f32, Vector4f32>
+    struct MyInputStruct : Structure<NodeType::Constant, InputPin, void, bool, int32_t, float, Vector2f32, Vector3f32, Vector4f32>
     {
         MyInputStruct(Script& script) :
-            Structure<NodeType::Constant, InputPin, bool, int32_t, float, Vector2f32, Vector3f32, Vector4f32>(script)
+            Structure<NodeType::Constant, InputPin, void, bool, int32_t, float, Vector2f32, Vector3f32, Vector4f32>(script)
         {}
     };
 
@@ -47,11 +47,11 @@ namespace Molten::Shader::Visual
         InputPin<float> pin(node, "test name");
         EXPECT_STREQ(pin.GetName().c_str(), "test name");
         EXPECT_EQ(pin.GetDirection(), PinDirection::In);
-        EXPECT_EQ(pin.GetConnectionCount(), size_t(0));
+        EXPECT_EQ(pin.GetConnectionCount(), size_t{ 0 });
         EXPECT_EQ(pin.GetConnection(), nullptr);
         EXPECT_EQ(pin.GetConnection(0), nullptr);
         EXPECT_EQ(pin.GetConnection(1), nullptr);
-        EXPECT_EQ(pin.GetConnections().size(), size_t(0));
+        EXPECT_EQ(pin.GetConnections().size(), size_t{ 0 });
     }
     
     TEST(Shader, VisualShader_InputPin_DefaultValue)
@@ -64,11 +64,11 @@ namespace Molten::Shader::Visual
         EXPECT_STREQ(pin.GetName().c_str(), "test name");
         EXPECT_EQ(pin.GetDefaultValue(), int32_t(1234));
         EXPECT_EQ(pin.GetDirection(), PinDirection::In);
-        EXPECT_EQ(pin.GetConnectionCount(), size_t(0));
+        EXPECT_EQ(pin.GetConnectionCount(), size_t{ 0 });
         EXPECT_EQ(pin.GetConnection(), nullptr);
         EXPECT_EQ(pin.GetConnection(0), nullptr);
         EXPECT_EQ(pin.GetConnection(1), nullptr);
-        EXPECT_EQ(pin.GetConnections().size(), size_t(0));
+        EXPECT_EQ(pin.GetConnections().size(), size_t{ 0 });
 
         pin.SetDefaultValue(5432);
         EXPECT_EQ(pin.GetDefaultValue(), int32_t(5432));
@@ -112,11 +112,6 @@ namespace Molten::Shader::Visual
         }
     }
 
-    TEST(Shader, VisualShader_InputPin_SizeOfDataType)
-    {
-        EXPECT_EQ(pin1.GetSizeOfDataType(), size_t(1));
-    }
-
     TEST(Shader, VisualShader_InputPin_Connection)
     {
         FragmentScript script;
@@ -129,14 +124,14 @@ namespace Molten::Shader::Visual
             InputPin<float> pin1(node1);
             InputPin<float> pin2(node2);
 
-            EXPECT_EQ(pin1.GetConnections().size(), size_t(0));
-            EXPECT_EQ(pin2.GetConnections().size(), size_t(0));
+            EXPECT_EQ(pin1.GetConnections().size(), size_t{ 0 });
+            EXPECT_EQ(pin2.GetConnections().size(), size_t{ 0 });
             EXPECT_FALSE(pin1.Connect(pin2));
-            EXPECT_EQ(pin1.GetConnections().size(), size_t(0));
-            EXPECT_EQ(pin2.GetConnections().size(), size_t(0));
+            EXPECT_EQ(pin1.GetConnections().size(), size_t{ 0 });
+            EXPECT_EQ(pin2.GetConnections().size(), size_t{ 0 });
             EXPECT_FALSE(pin2.Connect(pin1));
-            EXPECT_EQ(pin1.GetConnections().size(), size_t(0));
-            EXPECT_EQ(pin2.GetConnections().size(), size_t(0));
+            EXPECT_EQ(pin1.GetConnections().size(), size_t{ 0 });
+            EXPECT_EQ(pin2.GetConnections().size(), size_t{ 0 });
         }
         {
             InputPin<float> in(node1);
@@ -150,26 +145,26 @@ namespace Molten::Shader::Visual
             const auto& in_const = in;
             const auto& out_const = out;
 
-            EXPECT_EQ(in.GetConnections().size(), size_t(0));
-            EXPECT_EQ(out.GetConnections().size(), size_t(0));
+            EXPECT_EQ(in.GetConnections().size(), size_t{ 0 });
+            EXPECT_EQ(out.GetConnections().size(), size_t{ 0 });
 
             {
                 EXPECT_TRUE(in.Connect(out));
 
-                EXPECT_EQ(in.GetConnections().size(), size_t(1));
-                EXPECT_EQ(out.GetConnections().size(), size_t(1));
-                EXPECT_EQ(in_const.GetConnections().size(), size_t(1));
-                EXPECT_EQ(out_const.GetConnections().size(), size_t(1));
+                EXPECT_EQ(in.GetConnections().size(), size_t{ 1 });
+                EXPECT_EQ(out.GetConnections().size(), size_t{ 1 });
+                EXPECT_EQ(in_const.GetConnections().size(), size_t{ 1 });
+                EXPECT_EQ(out_const.GetConnections().size(), size_t{ 1 });
 
                 EXPECT_EQ(in.GetConnection(), &out);
                 EXPECT_EQ(out.GetConnection(), &in);
                 EXPECT_EQ(in_const.GetConnection(), &out_const);
                 EXPECT_EQ(out_const.GetConnection(), &in_const);
 
-                EXPECT_EQ(in.GetConnections().size(), size_t(1));
-                EXPECT_EQ(out.GetConnections().size(), size_t(1));
-                EXPECT_EQ(in_const.GetConnections().size(), size_t(1));
-                EXPECT_EQ(out_const.GetConnections().size(), size_t(1));
+                EXPECT_EQ(in.GetConnections().size(), size_t{ 1 });
+                EXPECT_EQ(out.GetConnections().size(), size_t{ 1 });
+                EXPECT_EQ(in_const.GetConnections().size(), size_t{ 1 });
+                EXPECT_EQ(out_const.GetConnections().size(), size_t{ 1 });
 
                 EXPECT_EQ(in.GetConnections()[0], &out);
                 EXPECT_EQ(out.GetConnections()[0], &in);
@@ -177,40 +172,40 @@ namespace Molten::Shader::Visual
                 EXPECT_EQ(out_const.GetConnections()[0], &in_const);
             }
             {
-                EXPECT_EQ(in.Disconnect(), size_t(1));
+                EXPECT_EQ(in.Disconnect(), size_t{ 1 });
 
-                EXPECT_EQ(in.GetConnections().size(), size_t(0));
-                EXPECT_EQ(out.GetConnections().size(), size_t(0));
-                EXPECT_EQ(in_const.GetConnections().size(), size_t(0));
-                EXPECT_EQ(out_const.GetConnections().size(), size_t(0));
+                EXPECT_EQ(in.GetConnections().size(), size_t{ 0 });
+                EXPECT_EQ(out.GetConnections().size(), size_t{ 0 });
+                EXPECT_EQ(in_const.GetConnections().size(), size_t{ 0 });
+                EXPECT_EQ(out_const.GetConnections().size(), size_t{ 0 });
 
                 EXPECT_EQ(in.GetConnection(), nullptr);
                 EXPECT_EQ(out.GetConnection(), nullptr);
                 EXPECT_EQ(in_const.GetConnection(), nullptr);
                 EXPECT_EQ(out_const.GetConnection(), nullptr);
 
-                EXPECT_EQ(in.GetConnections().size(), size_t(0));
-                EXPECT_EQ(out.GetConnections().size(), size_t(0));
-                EXPECT_EQ(in_const.GetConnections().size(), size_t(0));
-                EXPECT_EQ(out_const.GetConnections().size(), size_t(0));
+                EXPECT_EQ(in.GetConnections().size(), size_t{ 0 });
+                EXPECT_EQ(out.GetConnections().size(), size_t{ 0 });
+                EXPECT_EQ(in_const.GetConnections().size(), size_t{ 0 });
+                EXPECT_EQ(out_const.GetConnections().size(), size_t{ 0 });
             }
             {
                 EXPECT_TRUE(in.Connect(out));
 
-                EXPECT_EQ(in.GetConnections().size(), size_t(1));
-                EXPECT_EQ(out.GetConnections().size(), size_t(1));
-                EXPECT_EQ(in_const.GetConnections().size(), size_t(1));
-                EXPECT_EQ(out_const.GetConnections().size(), size_t(1));
+                EXPECT_EQ(in.GetConnections().size(), size_t{ 1 });
+                EXPECT_EQ(out.GetConnections().size(), size_t{ 1 });
+                EXPECT_EQ(in_const.GetConnections().size(), size_t{ 1 });
+                EXPECT_EQ(out_const.GetConnections().size(), size_t{ 1 });
 
                 EXPECT_EQ(in.GetConnection(), &out);
                 EXPECT_EQ(out.GetConnection(), &in);
                 EXPECT_EQ(in_const.GetConnection(), &out_const);
                 EXPECT_EQ(out_const.GetConnection(), &in_const);
 
-                EXPECT_EQ(in.GetConnections().size(), size_t(1));
-                EXPECT_EQ(out.GetConnections().size(), size_t(1));
-                EXPECT_EQ(in_const.GetConnections().size(), size_t(1));
-                EXPECT_EQ(out_const.GetConnections().size(), size_t(1));
+                EXPECT_EQ(in.GetConnections().size(), size_t{ 1 });
+                EXPECT_EQ(out.GetConnections().size(), size_t{ 1 });
+                EXPECT_EQ(in_const.GetConnections().size(), size_t{ 1 });
+                EXPECT_EQ(out_const.GetConnections().size(), size_t{ 1 });
 
                 EXPECT_EQ(in.GetConnections()[0], &out);
                 EXPECT_EQ(out.GetConnections()[0], &in);
@@ -225,21 +220,21 @@ namespace Molten::Shader::Visual
 
             EXPECT_TRUE(in.Connect(outA));
             EXPECT_TRUE(in.Connect(outB));
-            EXPECT_EQ(in.GetConnections().size(), size_t(1));
-            EXPECT_EQ(outA.GetConnections().size(), size_t(0));
-            EXPECT_EQ(outB.GetConnections().size(), size_t(1));
+            EXPECT_EQ(in.GetConnections().size(), size_t{ 1 });
+            EXPECT_EQ(outA.GetConnections().size(), size_t{ 0 });
+            EXPECT_EQ(outB.GetConnections().size(), size_t{ 1 });
             EXPECT_EQ(in.GetConnections()[0], &outB);
 
             EXPECT_FALSE(in.Disconnect(1));
-            EXPECT_EQ(in.GetConnections().size(), size_t(1));
-            EXPECT_EQ(outA.GetConnections().size(), size_t(0));
-            EXPECT_EQ(outB.GetConnections().size(), size_t(1));
+            EXPECT_EQ(in.GetConnections().size(), size_t{ 1 });
+            EXPECT_EQ(outA.GetConnections().size(), size_t{ 0 });
+            EXPECT_EQ(outB.GetConnections().size(), size_t{ 1 });
             EXPECT_EQ(in.GetConnections()[0], &outB);
 
             EXPECT_TRUE(in.Disconnect(0));
-            EXPECT_EQ(in.GetConnections().size(), size_t(0));
-            EXPECT_EQ(outA.GetConnections().size(), size_t(0));
-            EXPECT_EQ(outB.GetConnections().size(), size_t(0));;
+            EXPECT_EQ(in.GetConnections().size(), size_t{ 0 });
+            EXPECT_EQ(outA.GetConnections().size(), size_t{ 0 });
+            EXPECT_EQ(outB.GetConnections().size(), size_t{ 0 });;
         }
         {
             InputPin<float> in(node1);
@@ -248,23 +243,23 @@ namespace Molten::Shader::Visual
 
             EXPECT_TRUE(in.Connect(outA));
 
-            EXPECT_EQ(in.GetConnections().size(), size_t(1));
+            EXPECT_EQ(in.GetConnections().size(), size_t{ 1 });
             EXPECT_EQ(in.GetConnections()[0], &outA);
-            EXPECT_EQ(outA.GetConnections().size(), size_t(1));
+            EXPECT_EQ(outA.GetConnections().size(), size_t{ 1 });
             EXPECT_EQ(outA.GetConnections()[0], &in);
-            EXPECT_EQ(outB.GetConnections().size(), size_t(0));
+            EXPECT_EQ(outB.GetConnections().size(), size_t{ 0 });
 
             EXPECT_FALSE(in.Disconnect(outB));
-            EXPECT_EQ(in.GetConnections().size(), size_t(1));
+            EXPECT_EQ(in.GetConnections().size(), size_t{ 1 });
             EXPECT_EQ(in.GetConnections()[0], &outA);
-            EXPECT_EQ(outA.GetConnections().size(), size_t(1));
+            EXPECT_EQ(outA.GetConnections().size(), size_t{ 1 });
             EXPECT_EQ(outA.GetConnections()[0], &in);
-            EXPECT_EQ(outB.GetConnections().size(), size_t(0));
+            EXPECT_EQ(outB.GetConnections().size(), size_t{ 0 });
 
             EXPECT_TRUE(in.Disconnect(outA));
-            EXPECT_EQ(in.GetConnections().size(), size_t(0));
-            EXPECT_EQ(outA.GetConnections().size(), size_t(0));
-            EXPECT_EQ(outB.GetConnections().size(), size_t(0));
+            EXPECT_EQ(in.GetConnections().size(), size_t{ 0 });
+            EXPECT_EQ(outA.GetConnections().size(), size_t{ 0 });
+            EXPECT_EQ(outB.GetConnections().size(), size_t{ 0 });
         }
     }
 
@@ -277,11 +272,11 @@ namespace Molten::Shader::Visual
         OutputPin<float> pin(node, "test name");
         EXPECT_STREQ(pin.GetName().c_str(), "test name");
         EXPECT_EQ(pin.GetDirection(), PinDirection::Out);
-        EXPECT_EQ(pin.GetConnectionCount(), size_t(0));
+        EXPECT_EQ(pin.GetConnectionCount(), size_t{ 0 });
         EXPECT_EQ(pin.GetConnection(), nullptr);
         EXPECT_EQ(pin.GetConnection(0), nullptr);
         EXPECT_EQ(pin.GetConnection(1), nullptr);
-        EXPECT_EQ(pin.GetConnections().size(), size_t(0));
+        EXPECT_EQ(pin.GetConnections().size(), size_t{ 0 });
     }
 
     TEST(Shader, VisualShader_OutputPin_DataType)
@@ -334,14 +329,14 @@ namespace Molten::Shader::Visual
             OutputPin<float> pin1(node1);
             OutputPin<float> pin2(node2);
 
-            EXPECT_EQ(pin1.GetConnections().size(), size_t(0));
-            EXPECT_EQ(pin2.GetConnections().size(), size_t(0));
+            EXPECT_EQ(pin1.GetConnections().size(), size_t{ 0 });
+            EXPECT_EQ(pin2.GetConnections().size(), size_t{ 0 });
             EXPECT_FALSE(pin1.Connect(pin2));
-            EXPECT_EQ(pin1.GetConnections().size(), size_t(0));
-            EXPECT_EQ(pin2.GetConnections().size(), size_t(0));
+            EXPECT_EQ(pin1.GetConnections().size(), size_t{ 0 });
+            EXPECT_EQ(pin2.GetConnections().size(), size_t{ 0 });
             EXPECT_FALSE(pin2.Connect(pin1));
-            EXPECT_EQ(pin1.GetConnections().size(), size_t(0));
-            EXPECT_EQ(pin2.GetConnections().size(), size_t(0));
+            EXPECT_EQ(pin1.GetConnections().size(), size_t{ 0 });
+            EXPECT_EQ(pin2.GetConnections().size(), size_t{ 0 });
         }
         {
             InputPin<float> in(node1);
@@ -350,26 +345,26 @@ namespace Molten::Shader::Visual
             const auto& in_const = in;
             const auto& out_const = out;
 
-            EXPECT_EQ(in.GetConnections().size(), size_t(0));
-            EXPECT_EQ(out.GetConnections().size(), size_t(0));
+            EXPECT_EQ(in.GetConnections().size(), size_t{ 0 });
+            EXPECT_EQ(out.GetConnections().size(), size_t{ 0 });
 
             {
                 EXPECT_TRUE(out.Connect(in));
 
-                EXPECT_EQ(in.GetConnections().size(), size_t(1));
-                EXPECT_EQ(out.GetConnections().size(), size_t(1));
-                EXPECT_EQ(in_const.GetConnections().size(), size_t(1));
-                EXPECT_EQ(out_const.GetConnections().size(), size_t(1));
+                EXPECT_EQ(in.GetConnections().size(), size_t{ 1 });
+                EXPECT_EQ(out.GetConnections().size(), size_t{ 1 });
+                EXPECT_EQ(in_const.GetConnections().size(), size_t{ 1 });
+                EXPECT_EQ(out_const.GetConnections().size(), size_t{ 1 });
 
                 EXPECT_EQ(in.GetConnection(), &out);
                 EXPECT_EQ(out.GetConnection(), &in);
                 EXPECT_EQ(in_const.GetConnection(), &out_const);
                 EXPECT_EQ(out_const.GetConnection(), &in_const);
 
-                EXPECT_EQ(in.GetConnections().size(), size_t(1));
-                EXPECT_EQ(out.GetConnections().size(), size_t(1));
-                EXPECT_EQ(in_const.GetConnections().size(), size_t(1));
-                EXPECT_EQ(out_const.GetConnections().size(), size_t(1));
+                EXPECT_EQ(in.GetConnections().size(), size_t{ 1 });
+                EXPECT_EQ(out.GetConnections().size(), size_t{ 1 });
+                EXPECT_EQ(in_const.GetConnections().size(), size_t{ 1 });
+                EXPECT_EQ(out_const.GetConnections().size(), size_t{ 1 });
 
                 EXPECT_EQ(in.GetConnections()[0], &out);
                 EXPECT_EQ(out.GetConnections()[0], &in);
@@ -377,40 +372,40 @@ namespace Molten::Shader::Visual
                 EXPECT_EQ(out_const.GetConnections()[0], &in_const);
             }
             {
-                EXPECT_EQ(out.Disconnect(), size_t(1));
+                EXPECT_EQ(out.Disconnect(), size_t{ 1 });
 
-                EXPECT_EQ(in.GetConnections().size(), size_t(0));
-                EXPECT_EQ(out.GetConnections().size(), size_t(0));
-                EXPECT_EQ(in_const.GetConnections().size(), size_t(0));
-                EXPECT_EQ(out_const.GetConnections().size(), size_t(0));
+                EXPECT_EQ(in.GetConnections().size(), size_t{ 0 });
+                EXPECT_EQ(out.GetConnections().size(), size_t{ 0 });
+                EXPECT_EQ(in_const.GetConnections().size(), size_t{ 0 });
+                EXPECT_EQ(out_const.GetConnections().size(), size_t{ 0 });
 
                 EXPECT_EQ(in.GetConnection(), nullptr);
                 EXPECT_EQ(out.GetConnection(), nullptr);
                 EXPECT_EQ(in_const.GetConnection(), nullptr);
                 EXPECT_EQ(out_const.GetConnection(), nullptr);
 
-                EXPECT_EQ(in.GetConnections().size(), size_t(0));
-                EXPECT_EQ(out.GetConnections().size(), size_t(0));
-                EXPECT_EQ(in_const.GetConnections().size(), size_t(0));
-                EXPECT_EQ(out_const.GetConnections().size(), size_t(0));
+                EXPECT_EQ(in.GetConnections().size(), size_t{ 0 });
+                EXPECT_EQ(out.GetConnections().size(), size_t{ 0 });
+                EXPECT_EQ(in_const.GetConnections().size(), size_t{ 0 });
+                EXPECT_EQ(out_const.GetConnections().size(), size_t{ 0 });
             }
             {
                 EXPECT_TRUE(out.Connect(in));
 
-                EXPECT_EQ(in.GetConnections().size(), size_t(1));
-                EXPECT_EQ(out.GetConnections().size(), size_t(1));
-                EXPECT_EQ(in_const.GetConnections().size(), size_t(1));
-                EXPECT_EQ(out_const.GetConnections().size(), size_t(1));
+                EXPECT_EQ(in.GetConnections().size(), size_t{ 1 });
+                EXPECT_EQ(out.GetConnections().size(), size_t{ 1 });
+                EXPECT_EQ(in_const.GetConnections().size(), size_t{ 1 });
+                EXPECT_EQ(out_const.GetConnections().size(), size_t{ 1 });
 
                 EXPECT_EQ(in.GetConnection(), &out);
                 EXPECT_EQ(out.GetConnection(), &in);
                 EXPECT_EQ(in_const.GetConnection(), &out_const);
                 EXPECT_EQ(out_const.GetConnection(), &in_const);
 
-                EXPECT_EQ(in.GetConnections().size(), size_t(1));
-                EXPECT_EQ(out.GetConnections().size(), size_t(1));
-                EXPECT_EQ(in_const.GetConnections().size(), size_t(1));
-                EXPECT_EQ(out_const.GetConnections().size(), size_t(1));
+                EXPECT_EQ(in.GetConnections().size(), size_t{ 1 });
+                EXPECT_EQ(out.GetConnections().size(), size_t{ 1 });
+                EXPECT_EQ(in_const.GetConnections().size(), size_t{ 1 });
+                EXPECT_EQ(out_const.GetConnections().size(), size_t{ 1 });
 
                 EXPECT_EQ(in.GetConnections()[0], &out);
                 EXPECT_EQ(out.GetConnections()[0], &in);
@@ -427,58 +422,58 @@ namespace Molten::Shader::Visual
             EXPECT_TRUE(out.Connect(inA));
             EXPECT_TRUE(out.Connect(inB));
             EXPECT_TRUE(out.Connect(inC));
-            EXPECT_EQ(inA.GetConnections().size(), size_t(1));
-            EXPECT_EQ(inB.GetConnections().size(), size_t(1));
-            EXPECT_EQ(inC.GetConnections().size(), size_t(1));
-            EXPECT_EQ(out.GetConnections().size(), size_t(3));
+            EXPECT_EQ(inA.GetConnections().size(), size_t{ 1 });
+            EXPECT_EQ(inB.GetConnections().size(), size_t{ 1 });
+            EXPECT_EQ(inC.GetConnections().size(), size_t{ 1 });
+            EXPECT_EQ(out.GetConnections().size(), size_t{ 3 });
             EXPECT_EQ(out.GetConnections()[0], &inA);
             EXPECT_EQ(out.GetConnections()[1], &inB);
             EXPECT_EQ(out.GetConnections()[2], &inC);
 
             EXPECT_FALSE(out.Disconnect(4));
-            EXPECT_EQ(inA.GetConnections().size(), size_t(1));
-            EXPECT_EQ(inB.GetConnections().size(), size_t(1));
-            EXPECT_EQ(inC.GetConnections().size(), size_t(1));
-            EXPECT_EQ(out.GetConnections().size(), size_t(3));
+            EXPECT_EQ(inA.GetConnections().size(), size_t{ 1 });
+            EXPECT_EQ(inB.GetConnections().size(), size_t{ 1 });
+            EXPECT_EQ(inC.GetConnections().size(), size_t{ 1 });
+            EXPECT_EQ(out.GetConnections().size(), size_t{ 3 });
             EXPECT_EQ(out.GetConnections()[0], &inA);
             EXPECT_EQ(out.GetConnections()[1], &inB);
             EXPECT_EQ(out.GetConnections()[2], &inC);
 
             EXPECT_TRUE(out.Disconnect(1));
-            EXPECT_EQ(inA.GetConnections().size(), size_t(1));
-            EXPECT_EQ(inB.GetConnections().size(), size_t(0));
-            EXPECT_EQ(inC.GetConnections().size(), size_t(1));
-            EXPECT_EQ(out.GetConnections().size(), size_t(2));
+            EXPECT_EQ(inA.GetConnections().size(), size_t{ 1 });
+            EXPECT_EQ(inB.GetConnections().size(), size_t{ 0 });
+            EXPECT_EQ(inC.GetConnections().size(), size_t{ 1 });
+            EXPECT_EQ(out.GetConnections().size(), size_t{ 2 });
             EXPECT_EQ(out.GetConnections()[0], &inA);
             EXPECT_EQ(out.GetConnections()[1], &inC);
 
             EXPECT_FALSE(out.Disconnect(2));
-            EXPECT_EQ(inA.GetConnections().size(), size_t(1));
-            EXPECT_EQ(inB.GetConnections().size(), size_t(0));
-            EXPECT_EQ(inC.GetConnections().size(), size_t(1));
-            EXPECT_EQ(out.GetConnections().size(), size_t(2));
+            EXPECT_EQ(inA.GetConnections().size(), size_t{ 1 });
+            EXPECT_EQ(inB.GetConnections().size(), size_t{ 0 });
+            EXPECT_EQ(inC.GetConnections().size(), size_t{ 1 });
+            EXPECT_EQ(out.GetConnections().size(), size_t{ 2 });
             EXPECT_EQ(out.GetConnections()[0], &inA);
             EXPECT_EQ(out.GetConnections()[1], &inC);
 
             EXPECT_TRUE(out.Disconnect(1));
-            EXPECT_EQ(inA.GetConnections().size(), size_t(1));
-            EXPECT_EQ(inB.GetConnections().size(), size_t(0));
-            EXPECT_EQ(inC.GetConnections().size(), size_t(0));
-            EXPECT_EQ(out.GetConnections().size(), size_t(1));
+            EXPECT_EQ(inA.GetConnections().size(), size_t{ 1 });
+            EXPECT_EQ(inB.GetConnections().size(), size_t{ 0 });
+            EXPECT_EQ(inC.GetConnections().size(), size_t{ 0 });
+            EXPECT_EQ(out.GetConnections().size(), size_t{ 1 });
             EXPECT_EQ(out.GetConnections()[0], &inA);
 
             EXPECT_FALSE(out.Disconnect(1));
-            EXPECT_EQ(inA.GetConnections().size(), size_t(1));
-            EXPECT_EQ(inB.GetConnections().size(), size_t(0));
-            EXPECT_EQ(inC.GetConnections().size(), size_t(0));
-            EXPECT_EQ(out.GetConnections().size(), size_t(1));
+            EXPECT_EQ(inA.GetConnections().size(), size_t{ 1 });
+            EXPECT_EQ(inB.GetConnections().size(), size_t{ 0 });
+            EXPECT_EQ(inC.GetConnections().size(), size_t{ 0 });
+            EXPECT_EQ(out.GetConnections().size(), size_t{ 1 });
             EXPECT_EQ(out.GetConnections()[0], &inA);
 
             EXPECT_TRUE(out.Disconnect(0));
-            EXPECT_EQ(inA.GetConnections().size(), size_t(0));
-            EXPECT_EQ(inB.GetConnections().size(), size_t(0));
-            EXPECT_EQ(inC.GetConnections().size(), size_t(0));
-            EXPECT_EQ(out.GetConnections().size(), size_t(0));
+            EXPECT_EQ(inA.GetConnections().size(), size_t{ 0 });
+            EXPECT_EQ(inB.GetConnections().size(), size_t{ 0 });
+            EXPECT_EQ(inC.GetConnections().size(), size_t{ 0 });
+            EXPECT_EQ(out.GetConnections().size(), size_t{ 0 });
         }
         {
             InputPin<float> inA(node1);
@@ -489,34 +484,34 @@ namespace Molten::Shader::Visual
             EXPECT_TRUE(out.Connect(inA));
             EXPECT_TRUE(out.Connect(inB));
             EXPECT_TRUE(out.Connect(inC));
-            EXPECT_EQ(inA.GetConnections().size(), size_t(1));
-            EXPECT_EQ(inB.GetConnections().size(), size_t(1));
-            EXPECT_EQ(inC.GetConnections().size(), size_t(1));
-            EXPECT_EQ(out.GetConnections().size(), size_t(3));
+            EXPECT_EQ(inA.GetConnections().size(), size_t{ 1 });
+            EXPECT_EQ(inB.GetConnections().size(), size_t{ 1 });
+            EXPECT_EQ(inC.GetConnections().size(), size_t{ 1 });
+            EXPECT_EQ(out.GetConnections().size(), size_t{ 3 });
             EXPECT_EQ(out.GetConnections()[0], &inA);
             EXPECT_EQ(out.GetConnections()[1], &inB);
             EXPECT_EQ(out.GetConnections()[2], &inC);
 
             EXPECT_TRUE(out.Disconnect(inB));
-            EXPECT_EQ(inA.GetConnections().size(), size_t(1));
-            EXPECT_EQ(inB.GetConnections().size(), size_t(0));
-            EXPECT_EQ(inC.GetConnections().size(), size_t(1));
-            EXPECT_EQ(out.GetConnections().size(), size_t(2));
+            EXPECT_EQ(inA.GetConnections().size(), size_t{ 1 });
+            EXPECT_EQ(inB.GetConnections().size(), size_t{ 0 });
+            EXPECT_EQ(inC.GetConnections().size(), size_t{ 1 });
+            EXPECT_EQ(out.GetConnections().size(), size_t{ 2 });
             EXPECT_EQ(out.GetConnections()[0], &inA);
             EXPECT_EQ(out.GetConnections()[1], &inC);
 
             EXPECT_TRUE(out.Disconnect(inC));
-            EXPECT_EQ(inA.GetConnections().size(), size_t(1));
-            EXPECT_EQ(inB.GetConnections().size(), size_t(0));
-            EXPECT_EQ(inC.GetConnections().size(), size_t(0));
-            EXPECT_EQ(out.GetConnections().size(), size_t(1));
+            EXPECT_EQ(inA.GetConnections().size(), size_t{ 1 });
+            EXPECT_EQ(inB.GetConnections().size(), size_t{ 0 });
+            EXPECT_EQ(inC.GetConnections().size(), size_t{ 0 });
+            EXPECT_EQ(out.GetConnections().size(), size_t{ 1 });
             EXPECT_EQ(out.GetConnections()[0], &inA);
 
             EXPECT_TRUE(out.Disconnect(inA));
-            EXPECT_EQ(inA.GetConnections().size(), size_t(0));
-            EXPECT_EQ(inB.GetConnections().size(), size_t(0));
-            EXPECT_EQ(inC.GetConnections().size(), size_t(0));
-            EXPECT_EQ(out.GetConnections().size(), size_t(0));
+            EXPECT_EQ(inA.GetConnections().size(), size_t{ 0 });
+            EXPECT_EQ(inB.GetConnections().size(), size_t{ 0 });
+            EXPECT_EQ(inC.GetConnections().size(), size_t{ 0 });
+            EXPECT_EQ(out.GetConnections().size(), size_t{ 0 });
         }
         {
             {
@@ -525,13 +520,13 @@ namespace Molten::Shader::Visual
 
                 EXPECT_FALSE(out1.Connect(out2));
 
-                EXPECT_EQ(out1.GetConnections().size(), size_t(0));
+                EXPECT_EQ(out1.GetConnections().size(), size_t{ 0 });
                 EXPECT_EQ(out1.GetConnection(), nullptr);
-                EXPECT_EQ(out1.GetConnections().size(), size_t(0));
+                EXPECT_EQ(out1.GetConnections().size(), size_t{ 0 });
 
-                EXPECT_EQ(out2.GetConnections().size(), size_t(0));
+                EXPECT_EQ(out2.GetConnections().size(), size_t{ 0 });
                 EXPECT_EQ(out2.GetConnection(), nullptr);
-                EXPECT_EQ(out2.GetConnections().size(), size_t(0));
+                EXPECT_EQ(out2.GetConnections().size(), size_t{ 0 });
             }
             {
                 OutputPin<float> out1(node1);
@@ -539,15 +534,15 @@ namespace Molten::Shader::Visual
 
                 EXPECT_FALSE(out1.Connect(in1));
 
-                EXPECT_EQ(out1.GetConnections().size(), size_t(0));
+                EXPECT_EQ(out1.GetConnections().size(), size_t{ 0 });
                 EXPECT_EQ(out1.GetConnection(), nullptr);
-                EXPECT_EQ(out1.GetConnections().size(), size_t(0));
+                EXPECT_EQ(out1.GetConnections().size(), size_t{ 0 });
 
-                EXPECT_EQ(in1.GetConnections().size(), size_t(0));
+                EXPECT_EQ(in1.GetConnections().size(), size_t{ 0 });
                 EXPECT_EQ(in1.GetConnection(), nullptr);
-                EXPECT_EQ(in1.GetConnections().size(), size_t(0));
+                EXPECT_EQ(in1.GetConnections().size(), size_t{ 0 });
             }
         }
-    }*/
+    }
     
 }
