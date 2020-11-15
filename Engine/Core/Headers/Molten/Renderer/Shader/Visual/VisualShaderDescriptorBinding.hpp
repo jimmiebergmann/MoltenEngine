@@ -27,9 +27,7 @@
 #define MOLTEN_CORE_RENDERER_SHADER_VISUAL_VISUALSHADERDESCRIPTORBINDING_HPP
 
 #include "Molten/Renderer/Shader/Visual/VisualShaderNode.hpp"
-#include "Molten/Renderer/Shader/Visual/VisualShaderSampler.hpp"
 #include "Molten/Renderer/Shader/Visual/VisualShaderUniformBuffer.hpp"
-#include <algorithm>
 
 namespace Molten::Shader::Visual
 {
@@ -128,7 +126,7 @@ namespace Molten::Shader::Visual
 
     /** Descritor binding of sampler 1D type. */
     template<>
-    class DescriptorBinding<Sampler1D> : public DescriptorBindingSamplerBase<Sampler1D::Handle>
+    class DescriptorBinding<Sampler1D> : public DescriptorBindingSamplerBase<Sampler1D>
     {
 
     public:
@@ -148,7 +146,7 @@ namespace Molten::Shader::Visual
 
     /** Descritor binding of sampler 2D type. */
     template<>
-    class DescriptorBinding<Sampler2D> : public DescriptorBindingSamplerBase<Sampler2D::Handle>
+    class DescriptorBinding<Sampler2D> : public DescriptorBindingSamplerBase<Sampler2D>
     {
 
     public:
@@ -168,7 +166,7 @@ namespace Molten::Shader::Visual
 
     /** Descritor binding of sampler 3D type. */
     template<>
-    class DescriptorBinding<Sampler3D> : public DescriptorBindingSamplerBase<Sampler3D::Handle>
+    class DescriptorBinding<Sampler3D> : public DescriptorBindingSamplerBase<Sampler3D>
     {
 
     public:

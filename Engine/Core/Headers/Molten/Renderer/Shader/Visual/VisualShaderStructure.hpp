@@ -26,7 +26,7 @@
 #ifndef MOLTEN_CORE_RENDERER_SHADER_VISUAL_VISUALSHADERSTRUCTURE_HPP
 #define MOLTEN_CORE_RENDERER_SHADER_VISUAL_VISUALSHADERSTRUCTURE_HPP
 
-#include "Molten/Renderer/Shader/Visual/VisualShaderVariable.hpp"
+#include "Molten/Renderer/Shader/Visual/VisualShaderNode.hpp"
 #include <vector>
 
 namespace Molten::Shader::Visual

@@ -27,7 +27,7 @@
 #include "Molten/Renderer/Renderer.hpp"
 #include "Molten/Renderer/Pipeline.hpp"
 #include "Molten/Renderer/Shader/Visual/VisualShaderScript.hpp"
-#include "Molten/Renderer/Shader/Generator/VulkanShaderGenerator.hpp"
+#include "Molten/Renderer/Shader/Generator/GlslShaderGenerator.hpp"
 #include "Molten/Logger.hpp"
 #include <array>
 
@@ -224,11 +224,13 @@ namespace Molten::Gui
             Shader::VulkanGenerator::GlslStageTemplates stageTemplate;
             stageTemplate.pushConstantTemplate.blockSource = &glslTemplates.pushConstantTemplate.blockSource;*/
 
+            Shader::GlslGenerator glslGenerator;
+
             //stageTemplate.pushConstantTemplate.offsets = &glslTemplates.pushConstantTemplate.stageOffsets[0];
-            auto vertGlsl = Shader::VulkanGenerator::GenerateGlsl(*m_rectInstance.vertexScript/*, &stageTemplate*/);
+            auto vertGlsl = glslGenerator.Generate(*m_rectInstance.vertexScript, Shader::GlslGenerator::Compability::SpirV);
 
             //stageTemplate.pushConstantTemplate.offsets = &glslTemplates.pushConstantTemplate.stageOffsets[1];
-            auto fragGlsl = Shader::VulkanGenerator::GenerateGlsl(*m_rectInstance.fragmentScript/*, &stageTemplate*/);
+            auto fragGlsl = glslGenerator.Generate(*m_rectInstance.fragmentScript, Shader::GlslGenerator::Compability::SpirV);
 
             std::string vertStr(vertGlsl.begin(), vertGlsl.end());
             std::string fragStr(fragGlsl.begin(), fragGlsl.end());

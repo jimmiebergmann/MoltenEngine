@@ -63,21 +63,30 @@ namespace Molten::Shader
     };
 
     /** Sample handle types. */
-    struct Sampler1DHandle {};
-    struct Sampler2DHandle {};
-    struct Sampler3DHandle {};
+    struct Sampler1D {};
+    struct Sampler2D {};
+    struct Sampler3D {};
 
 
     /** Helper wrapper class for aligning any data type by 16 bytes. */
     MOLTEN_PADDED_STRUCT_BEGIN
     template<typename T>
-    class alignas(16) PaddedType : public T
+    class alignas(16) PaddedType
     {
 
     public:
 
         PaddedType();
-        PaddedType(const T& type);
+        PaddedType(const T& value);
+        PaddedType(T&& value);
+
+        PaddedType& operator =(const T& value);
+        PaddedType & operator =(T&& value);
+
+        T& operator()();
+        const T& operator()() const;
+
+        T value;
 
     };
     MOLTEN_PADDED_STRUCT_END
@@ -88,6 +97,7 @@ namespace Molten::Shader
     struct VariableTrait
     {
         inline static const bool supported = false; ///< Set to true if T is accepted as a data type of pin.
+        inline static const bool hasDefaultValue = false; ///< Set to true if default value if supported.
         inline static const T defaultValue = { }; ///< Set to the default value of pin data type T.
         inline static const VariableDataType dataType = VariableDataType::Bool; ///< Set to the corresponding VariableDataType of T.
         inline static const size_t dataSize = 0; ///< Size of data type, in bytes.

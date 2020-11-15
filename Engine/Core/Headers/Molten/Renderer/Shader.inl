@@ -32,19 +32,51 @@ namespace Molten::Shader
     // Data type padded implementations.
     template<typename T>
     inline PaddedType<T>::PaddedType() :
-        T()
+        value{}
     { }
 
     template<typename T>
-    inline PaddedType<T>::PaddedType(const T& type) :
-        T(type)
+    inline PaddedType<T>::PaddedType(const T& newValue) :
+        value(newValue)
     { }
+
+    template<typename T>
+    inline PaddedType<T>::PaddedType(T&& newValue) :
+        value(std::move(newValue))
+    {}
+
+    template<typename T>
+    inline PaddedType<T>& PaddedType<T>::operator =(const T& newValue)
+    {
+        value = newValue;
+        return *this;
+    }
+
+    template<typename T>
+    inline PaddedType<T>& PaddedType<T>::operator =(T&& newValue)
+    {
+        value = std::move(newValue);
+        return *this;
+    }
+
+    template<typename T>
+    inline T& PaddedType<T>::operator()()
+    {
+        return value;
+    }
+
+    template<typename T>
+    inline const T& PaddedType<T>::operator()() const
+    {
+        return value;
+    }
 
 
     // VariableTrait implementations.
     template<> struct VariableTrait<bool>
     {
         inline static const bool supported = true;
+        inline static const bool hasDefaultValue{ true };
         inline static const bool defaultValue{ false };
         inline static const VariableDataType dataType = VariableDataType::Bool;
         inline static const size_t dataSize = 1;
@@ -53,6 +85,7 @@ namespace Molten::Shader
     template<> struct VariableTrait<int32_t>
     {
         inline static const bool supported = true;
+        inline static const bool hasDefaultValue{ true };
         inline static const int32_t defaultValue{ 0 };
         inline static const VariableDataType dataType = VariableDataType::Int32;
         inline static const size_t dataSize = 4;
@@ -61,6 +94,7 @@ namespace Molten::Shader
     template<> struct VariableTrait<float>
     {
         inline static const bool supported = true;
+        inline static const bool hasDefaultValue{ true };
         inline static const float defaultValue{ 0.0f };
         inline static const VariableDataType dataType = VariableDataType::Float32;
         inline static const size_t dataSize = 4;
@@ -69,6 +103,7 @@ namespace Molten::Shader
     template<> struct VariableTrait<Vector2f32>
     {
         inline static const bool supported = true;
+        inline static const bool hasDefaultValue{ true };
         inline static const Vector2f32 defaultValue{ 0.0f };
         inline static const VariableDataType dataType = VariableDataType::Vector2f32;
         inline static const size_t dataSize = 8;
@@ -77,6 +112,7 @@ namespace Molten::Shader
     template<> struct VariableTrait<Vector3f32>
     {
         inline static const bool supported = true;
+        inline static const bool hasDefaultValue{ true };
         inline static const Vector3f32 defaultValue{ 0.0f };
         inline static const VariableDataType dataType = VariableDataType::Vector3f32;
         inline static const size_t dataSize = 12;
@@ -85,6 +121,7 @@ namespace Molten::Shader
     template<> struct VariableTrait<Vector4f32>
     {
         inline static const bool supported = true;
+        inline static const bool hasDefaultValue{ true };
         inline static const Vector4f32 defaultValue{ 0.0f };
         inline static const VariableDataType dataType = VariableDataType::Vector4f32;
         inline static const size_t dataSize = 16;
@@ -93,24 +130,31 @@ namespace Molten::Shader
     template<> struct VariableTrait<Matrix4x4f32>
     {
         inline static const bool supported = true;
+        inline static const bool hasDefaultValue{ true };
         inline static const Matrix4x4f32 defaultValue{ 0.0f };
         inline static const VariableDataType dataType = VariableDataType::Matrix4x4f32;
         inline static const size_t dataSize = 64;
         inline static const size_t paddedDataSize = 64;
     };
-    template<> struct VariableTrait<Sampler1DHandle>
+    template<> struct VariableTrait<Sampler1D>
     {
         inline static const bool supported = true;
+        inline static const bool hasDefaultValue{ false };
+        inline static const Sampler1D defaultValue{ };
         inline static const VariableDataType dataType = VariableDataType::Sampler1D;
     };
-    template<> struct VariableTrait<Sampler2DHandle>
+    template<> struct VariableTrait<Sampler2D>
     {
         inline static const bool supported = true;
+        inline static const bool hasDefaultValue{ false };
+        inline static const Sampler2D defaultValue{ };
         inline static const VariableDataType dataType = VariableDataType::Sampler2D;
     };
-    template<> struct VariableTrait<Sampler3DHandle>
+    template<> struct VariableTrait<Sampler3D>
     {
         inline static const bool supported = true;
+        inline static const bool hasDefaultValue{ false };
+        inline static const Sampler3D defaultValue{ };
         inline static const VariableDataType dataType = VariableDataType::Sampler3D;
     };
 

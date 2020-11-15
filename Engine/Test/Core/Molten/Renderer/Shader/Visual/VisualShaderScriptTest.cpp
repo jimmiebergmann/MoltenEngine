@@ -25,7 +25,10 @@
 
 #include "Test.hpp"
 #include "Molten/Renderer/Shader/Visual/VisualShaderScript.hpp"
-#include "Molten/Renderer/Shader/Generator/VulkanShaderGenerator.hpp"
+#include "Molten/Renderer/Shader/Generator/GlslShaderGenerator.hpp"
+#include "Molten/Logger.hpp"
+
+static Molten::Logger g_logger;
 
 namespace Molten::Shader::Visual
 {
@@ -64,103 +67,71 @@ namespace Molten::Shader::Visual
         multVec4_1.GetInputPin(0)->Connect(pc2);
         multVec4_1.GetInputPin(1)->Connect(*addVec4_1.GetOutputPin());
 
+        auto* sampler1 = set1->AddBinding<Sampler2D>(1);
+        auto& input2 = script.GetInputInterface().AddMember<Vector2f32>();
+
+        auto& texture1 = script.CreateFunction<Shader::Visual::Functions::Texture2D>();
+        texture1.GetInputPin(0)->Connect(*sampler1->GetOutputPin());
+        texture1.GetInputPin(1)->Connect(input2);
+
+        auto& subVec4_1 = script.CreateOperator<Shader::Visual::Operators::SubVec4f32>();
+        subVec4_1.GetInputPin(0)->Connect(*multVec4_1.GetOutputPin());
+        subVec4_1.GetInputPin(1)->Connect(*texture1.GetOutputPin());
+
         auto& output1 = script.GetOutputInterface().AddMember<Vector4f32>();
-        output1.Connect(*multVec4_1.GetOutputPin());
+        output1.Connect(*subVec4_1.GetOutputPin());
 
-        /*auto& output2 = script.GetOutputInterface().AddMember<Vector4f32>();
-
-        auto& input1 = script.GetInputInterface().AddMember<Vector4f32>();
-        auto& mult = script.CreateOperator<Shader::Visual::Operators::MultVec4f32>();
-        auto& add1 = script.CreateOperator<Shader::Visual::Operators::AddVec4f32>();
-        auto& add2 = script.CreateOperator<Shader::Visual::Operators::AddVec4f32>();
-        auto& var1 = script.CreateConstant<Vector4f32>({ 0.0f, 0.0f, 0.3f, 0.0f });
-        auto& var2 = script.CreateConstant<Vector4f32>({ 1.0f, 0.5f, 0.0f, 1.0f });
-        auto* set1 = script.GetDescriptorSets().AddSet(0);
-        auto* set2 = script.GetDescriptorSets().AddSet(1);
-        set1->AddBinding<Sampler1D>(0);
-        set1->AddBinding<Sampler2D>(1);
-        set2->AddBinding<Sampler3D>(0);
-        auto* ubo1 = set1->AddBinding<FragmentUniformBuffer>(2);
-        auto* ubo2 = set1->AddBinding<FragmentUniformBuffer>(3);
-        ubo1->AddPin<bool>();
-        ubo1->AddPin<int32_t>();
-        ubo1->AddPin<float>();
-        ubo1->AddPin<Vector2f32>();
-        ubo1->AddPin<Vector3f32>();
-        auto& ubo1_vec4 = ubo1->AddPin<Vector4f32>();
-        ubo1->AddPin<Matrix4x4f32>();
-        ubo2->AddPin<float>();
-
-        script.GetPushConstants().AddMember<Vector4f32>();
-        script.GetPushConstants().AddMember<Vector2f32>();
-        script.GetPushConstants().AddMember<float>();
-
-        output1.Connect(*add2.GetOutputPin());
-        output2.Connect(*add1.GetOutputPin());
-
-        add1.GetInputPin(0)->Connect(ubo1_vec4);
-        add1.GetInputPin(1)->Connect(*var1.GetOutputPin());
-
-        add2.GetInputPin(0)->Connect(*mult.GetOutputPin());
-        add2.GetInputPin(1)->Connect(*add1.GetOutputPin());
-
-        mult.GetInputPin(0)->Connect(input1);
-        mult.GetInputPin(1)->Connect(*var2.GetOutputPin());*/
-
+        GlslGenerator generator;
         std::vector<uint8_t> source;    
         {
             Molten::Test::Benchmarker bench1("Generate GLSL");
-            source = VulkanGenerator::GenerateGlsl(script, nullptr);
+            source = generator.Generate(script, GlslGenerator::Compability::SpirV, &g_logger);
         }
         
-        ASSERT_GT(source.size(), size_t(0));
+        ASSERT_GT(source.size(), size_t{0});
         const std::string sourceStr(source.begin(), source.end());
 
-        static const std::string expectedSource =
+        const char* const expectedSource =
             "#version 450\n"
             "#extension GL_ARB_separate_shader_objects : enable\n"
-            "layout(location = 0) in vec4 in_0;\n"
+            "\n"
+            "layout(location = 0) in float in_0;\n"
+            "layout(location = 1) in vec2 in_1;\n"
+            "\n"
             "layout(std140, push_constant) uniform s_pc\n"
             "{\n"
-            "layout(offset = 0) vec4 mem0;\n"
-            "layout(offset = 16) vec2 mem16;\n"
-            "layout(offset = 24) float mem24;\n"
+            "layout(offset = 0) float float_0;\n"
+            "layout(offset = 16) vec4 vec4_0;\n"
             "} pc;\n"
-            "layout(set = 0, binding = 0) uniform sampler1D sampler_0;\n"
-            "layout(set = 0, binding = 1) uniform sampler2D sampler_1;\n"
-            "layout(std140, set = 0, binding=2) uniform s_ubo_0\n"
+            "\n"
+            "layout(std140, set = 0, binding=0) uniform s_ubo_0\n"
             "{\n"
-            "bool val_0;\n"
-            "int val_1;\n"
-            "float val_2;\n"
-            "vec2 val_3;\n"
-            "vec3 val_4;\n"
-            "vec4 val_5;\n"
-            "mat4 val_6;\n"
+            "vec4 vec4_0;\n"
             "} ubo_0;\n"
-            "layout(std140, set = 0, binding=3) uniform s_ubo_1\n"
-            "{\n"
-            "float val_0;\n"
-            "} ubo_1;\n"
-            "layout(set = 1, binding = 0) uniform sampler3D sampler_2;\n"
+            "layout(set = 0, binding = 1) uniform sampler2D sampler_0;\n"
+            "\n"
             "layout(location = 0) out vec4 out_0;\n"
+            "\n"
             "void main()\n"
             "{\n"
-            "vec4 vec4_0 = vec4(1, 0.5, 0, 1);\n"
-            "vec4 mul_1 = in_0 * vec4_0;\n"
-            "vec4 vec4_2 = vec4(0, 0, 0.3, 0);\n"
-            "vec4 add_3 = ubo_0.val_5 + vec4_2;\n"
-            "vec4 add_4 = mul_1 + add_3;\n"
-            "out_0 = add_4;\n"
+            "float float_0 = 4;\n"
+            "float float_1 = 6;\n"
+            "float sin_0 = sin(float_1);\n"
+            "vec4 vec4_0 = vec4(float_0, sin_0, pc.float_0, 0);\n"
+            "vec4 add_0 = ubo_0.vec4_0 + vec4_0;\n"
+            "vec4 mul_0 = pc.vec4_0 * add_0;\n"
+            "vec4 texture_0 = texture(sampler_0, in_1);\n"
+            "vec4 sub_0 = mul_0 - texture_0;\n"
+            "out_0 = sub_0;\n"
             "}\n";
 
-        EXPECT_STREQ(sourceStr.c_str(), expectedSource.c_str());
+        EXPECT_STREQ(sourceStr.c_str(), expectedSource);
 
 #if defined(MOLTEN_ENABLE_VULKAN)
         std::vector<uint8_t> spirv;
         {
             Molten::Test::Benchmarker bench1("Generate SPIR-V");
-            spirv = VulkanGenerator::ConvertGlslToSpriV(source, Shader::Type::Fragment);
+            spirv = GlslGenerator::ConvertGlslToSpriV(source, Shader::Type::Fragment, &g_logger);
         }
         
         EXPECT_GE(spirv.size(), size_t(0));

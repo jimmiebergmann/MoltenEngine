@@ -54,7 +54,12 @@ namespace Molten::Shader::Visual
 
         // Vector.
         Cross,
-        Dot
+        Dot,
+
+        // Texture
+        Texture1D,
+        Texture2D,
+        Texture3D
 
     };
 

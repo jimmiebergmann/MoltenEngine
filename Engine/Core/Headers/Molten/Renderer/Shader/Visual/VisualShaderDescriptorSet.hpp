@@ -28,7 +28,6 @@
 
 #include "Molten/Renderer/Shader/Visual/VisualShaderDescriptorBinding.hpp"
 #include "Molten/Renderer/Shader/Visual/VisualShaderUniformBuffer.hpp"
-#include "Molten/Renderer/Shader/Visual/VisualShaderSampler.hpp"
 #include <set>
 #include <vector>
 

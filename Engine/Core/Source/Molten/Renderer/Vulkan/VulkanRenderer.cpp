@@ -30,7 +30,7 @@
 
 #include "Molten/Renderer/Shader/Visual/VisualShaderScript.hpp"
 #include "Molten/Renderer/Shader/Visual/VisualShaderStructure.hpp"
-#include "Molten/Renderer/Shader/Generator/VulkanShaderGenerator.hpp"
+#include "Molten/Renderer/Shader/Generator/GlslShaderGenerator.hpp"
 #include "Molten/Renderer/Vulkan/VulkanFramebuffer.hpp"
 #include "Molten/Renderer/Vulkan/VulkanIndexBuffer.hpp"
 #include "Molten/Renderer/Vulkan/VulkanPipeline.hpp"

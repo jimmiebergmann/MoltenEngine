@@ -24,6 +24,7 @@
 */
 
 #include "Molten/Utility/Template.hpp"
+#include <algorithm>
 
 namespace Molten::Shader::Visual
 {
@@ -49,13 +50,13 @@ namespace Molten::Shader::Visual
     }
 
     template<typename TOutputType>
-    size_t DescriptorBindingSamplerBase<TOutputType>::GetOutputPinCount() const
+    inline size_t DescriptorBindingSamplerBase<TOutputType>::GetOutputPinCount() const
     {
         return 1;
     }
 
     template<typename TOutputType>
-    Pin* DescriptorBindingSamplerBase<TOutputType>::GetOutputPin(const size_t index)
+    inline Pin* DescriptorBindingSamplerBase<TOutputType>::GetOutputPin(const size_t index)
     {
         if(index != 0)
         {
@@ -64,7 +65,7 @@ namespace Molten::Shader::Visual
         return &m_pin;
     }
     template<typename TOutputType>
-    const Pin* DescriptorBindingSamplerBase<TOutputType>::GetOutputPin(const size_t index) const
+    inline const Pin* DescriptorBindingSamplerBase<TOutputType>::GetOutputPin(const size_t index) const
     {
         if (index != 0)
         {
@@ -74,12 +75,12 @@ namespace Molten::Shader::Visual
     }
 
     template<typename TOutputType>
-    std::vector<Pin*> DescriptorBindingSamplerBase<TOutputType>::GetOutputPins()
+    inline std::vector<Pin*> DescriptorBindingSamplerBase<TOutputType>::GetOutputPins()
     {
         return { &m_pin };
     }
     template<typename TOutputType>
-    std::vector<const Pin*> DescriptorBindingSamplerBase<TOutputType>::GetOutputPins() const
+    inline std::vector<const Pin*> DescriptorBindingSamplerBase<TOutputType>::GetOutputPins() const
     {
         return { &m_pin };
     }
@@ -87,17 +88,17 @@ namespace Molten::Shader::Visual
 
     // Descriptor binding Sampler1D specializing implementations.
     inline DescriptorBinding<Sampler1D>::DescriptorBinding(Script& script, const uint32_t id) :
-        DescriptorBindingSamplerBase<Sampler1D::Handle>(script, id)
+        DescriptorBindingSamplerBase<Sampler1D>(script, id)
     {}
 
     // Descriptor binding Sampler2D specializing implementations.
     inline DescriptorBinding<Sampler2D>::DescriptorBinding(Script& script, const uint32_t id) :
-        DescriptorBindingSamplerBase<Sampler2D::Handle>(script, id)
+        DescriptorBindingSamplerBase<Sampler2D>(script, id)
     {}
 
     // Descriptor binding Sampler3D specializing implementations.
     inline DescriptorBinding<Sampler3D>::DescriptorBinding(Script& script, const uint32_t id) :
-        DescriptorBindingSamplerBase<Sampler3D::Handle>(script, id)
+        DescriptorBindingSamplerBase<Sampler3D>(script, id)
     {}
 
 
@@ -121,8 +122,6 @@ namespace Molten::Shader::Visual
     {
         return DescriptorBindingType::UniformBuffer;
     }
-
-
 
     template<typename ... TAllowedDataTypes>
     inline size_t DescriptorBinding<UniformBuffer<TAllowedDataTypes...>>::GetOutputPinCount() const
@@ -234,19 +233,19 @@ namespace Molten::Shader::Visual
 
     // Descriptor binding traits implementations.
     template<>
-    struct DescriptorBindingSamplerTraits<Sampler1D::Handle>
+    struct DescriptorBindingSamplerTraits<Sampler1D>
     {
         static constexpr DescriptorBindingType bindingType = DescriptorBindingType::Sampler1D;
     };
 
     template<>
-    struct DescriptorBindingSamplerTraits<Sampler2D::Handle>
+    struct DescriptorBindingSamplerTraits<Sampler2D>
     {
         static constexpr DescriptorBindingType bindingType = DescriptorBindingType::Sampler2D;
     };
 
     template<>
-    struct DescriptorBindingSamplerTraits<Sampler3D::Handle>
+    struct DescriptorBindingSamplerTraits<Sampler3D>
     {
         static constexpr DescriptorBindingType bindingType = DescriptorBindingType::Sampler3D;
     };

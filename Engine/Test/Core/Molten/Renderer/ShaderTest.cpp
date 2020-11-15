@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2019 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,19 +23,25 @@
 *
 */
 
-//#include "Molten/Renderer/Shader/Visual/VisualShaderVariable.hpp"
+#include "Test.hpp"
+#include "Molten/Renderer/Shader.hpp"
+#include "Molten/Math/Vector.hpp"
+#include "Molten/Math/Matrix.hpp"
 
-namespace Molten::Shader::Visual
+
+namespace Molten::Shader
 {
 
-    // Variable base implementations.
-   /* VariableBase::VariableBase(Script& script) :
-        Node(script)
-    {}
-
-    NodeType VariableBase::GetType() const
+    TEST(Shader, PaddedType)
     {
-        return NodeType::Variable;
-    }*/
+        EXPECT_EQ(sizeof(PaddedType<bool>), size_t{ 16 });
+        EXPECT_EQ(sizeof(PaddedType<int32_t>), size_t{ 16 });
+        EXPECT_EQ(sizeof(PaddedType<float>), size_t{ 16 });
+        EXPECT_EQ(sizeof(PaddedType<Vector2f32>), size_t{ 16 });
+        EXPECT_EQ(sizeof(PaddedType<Vector3f32>), size_t{ 16 });
+        EXPECT_EQ(sizeof(PaddedType<Vector4f32>), size_t{ 16 });
+        EXPECT_EQ(sizeof(PaddedType<Matrix4x4f32>), size_t{ 64 });
+
+    }
 
 }

@@ -27,7 +27,7 @@
 #include "Editor/Application.hpp"
 #include "Molten/Window/Window.hpp"
 #include "Molten/Renderer/Renderer.hpp"
-#include "Molten/Renderer/Shader/Generator/VulkanShaderGenerator.hpp"
+#include "Molten/Renderer/Shader/Generator/GlslShaderGenerator.hpp"
 #include "Molten/Gui/CanvasRenderer.hpp"
 #include "Molten/Gui/Layers/RootLayer.hpp"
 #include "Molten/Gui/Widget.hpp"
@@ -359,11 +359,13 @@ namespace Molten
             Shader::VulkanGenerator::GlslStageTemplates stageTemplate;
             stageTemplate.pushConstantTemplate.blockSource = &glslTemplates.pushConstantTemplate.blockSource;*/
 
+            Shader::GlslGenerator glslGenerator;
+
             //stageTemplate.pushConstantTemplate.offsets = &glslTemplates.pushConstantTemplate.stageOffsets[0];
-            auto vertGlsl = Shader::VulkanGenerator::GenerateGlsl(m_gridVertexScript/*, &stageTemplate*/);
+            auto vertGlsl = glslGenerator.Generate(m_gridVertexScript, Shader::GlslGenerator::Compability::SpirV);
 
             //stageTemplate.pushConstantTemplate.offsets = &glslTemplates.pushConstantTemplate.stageOffsets[1];
-            auto fragGlsl = Shader::VulkanGenerator::GenerateGlsl(m_gridFragmentScript/*, &stageTemplate*/);
+            auto fragGlsl = glslGenerator.Generate(m_gridFragmentScript, Shader::GlslGenerator::Compability::SpirV);
 
             std::string vertStr(vertGlsl.begin(), vertGlsl.end());
             std::string fragStr(fragGlsl.begin(), fragGlsl.end());
@@ -532,11 +534,15 @@ namespace Molten
             Shader::VulkanGenerator::GlslStageTemplates stageTemplate;
             stageTemplate.pushConstantTemplate.blockSource = &glslTemplates.pushConstantTemplate.blockSource;
 
+
             stageTemplate.pushConstantTemplate.offsets = &glslTemplates.pushConstantTemplate.stageOffsets[0];*/
-            auto vertGlsl = Shader::VulkanGenerator::GenerateGlsl(m_objectVertexScript/*, &stageTemplate*/);
+
+            Shader::GlslGenerator glslGenerator;
+
+            auto vertGlsl = glslGenerator.Generate(m_objectVertexScript, Shader::GlslGenerator::Compability::SpirV);
 
             //stageTemplate.pushConstantTemplate.offsets = &glslTemplates.pushConstantTemplate.stageOffsets[1];
-            auto fragGlsl = Shader::VulkanGenerator::GenerateGlsl(m_objectFragmentScript/*, &stageTemplate*/);
+            auto fragGlsl = glslGenerator.Generate(m_objectFragmentScript, Shader::GlslGenerator::Compability::SpirV);
 
             std::string vertStr(vertGlsl.begin(), vertGlsl.end());
             std::string fragStr(fragGlsl.begin(), fragGlsl.end());
