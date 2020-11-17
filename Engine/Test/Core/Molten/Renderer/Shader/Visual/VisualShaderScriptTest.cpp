@@ -82,10 +82,15 @@ namespace Molten::Shader::Visual
         output1.Connect(*subVec4_1.GetOutputPin());
 
         GlslGenerator generator;
-        std::vector<uint8_t> source;    
+        std::vector<uint8_t> source;
+        Shader::GlslGenerator::GlslTemplate glslTemplate;
         {
-            Molten::Test::Benchmarker bench1("Generate GLSL");
-            source = generator.Generate(script, GlslGenerator::Compability::SpirV, &g_logger);
+            Molten::Test::Benchmarker bench1("Generate GLSL template");
+            GlslGenerator::GenerateGlslTemplate(glslTemplate, { &script }, &g_logger);
+        }
+        {
+            Molten::Test::Benchmarker bench1("Generate GLSL code");
+            source = generator.Generate(script, GlslGenerator::Compability::SpirV, &glslTemplate,  &g_logger);
         }
         
         ASSERT_GT(source.size(), size_t{0});

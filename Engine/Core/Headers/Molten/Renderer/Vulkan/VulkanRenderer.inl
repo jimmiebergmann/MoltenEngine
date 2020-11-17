@@ -29,17 +29,9 @@ namespace Molten
     template<typename T>
     void VulkanRenderer::InternalPushConstant(const uint32_t location, const T& value)
     {
-        auto& pushConstantOffsets = m_currentPipeline->pushConstantOffsets;
-        if (location >= pushConstantOffsets.size())
-        {
-            Logger::WriteWarning(m_logger, "Trying to set push constant with out of bounds location.");
-            return;
-        }
-
-        auto& currentOffset = pushConstantOffsets[location];
         vkCmdPushConstants(
             *m_currentCommandBuffer, m_currentPipeline->pipelineLayout,
-            VK_SHADER_STAGE_ALL, currentOffset.offset, sizeof(value), &value);
+            VK_SHADER_STAGE_ALL, location, sizeof(value), &value);
 
     }
 

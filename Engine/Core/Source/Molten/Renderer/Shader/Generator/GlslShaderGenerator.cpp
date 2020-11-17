@@ -217,9 +217,74 @@ namespace Molten::Shader
 
 
     // Glsl shader generator implementations.
+    bool GlslGenerator::GenerateGlslTemplate(
+        GlslTemplate& glslTemplate,
+        const std::vector<Visual::Script*>& scripts,
+        Logger* logger)
+    {
+        auto& locations = glslTemplate.pushConstantLocations;
+        locations.clear();
+
+        // Loop scripts and add location data types to output.
+        // Data types of of same push constant id's are evaluated and error checked.
+        size_t scriptIndex = 0;
+        for (const auto* script : scripts)
+        {
+            auto& pushConstants = script->GetPushConstantsBase();
+            const size_t pushConstantCount = pushConstants.GetMemberCount();
+
+            for (size_t i = 0; i < pushConstantCount; i++)
+            {
+                auto* pushConstant = pushConstants.GetMemberBase(i);
+                if (pushConstant == nullptr)
+                {
+                    Logger::WriteError(logger, "Push constant at id " + std::to_string(i) +
+                        " of script no " + std::to_string(scriptIndex) + " is nullptr.");
+                    return false;
+                }
+
+                const auto id = pushConstant->GetId();
+                const auto dataType = pushConstant->GetPin().GetDataType();
+
+                auto it = locations.find(id);
+                if (it == locations.end())
+                {
+
+                    locations.insert({ id, { id, 0, dataType } }).first;
+                }
+                else
+                {
+                    auto& pushConstantLocation = it->second;
+                    if (pushConstantLocation.dataType != dataType)
+                    {
+                        Logger::WriteError(logger, "Push constant at id " + std::to_string(i) +
+                            " already exists with different data type: Exists: " +
+                            std::to_string(static_cast<int32_t>(pushConstantLocation.dataType)) +
+                            ", New: " + std::to_string(static_cast<int32_t>(dataType)) + ".");
+                        return false;
+                    }
+                }
+            }
+
+            // Calculate offsets(location).
+            size_t offset = 0;
+            for (auto& [_, location] : locations)
+            {
+                location.location = static_cast<uint32_t>(offset);
+                offset += std::max(size_t{ 16 }, GetVariableByteOffset(location.dataType));
+            }
+            glslTemplate.pushConstantBlockByteSize = static_cast<uint32_t>(offset);
+
+            ++scriptIndex;
+        }
+
+        return true;
+    }
 
 #if defined(MOLTEN_ENABLE_GLSLANG)
-    std::vector<uint8_t> GlslGenerator::ConvertGlslToSpriV(const std::vector<uint8_t>& code, Type shaderType, Logger* logger)
+    std::vector<uint8_t> GlslGenerator::ConvertGlslToSpriV(
+        const std::vector<uint8_t>& code,
+        Type shaderType, Logger* logger)
     {
         // Helper function for getting the shader type.
         static auto GetEShShaderType = [](const Shader::Type type) -> EShLanguage
@@ -433,11 +498,15 @@ namespace Molten::Shader
         m_logger(nullptr)
     {}
 
-    std::vector<uint8_t> GlslGenerator::Generate(const Visual::Script& script, const Compability compability, Logger* logger)
+    std::vector<uint8_t> GlslGenerator::Generate(
+        const Visual::Script& script,
+        const Compability compability,
+        GlslTemplate* glslTemplate,
+        Logger* logger)
     {
         PrepareGeneration(script, logger);
 
-        if(!GenerateHeader(compability) || !GenerateMain())
+        if(!GenerateHeader(compability, glslTemplate) || !GenerateMain())
         {
             Logger::WriteError(m_logger, "Failed to generate shader code.");
             return {};
@@ -648,14 +717,14 @@ namespace Molten::Shader
         m_outputNodes.clear();
     }
     
-    bool GlslGenerator::GenerateHeader(const Compability compability)
+    bool GlslGenerator::GenerateHeader(const Compability compability, GlslTemplate* glslTemplate)
     {
         if(compability == Compability::Glsl)
         {
             return GenerateGlslHeader();
         }
 
-        return GenerateSpirVHeader();
+        return GenerateSpirVHeader(glslTemplate);
     }
 
     bool GlslGenerator::GenerateGlslHeader()
@@ -664,7 +733,7 @@ namespace Molten::Shader
         return false;
     }
 
-    bool GlslGenerator::GenerateSpirVHeader()
+    bool GlslGenerator::GenerateSpirVHeader(GlslTemplate* glslTemplate)
     {
         m_lineBuffer =
             "#version 450\n"
@@ -697,33 +766,13 @@ namespace Molten::Shader
         }
         
         // Push constants
-        const auto& pushConstants = m_script->GetPushConstantsBase();
-        auto pushConstantsOutputPins = pushConstants.GetOutputPins();
-        if (!inputInterfaceOutputPins.empty())
+        if(glslTemplate)
         {
-            auto nodeObject = std::make_shared<GeneratorNode>(pushConstants);
-            m_visitedNodes.insert({ &pushConstants, nodeObject });
-
-            m_lineBuffer = "layout(std140, push_constant) uniform s_pc\n{\n";
-            AppendToSourceBuffer(m_lineBuffer);
-
-            size_t offset = 0;
-            for (const auto* pin : pushConstantsOutputPins)
-            {
-                const auto pinDataType = pin->GetDataType();
-                std::string currentOffset = std::to_string(offset);
-                std::string memberName = m_counters.GetNextVariableName(pinDataType);
-                std::string pushConstantName = "pc." + memberName;
-                auto outputVariable = nodeObject->CreateOutputVariable(pin, std::move(pushConstantName));
-                m_visitedOutputVariables.insert({ pin, outputVariable });
-
-                m_lineBuffer = "layout(offset = " + currentOffset + ") " + GetVariableDataType(pinDataType) + " " + memberName + ";\n";
-                AppendToSourceBuffer(m_lineBuffer);
-
-                offset += std::max(size_t{16}, GetVariableByteOffset(pin->GetDataType()));
-            }
-            m_counters.ResetVariables();
-            AppendToSourceBuffer("} pc;\n\n");
+            GenerateSpirVPushConstantsTemplated(glslTemplate);
+        }
+        else
+        {
+            GenerateSpirVPushConstants();
         }
 
         // Descriptor sets.
@@ -820,6 +869,83 @@ namespace Molten::Shader
             AppendToSourceBuffer("\n");
         }
 
+        return true;
+    }
+
+    bool GlslGenerator::GenerateSpirVPushConstants()
+    {
+        const auto& pushConstants = m_script->GetPushConstantsBase();
+        auto pushConstantsOutputPins = pushConstants.GetOutputPins();
+        if (!pushConstantsOutputPins.empty())
+        {
+            auto nodeObject = std::make_shared<GeneratorNode>(pushConstants);
+            m_visitedNodes.insert({ &pushConstants, nodeObject });
+
+            m_lineBuffer = "layout(std140, push_constant) uniform s_pc\n{\n";
+            AppendToSourceBuffer(m_lineBuffer);
+
+            size_t offset = 0;
+            for (const auto* pin : pushConstantsOutputPins)
+            {          
+                std::string currentOffset = std::to_string(offset);
+                const auto pinDataType = pin->GetDataType();
+                std::string memberName = m_counters.GetNextVariableName(pinDataType);
+                std::string pushConstantName = "pc." + memberName;
+                auto outputVariable = nodeObject->CreateOutputVariable(pin, std::move(pushConstantName));
+                m_visitedOutputVariables.insert({ pin, outputVariable });
+
+                m_lineBuffer = "layout(offset = " + currentOffset + ") " + GetVariableDataType(pinDataType) + " " + memberName + ";\n";
+                AppendToSourceBuffer(m_lineBuffer);
+
+                offset += std::max(size_t{ 16 }, GetVariableByteOffset(pin->GetDataType()));
+            }
+            m_counters.ResetVariables();
+            AppendToSourceBuffer("} pc;\n\n");
+        }
+        return true;
+    }
+    bool GlslGenerator::GenerateSpirVPushConstantsTemplated(GlslTemplate* glslTemplate)
+    {
+        const auto& locations = glslTemplate->pushConstantLocations;
+
+        const auto& pushConstants = m_script->GetPushConstantsBase();
+
+        const size_t pushConstantCount = pushConstants.GetMemberCount();
+        if (pushConstantCount > 0)
+        {
+            auto nodeObject = std::make_shared<GeneratorNode>(pushConstants);
+            m_visitedNodes.insert({ &pushConstants, nodeObject });
+
+            m_lineBuffer = "layout(std140, push_constant) uniform s_pc\n{\n";
+            AppendToSourceBuffer(m_lineBuffer);
+
+            for(size_t i = 0; i < pushConstantCount; i++)
+            {
+                auto* pushConstant = pushConstants.GetMemberBase(i);
+                const auto id = pushConstant->GetId();
+                auto locIt = locations.find(id);
+                if(locIt == locations.end())
+                {
+                    Logger::WriteError(m_logger, "Push constant is missing from template, id: " + std::to_string(id) +".");
+                    return false;
+                }
+
+                const auto& location = locIt->second;
+                size_t offset = location.location;
+                std::string currentOffset = std::to_string(offset);
+                const auto& pin = pushConstant->GetPin();
+                const auto pinDataType = pin.GetDataType();
+                std::string memberName = m_counters.GetNextVariableName(pinDataType);
+                std::string pushConstantName = "pc." + memberName;
+                auto outputVariable = nodeObject->CreateOutputVariable(&pin, std::move(pushConstantName));
+                m_visitedOutputVariables.insert({ &pin, outputVariable });
+
+                m_lineBuffer = "layout(offset = " + currentOffset + ") " + GetVariableDataType(pinDataType) + " " + memberName + ";\n";
+                AppendToSourceBuffer(m_lineBuffer);
+            }
+            m_counters.ResetVariables();
+            AppendToSourceBuffer("} pc;\n\n");
+        }
         return true;
     }
 

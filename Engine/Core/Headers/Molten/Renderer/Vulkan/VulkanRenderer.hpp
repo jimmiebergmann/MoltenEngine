@@ -202,13 +202,11 @@ namespace Molten
             const std::vector<Shader::Visual::Script*>& visualScripts,
             Vulkan::DescriptorSetLayouts& setLayouts);
 
-        bool CreatePushConstantRange(
-            VkPushConstantRange& pushConstantRange,
-            const std::vector<Shader::Visual::Script*>& visualScripts);
-
         bool LoadShaderModules(
             Vulkan::ShaderModules& shaderModules,
             std::vector<VkPipelineShaderStageCreateInfo>& shaderStageCreateInfos,
+            PushConstantLocations& pushConstantLocations,
+            VkPushConstantRange& pushConstantRange,
             const std::vector<Shader::Visual::Script*>& visualScripts);
 
 

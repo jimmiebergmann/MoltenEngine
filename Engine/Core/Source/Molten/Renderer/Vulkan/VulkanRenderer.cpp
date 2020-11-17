@@ -358,7 +358,7 @@ namespace Molten
             return std::numeric_limits<uint32_t>::max();
         }
 
-        return it->second;
+        return it->second.location;
     }
 
     Framebuffer* VulkanRenderer::CreateFramebuffer(const FramebufferDescriptor& descriptor)
@@ -430,20 +430,16 @@ namespace Molten
         {
             descriptor.vertexScript, descriptor.fragmentScript
         };
-
-        VkPushConstantRange pushConstantRange;
-        if (!CreatePushConstantRange(
-            pushConstantRange,
-            shaderScripts))
-        {
-            return nullptr;
-        }
-
+       
+        Vulkan::ShaderModules shaderModules;
         std::vector<VkPipelineShaderStageCreateInfo> shaderStageCreateInfos;
-        Vulkan::ShaderModules shaderModules;    
+        PushConstantLocations pushConstantLocations;
+        VkPushConstantRange pushConstantRange = {};
         if (!LoadShaderModules(
             shaderModules,
             shaderStageCreateInfos,
+            pushConstantLocations,
+            pushConstantRange,
             shaderScripts))
         {
             return nullptr;
@@ -546,7 +542,7 @@ namespace Molten
         {
             return nullptr;
         }
-        return nullptr;/*
+
         VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(setLayouts.size());
@@ -593,8 +589,7 @@ namespace Molten
             pipelineLayout, 
             std::move(setLayouts),
             std::move(pushConstantLocations), 
-            std::move(pushConstantOffsets),
-            std::move(shaderModules));*/
+            std::move(shaderModules));
     }
 
     Texture* VulkanRenderer::CreateTexture(const TextureDescriptor& descriptor)
@@ -1496,40 +1491,33 @@ namespace Molten
        return true;
     }
 
-   bool VulkanRenderer::CreatePushConstantRange(
-       VkPushConstantRange& pushConstantRange,
-       const std::vector<Shader::Visual::Script*>& visualScripts)
-    {
-
-       /*for (size_t i = 0; i < visualScripts.size(); i++)
-       {
-           const auto& script = visualScripts[i];
-
-       }*/
-
-       //offset += std::max(size_t{ 16 }, GetVariableByteOffset(pin->GetDataType()));
-
-        /*
-         
-        pushConstantRange.stageFlags = VK_SHADER_STAGE_ALL;
-        pushConstantRange.offset = 0;
-        pushConstantRange.size = highestPushConstantsByteSize;
-         */
-       return true;
-    }
-
     bool VulkanRenderer::LoadShaderModules(
         Vulkan::ShaderModules& shaderModules,
         std::vector<VkPipelineShaderStageCreateInfo>& shaderStageCreateInfos,
-        const std::vector<Shader::Visual::Script*>& visualScripts)
+        PushConstantLocations& pushConstantLocations,
+        VkPushConstantRange& pushConstantRange,
+        const std::vector<Shader::Visual::Script*>& visualScripts
+    )
     {
         shaderModules.resize(visualScripts.size());
+
+        if(visualScripts.empty())
+        {
+            Logger::WriteError(m_logger, "Cannot load shader module with 0 scripts.");
+            return false;
+        }
+
+        Shader::GlslGenerator::GlslTemplate glslTemplate;
+        if(!Shader::GlslGenerator::GenerateGlslTemplate(glslTemplate, visualScripts, m_logger))
+        {
+            return false;
+        }
 
         for(size_t i = 0; i < visualScripts.size(); i++)
         {
             const auto& script = visualScripts[i];
 
-            auto glslCode = m_glslGenerator.Generate(*script, Shader::GlslGenerator::Compability::SpirV, m_logger);
+            auto glslCode = m_glslGenerator.Generate(*script, Shader::GlslGenerator::Compability::SpirV, &glslTemplate, m_logger);
             if (glslCode.empty())
             {
                 Logger::WriteError(m_logger, "Failed to generate GLSL code.");
@@ -1559,6 +1547,12 @@ namespace Molten
             stageCreateInfo.stage = GetShaderProgramStageFlag(scriptType);
             shaderStageCreateInfos.push_back(stageCreateInfo);
         }
+
+        pushConstantLocations = std::move(glslTemplate.pushConstantLocations);
+
+        pushConstantRange.stageFlags = VK_SHADER_STAGE_ALL;
+        pushConstantRange.offset = 0;
+        pushConstantRange.size = glslTemplate.pushConstantBlockByteSize;
 
         return true;
     }

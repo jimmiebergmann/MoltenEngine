@@ -146,7 +146,7 @@ namespace Molten
             m_window->OnResize.Connect([&](Vector2ui32 size)
             {
                 m_camera.SetWindowSize(size);
-                m_canvas->SetSize(size);
+                //m_canvas->SetSize(size);
             });
 
             //LoadGui();
@@ -267,8 +267,8 @@ namespace Molten
                 throw Exception("Failed to create uniform block.");
             }
 
-            m_gridColor1PushLocation = m_renderer->GetPushConstantLocation(m_gridPipeline, 12345);
-            m_gridColor2PushLocation = m_renderer->GetPushConstantLocation(m_gridPipeline, 123456);
+            m_gridColor1PushLocation = m_renderer->GetPushConstantLocation(m_gridPipeline, 0);
+            m_gridColor2PushLocation = m_renderer->GetPushConstantLocation(m_gridPipeline, 1);
         }
 
         void Application::LoadGridShaders()
@@ -351,21 +351,16 @@ namespace Molten
                 //cos->GetInputPin()->Connect(*const2->GetOutputPin());
             }
 
-           /* Shader::VulkanGenerator::GlslTemplates glslTemplates;
+            Shader::GlslGenerator::GlslTemplate glslTemplate;
             std::vector<Shader::Visual::Script*> visualScripts = { &m_gridVertexScript, &m_gridFragmentScript };
-            if (!Shader::VulkanGenerator::GenerateGlslTemplate(glslTemplates, visualScripts, &m_logger))
-            {
-                return;
+            if (!Shader::GlslGenerator::GenerateGlslTemplate(glslTemplate, visualScripts, &m_logger))
+            {         
             }
-
-            // Debugging.
-            Shader::VulkanGenerator::GlslStageTemplates stageTemplate;
-            stageTemplate.pushConstantTemplate.blockSource = &glslTemplates.pushConstantTemplate.blockSource;*/
 
             Shader::GlslGenerator glslGenerator;
 
             //stageTemplate.pushConstantTemplate.offsets = &glslTemplates.pushConstantTemplate.stageOffsets[0];
-            auto vertGlsl = glslGenerator.Generate(m_gridVertexScript, Shader::GlslGenerator::Compability::SpirV);
+            auto vertGlsl = glslGenerator.Generate(m_gridVertexScript, Shader::GlslGenerator::Compability::SpirV, &glslTemplate);
 
             //stageTemplate.pushConstantTemplate.offsets = &glslTemplates.pushConstantTemplate.stageOffsets[1];
             auto fragGlsl = glslGenerator.Generate(m_gridFragmentScript, Shader::GlslGenerator::Compability::SpirV);
@@ -476,76 +471,71 @@ namespace Molten
         void Application::LoadObjectShaders()
         {
             // Vertex script.
-            /*{
+            {
                 auto& script = m_objectVertexScript;
 
                 auto& inputs = script.GetInputInterface();
-                auto inPos = inputs.AddMember<Vector3f32>();
+                auto& inPos = inputs.AddMember<Vector3f32>();
 
-                auto& pushConstants = script.GetPushConstantInterface();
-                auto pushPos = pushConstants.AddMember<Vector4f32>(0);
-                auto pushColor = pushConstants.AddMember<Vector4f32>(1);
+                auto& pushConstants = script.GetPushConstants();
+                auto& pushPos = pushConstants.AddMember<Vector4f32>(0);
+                auto& pushColor = pushConstants.AddMember<Vector4f32>(1);
 
                 auto& outputs = script.GetOutputInterface();
-                auto outColor = outputs.AddMember<Vector4f32>();
-                auto outPos = script.GetVertexOutputVariable();
+                auto& outColor = outputs.AddMember<Vector4f32>();
+                auto* outPos = script.GetVertexOutput();
 
-                auto uBlock = script.GetUniformInterfaces().AddInterface(0);
-                auto uProjView = uBlock->AddMember<Matrix4x4f32>();
-                auto uModel = uBlock->AddMember<Matrix4x4f32>();
+                auto& descSets = script.GetDescriptorSets();
+                auto* descSet = descSets.AddSet(0);
+                auto* ubo = descSet->AddBinding<Shader::Visual::VertexUniformBuffer>(0);
 
-                auto inPosVec4 = script.CreateFunction<Shader::Visual::Functions::Vec3ToVec4f32>();
-                inPosVec4->GetInputPin(0)->Connect(*inPos->GetOutputPin());
-                static_cast<Shader::Visual::InputPin<float>*>(inPosVec4->GetInputPin(1))->SetDefaultValue(1.0f);
+                auto& uProjView = ubo->AddPin<Matrix4x4f32>();
+                auto& uModelView = ubo->AddPin<Matrix4x4f32>();
 
-                auto posAdd = script.CreateOperator<Shader::Visual::Operators::AddVec4f32>();
-                posAdd->GetInputPin(0)->Connect(*pushPos->GetOutputPin());
-                posAdd->GetInputPin(1)->Connect(*inPosVec4->GetOutputPin());
+                auto& inPosVec4 = script.CreateFunction<Shader::Visual::Functions::Vec3ToVec4f32>();
+                inPosVec4.GetInputPin(0)->Connect(inPos);
+                static_cast<Shader::Visual::InputPin<float>*>(inPosVec4.GetInputPin(1))->SetDefaultValue(1.0f);
 
-                auto projModelmat = script.CreateOperator<Shader::Visual::Operators::MultMat4f32>();
-                projModelmat->GetInputPin(0)->Connect(*uProjView->GetOutputPin());
-                projModelmat->GetInputPin(1)->Connect(*uModel->GetOutputPin());
+                auto& posAdd = script.CreateOperator<Shader::Visual::Operators::AddVec4f32>();
+                posAdd.GetInputPin(0)->Connect(pushPos);
+                posAdd.GetInputPin(1)->Connect(*inPosVec4.GetOutputPin());
 
-                auto finalPos = script.CreateOperator<Shader::Visual::Operators::MultMat4Vec4f32>();
-                finalPos->GetInputPin(0)->Connect(*projModelmat->GetOutputPin());
-                finalPos->GetInputPin(1)->Connect(*posAdd->GetOutputPin());
+                auto& projModelmat = script.CreateOperator<Shader::Visual::Operators::MultMat4f32>();
+                projModelmat.GetInputPin(0)->Connect(uProjView);
+                projModelmat.GetInputPin(1)->Connect(uModelView);
 
-                outPos->GetInputPin()->Connect(*finalPos->GetOutputPin());
-                outColor->GetInputPin()->Connect(*pushColor->GetOutputPin());
+                auto& finalPos = script.CreateOperator<Shader::Visual::Operators::MultMat4Vec4f32>();
+                finalPos.GetInputPin(0)->Connect(*projModelmat.GetOutputPin());
+                finalPos.GetInputPin(1)->Connect(*posAdd.GetOutputPin());
+
+                outPos->GetInputPin()->Connect(*finalPos.GetOutputPin());
+                outColor.Connect(pushColor);
             }
             // Fragment script
             {
                 auto& script = m_objectFragmentScript;
 
                 auto& inputs = script.GetInputInterface();
-                auto inColor = inputs.AddMember<Vector4f32>();
+                auto& inColor = inputs.AddMember<Vector4f32>();
 
                 auto& outputs = script.GetOutputInterface();
-                auto outColor = outputs.AddMember<Vector4f32>();
+                auto& outColor = outputs.AddMember<Vector4f32>();
 
-                outColor->GetInputPin()->Connect(*inColor->GetOutputPin());
-            }*/
-
-            /*Shader::VulkanGenerator::GlslTemplates glslTemplates;
-            std::vector<Shader::Visual::Script*> visualScripts = { &m_objectVertexScript, &m_objectFragmentScript };
-            if (!Shader::VulkanGenerator::GenerateGlslTemplate(glslTemplates, visualScripts, &m_logger))
-            {
-                return;
+                outColor.Connect(inColor);
             }
 
-            // Debugging.
-            Shader::VulkanGenerator::GlslStageTemplates stageTemplate;
-            stageTemplate.pushConstantTemplate.blockSource = &glslTemplates.pushConstantTemplate.blockSource;
-
-
-            stageTemplate.pushConstantTemplate.offsets = &glslTemplates.pushConstantTemplate.stageOffsets[0];*/
+            Shader::GlslGenerator::GlslTemplate glslTemplate;
+            std::vector<Shader::Visual::Script*> visualScripts = { &m_gridVertexScript, &m_gridFragmentScript };
+            if (!Shader::GlslGenerator::GenerateGlslTemplate(glslTemplate, visualScripts, &m_logger))
+            {
+            }
 
             Shader::GlslGenerator glslGenerator;
 
-            auto vertGlsl = glslGenerator.Generate(m_objectVertexScript, Shader::GlslGenerator::Compability::SpirV);
+            auto vertGlsl = glslGenerator.Generate(m_objectVertexScript, Shader::GlslGenerator::Compability::SpirV, &glslTemplate);
 
             //stageTemplate.pushConstantTemplate.offsets = &glslTemplates.pushConstantTemplate.stageOffsets[1];
-            auto fragGlsl = glslGenerator.Generate(m_objectFragmentScript, Shader::GlslGenerator::Compability::SpirV);
+            auto fragGlsl = glslGenerator.Generate(m_objectFragmentScript, Shader::GlslGenerator::Compability::SpirV, &glslTemplate);
 
             std::string vertStr(vertGlsl.begin(), vertGlsl.end());
             std::string fragStr(fragGlsl.begin(), fragGlsl.end());

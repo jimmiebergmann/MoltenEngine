@@ -27,22 +27,33 @@
 #define MOLTEN_CORE_RENDERER_PUSHCONSTANT_HPP
 
 #include "Molten/Renderer/Shader.hpp"
-#include <vector>
 #include <map>
 
 namespace Molten
 {
 
-    struct PushConstantOffset
+    /** Push constant location base class. */
+    /*class MOLTEN_API PushConstantLocation
     {
-        PushConstantOffset(const uint32_t offset, const Shader::VariableDataType dataType);
 
-        uint32_t offset;
+    protected:
+
+        PushConstantLocation() = default;
+        PushConstantLocation(const PushConstantLocation&) = delete;
+        PushConstantLocation(PushConstantLocation&&) = delete;
+        virtual ~PushConstantLocation() = default;
+
+    };*/
+
+
+    struct PushConstantLocation
+    {
+        uint32_t id;
+        uint32_t location;
         Shader::VariableDataType dataType;
     };
 
-    using PushConstantOffsets = std::vector<PushConstantOffset>;
-    using PushConstantLocations = std::map<uint32_t, uint32_t>;
+    using PushConstantLocations = std::map<uint32_t, PushConstantLocation>;
 
 }
 

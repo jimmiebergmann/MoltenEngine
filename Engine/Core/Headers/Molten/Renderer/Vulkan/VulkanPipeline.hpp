@@ -49,14 +49,12 @@ namespace Molten
             VkPipelineLayout pipelineLayout,
             Vulkan::DescriptorSetLayouts&& descriptionSetLayouts,
             PushConstantLocations&& pushConstantLocations,
-            PushConstantOffsets&& pushConstantOffsets,
             Vulkan::ShaderModules&& shaderModules);
         
         VkPipeline graphicsPipeline;
         VkPipelineLayout pipelineLayout;
         Vulkan::DescriptorSetLayouts descriptionSetLayouts;
         PushConstantLocations pushConstantLocations;
-        PushConstantOffsets pushConstantOffsets;
         Vulkan::ShaderModules shaderModules;
 
         friend class VulkanRenderer;

@@ -35,14 +35,12 @@ namespace Molten
         VkPipelineLayout pipelineLayout,
         Vulkan::DescriptorSetLayouts&& descriptionSetLayouts,
         PushConstantLocations&& pushConstantLocations,
-        PushConstantOffsets&& pushConstantOffsets,
         Vulkan::ShaderModules&& shaderModules
     ) :
         graphicsPipeline(graphicsPipeline),
         pipelineLayout(pipelineLayout),
         descriptionSetLayouts(descriptionSetLayouts),
         pushConstantLocations(std::move(pushConstantLocations)),
-        pushConstantOffsets(std::move(pushConstantOffsets)),
         shaderModules(std::move(shaderModules))
     {}
 

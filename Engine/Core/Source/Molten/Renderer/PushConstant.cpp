@@ -28,11 +28,11 @@
 namespace Molten
 {
 
-    PushConstantOffset::PushConstantOffset(
+    /*PushConstantOffset::PushConstantOffset(
             const uint32_t offset, 
             const Shader::VariableDataType dataType) :
         offset(offset),
         dataType(dataType)
-    {}
+    {}*/
 
 }
