@@ -97,6 +97,11 @@ namespace Molten::Vulkan
         return result;
     }
 
+    VkSampler ImageSampler::GetHandle() const
+    {
+        return m_handle;
+    }
+
     void ImageSampler::Destroy()
     {
         if (m_logicalDevice)

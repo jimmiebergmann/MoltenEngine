@@ -31,6 +31,7 @@
 #include "Molten/Renderer/Shader/Visual/VisualShaderFunction.hpp"
 #include "Molten/Renderer/Shader/Visual/VisualShaderOperator.hpp"
 #include "Molten/Renderer/PushConstant.hpp"
+#include "Molten/Renderer/DescriptorSet.hpp"
 #include <string>
 #include <vector>
 #include <map>
@@ -69,6 +70,7 @@ namespace Molten::Shader
          */
         struct GlslTemplate
         {
+            MappedDescriptorSets mappedDescriptorSets;
             PushConstantLocations pushConstantLocations;
             uint32_t pushConstantBlockByteSize;
         };
@@ -107,7 +109,7 @@ namespace Molten::Shader
         std::vector<uint8_t> Generate(
             const Visual::Script& script,
             const Compability compability,
-            GlslTemplate* glslTemplate = nullptr,
+            const GlslTemplate* glslTemplate = nullptr,
             Logger* logger = nullptr);
 
     private:
@@ -168,14 +170,16 @@ namespace Molten::Shader
         void PrepareGeneration(const Visual::Script& script, Logger* logger);
 
         /** Generate header data, including input and output data.*/
-        bool GenerateHeader(const Compability compability, GlslTemplate* glslTemplate);
+        bool GenerateHeader(const Compability compability, const GlslTemplate* glslTemplate);
 
         /** Helper functions for generating headers of different compabilities. */
         /**@{*/
         bool GenerateGlslHeader();
-        bool GenerateSpirVHeader(GlslTemplate* glslTemplate);
+        bool GenerateSpirVHeader(const GlslTemplate* glslTemplate);
+        bool GenerateSpirVDescriptorSets();
+        bool GenerateSpirVDescriptorSetsTemplated(const GlslTemplate& glslTemplate);
         bool GenerateSpirVPushConstants();
-        bool GenerateSpirVPushConstantsTemplated(GlslTemplate* glslTemplate);
+        bool GenerateSpirVPushConstantsTemplated(const GlslTemplate& glslTemplate);
         /**@}*/
 
         /** Generate main function. */

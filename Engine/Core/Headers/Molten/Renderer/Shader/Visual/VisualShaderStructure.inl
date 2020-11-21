@@ -416,10 +416,11 @@ namespace Molten::Shader::Visual
         return m_sizeOf;
     }
 
+
     template<NodeType VNodeType, template<typename> typename TPinType, typename TMetaData, typename ... TAllowedDataTypes>
-    template<NodeType VOtherNodeType, template<typename> typename TOtherPinType, typename ... TOtherAllowedDataTypes>
+    template<NodeType VOtherNodeType, template<typename> typename TOtherPinType, typename TOtherMetaData, typename ... TOtherAllowedDataTypes>
     bool Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::CompareStructure(
-        const Structure<VOtherNodeType, TOtherPinType, TOtherAllowedDataTypes...>& other) const
+        const Structure<VOtherNodeType, TOtherPinType, TOtherMetaData, TOtherAllowedDataTypes...>& other) const
     {
         if (m_members.size() != other.m_members.size())
         {

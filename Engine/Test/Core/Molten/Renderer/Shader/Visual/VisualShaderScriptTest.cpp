@@ -53,8 +53,8 @@ namespace Molten::Shader::Visual
         compsToVec4_1.GetInputPin(2)->Connect(input1);
         compsToVec4_1.GetInputPin(2)->Connect(pc1);
 
-        auto* set1 = script.GetDescriptorSets().AddSet(0);
-        auto* ubo1 = set1->AddBinding<FragmentUniformBuffer>(0);
+        auto* set1 = script.GetDescriptorSets().AddSet(10);
+        auto* ubo1 = set1->AddBinding<FragmentUniformBuffer>(5);
         auto& ubo1_m1 = ubo1->AddPin<Vector4f32>();
 
         auto& addVec4_1 = script.CreateOperator<Shader::Visual::Operators::AddVec4f32>();
@@ -67,7 +67,7 @@ namespace Molten::Shader::Visual
         multVec4_1.GetInputPin(0)->Connect(pc2);
         multVec4_1.GetInputPin(1)->Connect(*addVec4_1.GetOutputPin());
 
-        auto* sampler1 = set1->AddBinding<Sampler2D>(1);
+        auto* sampler1 = set1->AddBinding<Sampler2D>(10);
         auto& input2 = script.GetInputInterface().AddMember<Vector2f32>();
 
         auto& texture1 = script.CreateFunction<Shader::Visual::Functions::Texture2D>();
@@ -90,7 +90,7 @@ namespace Molten::Shader::Visual
         }
         {
             Molten::Test::Benchmarker bench1("Generate GLSL code");
-            source = generator.Generate(script, GlslGenerator::Compability::SpirV, &glslTemplate,  &g_logger);
+            source = generator.Generate(script, GlslGenerator::Compability::SpirV, &glslTemplate, &g_logger);
         }
         
         ASSERT_GT(source.size(), size_t{0});
@@ -142,120 +142,5 @@ namespace Molten::Shader::Visual
         EXPECT_GE(spirv.size(), size_t(0));
 #endif
     }
-    /*
-    TEST(Shader, VisualShader_DefaultPinValue)
-    {
-        // Cos
-        {
-            FragmentScript script;
-            auto output = script.GetOutputInterface().AddMember<Vector4f32>();
-            auto cos = script.CreateFunction<Shader::Visual::Functions::CosVec4f32>();
-
-            output->GetInputPin()->Connect(*cos->GetOutputPin());
-            static_cast<Shader::Visual::InputPin<Vector4f32>*>(cos->GetInputPin())->SetDefaultValue({2.1f, 3.5f, 4.7f, 5.2f});
-
-            std::vector<uint8_t> source;
-            {
-                Molten::Test::Benchmarker bench("GLSL generator - default pin");
-                source = VulkanGenerator::GenerateGlsl(script, nullptr);
-            }
-            EXPECT_GT(source.size(), size_t(0));
-            const std::string sourceStr(source.begin(), source.end());
-
-            static const std::string expectedSource =
-                "#version 450\n"
-                "#extension GL_ARB_separate_shader_objects : enable\n"
-                "layout(location = 0) out vec4 out_0;\n"
-                "void main(){\n"
-                "vec4 cos_0 = cos(vec4(2.1, 3.5, 4.7, 5.2));\n"
-                "out_0 = cos_0;\n"
-                "}\n";
-
-            EXPECT_STREQ(sourceStr.c_str(), expectedSource.c_str());
-        }
-    }
-
-    TEST(Shader, VisualShader_Functions)
-    {
-        // Cos
-        {
-            FragmentScript script;
-            auto output = script.GetOutputInterface().AddMember<Vector4f32>();
-            auto var1 = script.CreateConstantVariable<Vector4f32>({ 1.0f, 2.0f, 3.0f, 4.0f });
-            auto cos = script.CreateFunction<Shader::Visual::Functions::CosVec4f32>();
-
-            output->GetInputPin()->Connect(*cos->GetOutputPin());
-            cos->GetInputPin()->Connect(*var1->GetOutputPin());
-
-            std::vector<uint8_t> source;
-            {
-                Molten::Test::Benchmarker bench("GLSL generator - function");
-                source = VulkanGenerator::GenerateGlsl(script, nullptr);
-            }
-            const std::string sourceStr(source.begin(), source.end());
-
-            static const std::string expectedSource =
-                "#version 450\n"
-                "#extension GL_ARB_separate_shader_objects : enable\n"
-                "layout(location = 0) out vec4 out_0;\n"
-                "void main(){\n"
-                "vec4 vec4_0 = vec4(1, 2, 3, 4);\n"
-                "vec4 cos_1 = cos(vec4_0);\n"
-                "out_0 = cos_1;\n"
-                "}\n";
-
-            EXPECT_STREQ(sourceStr.c_str(), expectedSource.c_str());
-        }
-        // Sin
-        {
-            FragmentScript script;
-            auto output = script.GetOutputInterface().AddMember<Vector3f32>();
-            auto var1 = script.CreateConstantVariable<Vector3f32>({ 1.0f, 2.0f, 3.0f });
-            auto cos = script.CreateFunction<Shader::Visual::Functions::SinVec3f32>();
-
-            output->GetInputPin()->Connect(*cos->GetOutputPin());
-            cos->GetInputPin()->Connect(*var1->GetOutputPin());
-
-            auto source = VulkanGenerator::GenerateGlsl(script, nullptr);
-            const std::string sourceStr(source.begin(), source.end());
-
-            static const std::string expectedSource =
-                "#version 450\n"
-                "#extension GL_ARB_separate_shader_objects : enable\n"
-                "layout(location = 0) out vec3 out_0;\n"
-                "void main(){\n"
-                "vec3 vec3_0 = vec3(1, 2, 3);\n"
-                "vec3 sin_1 = sin(vec3_0);\n"
-                "out_0 = sin_1;\n"
-                "}\n";
-
-            EXPECT_STREQ(sourceStr.c_str(), expectedSource.c_str());
-        }
-        // Tan
-        {
-            FragmentScript script;
-            auto output = script.GetOutputInterface().AddMember<Vector2f32>();
-            auto var1 = script.CreateConstantVariable<Vector2f32>({ 1.0f, 2.0f });
-            auto cos = script.CreateFunction<Shader::Visual::Functions::TanVec2f32>();
-
-            output->GetInputPin()->Connect(*cos->GetOutputPin());
-            cos->GetInputPin()->Connect(*var1->GetOutputPin());
-
-            auto source = VulkanGenerator::GenerateGlsl(script, nullptr);
-            const std::string sourceStr(source.begin(), source.end());
-
-            static const std::string expectedSource =
-                "#version 450\n"
-                "#extension GL_ARB_separate_shader_objects : enable\n"
-                "layout(location = 0) out vec2 out_0;\n"
-                "void main(){\n"
-                "vec2 vec2_0 = vec2(1, 2);\n"
-                "vec2 tan_1 = tan(vec2_0);\n"
-                "out_0 = tan_1;\n"
-                "}\n";
-
-            EXPECT_STREQ(sourceStr.c_str(), expectedSource.c_str());
-        }
-    }
-    */
+   
 }

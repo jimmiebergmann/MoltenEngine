@@ -36,15 +36,6 @@ namespace Molten::Shader::Visual
     template<typename ... TAllowedBindingTypes> class DescriptorSet;
     template<typename TBindingType, typename ... TAllowedDataTypes> class DescriptorBinding;
 
-    /** Enumerator of descriptor binding types.*/
-    enum class DescriptorBindingType : uint32_t
-    {
-        Sampler1D,
-        Sampler2D,
-        Sampler3D,
-        UniformBuffer
-    };
-
 
     /** Base class for Descriptor binding. */
     class MOLTEN_API DescriptorBindingBase : public Node
@@ -62,7 +53,7 @@ namespace Molten::Shader::Visual
         [[nodiscard]] virtual uint32_t GetId() const = 0;
 
         /** Get type of binding. */
-        [[nodiscard]] virtual DescriptorBindingType GetBindingType() const = 0;
+        [[nodiscard]] virtual BindingType GetBindingType() const = 0;
 
     protected:
 
@@ -95,7 +86,7 @@ namespace Molten::Shader::Visual
         [[nodiscard]] uint32_t GetId() const override;
 
         /** Get type of binding. */
-        [[nodiscard]] DescriptorBindingType GetBindingType() const override;
+        [[nodiscard]] BindingType GetBindingType() const override;
 
         size_t GetOutputPinCount() const override;
 
@@ -199,7 +190,7 @@ namespace Molten::Shader::Visual
         [[nodiscard]] uint32_t GetId() const override;
 
         /** Get type of binding. */
-        [[nodiscard]] DescriptorBindingType GetBindingType() const override;
+        [[nodiscard]] BindingType GetBindingType() const override;
 
         /**  Get number of output pins.*/
         size_t GetOutputPinCount() const override;

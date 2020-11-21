@@ -241,8 +241,8 @@ namespace Molten::Shader::Visual
         size_t GetSizeOf() const override;
 
         /** Compare pin types with another structure. Returns true if layout is the same, else false. */
-        template<NodeType VOtherNodeType, template<typename> typename TOtherPinType, typename ... TOtherAllowedDataTypes>
-        bool CompareStructure(const Structure<VOtherNodeType, TOtherPinType, TOtherAllowedDataTypes...>& other) const;
+        template<NodeType VOtherNodeType, template<typename> typename TOtherPinType, typename TOtherMetaData, typename ... TOtherAllowedDataTypes>
+        bool CompareStructure(const Structure<VOtherNodeType, TOtherPinType, TOtherMetaData, TOtherAllowedDataTypes...>& other) const;
 
     private:
 

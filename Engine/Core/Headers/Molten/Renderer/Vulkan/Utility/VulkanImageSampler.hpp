@@ -58,6 +58,8 @@ namespace Molten::Vulkan
 
         void Destroy();
 
+        VkSampler GetHandle() const;
+
         LogicalDevice& GetLogicalDevice();
         const LogicalDevice& GetLogicalDevice() const;
 

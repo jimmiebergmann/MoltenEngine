@@ -109,6 +109,9 @@ namespace Molten
         virtual VertexBuffer* CreateVertexBuffer(const VertexBufferDescriptor& descriptor) override;
 
 
+        /** Create descriptor set object. */
+        virtual DescriptorSet* CreateDescriptorSet(const DescriptorSetDescriptor& descriptor) override;
+
         /** Destroy framebuffer object. */
         virtual void DestroyFramebuffer(Framebuffer* framebuffer) override;
 
@@ -130,6 +133,9 @@ namespace Molten
         /** Destroy vertex buffer object. */
         virtual void DestroyVertexBuffer(VertexBuffer* vertexBuffer) override;
 
+
+        /** Bind descriptor set to draw queue. */
+        virtual void BindDescriptorSet(DescriptorSet* descriptorSet) override;
 
         /** Bind pipeline to draw queue. */
         virtual void BindPipeline(Pipeline* pipeline) override;

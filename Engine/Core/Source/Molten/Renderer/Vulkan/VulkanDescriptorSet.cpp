@@ -23,27 +23,21 @@
 *
 */
 
-#include "Molten/Renderer/Vulkan/VulkanPipeline.hpp"
+#include "Molten/Renderer/Vulkan/VulkanDescriptorSet.hpp"
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 
 namespace Molten
 {
 
-    VulkanPipeline::VulkanPipeline(
-        VkPipeline graphicsPipeline,
-        VkPipelineLayout pipelineLayout,
-        Vulkan::DescriptorSetLayouts&& descriptionSetLayouts,
-        PushConstantLocations&& pushConstantLocations,
-        Vulkan::ShaderModules&& shaderModules,
-        MappedDescriptorSets&& mappedDescriptorSets
+    VulkanDescriptorSet::VulkanDescriptorSet(
+        const uint32_t index,
+        VkDescriptorSet descriptorSet,
+        VkDescriptorPool descriptorPool
     ) :
-        graphicsPipeline(graphicsPipeline),
-        pipelineLayout(pipelineLayout),
-        descriptionSetLayouts(descriptionSetLayouts),
-        pushConstantLocations(std::move(pushConstantLocations)),
-        shaderModules(std::move(shaderModules)),
-        mappedDescriptorSets(std::move(mappedDescriptorSets))
+        index(index),
+        descriptorSet(descriptorSet),
+        descriptorPool(descriptorPool)
     {}
 
 }

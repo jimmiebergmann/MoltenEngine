@@ -59,7 +59,8 @@ namespace Molten
             m_objectVertexBuffer(nullptr),
             m_objectIndexBuffer(nullptr),
             m_objectUniformBuffer(nullptr),
-            m_objectUniformBlock(nullptr),
+            //m_objectUniformBlock(nullptr),
+            m_objectMatrixDescriptorSet(nullptr),
             m_objectPosPushLocation(0),
             m_objectColorPushLocation(0),
             m_objectTexture(nullptr),
@@ -438,15 +439,27 @@ namespace Molten
                 throw Exception("Failed to create uniform buffer.");
             }
 
-            UniformBlockDescriptor uniformBlockDesc;
-            uniformBlockDesc.id = 0;
+            DescriptorSetDescriptor descriptorSetDescriptor1;
+            descriptorSetDescriptor1.id = 10;
+            descriptorSetDescriptor1.pipeline = m_objectPipeline;
+            descriptorSetDescriptor1.bindings.push_back(
+                DescriptorBinding{ 1000000,  UniformBufferDescriptorBinding{ m_objectUniformBuffer } }
+            );
+            m_objectMatrixDescriptorSet = m_renderer->CreateDescriptorSet(descriptorSetDescriptor1);
+            if (!m_objectMatrixDescriptorSet)
+            {
+                throw Exception("Failed to create matrix descriptor set.");
+            }
+
+            /*UniformBlockDescriptor uniformBlockDesc;
+            uniformBlockDesc.id = 10;
             uniformBlockDesc.buffer = m_objectUniformBuffer;
             uniformBlockDesc.pipeline = m_objectPipeline;
             m_objectUniformBlock = m_renderer->CreateUniformBlock(uniformBlockDesc);
             if (!m_objectUniformBlock)
             {
                 throw Exception("Failed to create uniform block.");
-            }
+            }*/
 
             m_objectPosPushLocation = m_renderer->GetPushConstantLocation(m_objectPipeline, 0);
             m_objectColorPushLocation = m_renderer->GetPushConstantLocation(m_objectPipeline, 1);
@@ -486,8 +499,8 @@ namespace Molten
                 auto* outPos = script.GetVertexOutput();
 
                 auto& descSets = script.GetDescriptorSets();
-                auto* descSet = descSets.AddSet(0);
-                auto* ubo = descSet->AddBinding<Shader::Visual::VertexUniformBuffer>(0);
+                auto* descSet = descSets.AddSet(10);
+                auto* ubo = descSet->AddBinding<Shader::Visual::VertexUniformBuffer>(1000000);
 
                 auto& uProjView = ubo->AddPin<Matrix4x4f32>();
                 auto& uModelView = ubo->AddPin<Matrix4x4f32>();
@@ -525,7 +538,7 @@ namespace Molten
             }
 
             Shader::GlslGenerator::GlslTemplate glslTemplate;
-            std::vector<Shader::Visual::Script*> visualScripts = { &m_gridVertexScript, &m_gridFragmentScript };
+            std::vector<Shader::Visual::Script*> visualScripts = { &m_objectVertexScript, &m_objectFragmentScript };
             if (!Shader::GlslGenerator::GenerateGlslTemplate(glslTemplate, visualScripts, &m_logger))
             {
             }
@@ -610,11 +623,11 @@ namespace Molten
                 m_renderer->DestroyTexture(m_objectTexture);
                 m_objectTexture = nullptr;
             }
-            if (m_objectUniformBlock)
+           /* if (m_objectUniformBlock)
             {
                 m_renderer->DestroyUniformBlock(m_objectUniformBlock);
                 m_objectUniformBlock = nullptr;
-            }
+            }*/
             if (m_objectUniformBuffer)
             {
                 m_renderer->DestroyUniformBuffer(m_objectUniformBuffer);
@@ -741,6 +754,8 @@ namespace Molten
                 return;
             }
 
+            //std::this_thread::sleep_for(std::chrono::duration<double>(0.2f));
+
             m_renderer->Resize(windowSize);
 
             m_renderer->BeginDraw();
@@ -778,7 +793,8 @@ namespace Molten
             // Object
             m_renderer->BindPipeline(m_objectPipeline);
             m_renderer->UpdateUniformBuffer(m_objectUniformBuffer, 0, sizeof(UniformBuffer), &bufferData1);
-            m_renderer->BindUniformBlock(m_objectUniformBlock, 0);
+            //m_renderer->BindUniformBlock(m_objectUniformBlock, 0);
+            m_renderer->BindDescriptorSet(m_objectMatrixDescriptorSet);
             m_renderer->PushConstant(m_objectPosPushLocation, { 0.0f, 0.0f, 0.0f, 1.0f });
             m_renderer->PushConstant(m_objectColorPushLocation, { 1.0f, 1.0f, 1.0f, 1.0f });
             m_renderer->DrawVertexBuffer(m_objectIndexBuffer, m_objectVertexBuffer);

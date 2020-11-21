@@ -62,6 +62,15 @@ namespace Molten::Shader
         Sampler3D
     };
 
+    /** Enumerator of descriptor binding types. */
+    enum class BindingType : uint8_t
+    {
+        Sampler1D,
+        Sampler2D,
+        Sampler3D,
+        UniformBuffer
+    };
+
     /** Sample handle types. */
     struct Sampler1D {};
     struct Sampler2D {};

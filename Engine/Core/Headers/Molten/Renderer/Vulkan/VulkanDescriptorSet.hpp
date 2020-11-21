@@ -23,29 +23,37 @@
 *
 */
 
-#include "Molten/Renderer/Vulkan/VulkanPipeline.hpp"
+#ifndef MOLTEN_CORE_RENDERER_VULKANDESCRIPTORSET_HPP
+#define MOLTEN_CORE_RENDERER_VULKANDESCRIPTORSET_HPP
+
+#include "Molten/Renderer/DescriptorSet.hpp"
 
 #if defined(MOLTEN_ENABLE_VULKAN)
+#include "Molten/Renderer/Vulkan/Utility/VulkanTypes.hpp"
 
 namespace Molten
 {
 
-    VulkanPipeline::VulkanPipeline(
-        VkPipeline graphicsPipeline,
-        VkPipelineLayout pipelineLayout,
-        Vulkan::DescriptorSetLayouts&& descriptionSetLayouts,
-        PushConstantLocations&& pushConstantLocations,
-        Vulkan::ShaderModules&& shaderModules,
-        MappedDescriptorSets&& mappedDescriptorSets
-    ) :
-        graphicsPipeline(graphicsPipeline),
-        pipelineLayout(pipelineLayout),
-        descriptionSetLayouts(descriptionSetLayouts),
-        pushConstantLocations(std::move(pushConstantLocations)),
-        shaderModules(std::move(shaderModules)),
-        mappedDescriptorSets(std::move(mappedDescriptorSets))
-    {}
+    class VulkanRenderer;
+
+    class MOLTEN_API VulkanDescriptorSet : public DescriptorSet
+    {
+
+        VulkanDescriptorSet(
+            const uint32_t index,
+            VkDescriptorSet descriptorSet,
+            VkDescriptorPool descriptorPool);
+
+        uint32_t index;
+        VkDescriptorSet descriptorSet;
+        VkDescriptorPool descriptorPool;
+
+        friend class VulkanRenderer;
+
+    };
 
 }
+
+#endif
 
 #endif

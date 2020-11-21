@@ -180,14 +180,14 @@ namespace Molten
         throw Exception("Provided data type is not supported as index buffer data type by the Vulkan renderer.");
     }
   
-    static VkDescriptorType GetDescriptorType(const Shader::Visual::DescriptorBindingType bindingType)
+    static VkDescriptorType GetDescriptorType(const Shader::BindingType bindingType)
     {
         switch(bindingType)
         {
-            case Shader::Visual::DescriptorBindingType::Sampler1D:
-            case Shader::Visual::DescriptorBindingType::Sampler2D:
-            case Shader::Visual::DescriptorBindingType::Sampler3D: return VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            case Shader::Visual::DescriptorBindingType::UniformBuffer: return VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+            case Shader::BindingType::Sampler1D:
+            case Shader::BindingType::Sampler2D:
+            case Shader::BindingType::Sampler3D: return VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            case Shader::BindingType::UniformBuffer: return VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
         }
         throw Exception("Provided provided binding type is not handled.");
     }
@@ -361,6 +361,160 @@ namespace Molten
         return it->second.location;
     }
 
+    DescriptorSet* VulkanRenderer::CreateDescriptorSet(const DescriptorSetDescriptor& descriptor)
+    {
+        auto* vulkanPipeline = static_cast<VulkanPipeline*>(descriptor.pipeline);
+
+        const auto& mappedSets = vulkanPipeline->mappedDescriptorSets;
+        auto mappedSetIt = mappedSets.find(descriptor.id);
+        if(mappedSetIt == mappedSets.end())
+        {
+            Logger::WriteError(m_logger, "Failed to find mapped descriptor set of id " + std::to_string(descriptor.id) + ".");
+            return nullptr;
+        }
+
+        const auto& mappedSet = mappedSetIt->second;
+        const uint32_t setIndex = mappedSet.index;
+
+        std::vector<VkDescriptorBufferInfo> bufferInfos;
+        std::vector<VkDescriptorImageInfo> imageInfos;
+        std::vector<VkDescriptorPoolSize> poolSizes = {};
+
+        auto AddBindingToPool = [&](VkDescriptorType descriptorType)
+        {
+            auto it = std::find_if(poolSizes.begin(), poolSizes.end(), [&](VkDescriptorPoolSize& poolSize)
+            {
+                return poolSize.type == descriptorType;
+            });
+
+            if(it != poolSizes.end())
+            {
+                auto& poolSize = *it;
+                poolSize.descriptorCount++;
+                return;
+            }
+
+            VkDescriptorPoolSize poolSize = {};
+            poolSize.type = descriptorType;
+            poolSize.descriptorCount = 1;
+            poolSizes.push_back(poolSize);
+        };
+        
+        auto CreateBufferInfo = [&](VkBuffer buffer) -> VkDescriptorBufferInfo&
+        {
+            AddBindingToPool(VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+
+            VkDescriptorBufferInfo bufferInfo = {};
+            bufferInfo.buffer = buffer;
+            bufferInfo.offset = 0;
+            bufferInfo.range = VK_WHOLE_SIZE;
+            bufferInfos.push_back(bufferInfo);
+            return bufferInfos.back();
+        };
+        auto CreateImageInfo = [&](VkSampler sampler, VkImageView imageView) -> VkDescriptorImageInfo&
+        {
+            AddBindingToPool(VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
+
+            VkDescriptorImageInfo imageInfo = {};
+            imageInfo.sampler = sampler;
+            imageInfo.imageView = imageView;
+            imageInfo.imageLayout = VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            imageInfos.push_back(imageInfo);
+            return imageInfos.back();
+        };
+
+        const auto bindings = descriptor.bindings;
+        const auto& mappedBindings = mappedSet.bindings;
+        std::vector<VkWriteDescriptorSet> writes(bindings.size());
+        size_t writeIndex = 0;
+        for (const auto& binding : bindings)
+        {
+            auto mappedBindingIt = mappedBindings.find(binding.id);
+            if (mappedBindingIt == mappedBindings.end())
+            {
+                Logger::WriteError(m_logger, "Failed to find mapped descriptor binding of id " + std::to_string(binding.id) + ".");
+                return nullptr;
+            }
+            const auto& mappedBinding = mappedBindingIt->second;
+
+            auto& write = writes[writeIndex];
+            write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            write.dstSet = VK_NULL_HANDLE;
+            write.dstBinding = mappedBinding.index;
+            write.dstArrayElement = 0;
+            write.descriptorCount = 1;
+
+            std::visit([&](auto& bindingData) {
+                using T = std::decay_t<decltype(bindingData)>;
+                if constexpr (std::is_same_v<T, UniformBufferDescriptorBinding>)
+                {
+                    auto* vulkanBuffer = static_cast<VulkanUniformBuffer*>(bindingData.uniformBuffer);
+                    const auto bufferHandle = vulkanBuffer->frames[0].buffer.GetHandle();
+                    auto& bufferInfo = CreateBufferInfo(bufferHandle);
+
+                    write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC; 
+                    write.pBufferInfo = &bufferInfo;
+                }
+                else if constexpr (std::is_same_v<T, SampledTextureDescriptorBinding>)
+                {
+                    auto* vulkanTexture = static_cast<VulkanTexture*>(bindingData.texture);
+                    const auto samplerHandle = vulkanTexture->imageSampler.GetHandle();
+                    auto& imageInfo = CreateImageInfo(samplerHandle, VK_NULL_HANDLE);
+
+                    write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                    write.descriptorCount = 1;
+                    write.pImageInfo = &imageInfo;
+                }   
+                else
+                {
+                    static_assert(false, "Unknown binding type.");
+                }
+                    
+            }, binding.binding);
+
+            ++writeIndex;
+        }
+
+        VkDescriptorPoolCreateInfo poolInfo = {};
+        poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
+        poolInfo.pPoolSizes = poolSizes.data();
+        poolInfo.maxSets = 1;
+        poolInfo.flags = 0;
+
+        VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
+        if (vkCreateDescriptorPool(m_logicalDevice.GetHandle(), &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)
+        {
+            Logger::WriteError(m_logger, "Failed to create descriptor pool.");
+            return nullptr;
+        }
+
+        auto& setLayouts = vulkanPipeline->descriptionSetLayouts;
+        VkDescriptorSetAllocateInfo allocInfo = {};
+        allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        allocInfo.descriptorPool = descriptorPool;
+        allocInfo.descriptorSetCount = 1;
+        allocInfo.pSetLayouts = &setLayouts[setIndex];
+
+        VkDescriptorSet descriptorSet = VK_NULL_HANDLE;
+        if (vkAllocateDescriptorSets(m_logicalDevice.GetHandle(), &allocInfo, &descriptorSet) != VK_SUCCESS)
+        {
+            Logger::WriteError(m_logger, "Failed to create descriptor sets.");
+            return nullptr;
+        }
+
+        for(auto& write : writes)
+        {
+            write.dstSet = descriptorSet;
+            vkUpdateDescriptorSets(m_logicalDevice.GetHandle(), 1, &write, 0, nullptr);
+        }
+
+        return new VulkanDescriptorSet(
+            setIndex,
+            descriptorSet,
+            descriptorPool);
+    }
+
     Framebuffer* VulkanRenderer::CreateFramebuffer(const FramebufferDescriptor& descriptor)
     {
         return nullptr;
@@ -435,11 +589,13 @@ namespace Molten
         std::vector<VkPipelineShaderStageCreateInfo> shaderStageCreateInfos;
         PushConstantLocations pushConstantLocations;
         VkPushConstantRange pushConstantRange = {};
+        MappedDescriptorSets mappedDescriptorSets;
         if (!LoadShaderModules(
             shaderModules,
             shaderStageCreateInfos,
             pushConstantLocations,
             pushConstantRange,
+            mappedDescriptorSets,
             shaderScripts))
         {
             return nullptr;
@@ -454,6 +610,12 @@ namespace Molten
             {
                 return nullptr;
             }
+        }
+
+        Vulkan::DescriptorSetLayouts setLayouts;
+        if (!CreateDescriptorSetLayouts(setLayouts, mappedDescriptorSets))
+        {
+            return nullptr;
         }
  
         VkVertexInputBindingDescription vertexBinding;
@@ -536,12 +698,6 @@ namespace Molten
         dynamicStateInfo.pDynamicStates = dynamicStateEnables;
         dynamicStateInfo.dynamicStateCount = 2;
         dynamicStateInfo.flags = 0;
-        
-        Vulkan::DescriptorSetLayouts setLayouts;
-        if (!CreateDescriptorSetLayouts(shaderScripts, setLayouts))
-        {
-            return nullptr;
-        }
 
         VkPipelineLayoutCreateInfo pipelineLayoutInfo = {};
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -589,7 +745,8 @@ namespace Molten
             pipelineLayout, 
             std::move(setLayouts),
             std::move(pushConstantLocations), 
-            std::move(shaderModules));
+            std::move(shaderModules),
+            std::move(mappedDescriptorSets));
     }
 
     Texture* VulkanRenderer::CreateTexture(const TextureDescriptor& descriptor)
@@ -846,6 +1003,23 @@ namespace Molten
     {
         VulkanVertexBuffer* vulkanVertexBuffer = static_cast<VulkanVertexBuffer*>(vertexBuffer);
         delete vulkanVertexBuffer;
+    }
+
+    void VulkanRenderer::BindDescriptorSet(DescriptorSet* descriptorSet)
+    {
+        VulkanDescriptorSet* vulkanDescriptorSet = static_cast<VulkanDescriptorSet*>(descriptorSet);
+
+        uint32_t offset = 0;
+
+        vkCmdBindDescriptorSets(
+            *m_currentCommandBuffer, 
+            VK_PIPELINE_BIND_POINT_GRAPHICS, 
+            m_currentPipeline->pipelineLayout,
+            vulkanDescriptorSet->index,
+            1,
+            &vulkanDescriptorSet->descriptorSet,
+            1,
+            &offset);
     }
 
     void VulkanRenderer::BindPipeline(Pipeline* pipeline)
@@ -1397,96 +1571,43 @@ namespace Molten
         return true;
     }
 
-   bool VulkanRenderer::CreateDescriptorSetLayouts(
-        const std::vector<Shader::Visual::Script*>& visualScripts, 
-        Vulkan::DescriptorSetLayouts& setLayouts)
+    bool VulkanRenderer::CreateDescriptorSetLayouts(
+        Vulkan::DescriptorSetLayouts& setLayouts,
+        const MappedDescriptorSets& mappedDescriptorSets)
     {
-       struct Sets
-       {
-           bool AddBindings(const Shader::Visual::DescriptorSetBase* set, Logger* logger)
-           {
-               const size_t bindingCount = set->GetBindingCount();
-               for (size_t i = 0; i < bindingCount; i++)
-               {
-                   const auto& binding = set->GetBindingBase(i);
-                   const auto bindingType = binding->GetBindingType();
-                   const uint32_t bindingId = binding->GetId();
+        for(const auto& mappedDescriptorSetPair : mappedDescriptorSets)
+        {
+            const auto& mappedDescriptorSet = mappedDescriptorSetPair.second;
+            const auto mappedDescriptorBindings = mappedDescriptorSet.bindings;
 
-                   auto it = bindings.find(bindingId);
-                   if (it != bindings.end())
-                   {
-                       if (it->second != bindingType)
-                       {
-                           Logger::WriteError(logger, "Mismatching binding type of id " + std::to_string(bindingId) + ".");
-                           return false;
-                       } 
-                   }
-                   else
-                   {
-                       bindings.insert({ bindingId, bindingType });
-                   }
-               }
-               return true;
-           }
+            std::vector<VkDescriptorSetLayoutBinding> bindings(mappedDescriptorBindings.size());
+            uint32_t bindingIndex = 0;
+            for(const auto& mappedDescriptorBindingPair : mappedDescriptorBindings)
+            {
+                const auto& mappedDescriptorBinding = mappedDescriptorBindingPair.second;
 
-           std::map<uint32_t, Shader::Visual::DescriptorBindingType> bindings;
-       };
+                auto& binding = bindings[bindingIndex++];
+                binding.binding = mappedDescriptorBinding.index;
+                binding.descriptorType = GetDescriptorType(mappedDescriptorBinding.bindingType);
+                binding.descriptorCount = 1;
+                binding.stageFlags = VkShaderStageFlagBits::VK_SHADER_STAGE_ALL;
+                binding.pImmutableSamplers = nullptr;
+            }
 
-       std::map<uint32_t, Sets> setMap;
+            VkDescriptorSetLayoutCreateInfo descriptorSetLayoutInfo = {};
+            descriptorSetLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+            descriptorSetLayoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
+            descriptorSetLayoutInfo.pBindings = bindings.data();
 
-       for (const auto* script : visualScripts)
-       {
-           const auto& descriptorSets = script->GetDescriptorSetsBase();
-           const size_t descriptorSetCount = descriptorSets.GetSetCount();
-           for (size_t i = 0; i < descriptorSetCount; i++)
-           {
-               const auto* descriptorSet = descriptorSets.GetSetBase(i);
-               const uint32_t setId = descriptorSet->GetId();
-               auto it = setMap.find(setId);
-               if (it == setMap.end())
-               {
-                   it = setMap.insert({ setId, {} }).first;
-               }
+            VkDescriptorSetLayout descriptorSetLayout;
+            if (vkCreateDescriptorSetLayout(m_logicalDevice.GetHandle(), &descriptorSetLayoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS)
+            {
+                Logger::WriteError(m_logger, "Failed to create descriptor set layout.");
+                return false;
+            }
 
-               auto& set = it->second;
-
-               if (!set.AddBindings(descriptorSet, m_logger))
-               {
-                   return false;
-               }
-           }
-       }
-
-       for (auto& [_, set] : setMap)
-       {
-           const size_t bindingCount = set.bindings.size();
-           std::vector<VkDescriptorSetLayoutBinding> bindings(bindingCount);
-
-           size_t bindingIndex = 0;
-           for(auto& [bindingId, bindingType] : set.bindings)
-           {
-               auto& binding = bindings[bindingIndex++];
-               binding.binding = bindingId;
-               binding.descriptorType = GetDescriptorType(bindingType);
-               binding.descriptorCount = 1;
-               binding.stageFlags = VkShaderStageFlagBits::VK_SHADER_STAGE_ALL;
-               binding.pImmutableSamplers = nullptr;
-           }
-
-           VkDescriptorSetLayoutCreateInfo descriptorSetLayoutInfo = {};
-           descriptorSetLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-           descriptorSetLayoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
-           descriptorSetLayoutInfo.pBindings = bindings.data();
-
-           VkDescriptorSetLayout descriptorSetLayout;
-           if (vkCreateDescriptorSetLayout(m_logicalDevice.GetHandle(), &descriptorSetLayoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS)
-           {
-               Logger::WriteError(m_logger, "Failed to create descriptor set layout.");
-               return false;
-           }
-
-           setLayouts.push_back(descriptorSetLayout);
-       }
+            setLayouts.push_back(descriptorSetLayout);
+        }
 
        return true;
     }
@@ -1496,6 +1617,7 @@ namespace Molten
         std::vector<VkPipelineShaderStageCreateInfo>& shaderStageCreateInfos,
         PushConstantLocations& pushConstantLocations,
         VkPushConstantRange& pushConstantRange,
+        MappedDescriptorSets& mappedDescriptorSets,
         const std::vector<Shader::Visual::Script*>& visualScripts
     )
     {
@@ -1553,6 +1675,8 @@ namespace Molten
         pushConstantRange.stageFlags = VK_SHADER_STAGE_ALL;
         pushConstantRange.offset = 0;
         pushConstantRange.size = glslTemplate.pushConstantBlockByteSize;
+
+        mappedDescriptorSets = std::move(glslTemplate.mappedDescriptorSets);
 
         return true;
     }

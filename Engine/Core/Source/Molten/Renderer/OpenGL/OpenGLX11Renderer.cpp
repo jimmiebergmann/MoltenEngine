@@ -184,11 +184,10 @@ namespace Molten
         return 0;
     }
 
-    //std::vector<uint8_t> OpenGLX11Renderer::CompileShader(const ShaderFormat /*inputFormat*/, const ShaderType /*inputType*/,
-    //                                                      const std::vector<uint8_t>& /*inputData*/, const ShaderFormat /*outputFormat*/)
-    //{
-    //    return {};
-    //}
+    DescriptorSet* OpenGLX11Renderer::CreateDescriptorSet(const DescriptorSetDescriptor& descriptor)
+    {
+        return nullptr;
+    }
 
     Framebuffer* OpenGLX11Renderer::CreateFramebuffer(const FramebufferDescriptor&)
     {
@@ -250,6 +249,10 @@ namespace Molten
     }
 
     void OpenGLX11Renderer::DestroyVertexBuffer(VertexBuffer* /*vertexBuffer*/)
+    {
+    }
+
+    void OpenGLX11Renderer::BindDescriptorSet(DescriptorSet* /*descriptorSet*/)
     {
     }
 

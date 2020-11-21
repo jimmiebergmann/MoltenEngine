@@ -32,6 +32,7 @@
 #include "Molten/Renderer/Vulkan/VulkanHeaders.hpp"
 #include <vector>
 #include <string>
+#include <map>
 
 MOLTEN_UNSCOPED_ENUM_BEGIN
 

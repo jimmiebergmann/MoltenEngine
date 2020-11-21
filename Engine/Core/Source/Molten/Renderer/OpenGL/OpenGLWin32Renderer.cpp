@@ -187,11 +187,10 @@ namespace Molten
         return 0;
     }
 
-    //std::vector<uint8_t> OpenGLWin32Renderer::CompileShaderProgram(const ShaderFormat /*inputFormat*/, const ShaderType /*inputType*/,
-    //                                                              const std::vector<uint8_t>& /*inputData*/, const ShaderFormat /*outputFormat*/)
-    //{
-    //    return {};
-    //}
+    DescriptorSet* OpenGLWin32Renderer::CreateDescriptorSet(const DescriptorSetDescriptor& descriptor)
+    {
+        return nullptr;
+    }
 
     Framebuffer* OpenGLWin32Renderer::CreateFramebuffer(const FramebufferDescriptor&)
     {
@@ -253,6 +252,10 @@ namespace Molten
     }
 
     void OpenGLWin32Renderer::DestroyVertexBuffer(VertexBuffer* /*vertexBuffer*/)
+    {
+    }
+
+    void OpenGLWin32Renderer::BindDescriptorSet(DescriptorSet* /*descriptorSet*/)
     {
     }
 

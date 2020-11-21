@@ -268,14 +268,54 @@ namespace Molten::Shader
 
             // Calculate offsets(location).
             size_t offset = 0;
-            for (auto& [_, location] : locations)
+            for (auto& locationPair : locations)
             {
+                auto& location = locationPair.second;
                 location.location = static_cast<uint32_t>(offset);
                 offset += std::max(size_t{ 16 }, GetVariableByteOffset(location.dataType));
             }
             glslTemplate.pushConstantBlockByteSize = static_cast<uint32_t>(offset);
 
             ++scriptIndex;
+        }
+
+        // Map descriptor sets and their bindings.
+        auto& mappedDescriptorSets = glslTemplate.mappedDescriptorSets;
+        for (const auto* script : scripts)
+        {
+            const auto& sets = script->GetDescriptorSetsBase();
+            const size_t setCount = sets.GetSetCount();
+            for(size_t i = 0; i < setCount; i++)
+            {
+                const auto* set = sets.GetSetBase(i);
+                const size_t bindingCount = set->GetBindingCount();
+
+                if(bindingCount == 0)
+                {
+                    continue;
+                }
+                auto& mappedSet = mappedDescriptorSets.insert({ set->GetId(), {} }).first->second;
+
+                for(size_t j = 0; j < bindingCount; j++)
+                {
+                    const auto* binding = set->GetBindingBase(j);
+                    mappedSet.bindings.insert({ binding->GetId(), { 0, binding->GetBindingType() } });
+                }
+            }
+        }
+
+        uint32_t setIndex = 0;
+        for(auto& mappedDescriptorSetPair : mappedDescriptorSets)
+        {
+            auto& mappedDescriptorSet = mappedDescriptorSetPair.second;
+            mappedDescriptorSet.index = setIndex++;
+
+            uint32_t bindingIndex = 0;
+            for (auto& mappedBindingPair : mappedDescriptorSet.bindings)
+            {
+                auto& mappedBinding = mappedBindingPair.second;
+                mappedBinding.index = bindingIndex++;
+            }
         }
 
         return true;
@@ -501,7 +541,7 @@ namespace Molten::Shader
     std::vector<uint8_t> GlslGenerator::Generate(
         const Visual::Script& script,
         const Compability compability,
-        GlslTemplate* glslTemplate,
+        const GlslTemplate* glslTemplate,
         Logger* logger)
     {
         PrepareGeneration(script, logger);
@@ -717,7 +757,7 @@ namespace Molten::Shader
         m_outputNodes.clear();
     }
     
-    bool GlslGenerator::GenerateHeader(const Compability compability, GlslTemplate* glslTemplate)
+    bool GlslGenerator::GenerateHeader(const Compability compability, const GlslTemplate* glslTemplate)
     {
         if(compability == Compability::Glsl)
         {
@@ -733,7 +773,7 @@ namespace Molten::Shader
         return false;
     }
 
-    bool GlslGenerator::GenerateSpirVHeader(GlslTemplate* glslTemplate)
+    bool GlslGenerator::GenerateSpirVHeader(const GlslTemplate* glslTemplate)
     {
         m_lineBuffer =
             "#version 450\n"
@@ -766,82 +806,35 @@ namespace Molten::Shader
         }
         
         // Push constants
-        if(glslTemplate)
+        if(glslTemplate && !glslTemplate->pushConstantLocations.empty())
         {
-            GenerateSpirVPushConstantsTemplated(glslTemplate);
+            if(!GenerateSpirVPushConstantsTemplated(*glslTemplate))
+            {
+                return false;
+            }
         }
         else
         {
-            GenerateSpirVPushConstants();
+            if (!GenerateSpirVPushConstants())
+            {
+                return false;
+            }
         }
 
         // Descriptor sets.
-        size_t samplerIndex = 0;
-        size_t uboIndex = 0;
-        const auto& descriptorSets = m_script->GetDescriptorSetsBase();
-        for (size_t i = 0; i < descriptorSets.GetSetCount(); i++)
+        if (glslTemplate && !glslTemplate->mappedDescriptorSets.empty())
         {
-            const auto* set = descriptorSets.GetSetBase(i);
-            const uint32_t setId = set->GetId();
-            for (size_t j = 0; j < set->GetBindingCount(); j++)
+            if(!GenerateSpirVDescriptorSetsTemplated(*glslTemplate))
             {
-                auto* binding = set->GetBindingBase(j);
-                auto nodeObject = std::make_shared<GeneratorNode>(*binding);
-                m_visitedNodes.insert({ binding, nodeObject });
-
-                const uint32_t bindingId = binding->GetId();
-                switch (binding->GetBindingType())
-                {
-                    case Visual::DescriptorBindingType::Sampler1D:
-                    case Visual::DescriptorBindingType::Sampler2D:
-                    case Visual::DescriptorBindingType::Sampler3D:
-                    {
-                        auto* pin = binding->GetOutputPin();
-                        std::string name = "sampler_" + std::to_string(samplerIndex);
-                        auto outputVariable = nodeObject->CreateOutputVariable(pin, std::move(name));
-                        m_visitedOutputVariables.insert({ pin, outputVariable });
-
-                        m_lineBuffer = 
-                            "layout(set = " + std::to_string(setId) + ", binding = " + std::to_string(bindingId) +
-                            ") uniform " + GetVariableDataType(pin->GetDataType()) + " " + name + ";\n";
-                        AppendToSourceBuffer(m_lineBuffer);
-
-                        ++samplerIndex;
-                    } break;
-                    case Visual::DescriptorBindingType::UniformBuffer:
-                    {
-                        const std::string blockName = "ubo_" + std::to_string(uboIndex);
-
-                        m_lineBuffer =
-                            "layout(std140, set = " + std::to_string(setId) + ", binding=" + std::to_string(bindingId) +
-                            ") uniform s_" + blockName + "\n{\n";
-                        AppendToSourceBuffer(m_lineBuffer);
-
-                        size_t uboMemberIndex = 0;
-                        for (auto* pin : binding->GetOutputPins())
-                        {
-                            std::string memberName = m_counters.GetNextVariableName(pin->GetDataType());
-                            std::string name = blockName + "." + memberName;
-                            auto outputVariable = nodeObject->CreateOutputVariable(pin, std::move(name));
-                            m_visitedOutputVariables.insert({ pin, outputVariable });
-
-                            m_lineBuffer = GetVariableDataType(pin->GetDataType()) + " " + memberName + ";\n";
-                            AppendToSourceBuffer(m_lineBuffer);
-
-                            ++uboMemberIndex;
-                        }
-
-                        AppendToSourceBuffer("} " + blockName + ";\n");
-
-                        ++uboIndex;
-                    } break;
-                }
+                return false;
             }
-            m_counters.ResetVariables();
         }
-        if(descriptorSets.GetSetCount() > 0)
+        else
         {
-            AppendToSourceBuffer("\n");
+            if (!GenerateSpirVDescriptorSets())
+            {
+                return false;
+            }
         }
 
         // Output interface.
@@ -866,6 +859,187 @@ namespace Molten::Shader
 
                 index++;
             }
+            AppendToSourceBuffer("\n");
+        }
+
+        return true;
+    }
+
+    bool GlslGenerator::GenerateSpirVDescriptorSets()
+    {
+        size_t samplerIndex = 0;
+        size_t uboIndex = 0;
+        const auto& descriptorSets = m_script->GetDescriptorSetsBase();
+        for (size_t i = 0; i < descriptorSets.GetSetCount(); i++)
+        {
+            const auto* set = descriptorSets.GetSetBase(i);
+            const uint32_t setId = set->GetId();
+            for (size_t j = 0; j < set->GetBindingCount(); j++)
+            {
+                const auto* binding = set->GetBindingBase(j);
+                auto nodeObject = std::make_shared<GeneratorNode>(*binding);
+                m_visitedNodes.insert({ binding, nodeObject });
+
+                const uint32_t bindingId = binding->GetId();
+                switch (binding->GetBindingType())
+                {
+                    case BindingType::Sampler1D:
+                    case BindingType::Sampler2D:
+                    case BindingType::Sampler3D:
+                    {
+                        const auto* pin = binding->GetOutputPin();
+                        std::string name = "sampler_" + std::to_string(samplerIndex);
+                        auto outputVariable = nodeObject->CreateOutputVariable(pin, std::move(name));
+                        m_visitedOutputVariables.insert({ pin, outputVariable });
+
+                        m_lineBuffer =
+                            "layout(set = " + std::to_string(setId) + ", binding = " + std::to_string(bindingId) +
+                            ") uniform " + GetVariableDataType(pin->GetDataType()) + " " + name + ";\n";
+                        AppendToSourceBuffer(m_lineBuffer);
+
+                        ++samplerIndex;
+                    } break;
+                    case BindingType::UniformBuffer:
+                    {
+                        const std::string blockName = "ubo_" + std::to_string(uboIndex);
+
+                        m_lineBuffer =
+                            "layout(std140, set = " + std::to_string(setId) + ", binding=" + std::to_string(bindingId) +
+                            ") uniform s_" + blockName + "\n{\n";
+                        AppendToSourceBuffer(m_lineBuffer);
+
+                        size_t uboMemberIndex = 0;
+                        for (const auto* pin : binding->GetOutputPins())
+                        {
+                            std::string memberName = m_counters.GetNextVariableName(pin->GetDataType());
+                            std::string name = blockName + "." + memberName;
+                            auto outputVariable = nodeObject->CreateOutputVariable(pin, std::move(name));
+                            m_visitedOutputVariables.insert({ pin, outputVariable });
+
+                            m_lineBuffer = GetVariableDataType(pin->GetDataType()) + " " + memberName + ";\n";
+                            AppendToSourceBuffer(m_lineBuffer);
+
+                            ++uboMemberIndex;
+                        }
+
+                        AppendToSourceBuffer("} " + blockName + ";\n");
+
+                        ++uboIndex;
+                    } break;
+                }
+            }
+            m_counters.ResetVariables();
+        }
+        if (descriptorSets.GetSetCount() > 0)
+        {
+            AppendToSourceBuffer("\n");
+        }
+
+        return true;
+    }
+
+    bool GlslGenerator::GenerateSpirVDescriptorSetsTemplated(const GlslTemplate& glslTemplate)
+    {
+        const auto& mappedDescriptorSets = glslTemplate.mappedDescriptorSets;
+
+        const auto& descriptorSets = m_script->GetDescriptorSetsBase();
+        for (size_t i = 0; i < descriptorSets.GetSetCount(); i++)
+        {
+            const auto* set = descriptorSets.GetSetBase(i);
+            const uint32_t setId = set->GetId();
+
+            auto mappedSetIt = mappedDescriptorSets.find(setId);
+            if(mappedSetIt == mappedDescriptorSets.end())
+            {
+                Logger::WriteError(m_logger, "Set id " + std::to_string(setId) + " is found in shader script, but missing from template.");
+                return false;
+            }
+
+            const auto& mappedSet = mappedSetIt->second;
+            const uint32_t setIndex = mappedSet.index;
+
+            const size_t bindingCount = set->GetBindingCount();
+            const size_t mappedBindingCount = mappedSet.bindings.size();
+            if(bindingCount != mappedBindingCount)
+            {
+                Logger::WriteError(m_logger, "Binding count of shader script(" + std::to_string(bindingCount) + 
+                    ") is mismatching with template(" + std::to_string(mappedBindingCount) +").");
+                return false;
+            }
+
+            const auto& mappedBindings = mappedSet.bindings;
+
+            size_t samplerIndex = 0;
+            size_t uboIndex = 0;
+            for (size_t j = 0; j < bindingCount; j++)
+            {
+                const auto* binding = set->GetBindingBase(j);
+                auto nodeObject = std::make_shared<GeneratorNode>(*binding);
+                m_visitedNodes.insert({ binding, nodeObject });
+
+                const uint32_t bindingId = binding->GetId();
+
+                auto mappedBindingIt = mappedBindings.find(bindingId);
+                if (mappedBindingIt == mappedBindings.end())
+                {
+                    Logger::WriteError(m_logger, "Binding id " + std::to_string(bindingId) + " of set id " +
+                        std::to_string(setId) + " is found in shader script, but missing from template.");
+                    return false;
+                }
+                const auto& mappedBinding = mappedBindingIt->second;
+                const uint32_t bindingIndex = mappedBinding.index;
+
+                switch (binding->GetBindingType())
+                {
+                    case BindingType::Sampler1D:
+                    case BindingType::Sampler2D:
+                    case BindingType::Sampler3D:
+                    {
+                        const auto* pin = binding->GetOutputPin();
+                        std::string name = "sampler_" + std::to_string(samplerIndex);
+                        auto outputVariable = nodeObject->CreateOutputVariable(pin, std::move(name));
+                        m_visitedOutputVariables.insert({ pin, outputVariable });
+
+                        m_lineBuffer =
+                            "layout(set = " + std::to_string(setIndex) + ", binding = " + std::to_string(bindingIndex) +
+                            ") uniform " + GetVariableDataType(pin->GetDataType()) + " " + name + ";\n";
+                        AppendToSourceBuffer(m_lineBuffer);
+
+                        ++samplerIndex;
+                    } break;
+                    case BindingType::UniformBuffer:
+                    {
+                        const std::string blockName = "ubo_" + std::to_string(uboIndex);
+
+                        m_lineBuffer =
+                            "layout(std140, set = " + std::to_string(setIndex) + ", binding=" + std::to_string(bindingIndex) +
+                            ") uniform s_" + blockName + "\n{\n";
+                        AppendToSourceBuffer(m_lineBuffer);
+
+                        size_t uboMemberIndex = 0;
+                        for (const auto* pin : binding->GetOutputPins())
+                        {
+                            std::string memberName = m_counters.GetNextVariableName(pin->GetDataType());
+                            std::string name = blockName + "." + memberName;
+                            auto outputVariable = nodeObject->CreateOutputVariable(pin, std::move(name));
+                            m_visitedOutputVariables.insert({ pin, outputVariable });
+
+                            m_lineBuffer = GetVariableDataType(pin->GetDataType()) + " " + memberName + ";\n";
+                            AppendToSourceBuffer(m_lineBuffer);
+
+                            ++uboMemberIndex;
+                        }
+
+                        AppendToSourceBuffer("} " + blockName + ";\n");
+
+                        ++uboIndex;
+                    } break;
+                }
+            }
+            m_counters.ResetVariables();
+        }
+        if (descriptorSets.GetSetCount() > 0)
+        {
             AppendToSourceBuffer("\n");
         }
 
@@ -904,9 +1078,9 @@ namespace Molten::Shader
         }
         return true;
     }
-    bool GlslGenerator::GenerateSpirVPushConstantsTemplated(GlslTemplate* glslTemplate)
+    bool GlslGenerator::GenerateSpirVPushConstantsTemplated(const GlslTemplate& glslTemplate)
     {
-        const auto& locations = glslTemplate->pushConstantLocations;
+        const auto& locations = glslTemplate.pushConstantLocations;
 
         const auto& pushConstants = m_script->GetPushConstantsBase();
 

@@ -93,7 +93,8 @@ namespace Molten::Editor
         VertexBuffer* m_objectVertexBuffer;
         IndexBuffer* m_objectIndexBuffer;
         UniformBuffer* m_objectUniformBuffer;
-        UniformBlock* m_objectUniformBlock;
+        //UniformBlock* m_objectUniformBlock;
+        DescriptorSet* m_objectMatrixDescriptorSet;
         uint32_t m_objectPosPushLocation;
         uint32_t m_objectColorPushLocation;
         Texture* m_objectTexture;

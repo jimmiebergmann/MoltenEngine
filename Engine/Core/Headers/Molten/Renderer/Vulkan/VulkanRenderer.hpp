@@ -90,6 +90,9 @@ namespace Molten
         virtual uint32_t GetPushConstantLocation(Pipeline * pipeline, const uint32_t id) override;
 
 
+        /** Create descriptor set object. */
+        virtual DescriptorSet* CreateDescriptorSet(const DescriptorSetDescriptor& descriptor) override;
+
         /** Create framebuffer object. */
         virtual Framebuffer* CreateFramebuffer(const FramebufferDescriptor& descriptor) override;
 
@@ -133,6 +136,9 @@ namespace Molten
         /** Destroy vertex buffer object. */
         virtual void DestroyVertexBuffer(VertexBuffer* vertexBuffer) override;
 
+
+        /** Bind descriptor set to draw queue. */
+        virtual void BindDescriptorSet(DescriptorSet* descriptorSet) override;
 
         /** Bind pipeline to draw queue. */
         virtual void BindPipeline(Pipeline* pipeline) override;
@@ -199,14 +205,15 @@ namespace Molten
             uint32_t& stride);
         
         bool CreateDescriptorSetLayouts(
-            const std::vector<Shader::Visual::Script*>& visualScripts,
-            Vulkan::DescriptorSetLayouts& setLayouts);
+            Vulkan::DescriptorSetLayouts& setLayouts,
+            const MappedDescriptorSets& mappedDescriptorSets);
 
         bool LoadShaderModules(
             Vulkan::ShaderModules& shaderModules,
             std::vector<VkPipelineShaderStageCreateInfo>& shaderStageCreateInfos,
             PushConstantLocations& pushConstantLocations,
             VkPushConstantRange& pushConstantRange,
+            MappedDescriptorSets& mappedDescriptorSets,
             const std::vector<Shader::Visual::Script*>& visualScripts);
 
 

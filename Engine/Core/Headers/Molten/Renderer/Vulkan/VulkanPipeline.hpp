@@ -29,10 +29,10 @@
 #include "Molten/Renderer/Pipeline.hpp"
 
 #if defined(MOLTEN_ENABLE_VULKAN)
+#include "Molten/Renderer/Vulkan/VulkanDescriptorSet.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanTypes.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanShaderModule.hpp"
 #include "Molten/Renderer/PushConstant.hpp"
-#include <map>
 
 namespace Molten
 {
@@ -49,13 +49,15 @@ namespace Molten
             VkPipelineLayout pipelineLayout,
             Vulkan::DescriptorSetLayouts&& descriptionSetLayouts,
             PushConstantLocations&& pushConstantLocations,
-            Vulkan::ShaderModules&& shaderModules);
+            Vulkan::ShaderModules&& shaderModules,
+            MappedDescriptorSets&& mappedDescriptorSets);
         
         VkPipeline graphicsPipeline;
         VkPipelineLayout pipelineLayout;
         Vulkan::DescriptorSetLayouts descriptionSetLayouts;
         PushConstantLocations pushConstantLocations;
         Vulkan::ShaderModules shaderModules;
+        MappedDescriptorSets mappedDescriptorSets;
 
         friend class VulkanRenderer;
 

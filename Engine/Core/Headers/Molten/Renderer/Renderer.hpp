@@ -34,6 +34,7 @@
 #include "Molten/Renderer/UniformBlock.hpp"
 #include "Molten/Renderer/UniformBuffer.hpp"
 #include "Molten/Renderer/VertexBuffer.hpp"
+#include "Molten/Renderer/DescriptorSet.hpp"
 #include "Molten/System/Version.hpp"
 
 namespace Molten::Shader::Visual
@@ -96,6 +97,9 @@ namespace Molten
         virtual uint32_t GetPushConstantLocation(Pipeline* pipeline, const uint32_t id) = 0;
 
 
+        /** Create descriptor set object. */
+        virtual DescriptorSet* CreateDescriptorSet(const DescriptorSetDescriptor& descriptor) = 0;
+
         /** Create framebuffer object. */
         virtual Framebuffer* CreateFramebuffer(const FramebufferDescriptor& descriptor) = 0;
 
@@ -139,6 +143,9 @@ namespace Molten
         /** Destroy vertex buffer object. */
         virtual void DestroyVertexBuffer(VertexBuffer* vertexBuffer) = 0;    
 
+
+        /** Bind descriptor set to draw queue. */
+        virtual void BindDescriptorSet(DescriptorSet* descriptorSet) = 0;
 
         /** Bind pipeline to draw queue. */
         virtual void BindPipeline(Pipeline* pipeline) = 0;
