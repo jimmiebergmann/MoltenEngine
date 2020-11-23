@@ -41,8 +41,8 @@ namespace Molten::Shader::Visual
     template<typename TPinType, typename TMetaData>
     template<typename ... TArgs>
     inline StructureMember<TPinType, TMetaData>::StructureMember(Node& node, TArgs ... args) :
-        TPinType(node),
-        StructureMemberBase<TMetaData>(args...)
+        StructureMemberBase<TMetaData>(args...),
+        TPinType(node)  
     {}
 
     template<typename TPinType, typename TMetaData>
@@ -139,7 +139,7 @@ namespace Molten::Shader::Visual
     }
     
     template<NodeType VNodeType, template<typename> typename TPinType, typename TMetaData, typename ... TAllowedDataTypes>
-    inline Pin* Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::GetInputPin(const size_t index)
+    inline Pin* Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::GetInputPin([[maybe_unused]] const size_t index)
     {
         if constexpr (PinTraits<TPinType>::isInputPin == true)
         {
@@ -155,7 +155,7 @@ namespace Molten::Shader::Visual
         }
     }
     template<NodeType VNodeType, template<typename> typename TPinType, typename TMetaData, typename ... TAllowedDataTypes>
-    inline const Pin* Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::GetInputPin(const size_t index) const
+    inline const Pin* Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::GetInputPin([[maybe_unused]] const size_t index) const
     {
         if constexpr (PinTraits<TPinType>::isInputPin == true)
         {
@@ -173,7 +173,7 @@ namespace Molten::Shader::Visual
 
     template<NodeType VNodeType, template<typename> typename TPinType, typename TMetaData, typename ... TAllowedDataTypes>
     template<typename TDataType>
-    inline InputPin<TDataType>* Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::GetInputPin(const size_t index)
+    inline InputPin<TDataType>* Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::GetInputPin([[maybe_unused]] const size_t index)
     {
         if constexpr (PinTraits<TPinType>::isInputPin == true)
         {
@@ -186,7 +186,7 @@ namespace Molten::Shader::Visual
     }
     template<NodeType VNodeType, template<typename> typename TPinType, typename TMetaData, typename ... TAllowedDataTypes>
     template<typename TDataType>
-    inline const InputPin<TDataType>* Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::GetInputPin(const size_t index) const
+    inline const InputPin<TDataType>* Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::GetInputPin([[maybe_unused]] const size_t index) const
     {
         if constexpr (PinTraits<TPinType>::isInputPin == true)
         {
@@ -224,7 +224,7 @@ namespace Molten::Shader::Visual
     }
     
     template<NodeType VNodeType, template<typename> typename TPinType, typename TMetaData, typename ... TAllowedDataTypes>
-    inline Pin* Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::GetOutputPin(const size_t index)
+    inline Pin* Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::GetOutputPin([[maybe_unused]] const size_t index)
     {
         if constexpr (PinTraits<TPinType>::isOutputPin == true)
         {
@@ -240,7 +240,7 @@ namespace Molten::Shader::Visual
         }
     }
     template<NodeType VNodeType, template<typename> typename TPinType, typename TMetaData, typename ... TAllowedDataTypes>
-    inline const Pin* Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::GetOutputPin(const size_t index) const
+    inline const Pin* Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::GetOutputPin([[maybe_unused]] const size_t index) const
     {
         if constexpr (PinTraits<TPinType>::isOutputPin == true)
         {
@@ -258,7 +258,7 @@ namespace Molten::Shader::Visual
 
     template<NodeType VNodeType, template<typename> typename TPinType, typename TMetaData, typename ... TAllowedDataTypes>
     template<typename TDataType>
-    inline OutputPin<TDataType>* Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::GetOutputPin(const size_t index)
+    inline OutputPin<TDataType>* Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::GetOutputPin([[maybe_unused]] const size_t index)
     {
         if constexpr (PinTraits<TPinType>::isOutputPin == true)
         {
@@ -271,7 +271,7 @@ namespace Molten::Shader::Visual
     }
     template<NodeType VNodeType, template<typename> typename TPinType, typename TMetaData, typename ... TAllowedDataTypes>
     template<typename TDataType>
-    inline const OutputPin<TDataType>* Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::GetOutputPin(const size_t index) const
+    inline const OutputPin<TDataType>* Structure<VNodeType, TPinType, TMetaData, TAllowedDataTypes...>::GetOutputPin([[maybe_unused]] const size_t index) const
     {
         if constexpr (PinTraits<TPinType>::isOutputPin == true)
         {

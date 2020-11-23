@@ -184,7 +184,7 @@ namespace Molten
         return 0;
     }
 
-    DescriptorSet* OpenGLX11Renderer::CreateDescriptorSet(const DescriptorSetDescriptor& descriptor)
+    DescriptorSet* OpenGLX11Renderer::CreateDescriptorSet(const DescriptorSetDescriptor& /*descriptor*/)
     {
         return nullptr;
     }
