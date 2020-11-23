@@ -189,6 +189,11 @@ namespace Molten
         return nullptr;
     }
 
+    FramedDescriptorSet* OpenGLX11Renderer::CreateFramedDescriptorSet(const FramedDescriptorSetDescriptor& /*descriptor*/)
+    {
+        return nullptr;
+    }
+
     Framebuffer* OpenGLX11Renderer::CreateFramebuffer(const FramebufferDescriptor&)
     {
         return nullptr;
@@ -209,12 +214,12 @@ namespace Molten
         return nullptr;
     }
 
-    UniformBlock* OpenGLX11Renderer::CreateUniformBlock(const UniformBlockDescriptor&)
+    UniformBuffer* OpenGLX11Renderer::CreateUniformBuffer(const UniformBufferDescriptor&)
     {
         return nullptr;
     }
 
-    UniformBuffer* OpenGLX11Renderer::CreateUniformBuffer(const UniformBufferDescriptor&)
+    FramedUniformBuffer* OpenGLX11Renderer::CreateFramedUniformBuffer(const FramedUniformBufferDescriptor& /*descriptor*/)
     {
         return nullptr;
     }
@@ -222,6 +227,14 @@ namespace Molten
     VertexBuffer* OpenGLX11Renderer::CreateVertexBuffer(const VertexBufferDescriptor&)
     {
         return nullptr;
+    }
+
+    void OpenGLX11Renderer::DestroyDescriptorSet(DescriptorSet* )
+    {
+    }
+
+    void OpenGLX11Renderer::DestroyFramedDescriptorSet(FramedDescriptorSet*)
+    {
     }
 
     void OpenGLX11Renderer::DestroyFramebuffer(Framebuffer*)
@@ -240,11 +253,11 @@ namespace Molten
     {
     }
 
-    void OpenGLX11Renderer::DestroyUniformBlock(UniformBlock* /*uniformBlock*/)
+    void OpenGLX11Renderer::DestroyUniformBuffer(UniformBuffer* /*uniformBuffer*/)
     {
     }
 
-    void OpenGLX11Renderer::DestroyUniformBuffer(UniformBuffer* /*uniformBuffer*/)
+    void OpenGLX11Renderer::DestroyFramedUniformBuffer(FramedUniformBuffer* /*framedUniformBuffer*/)
     {
     }
 
@@ -256,11 +269,11 @@ namespace Molten
     {
     }
 
-    void OpenGLX11Renderer::BindPipeline(Pipeline* /*pipeline*/)
+    void OpenGLX11Renderer::BindFramedDescriptorSet(FramedDescriptorSet* /*framedDescriptorSet*/)
     {
     }
 
-    void OpenGLX11Renderer::BindUniformBlock(UniformBlock* /*uniformBlock*/, const uint32_t /*offset*/)
+    void OpenGLX11Renderer::BindPipeline(Pipeline* /*pipeline*/)
     {
     }
 
@@ -307,6 +320,10 @@ namespace Molten
     }
 
     void OpenGLX11Renderer::UpdateUniformBuffer(UniformBuffer* /*uniformBuffer*/, const size_t /*offset*/, const size_t /*size*/, const void* /*data*/)
+    {
+    }
+
+    void OpenGLX11Renderer::UpdateFramedUniformBuffer(FramedUniformBuffer* /*framedUniformBuffer*/, const size_t /*offset*/, const size_t /*size*/, const void* /*data*/)
     {
     }
 

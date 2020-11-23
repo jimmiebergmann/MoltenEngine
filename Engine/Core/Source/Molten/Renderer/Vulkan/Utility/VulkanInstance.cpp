@@ -75,21 +75,6 @@ namespace Molten::Vulkan
         const Layers& enabledLayers,
         DebugCallbackDescriptor debugCallbackDescriptor)
     {
-        VkResult result = VkResult::VK_SUCCESS;
-      
-        /*if ((result = Vulkan::FetchInstanceExtensions(instance.extensions)) != VK_SUCCESS)
-        {
-            return result;
-        }
-
-        if ((result = Vulkan::FetchInstanceLayers(instance.layers)) != VK_SUCCESS)
-        {
-            return result;
-        }
-
-        m_extensions = enabledExtensions;
-        m_layers = enabledLayers;*/
-
         // Create pointer vectors to extensions and layers.
         std::vector<const char*> ptrExtensions(enabledExtensions.size(), nullptr);
         for (size_t i = 0; i < enabledExtensions.size(); i++)
@@ -181,7 +166,8 @@ namespace Molten::Vulkan
             instanceInfo.pNext = &m_debugCreateInfo;
         }
 
-        if ((result = vkCreateInstance(&instanceInfo, nullptr, &m_handle)) != VkResult::VK_SUCCESS)
+        VkResult result = vkCreateInstance(&instanceInfo, nullptr, &m_handle);
+        if (result != VkResult::VK_SUCCESS)
         {
             return result;
         }

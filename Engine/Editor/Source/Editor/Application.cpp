@@ -47,19 +47,18 @@ namespace Molten
 
         Application::Application() :
 
+            m_viewMatrixBuffer(nullptr),
+
             m_gridPipeline(nullptr),
             m_gridVertexBuffer(nullptr),
             m_gridIndexBuffer(nullptr),
-            m_gridUniformBuffer(nullptr),
-            m_gridUniformBlock(nullptr),
+            m_gridMatrixDescriptorSet(nullptr),
             m_gridColor1PushLocation(0),
             m_gridColor2PushLocation(0),
 
             m_objectPipeline(nullptr),
             m_objectVertexBuffer(nullptr),
             m_objectIndexBuffer(nullptr),
-            m_objectUniformBuffer(nullptr),
-            //m_objectUniformBlock(nullptr),
             m_objectMatrixDescriptorSet(nullptr),
             m_objectPosPushLocation(0),
             m_objectColorPushLocation(0),
@@ -89,6 +88,7 @@ namespace Molten
 
             m_window->Show();
             m_deltaTimer.Reset();
+            m_secondTimer.Reset();
             while (m_window->IsOpen())
             {
                 Tick();
@@ -133,6 +133,14 @@ namespace Molten
             if (!m_renderer->Open(*m_window, Version(1, 1), &m_logger))
             {
                 throw Exception("Failed to open Vulkan renderer.");
+            }
+
+            FramedUniformBufferDescriptor uniformBufferDesc;
+            uniformBufferDesc.size = 512;
+            m_viewMatrixBuffer = m_renderer->CreateFramedUniformBuffer(uniformBufferDesc);
+            if (!m_viewMatrixBuffer)
+            {
+                throw Exception("Failed to create uniform buffer.");
             }
 
             LoadGridPipeline();
@@ -250,22 +258,14 @@ namespace Molten
                 throw Exception("Failed to create index buffer.");
             }
 
-            UniformBufferDescriptor uniformBufferDesc;
-            uniformBufferDesc.size = 512;
-            m_gridUniformBuffer = m_renderer->CreateUniformBuffer(uniformBufferDesc);
-            if (!m_gridUniformBuffer)
+            auto descriptorSetDescriptor1 = FramedDescriptorSetDescriptor{
+                m_gridPipeline, 0,
+                {{ 0,  m_viewMatrixBuffer }}
+            };
+            m_gridMatrixDescriptorSet = m_renderer->CreateFramedDescriptorSet(descriptorSetDescriptor1);
+            if (!m_gridMatrixDescriptorSet)
             {
-                throw Exception("Failed to create uniform buffer.");
-            }
-
-            UniformBlockDescriptor uniformBlockDesc;
-            uniformBlockDesc.id = 0;
-            uniformBlockDesc.buffer = m_gridUniformBuffer;
-            uniformBlockDesc.pipeline = m_gridPipeline;
-            m_gridUniformBlock = m_renderer->CreateUniformBlock(uniformBlockDesc);
-            if (!m_gridUniformBlock)
-            {
-                throw Exception("Failed to create uniform block.");
+                throw Exception("Failed to create grid matrix descriptor set.");
             }
 
             m_gridColor1PushLocation = m_renderer->GetPushConstantLocation(m_gridPipeline, 0);
@@ -431,39 +431,18 @@ namespace Molten
                 throw Exception("Failed to create index buffer.");
             }
 
-            UniformBufferDescriptor uniformBufferDesc;
-            uniformBufferDesc.size = 512;
-            m_objectUniformBuffer = m_renderer->CreateUniformBuffer(uniformBufferDesc);
-            if (!m_objectUniformBuffer)
-            {
-                throw Exception("Failed to create uniform buffer.");
-            }
-
-            DescriptorSetDescriptor descriptorSetDescriptor1;
-            descriptorSetDescriptor1.id = 10;
-            descriptorSetDescriptor1.pipeline = m_objectPipeline;
-            descriptorSetDescriptor1.bindings.push_back(
-                DescriptorBinding{ 1000000,  UniformBufferDescriptorBinding{ m_objectUniformBuffer } }
-            );
-            m_objectMatrixDescriptorSet = m_renderer->CreateDescriptorSet(descriptorSetDescriptor1);
+            auto descriptorSetDescriptor1 = FramedDescriptorSetDescriptor{
+                m_objectPipeline, 10,
+                {{ 1000000,  m_viewMatrixBuffer }}
+            };
+            m_objectMatrixDescriptorSet = m_renderer->CreateFramedDescriptorSet(descriptorSetDescriptor1);
             if (!m_objectMatrixDescriptorSet)
             {
-                throw Exception("Failed to create matrix descriptor set.");
+                throw Exception("Failed to create object matrix descriptor set.");
             }
-
-            /*UniformBlockDescriptor uniformBlockDesc;
-            uniformBlockDesc.id = 10;
-            uniformBlockDesc.buffer = m_objectUniformBuffer;
-            uniformBlockDesc.pipeline = m_objectPipeline;
-            m_objectUniformBlock = m_renderer->CreateUniformBlock(uniformBlockDesc);
-            if (!m_objectUniformBlock)
-            {
-                throw Exception("Failed to create uniform block.");
-            }*/
 
             m_objectPosPushLocation = m_renderer->GetPushConstantLocation(m_objectPipeline, 0);
             m_objectColorPushLocation = m_renderer->GetPushConstantLocation(m_objectPipeline, 1);
-
 
             const Vector2ui32 textureDimensions = { 2, 2 };
             uint8_t textureData[2 * 2 * 4] = {
@@ -575,6 +554,12 @@ namespace Molten
                     m_renderer->WaitForDevice();
                 }
 
+                if (m_viewMatrixBuffer)
+                {
+                    m_renderer->DestroyFramedUniformBuffer(m_viewMatrixBuffer);
+                    m_viewMatrixBuffer = nullptr;
+                }
+
                 UnloadObjectPipeline();
                 UnloadGridPipeline();
 
@@ -589,15 +574,10 @@ namespace Molten
 
         void Application::UnloadGridPipeline()
         {
-            if (m_gridUniformBlock)
+            if(m_gridMatrixDescriptorSet)
             {
-                m_renderer->DestroyUniformBlock(m_gridUniformBlock);
-                m_gridUniformBlock = nullptr;
-            }
-            if (m_gridUniformBuffer)
-            {
-                m_renderer->DestroyUniformBuffer(m_gridUniformBuffer);
-                m_gridUniformBuffer = nullptr;
+                m_renderer->DestroyFramedDescriptorSet(m_gridMatrixDescriptorSet);
+                m_gridMatrixDescriptorSet = nullptr;
             }
             if (m_gridIndexBuffer)
             {
@@ -623,15 +603,10 @@ namespace Molten
                 m_renderer->DestroyTexture(m_objectTexture);
                 m_objectTexture = nullptr;
             }
-           /* if (m_objectUniformBlock)
+            if (m_objectMatrixDescriptorSet)
             {
-                m_renderer->DestroyUniformBlock(m_objectUniformBlock);
-                m_objectUniformBlock = nullptr;
-            }*/
-            if (m_objectUniformBuffer)
-            {
-                m_renderer->DestroyUniformBuffer(m_objectUniformBuffer);
-                m_objectUniformBuffer = nullptr;
+                m_renderer->DestroyFramedDescriptorSet(m_objectMatrixDescriptorSet);
+                m_objectMatrixDescriptorSet = nullptr;
             }
             if (m_objectIndexBuffer)
             {
@@ -674,6 +649,15 @@ namespace Molten
             {
                 return false;
             }
+
+            if(m_secondTimer.GetTime() > Seconds(1.0f))
+            {
+
+                m_window->SetTitle( "Molten Editor. FPS: " + std::to_string(static_cast<size_t>(1.0f / m_deltaTime)));
+                m_secondTimer.Reset();
+            }
+
+            
 
             UserInput userInput = m_window->GetUserInput();
             UserInput::Event event;
@@ -774,33 +758,20 @@ namespace Molten
             bufferData1.projViewMatrix = projViewMatrix;
             bufferData1.modelMatrix = Matrix4x4f32::Identity();
             //bufferData1.modelMatrix.Translate({ std::sin(m_programTime * 3.0f) * 0.25f, 0.0f, 0.2f });
-
-            /*UniformBuffer bufferData2;
-            bufferData2.projViewMatrix = projViewMatrix;
-            bufferData2.modelMatrix = Matrix4x4f32::Identity();
-            bufferData2.modelMatrix.Translate({ 0.0f, std::cos(m_programTime * 3.0f) * 0.25f, 0.0f });*/
+            m_renderer->UpdateFramedUniformBuffer(m_viewMatrixBuffer, 0, sizeof(UniformBuffer), &bufferData1);
 
             // Grid
-            m_renderer->UpdateUniformBuffer(m_gridUniformBuffer, 0, sizeof(UniformBuffer), &bufferData1);
-            //m_renderer->UpdateUniformBuffer(m_uniformBuffer, 256, sizeof(UniformBuffer), &bufferData2);
-
-            m_renderer->BindUniformBlock(m_gridUniformBlock, 0);
-
+            m_renderer->BindFramedDescriptorSet(m_gridMatrixDescriptorSet);
             m_renderer->PushConstant(m_gridColor1PushLocation, { 0.4f, 0.8f, 0.7f, 1.0f });
             m_renderer->PushConstant(m_gridColor2PushLocation, { 0.5f, 0.5f, 0.5f, 1.0f });
             m_renderer->DrawVertexBuffer(m_gridIndexBuffer, m_gridVertexBuffer);
 
             // Object
             m_renderer->BindPipeline(m_objectPipeline);
-            m_renderer->UpdateUniformBuffer(m_objectUniformBuffer, 0, sizeof(UniformBuffer), &bufferData1);
-            //m_renderer->BindUniformBlock(m_objectUniformBlock, 0);
-            m_renderer->BindDescriptorSet(m_objectMatrixDescriptorSet);
+            m_renderer->BindFramedDescriptorSet(m_objectMatrixDescriptorSet);
             m_renderer->PushConstant(m_objectPosPushLocation, { 0.0f, 0.0f, 0.0f, 1.0f });
             m_renderer->PushConstant(m_objectColorPushLocation, { 1.0f, 1.0f, 1.0f, 1.0f });
             m_renderer->DrawVertexBuffer(m_objectIndexBuffer, m_objectVertexBuffer);
-
-            /*m_renderer->BindUniformBlock(m_uniformBlock, 256);
-            m_renderer->DrawVertexBuffer(m_indexBuffer, m_vertexBuffer);*/
 
             //m_canvas->Draw();
 

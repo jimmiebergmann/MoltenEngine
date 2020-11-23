@@ -35,7 +35,6 @@
 #include "Molten/Renderer/Vulkan/VulkanIndexBuffer.hpp"
 #include "Molten/Renderer/Vulkan/VulkanPipeline.hpp"
 #include "Molten/Renderer/Vulkan/VulkanTexture.hpp"
-#include "Molten/Renderer/Vulkan/VulkanUniformBlock.hpp"
 #include "Molten/Renderer/Vulkan/VulkanUniformBuffer.hpp"
 #include "Molten/Renderer/Vulkan/VulkanVertexBuffer.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanFunctions.hpp"
@@ -46,12 +45,9 @@
 #include "Molten/Logger.hpp"
 #include "Molten/System/Exception.hpp"
 #include "Molten/Utility/SmartFunction.hpp"
-#include <map>
-#include <set>
 #include <algorithm>
 #include <limits>
 #include <memory>
-#include <array>
 
 namespace Molten
 {
@@ -446,18 +442,18 @@ namespace Molten
 
             std::visit([&](auto& bindingData) {
                 using T = std::decay_t<decltype(bindingData)>;
-                if constexpr (std::is_same_v<T, UniformBufferDescriptorBinding>)
+                if constexpr (std::is_same_v<T, UniformBuffer*>)
                 {
-                    auto* vulkanBuffer = static_cast<VulkanUniformBuffer*>(bindingData.uniformBuffer);
-                    const auto bufferHandle = vulkanBuffer->frames[0].buffer.GetHandle();
+                    auto* vulkanBuffer = static_cast<VulkanUniformBuffer*>(bindingData);
+                    const auto bufferHandle = vulkanBuffer->deviceBuffer.GetHandle(); //vulkanBuffer->frames[0].buffer.GetHandle();
                     auto& bufferInfo = CreateBufferInfo(bufferHandle);
 
                     write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC; 
                     write.pBufferInfo = &bufferInfo;
                 }
-                else if constexpr (std::is_same_v<T, SampledTextureDescriptorBinding>)
+                else if constexpr (std::is_same_v<T, Texture*>)
                 {
-                    auto* vulkanTexture = static_cast<VulkanTexture*>(bindingData.texture);
+                    auto* vulkanTexture = static_cast<VulkanTexture*>(bindingData);
                     const auto samplerHandle = vulkanTexture->imageSampler.GetHandle();
                     auto& imageInfo = CreateImageInfo(samplerHandle, VK_NULL_HANDLE);
 
@@ -483,6 +479,14 @@ namespace Molten
         poolInfo.flags = 0;
 
         VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
+        SmartFunction destroyer = [&]()
+        {
+            if(descriptorPool != VK_NULL_HANDLE)
+            {
+                vkDestroyDescriptorPool(m_logicalDevice.GetHandle(), descriptorPool, nullptr);
+            }
+        };
+ 
         if (vkCreateDescriptorPool(m_logicalDevice.GetHandle(), &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)
         {
             Logger::WriteError(m_logger, "Failed to create descriptor pool.");
@@ -509,9 +513,223 @@ namespace Molten
             vkUpdateDescriptorSets(m_logicalDevice.GetHandle(), 1, &write, 0, nullptr);
         }
 
+        destroyer.Release();
         return new VulkanDescriptorSet(
             setIndex,
             descriptorSet,
+            descriptorPool);
+    }
+
+    FramedDescriptorSet* VulkanRenderer::CreateFramedDescriptorSet(const FramedDescriptorSetDescriptor& descriptor)
+    {
+        auto* vulkanPipeline = static_cast<VulkanPipeline*>(descriptor.pipeline);
+
+        const auto& mappedSets = vulkanPipeline->mappedDescriptorSets;
+        auto mappedSetIt = mappedSets.find(descriptor.id);
+        if (mappedSetIt == mappedSets.end())
+        {
+            Logger::WriteError(m_logger, "Failed to find mapped descriptor set of id " + std::to_string(descriptor.id) + ".");
+            return nullptr;
+        }
+
+        const auto& mappedSet = mappedSetIt->second;
+        const uint32_t setIndex = mappedSet.index;
+
+        std::vector<std::unique_ptr<VkDescriptorBufferInfo[]>> bufferInfos;
+        std::vector<std::unique_ptr<VkDescriptorImageInfo[]>> imageInfos;
+        std::vector<VkDescriptorPoolSize> poolSizes;
+        const uint32_t swapChainImageCount = m_swapChain.GetImageCount();  
+    
+        const auto& bindings = descriptor.bindings;
+        auto setWrites = std::make_unique<std::vector<VkWriteDescriptorSet>[]>(swapChainImageCount);
+        for (uint32_t i = 0; i < swapChainImageCount; i++)
+        {
+            setWrites[i].resize(bindings.size());
+        }
+
+        using SetWritesType = std::unique_ptr<std::vector<VkWriteDescriptorSet>[]>;
+
+        auto AddBindingToPool = [&](VkDescriptorType descriptorType, const uint32_t descriptorCount)
+        {
+            auto it = std::find_if(poolSizes.begin(), poolSizes.end(), [&](VkDescriptorPoolSize& poolSize)
+            {
+                return poolSize.type == descriptorType;
+            });
+
+            if (it != poolSizes.end())
+            {
+                auto& poolSize = *it;
+                poolSize.descriptorCount += descriptorCount;
+                return;
+            }
+
+            VkDescriptorPoolSize poolSize = {};
+            poolSize.type = descriptorType;
+            poolSize.descriptorCount = descriptorCount;
+            poolSizes.push_back(poolSize);
+        };
+
+        auto CreateBufferInfos = [&](
+            SetWritesType& writes,
+            const size_t writesIndex,
+            const uint32_t bindingIndex,
+            const std::vector<Vulkan::DeviceBuffer>& buffers)
+        {
+           auto bufferInfo = std::make_unique<VkDescriptorBufferInfo[]>(swapChainImageCount);
+           const VkDescriptorType descriptorType = VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+
+            for(size_t i = 0; i < swapChainImageCount; i++)
+            {
+                bufferInfo[i].buffer = buffers[i].GetHandle();
+                bufferInfo[i].offset = 0;
+                bufferInfo[i].range = VK_WHOLE_SIZE;
+
+                auto& write = writes[i][writesIndex];
+                write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                write.dstSet = VK_NULL_HANDLE;
+                write.dstBinding = bindingIndex;
+                write.dstArrayElement = 0;
+                write.descriptorCount = 1;
+                write.descriptorType = descriptorType;
+                write.pBufferInfo = &bufferInfo[i];
+            }
+
+            bufferInfos.push_back(std::move(bufferInfo));
+            AddBindingToPool(descriptorType, swapChainImageCount);
+        };
+
+        auto CreateImageInfo = [&](
+            SetWritesType& writes,
+            const size_t writesIndex,
+            const uint32_t bindingIndex,
+            VkSampler sampler,
+            VkImageView imageView)
+        {
+            auto imageInfo = std::make_unique<VkDescriptorImageInfo[]>(swapChainImageCount);
+            const VkDescriptorType descriptorType = VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+
+            for (size_t i = 0; i < swapChainImageCount; i++)
+            {
+                imageInfo[i].sampler = sampler;
+                imageInfo[i].imageView = imageView;
+                imageInfo[i].imageLayout = VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+                auto& write = writes[i][writesIndex];
+                write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                write.dstSet = VK_NULL_HANDLE;
+                write.dstBinding = bindingIndex;
+                write.dstArrayElement = 0;
+                write.descriptorCount = 1;
+                write.descriptorType = descriptorType;
+                write.pImageInfo = &imageInfo[i];
+            }
+
+            imageInfos.push_back(std::move(imageInfo));
+            AddBindingToPool(descriptorType, swapChainImageCount);
+        };
+
+        size_t writeIndex = 0;
+        const auto& mappedBindings = mappedSet.bindings;
+        for (const auto& binding : bindings)
+        {
+            auto mappedBindingIt = mappedBindings.find(binding.id);
+            if (mappedBindingIt == mappedBindings.end())
+            {
+                Logger::WriteError(m_logger, "Failed to find mapped descriptor binding of id " + std::to_string(binding.id) + ".");
+                return nullptr;
+            }
+            const auto& mappedBinding = mappedBindingIt->second;
+            const uint32_t bindingIndex = mappedBinding.index;
+
+            bool successfulVisit = true;
+            std::visit([&](auto& bindingData) {
+                using T = std::decay_t<decltype(bindingData)>;
+                if constexpr (std::is_same_v<T, FramedUniformBuffer*>)
+                {
+                    auto* vulkanBuffer = static_cast<VulkanFramedUniformBuffer*>(bindingData);
+
+                    const auto& deviceBuffers = vulkanBuffer->deviceBuffers;
+                    if (deviceBuffers.size() != swapChainImageCount)
+                    {
+                        Logger::WriteError(m_logger, "Buffer count(" + std::to_string(deviceBuffers.size()) +
+                            ") of framed buffer is mismatching with number of swap chain images(" + std::to_string(swapChainImageCount) +").");
+                        successfulVisit = false;
+                        return;
+                    }
+
+                    CreateBufferInfos(setWrites, writeIndex, bindingIndex, deviceBuffers);
+                }
+                else if constexpr (std::is_same_v<T, Texture*>)
+                {
+                    auto* vulkanTexture = static_cast<VulkanTexture*>(bindingData);
+
+                    CreateImageInfo(setWrites, writeIndex, bindingIndex, vulkanTexture->imageSampler.GetHandle(), vulkanTexture->image.GetHandle());
+                }
+                else
+                {
+                    static_assert(false, "Unknown binding type.");
+                }
+
+            }, binding.binding);
+
+            if(!successfulVisit)
+            {
+                return nullptr;
+            }
+
+            writeIndex++;
+        }
+
+        VkDescriptorPoolCreateInfo poolInfo = {};
+        poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
+        poolInfo.pPoolSizes = poolSizes.data();
+        poolInfo.maxSets = swapChainImageCount;
+        poolInfo.flags = 0;
+
+        VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
+        SmartFunction destroyer = [&]()
+        {
+            if (descriptorPool != VK_NULL_HANDLE)
+            {
+                vkDestroyDescriptorPool(m_logicalDevice.GetHandle(), descriptorPool, nullptr);
+            }
+        };
+
+        if (vkCreateDescriptorPool(m_logicalDevice.GetHandle(), &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)
+        {
+            Logger::WriteError(m_logger, "Failed to create descriptor pool.");
+            return nullptr;
+        }
+
+        std::vector<VkDescriptorSetLayout> setLayouts(swapChainImageCount, vulkanPipeline->descriptionSetLayouts[setIndex]);
+        VkDescriptorSetAllocateInfo allocInfo = {};
+        allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        allocInfo.descriptorPool = descriptorPool;
+        allocInfo.descriptorSetCount = swapChainImageCount;
+        allocInfo.pSetLayouts = setLayouts.data();
+
+        std::vector<VkDescriptorSet> descriptorSets(swapChainImageCount, VK_NULL_HANDLE);
+        if (vkAllocateDescriptorSets(m_logicalDevice.GetHandle(), &allocInfo, descriptorSets.data()) != VK_SUCCESS)
+        {
+            Logger::WriteError(m_logger, "Failed to create descriptor sets.");
+            return nullptr;
+        }
+
+        for(uint32_t i = 0; i < swapChainImageCount; i++)
+        {
+            const auto descriptorSet = descriptorSets[i];
+            for (auto& write : setWrites[i])
+            {
+                write.dstSet = descriptorSet;
+                vkUpdateDescriptorSets(m_logicalDevice.GetHandle(), 1, &write, 0, nullptr);
+            }
+        }
+
+        destroyer.Release();
+        return new VulkanFramedDescriptorSet(
+            setIndex,
+            std::move(descriptorSets),
             descriptorPool);
     }
 
@@ -613,6 +831,15 @@ namespace Molten
         }
 
         Vulkan::DescriptorSetLayouts setLayouts;
+
+        SmartFunction destroyer = [&]()
+        {
+            for(auto& setLayout : setLayouts)
+            {
+                vkDestroyDescriptorSetLayout(m_logicalDevice.GetHandle(), setLayout, nullptr);
+            }
+        };
+
         if (!CreateDescriptorSetLayouts(setLayouts, mappedDescriptorSets))
         {
             return nullptr;
@@ -740,6 +967,7 @@ namespace Molten
             return nullptr;
         }
 
+        destroyer.Release();
         return new VulkanPipeline(
             graphicsPipeline, 
             pipelineLayout, 
@@ -802,103 +1030,35 @@ namespace Molten
         return texture;
     }
 
-    UniformBlock* VulkanRenderer::CreateUniformBlock(const UniformBlockDescriptor& descriptor)
-    {
-        VulkanPipeline* vulkanPipeline = static_cast<VulkanPipeline*>(descriptor.pipeline);
-        VulkanUniformBuffer* vulkanUniformBuffer = static_cast<VulkanUniformBuffer*>(descriptor.buffer);      
-
-        if (descriptor.id >= vulkanPipeline->descriptionSetLayouts.size())
-        {
-            Logger::WriteError(m_logger, "Id of uniform descriptor block is too large.");
-            return nullptr;
-        }
-
-        VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
-        SmartFunction descriptorPoolDestroyer = [&]()
-        {
-            if (descriptorPool)
-            {
-                vkDestroyDescriptorPool(m_logicalDevice.GetHandle(), descriptorPool, nullptr);
-            }
-        };
-
-        const uint32_t swapChainImageCount = m_swapChain.GetImageCount();
-
-        VkDescriptorPoolSize poolSize = {};
-        poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-        poolSize.descriptorCount = swapChainImageCount;
-
-        VkDescriptorPoolCreateInfo poolInfo = {};
-        poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-        poolInfo.poolSizeCount = 1;
-        poolInfo.pPoolSizes = &poolSize;
-        poolInfo.maxSets = swapChainImageCount;
-        poolInfo.flags = 0;
-
-        if (vkCreateDescriptorPool(m_logicalDevice.GetHandle(), &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)
-        {
-            Logger::WriteError(m_logger, "Failed to create descriptor pool.");
-            return nullptr;
-        }
-      
-        std::vector<VkDescriptorSetLayout> layouts(swapChainImageCount, vulkanPipeline->descriptionSetLayouts[descriptor.id]);
-        VkDescriptorSetAllocateInfo allocInfo = {};
-        allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-        allocInfo.descriptorPool = descriptorPool;
-        allocInfo.descriptorSetCount = swapChainImageCount;
-        allocInfo.pSetLayouts = layouts.data(); 
-
-        Vulkan::DescriptorSets descriptorSets(swapChainImageCount, VK_NULL_HANDLE);
-        if (vkAllocateDescriptorSets(m_logicalDevice.GetHandle(), &allocInfo, descriptorSets.data()) != VK_SUCCESS)
-        {
-            Logger::WriteError(m_logger, "Failed to create descriptor sets.");
-            return nullptr;
-        }
-
-        for (size_t i = 0; i < descriptorSets.size(); i++)
-        {
-            VkDescriptorBufferInfo bufferInfo = {};
-            bufferInfo.buffer = vulkanUniformBuffer->frames[i].buffer.GetHandle();
-            bufferInfo.offset = 0;
-            bufferInfo.range = VK_WHOLE_SIZE;
-
-            VkWriteDescriptorSet descWrite = {};
-            descWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            descWrite.dstSet = descriptorSets[i];
-            descWrite.dstBinding = 0;
-            descWrite.dstArrayElement = 0;
-            descWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-            descWrite.descriptorCount = 1;
-            descWrite.pBufferInfo = &bufferInfo;
-
-            vkUpdateDescriptorSets(m_logicalDevice.GetHandle(), 1, &descWrite, 0, nullptr);
-        }
-
-        descriptorPoolDestroyer.Release();
-
-        auto* uniformBlock = new VulkanUniformBlock(
-            vulkanPipeline->pipelineLayout, descriptorPool, std::move(descriptorSets), descriptor.id);
-        return uniformBlock;
-    }
-
     UniformBuffer* VulkanRenderer::CreateUniformBuffer(const UniformBufferDescriptor& descriptor)
     {
-        std::vector<VulkanUniformBuffer::Frame> frames;
-        frames.resize(m_swapChain.GetImageCount());
-
-        for (auto& frame : frames)
+        Vulkan::Result<> result;
+        Vulkan::DeviceBuffer deviceBuffer;
+        if (!(result = deviceBuffer.Create(m_logicalDevice, descriptor.size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, m_memoryTypesHostVisibleOrCoherent)))
         {
-            Vulkan::Result<> result;
-            if (!(result = frame.buffer.Create(m_logicalDevice, descriptor.size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, m_memoryTypesHostVisibleOrCoherent)))
-            {
-                Vulkan::Logger::WriteError(m_logger, result, "Failed to create frame buffer for uniform buffer");
-                return nullptr;
-            }          
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to create device buffer for uniform buffer");
+            return nullptr;
         }
 
-        auto vulkanUniformBuffer = new VulkanUniformBuffer;
-        vulkanUniformBuffer->frames = std::move(frames);
-        return vulkanUniformBuffer;
+        return new VulkanUniformBuffer(
+            std::move(deviceBuffer));
+    }
+
+    FramedUniformBuffer* VulkanRenderer::CreateFramedUniformBuffer(const FramedUniformBufferDescriptor& descriptor)
+    {
+        std::vector<Vulkan::DeviceBuffer> deviceBuffers(m_swapChain.GetImageCount());
+        Vulkan::Result<> result;
+        for(auto& deviceBuffer : deviceBuffers)
+        {
+            if (!(result = deviceBuffer.Create(m_logicalDevice, descriptor.size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, m_memoryTypesHostVisibleOrCoherent)))
+            {
+                Vulkan::Logger::WriteError(m_logger, result, "Failed to create device buffer for framed uniform buffer");
+                return nullptr;
+            }
+        }
+
+        return new VulkanFramedUniformBuffer(
+            std::move(deviceBuffers));
     }
 
     VertexBuffer* VulkanRenderer::CreateVertexBuffer(const VertexBufferDescriptor& descriptor)
@@ -939,22 +1099,36 @@ namespace Molten
         return buffer;
     }
 
+    void VulkanRenderer::DestroyDescriptorSet(DescriptorSet* descriptorSet)
+    {
+        auto* vulkanDescriptorSet = static_cast<VulkanDescriptorSet*>(descriptorSet);
+        vkDestroyDescriptorPool(m_logicalDevice.GetHandle(), vulkanDescriptorSet->descriptorPool, nullptr);
+        delete vulkanDescriptorSet;
+    }
+
+    void VulkanRenderer::DestroyFramedDescriptorSet(FramedDescriptorSet* framedDescriptorSet)
+    {
+        auto* vulkanFramedDescriptorSet = static_cast<VulkanFramedDescriptorSet*>(framedDescriptorSet);
+        vkDestroyDescriptorPool(m_logicalDevice.GetHandle(), vulkanFramedDescriptorSet->descriptorPool, nullptr);
+        delete vulkanFramedDescriptorSet;
+    }
+
     void VulkanRenderer::DestroyFramebuffer(Framebuffer* framebuffer)
     {
-        VulkanFramebuffer* vulkanFramebuffer = static_cast<VulkanFramebuffer*>(framebuffer);
+        auto* vulkanFramebuffer = static_cast<VulkanFramebuffer*>(framebuffer);
         vkDestroyFramebuffer(m_logicalDevice.GetHandle(), vulkanFramebuffer->framebuffer, nullptr);
         delete vulkanFramebuffer;
     }
 
     void VulkanRenderer::DestroyIndexBuffer(IndexBuffer* indexBuffer)
     {
-        VulkanIndexBuffer* vulkanIndexBuffer = static_cast<VulkanIndexBuffer*>(indexBuffer);
+        auto* vulkanIndexBuffer = static_cast<VulkanIndexBuffer*>(indexBuffer);
         delete vulkanIndexBuffer;
     }
 
     void VulkanRenderer::DestroyPipeline(Pipeline* pipeline)
     {
-        VulkanPipeline* vulkanPipeline = static_cast<VulkanPipeline*>(pipeline);
+        auto* vulkanPipeline = static_cast<VulkanPipeline*>(pipeline);
 
         if (vulkanPipeline->graphicsPipeline)
         {
@@ -979,35 +1153,31 @@ namespace Molten
 
     void VulkanRenderer::DestroyTexture(Texture* texture)
     {
-        VulkanTexture* vulkanTexture = static_cast<VulkanTexture*>(texture);
+        auto* vulkanTexture = static_cast<VulkanTexture*>(texture);
         delete vulkanTexture;
-    }
-
-    void VulkanRenderer::DestroyUniformBlock(UniformBlock* uniformBlock)
-    {
-        VulkanUniformBlock* vulkanUniformBlock = static_cast<VulkanUniformBlock*>(uniformBlock);
-        if(vulkanUniformBlock->descriptorPool != VK_NULL_HANDLE)
-        {
-            vkDestroyDescriptorPool(m_logicalDevice.GetHandle(), vulkanUniformBlock->descriptorPool, nullptr);
-        }
-        delete vulkanUniformBlock;
     }
 
     void VulkanRenderer::DestroyUniformBuffer(UniformBuffer* uniformBuffer)
     {
-        VulkanUniformBuffer* vulkanUniformBuffer = static_cast<VulkanUniformBuffer*>(uniformBuffer);
+        auto* vulkanUniformBuffer = static_cast<VulkanUniformBuffer*>(uniformBuffer);
         delete vulkanUniformBuffer;
+    }
+
+    void VulkanRenderer::DestroyFramedUniformBuffer(FramedUniformBuffer* framedUniformBuffer)
+    {
+        auto* vulkanFramedUniformBuffer = static_cast<VulkanFramedUniformBuffer*>(framedUniformBuffer);
+        delete vulkanFramedUniformBuffer;
     }
 
     void VulkanRenderer::DestroyVertexBuffer(VertexBuffer* vertexBuffer)
     {
-        VulkanVertexBuffer* vulkanVertexBuffer = static_cast<VulkanVertexBuffer*>(vertexBuffer);
+        auto* vulkanVertexBuffer = static_cast<VulkanVertexBuffer*>(vertexBuffer);
         delete vulkanVertexBuffer;
     }
 
     void VulkanRenderer::BindDescriptorSet(DescriptorSet* descriptorSet)
     {
-        VulkanDescriptorSet* vulkanDescriptorSet = static_cast<VulkanDescriptorSet*>(descriptorSet);
+        auto* vulkanDescriptorSet = static_cast<VulkanDescriptorSet*>(descriptorSet);
 
         uint32_t offset = 0;
 
@@ -1022,18 +1192,28 @@ namespace Molten
             &offset);
     }
 
-    void VulkanRenderer::BindPipeline(Pipeline* pipeline)
+    void VulkanRenderer::BindFramedDescriptorSet(FramedDescriptorSet* framedDescriptorSet)
     {
-        VulkanPipeline* vulkanPipeline = static_cast<VulkanPipeline*>(pipeline);
-        vkCmdBindPipeline(*m_currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkanPipeline->graphicsPipeline);
-        m_currentPipeline = vulkanPipeline;
+        auto* vulkanFramedDescriptorSet = static_cast<VulkanFramedDescriptorSet*>(framedDescriptorSet);
+
+        uint32_t offset = 0;
+
+        vkCmdBindDescriptorSets(
+            *m_currentCommandBuffer,
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            m_currentPipeline->pipelineLayout,
+            vulkanFramedDescriptorSet->index,
+            1,
+            &vulkanFramedDescriptorSet->descriptorSets[m_swapChain.GetCurrentImageIndex()],
+            1,
+            &offset);
     }
 
-    void VulkanRenderer::BindUniformBlock(UniformBlock* uniformBlock, const uint32_t offset)
+    void VulkanRenderer::BindPipeline(Pipeline* pipeline)
     {
-        VulkanUniformBlock* vulkanUniformBlock = static_cast<VulkanUniformBlock*>(uniformBlock);
-        vkCmdBindDescriptorSets(*m_currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkanUniformBlock->pipelineLayout, vulkanUniformBlock->set, 1,
-            &vulkanUniformBlock->descriptorSets[m_swapChain.GetCurrentImageIndex()], 1, &offset);
+        auto* vulkanPipeline = static_cast<VulkanPipeline*>(pipeline);
+        vkCmdBindPipeline(*m_currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkanPipeline->graphicsPipeline);
+        m_currentPipeline = vulkanPipeline;
     }
 
     void VulkanRenderer::BeginDraw()
@@ -1102,7 +1282,7 @@ namespace Molten
 
     void VulkanRenderer::DrawVertexBuffer(VertexBuffer* vertexBuffer)
     {
-        VulkanVertexBuffer* vulkanVertexBuffer = static_cast<VulkanVertexBuffer*>(vertexBuffer);
+        auto* vulkanVertexBuffer = static_cast<VulkanVertexBuffer*>(vertexBuffer);
 
         VkBuffer vertexBuffers[] = { vulkanVertexBuffer->buffer.GetHandle() };
         const VkDeviceSize offsets[] = { 0 };
@@ -1113,8 +1293,8 @@ namespace Molten
 
     void VulkanRenderer::DrawVertexBuffer(IndexBuffer* indexBuffer, VertexBuffer* vertexBuffer)
     {
-        VulkanIndexBuffer* vulkanIndexBuffer = static_cast<VulkanIndexBuffer*>(indexBuffer);
-        VulkanVertexBuffer* vulkanVertexBuffer = static_cast<VulkanVertexBuffer*>(vertexBuffer);
+        auto* vulkanIndexBuffer = static_cast<VulkanIndexBuffer*>(indexBuffer);
+        auto* vulkanVertexBuffer = static_cast<VulkanVertexBuffer*>(vertexBuffer);
 
         VkBuffer vertexBuffers[] = { vulkanVertexBuffer->buffer.GetHandle() };
         const VkDeviceSize offsets[] = { 0 };
@@ -1186,14 +1366,25 @@ namespace Molten
 
     void VulkanRenderer::UpdateUniformBuffer(UniformBuffer* uniformBuffer, const size_t offset, const size_t size, const void* data)
     {
-        VulkanUniformBuffer* vulkanUniformBuffer = static_cast<VulkanUniformBuffer*>(uniformBuffer);
-
-        auto& frame = vulkanUniformBuffer->frames[m_swapChain.GetCurrentImageIndex()];
+        auto* vulkanUniformBuffer = static_cast<VulkanUniformBuffer*>(uniformBuffer);      
 
         Vulkan::Result<> result;
-        if (!(result = frame.buffer.MapMemory(offset, size, data, 0)))
+        if (!(result = vulkanUniformBuffer->deviceBuffer.MapMemory(offset, size, data, 0)))
         {
-            Vulkan::Logger::WriteError(m_logger, result, "Failed to update uniform buffer");
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to map memory of uniform buffer");
+        }
+    }
+
+    void VulkanRenderer::UpdateFramedUniformBuffer(FramedUniformBuffer* framedUniformBuffer, const size_t offset, const size_t size, const void* data)
+    {
+        auto* vulkanFramedUniformBuffer = static_cast<VulkanFramedUniformBuffer*>(framedUniformBuffer);
+
+        auto& deviceBuffer = vulkanFramedUniformBuffer->deviceBuffers[m_swapChain.GetCurrentImageIndex()];
+
+        Vulkan::Result<> result;
+        if (!(result = deviceBuffer.MapMemory(offset, size, data, 0)))
+        {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to map memory of framed uniform buffer");
         }
     }
 
@@ -1680,6 +1871,7 @@ namespace Molten
 
         return true;
     }
+
 
 }
 

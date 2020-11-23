@@ -36,6 +36,8 @@ namespace Molten
 
     class VulkanRenderer;
 
+
+    /** Vulkan descriptor set. */
     class MOLTEN_API VulkanDescriptorSet : public DescriptorSet
     {
 
@@ -46,6 +48,24 @@ namespace Molten
 
         uint32_t index;
         VkDescriptorSet descriptorSet;
+        VkDescriptorPool descriptorPool;
+
+        friend class VulkanRenderer;
+
+    };
+
+
+    /** Vulkan framed descriptor set. */
+    class MOLTEN_API VulkanFramedDescriptorSet : public FramedDescriptorSet
+    {
+
+        VulkanFramedDescriptorSet(
+            const uint32_t index,
+            std::vector<VkDescriptorSet>&& descriptorSets,
+            VkDescriptorPool descriptorPool);
+
+        uint32_t index;
+        std::vector<VkDescriptorSet> descriptorSets;
         VkDescriptorPool descriptorPool;
 
         friend class VulkanRenderer;

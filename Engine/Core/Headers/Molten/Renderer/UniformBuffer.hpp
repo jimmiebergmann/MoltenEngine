@@ -35,15 +35,18 @@ namespace Molten
     class MOLTEN_API UniformBuffer
     {
 
+    public:
+
+        UniformBuffer(const UniformBuffer&) = delete;
+        UniformBuffer(UniformBuffer&&) = delete;
+
+        UniformBuffer& operator =(const UniformBuffer&) = delete;
+        UniformBuffer& operator =(UniformBuffer&&) = delete;
+
     protected:
 
         UniformBuffer() = default;
         virtual ~UniformBuffer() = default;
-
-        UniformBuffer(const UniformBuffer&) = delete;
-        UniformBuffer(UniformBuffer&&) = delete;
-        UniformBuffer& operator =(const UniformBuffer&) = delete;
-        UniformBuffer& operator =(UniformBuffer&&) = delete;
 
     };
 
@@ -53,9 +56,44 @@ namespace Molten
 
     public:
 
-        UniformBufferDescriptor() = default;
+        UniformBufferDescriptor();
+        UniformBufferDescriptor(const uint32_t size);
 
-        uint32_t size;
+        uint32_t size; ///< Size of buffer, in bytes.
+
+    };
+
+
+    /** Uniform buffer resource object. */
+    class MOLTEN_API FramedUniformBuffer
+    {
+
+    public:
+
+        FramedUniformBuffer(const FramedUniformBuffer&) = delete;
+        FramedUniformBuffer(FramedUniformBuffer&&) = delete;
+
+        FramedUniformBuffer& operator =(const FramedUniformBuffer&) = delete;
+        FramedUniformBuffer& operator =(FramedUniformBuffer&&) = delete;
+
+    protected:
+
+        FramedUniformBuffer() = default;
+        virtual ~FramedUniformBuffer() = default;
+
+    };
+
+    
+    /** Descriptor class of framed uniform buffer class. */
+    class MOLTEN_API FramedUniformBufferDescriptor
+    {
+
+    public:
+
+        FramedUniformBufferDescriptor();
+        FramedUniformBufferDescriptor(const uint32_t size);
+
+        uint32_t size; ///< Size of buffer, in bytes.
 
     };
 

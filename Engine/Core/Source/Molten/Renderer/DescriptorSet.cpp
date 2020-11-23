@@ -30,6 +30,40 @@
 namespace Molten
 {
 
+    // Descriptor set descriptor implementations.
+    DescriptorSetDescriptor::DescriptorSetDescriptor() :
+        pipeline(nullptr),
+        id(std::numeric_limits<uint32_t>::max())
+    {}
+
+    DescriptorSetDescriptor::DescriptorSetDescriptor(
+        Pipeline* pipeline,
+        const uint32_t id,
+        std::vector<DescriptorBinding>&& bindings
+    ) :
+        pipeline(pipeline),
+        id(id),
+        bindings(std::move(bindings))
+    {}
+
+
+    // Framed descriptor set descriptor implementations.
+    FramedDescriptorSetDescriptor::FramedDescriptorSetDescriptor() :
+        pipeline(nullptr),
+        id(std::numeric_limits<uint32_t>::max())
+    {}
+
+    FramedDescriptorSetDescriptor::FramedDescriptorSetDescriptor(
+        Pipeline* pipeline,
+        const uint32_t id,
+        std::vector<FramedDescriptorBinding>&& bindings
+    ) :
+        pipeline(pipeline),
+        id(id),
+        bindings(std::move(bindings))
+    {}
+
+
     // Mapped descriptor binding implementations.
     MappedDescriptorBinding::MappedDescriptorBinding(
         const uint32_t index,

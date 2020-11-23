@@ -23,47 +23,29 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_UNIFORMBLOCK_HPP
-#define MOLTEN_CORE_RENDERER_UNIFORMBLOCK_HPP
-
-#include "Molten/Types.hpp"
+#include "Molten/Renderer/UniformBuffer.hpp"
 
 namespace Molten
 {
 
-    class Pipeline;
-    class UniformBuffer;
+    // Uniform buffer descriptor implementations.
+    UniformBufferDescriptor::UniformBufferDescriptor() :
+        size(0)
+    {}
 
-    /** Uniform block resource object. */
-    class MOLTEN_API UniformBlock
-    {
+    UniformBufferDescriptor::UniformBufferDescriptor(const uint32_t size) :
+        size(size)
+    {}
 
-    protected:
 
-        UniformBlock() = default;
-        virtual ~UniformBlock() = default;
+    // Framed uniform buffer descriptor implementations.
+    FramedUniformBufferDescriptor::FramedUniformBufferDescriptor() :
+        size(0)
+    {}
 
-        UniformBlock(const UniformBlock&) = delete;
-        UniformBlock(UniformBlock&&) = delete;
-        UniformBlock& operator =(const UniformBlock&) = delete;
-        UniformBlock& operator =(UniformBlock&&) = delete;
-
-    };
-
-    /** Descriptor class of uniform block class. */
-    class MOLTEN_API UniformBlockDescriptor
-    {
-
-    public:
-
-        UniformBlockDescriptor() = default;
-
-        Pipeline* pipeline;
-        UniformBuffer* buffer;
-        uint32_t id;
-
-    };
+    FramedUniformBufferDescriptor::FramedUniformBufferDescriptor(const uint32_t size) :
+        size(size)
+    {}
+  
 
 }
-
-#endif

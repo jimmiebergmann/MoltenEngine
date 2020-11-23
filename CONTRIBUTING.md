@@ -2,8 +2,8 @@
 1.  Fork this repository.
 2.  Create a new branch with any of the following naming conventions:
     -   topic-*something* E.g. `topic-renderer`.
-    -   feature-*something* E.g. `feature-my-new-cool-thingie`.
-    -   fix-*something* E.g. `fix-broken-thing`.
+    -   feature-*something* E.g. `feature-my_new_cool_thingie`.
+    -   fix-*something* E.g. `fix-broken_thing`.
     -   Feel free to reference to an issue. I.e. `fix-issue-123`.
 3.  Commit changes.
 4.  Send pull request at Github.
@@ -12,7 +12,8 @@
 -   Use 4 spaces for indention.
 -   Put curly braces on their own line.
 -   Class and function names are written in PascalCase, e.g. `class Object`.
--   Prefix template argument with T and use PascalCase for the rest, e.g. `template<typename TMyArg>`.
+-   Prefix template argument types with T and use PascalCase for the rest, e.g. `template<typename TMyArg>`.
+-   Prefix template argument values with V and use PascalCase for the rest, e.g. `template<size_t VMySize>`.
 -   Public class variables and local variables are written in camelCase, e.g. `int32_t localVar = 0;`.
 -   Private class variables are prefixed with "m_", followed with camelCase names, e.g. `float m_var;`.
 -   Do not use global variables, other than constants, i.e. `constexpr` or `static const`.

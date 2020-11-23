@@ -31,7 +31,6 @@
 #include "Molten/Renderer/IndexBuffer.hpp"
 #include "Molten/Renderer/Pipeline.hpp"
 #include "Molten/Renderer/Texture.hpp"
-#include "Molten/Renderer/UniformBlock.hpp"
 #include "Molten/Renderer/UniformBuffer.hpp"
 #include "Molten/Renderer/VertexBuffer.hpp"
 #include "Molten/Renderer/DescriptorSet.hpp"
@@ -100,6 +99,9 @@ namespace Molten
         /** Create descriptor set object. */
         virtual DescriptorSet* CreateDescriptorSet(const DescriptorSetDescriptor& descriptor) = 0;
 
+        /** Create framed descriptor set object. */
+        virtual FramedDescriptorSet* CreateFramedDescriptorSet(const FramedDescriptorSetDescriptor& descriptor) = 0;
+
         /** Create framebuffer object. */
         virtual Framebuffer* CreateFramebuffer(const FramebufferDescriptor& descriptor) = 0;
 
@@ -113,14 +115,20 @@ namespace Molten
         virtual Texture* CreateTexture(const TextureDescriptor& descriptor) = 0;
 
         /** Create uniform buffer object. */
-        virtual UniformBlock* CreateUniformBlock(const UniformBlockDescriptor& descriptor) = 0;
-
-        /** Create uniform buffer object. */
         virtual UniformBuffer* CreateUniformBuffer(const UniformBufferDescriptor& descriptor) = 0;
+
+        /** Create framed uniform buffer object. */
+        virtual FramedUniformBuffer* CreateFramedUniformBuffer(const FramedUniformBufferDescriptor& descriptor) = 0;
 
         /** Create vertex buffer object. */
         virtual VertexBuffer* CreateVertexBuffer(const VertexBufferDescriptor& descriptor) = 0;
 
+
+        /** Destroy descriptor set object. */
+        virtual void DestroyDescriptorSet(DescriptorSet* descriptorSet) = 0;
+
+        /** Destroy framed descriptor set object. */
+        virtual void DestroyFramedDescriptorSet(FramedDescriptorSet* framedDescriptorSet) = 0;
 
         /** Destroy framebuffer object. */
         virtual void DestroyFramebuffer(Framebuffer* framebuffer) = 0;
@@ -134,11 +142,11 @@ namespace Molten
         /** Destroy texture object. */
         virtual void DestroyTexture(Texture* texture) = 0;
 
-        /** Destroy uniform block object. */
-        virtual void DestroyUniformBlock(UniformBlock* uniformBlock) = 0;
-
         /** Destroy uniform buffer object. */
         virtual void DestroyUniformBuffer(UniformBuffer* uniformBuffer) = 0;
+
+        /** Destroy framed uniform buffer object. */
+        virtual void DestroyFramedUniformBuffer(FramedUniformBuffer* framedUniformBuffer) = 0;
 
         /** Destroy vertex buffer object. */
         virtual void DestroyVertexBuffer(VertexBuffer* vertexBuffer) = 0;    
@@ -147,11 +155,11 @@ namespace Molten
         /** Bind descriptor set to draw queue. */
         virtual void BindDescriptorSet(DescriptorSet* descriptorSet) = 0;
 
-        /** Bind pipeline to draw queue. */
-        virtual void BindPipeline(Pipeline* pipeline) = 0;
+        /** Bind framed descriptor set to draw queue. */
+        virtual void BindFramedDescriptorSet(FramedDescriptorSet* framedDescriptorSet) = 0;
 
         /** Bind pipeline to draw queue. */
-        virtual void BindUniformBlock(UniformBlock* uniformBlock, const uint32_t offset = 0) = 0;
+        virtual void BindPipeline(Pipeline* pipeline) = 0;
 
 
         /** Begin and initialize rendering to framebuffers. */
@@ -188,6 +196,9 @@ namespace Molten
 
         /** Update uniform buffer data. */
         virtual void UpdateUniformBuffer(UniformBuffer* uniformBuffer, const size_t offset, const size_t size, const void* data) = 0;
+
+        /** Update framed uniform buffer data. */
+        virtual void UpdateFramedUniformBuffer(FramedUniformBuffer* framedUniformBuffer, const size_t offset, const size_t size, const void* data) = 0;
 
     };
 

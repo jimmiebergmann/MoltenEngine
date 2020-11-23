@@ -77,13 +77,14 @@ namespace Molten::Editor
         std::unique_ptr<Window> m_window;
         std::unique_ptr <Renderer> m_renderer;
 
+        FramedUniformBuffer* m_viewMatrixBuffer;
+
         Pipeline* m_gridPipeline;
         Shader::Visual::VertexScript m_gridVertexScript;
         Shader::Visual::FragmentScript m_gridFragmentScript;
         VertexBuffer* m_gridVertexBuffer;
         IndexBuffer* m_gridIndexBuffer;
-        UniformBuffer* m_gridUniformBuffer;
-        UniformBlock* m_gridUniformBlock;
+        FramedDescriptorSet* m_gridMatrixDescriptorSet;
         uint32_t m_gridColor1PushLocation;
         uint32_t m_gridColor2PushLocation;
 
@@ -92,17 +93,16 @@ namespace Molten::Editor
         Shader::Visual::FragmentScript m_objectFragmentScript;
         VertexBuffer* m_objectVertexBuffer;
         IndexBuffer* m_objectIndexBuffer;
-        UniformBuffer* m_objectUniformBuffer;
-        //UniformBlock* m_objectUniformBlock;
-        DescriptorSet* m_objectMatrixDescriptorSet;
+        FramedDescriptorSet* m_objectMatrixDescriptorSet;
         uint32_t m_objectPosPushLocation;
         uint32_t m_objectColorPushLocation;
         Texture* m_objectTexture;
   
         Clock m_programTimer;
         float m_programTime;
+        Clock m_secondTimer;
         Clock m_deltaTimer;
-        float m_deltaTime;        
+        float m_deltaTime;
 
         Scene::Camera m_camera;
 

@@ -35,6 +35,7 @@ namespace Molten
 
     class Pipeline;
     class UniformBuffer;
+    class FramedUniformBuffer;
     class Texture;
 
 
@@ -57,17 +58,6 @@ namespace Molten
     };
 
 
-    struct UniformBufferDescriptorBinding
-    {
-        UniformBuffer* uniformBuffer;
-    };
-
-    struct SampledTextureDescriptorBinding
-    {
-        Texture* texture;
-        //Sampler* sampler;
-    };
-
     /** Descriptor class of descriptor binding class. */
     class MOLTEN_API DescriptorBinding
     {
@@ -75,8 +65,8 @@ namespace Molten
     public:
 
         using BindingVariant = std::variant< 
-            UniformBufferDescriptorBinding,
-            SampledTextureDescriptorBinding
+            UniformBuffer*,
+            Texture*
         >;
 
         uint32_t id;
@@ -90,9 +80,70 @@ namespace Molten
 
     public:
 
+        DescriptorSetDescriptor();
+        DescriptorSetDescriptor(
+            Pipeline* pipeline,
+            const uint32_t id,
+            std::vector<DescriptorBinding>&& bindings
+        );
+
         Pipeline* pipeline;
         uint32_t id;
         std::vector<DescriptorBinding> bindings;
+
+    };
+
+
+    /** Framed descriptor set resource object. */
+    class MOLTEN_API FramedDescriptorSet
+    {
+
+    public:
+
+        FramedDescriptorSet(const FramedDescriptorSet&) = delete;
+        FramedDescriptorSet(FramedDescriptorSet&&) = delete;
+        FramedDescriptorSet& operator =(const FramedDescriptorSet&) = delete;
+        FramedDescriptorSet& operator =(FramedDescriptorSet&&) = delete;
+
+    protected:
+
+        FramedDescriptorSet() = default;
+        virtual ~FramedDescriptorSet() = default;
+
+    };
+
+    /** Framed descriptor class of descriptor binding class. */
+    class MOLTEN_API FramedDescriptorBinding
+    {
+
+    public:
+
+        using BindingVariant = std::variant<
+            FramedUniformBuffer*,
+            Texture*
+        >;
+
+        uint32_t id;
+        BindingVariant binding;
+
+    };
+
+    /** Descriptor class of descriptor set class. */
+    class MOLTEN_API FramedDescriptorSetDescriptor
+    {
+
+    public:
+
+        FramedDescriptorSetDescriptor();
+        FramedDescriptorSetDescriptor(
+            Pipeline* pipeline,
+            const uint32_t id,
+            std::vector<FramedDescriptorBinding>&& bindings
+        );
+
+        Pipeline* pipeline;
+        uint32_t id;
+        std::vector<FramedDescriptorBinding> bindings;
 
     };
 

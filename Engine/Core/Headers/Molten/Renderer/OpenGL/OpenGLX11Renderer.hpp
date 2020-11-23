@@ -87,6 +87,12 @@ namespace Molten
         virtual uint32_t GetPushConstantLocation(Pipeline* pipeline, const uint32_t id) override;
 
 
+        /** Create descriptor set object. */
+        virtual DescriptorSet* CreateDescriptorSet(const DescriptorSetDescriptor& descriptor) override;
+
+        /** Create framed descriptor set object. */
+        virtual FramedDescriptorSet* CreateFramedDescriptorSet(const FramedDescriptorSetDescriptor& descriptor) override;
+
         /** Create framebuffer object. */
         virtual Framebuffer* CreateFramebuffer(const FramebufferDescriptor& descriptor) override;
 
@@ -100,17 +106,20 @@ namespace Molten
         virtual Texture* CreateTexture(const TextureDescriptor& descriptor) override;
 
         /** Create uniform buffer object. */
-        virtual UniformBlock* CreateUniformBlock(const UniformBlockDescriptor& descriptor) override;
-
-        /** Create uniform buffer object. */
         virtual UniformBuffer* CreateUniformBuffer(const UniformBufferDescriptor& descriptor) override;
+
+        /** Create framed uniform buffer object. */
+        virtual FramedUniformBuffer* CreateFramedUniformBuffer(const FramedUniformBufferDescriptor& descriptor) override;
 
         /** Create vertex buffer object. */
         virtual VertexBuffer* CreateVertexBuffer(const VertexBufferDescriptor& descriptor) override;
 
 
-        /** Create descriptor set object. */
-        virtual DescriptorSet* CreateDescriptorSet(const DescriptorSetDescriptor& descriptor) override;
+        /** Destroy descriptor set object. */
+        virtual void DestroyDescriptorSet(DescriptorSet* descriptorSet) override;
+
+        /** Destroy framed descriptor set object. */
+        virtual void DestroyFramedDescriptorSet(FramedDescriptorSet* framedDescriptorSet) override;
 
         /** Destroy framebuffer object. */
         virtual void DestroyFramebuffer(Framebuffer* framebuffer) override;
@@ -124,11 +133,11 @@ namespace Molten
         /** Destroy texture object. */
         virtual void DestroyTexture(Texture* texture) override;
 
-        /** Destroy uniform block object. */
-        virtual void DestroyUniformBlock(UniformBlock* uniformBlock) override;
-
         /** Destroy uniform buffer object. */
         virtual void DestroyUniformBuffer(UniformBuffer* uniformBuffer) override;
+
+        /** Destroy framed uniform buffer object. */
+        virtual void DestroyFramedUniformBuffer(FramedUniformBuffer* framedUniformBuffer) override;
 
         /** Destroy vertex buffer object. */
         virtual void DestroyVertexBuffer(VertexBuffer* vertexBuffer) override;
@@ -137,11 +146,11 @@ namespace Molten
         /** Bind descriptor set to draw queue. */
         virtual void BindDescriptorSet(DescriptorSet* descriptorSet) override;
 
-        /** Bind pipeline to draw queue. */
-        virtual void BindPipeline(Pipeline* pipeline) override;
+        /** Bind framed descriptor set to draw queue. */
+        virtual void BindFramedDescriptorSet(FramedDescriptorSet* framedDescriptorSet) override;
 
         /** Bind pipeline to draw queue. */
-        virtual void BindUniformBlock(UniformBlock* uniformBlock, const uint32_t offset = 0) override;
+        virtual void BindPipeline(Pipeline* pipeline) override;
 
 
         /** Begin and initialize rendering to framebuffers. */
@@ -153,11 +162,10 @@ namespace Molten
         /** Draw indexed vertex buffer, using the current bound pipeline. */
         virtual void DrawVertexBuffer(IndexBuffer* indexBuffer, VertexBuffer* vertexBuffer) override;
 
-        /**
-         * Push constant values to shader stage.
-         * This function call has no effect if provided id argument is greater than the number of push constants in pipeline.
+        /** Push constant values to shader stage.
+         *  This function call has no effect if provided id argument is greater than the number of push constants in pipeline.
          *
-         * @param id Id of push constant to update. This id can be shared between multiple shader stages.
+         * @param location Id of push constant to update. This id can be shared between multiple shader stages.
          */
          /**@{*/
         virtual void PushConstant(const uint32_t location, const bool& value) override;
@@ -169,6 +177,7 @@ namespace Molten
         virtual void PushConstant(const uint32_t location, const Matrix4x4f32& value) override;
         /**@}*/
 
+
         /** Finalize and present rendering. */
         virtual void EndDraw() override;
 
@@ -178,6 +187,9 @@ namespace Molten
 
         /** Update uniform buffer data. */
         virtual void UpdateUniformBuffer(UniformBuffer* uniformBuffer, const size_t offset, const size_t size, const void* data) override;
+
+        /** Update uniform buffer data. */
+        virtual void UpdateFramedUniformBuffer(FramedUniformBuffer* framedUniformBuffer, const size_t offset, const size_t size, const void* data) override;
 
     private:
 

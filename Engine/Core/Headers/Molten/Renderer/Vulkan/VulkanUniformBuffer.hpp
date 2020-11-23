@@ -37,20 +37,48 @@ namespace Molten
 
     class VulkanRenderer;
 
+    /** Vulkan uniform buffer. */
     class MOLTEN_API VulkanUniformBuffer : public UniformBuffer
     {
 
+    public:
+
+        VulkanUniformBuffer(const VulkanUniformBuffer&) = delete;
+        VulkanUniformBuffer& operator =(const VulkanUniformBuffer&) = delete;
+
     private:
 
-        VulkanUniformBuffer() = default;
+        explicit VulkanUniformBuffer(Vulkan::DeviceBuffer && deviceBuffer);
         ~VulkanUniformBuffer() = default;
 
-        struct Frame
-        {
-            Vulkan::DeviceBuffer buffer;
-        };
+        VulkanUniformBuffer(VulkanUniformBuffer&& uniformBuffer) noexcept;
+        VulkanUniformBuffer& operator =(VulkanUniformBuffer&& uniformBuffer) noexcept;
 
-        std::vector<Frame> frames;
+        Vulkan::DeviceBuffer deviceBuffer;
+
+        friend class VulkanRenderer;
+
+    };
+
+
+    /** Vulkan framed uniform buffer. */
+    class MOLTEN_API VulkanFramedUniformBuffer : public FramedUniformBuffer
+    {
+
+    public:
+
+        VulkanFramedUniformBuffer(const VulkanFramedUniformBuffer&) = delete;
+        VulkanFramedUniformBuffer& operator =(const VulkanFramedUniformBuffer&) = delete;
+
+    private:
+
+        explicit VulkanFramedUniformBuffer(std::vector<Vulkan::DeviceBuffer> && deviceBuffers);
+        ~VulkanFramedUniformBuffer() = default;
+
+        VulkanFramedUniformBuffer(VulkanFramedUniformBuffer&& framedUniformBuffer) noexcept;
+        VulkanFramedUniformBuffer& operator =(VulkanFramedUniformBuffer&& framedUniformBuffer) noexcept;
+
+        std::vector<Vulkan::DeviceBuffer> deviceBuffers;
 
         friend class VulkanRenderer;
 
