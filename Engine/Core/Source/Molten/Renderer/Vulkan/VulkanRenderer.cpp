@@ -183,7 +183,7 @@ namespace Molten
             case Shader::BindingType::Sampler1D:
             case Shader::BindingType::Sampler2D:
             case Shader::BindingType::Sampler3D: return VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            case Shader::BindingType::UniformBuffer: return VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+            case Shader::BindingType::UniformBuffer: return VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         }
         throw Exception("Provided provided binding type is not handled.");
     }
@@ -448,14 +448,14 @@ namespace Molten
                     const auto bufferHandle = vulkanBuffer->deviceBuffer.GetHandle(); //vulkanBuffer->frames[0].buffer.GetHandle();
                     auto& bufferInfo = CreateBufferInfo(bufferHandle);
 
-                    write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC; 
+                    write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER; 
                     write.pBufferInfo = &bufferInfo;
                 }
                 else if constexpr (std::is_same_v<T, Texture*>)
                 {
                     auto* vulkanTexture = static_cast<VulkanTexture*>(bindingData);
                     const auto samplerHandle = vulkanTexture->imageSampler.GetHandle();
-                    auto& imageInfo = CreateImageInfo(samplerHandle, VK_NULL_HANDLE);
+                    auto& imageInfo = CreateImageInfo(samplerHandle, vulkanTexture->imageView);
 
                     write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                     write.descriptorCount = 1;
@@ -576,7 +576,7 @@ namespace Molten
             const std::vector<Vulkan::DeviceBuffer>& buffers)
         {
            auto bufferInfo = std::make_unique<VkDescriptorBufferInfo[]>(swapChainImageCount);
-           const VkDescriptorType descriptorType = VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+           const VkDescriptorType descriptorType = VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 
             for(size_t i = 0; i < swapChainImageCount; i++)
             {
@@ -1019,6 +1019,23 @@ namespace Molten
             return nullptr;
         }
 
+        VkImageViewCreateInfo viewInfo{};
+        viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        viewInfo.image = image.GetHandle();
+        viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        viewInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
+        viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        viewInfo.subresourceRange.baseMipLevel = 0;
+        viewInfo.subresourceRange.levelCount = 1;
+        viewInfo.subresourceRange.baseArrayLayer = 0;
+        viewInfo.subresourceRange.layerCount = 1;
+
+        VkImageView imageView;
+        if (vkCreateImageView(m_logicalDevice.GetHandle(), &viewInfo, nullptr, &imageView) != VK_SUCCESS) {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to create image view for texture");
+            return nullptr;
+        }
+
         Vulkan::ImageSampler sampler;
         if (!(result = sampler.Create(m_logicalDevice)))
         {
@@ -1026,7 +1043,7 @@ namespace Molten
             return nullptr;
         }
 
-        auto* texture = new VulkanTexture(std::move(image), std::move(sampler));
+        auto* texture = new VulkanTexture(std::move(image), std::move(sampler), imageView);
         return texture;
     }
 
@@ -1179,8 +1196,6 @@ namespace Molten
     {
         auto* vulkanDescriptorSet = static_cast<VulkanDescriptorSet*>(descriptorSet);
 
-        uint32_t offset = 0;
-
         vkCmdBindDescriptorSets(
             *m_currentCommandBuffer, 
             VK_PIPELINE_BIND_POINT_GRAPHICS, 
@@ -1188,15 +1203,13 @@ namespace Molten
             vulkanDescriptorSet->index,
             1,
             &vulkanDescriptorSet->descriptorSet,
-            1,
-            &offset);
+            0,
+            nullptr);
     }
 
     void VulkanRenderer::BindFramedDescriptorSet(FramedDescriptorSet* framedDescriptorSet)
     {
         auto* vulkanFramedDescriptorSet = static_cast<VulkanFramedDescriptorSet*>(framedDescriptorSet);
-
-        uint32_t offset = 0;
 
         vkCmdBindDescriptorSets(
             *m_currentCommandBuffer,
@@ -1205,8 +1218,8 @@ namespace Molten
             vulkanFramedDescriptorSet->index,
             1,
             &vulkanFramedDescriptorSet->descriptorSets[m_swapChain.GetCurrentImageIndex()],
-            1,
-            &offset);
+            0,
+            nullptr);
     }
 
     void VulkanRenderer::BindPipeline(Pipeline* pipeline)

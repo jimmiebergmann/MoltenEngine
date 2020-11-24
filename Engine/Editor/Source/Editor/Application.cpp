@@ -60,6 +60,7 @@ namespace Molten
             m_objectVertexBuffer(nullptr),
             m_objectIndexBuffer(nullptr),
             m_objectMatrixDescriptorSet(nullptr),
+            m_objectTextureDescriptorSet(nullptr),
             m_objectPosPushLocation(0),
             m_objectColorPushLocation(0),
             m_objectTexture(nullptr),
@@ -399,14 +400,15 @@ namespace Molten
             struct Vertex
             {
                 Vector3f32 position;
+                Vector2f32 uv;
             };
 
             std::vector<Vertex> vertexData =
             {
-                {{ 0.0f, 0.0f, 0.0f }}, 
-                {{ 0.0f, 0.0f, 1.0f }}, 
-                {{ 1.0f, 0.0f, 1.0f }}, 
-                {{ 1.0f, 0.0f, 0.0f }}
+                {{ 0.0f, 0.0f, 0.0f }, {0.0f, 0.0f}}, 
+                {{ 0.0f, 0.0f, 1.0f }, {0.0f, 1.0f}},
+                {{ 1.0f, 0.0f, 1.0f }, {1.0f, 1.0f}},
+                {{ 1.0f, 0.0f, 0.0f }, {1.0f, 0.0f}}
             };
 
             std::vector<uint16_t> indices = { 0, 1, 2, 0, 2, 3 };
@@ -458,6 +460,16 @@ namespace Molten
             {
                 throw Exception("Failed to create texture.");
             }
+
+            auto descriptorSetDescriptor2 = DescriptorSetDescriptor{
+                m_objectPipeline, 40,
+                {{ 100,  m_objectTexture }}
+            };
+            m_objectTextureDescriptorSet = m_renderer->CreateDescriptorSet(descriptorSetDescriptor2);
+            if (!m_objectTextureDescriptorSet)
+            {
+                throw Exception("Failed to create object texture descriptor set.");
+            }
         }
 
         void Application::LoadObjectShaders()
@@ -468,6 +480,7 @@ namespace Molten
 
                 auto& inputs = script.GetInputInterface();
                 auto& inPos = inputs.AddMember<Vector3f32>();
+                auto& inUv = inputs.AddMember<Vector2f32>();
 
                 auto& pushConstants = script.GetPushConstants();
                 auto& pushPos = pushConstants.AddMember<Vector4f32>(0);
@@ -475,6 +488,7 @@ namespace Molten
 
                 auto& outputs = script.GetOutputInterface();
                 auto& outColor = outputs.AddMember<Vector4f32>();
+                auto& outUv = outputs.AddMember<Vector2f32>();
                 auto* outPos = script.GetVertexOutput();
 
                 auto& descSets = script.GetDescriptorSets();
@@ -502,18 +516,30 @@ namespace Molten
 
                 outPos->GetInputPin()->Connect(*finalPos.GetOutputPin());
                 outColor.Connect(pushColor);
+
+                outUv.Connect((inUv));
             }
             // Fragment script
             {
                 auto& script = m_objectFragmentScript;
 
                 auto& inputs = script.GetInputInterface();
-                auto& inColor = inputs.AddMember<Vector4f32>();
+                /*auto& inColor = */inputs.AddMember<Vector4f32>();
+                auto& inUv = inputs.AddMember<Vector2f32>();
+
+                auto& descSets = script.GetDescriptorSets();
+                auto* descSet = descSets.AddSet(40);
+                auto* sampler = descSet->AddBinding<Shader::Sampler2D>(100);
+
+
+                auto& textureColor = script.CreateFunction<Shader::Visual::Functions::Texture2D>();
+                textureColor.GetInputPin(0)->Connect(*sampler->GetOutputPin());
+                textureColor.GetInputPin(1)->Connect(inUv);
 
                 auto& outputs = script.GetOutputInterface();
                 auto& outColor = outputs.AddMember<Vector4f32>();
 
-                outColor.Connect(inColor);
+                outColor.Connect(*textureColor.GetOutputPin());
             }
 
             Shader::GlslGenerator::GlslTemplate glslTemplate;
@@ -598,11 +624,16 @@ namespace Molten
 
         void Application::UnloadObjectPipeline()
         {
+            if (m_objectTextureDescriptorSet)
+            {
+                m_renderer->DestroyDescriptorSet(m_objectTextureDescriptorSet);
+                m_objectTextureDescriptorSet = nullptr;
+            }
             if (m_objectTexture)
             {
                 m_renderer->DestroyTexture(m_objectTexture);
                 m_objectTexture = nullptr;
-            }
+            }          
             if (m_objectMatrixDescriptorSet)
             {
                 m_renderer->DestroyFramedDescriptorSet(m_objectMatrixDescriptorSet);
@@ -769,6 +800,7 @@ namespace Molten
             // Object
             m_renderer->BindPipeline(m_objectPipeline);
             m_renderer->BindFramedDescriptorSet(m_objectMatrixDescriptorSet);
+            m_renderer->BindDescriptorSet(m_objectTextureDescriptorSet);
             m_renderer->PushConstant(m_objectPosPushLocation, { 0.0f, 0.0f, 0.0f, 1.0f });
             m_renderer->PushConstant(m_objectColorPushLocation, { 1.0f, 1.0f, 1.0f, 1.0f });
             m_renderer->DrawVertexBuffer(m_objectIndexBuffer, m_objectVertexBuffer);

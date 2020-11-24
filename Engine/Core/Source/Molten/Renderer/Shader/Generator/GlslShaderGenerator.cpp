@@ -250,7 +250,7 @@ namespace Molten::Shader
                 if (it == locations.end())
                 {
 
-                    locations.insert({ id, { id, 0, dataType } }).first;
+                    locations.insert({ id, { id, 0, dataType } });
                 }
                 else
                 {

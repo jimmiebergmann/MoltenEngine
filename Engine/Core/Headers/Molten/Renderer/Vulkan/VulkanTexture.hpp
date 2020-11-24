@@ -45,10 +45,12 @@ namespace Molten
 
         VulkanTexture(
             Vulkan::Image&& image,
-            Vulkan::ImageSampler imageSampler);
+            Vulkan::ImageSampler imageSampler,
+            VkImageView imageView);
 
         Vulkan::Image image;
         Vulkan::ImageSampler imageSampler;
+        VkImageView imageView;
 
         friend class VulkanRenderer;
 

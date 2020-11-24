@@ -72,8 +72,8 @@ namespace Molten::Vulkan
 
         VkSamplerCreateInfo samplerInfo = {};
         samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-        samplerInfo.magFilter = VkFilter::VK_FILTER_LINEAR;
-        samplerInfo.minFilter = VkFilter::VK_FILTER_LINEAR;
+        samplerInfo.magFilter = VkFilter::VK_FILTER_NEAREST;
+        samplerInfo.minFilter = VkFilter::VK_FILTER_NEAREST;
         samplerInfo.addressModeU = VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_REPEAT;
         samplerInfo.addressModeV = VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_REPEAT;
         samplerInfo.addressModeW = VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_REPEAT;
