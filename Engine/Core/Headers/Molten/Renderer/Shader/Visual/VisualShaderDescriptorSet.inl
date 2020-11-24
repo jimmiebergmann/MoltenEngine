@@ -111,6 +111,12 @@ namespace Molten::Shader::Visual
     template<typename ... TAllowedBindingTypes>
     inline void DescriptorSet<TAllowedBindingTypes...>::RemoveBinding(Iterator it)
     {
+        if(it == m_bindings.end())
+        {
+            MOLTEN_DEBUG_ASSERT(false, "Cannot remove binding of end iterator.");
+            return;
+        }
+
         m_usedBindingIds.erase((*it)->GetId());
         delete* it;
         m_bindings.erase(it);
@@ -119,7 +125,14 @@ namespace Molten::Shader::Visual
     template<typename ... TAllowedBindingTypes>
     inline void DescriptorSet<TAllowedBindingTypes...>::RemoveBinding(ConstIterator it)
     {
+        if (it == m_bindings.end())
+        {
+            MOLTEN_DEBUG_ASSERT(false, "Cannot remove binding of end iterator.");
+            return;
+        }
+
         m_usedBindingIds.erase((*it)->GetId());
+        delete* it;
         m_bindings.erase(it);
     }
 
@@ -254,6 +267,12 @@ namespace Molten::Shader::Visual
     template<typename ... TAllowedBindingTypes>
     inline void DescriptorSets<TAllowedBindingTypes...>::RemoveSet(Iterator it)
     {
+        if (it == m_sets.end())
+        {
+            MOLTEN_DEBUG_ASSERT(false, "Cannot remove set of end iterator.");
+            return;
+        }
+
         m_usedSetIds.erase((*it)->GetId());
         delete* it;
         m_sets.erase(it);
@@ -262,6 +281,12 @@ namespace Molten::Shader::Visual
     template<typename ... TAllowedBindingTypes>
     inline void DescriptorSets<TAllowedBindingTypes...>::RemoveSet(ConstIterator it)
     {
+        if (it == m_sets.end())
+        {
+            MOLTEN_DEBUG_ASSERT(false, "Cannot remove set of end iterator.");
+            return;
+        }
+
         m_usedSetIds.erase((*it)->GetId());
         delete* it;
         m_sets.erase(it);
