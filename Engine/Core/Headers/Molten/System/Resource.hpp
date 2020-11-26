@@ -26,7 +26,6 @@
 #ifndef MOLTEN_CORE_SYSTEM_RESOURCE_HPP
 #define MOLTEN_CORE_SYSTEM_RESOURCE_HPP
 
-#include "Molten/Core.hpp"
 #include <memory>
 #include <functional>
 
@@ -102,7 +101,6 @@ namespace Molten
     /** Derived resource type. Use this type for creating derived resource types. */
     template<typename TResourceType>
     using DerivedResource = Resource<TResourceType, typename TResourceType::Base>;
-
 
 }
 
