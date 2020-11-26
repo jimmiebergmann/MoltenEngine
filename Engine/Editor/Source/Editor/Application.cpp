@@ -47,23 +47,10 @@ namespace Molten
 
         Application::Application() :
 
-            m_viewMatrixBuffer(nullptr),
-
-            m_gridPipeline(nullptr),
-            m_gridVertexBuffer(nullptr),
-            m_gridIndexBuffer(nullptr),
-            m_gridMatrixDescriptorSet(nullptr),
             m_gridColor1PushLocation(0),
-            m_gridColor2PushLocation(0),
-
-            m_objectPipeline(nullptr),
-            m_objectVertexBuffer(nullptr),
-            m_objectIndexBuffer(nullptr),
-            m_objectMatrixDescriptorSet(nullptr),
-            m_objectTextureDescriptorSet(nullptr),
+            m_gridColor2PushLocation(0),      
             m_objectPosPushLocation(0),
             m_objectColorPushLocation(0),
-            m_objectTexture(nullptr),
 
             m_programTime(0.0f),
             m_deltaTime(0.0f)//,
@@ -260,8 +247,8 @@ namespace Molten
             }
 
             auto descriptorSetDescriptor1 = FramedDescriptorSetDescriptor{
-                m_gridPipeline, 0,
-                {{ 0,  m_viewMatrixBuffer }}
+                &m_gridPipeline, 0,
+                { { 0, &m_viewMatrixBuffer } }
             };
             m_gridMatrixDescriptorSet = m_renderer->CreateFramedDescriptorSet(descriptorSetDescriptor1);
             if (!m_gridMatrixDescriptorSet)
@@ -434,8 +421,8 @@ namespace Molten
             }
 
             auto descriptorSetDescriptor1 = FramedDescriptorSetDescriptor{
-                m_objectPipeline, 10,
-                {{ 1000000,  m_viewMatrixBuffer }}
+                &m_objectPipeline, 10,
+                { { 1000000, &m_viewMatrixBuffer } }
             };
             m_objectMatrixDescriptorSet = m_renderer->CreateFramedDescriptorSet(descriptorSetDescriptor1);
             if (!m_objectMatrixDescriptorSet)
@@ -462,8 +449,8 @@ namespace Molten
             }
 
             auto descriptorSetDescriptor2 = DescriptorSetDescriptor{
-                m_objectPipeline, 40,
-                {{ 100,  m_objectTexture }}
+                &m_objectPipeline, 40,
+                {{ 100, &m_objectTexture }}
             };
             m_objectTextureDescriptorSet = m_renderer->CreateDescriptorSet(descriptorSetDescriptor2);
             if (!m_objectTextureDescriptorSet)
@@ -580,11 +567,7 @@ namespace Molten
                     m_renderer->WaitForDevice();
                 }
 
-                if (m_viewMatrixBuffer)
-                {
-                    m_renderer->DestroyFramedUniformBuffer(m_viewMatrixBuffer);
-                    m_viewMatrixBuffer = nullptr;
-                }
+                m_viewMatrixBuffer.reset();
 
                 UnloadObjectPipeline();
                 UnloadGridPipeline();
@@ -600,60 +583,20 @@ namespace Molten
 
         void Application::UnloadGridPipeline()
         {
-            if(m_gridMatrixDescriptorSet)
-            {
-                m_renderer->DestroyFramedDescriptorSet(m_gridMatrixDescriptorSet);
-                m_gridMatrixDescriptorSet = nullptr;
-            }
-            if (m_gridIndexBuffer)
-            {
-                m_renderer->DestroyIndexBuffer(m_gridIndexBuffer);
-                m_gridIndexBuffer = nullptr;
-            }
-            if (m_gridVertexBuffer)
-            {
-                m_renderer->DestroyVertexBuffer(m_gridVertexBuffer);
-                m_gridVertexBuffer = nullptr;
-            }
-            if (m_gridPipeline)
-            {
-                m_renderer->DestroyPipeline(m_gridPipeline);
-                m_gridPipeline = nullptr;
-            }
+            m_gridMatrixDescriptorSet.reset();
+            m_gridVertexBuffer.reset();
+            m_gridIndexBuffer.reset();
+            m_gridPipeline.reset();
         }
 
         void Application::UnloadObjectPipeline()
         {
-            if (m_objectTextureDescriptorSet)
-            {
-                m_renderer->DestroyDescriptorSet(m_objectTextureDescriptorSet);
-                m_objectTextureDescriptorSet = nullptr;
-            }
-            if (m_objectTexture)
-            {
-                m_renderer->DestroyTexture(m_objectTexture);
-                m_objectTexture = nullptr;
-            }          
-            if (m_objectMatrixDescriptorSet)
-            {
-                m_renderer->DestroyFramedDescriptorSet(m_objectMatrixDescriptorSet);
-                m_objectMatrixDescriptorSet = nullptr;
-            }
-            if (m_objectIndexBuffer)
-            {
-                m_renderer->DestroyIndexBuffer(m_objectIndexBuffer);
-                m_objectIndexBuffer = nullptr;
-            }
-            if (m_objectVertexBuffer)
-            {
-                m_renderer->DestroyVertexBuffer(m_objectVertexBuffer);
-                m_objectVertexBuffer = nullptr;
-            }
-            if (m_objectPipeline)
-            {
-                m_renderer->DestroyPipeline(m_objectPipeline);
-                m_objectPipeline = nullptr;
-            }
+            m_objectTextureDescriptorSet.reset();
+            m_objectTexture.reset();
+            m_objectMatrixDescriptorSet.reset();
+            m_objectVertexBuffer.reset();
+            m_objectIndexBuffer.reset();
+            m_objectPipeline.reset();
         }
 
         void Application::Tick()

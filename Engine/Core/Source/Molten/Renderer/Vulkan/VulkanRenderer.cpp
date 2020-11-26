@@ -345,9 +345,9 @@ namespace Molten
         return m_version;
     }
 
-    uint32_t VulkanRenderer::GetPushConstantLocation(Pipeline* pipeline, const uint32_t id)
+    uint32_t VulkanRenderer::GetPushConstantLocation(Resource<Pipeline>& pipeline, const uint32_t id)
     {
-        auto& locations = static_cast<VulkanPipeline*>(pipeline)->pushConstantLocations;
+        auto& locations = static_cast<VulkanPipeline*>(pipeline.get())->pushConstantLocations;
         auto it = locations.find(id);
         if (it == locations.end())
         {
@@ -357,16 +357,16 @@ namespace Molten
         return it->second.location;
     }
 
-    DescriptorSet* VulkanRenderer::CreateDescriptorSet(const DescriptorSetDescriptor& descriptor)
+    Resource<DescriptorSet> VulkanRenderer::CreateDescriptorSet(const DescriptorSetDescriptor& descriptor)
     {
-        auto* vulkanPipeline = static_cast<VulkanPipeline*>(descriptor.pipeline);
+        auto* vulkanPipeline = static_cast<VulkanPipeline*>(descriptor.pipeline->get());
 
         const auto& mappedSets = vulkanPipeline->mappedDescriptorSets;
         auto mappedSetIt = mappedSets.find(descriptor.id);
         if(mappedSetIt == mappedSets.end())
         {
             Logger::WriteError(m_logger, "Failed to find mapped descriptor set of id " + std::to_string(descriptor.id) + ".");
-            return nullptr;
+            return { };
         }
 
         const auto& mappedSet = mappedSetIt->second;
@@ -429,7 +429,7 @@ namespace Molten
             if (mappedBindingIt == mappedBindings.end())
             {
                 Logger::WriteError(m_logger, "Failed to find mapped descriptor binding of id " + std::to_string(binding.id) + ".");
-                return nullptr;
+                return { };
             }
             const auto& mappedBinding = mappedBindingIt->second;
 
@@ -440,20 +440,20 @@ namespace Molten
             write.dstArrayElement = 0;
             write.descriptorCount = 1;
 
-            std::visit([&](auto& bindingData) {
+            std::visit([&](auto* bindingData) {
                 using T = std::decay_t<decltype(bindingData)>;
-                if constexpr (std::is_same_v<T, UniformBuffer*>)
+                if constexpr (std::is_same_v<T, Resource<UniformBuffer>*>)
                 {
-                    auto* vulkanBuffer = static_cast<VulkanUniformBuffer*>(bindingData);
+                    auto* vulkanBuffer = static_cast<VulkanUniformBuffer*>(bindingData->get());
                     const auto bufferHandle = vulkanBuffer->deviceBuffer.GetHandle(); //vulkanBuffer->frames[0].buffer.GetHandle();
                     auto& bufferInfo = CreateBufferInfo(bufferHandle);
 
                     write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER; 
                     write.pBufferInfo = &bufferInfo;
                 }
-                else if constexpr (std::is_same_v<T, Texture*>)
+                else if constexpr (std::is_same_v<T, Resource<Texture>*>)
                 {
-                    auto* vulkanTexture = static_cast<VulkanTexture*>(bindingData);
+                    auto* vulkanTexture = static_cast<VulkanTexture*>(bindingData->get());
                     const auto samplerHandle = vulkanTexture->imageSampler.GetHandle();
                     auto& imageInfo = CreateImageInfo(samplerHandle, vulkanTexture->imageView);
 
@@ -490,7 +490,7 @@ namespace Molten
         if (vkCreateDescriptorPool(m_logicalDevice.GetHandle(), &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)
         {
             Logger::WriteError(m_logger, "Failed to create descriptor pool.");
-            return nullptr;
+            return { };
         }
 
         auto& setLayouts = vulkanPipeline->descriptionSetLayouts;
@@ -504,7 +504,7 @@ namespace Molten
         if (vkAllocateDescriptorSets(m_logicalDevice.GetHandle(), &allocInfo, &descriptorSet) != VK_SUCCESS)
         {
             Logger::WriteError(m_logger, "Failed to create descriptor sets.");
-            return nullptr;
+            return { };
         }
 
         for(auto& write : writes)
@@ -514,22 +514,30 @@ namespace Molten
         }
 
         destroyer.Release();
-        return new VulkanDescriptorSet(
+
+        auto deleter = [&](DescriptorSet& descriptorSet)
+        {
+            auto& vulkanDescriptorSet = static_cast<VulkanDescriptorSet&>(descriptorSet);
+            vkDestroyDescriptorPool(m_logicalDevice.GetHandle(), vulkanDescriptorSet.descriptorPool, nullptr);
+        };
+
+        return DerivedResource<VulkanDescriptorSet>::Create(
+            deleter,
             setIndex,
             descriptorSet,
             descriptorPool);
     }
 
-    FramedDescriptorSet* VulkanRenderer::CreateFramedDescriptorSet(const FramedDescriptorSetDescriptor& descriptor)
+    Resource<FramedDescriptorSet> VulkanRenderer::CreateFramedDescriptorSet(const FramedDescriptorSetDescriptor& descriptor)
     {
-        auto* vulkanPipeline = static_cast<VulkanPipeline*>(descriptor.pipeline);
+        auto* vulkanPipeline = static_cast<VulkanPipeline*>(descriptor.pipeline->get());
 
         const auto& mappedSets = vulkanPipeline->mappedDescriptorSets;
         auto mappedSetIt = mappedSets.find(descriptor.id);
         if (mappedSetIt == mappedSets.end())
         {
             Logger::WriteError(m_logger, "Failed to find mapped descriptor set of id " + std::to_string(descriptor.id) + ".");
-            return nullptr;
+            return { };
         }
 
         const auto& mappedSet = mappedSetIt->second;
@@ -636,17 +644,17 @@ namespace Molten
             if (mappedBindingIt == mappedBindings.end())
             {
                 Logger::WriteError(m_logger, "Failed to find mapped descriptor binding of id " + std::to_string(binding.id) + ".");
-                return nullptr;
+                return { };
             }
             const auto& mappedBinding = mappedBindingIt->second;
             const uint32_t bindingIndex = mappedBinding.index;
 
             bool successfulVisit = true;
-            std::visit([&](auto& bindingData) {
+            std::visit([&](auto* bindingData) {
                 using T = std::decay_t<decltype(bindingData)>;
-                if constexpr (std::is_same_v<T, FramedUniformBuffer*>)
+                if constexpr (std::is_same_v<T, Resource<FramedUniformBuffer>*>)
                 {
-                    auto* vulkanBuffer = static_cast<VulkanFramedUniformBuffer*>(bindingData);
+                    auto* vulkanBuffer = static_cast<VulkanFramedUniformBuffer*>(bindingData->get());
 
                     const auto& deviceBuffers = vulkanBuffer->deviceBuffers;
                     if (deviceBuffers.size() != swapChainImageCount)
@@ -659,9 +667,9 @@ namespace Molten
 
                     CreateBufferInfos(setWrites, writeIndex, bindingIndex, deviceBuffers);
                 }
-                else if constexpr (std::is_same_v<T, Texture*>)
+                else if constexpr (std::is_same_v<T, Resource<Texture>*>)
                 {
-                    auto* vulkanTexture = static_cast<VulkanTexture*>(bindingData);
+                    auto* vulkanTexture = static_cast<VulkanTexture*>(bindingData->get());
 
                     CreateImageInfo(setWrites, writeIndex, bindingIndex, vulkanTexture->imageSampler.GetHandle(), vulkanTexture->image.GetHandle());
                 }
@@ -674,7 +682,7 @@ namespace Molten
 
             if(!successfulVisit)
             {
-                return nullptr;
+                return { };
             }
 
             writeIndex++;
@@ -699,7 +707,7 @@ namespace Molten
         if (vkCreateDescriptorPool(m_logicalDevice.GetHandle(), &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)
         {
             Logger::WriteError(m_logger, "Failed to create descriptor pool.");
-            return nullptr;
+            return { };
         }
 
         std::vector<VkDescriptorSetLayout> setLayouts(swapChainImageCount, vulkanPipeline->descriptionSetLayouts[setIndex]);
@@ -713,7 +721,7 @@ namespace Molten
         if (vkAllocateDescriptorSets(m_logicalDevice.GetHandle(), &allocInfo, descriptorSets.data()) != VK_SUCCESS)
         {
             Logger::WriteError(m_logger, "Failed to create descriptor sets.");
-            return nullptr;
+            return { };
         }
 
         for(uint32_t i = 0; i < swapChainImageCount; i++)
@@ -727,18 +735,26 @@ namespace Molten
         }
 
         destroyer.Release();
-        return new VulkanFramedDescriptorSet(
+
+        auto deleter = [&](FramedDescriptorSet& framedDescriptorSet)
+        {
+            auto& vulkanFramedDescriptorSet = static_cast<VulkanFramedDescriptorSet&>(framedDescriptorSet);
+            vkDestroyDescriptorPool(m_logicalDevice.GetHandle(), vulkanFramedDescriptorSet.descriptorPool, nullptr);
+        };
+
+        return DerivedResource<VulkanFramedDescriptorSet>::Create(
+            deleter,
             setIndex,
             std::move(descriptorSets),
             descriptorPool);
     }
 
-    Framebuffer* VulkanRenderer::CreateFramebuffer(const FramebufferDescriptor& descriptor)
+    Resource<Framebuffer> VulkanRenderer::CreateFramebuffer(const FramebufferDescriptor& descriptor)
     {
-        return nullptr;
+        return { };
     }
 
-    IndexBuffer* VulkanRenderer::CreateIndexBuffer(const IndexBufferDescriptor& descriptor)
+    Resource<IndexBuffer> VulkanRenderer::CreateIndexBuffer(const IndexBufferDescriptor& descriptor)
     {
         const auto bufferSize = static_cast<VkDeviceSize>(descriptor.indexCount) * GetIndexBufferDataTypeSize(descriptor.dataType);
 
@@ -748,43 +764,45 @@ namespace Molten
         if (!(result = stagingBuffer.Create(m_logicalDevice, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, m_memoryTypesHostVisibleOrCoherent)))
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to create staging buffer for index buffer");
-            return nullptr;
+            return { };
         }
 
         if (!(result = stagingBuffer.MapMemory(0, bufferSize, descriptor.data)))
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to map staging buffer for index buffer");
-            return nullptr;
+            return { };
         }
 
         Vulkan::DeviceBuffer indexBuffer;
         if (!(result = indexBuffer.Create(m_logicalDevice, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, m_memoryTypesDeviceLocal)))
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to create index buffer");
-            return nullptr;
+            return { };
         }
 
         if (!(result = indexBuffer.CopyFromBuffer(m_commandPool, stagingBuffer, bufferSize)))
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to copy from staging buffer to index buffer");
-            return nullptr;
+            return { };
         }
 
-        auto* buffer = new VulkanIndexBuffer(std::move(indexBuffer), descriptor.indexCount, descriptor.dataType);
-        return buffer;
+        return DerivedResource<VulkanIndexBuffer>::CreateDefault(
+            std::move(indexBuffer),
+            descriptor.indexCount,
+            descriptor.dataType);
     }
 
-    Pipeline* VulkanRenderer::CreatePipeline(const PipelineDescriptor& descriptor)
+    Resource<Pipeline> VulkanRenderer::CreatePipeline(const PipelineDescriptor& descriptor)
     {
         if (descriptor.vertexScript == nullptr)
         {
             Logger::WriteError(m_logger, "Vertex script is missing for pipeline. (vertexScript == nullptr).");
-            return nullptr;
+            return { };
         }
         if (descriptor.fragmentScript == nullptr)
         {
             Logger::WriteError(m_logger, "Fragment script is missing for pipeline. (fragmentScript == nullptr).");
-            return nullptr;
+            return { };
         }
 
         auto& vertexScript = *descriptor.vertexScript;
@@ -795,7 +813,7 @@ namespace Molten
         if (!vertexOutputs.CompareStructure(fragmentInputs))
         {
             Logger::WriteError(m_logger, "Vertex output structure is not compatible with fragment input structure.");
-            return nullptr;
+            return { };
         }
         
         const std::vector<Shader::Visual::Script*> shaderScripts =
@@ -816,7 +834,7 @@ namespace Molten
             mappedDescriptorSets,
             shaderScripts))
         {
-            return nullptr;
+            return { };
         }
 
         std::vector<VkVertexInputAttributeDescription> vertexInputAttributes;
@@ -826,7 +844,7 @@ namespace Molten
             auto& vertexInputs = descriptor.vertexScript->GetInputInterface();
             if (!CreateVertexInputAttributes(vertexInputs, vertexInputAttributes, vertexBindingStride))
             {
-                return nullptr;
+                return { };
             }
         }
 
@@ -842,7 +860,7 @@ namespace Molten
 
         if (!CreateDescriptorSetLayouts(setLayouts, mappedDescriptorSets))
         {
-            return nullptr;
+            return { };
         }
  
         VkVertexInputBindingDescription vertexBinding;
@@ -937,7 +955,7 @@ namespace Molten
         if (vkCreatePipelineLayout(m_logicalDevice.GetHandle(), &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
         {
             Logger::WriteError(m_logger, "Failed to create pipeline layout.");
-            return nullptr;
+            return { };
         }
 
         VkGraphicsPipelineCreateInfo pipelineInfo = {};
@@ -964,20 +982,46 @@ namespace Molten
         {
             vkDestroyPipelineLayout(m_logicalDevice.GetHandle(), pipelineLayout, nullptr);
             Logger::WriteError(m_logger, "Failed to create pipeline.");
-            return nullptr;
+            return { };
         }
 
         destroyer.Release();
-        return new VulkanPipeline(
-            graphicsPipeline, 
-            pipelineLayout, 
+
+        auto deleter = [&](Pipeline& pipeline)
+        {
+            auto& vulkanPipeline = static_cast<VulkanPipeline&>(pipeline);
+
+            if (vulkanPipeline.graphicsPipeline)
+            {
+                vkDeviceWaitIdle(m_logicalDevice.GetHandle());
+                vkDestroyPipeline(m_logicalDevice.GetHandle(), vulkanPipeline.graphicsPipeline, nullptr);
+            }
+            if (vulkanPipeline.pipelineLayout)
+            {
+                vkDestroyPipelineLayout(m_logicalDevice.GetHandle(), vulkanPipeline.pipelineLayout, nullptr);
+            }
+            for (auto& setLayout : vulkanPipeline.descriptionSetLayouts)
+            {
+                vkDestroyDescriptorSetLayout(m_logicalDevice.GetHandle(), setLayout, nullptr);
+            }
+            for (auto& shaderModule : vulkanPipeline.shaderModules)
+            {
+                shaderModule.Destroy();
+            }
+        };
+
+
+        return DerivedResource<VulkanPipeline>::Create(
+            deleter,
+            graphicsPipeline,
+            pipelineLayout,
             std::move(setLayouts),
-            std::move(pushConstantLocations), 
+            std::move(pushConstantLocations),
             std::move(shaderModules),
             std::move(mappedDescriptorSets));
     }
 
-    Texture* VulkanRenderer::CreateTexture(const TextureDescriptor& descriptor)
+    Resource<Texture> VulkanRenderer::CreateTexture(const TextureDescriptor& descriptor)
     {
         const auto bufferSize = 
             static_cast<VkDeviceSize>(descriptor.dimensions.x) * 
@@ -989,13 +1033,13 @@ namespace Molten
         if (!(result = stagingBuffer.Create(m_logicalDevice, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, m_memoryTypesHostVisibleOrCoherent)))
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to create staging buffer for index buffer");
-            return nullptr;
+            return { };
         }
 
         if (!(result = stagingBuffer.MapMemory(0, bufferSize, descriptor.data)))
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to map staging buffer for index buffer");
-            return nullptr;
+            return { };
         }
 
         Vulkan::Image image;
@@ -1008,7 +1052,7 @@ namespace Molten
             m_memoryTypesDeviceLocal)))
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to create image");
-            return nullptr;
+            return { };
         }
 
         if (!(result = image.TransitionToLayout(
@@ -1016,7 +1060,7 @@ namespace Molten
             VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)))
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed transition image to read only optional layout");
-            return nullptr;
+            return { };
         }
 
         VkImageViewCreateInfo viewInfo{};
@@ -1033,35 +1077,37 @@ namespace Molten
         VkImageView imageView;
         if (vkCreateImageView(m_logicalDevice.GetHandle(), &viewInfo, nullptr, &imageView) != VK_SUCCESS) {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to create image view for texture");
-            return nullptr;
+            return { };
         }
 
         Vulkan::ImageSampler sampler;
         if (!(result = sampler.Create(m_logicalDevice)))
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to create image sampler");
-            return nullptr;
+            return { };
         }
 
-        auto* texture = new VulkanTexture(std::move(image), std::move(sampler), imageView);
-        return texture;
+        return DerivedResource<VulkanTexture>::CreateDefault(
+            std::move(image),
+            std::move(sampler),
+            imageView);
     }
 
-    UniformBuffer* VulkanRenderer::CreateUniformBuffer(const UniformBufferDescriptor& descriptor)
+    Resource<UniformBuffer> VulkanRenderer::CreateUniformBuffer(const UniformBufferDescriptor& descriptor)
     {
         Vulkan::Result<> result;
         Vulkan::DeviceBuffer deviceBuffer;
         if (!(result = deviceBuffer.Create(m_logicalDevice, descriptor.size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, m_memoryTypesHostVisibleOrCoherent)))
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to create device buffer for uniform buffer");
-            return nullptr;
+            return { };
         }
 
-        return new VulkanUniformBuffer(
+        return DerivedResource<VulkanUniformBuffer>::CreateDefault(
             std::move(deviceBuffer));
     }
 
-    FramedUniformBuffer* VulkanRenderer::CreateFramedUniformBuffer(const FramedUniformBufferDescriptor& descriptor)
+    Resource<FramedUniformBuffer> VulkanRenderer::CreateFramedUniformBuffer(const FramedUniformBufferDescriptor& descriptor)
     {
         std::vector<Vulkan::DeviceBuffer> deviceBuffers(m_swapChain.GetImageCount());
         Vulkan::Result<> result;
@@ -1070,15 +1116,15 @@ namespace Molten
             if (!(result = deviceBuffer.Create(m_logicalDevice, descriptor.size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, m_memoryTypesHostVisibleOrCoherent)))
             {
                 Vulkan::Logger::WriteError(m_logger, result, "Failed to create device buffer for framed uniform buffer");
-                return nullptr;
+                return { };
             }
         }
 
-        return new VulkanFramedUniformBuffer(
+        return DerivedResource<VulkanFramedUniformBuffer>::CreateDefault(
             std::move(deviceBuffers));
     }
 
-    VertexBuffer* VulkanRenderer::CreateVertexBuffer(const VertexBufferDescriptor& descriptor)
+    Resource<VertexBuffer> VulkanRenderer::CreateVertexBuffer(const VertexBufferDescriptor& descriptor)
     {
         const size_t bufferSize = 
             static_cast<VkDeviceSize>(static_cast<VkDeviceSize>(descriptor.vertexCount) *
@@ -1090,111 +1136,37 @@ namespace Molten
         if (!(result = stagingBuffer.Create(m_logicalDevice, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, m_memoryTypesHostVisibleOrCoherent)))
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to create staging buffer for vertex buffer");
-            return nullptr;
+            return { };
         }
 
         if (!(result = stagingBuffer.MapMemory(0, bufferSize, descriptor.data)))
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to map staging buffer for vertex buffer");
-            return nullptr;
+            return { };
         }
 
         Vulkan::DeviceBuffer vertexBuffer;
         if (!(result = vertexBuffer.Create(m_logicalDevice, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, m_memoryTypesDeviceLocal)))
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to create vertex buffer");
-            return nullptr;
+            return { };
         }
 
         if (!(result = vertexBuffer.CopyFromBuffer(m_commandPool, stagingBuffer, bufferSize)))
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to copy from staging buffer to vertex buffer");
-            return nullptr;
+            return { };
         }
 
-        auto* buffer = new VulkanVertexBuffer(std::move(vertexBuffer), descriptor.vertexCount, descriptor.vertexSize);
-        return buffer;
+        return DerivedResource<VulkanVertexBuffer>::CreateDefault(
+            std::move(vertexBuffer),
+            descriptor.vertexCount,
+            descriptor.vertexSize);
     }
 
-    void VulkanRenderer::DestroyDescriptorSet(DescriptorSet* descriptorSet)
+    void VulkanRenderer::BindDescriptorSet(Resource<DescriptorSet>& descriptorSet)
     {
-        auto* vulkanDescriptorSet = static_cast<VulkanDescriptorSet*>(descriptorSet);
-        vkDestroyDescriptorPool(m_logicalDevice.GetHandle(), vulkanDescriptorSet->descriptorPool, nullptr);
-        delete vulkanDescriptorSet;
-    }
-
-    void VulkanRenderer::DestroyFramedDescriptorSet(FramedDescriptorSet* framedDescriptorSet)
-    {
-        auto* vulkanFramedDescriptorSet = static_cast<VulkanFramedDescriptorSet*>(framedDescriptorSet);
-        vkDestroyDescriptorPool(m_logicalDevice.GetHandle(), vulkanFramedDescriptorSet->descriptorPool, nullptr);
-        delete vulkanFramedDescriptorSet;
-    }
-
-    void VulkanRenderer::DestroyFramebuffer(Framebuffer* framebuffer)
-    {
-        auto* vulkanFramebuffer = static_cast<VulkanFramebuffer*>(framebuffer);
-        vkDestroyFramebuffer(m_logicalDevice.GetHandle(), vulkanFramebuffer->framebuffer, nullptr);
-        delete vulkanFramebuffer;
-    }
-
-    void VulkanRenderer::DestroyIndexBuffer(IndexBuffer* indexBuffer)
-    {
-        auto* vulkanIndexBuffer = static_cast<VulkanIndexBuffer*>(indexBuffer);
-        delete vulkanIndexBuffer;
-    }
-
-    void VulkanRenderer::DestroyPipeline(Pipeline* pipeline)
-    {
-        auto* vulkanPipeline = static_cast<VulkanPipeline*>(pipeline);
-
-        if (vulkanPipeline->graphicsPipeline)
-        {
-            vkDeviceWaitIdle(m_logicalDevice.GetHandle());
-            vkDestroyPipeline(m_logicalDevice.GetHandle(), vulkanPipeline->graphicsPipeline, nullptr);
-        }
-        if (vulkanPipeline->pipelineLayout)
-        {
-            vkDestroyPipelineLayout(m_logicalDevice.GetHandle(), vulkanPipeline->pipelineLayout, nullptr);
-        }
-        for (auto& setLayout : vulkanPipeline->descriptionSetLayouts)
-        {
-            vkDestroyDescriptorSetLayout(m_logicalDevice.GetHandle(), setLayout, nullptr);
-        }
-        for (auto& shaderModule : vulkanPipeline->shaderModules)
-        {
-            shaderModule.Destroy();
-        }
-
-        delete vulkanPipeline;
-    }
-
-    void VulkanRenderer::DestroyTexture(Texture* texture)
-    {
-        auto* vulkanTexture = static_cast<VulkanTexture*>(texture);
-        delete vulkanTexture;
-    }
-
-    void VulkanRenderer::DestroyUniformBuffer(UniformBuffer* uniformBuffer)
-    {
-        auto* vulkanUniformBuffer = static_cast<VulkanUniformBuffer*>(uniformBuffer);
-        delete vulkanUniformBuffer;
-    }
-
-    void VulkanRenderer::DestroyFramedUniformBuffer(FramedUniformBuffer* framedUniformBuffer)
-    {
-        auto* vulkanFramedUniformBuffer = static_cast<VulkanFramedUniformBuffer*>(framedUniformBuffer);
-        delete vulkanFramedUniformBuffer;
-    }
-
-    void VulkanRenderer::DestroyVertexBuffer(VertexBuffer* vertexBuffer)
-    {
-        auto* vulkanVertexBuffer = static_cast<VulkanVertexBuffer*>(vertexBuffer);
-        delete vulkanVertexBuffer;
-    }
-
-    void VulkanRenderer::BindDescriptorSet(DescriptorSet* descriptorSet)
-    {
-        auto* vulkanDescriptorSet = static_cast<VulkanDescriptorSet*>(descriptorSet);
+        auto* vulkanDescriptorSet = static_cast<VulkanDescriptorSet*>(descriptorSet.get());
 
         vkCmdBindDescriptorSets(
             *m_currentCommandBuffer, 
@@ -1207,9 +1179,9 @@ namespace Molten
             nullptr);
     }
 
-    void VulkanRenderer::BindFramedDescriptorSet(FramedDescriptorSet* framedDescriptorSet)
+    void VulkanRenderer::BindFramedDescriptorSet(Resource<FramedDescriptorSet>& framedDescriptorSet)
     {
-        auto* vulkanFramedDescriptorSet = static_cast<VulkanFramedDescriptorSet*>(framedDescriptorSet);
+        auto* vulkanFramedDescriptorSet = static_cast<VulkanFramedDescriptorSet*>(framedDescriptorSet.get());
 
         vkCmdBindDescriptorSets(
             *m_currentCommandBuffer,
@@ -1222,9 +1194,9 @@ namespace Molten
             nullptr);
     }
 
-    void VulkanRenderer::BindPipeline(Pipeline* pipeline)
+    void VulkanRenderer::BindPipeline(Resource<Pipeline>& pipeline)
     {
-        auto* vulkanPipeline = static_cast<VulkanPipeline*>(pipeline);
+        auto* vulkanPipeline = static_cast<VulkanPipeline*>(pipeline.get());
         vkCmdBindPipeline(*m_currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkanPipeline->graphicsPipeline);
         m_currentPipeline = vulkanPipeline;
     }
@@ -1293,9 +1265,9 @@ namespace Molten
         m_beginDraw = true;
     }
 
-    void VulkanRenderer::DrawVertexBuffer(VertexBuffer* vertexBuffer)
+    void VulkanRenderer::DrawVertexBuffer(Resource<VertexBuffer>& vertexBuffer)
     {
-        auto* vulkanVertexBuffer = static_cast<VulkanVertexBuffer*>(vertexBuffer);
+        auto* vulkanVertexBuffer = static_cast<VulkanVertexBuffer*>(vertexBuffer.get());
 
         VkBuffer vertexBuffers[] = { vulkanVertexBuffer->buffer.GetHandle() };
         const VkDeviceSize offsets[] = { 0 };
@@ -1304,10 +1276,10 @@ namespace Molten
         vkCmdDraw(*m_currentCommandBuffer, static_cast<uint32_t>(vulkanVertexBuffer->vertexCount), 1, 0, 0);
     }
 
-    void VulkanRenderer::DrawVertexBuffer(IndexBuffer* indexBuffer, VertexBuffer* vertexBuffer)
+    void VulkanRenderer::DrawVertexBuffer(Resource<IndexBuffer>& indexBuffer, Resource<VertexBuffer>& vertexBuffer)
     {
-        auto* vulkanIndexBuffer = static_cast<VulkanIndexBuffer*>(indexBuffer);
-        auto* vulkanVertexBuffer = static_cast<VulkanVertexBuffer*>(vertexBuffer);
+        auto* vulkanIndexBuffer = static_cast<VulkanIndexBuffer*>(indexBuffer.get());
+        auto* vulkanVertexBuffer = static_cast<VulkanVertexBuffer*>(vertexBuffer.get());
 
         VkBuffer vertexBuffers[] = { vulkanVertexBuffer->buffer.GetHandle() };
         const VkDeviceSize offsets[] = { 0 };
@@ -1377,9 +1349,9 @@ namespace Molten
         m_logicalDevice.WaitIdle();
     }
 
-    void VulkanRenderer::UpdateUniformBuffer(UniformBuffer* uniformBuffer, const size_t offset, const size_t size, const void* data)
+    void VulkanRenderer::UpdateUniformBuffer(Resource<UniformBuffer>& uniformBuffer, const size_t offset, const size_t size, const void* data)
     {
-        auto* vulkanUniformBuffer = static_cast<VulkanUniformBuffer*>(uniformBuffer);      
+        auto* vulkanUniformBuffer = static_cast<VulkanUniformBuffer*>(uniformBuffer.get());      
 
         Vulkan::Result<> result;
         if (!(result = vulkanUniformBuffer->deviceBuffer.MapMemory(offset, size, data, 0)))
@@ -1388,9 +1360,9 @@ namespace Molten
         }
     }
 
-    void VulkanRenderer::UpdateFramedUniformBuffer(FramedUniformBuffer* framedUniformBuffer, const size_t offset, const size_t size, const void* data)
+    void VulkanRenderer::UpdateFramedUniformBuffer(Resource<FramedUniformBuffer>& framedUniformBuffer, const size_t offset, const size_t size, const void* data)
     {
-        auto* vulkanFramedUniformBuffer = static_cast<VulkanFramedUniformBuffer*>(framedUniformBuffer);
+        auto* vulkanFramedUniformBuffer = static_cast<VulkanFramedUniformBuffer*>(framedUniformBuffer.get());
 
         auto& deviceBuffer = vulkanFramedUniformBuffer->deviceBuffers[m_swapChain.GetCurrentImageIndex()];
 

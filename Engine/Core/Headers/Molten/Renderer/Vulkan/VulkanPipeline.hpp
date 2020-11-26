@@ -37,13 +37,14 @@
 namespace Molten
 {
 
-    class VulkanRenderer;
-
     class MOLTEN_API VulkanPipeline : public Pipeline
     {
 
-    private:
+    public:
 
+        using Base = Pipeline;
+
+        VulkanPipeline() = delete;
         VulkanPipeline(
             VkPipeline graphicsPipeline,
             VkPipelineLayout pipelineLayout,
@@ -58,8 +59,6 @@ namespace Molten
         PushConstantLocations pushConstantLocations;
         Vulkan::ShaderModules shaderModules;
         MappedDescriptorSets mappedDescriptorSets;
-
-        friend class VulkanRenderer;
 
     };
 

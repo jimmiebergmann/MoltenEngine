@@ -34,18 +34,17 @@
 namespace Molten
 {
 
-    class VulkanRenderer;
-
     class MOLTEN_API VulkanFramebuffer : public Framebuffer
     {
 
-    private:
+    public:
 
+        using Base = Framebuffer;
+
+        VulkanFramebuffer() = delete;
         VulkanFramebuffer(VkFramebuffer framebuffer);
  
         VkFramebuffer framebuffer;
-
-        friend class VulkanRenderer;
 
     };
 

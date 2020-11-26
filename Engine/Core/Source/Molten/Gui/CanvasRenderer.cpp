@@ -107,10 +107,6 @@ namespace Molten::Gui
     {}
 
     CanvasRenderer::RenderInstance::RenderInstance() :
-        pipeline(nullptr),
-        vertexBuffer(nullptr),
-        indexBuffer(nullptr),
-        texture(nullptr),
         vertexScript(nullptr),
         fragmentScript(nullptr),
         projectionLocation(0),
@@ -264,26 +260,11 @@ namespace Molten::Gui
 
     void CanvasRenderer::DestroyRenderInstance(RenderInstance& instance)
     {
-        if (instance.pipeline)
-        {
-            m_backendRenderer.DestroyPipeline(instance.pipeline);
-            instance.pipeline = nullptr;
-        }
-        if (instance.texture)
-        {
-            m_backendRenderer.DestroyTexture(instance.texture);
-            instance.texture = nullptr;
-        }
-        if (instance.vertexBuffer)
-        {
-            m_backendRenderer.DestroyVertexBuffer(instance.vertexBuffer);
-            instance.vertexBuffer = nullptr;
-        }
-        if (instance.indexBuffer)
-        {
-            m_backendRenderer.DestroyIndexBuffer(instance.indexBuffer);
-            instance.indexBuffer = nullptr;
-        }
+        instance.pipeline.reset();
+        instance.vertexBuffer.reset();
+        instance.indexBuffer.reset();
+        instance.texture.reset();
+        instance.indexBuffer.reset();
 
         delete instance.vertexScript;
         instance.vertexScript = nullptr;

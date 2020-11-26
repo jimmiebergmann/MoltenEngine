@@ -36,13 +36,14 @@
 namespace Molten
 {
 
-    class VulkanRenderer;
-
     class MOLTEN_API VulkanTexture : public Texture
     {
 
-    private:
+    public:
 
+        using Base = Texture;
+
+        VulkanTexture() = delete;
         VulkanTexture(
             Vulkan::Image&& image,
             Vulkan::ImageSampler imageSampler,
@@ -51,8 +52,6 @@ namespace Molten
         Vulkan::Image image;
         Vulkan::ImageSampler imageSampler;
         VkImageView imageView;
-
-        friend class VulkanRenderer;
 
     };
 

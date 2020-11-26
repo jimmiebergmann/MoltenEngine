@@ -44,15 +44,16 @@ namespace Molten
             Uint32  ///< 32 bit unsigned integer data type.
         };
 
-    protected:
-
         IndexBuffer() = default;
         virtual ~IndexBuffer() = default;
 
+        /* Deleted copy and move operations. */
+        /**@{*/
         IndexBuffer(const IndexBuffer&) = delete;
         IndexBuffer(IndexBuffer&&) = delete;
         IndexBuffer& operator =(const IndexBuffer&) = delete;
         IndexBuffer& operator =(IndexBuffer&&) = delete;
+        /**@}*/
 
     };
 

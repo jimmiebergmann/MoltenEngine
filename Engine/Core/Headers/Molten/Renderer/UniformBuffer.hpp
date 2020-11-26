@@ -37,16 +37,16 @@ namespace Molten
 
     public:
 
-        UniformBuffer(const UniformBuffer&) = delete;
-        UniformBuffer(UniformBuffer&&) = delete;
-
-        UniformBuffer& operator =(const UniformBuffer&) = delete;
-        UniformBuffer& operator =(UniformBuffer&&) = delete;
-
-    protected:
-
         UniformBuffer() = default;
         virtual ~UniformBuffer() = default;
+
+        /* Deleted copy and move operations. */
+        /**@{*/
+        UniformBuffer(const UniformBuffer&) = delete;
+        UniformBuffer(UniformBuffer&&) = delete;
+        UniformBuffer& operator =(const UniformBuffer&) = delete;
+        UniformBuffer& operator =(UniformBuffer&&) = delete;
+        /**@}*/
 
     };
 
@@ -70,16 +70,16 @@ namespace Molten
 
     public:
 
-        FramedUniformBuffer(const FramedUniformBuffer&) = delete;
-        FramedUniformBuffer(FramedUniformBuffer&&) = delete;
-
-        FramedUniformBuffer& operator =(const FramedUniformBuffer&) = delete;
-        FramedUniformBuffer& operator =(FramedUniformBuffer&&) = delete;
-
-    protected:
-
         FramedUniformBuffer() = default;
         virtual ~FramedUniformBuffer() = default;
+
+        /* Deleted copy and move operations. */
+        /**@{*/
+        FramedUniformBuffer(const FramedUniformBuffer&) = delete;
+        FramedUniformBuffer(FramedUniformBuffer&&) = delete;
+        FramedUniformBuffer& operator =(const FramedUniformBuffer&) = delete;
+        FramedUniformBuffer& operator =(FramedUniformBuffer&&) = delete;
+        /**@}*/        
 
     };
 

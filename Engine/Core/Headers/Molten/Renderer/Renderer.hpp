@@ -35,6 +35,7 @@
 #include "Molten/Renderer/VertexBuffer.hpp"
 #include "Molten/Renderer/DescriptorSet.hpp"
 #include "Molten/System/Version.hpp"
+#include "Molten/System/Resource.hpp"
 
 namespace Molten::Shader::Visual
 {
@@ -93,83 +94,55 @@ namespace Molten
         virtual Version GetVersion() const = 0;
 
         /** Get location of pipeline push constant by id. Id is set in shader script. */
-        virtual uint32_t GetPushConstantLocation(Pipeline* pipeline, const uint32_t id) = 0;
+        virtual uint32_t GetPushConstantLocation(Resource<Pipeline>& pipeline, const uint32_t id) = 0;
 
 
         /** Create descriptor set object. */
-        virtual DescriptorSet* CreateDescriptorSet(const DescriptorSetDescriptor& descriptor) = 0;
+        virtual Resource<DescriptorSet> CreateDescriptorSet(const DescriptorSetDescriptor& descriptor) = 0;
 
         /** Create framed descriptor set object. */
-        virtual FramedDescriptorSet* CreateFramedDescriptorSet(const FramedDescriptorSetDescriptor& descriptor) = 0;
+        virtual Resource<FramedDescriptorSet> CreateFramedDescriptorSet(const FramedDescriptorSetDescriptor& descriptor) = 0;
 
         /** Create framebuffer object. */
-        virtual Framebuffer* CreateFramebuffer(const FramebufferDescriptor& descriptor) = 0;
+        virtual Resource<Framebuffer> CreateFramebuffer(const FramebufferDescriptor& descriptor) = 0;
 
         /**  Create index buffer object. */
-        virtual IndexBuffer* CreateIndexBuffer(const IndexBufferDescriptor& descriptor) = 0;
+        virtual Resource<IndexBuffer> CreateIndexBuffer(const IndexBufferDescriptor& descriptor) = 0;
 
         /** Create pipeline object. */
-        virtual Pipeline* CreatePipeline(const PipelineDescriptor& descriptor) = 0;
+        virtual Resource<Pipeline> CreatePipeline(const PipelineDescriptor& descriptor) = 0;
 
         /** Create texture object. */
-        virtual Texture* CreateTexture(const TextureDescriptor& descriptor) = 0;
+        virtual Resource<Texture> CreateTexture(const TextureDescriptor& descriptor) = 0;
 
         /** Create uniform buffer object. */
-        virtual UniformBuffer* CreateUniformBuffer(const UniformBufferDescriptor& descriptor) = 0;
+        virtual Resource<UniformBuffer> CreateUniformBuffer(const UniformBufferDescriptor& descriptor) = 0;
 
         /** Create framed uniform buffer object. */
-        virtual FramedUniformBuffer* CreateFramedUniformBuffer(const FramedUniformBufferDescriptor& descriptor) = 0;
+        virtual Resource<FramedUniformBuffer> CreateFramedUniformBuffer(const FramedUniformBufferDescriptor& descriptor) = 0;
 
         /** Create vertex buffer object. */
-        virtual VertexBuffer* CreateVertexBuffer(const VertexBufferDescriptor& descriptor) = 0;
-
-
-        /** Destroy descriptor set object. */
-        virtual void DestroyDescriptorSet(DescriptorSet* descriptorSet) = 0;
-
-        /** Destroy framed descriptor set object. */
-        virtual void DestroyFramedDescriptorSet(FramedDescriptorSet* framedDescriptorSet) = 0;
-
-        /** Destroy framebuffer object. */
-        virtual void DestroyFramebuffer(Framebuffer* framebuffer) = 0;
-
-        /** Destroy index buffer object. */
-        virtual void DestroyIndexBuffer(IndexBuffer* indexBuffer) = 0;
-
-        /** Destroy pipeline object. */
-        virtual void DestroyPipeline(Pipeline* pipeline) = 0;
-
-        /** Destroy texture object. */
-        virtual void DestroyTexture(Texture* texture) = 0;
-
-        /** Destroy uniform buffer object. */
-        virtual void DestroyUniformBuffer(UniformBuffer* uniformBuffer) = 0;
-
-        /** Destroy framed uniform buffer object. */
-        virtual void DestroyFramedUniformBuffer(FramedUniformBuffer* framedUniformBuffer) = 0;
-
-        /** Destroy vertex buffer object. */
-        virtual void DestroyVertexBuffer(VertexBuffer* vertexBuffer) = 0;    
+        virtual Resource<VertexBuffer> CreateVertexBuffer(const VertexBufferDescriptor& descriptor) = 0;
 
 
         /** Bind descriptor set to draw queue. */
-        virtual void BindDescriptorSet(DescriptorSet* descriptorSet) = 0;
+        virtual void BindDescriptorSet(Resource<DescriptorSet>& descriptorSet) = 0;
 
         /** Bind framed descriptor set to draw queue. */
-        virtual void BindFramedDescriptorSet(FramedDescriptorSet* framedDescriptorSet) = 0;
+        virtual void BindFramedDescriptorSet(Resource<FramedDescriptorSet>& framedDescriptorSet) = 0;
 
         /** Bind pipeline to draw queue. */
-        virtual void BindPipeline(Pipeline* pipeline) = 0;
+        virtual void BindPipeline(Resource<Pipeline>& pipeline) = 0;
 
 
         /** Begin and initialize rendering to framebuffers. */
         virtual void BeginDraw() = 0;
 
         /** Draw vertex buffer, using the current bound pipeline. */
-        virtual void DrawVertexBuffer(VertexBuffer* vertexBuffer) = 0;
+        virtual void DrawVertexBuffer(Resource<VertexBuffer>& vertexBuffer) = 0;
 
         /** Draw indexed vertex buffer, using the current bound pipeline. */
-        virtual void DrawVertexBuffer(IndexBuffer* indexBuffer, VertexBuffer* vertexBuffer) = 0;
+        virtual void DrawVertexBuffer(Resource<IndexBuffer>& indexBuffer, Resource<VertexBuffer>& vertexBuffer) = 0;
 
         /** Push constant values to shader stage.
          *  This function call has no effect if provided id argument is greater than the number of push constants in pipeline.
@@ -195,10 +168,10 @@ namespace Molten
         virtual void WaitForDevice() = 0;
 
         /** Update uniform buffer data. */
-        virtual void UpdateUniformBuffer(UniformBuffer* uniformBuffer, const size_t offset, const size_t size, const void* data) = 0;
+        virtual void UpdateUniformBuffer(Resource<UniformBuffer>& uniformBuffer, const size_t offset, const size_t size, const void* data) = 0;
 
         /** Update framed uniform buffer data. */
-        virtual void UpdateFramedUniformBuffer(FramedUniformBuffer* framedUniformBuffer, const size_t offset, const size_t size, const void* data) = 0;
+        virtual void UpdateFramedUniformBuffer(Resource<FramedUniformBuffer>& framedUniformBuffer, const size_t offset, const size_t size, const void* data) = 0;
 
     };
 

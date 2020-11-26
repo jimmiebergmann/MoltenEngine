@@ -38,16 +38,16 @@ namespace Molten
 
     public:
 
-    protected:
-
         Texture() = default;
         virtual ~Texture() = default;
 
+        /* Deleted copy and move operations. */
+        /**@{*/
         Texture(const Texture&) = delete;
         Texture(Texture&&) = delete;
         Texture& operator =(const Texture&) = delete;
         Texture& operator =(Texture&&) = delete;
-        
+        /**@}*/
 
     };
 

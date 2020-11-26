@@ -32,6 +32,7 @@
 #include "Molten/Renderer/OpenGL/OpengGLFunctions.hpp"
 #include "Molten/Window/Window.hpp"
 #include "Molten/System/Exception.hpp"
+#include <limits>
 
 namespace Molten
 {
@@ -179,101 +180,65 @@ namespace Molten
         return m_version;
     }
 
-    uint32_t OpenGLX11Renderer::GetPushConstantLocation(Pipeline* /*pipeline*/, const uint32_t /*id*/)
+    uint32_t OpenGLX11Renderer::GetPushConstantLocation(Resource<Pipeline>& /*pipeline*/, const uint32_t /*id*/)
     {
-        return 0;
+        return std::numeric_limits<uint32_t>::max();
     }
 
-    DescriptorSet* OpenGLX11Renderer::CreateDescriptorSet(const DescriptorSetDescriptor& /*descriptor*/)
+    Resource<DescriptorSet> OpenGLX11Renderer::CreateDescriptorSet(const DescriptorSetDescriptor& /*descriptor*/)
     {
-        return nullptr;
+        return { };
     }
 
-    FramedDescriptorSet* OpenGLX11Renderer::CreateFramedDescriptorSet(const FramedDescriptorSetDescriptor& /*descriptor*/)
+    Resource<FramedDescriptorSet> OpenGLX11Renderer::CreateFramedDescriptorSet(const FramedDescriptorSetDescriptor& /*descriptor*/)
     {
-        return nullptr;
+        return { };
     }
 
-    Framebuffer* OpenGLX11Renderer::CreateFramebuffer(const FramebufferDescriptor&)
+    Resource<Framebuffer> OpenGLX11Renderer::CreateFramebuffer(const FramebufferDescriptor&)
     {
-        return nullptr;
+        return { };
     }
 
-    IndexBuffer* OpenGLX11Renderer::CreateIndexBuffer(const IndexBufferDescriptor& /*descriptor*/)
+    Resource<IndexBuffer> OpenGLX11Renderer::CreateIndexBuffer(const IndexBufferDescriptor& /*descriptor*/)
     {
-        return nullptr;
+        return { };
     }
 
-    Pipeline* OpenGLX11Renderer::CreatePipeline(const PipelineDescriptor& /*descriptor*/)
+    Resource<Pipeline> OpenGLX11Renderer::CreatePipeline(const PipelineDescriptor& /*descriptor*/)
     {
-        return nullptr;
+        return { };
     }
 
-    Texture* OpenGLX11Renderer::CreateTexture(const TextureDescriptor&)
+    Resource<Texture> OpenGLX11Renderer::CreateTexture(const TextureDescriptor&)
     {
-        return nullptr;
+        return { };
     }
 
-    UniformBuffer* OpenGLX11Renderer::CreateUniformBuffer(const UniformBufferDescriptor&)
+    Resource<UniformBuffer> OpenGLX11Renderer::CreateUniformBuffer(const UniformBufferDescriptor&)
     {
-        return nullptr;
+        return { };
     }
 
-    FramedUniformBuffer* OpenGLX11Renderer::CreateFramedUniformBuffer(const FramedUniformBufferDescriptor& /*descriptor*/)
+    Resource<FramedUniformBuffer> OpenGLX11Renderer::CreateFramedUniformBuffer(const FramedUniformBufferDescriptor& /*descriptor*/)
     {
-        return nullptr;
+        return { };
     }
 
-    VertexBuffer* OpenGLX11Renderer::CreateVertexBuffer(const VertexBufferDescriptor&)
+    Resource<VertexBuffer> OpenGLX11Renderer::CreateVertexBuffer(const VertexBufferDescriptor&)
     {
-        return nullptr;
+        return { };
     }
 
-    void OpenGLX11Renderer::DestroyDescriptorSet(DescriptorSet* )
-    {
-    }
-
-    void OpenGLX11Renderer::DestroyFramedDescriptorSet(FramedDescriptorSet*)
+    void OpenGLX11Renderer::BindDescriptorSet(Resource<DescriptorSet>& /*descriptorSet*/)
     {
     }
 
-    void OpenGLX11Renderer::DestroyFramebuffer(Framebuffer*)
+    void OpenGLX11Renderer::BindFramedDescriptorSet(Resource<FramedDescriptorSet>& /*framedDescriptorSet*/)
     {
     }
 
-    void OpenGLX11Renderer::DestroyIndexBuffer(IndexBuffer* /*indexBuffer*/)
-    {
-    }
-
-    void OpenGLX11Renderer::DestroyPipeline(Pipeline* /*shader*/)
-    {
-    }
-
-    void OpenGLX11Renderer::DestroyTexture(Texture*)
-    {
-    }
-
-    void OpenGLX11Renderer::DestroyUniformBuffer(UniformBuffer* /*uniformBuffer*/)
-    {
-    }
-
-    void OpenGLX11Renderer::DestroyFramedUniformBuffer(FramedUniformBuffer* /*framedUniformBuffer*/)
-    {
-    }
-
-    void OpenGLX11Renderer::DestroyVertexBuffer(VertexBuffer* /*vertexBuffer*/)
-    {
-    }
-
-    void OpenGLX11Renderer::BindDescriptorSet(DescriptorSet* /*descriptorSet*/)
-    {
-    }
-
-    void OpenGLX11Renderer::BindFramedDescriptorSet(FramedDescriptorSet* /*framedDescriptorSet*/)
-    {
-    }
-
-    void OpenGLX11Renderer::BindPipeline(Pipeline* /*pipeline*/)
+    void OpenGLX11Renderer::BindPipeline(Resource<Pipeline>& /*pipeline*/)
     {
     }
 
@@ -281,11 +246,11 @@ namespace Molten
     {
     }
 
-    void OpenGLX11Renderer::DrawVertexBuffer(VertexBuffer* /*vertexBuffer*/)
+    void OpenGLX11Renderer::DrawVertexBuffer(Resource<VertexBuffer>& /*vertexBuffer*/)
     {
     }
 
-    void OpenGLX11Renderer::DrawVertexBuffer(IndexBuffer* /*indexBuffer*/, VertexBuffer* /*vertexBuffer*/)
+    void OpenGLX11Renderer::DrawVertexBuffer(Resource<IndexBuffer>& /*indexBuffer*/, Resource<VertexBuffer>& /*vertexBuffer*/)
     {
     }
 
@@ -319,11 +284,11 @@ namespace Molten
     {
     }
 
-    void OpenGLX11Renderer::UpdateUniformBuffer(UniformBuffer* /*uniformBuffer*/, const size_t /*offset*/, const size_t /*size*/, const void* /*data*/)
+    void OpenGLX11Renderer::UpdateUniformBuffer(Resource<UniformBuffer>& /*uniformBuffer*/, const size_t /*offset*/, const size_t /*size*/, const void* /*data*/)
     {
     }
 
-    void OpenGLX11Renderer::UpdateFramedUniformBuffer(FramedUniformBuffer* /*framedUniformBuffer*/, const size_t /*offset*/, const size_t /*size*/, const void* /*data*/)
+    void OpenGLX11Renderer::UpdateFramedUniformBuffer(Resource<FramedUniformBuffer>& /*framedUniformBuffer*/, const size_t /*offset*/, const size_t /*size*/, const void* /*data*/)
     {
     }
 

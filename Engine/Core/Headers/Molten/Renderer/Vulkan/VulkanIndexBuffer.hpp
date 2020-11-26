@@ -29,19 +29,19 @@
 #include "Molten/Renderer/IndexBuffer.hpp"
 
 #if defined(MOLTEN_ENABLE_VULKAN)
-#include "Molten/Renderer/Vulkan/VulkanHeaders.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanBuffer.hpp"
 
 namespace Molten
 {
 
-    class VulkanRenderer;
-
     class MOLTEN_API VulkanIndexBuffer : public IndexBuffer
     {
 
-    private:
+    public:
 
+        using Base = IndexBuffer;
+
+        VulkanIndexBuffer() = delete;
         VulkanIndexBuffer(
             Vulkan::DeviceBuffer&& buffer,
             const size_t indexCount,
@@ -50,8 +50,6 @@ namespace Molten
         Vulkan::DeviceBuffer buffer;
         size_t indexCount;
         DataType dataType;
-
-        friend class VulkanRenderer;
 
     };
 

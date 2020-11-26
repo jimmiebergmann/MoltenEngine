@@ -29,6 +29,7 @@
 #include "Molten/Gui/GuiTypes.hpp"
 #include "Molten/Math/Vector.hpp"
 #include "Molten/Math/Matrix.hpp"
+#include "Molten/System/Resource.hpp"
 #include <stack>
 
 namespace Molten
@@ -85,10 +86,10 @@ namespace Molten::Gui
         {
             RenderInstance();
 
-            Pipeline* pipeline;
-            VertexBuffer* vertexBuffer;
-            IndexBuffer* indexBuffer;
-            Texture* texture;
+            Resource<Pipeline> pipeline;
+            Resource<VertexBuffer> vertexBuffer;
+            Resource<IndexBuffer> indexBuffer;
+            Resource<Texture> texture;
             Shader::Visual::VertexScript* vertexScript;
             Shader::Visual::FragmentScript* fragmentScript;
             uint32_t projectionLocation;

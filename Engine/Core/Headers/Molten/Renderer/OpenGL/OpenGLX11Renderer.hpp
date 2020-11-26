@@ -84,83 +84,55 @@ namespace Molten
         virtual Version GetVersion() const override;
 
         /** Get location of pipeline push constant by id. Id is set in shader script. */
-        virtual uint32_t GetPushConstantLocation(Pipeline* pipeline, const uint32_t id) override;
+        virtual uint32_t GetPushConstantLocation(Resource<Pipeline>& pipeline, const uint32_t id) override;
 
 
         /** Create descriptor set object. */
-        virtual DescriptorSet* CreateDescriptorSet(const DescriptorSetDescriptor& descriptor) override;
+        virtual Resource<DescriptorSet> CreateDescriptorSet(const DescriptorSetDescriptor& descriptor) override;
 
         /** Create framed descriptor set object. */
-        virtual FramedDescriptorSet* CreateFramedDescriptorSet(const FramedDescriptorSetDescriptor& descriptor) override;
+        virtual Resource<FramedDescriptorSet> CreateFramedDescriptorSet(const FramedDescriptorSetDescriptor& descriptor) override;
 
         /** Create framebuffer object. */
-        virtual Framebuffer* CreateFramebuffer(const FramebufferDescriptor& descriptor) override;
+        virtual Resource<Framebuffer> CreateFramebuffer(const FramebufferDescriptor& descriptor) override;
 
         /**  Create index buffer object. */
-        virtual IndexBuffer* CreateIndexBuffer(const IndexBufferDescriptor& descriptor) override;
+        virtual Resource<IndexBuffer> CreateIndexBuffer(const IndexBufferDescriptor& descriptor) override;
 
         /** Create pipeline object. */
-        virtual Pipeline* CreatePipeline(const PipelineDescriptor& descriptor) override;
+        virtual Resource<Pipeline> CreatePipeline(const PipelineDescriptor& descriptor) override;
 
         /** Create texture object. */
-        virtual Texture* CreateTexture(const TextureDescriptor& descriptor) override;
+        virtual Resource<Texture> CreateTexture(const TextureDescriptor& descriptor) override;
 
         /** Create uniform buffer object. */
-        virtual UniformBuffer* CreateUniformBuffer(const UniformBufferDescriptor& descriptor) override;
+        virtual Resource<UniformBuffer> CreateUniformBuffer(const UniformBufferDescriptor& descriptor) override;
 
         /** Create framed uniform buffer object. */
-        virtual FramedUniformBuffer* CreateFramedUniformBuffer(const FramedUniformBufferDescriptor& descriptor) override;
+        virtual Resource<FramedUniformBuffer> CreateFramedUniformBuffer(const FramedUniformBufferDescriptor& descriptor) override;
 
         /** Create vertex buffer object. */
-        virtual VertexBuffer* CreateVertexBuffer(const VertexBufferDescriptor& descriptor) override;
-
-
-        /** Destroy descriptor set object. */
-        virtual void DestroyDescriptorSet(DescriptorSet* descriptorSet) override;
-
-        /** Destroy framed descriptor set object. */
-        virtual void DestroyFramedDescriptorSet(FramedDescriptorSet* framedDescriptorSet) override;
-
-        /** Destroy framebuffer object. */
-        virtual void DestroyFramebuffer(Framebuffer* framebuffer) override;
-
-        /** Destroy index buffer object. */
-        virtual void DestroyIndexBuffer(IndexBuffer* indexBuffer) override;
-
-        /** Destroy pipeline object. */
-        virtual void DestroyPipeline(Pipeline* pipeline) override;
-
-        /** Destroy texture object. */
-        virtual void DestroyTexture(Texture* texture) override;
-
-        /** Destroy uniform buffer object. */
-        virtual void DestroyUniformBuffer(UniformBuffer* uniformBuffer) override;
-
-        /** Destroy framed uniform buffer object. */
-        virtual void DestroyFramedUniformBuffer(FramedUniformBuffer* framedUniformBuffer) override;
-
-        /** Destroy vertex buffer object. */
-        virtual void DestroyVertexBuffer(VertexBuffer* vertexBuffer) override;
+        virtual Resource<VertexBuffer> CreateVertexBuffer(const VertexBufferDescriptor& descriptor) override;
 
 
         /** Bind descriptor set to draw queue. */
-        virtual void BindDescriptorSet(DescriptorSet* descriptorSet) override;
+        virtual void BindDescriptorSet(Resource<DescriptorSet>& descriptorSet) override;
 
         /** Bind framed descriptor set to draw queue. */
-        virtual void BindFramedDescriptorSet(FramedDescriptorSet* framedDescriptorSet) override;
+        virtual void BindFramedDescriptorSet(Resource<FramedDescriptorSet>& framedDescriptorSet) override;
 
         /** Bind pipeline to draw queue. */
-        virtual void BindPipeline(Pipeline* pipeline) override;
+        virtual void BindPipeline(Resource<Pipeline>& pipeline) override;
 
 
         /** Begin and initialize rendering to framebuffers. */
         virtual void BeginDraw() override;
 
         /** Draw vertex buffer, using the current bound pipeline. */
-        virtual void DrawVertexBuffer(VertexBuffer* vertexBuffer) override;
+        virtual void DrawVertexBuffer(Resource<VertexBuffer>& vertexBuffer) override;
 
         /** Draw indexed vertex buffer, using the current bound pipeline. */
-        virtual void DrawVertexBuffer(IndexBuffer* indexBuffer, VertexBuffer* vertexBuffer) override;
+        virtual void DrawVertexBuffer(Resource<IndexBuffer>& indexBuffer, Resource<VertexBuffer>& vertexBuffer) override;
 
         /** Push constant values to shader stage.
          *  This function call has no effect if provided id argument is greater than the number of push constants in pipeline.
@@ -186,10 +158,10 @@ namespace Molten
         virtual void WaitForDevice() override;
 
         /** Update uniform buffer data. */
-        virtual void UpdateUniformBuffer(UniformBuffer* uniformBuffer, const size_t offset, const size_t size, const void* data) override;
+        virtual void UpdateUniformBuffer(Resource<UniformBuffer>& uniformBuffer, const size_t offset, const size_t size, const void* data) override;
 
         /** Update uniform buffer data. */
-        virtual void UpdateFramedUniformBuffer(FramedUniformBuffer* framedUniformBuffer, const size_t offset, const size_t size, const void* data) override;
+        virtual void UpdateFramedUniformBuffer(Resource<FramedUniformBuffer>& framedUniformBuffer, const size_t offset, const size_t size, const void* data) override;
 
     private:
 

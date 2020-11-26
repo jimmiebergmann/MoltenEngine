@@ -75,29 +75,29 @@ namespace Molten::Editor
 
         Logger m_logger;
         std::unique_ptr<Window> m_window;
-        std::unique_ptr <Renderer> m_renderer;
+        std::unique_ptr<Renderer> m_renderer;
 
-        FramedUniformBuffer* m_viewMatrixBuffer;
+        Resource<FramedUniformBuffer> m_viewMatrixBuffer;
 
-        Pipeline* m_gridPipeline;
+        Resource<Pipeline> m_gridPipeline;
         Shader::Visual::VertexScript m_gridVertexScript;
         Shader::Visual::FragmentScript m_gridFragmentScript;
-        VertexBuffer* m_gridVertexBuffer;
-        IndexBuffer* m_gridIndexBuffer;
-        FramedDescriptorSet* m_gridMatrixDescriptorSet;
+        Resource<VertexBuffer> m_gridVertexBuffer;
+        Resource<IndexBuffer> m_gridIndexBuffer;
+        Resource<FramedDescriptorSet> m_gridMatrixDescriptorSet;
         uint32_t m_gridColor1PushLocation;
         uint32_t m_gridColor2PushLocation;
 
-        Pipeline* m_objectPipeline;
+        Resource<Pipeline> m_objectPipeline;
         Shader::Visual::VertexScript m_objectVertexScript;
         Shader::Visual::FragmentScript m_objectFragmentScript;
-        VertexBuffer* m_objectVertexBuffer;
-        IndexBuffer* m_objectIndexBuffer;
-        FramedDescriptorSet* m_objectMatrixDescriptorSet;
-        DescriptorSet* m_objectTextureDescriptorSet;
+        Resource<VertexBuffer> m_objectVertexBuffer;
+        Resource<IndexBuffer> m_objectIndexBuffer;
+        Resource<FramedDescriptorSet> m_objectMatrixDescriptorSet;
+        Resource<DescriptorSet> m_objectTextureDescriptorSet;
         uint32_t m_objectPosPushLocation;
         uint32_t m_objectColorPushLocation;
-        Texture* m_objectTexture;
+        Resource<Texture> m_objectTexture;
   
         Clock m_programTimer;
         float m_programTime;

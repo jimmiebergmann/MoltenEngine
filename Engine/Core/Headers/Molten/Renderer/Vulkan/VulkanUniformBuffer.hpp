@@ -35,28 +35,18 @@
 namespace Molten
 {
 
-    class VulkanRenderer;
-
     /** Vulkan uniform buffer. */
     class MOLTEN_API VulkanUniformBuffer : public UniformBuffer
     {
 
     public:
 
-        VulkanUniformBuffer(const VulkanUniformBuffer&) = delete;
-        VulkanUniformBuffer& operator =(const VulkanUniformBuffer&) = delete;
+        using Base = UniformBuffer;
 
-    private:
-
-        explicit VulkanUniformBuffer(Vulkan::DeviceBuffer && deviceBuffer);
-        ~VulkanUniformBuffer() = default;
-
-        VulkanUniformBuffer(VulkanUniformBuffer&& uniformBuffer) noexcept;
-        VulkanUniformBuffer& operator =(VulkanUniformBuffer&& uniformBuffer) noexcept;
+        VulkanUniformBuffer() = delete;
+        explicit VulkanUniformBuffer(Vulkan::DeviceBuffer && deviceBuffer) noexcept;
 
         Vulkan::DeviceBuffer deviceBuffer;
-
-        friend class VulkanRenderer;
 
     };
 
@@ -67,20 +57,12 @@ namespace Molten
 
     public:
 
-        VulkanFramedUniformBuffer(const VulkanFramedUniformBuffer&) = delete;
-        VulkanFramedUniformBuffer& operator =(const VulkanFramedUniformBuffer&) = delete;
+        using Base = FramedUniformBuffer;
 
-    private:
-
-        explicit VulkanFramedUniformBuffer(std::vector<Vulkan::DeviceBuffer> && deviceBuffers);
-        ~VulkanFramedUniformBuffer() = default;
-
-        VulkanFramedUniformBuffer(VulkanFramedUniformBuffer&& framedUniformBuffer) noexcept;
-        VulkanFramedUniformBuffer& operator =(VulkanFramedUniformBuffer&& framedUniformBuffer) noexcept;
+        VulkanFramedUniformBuffer() = delete;
+        explicit VulkanFramedUniformBuffer(std::vector<Vulkan::DeviceBuffer> && deviceBuffers) noexcept;
 
         std::vector<Vulkan::DeviceBuffer> deviceBuffers;
-
-        friend class VulkanRenderer;
 
     };
 

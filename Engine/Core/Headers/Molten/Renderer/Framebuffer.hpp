@@ -35,15 +35,19 @@ namespace Molten
     class MOLTEN_API Framebuffer
     {
 
-    protected:
+    public:
 
         Framebuffer() = default;
         virtual ~Framebuffer() = default;
 
+        /* Deleted copy and move operations. */
+        /**@{*/
         Framebuffer(const Framebuffer&) = delete;
         Framebuffer(Framebuffer&&) = delete;
         Framebuffer& operator =(const Framebuffer&) = delete;
         Framebuffer& operator =(Framebuffer&&) = delete;
+        /**@}*/
+
     };
 
     /** Descriptor class of framebuffer class. */

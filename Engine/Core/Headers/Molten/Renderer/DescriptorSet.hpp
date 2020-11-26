@@ -27,6 +27,7 @@
 #define MOLTEN_CORE_RENDERER_DESCRIPTORSET_HPP
 
 #include "Molten/Renderer/Shader.hpp"
+#include "Molten/System/Resource.hpp"
 #include <variant>
 #include <map>
 
@@ -45,15 +46,16 @@ namespace Molten
 
     public:
 
+        DescriptorSet() = default;
+        virtual ~DescriptorSet() = default;
+
+        /* Deleted copy and move operations. */
+        /**@{*/
         DescriptorSet(const DescriptorSet&) = delete;
         DescriptorSet(DescriptorSet&&) = delete;
         DescriptorSet& operator =(const DescriptorSet&) = delete;
         DescriptorSet& operator =(DescriptorSet&&) = delete;
-
-    protected:
-
-        DescriptorSet() = default;
-        virtual ~DescriptorSet() = default;
+        /**@}*/
 
     };
 
@@ -65,8 +67,8 @@ namespace Molten
     public:
 
         using BindingVariant = std::variant< 
-            UniformBuffer*,
-            Texture*
+            Resource<UniformBuffer>*,
+            Resource<Texture>*
         >;
 
         uint32_t id;
@@ -82,12 +84,12 @@ namespace Molten
 
         DescriptorSetDescriptor();
         DescriptorSetDescriptor(
-            Pipeline* pipeline,
+            Resource<Pipeline>* pipeline,
             const uint32_t id,
             std::vector<DescriptorBinding>&& bindings
         );
 
-        Pipeline* pipeline;
+        Resource<Pipeline>* pipeline;
         uint32_t id;
         std::vector<DescriptorBinding> bindings;
 
@@ -100,15 +102,16 @@ namespace Molten
 
     public:
 
+        FramedDescriptorSet() = default;
+        virtual ~FramedDescriptorSet() = default;
+
+        /* Deleted copy and move operations. */
+        /**@{*/
         FramedDescriptorSet(const FramedDescriptorSet&) = delete;
         FramedDescriptorSet(FramedDescriptorSet&&) = delete;
         FramedDescriptorSet& operator =(const FramedDescriptorSet&) = delete;
         FramedDescriptorSet& operator =(FramedDescriptorSet&&) = delete;
-
-    protected:
-
-        FramedDescriptorSet() = default;
-        virtual ~FramedDescriptorSet() = default;
+        /**@}*/
 
     };
 
@@ -119,8 +122,8 @@ namespace Molten
     public:
 
         using BindingVariant = std::variant<
-            FramedUniformBuffer*,
-            Texture*
+            Resource<FramedUniformBuffer>*,
+            Resource<Texture>*
         >;
 
         uint32_t id;
@@ -136,12 +139,12 @@ namespace Molten
 
         FramedDescriptorSetDescriptor();
         FramedDescriptorSetDescriptor(
-            Pipeline* pipeline,
+            Resource<Pipeline>* pipeline,
             const uint32_t id,
             std::vector<FramedDescriptorBinding>&& bindings
         );
 
-        Pipeline* pipeline;
+        Resource<Pipeline>* pipeline;
         uint32_t id;
         std::vector<FramedDescriptorBinding> bindings;
 

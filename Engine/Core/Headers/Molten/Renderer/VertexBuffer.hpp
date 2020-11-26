@@ -44,15 +44,16 @@ namespace Molten
             Float64
         };
 
-    protected:
-
         VertexBuffer() = default;
         virtual ~VertexBuffer() = default;
 
+        /* Deleted copy and move operations. */
+        /**@{*/
         VertexBuffer(const VertexBuffer&) = delete;
         VertexBuffer(VertexBuffer&&) = delete;
         VertexBuffer& operator =(const VertexBuffer&) = delete;
         VertexBuffer& operator =(VertexBuffer&&) = delete;
+        /**@}*/
 
     };
 

@@ -77,12 +77,16 @@ namespace Molten
             FrontAndBack
         };
 
-    protected:
-
         Pipeline() = default;
+        virtual ~Pipeline() = default;
+
+        /* Deleted copy and move operations. */
+        /**@{*/
         Pipeline(const Pipeline&) = delete;
         Pipeline(Pipeline&&) = delete;
-        virtual ~Pipeline() = default;
+        Pipeline& operator =(const Pipeline&) = delete;
+        Pipeline& operator =(Pipeline&&) = delete;
+        /**@}*/       
 
     };
 

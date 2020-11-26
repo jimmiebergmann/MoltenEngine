@@ -33,36 +33,15 @@ namespace Molten
 {
 
     // Vulkan uniform buffer implementations.
-    VulkanUniformBuffer::VulkanUniformBuffer(Vulkan::DeviceBuffer&& deviceBuffer) :
+    VulkanUniformBuffer::VulkanUniformBuffer(Vulkan::DeviceBuffer&& deviceBuffer) noexcept  :
         deviceBuffer(std::move(deviceBuffer))
     {}
 
-    VulkanUniformBuffer::VulkanUniformBuffer(VulkanUniformBuffer&& uniformBuffer) noexcept :
-        deviceBuffer(std::move(uniformBuffer.deviceBuffer))
-    {}
-
-    VulkanUniformBuffer& VulkanUniformBuffer::operator =(VulkanUniformBuffer&& uniformBuffer) noexcept
-    {
-        deviceBuffer = std::move(uniformBuffer.deviceBuffer);
-        return *this;
-    }
-
 
     // Vulkan framed uniform buffer implementations.
-    VulkanFramedUniformBuffer::VulkanFramedUniformBuffer(std::vector<Vulkan::DeviceBuffer>&& deviceBuffers) :
+    VulkanFramedUniformBuffer::VulkanFramedUniformBuffer(std::vector<Vulkan::DeviceBuffer>&& deviceBuffers) noexcept :
         deviceBuffers(std::move(deviceBuffers))
     {}
-
-    VulkanFramedUniformBuffer::VulkanFramedUniformBuffer(VulkanFramedUniformBuffer&& framedUniformBuffer) noexcept :
-        deviceBuffers(std::move(framedUniformBuffer.deviceBuffers))
-    {}
-
-    VulkanFramedUniformBuffer& VulkanFramedUniformBuffer::operator =(VulkanFramedUniformBuffer&& framedUniformBuffer) noexcept
-    {
-        deviceBuffers = std::move(framedUniformBuffer.deviceBuffers);
-        return *this;
-    }
-
 
 }
 

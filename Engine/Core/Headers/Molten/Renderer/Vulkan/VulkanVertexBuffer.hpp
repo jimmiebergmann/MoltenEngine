@@ -35,12 +35,12 @@
 namespace Molten
 {
 
-    class VulkanRenderer;
-
     class MOLTEN_API VulkanVertexBuffer : public VertexBuffer
     {
 
-    private:
+    public:
+
+        using Base = VertexBuffer;
 
         VulkanVertexBuffer(
             Vulkan::DeviceBuffer&& buffer,
@@ -50,8 +50,6 @@ namespace Molten
         Vulkan::DeviceBuffer buffer;
         uint32_t vertexCount;
         uint32_t vertexSize;
-
-        friend class VulkanRenderer;
 
     };
 
