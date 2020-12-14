@@ -25,13 +25,13 @@
 
 #include "Molten/System/Clock.hpp"
 
-#if MOLTEN_PLATFORM
+#if MOLTEN_PLATFORM == MOLTEN_PLATFORM_WINDOWS
 #include "Molten/Platform/Win32Headers.hpp"
 #else
 #include <thread>
 #endif
 
-#include <iostream>
+#include <algorithm>
 
 namespace Molten
 {
@@ -107,7 +107,7 @@ namespace Molten
     // Global functions implementations.
     void SleepThreadFor(const Time& time)
     {
-#if MOLTEN_PLATFORM
+#if MOLTEN_PLATFORM == MOLTEN_PLATFORM_WINDOWS
 
         struct WaitableTimer
         {
