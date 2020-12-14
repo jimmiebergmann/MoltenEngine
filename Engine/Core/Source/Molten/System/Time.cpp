@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2020 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -39,26 +39,26 @@ namespace Molten
         return { m_duration + time.m_duration };
     }
 
+    Time Time::operator - (const Time& time) const
+    {
+        return { m_duration - time.m_duration };
+    }
+
+    Time Time::operator % (const Time& time) const
+    {
+        return { m_duration % time.m_duration };
+    }
+
     Time& Time::operator += (const Time& time)
     {
         m_duration += time.m_duration;
         return *this;
     }
 
-    Time Time::operator - (const Time& time) const
-    {
-        return { m_duration - time.m_duration };
-    }
-
     Time& Time::operator -= (const Time& time)
     {
         m_duration -= time.m_duration;
         return *this;
-    }
-
-    Time Time::operator % (const Time& time) const
-    {
-        return { m_duration % time.m_duration };
     }
 
     Time& Time::operator %= (const Time& time)
@@ -105,5 +105,5 @@ namespace Molten
     Time::Time(const std::chrono::nanoseconds nanoseconds) :
         m_duration(nanoseconds)
     {}
-
+  
 }

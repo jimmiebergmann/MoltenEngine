@@ -31,31 +31,35 @@
 namespace Molten::Gui
 {
 
-    class MOLTEN_API Padding : public Widget, public PaddingData
+    template<typename TSkin>
+    class Padding : public Widget<TSkin>, public PaddingData
     {
 
     public:
 
-        Padding(
+        explicit Padding(
+            TSkin& skin,
             const float left = 0.0f,
             const float top = 0.0f,
             const float right = 0.0f,
             const float bottom = 0.0f);
 
-        virtual void Update(const Time& deltaTime) override;
+        void Update(const Time& deltaTime) override;
 
-        virtual void Draw(CanvasRenderer& renderer) override;
+        void Draw(CanvasRenderer& renderer) override;
 
-        virtual Vector2f32 CalculateSize(const Vector2f32& grantedSize) override;
+        Vector2f32 CalculateSize(const Vector2f32& grantedSize) override;
 
-        virtual void CalculateChildrenGrantedSize(WidgetTreeData::Tree::ConstLane<WidgetTreeData::Tree::PartialLaneType> children) override;
+        void CalculateChildrenGrantedSize(typename WidgetTreeData<TSkin>::Tree::template ConstLane<typename WidgetTreeData<TSkin>::Tree::PartialLaneType> children) override;
 
     private:
 
-        virtual bool OnAddChild(WidgetPointer) override;
+        bool OnAddChild(WidgetPointer<TSkin>) override;
 
     };
 
 }
+
+#include "Molten/Gui/Widgets/PaddingWidget.inl"
 
 #endif

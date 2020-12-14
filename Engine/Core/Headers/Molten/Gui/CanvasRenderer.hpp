@@ -99,7 +99,7 @@ namespace Molten::Gui
         };
 
         void LoadRectRenderInstance();
-        void DestroyRenderInstance(RenderInstance& instance);
+        static void DestroyRenderInstance(RenderInstance& instance);
 
         using PositionStack = std::stack<Vector2f32>;
 

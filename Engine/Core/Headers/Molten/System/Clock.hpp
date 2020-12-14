@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2020 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -31,31 +31,25 @@
 namespace Molten
 {
 
-    /**
-    * @brief Clock class.
-    *        It's not possible to stop or pause a clock.
-    *        Clock starts to tick at construction.
+    /** Clock class.
+    *   It's not possible to stop or pause a clock.
+    *   Clock starts to tick at construction.
     */
     class MOLTEN_API Clock
     {
 
     public:
 
-        /**
-        * @brief Constructor.
+        /** Constructor.
         *
         * @param startTime Initial time of clock.
         */
-        Clock(const Time startTime = Time::Zero);
+        explicit Clock(const Time startTime = Time::Zero);
 
-        /**
-        * @brief Get current time of clock.
-        */
-        Time GetTime() const;
+        /**  Get current time of clock. */
+        [[nodiscard]] Time GetTime() const;
 
-        /**
-        * @brief Resets clock, sets initial time. 
-        */
+        /** Resets clock, sets initial time.  */
         void Reset(const Time startTime = Time::Zero);
 
     private:
@@ -63,6 +57,45 @@ namespace Molten
         Time m_startTime;
 
     };
+
+
+    /** Sleep clock class, used for limiting FPS for example. */
+    class MOLTEN_API SleepClock
+    {
+
+    public:
+
+        /** Constructor.
+        *
+        * @param sleepTime Maximum time to wait at Sleep.
+        */
+        SleepClock(const Time sleepTime = Time::Zero);
+
+        void SetSleepTime(const Time sleepTime);
+
+        [[nodiscard]] Time GetSleepTime() const;
+
+        /** Reset sleep clock. */
+        void Reset();
+
+        /** Sleep for provided (sleep time) - (time since last call to Reset). */
+        void Sleep() const;
+
+        /** Sleep for provided (sleep time) - (time since last call to Reset).
+         *  Caution: A spinlock is running for the last millisecond to achieve precision. 
+         */
+        void PrecisionSleep() const;
+
+    private:
+
+        Time m_sleepTime;
+        Time m_startTime;
+
+    };
+
+
+    /** Precision thread sleep function.*/
+    MOLTEN_API void SleepThreadFor(const Time& time);
 
 }
 

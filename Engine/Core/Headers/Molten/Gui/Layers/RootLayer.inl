@@ -23,32 +23,27 @@
 *
 */
 
-/*
-
-
-#include "Molten/Gui/Layers/RootLayer.hpp"
-#include "Molten/Gui/CanvasRenderer.hpp"
-#include "Molten/Gui/Widget.hpp"
-#include <algorithm>
-
 namespace Molten::Gui
 {
 
-    RootLayer::RootLayer() :
+    template<typename TSkin>
+    inline RootLayer<TSkin>::RootLayer(TSkin& skin) :
+        Layer<TSkin>(skin),
         m_size(0.0f, 0.0f),
         m_scale(1.0f, 1.0f)
     {}
 
-    void RootLayer::Update(const Time& )
+    template<typename TSkin>
+    inline void RootLayer<TSkin>::Update(const Time&)
     {
         auto& rootWidget = m_widgetTree.GetItem().GetValue();
-        auto& rootWidgetRenderData = Layer::GetWidgetRenderData(*rootWidget);
+        auto& rootWidgetRenderData = Layer<TSkin>::GetWidgetRenderData(*rootWidget);
         rootWidgetRenderData.grantedSize = m_size;
 
-        m_widgetTree.ForEachPreorder<WidgetTreeData::Tree::PartialLaneType>(
+        m_widgetTree.template ForEachPreorder<TreePartialLaneType>(
             [&](auto& widget)
         {
-            auto& widgetRenderData = Layer::GetWidgetRenderData(*widget);
+            auto& widgetRenderData = Layer<TSkin>::GetWidgetRenderData(*widget);
 
             const Vector2f32 margin = widget->margin.low + widget->margin.high;
             const Vector2f32 grantedChildSize = {
@@ -59,44 +54,48 @@ namespace Molten::Gui
             Vector2f32 size = widget->CalculateSize(grantedChildSize);
             widgetRenderData.size = size;
 
-            auto& widgetTreeData = Layer::GetWidgetTreeData(*widget);
-            auto childLane = widgetTreeData.item->template GetLane<WidgetTreeData::Tree::PartialLaneType>();
+            auto& widgetTreeData = Layer<TSkin>::GetWidgetTreeData(*widget);
+            auto childLane = widgetTreeData.treeItem->template GetLane<TreePartialLaneType>();
             if (childLane.begin() != childLane.end())
             {
                 widget->CalculateChildrenGrantedSize(childLane);
-            }      
+            }
         });
     }
 
-    void RootLayer::Draw(CanvasRenderer& renderer)
+    template<typename TSkin>
+    inline void RootLayer<TSkin>::Draw(CanvasRenderer& renderer)
     {
-        m_widgetTree.ForEachPreorder<WidgetTreeData::Tree::PartialLaneType>(
+        m_widgetTree.template ForEachPreorder<TreePartialLaneType>(
             [&](auto& widget)
         {
-            auto& renderData = Layer::GetWidgetRenderData(*widget);
+            auto& renderData = Layer<TSkin>::GetWidgetRenderData(*widget);
 
             //renderer.MaskArea(renderData.position, renderData.size);
             const Vector2f32 position = renderData.position + widget->margin.low;
             renderer.PushPosition(position);
             widget->Draw(renderer);
         },
-            [&](auto& )
+            [&](auto&)
         {
             renderer.PopPosition();
         });
     }
 
-    void RootLayer::Resize(const Vector2f32& size)
+    template<typename TSkin>
+    inline void RootLayer<TSkin>::Resize(const Vector2f32& size)
     {
         m_size = size;
     }
 
-    void RootLayer::SetScale(const Vector2f32& scale)
+    template<typename TSkin>
+    inline void RootLayer<TSkin>::SetScale(const Vector2f32& scale)
     {
         m_scale = scale;
     }
 
-    bool RootLayer::OnAddChild(WidgetPointer parent, WidgetPointer child)
+    template<typename TSkin>
+    inline bool RootLayer<TSkin>::OnAddChild(Widget<TSkin>* parent, WidgetPointer<TSkin> child)
     {
         if (!parent)
         {
@@ -108,36 +107,33 @@ namespace Molten::Gui
 
             rootWidget = child;
 
-            auto& childData = Layer::GetWidgetTreeData(*child);
-            childData.widget = child;
-            childData.item = std::addressof(m_widgetTree.GetItem());
+            auto& childData = Layer<TSkin>::GetWidgetTreeData(*child);
+            childData.treeItem = std::addressof(m_widgetTree.GetItem());
         }
         else
         {
-            auto& parentData = Layer::GetWidgetTreeData(*parent);
+            auto& parentData = Layer<TSkin>::GetWidgetTreeData(*parent);
 
-            auto& childData = Layer::GetWidgetTreeData(*child);
-            childData.widget = child;
+            auto& childData = Layer<TSkin>::GetWidgetTreeData(*child);
 
-            if (CallWidgetOnAddChild(parent, child) == true)
+            if (Layer<TSkin>::CallWidgetOnAddChild(parent, child) == true)
             {
-                auto partialLane = parentData.item->GetLane<WidgetTreeData::Tree::PartialLaneType>();
+                auto partialLane = parentData.treeItem->template GetLane<TreePartialLaneType>();
                 auto it = partialLane.Insert(partialLane.end(), child);
-                childData.iterator = it;
-                childData.item = std::addressof(*it);
+                childData.treeIterator = it;
+                childData.treeItem = std::addressof(*it);
             }
             else
             {
-                auto normalLane = parentData.item->GetLane<WidgetTreeData::Tree::NormalLaneType>();
+                auto normalLane = parentData.treeItem->template GetLane<TreeNormalLaneType>();
                 auto it = normalLane.Insert(normalLane.end(), child);
-                childData.iterator = it;
-                childData.item = std::addressof(*it);
+                childData.treeIterator = it;
+                childData.treeItem = std::addressof(*it);
             }
         }
 
         return true;
     }
 
-}
 
-*/
+}

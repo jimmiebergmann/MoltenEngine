@@ -23,12 +23,20 @@
 *
 */
 
-#include "Molten/Gui/Widgets/SpacerWidget.hpp"
+#ifndef MOLTEN_CORE_GUI_SKIN_HPP
+#define MOLTEN_CORE_GUI_SKIN_HPP
+
 
 namespace Molten::Gui
 {
-
-    Spacer::Spacer()
-    {}
+    enum class SkinStateType
+    {
+        Normal,
+        Disabled,
+        Hovered,
+        Pressed
+    };
 
 }
+
+#endif

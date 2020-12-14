@@ -104,6 +104,12 @@ namespace Molten
          */
         virtual bool IsMinimized() const = 0;
 
+        /** Checks if window is focused or not.
+         *  A window is considered focused when it is selected and will receive user inputs.
+         *  Minimizing or clicking on another desktop window will kill focus of this window and result in a return value of false.
+         */
+        virtual bool IsFocused() const = 0;
+
         /**
          * @brief Show window.
          *

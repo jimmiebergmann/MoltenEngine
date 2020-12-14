@@ -23,12 +23,12 @@
 *
 */
 
-#include "Molten/Gui/Widgets/VerticalGridWidget.hpp"
-
 namespace Molten::Gui
 {
 
-    VerticalGrid::VerticalGrid(
+    template<typename TSkin>
+    inline VerticalGrid<TSkin>::VerticalGrid(
+        TSkin& skin,
         const float spacing,
         const PaddingData& outerPadding,
         const PaddingData& innerPadding
@@ -36,24 +36,30 @@ namespace Molten::Gui
         spacing(spacing),
         outerPadding(outerPadding),
         innerPadding(innerPadding)
-    {}
+    {
+        skin.template Create<VerticalGrid>(*this);
+    }
 
-    void VerticalGrid::Update(const Time& /*deltaTime*/)
+    template<typename TSkin>
+    inline void VerticalGrid<TSkin>::Update(const Time& /*deltaTime*/)
     {
     }
 
-    void VerticalGrid::Draw(CanvasRenderer& /*renderer*/)
+    template<typename TSkin>
+    inline void VerticalGrid<TSkin>::Draw(CanvasRenderer& /*renderer*/)
     {
     }
 
-    Vector2f32 VerticalGrid::CalculateSize(const Vector2f32& grantedSize)
+    template<typename TSkin>
+    inline Vector2f32 VerticalGrid<TSkin>::CalculateSize(const Vector2f32& grantedSize)
     {
         return grantedSize;
     }
 
-    void VerticalGrid::CalculateChildrenGrantedSize(WidgetTreeData::Tree::ConstLane<WidgetTreeData::Tree::PartialLaneType> children)
+    template<typename TSkin>
+    inline void VerticalGrid<TSkin>::CalculateChildrenGrantedSize(typename WidgetTreeData<TSkin>::Tree::template ConstLane<typename WidgetTreeData<TSkin>::Tree::PartialLaneType> children)
     {
-        const auto& grantedSize = GetGrantedSize();
+        const auto& grantedSize = Widget<TSkin>::GetGrantedSize();
         
         const Vector2f32 outer = outerPadding.low + outerPadding.high;
         const Vector2f32 inner = innerPadding.low + innerPadding.high;
@@ -70,12 +76,13 @@ namespace Molten::Gui
 
         for (auto it = children.begin(); it != children.end(); it++)
         {
-            SetRenderData(it, childPosition, childSize);
+            Widget<TSkin>::SetRenderData(it, childPosition, childSize);
             childPosition.x += childSize.x + inner.x + spacing;
         }
     }
 
-    bool VerticalGrid::OnAddChild(WidgetPointer /*widget*/)
+    template<typename TSkin>
+    inline bool VerticalGrid<TSkin>::OnAddChild(WidgetPointer<TSkin> /*widget*/)
     {
         return true;
     }

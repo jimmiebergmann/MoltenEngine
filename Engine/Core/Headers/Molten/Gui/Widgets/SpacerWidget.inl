@@ -23,39 +23,13 @@
 *
 */
 
-#ifndef MOLTEN_CORE_GUI_WIDGETDATA_HPP
-#define MOLTEN_CORE_GUI_WIDGETDATA_HPP
-
-#include "Molten/Gui/GuiTypes.hpp"
-#include "Molten/Utility/BypassTree.hpp"
-#include "Molten/Math/Vector.hpp"
-
 namespace Molten::Gui
 {
+
     template<typename TSkin>
-    struct WidgetTreeData
+    inline Spacer<TSkin>::Spacer(TSkin& skin)
     {
-
-        using Tree = typename Molten::BypassTree<WidgetPointer<TSkin>>;
-        using NormalIterator = typename Tree::template Iterator<typename Tree::NormalLaneType>;
-        using NormalConstIterator = typename Tree::template ConstIterator<typename Tree::NormalLaneType>;
-        using PartialIterator = typename Tree::template Iterator<typename Tree::PartialLaneType>;
-        using PartialConstIterator = typename Tree::template ConstIterator<typename Tree::PartialLaneType>;
-        using Item = typename Tree::Item;
-        
-        Layer<TSkin>* layer;
-        Widget<TSkin>* widget;
-        NormalIterator treeIterator;
-        Item* treeItem;
-    };
-
-    struct WidgetRenderData
-    {
-        Vector2f32 grantedSize;
-        Vector2f32 position;
-        Vector2f32 size;
-    };
+        skin.template Create<Spacer>(*this);
+    }
 
 }
-
-#endif

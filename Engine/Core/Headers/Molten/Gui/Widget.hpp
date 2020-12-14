@@ -28,23 +28,22 @@
 
 #include "Molten/Gui/GuiTypes.hpp"
 #include "Molten/Gui/WidgetData.hpp"
+#include "Molten/Gui/Layer.hpp"
 #include "Molten/Gui/Data/OutlineData.hpp"
 #include "Molten/Math/Vector.hpp"
 #include "Molten/System/Time.hpp"
-#include <memory>
+#include <algorithm>
 
 namespace Molten::Gui
 {
 
-    class MOLTEN_API Widget
+    template<typename TSkin>
+    class Widget
     {
 
     public:
 
-        template<typename TWidgetType, typename ... TArgs>
-        static WidgetTypePointer<TWidgetType> CreateChild(WidgetPointer parent, TArgs ... args);
-
-        Widget();
+        Widget() = default;
 
         virtual ~Widget() = default;
 
@@ -56,26 +55,29 @@ namespace Molten::Gui
 
         virtual Vector2f32 CalculateSize(const Vector2f32& grantedSize);
 
-        virtual void CalculateChildrenGrantedSize(WidgetTreeData::Tree::ConstLane<WidgetTreeData::Tree::PartialLaneType> children);
+        virtual void CalculateChildrenGrantedSize(typename WidgetTreeData<TSkin>::Tree::template ConstLane<WidgetTreeData<TSkin>::Tree::PartialLaneType> children);
+
+        template<template<typename> typename TWidgetType, typename ... TArgs>
+        WidgetTypePointer<TWidgetType<TSkin>> CreateChild(TArgs ... args);
 
     protected:
 
-        virtual bool OnAddChild(WidgetPointer widget);
+        template<typename TWidget>
+        using WidgetSkin = typename TSkin::template WidgetSkin<TWidget>;
+
+        virtual bool OnAddChild(WidgetPointer<TSkin> widget);
 
         const WidgetRenderData& GetRenderData() const;
         const Vector2f32& GetGrantedSize() const;
 
         void SetRenderData(
-            WidgetTreeData::Tree::ConstIterator< WidgetTreeData::Tree::PartialLaneType> it,
+            typename WidgetTreeData<TSkin>::Tree::template ConstIterator<WidgetTreeData<TSkin>::Tree::PartialLaneType> it,
             const Vector2f32& position,
             const Vector2f32& grantedSize);
 
     private:
 
-        static bool AddChild(WidgetPointer parent, WidgetPointer child);
-
-        //void SetTreeIterator(WidgetTreeIterator iterator);
-        WidgetTreeData& GetWidgetTreeData();
+        WidgetTreeData<TSkin>& GetWidgetTreeData();
         WidgetRenderData& GetWidgetRenderData();
         
         Widget(const Widget&) = delete;
@@ -83,9 +85,10 @@ namespace Molten::Gui
         Widget& operator= (const Widget&) = delete;
         Widget& operator= (Widget&&) = delete;
 
-        WidgetTreeData m_treeData;
+        WidgetTreeData<TSkin> m_treeData;
         WidgetRenderData m_renderData;
 
+        template<typename TLayerSkin>
         friend class Layer;
 
     };

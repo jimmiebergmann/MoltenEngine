@@ -28,52 +28,109 @@
 namespace Molten::Gui
 {
 
-    template<typename ... TArgs>
-    inline CanvasPointer Canvas::Create(TArgs ... args)
+    template<typename TSkin>
+    inline Canvas<TSkin>::Canvas(CanvasRendererPointer renderer) :
+        m_renderer(renderer),
+        m_skin(*m_renderer.get()),
+        m_size(0.0f, 0.0f),
+        m_scale(1.0f, 1.0f)
+    {}
+
+    template<typename TSkin>
+    inline Canvas<TSkin>::~Canvas()
+    {}
+
+    template<typename TSkin>
+    inline void Canvas<TSkin>::SetRenderer(CanvasRendererPointer renderer)
     {
-        auto canvas = std::make_shared<Canvas>(args...);
-        return canvas;
+        m_renderer = renderer;
     }
 
-    template<typename TLayerType>
-    inline LayerTypePointer<TLayerType> Canvas::CreateChild(CanvasPointer parent)
+    template<typename TSkin>
+    inline CanvasRendererPointer Canvas<TSkin>::GetRenderer()
     {
-        static_assert(std::is_base_of<Gui::Layer, TLayerType>::value, "TLayerType is not base of Layer.");
-
-        if (!parent)
-        {
-            return nullptr;
-        }
-
-        auto layer = std::make_shared<TLayerType>(*parent);
-
-        parent->m_allLayers.insert(layer);
-        parent->m_activeLayers.push_back(layer);
-
-        return layer;
+        return m_renderer;
+    }
+    template<typename TSkin>
+    inline const CanvasRendererPointer Canvas<TSkin>::GetRenderer() const
+    {
+        return m_renderer;
     }
 
-    template<typename TLayerType>
-    inline LayerTypePointer<TLayerType> Canvas::CreateChild(CanvasPointer parent, LayerPosition position)
+    template<typename TSkin>
+    inline void Canvas<TSkin>::Update(const Time& deltaTime)
     {
-        static_assert(std::is_base_of<Gui::Layer, TLayerType>::value, "TLayerType is not base of Layer.");
-
-        if (!parent)
+        for (auto& layers : m_activeLayers)
         {
-            return nullptr;
+            layers->Update(deltaTime);
+        }
+    }
+
+    template<typename TSkin>
+    inline void Canvas<TSkin>::Draw()
+    {
+        if (!m_renderer)
+        {
+            return;
         }
 
-        auto layer = std::make_shared<TLayerType>(*parent);
+        m_renderer->BeginDraw();
+        for (auto& layers : m_activeLayers)
+        {
+            layers->Draw(*m_renderer);
+        }
+        m_renderer->EndDraw();
+    }
 
-        parent->m_allLayers.insert(layer);
+    template<typename TSkin>
+    inline void Canvas<TSkin>::SetSize(const Vector2f32& size)
+    {
+        if (size != m_size && size.x != 0.0f && size.y != 0.0f)
+        {
+            m_renderer->Resize(size);
+            for (auto& layers : m_activeLayers)
+            {
+                layers->Resize(size);
+            }
+        }
+        m_size = size;
+    }
+
+    template<typename TSkin>
+    inline void Canvas<TSkin>::SetScale(const Vector2f32& scale)
+    {
+        m_scale = scale;
+    }
+
+    template<typename TSkin>
+    inline const Vector2f32& Canvas<TSkin>::GetSize() const
+    {
+        return m_size;
+    }
+
+    template<typename TSkin>
+    inline const Vector2f32& Canvas<TSkin>::GetScale() const
+    {
+        return m_scale;
+    }
+
+    template<typename TSkin>
+    template<template<typename> typename TLayer>
+    LayerTypePointer<TLayer<TSkin>> Canvas<TSkin>::CreateChild(const LayerPosition position)
+    {
+        static_assert(std::is_base_of<Gui::Layer<TSkin>, TLayer<TSkin>>::value, "TLayerType is not base of Layer.");
+
+        auto layer = std::make_shared<TLayer<TSkin>>(m_skin);
+
+        m_allLayers.insert(layer);
 
         if (position == LayerPosition::Top)
         {
-            parent->m_activeLayers.push_back(layer);
+            m_activeLayers.push_back(layer);
         }
         else
         {
-            parent->m_activeLayers.push_front(layer);
+            m_activeLayers.push_front(layer);
         }
 
         return layer;

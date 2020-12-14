@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2020 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -27,6 +27,7 @@
 #define MOLTEN_CORE_SYSTEM_VERSION_HPP
 
 #include "Molten/Types.hpp"
+#include <string_view>
 #include <string>
 
 namespace Molten
@@ -40,53 +41,31 @@ namespace Molten
 
     public:
 
-        /**
-        * @brief Version object representing no version.
-        */
+        /** Version object representing no version. */
         static const Version None;
 
-        /**
-        * @brief Constructor.
-        */
+        /** Constructor. */
         Version(const uint32_t major = 0, const uint32_t minor = 0, const uint32_t patch = 0);
 
-        /**
-        * @brief Get version as string.
+        /** Get version as string.
         *
-        * @param ignoreTrail[in] Ignoring trailing zeros of version.
-        *                        Major version is always returned, even if being 0.
+        * @param ignoreTrail Ignoring trailing zeros of version.
+        *                    Major version is always returned, even if being 0.
         */
         std::string AsString(const bool ignoreTrail = true) const;
 
-        /**
-        * @brief Equal to compare operator.
-        */
+        /** Convert string to version of syntrax xxx[.yyy[.zzz]] */
+        [[nodiscard]] bool FromString(const std::string_view& version);
+
+        /** Operators. */
+        /**@{*/
         bool operator == (const Version& version) const;
-
-        /**
-        * @brief Not equal to compare operator.
-        */
         bool operator != (const Version& version) const;
-
-        /**
-        * @brief Less than compare operator.
-        */
         bool operator < (const Version& version) const;
-
-        /**
-        * @brief Less than or equal to compare operator.
-        */
         bool operator <= (const Version& version) const;
-
-        /**
-        * @brief Greater than compare operator.
-        */
         bool operator > (const Version& version) const;
-
-        /**
-        * @brief Greater than or equal to compare operator.
-        */
         bool operator >= (const Version& version) const;
+        /**@}*/
 
         uint32_t Major;
         uint32_t Minor;

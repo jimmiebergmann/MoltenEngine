@@ -35,28 +35,33 @@
 namespace Molten::Gui
 {
 
-    class MOLTEN_API RootLayer : public Layer
+    template<typename TSkin>
+    class RootLayer : public Layer<TSkin>
     {
 
     public:
 
-        RootLayer(Canvas& canvas);
+        explicit RootLayer(TSkin& skin);
 
         ~RootLayer() = default;
 
-        virtual void Update(const Time& deltaTime) override;
+        void Update(const Time& deltaTime) override;
 
-        virtual void Draw(CanvasRenderer & renderer) override;
+        void Draw(CanvasRenderer & renderer) override;
 
-        virtual void Resize(const Vector2f32& size) override;
+        void Resize(const Vector2f32& size) override;
 
-        virtual void SetScale(const Vector2f32& scale) override;
+        void SetScale(const Vector2f32& scale) override;
 
-        virtual bool OnAddChild(WidgetPointer parent, WidgetPointer child) override;
+    private:
 
-    private:        
+        bool OnAddChild(Widget<TSkin>* parent, WidgetPointer<TSkin> child) override;
 
-        WidgetTreeData::Tree m_widgetTree;
+        using TreeType = typename WidgetTreeData<TSkin>::Tree;
+        using TreeNormalLaneType = typename TreeType::NormalLaneType;
+        using TreePartialLaneType = typename TreeType::PartialLaneType;
+
+        TreeType m_widgetTree;
         Vector2f32 m_size;
         Vector2f32 m_scale;
 
@@ -64,5 +69,6 @@ namespace Molten::Gui
 
 }
 
+#include "Molten/Gui/Layers/RootLayer.inl"
 
 #endif

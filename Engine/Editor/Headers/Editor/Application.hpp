@@ -27,16 +27,19 @@
 #define MOLTEN_EDITOR_APPLICATION_HPP
 
 #include "Molten/Logger.hpp"
-#include "Molten/Renderer/Renderer.hpp"
-#include "Molten/Renderer/Shader/Visual/VisualShaderScript.hpp"
-#include "Molten/Scene/Camera.hpp"
-#include "Molten/System/Clock.hpp"
-#include "Molten/Window/Window.hpp"
-#include "Molten/Gui/Canvas.hpp"
+#include "Editor/Editor.hpp"
 #include <memory>
+
+namespace Molten
+{
+    class Logger; 
+}
 
 namespace Molten::Editor
 {
+
+    class Editor;
+    class EditorDescriptor;
 
     /** Editor application class. */
     class Application
@@ -48,70 +51,39 @@ namespace Molten::Editor
         Application();
 
         /** Destructor. */
-        ~Application();
+        ~Application() = default;
+
+        /* Deleted operations. */
+        /**@{*/
+        Application(const Application&) = delete;
+        Application(Application&&) = delete;
+        Application& operator =(const Application&) = delete;
+        Application& operator =(Application&&) = delete;
+        /**@}*/
 
         /** Start editor application. */
-        int Start(int argv, char** argc);
+        int Run(
+            int argc,
+            char** argv);
 
     private:
 
-        void Load();
-        
-        void LoadGui();
-        void LoadGridPipeline();
-        void LoadGridShaders();
-        void LoadObjectPipeline();
-        void LoadObjectShaders();
+        bool Load(
+            int argc,
+            char** argv,
+            EditorDescriptor& editorDescriptor);
+     
+        bool LoadSettings(
+            int argc,
+            char** argv,
+            EditorDescriptor& editorDescriptor);
 
-        void Unload();
-        void UnloadGridPipeline();
-        void UnloadObjectPipeline();
+        void LoadLogger(const std::optional<std::string>& filename);
 
-        void Tick();
+        int Start(const EditorDescriptor& editorDescriptor);
 
-        bool Update();
-
-        void Draw();            
-
-        Logger m_logger;
-        std::unique_ptr<Window> m_window;
-        std::unique_ptr<Renderer> m_renderer;
-
-        Resource<FramedUniformBuffer> m_viewMatrixBuffer;
-
-        Resource<Pipeline> m_gridPipeline;
-        Shader::Visual::VertexScript m_gridVertexScript;
-        Shader::Visual::FragmentScript m_gridFragmentScript;
-        Resource<VertexBuffer> m_gridVertexBuffer;
-        Resource<IndexBuffer> m_gridIndexBuffer;
-        Resource<FramedDescriptorSet> m_gridMatrixDescriptorSet;
-        uint32_t m_gridColor1PushLocation;
-        uint32_t m_gridColor2PushLocation;
-
-        Resource<Pipeline> m_objectPipeline;
-        Shader::Visual::VertexScript m_objectVertexScript;
-        Shader::Visual::FragmentScript m_objectFragmentScript;
-        Resource<VertexBuffer> m_objectVertexBuffer;
-        Resource<IndexBuffer> m_objectIndexBuffer;
-        Resource<FramedDescriptorSet> m_objectMatrixDescriptorSet;
-        Resource<DescriptorSet> m_objectTextureDescriptorSet;
-        uint32_t m_objectPosPushLocation;
-        uint32_t m_objectColorPushLocation;
-        Resource<Texture> m_objectTexture;
-  
-        Clock m_programTimer;
-        float m_programTime;
-        Clock m_secondTimer;
-        Clock m_deltaTimer;
-        float m_deltaTime;
-
-        Scene::Camera m_camera;
-
-        //Gui::Canvas m_guiCanvas;
-
-        Gui::CanvasRendererPointer m_canvasRenderer;
-        Gui::CanvasPointer m_canvas;
-
+        std::shared_ptr<Logger> m_logger;
+        std::unique_ptr<Editor> m_editor;
 
     };
 

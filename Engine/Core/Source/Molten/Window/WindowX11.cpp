@@ -198,6 +198,11 @@ namespace Molten
         return m_minimized;
     }
 
+    bool WindowX11::IsFocused() const
+    {
+        return true;
+    }
+
     void WindowX11::Show(const bool /*show*/, const bool /*signal*/)
     {
     }

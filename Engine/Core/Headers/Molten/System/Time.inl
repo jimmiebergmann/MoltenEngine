@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2020 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -85,6 +85,31 @@ namespace Molten
     }
 
     template<typename T>
+    inline Time Time::operator / (const T scalar) const
+    {
+        auto count = m_duration.count() / static_cast<std::chrono::nanoseconds::rep>(scalar);
+        return { std::chrono::nanoseconds(count) };
+    }
+    template <>
+    inline Time Time::operator / (const float scalar) const
+    {
+        std::chrono::duration<double, std::nano> dur(m_duration / static_cast<double>(scalar));
+        return { std::chrono::duration_cast<std::chrono::nanoseconds>(dur) };
+    }
+    template <>
+    inline Time Time::operator / (const double scalar) const
+    {
+        std::chrono::duration<double, std::nano> dur(m_duration / scalar);
+        return { std::chrono::duration_cast<std::chrono::nanoseconds>(dur) };
+    }
+    template <>
+    inline Time Time::operator / (const long double scalar) const
+    {
+        std::chrono::duration<double, std::nano> dur(m_duration / static_cast<double>(scalar));
+        return { std::chrono::duration_cast<std::chrono::nanoseconds>(dur) };
+    }
+
+    template<typename T>
     inline Time& Time::operator *= (const T scalar)
     {
         m_duration *= static_cast<std::chrono::nanoseconds::rep>(scalar);
@@ -110,31 +135,6 @@ namespace Molten
         std::chrono::duration<double, std::nano> dur(m_duration * static_cast<double>(scalar));
         m_duration = std::chrono::duration_cast<std::chrono::nanoseconds>(dur);
         return *this;
-    }
-
-    template<typename T>
-    inline Time Time::operator / (const T scalar) const
-    {
-        auto count = m_duration.count() / static_cast<std::chrono::nanoseconds::rep>(scalar);
-        return { std::chrono::nanoseconds(count) };
-    }
-    template <>
-    inline Time Time::operator / (const float scalar) const
-    {
-        std::chrono::duration<double, std::nano> dur(m_duration / static_cast<double>(scalar));
-        return { std::chrono::duration_cast<std::chrono::nanoseconds>(dur) };
-    }
-    template <>
-    inline Time Time::operator / (const double scalar) const
-    {
-        std::chrono::duration<double, std::nano> dur(m_duration / scalar);
-        return { std::chrono::duration_cast<std::chrono::nanoseconds>(dur) };
-    }
-    template <>
-    inline Time Time::operator / (const long double scalar) const
-    {
-        std::chrono::duration<double, std::nano> dur(m_duration / static_cast<double>(scalar));
-        return { std::chrono::duration_cast<std::chrono::nanoseconds>(dur) };
     }
 
     template<typename T>

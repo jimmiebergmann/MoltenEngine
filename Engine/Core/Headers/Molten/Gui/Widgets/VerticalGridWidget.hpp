@@ -31,12 +31,14 @@
 namespace Molten::Gui
 {
 
-    class MOLTEN_API VerticalGrid : public Widget
+    template<typename TSkin>
+    class VerticalGrid : public Widget<TSkin>
     {
 
     public:
 
-        VerticalGrid(
+        explicit VerticalGrid(
+            TSkin& skin,
             const float spacing = 0.0f,
             const PaddingData& outerPadding = PaddingData(),
             const PaddingData& innerPadding = PaddingData());
@@ -45,21 +47,22 @@ namespace Molten::Gui
         PaddingData outerPadding;
         PaddingData innerPadding;
 
-        virtual void Update(const Time& deltaTime) override;
+        void Update(const Time& deltaTime) override;
 
-        virtual void Draw(CanvasRenderer& renderer) override;
+        void Draw(CanvasRenderer& renderer) override;
 
-        virtual Vector2f32 CalculateSize(const Vector2f32& grantedSize) override;
+        Vector2f32 CalculateSize(const Vector2f32& grantedSize) override;
 
-        virtual void CalculateChildrenGrantedSize(
-            WidgetTreeData::Tree::ConstLane<WidgetTreeData::Tree::PartialLaneType> children) override;
+        void CalculateChildrenGrantedSize(typename WidgetTreeData<TSkin>::Tree::template ConstLane<typename WidgetTreeData<TSkin>::Tree::PartialLaneType> children) override;
 
     private:
 
-        virtual bool OnAddChild(WidgetPointer widget) override;
+        bool OnAddChild(WidgetPointer<TSkin> widget) override;
 
     };
 
 }
+
+#include "Molten/Gui/Widgets/VerticalGridWidget.inl"
 
 #endif

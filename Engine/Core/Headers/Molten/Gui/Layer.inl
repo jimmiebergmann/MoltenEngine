@@ -23,27 +23,82 @@
 *
 */
 
+#include <type_traits>
+
 namespace Molten::Gui
 {
 
-    template<typename TLayerType, typename ... TArgs>
-    inline LayerTypePointer<TLayerType> Layer::Create(Canvas& canvas, TArgs ... args)
-    {
-        static_assert(std::is_base_of<Gui::Layer, TLayerType>::value, "TLayerType is not base of Layer.");
+    template<typename TSkin>
+    inline Layer<TSkin>::Layer(TSkin& skin) :
+        m_skin(skin)
+    {}
 
-        auto layer = std::make_shared<TLayerType>(canvas, args...);
-        return layer;
+    template<typename TSkin>
+    template<template<typename> typename TWidgetType, typename ... TArgs>
+    inline WidgetTypePointer<TWidgetType<TSkin>> Layer<TSkin>::CreateChild(TArgs ... args)
+    {
+        static_assert(std::is_base_of<Gui::Widget<TSkin>, TWidgetType<TSkin>>::value, "TWidgetType is not base of Widget.");
+
+        auto widget = std::make_shared<TWidgetType<TSkin>>(m_skin, args...);
+
+        auto& childData = GetWidgetTreeData(*widget);
+        childData.layer = this;
+        childData.widget = widget.get();
+
+        if (!OnAddChild(nullptr, widget))
+        {
+            return nullptr;
+        }
+
+        return widget;
     }
 
-
-    template<typename TWidgetType, typename ... TArgs>
-    inline WidgetTypePointer<TWidgetType> Layer::CreateChild(LayerPointer parent, TArgs ... args)
+    template<typename TSkin>
+    template<template<typename> typename TWidgetType, typename ... TArgs>
+    inline WidgetTypePointer<TWidgetType<TSkin>> Layer<TSkin>::CreateChild(Widget<TSkin>& parent, TArgs ... args)
     {
-        static_assert(std::is_base_of<Gui::Widget, TWidgetType>::value, "TWidgetType is not base of Widget.");
+        static_assert(std::is_base_of<Gui::Widget<TSkin>, TWidgetType<TSkin>>::value, "TWidgetType is not base of Widget.");
 
-        auto widget = std::make_shared<TWidgetType>(args...);
-        Layer::AddChild(parent, widget);
+        auto& parentData = GetWidgetTreeData(parent);
+        auto* parentLayer = parentData.layer;
+        
+        if(parentLayer != this)
+        {
+            return nullptr;
+        }
+
+        auto widget = std::make_shared<TWidgetType<TSkin>>(m_skin, args...);
+
+        auto& childData = GetWidgetTreeData(*widget);
+        childData.layer = this;
+        childData.widget = widget.get();
+
+        if (!OnAddChild(&parent, widget))
+        {
+            return nullptr;
+        }
+
+        
+
         return widget;
+    }
+
+    template<typename TSkin>
+    inline WidgetTreeData<TSkin>& Layer<TSkin>::GetWidgetTreeData(Widget<TSkin>& widget)
+    {
+        return widget.m_treeData;
+    }
+
+    template<typename TSkin>
+    inline WidgetRenderData& Layer<TSkin>::GetWidgetRenderData(Widget<TSkin>& widget)
+    {
+        return widget.m_renderData;
+    }
+
+    template<typename TSkin>
+    inline bool Layer<TSkin>::CallWidgetOnAddChild(Widget<TSkin>* parent, WidgetPointer<TSkin> child)
+    {
+        return parent->OnAddChild(child);
     }
    
 }

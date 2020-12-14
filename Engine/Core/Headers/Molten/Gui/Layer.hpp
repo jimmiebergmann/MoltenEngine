@@ -40,22 +40,13 @@ namespace Molten::Gui
         Bottom
     };
 
-    class MOLTEN_API Layer
+    template<typename TSkin>
+    class Layer
     {
 
     public:
 
-        template<typename TLayerType, typename ... TArgs>
-        static LayerTypePointer<TLayerType> Create(Canvas & canvas, TArgs ... args);
-
-        template<typename TWidgetType, typename ... TArgs>
-        static WidgetTypePointer<TWidgetType> CreateChild(LayerPointer parent, TArgs ... args);
-
-        static bool AddChild(LayerPointer parent, WidgetPointer child);
-        static bool AddChild(WidgetPointer parent, WidgetPointer child);
-
-
-        Layer(Canvas& canvas);
+        explicit Layer(TSkin& skin);
 
         virtual ~Layer() = default;
 
@@ -67,17 +58,22 @@ namespace Molten::Gui
 
         virtual void SetScale(const Vector2f32& scale) = 0;
 
-        Canvas& GetCanvas();
-        const Canvas& GetCanvas() const;
+        template<template<typename> typename TWidgetType, typename ... TArgs>
+        WidgetTypePointer<TWidgetType<TSkin>> CreateChild(TArgs ... args);
+
+        template<template<typename> typename TWidgetType, typename ... TArgs>
+        WidgetTypePointer<TWidgetType<TSkin>> CreateChild(Widget<TSkin>& parent, TArgs ... args);
 
     protected:
 
-        virtual bool OnAddChild(WidgetPointer parent, WidgetPointer child) = 0;
+        virtual bool OnAddChild(Widget<TSkin>* parent, WidgetPointer<TSkin> child) = 0;
 
-        static WidgetTreeData& GetWidgetTreeData(Widget& widget);
-        static WidgetRenderData& GetWidgetRenderData(Widget& widget);
+        static WidgetTreeData<TSkin>& GetWidgetTreeData(Widget<TSkin>& widget);
+        static WidgetRenderData& GetWidgetRenderData(Widget<TSkin>& widget);
 
-        static bool CallWidgetOnAddChild(WidgetPointer parent, WidgetPointer child);
+        static bool CallWidgetOnAddChild(Widget<TSkin>* parent, WidgetPointer<TSkin> child);
+
+        TSkin& m_skin;
 
     private:
 
@@ -85,8 +81,6 @@ namespace Molten::Gui
         Layer(const Layer&) = delete;
         Layer& operator= (Layer&&) = delete;
         Layer& operator= (const Layer&) = delete;
-
-        Canvas& m_canvas;
 
     };
 

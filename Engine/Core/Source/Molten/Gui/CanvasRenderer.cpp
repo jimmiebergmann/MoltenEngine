@@ -164,69 +164,62 @@ namespace Molten::Gui
         m_rectInstance.vertexScript = new Shader::Visual::VertexScript();
         m_rectInstance.fragmentScript = new Shader::Visual::FragmentScript();
 
-        /*{ // Vertex
+        { // Vertex
             auto& script = *m_rectInstance.vertexScript;
 
             auto& inputs = script.GetInputInterface();
-            auto* vertexPosition = inputs.AddMember<Vector2f32>();
+            auto& vertexPosition = inputs.AddMember<Vector2f32>();
 
-            auto& pushConstants = script.GetPushConstantInterface();
-            auto* projection = pushConstants.AddMember<Matrix4x4f32>(1);
-            auto* position = pushConstants.AddMember<Vector2f32>(2);
-            auto* size = pushConstants.AddMember<Vector2f32>(3);
+            auto& pushConstants = script.GetPushConstants();
+            auto& projection = pushConstants.AddMember<Matrix4x4f32>(1);
+            auto& position = pushConstants.AddMember<Vector2f32>(2);
+            auto& size = pushConstants.AddMember<Vector2f32>(3);
             
-            auto* outPosition = script.GetVertexOutputVariable();
+            auto* outPosition = script.GetVertexOutput();
             
-            auto* vertexScaled = script.CreateOperator<Shader::Visual::Operators::MultVec2f32>();
-            vertexScaled->GetInputPin(0)->Connect(*vertexPosition->GetOutputPin());
-            vertexScaled->GetInputPin(1)->Connect(*size->GetOutputPin());
+            auto& vertexScaled = script.CreateOperator<Shader::Visual::Operators::MultVec2f32>();
+            vertexScaled.GetInputPin(0)->Connect(vertexPosition);
+            vertexScaled.GetInputPin(1)->Connect(size);
 
-            auto* vertexScaledMoved = script.CreateOperator<Shader::Visual::Operators::AddVec2f32>();
-            vertexScaledMoved->GetInputPin(0)->Connect(*vertexScaled->GetOutputPin());
-            vertexScaledMoved->GetInputPin(1)->Connect(*position->GetOutputPin());
+            auto& vertexScaledMoved = script.CreateOperator<Shader::Visual::Operators::AddVec2f32>();
+            vertexScaledMoved.GetInputPin(0)->Connect(*vertexScaled.GetOutputPin());
+            vertexScaledMoved.GetInputPin(1)->Connect(position);
 
-            auto* vertexPositionVec4 = script.CreateFunction<Shader::Visual::Functions::Vec2ToVec4f32>();
-            vertexPositionVec4->GetInputPin(0)->Connect(*vertexScaledMoved->GetOutputPin());
-            static_cast<Shader::Visual::InputPin<float>*>(vertexPositionVec4->GetInputPin(1))->SetDefaultValue(0.0f);
-            static_cast<Shader::Visual::InputPin<float>*>(vertexPositionVec4->GetInputPin(2))->SetDefaultValue(1.0f);
+            auto& vertexPositionVec4 = script.CreateFunction<Shader::Visual::Functions::Vec2ToVec4f32>();
+            vertexPositionVec4.GetInputPin(0)->Connect(*vertexScaledMoved.GetOutputPin());
+            static_cast<Shader::Visual::InputPin<float>*>(vertexPositionVec4.GetInputPin(1))->SetDefaultValue(0.0f);
+            static_cast<Shader::Visual::InputPin<float>*>(vertexPositionVec4.GetInputPin(2))->SetDefaultValue(1.0f);
 
-            auto* projectedVertexPosition = script.CreateOperator<Shader::Visual::Operators::MultMat4Vec4f32>();
-            projectedVertexPosition->GetInputPin(0)->Connect(*projection->GetOutputPin());
-            projectedVertexPosition->GetInputPin(1)->Connect(*vertexPositionVec4->GetOutputPin());
+            auto& projectedVertexPosition = script.CreateOperator<Shader::Visual::Operators::MultMat4Vec4f32>();
+            projectedVertexPosition.GetInputPin(0)->Connect(projection);
+            projectedVertexPosition.GetInputPin(1)->Connect(*vertexPositionVec4.GetOutputPin());
 
-            outPosition->GetInputPin()->Connect(*projectedVertexPosition->GetOutputPin());
+            outPosition->GetInputPin()->Connect(*projectedVertexPosition.GetOutputPin());
         }
         { // Fragment
             auto& script = *m_rectInstance.fragmentScript;
 
-            auto& pushConstants = script.GetPushConstantInterface();
-            auto* vertexColor = pushConstants.AddMember<Vector4f32>(4);
+            auto& pushConstants = script.GetPushConstants();
+            auto& vertexColor = pushConstants.AddMember<Vector4f32>(4);
 
             auto& outputs = script.GetOutputInterface();      
-            auto* outColor = outputs.AddMember<Vector4f32>();
+            auto& outColor = outputs.AddMember<Vector4f32>();
 
-            outColor->GetInputPin()->Connect(*vertexColor->GetOutputPin());
-        }*/
+            outColor.Connect(vertexColor);
+        }
 
         // Debug
         {
-           /* Shader::VulkanGenerator::GlslTemplates glslTemplates;
+            Shader::GlslGenerator::GlslTemplate glslTemplates;
             std::vector<Shader::Visual::Script*> visualScripts = { m_rectInstance.vertexScript, m_rectInstance.fragmentScript };
-            if (!Shader::VulkanGenerator::GenerateGlslTemplate(glslTemplates, visualScripts, m_logger))
+            if (!Shader::GlslGenerator::GenerateGlslTemplate(glslTemplates, visualScripts, m_logger))
             {
                 return;
             }
 
-            Shader::VulkanGenerator::GlslStageTemplates stageTemplate;
-            stageTemplate.pushConstantTemplate.blockSource = &glslTemplates.pushConstantTemplate.blockSource;*/
-
             Shader::GlslGenerator glslGenerator;
-
-            //stageTemplate.pushConstantTemplate.offsets = &glslTemplates.pushConstantTemplate.stageOffsets[0];
-            auto vertGlsl = glslGenerator.Generate(*m_rectInstance.vertexScript, Shader::GlslGenerator::Compability::SpirV);
-
-            //stageTemplate.pushConstantTemplate.offsets = &glslTemplates.pushConstantTemplate.stageOffsets[1];
-            auto fragGlsl = glslGenerator.Generate(*m_rectInstance.fragmentScript, Shader::GlslGenerator::Compability::SpirV);
+            auto vertGlsl = glslGenerator.Generate(*m_rectInstance.vertexScript, Shader::GlslGenerator::Compability::SpirV, &glslTemplates);
+            auto fragGlsl = glslGenerator.Generate(*m_rectInstance.fragmentScript, Shader::GlslGenerator::Compability::SpirV, &glslTemplates);
 
             std::string vertStr(vertGlsl.begin(), vertGlsl.end());
             std::string fragStr(fragGlsl.begin(), fragGlsl.end());
@@ -264,7 +257,6 @@ namespace Molten::Gui
         instance.vertexBuffer.reset();
         instance.indexBuffer.reset();
         instance.texture.reset();
-        instance.indexBuffer.reset();
 
         delete instance.vertexScript;
         instance.vertexScript = nullptr;

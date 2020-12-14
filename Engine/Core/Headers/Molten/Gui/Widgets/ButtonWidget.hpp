@@ -27,34 +27,39 @@
 #define MOLTEN_CORE_GUI_WIDGETS_BUTTONWIDGET_HPP
 
 #include "Molten/Gui/Widget.hpp"
-#include "Molten/System/Signal.hpp"
+//#include "Molten/Gui/CanvasRenderer.hpp"
+//#include "Molten/System/Signal.hpp"
 
 namespace Molten::Gui
 {
 
-    class MOLTEN_API Button : public Widget
+    template<typename TSkin>
+    class Button : public Widget<TSkin>
     {
 
     public:
 
-        Button() = default;
+        explicit Button(TSkin& skin);
 
-        Signal<int> onPress;
+        //Signal<int> onPress;
 
-        virtual void Update(const Time& deltaTime) override;
+        void Update(const Time& deltaTime) override;
 
-        virtual void Draw(CanvasRenderer& renderer) override;
+        void Draw(CanvasRenderer& renderer) override;
 
-        virtual Vector2f32 CalculateSize(const Vector2f32& grantedSize) override;
+        Vector2f32 CalculateSize(const Vector2f32& grantedSize) override;
 
-        virtual void CalculateChildrenGrantedSize(WidgetTreeData::Tree::ConstLane<WidgetTreeData::Tree::PartialLaneType> children) override;
+        void CalculateChildrenGrantedSize(typename WidgetTreeData<TSkin>::Tree::template ConstLane<typename WidgetTreeData<TSkin>::Tree::PartialLaneType> children) override;
 
     private:
 
-        virtual bool OnAddChild(WidgetPointer) override;
+        bool OnAddChild(WidgetPointer<TSkin> child) override;
 
+        std::unique_ptr<WidgetSkin<Button>> m_skin;
     };
 
 }
+
+#include "Molten/Gui/Widgets/ButtonWidget.inl"
 
 #endif

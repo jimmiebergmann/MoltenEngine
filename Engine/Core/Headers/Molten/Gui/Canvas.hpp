@@ -27,6 +27,7 @@
 #define MOLTEN_CORE_GUI_CANVAS_HPP
 
 #include "Molten/Gui/GuiTypes.hpp"
+#include "Molten/Gui/CanvasRenderer.hpp"
 #include "Molten/Gui/Layer.hpp"
 #include "Molten/Math/Vector.hpp"
 #include "Molten/System/Time.hpp"
@@ -43,25 +44,16 @@ namespace Molten
 namespace Molten::Gui
 {
 
-    class Renderer;
+    class CanvasRenderer;
 
-    class MOLTEN_API Canvas
+
+    template<typename TSkin>
+    class Canvas
     {
 
     public:
 
-        template<typename ... TArgs>
-        static CanvasPointer Create(TArgs ... args);
-
-        template<typename TLayerType>
-        static LayerTypePointer<TLayerType> CreateChild(CanvasPointer parent);
-        template<typename TLayerType>
-        static LayerTypePointer<TLayerType> CreateChild(CanvasPointer parent, LayerPosition position);
-
-        //static bool AddChild(CanvasPointer parent, LayerPointer child);
-        //static bool AddChild(CanvasPointer parent, LayerPointer child, LayerPosition position);
-
-        Canvas(CanvasRendererPointer renderer = nullptr);
+        explicit Canvas(CanvasRendererPointer renderer = nullptr);
         ~Canvas();
 
         void SetRenderer(CanvasRendererPointer renderer);
@@ -78,6 +70,9 @@ namespace Molten::Gui
         const Vector2f32& GetSize() const;
         const Vector2f32& GetScale() const;
 
+        template<template<typename> typename TLayer>
+        LayerTypePointer<TLayer<TSkin>> CreateChild(const LayerPosition position = LayerPosition::Top);
+
     private:
 
         Canvas(Canvas&&) = delete;
@@ -85,17 +80,16 @@ namespace Molten::Gui
         Canvas& operator= (Canvas&&) = delete;
         Canvas& operator= (const Canvas&) = delete;
 
-        //void OnAddChild(LayerPointer layer);
-       // void OnAddChild(LayerPointer layer, LayerPosition position);
+        using LayerPointerList = std::list<LayerPointer<TSkin>>;
+        using LayerPointerSet = std::set<LayerPointer<TSkin>>;
 
-        using LayerPointerList = std::list<LayerPointer>;
-        using LayerPointerSet = std::set<LayerPointer>;
+        CanvasRendererPointer m_renderer;
+        TSkin m_skin;
 
         LayerPointerSet m_allLayers;
         LayerPointerList m_activeLayers;
         LayerPointerSet m_inactiveLayers;       
-
-        CanvasRendererPointer m_renderer;
+     
         Vector2f32 m_size;
         Vector2f32 m_scale;
 

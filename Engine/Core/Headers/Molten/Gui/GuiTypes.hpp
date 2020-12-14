@@ -32,22 +32,30 @@
 namespace Molten::Gui
 {
 
+    template<typename TSkin>
     class Canvas;
-    using CanvasPointer = std::shared_ptr<Canvas>;
+    template<typename TSkin>
+    using CanvasPointer = std::shared_ptr<Canvas<TSkin>>;
 
     class CanvasRenderer;
     using CanvasRendererPointer = std::shared_ptr<CanvasRenderer>;
 
+    template<typename TSkin>
     class Layer;
-    using LayerPointer = std::shared_ptr<Layer>;
-    using LayerWeakPointer = std::weak_ptr<Layer>;
+    template<typename TSkin>
+    using LayerPointer = std::shared_ptr<Layer<TSkin>>;
+    template<typename TSkin>
+    using LayerWeakPointer = std::weak_ptr<Layer<TSkin>>;
     
     template<typename TLayerType>
     using LayerTypePointer = std::shared_ptr<TLayerType>;
 
+    template<typename TSkin>
     class Widget;
-    using WidgetPointer = std::shared_ptr<Widget>;
-    using WidgetWeakPointer = std::shared_ptr<Widget>;
+    template<typename TSkin>
+    using WidgetPointer = std::shared_ptr<Widget<TSkin>>;
+    template<typename TSkin>
+    using WidgetWeakPointer = std::shared_ptr<Widget<TSkin>>;
 
     template<typename TWidgetType>
     using WidgetTypePointer = std::shared_ptr<TWidgetType>;

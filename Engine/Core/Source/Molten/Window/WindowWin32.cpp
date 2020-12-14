@@ -151,6 +151,7 @@ namespace Molten
         m_showing(false),
         m_maximized(false),
         m_minimized(false),
+        m_focused(false),
         m_size(0, 0),
         m_position(0, 0),
         m_title(""),
@@ -363,6 +364,11 @@ namespace Molten
     bool WindowWin32::IsMinimized() const
     {
         return m_minimized;
+    }
+
+    bool WindowWin32::IsFocused() const
+    {
+        return m_focused;
     }
 
     void WindowWin32::Maximize(const bool /*signal*/)
@@ -632,6 +638,14 @@ namespace Molten
             } break;
             default: break;
             }
+        } break;
+        case WM_SETFOCUS:
+        {
+            m_focused = true;
+        } break;
+        case WM_KILLFOCUS:
+        {
+            m_focused = false;
         } break;
         case WM_MOVE:
         {

@@ -23,34 +23,10 @@
 *
 */
 
-#include "Molten/Gui/Widgets/ButtonWidget.hpp"
-#include "Molten/Gui/CanvasRenderer.hpp"
+#include "Editor/Application.hpp"
 
-namespace Molten::Gui
+int main(int argc, char ** argv)
 {
-
-    void Button::Update(const Time& /*deltaTime*/)
-    {
-    }
-
-    void Button::Draw(CanvasRenderer& renderer)
-    {
-        renderer.DrawRect(GetRenderData().size, Vector4f32{ 1.0f, 0.0f, 0.0f, 1.0f });
-    }
-
-    Vector2f32 Button::CalculateSize(const Vector2f32& grantedSize)
-    {
-        return grantedSize;
-    }
-
-    void Button::CalculateChildrenGrantedSize(WidgetTreeData::Tree::ConstLane<WidgetTreeData::Tree::PartialLaneType> children)
-    {
-        SetRenderData(children.begin(), { 0.0f, 0.0f }, GetGrantedSize());
-    }
-
-    bool Button::OnAddChild(WidgetPointer /*widget*/)
-    {
-        return true;
-    }
-
+    Molten::Editor::Application application;
+    return application.Run(argc, argv);
 }

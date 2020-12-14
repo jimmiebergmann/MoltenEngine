@@ -31,15 +31,18 @@
 namespace Molten::Gui
 {
 
-    class MOLTEN_API Spacer : public Widget
+    template<typename TSkin>
+    class Spacer : public Widget<TSkin>
     {
 
     public:
 
-        Spacer();
+        explicit Spacer(TSkin& skin);
 
     };
 
 }
+
+#include "Molten/Gui/Widgets/SpacerWidget.inl"
 
 #endif

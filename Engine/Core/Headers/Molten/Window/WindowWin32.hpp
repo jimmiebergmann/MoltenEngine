@@ -90,6 +90,12 @@ namespace Molten
          */
         virtual bool IsMinimized() const override;
 
+        /** Checks if window is focused or not.
+         *  A window is considered focused when it is selected and will receive user inputs.
+         *  Minimizing or clicking on another desktop window will kill focus of this window and result in a return value of false.
+         */
+        virtual bool IsFocused() const override;
+
         /** Maximize window.
          *
          * @param signal Signals OnMaximize if true. OnMaximize is not being signaled if window already is maximized.
@@ -209,6 +215,7 @@ namespace Molten
         bool m_showing;
         bool m_maximized;
         bool m_minimized;
+        bool m_focused;
         Vector2ui32 m_size;
         Vector2i32 m_position;
         std::string m_title;

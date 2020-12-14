@@ -23,11 +23,41 @@
 *
 */
 
-#include "Editor/Application.hpp"
-
-int main(int argv, char ** argc)
+namespace Molten::Gui
 {
-    Molten::Editor::Application app;
+    template<typename TSkin>
+    inline Button<TSkin>::Button(TSkin& skin)
+    {
+        m_skin = skin.template Create<Button>(*this);
+    }
 
-    return app.Start(argv, argc);
+    template<typename TSkin>
+    inline void Button<TSkin>::Update(const Time& /*deltaTime*/)
+    {
+    }
+
+    template<typename TSkin>
+    inline void Button<TSkin>::Draw(CanvasRenderer& renderer)
+    {
+        m_skin->Draw(renderer, GetRenderData().size);
+    }
+
+    template<typename TSkin>
+    inline Vector2f32 Button<TSkin>::CalculateSize(const Vector2f32& grantedSize)
+    {
+        return grantedSize;
+    }
+
+    template<typename TSkin>
+    inline void Button<TSkin>::CalculateChildrenGrantedSize(typename WidgetTreeData<TSkin>::Tree::template ConstLane<typename WidgetTreeData<TSkin>::Tree::PartialLaneType> children)
+    {
+        SetRenderData(children.begin(), { 0.0f, 0.0f }, Widget<TSkin>::GetGrantedSize());
+    }
+
+    template<typename TSkin>
+    inline bool Button<TSkin>::OnAddChild(WidgetPointer<TSkin> /*widget*/)
+    {
+        return true;
+    }
+
 }

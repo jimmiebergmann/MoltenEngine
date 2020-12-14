@@ -25,6 +25,7 @@
 
 #include "Test.hpp"
 #include "Molten/System/Version.hpp"
+#include <limits>
 
 namespace Molten
 {
@@ -117,6 +118,74 @@ namespace Molten
             EXPECT_STREQ(Version(0, 45, 34).AsString(false).c_str(), "0.45.34");
             EXPECT_STREQ(Version(123, 456, 789).AsString(false).c_str(), "123.456.789");
             EXPECT_STREQ(Version(123, 456, 789).AsString(true).c_str(), "123.456.789");
+        }
+    }
+    TEST(System, Version_FromString)
+    {
+        {
+            Version version;
+            EXPECT_FALSE(version.FromString(""));
+            EXPECT_FALSE(version.FromString(" "));
+            EXPECT_FALSE(version.FromString("a"));
+            EXPECT_FALSE(version.FromString("1.a"));
+            EXPECT_FALSE(version.FromString("1.1.a"));
+        }
+        {
+            Version version;
+            EXPECT_TRUE(version.FromString("1"));
+            EXPECT_EQ(version, Version(1, 0, 0));
+
+            EXPECT_TRUE(version.FromString("2.3"));
+            EXPECT_EQ(version, Version(2, 3, 0));
+
+            EXPECT_TRUE(version.FromString("4.5.6"));
+            EXPECT_EQ(version, Version(4, 5, 6));
+        }
+        {     
+            {
+                Version expectedVersion{
+                    std::numeric_limits<uint32_t>::max() - 1
+                };
+
+                const auto str = std::to_string(expectedVersion.Major);
+
+                Version version;
+                EXPECT_TRUE(version.FromString(str));
+                EXPECT_EQ(version, expectedVersion);
+            }
+            { 
+                Version expectedVersion{
+                    std::numeric_limits<uint32_t>::max() - 1,
+                    std::numeric_limits<uint32_t>::max() - 2
+                };
+
+                const auto str =
+                    std::to_string(expectedVersion.Major)
+                    + "." +
+                    std::to_string(expectedVersion.Minor);
+
+                Version version;
+                EXPECT_TRUE(version.FromString(str));
+                EXPECT_EQ(version, expectedVersion);
+            }
+            {
+                Version expectedVersion{
+                    std::numeric_limits<uint32_t>::max() - 1,
+                    std::numeric_limits<uint32_t>::max() - 2,
+                    std::numeric_limits<uint32_t>::max() - 3
+                };
+
+                const auto str =
+                    std::to_string(expectedVersion.Major)
+                    + "." +
+                    std::to_string(expectedVersion.Minor)
+                    + "." +
+                    std::to_string(expectedVersion.Patch);
+
+                Version version;
+                EXPECT_TRUE(version.FromString(str));
+                EXPECT_EQ(version, expectedVersion);
+            }
         }
     }
 

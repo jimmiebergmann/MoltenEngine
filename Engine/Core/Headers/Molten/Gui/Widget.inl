@@ -26,16 +26,92 @@
 namespace Molten::Gui
 {
 
-    template<typename TWidgetType, typename ... TArgs>
-    inline WidgetTypePointer<TWidgetType> Widget::CreateChild(WidgetPointer parent, TArgs ... args)
+    template<typename TSkin>
+    inline void Widget<TSkin>::Update(const Time&)
+    {}
+
+    template<typename TSkin>
+    inline void Widget<TSkin>::Draw(CanvasRenderer&)
+    {}
+
+    template<typename TSkin>
+    inline Vector2f32 Widget<TSkin>::CalculateSize(const Vector2f32& grantedSize)
     {
-        static_assert(std::is_base_of<Gui::Widget, TWidgetType>::value, "TWidgetType is not base of Layer.");
+        return grantedSize;
+    }
 
-        auto widget = std::make_shared<TWidgetType>(args...);
+    template<typename TSkin>
+    inline void Widget<TSkin>::CalculateChildrenGrantedSize(typename WidgetTreeData<TSkin>::Tree::template ConstLane<WidgetTreeData<TSkin>::Tree::PartialLaneType>)
+    {
+    }
 
-        Widget::AddChild(parent, widget);
+    template<typename TSkin>
+    template<template<typename> typename TWidgetType, typename ... TArgs>
+    inline WidgetTypePointer<TWidgetType<TSkin>> Widget<TSkin>::CreateChild(TArgs ... args)
+    {
+        auto& widgetData = GetWidgetTreeData();
+        if(widgetData.layer == nullptr)
+        {
+            return nullptr;
+        }
 
-        return widget;
+        return widgetData.layer->template CreateChild<TWidgetType>(*this, std::forward<TArgs>(args)...);
+    }
+
+    template<typename TSkin>
+    inline bool Widget<TSkin>::OnAddChild(WidgetPointer<TSkin>)
+    {
+        return false;
+    }
+
+    template<typename TSkin>
+    inline const WidgetRenderData& Widget<TSkin>::GetRenderData() const
+    {
+        return m_renderData;
+    }
+
+    template<typename TSkin>
+    inline const Vector2f32& Widget<TSkin>::GetGrantedSize() const
+    {
+        return m_renderData.grantedSize;
+    }
+
+    template<typename TSkin>
+    inline void Widget<TSkin>::SetRenderData(
+        typename WidgetTreeData<TSkin>::Tree::template ConstIterator<WidgetTreeData<TSkin>::Tree::PartialLaneType> it,
+        const Vector2f32& position,
+        const Vector2f32& grantedSize)
+    {
+        const auto& parentGrantedSize = GetGrantedSize();
+        auto& childRenderData = (*it).GetValue()->GetWidgetRenderData();
+
+        childRenderData.position = {
+            std::clamp(position.x, 0.0f, parentGrantedSize.x),
+            std::clamp(position.y, 0.0f, parentGrantedSize.y)
+        };
+
+        childRenderData.grantedSize = {
+            std::clamp(grantedSize.x, 0.0f, parentGrantedSize.x - childRenderData.position.x),
+            std::clamp(grantedSize.y, 0.0f, parentGrantedSize.y - childRenderData.position.y)
+        };
+    }
+
+    /*template<typename TSkin>
+    inline bool Widget<TSkin>::AddChild(WidgetPointer<TSkin> parent, WidgetPointer<TSkin> child)
+    {
+        return Layer<TSkin>::AddChild(parent, child);
+    }*/
+
+    template<typename TSkin>
+    inline WidgetTreeData<TSkin>& Widget<TSkin>::GetWidgetTreeData()
+    {
+        return m_treeData;
+    }
+
+    template<typename TSkin>
+    inline WidgetRenderData& Widget<TSkin>::GetWidgetRenderData()
+    {
+        return m_renderData;
     }
 
 }

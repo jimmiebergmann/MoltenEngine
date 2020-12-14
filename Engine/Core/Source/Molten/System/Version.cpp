@@ -24,10 +24,44 @@
 */
 
 #include "Molten/System/Version.hpp"
+#include <array>
+#include <charconv>
 
 namespace Molten
 {
 
+    static size_t FindNextNumberEnd(const std::string_view& string)
+    {
+        size_t i = 0;
+        for(i; i < string.size(); i++)
+        {
+            if(string[i] == '.')
+            {
+                return i;
+            }
+        }
+        return i;
+    }
+
+    // Static implementations.
+    static bool ReadNextNumber(std::string_view& string, uint32_t& value)
+    {
+        const size_t numberEnd = FindNextNumberEnd(string);
+        if(!numberEnd)
+        {
+            return false;
+        }
+        const auto result = std::from_chars(string.data(), string.data() + numberEnd, value);
+        if(result.ec != std::errc())
+        {
+            return false;
+        }
+        string = { result.ptr, string.size() - static_cast<size_t>(result.ptr - string.data()) };
+        return true;
+    }
+
+
+    // Version implementations.
     const Version Version::None = Version(0, 0, 0);
 
     Version::Version(const uint32_t major, const uint32_t minor, const uint32_t patch) :
@@ -51,6 +85,42 @@ namespace Molten
         }
 
         return str;
+    }
+
+    [[nodiscard]] bool Version::FromString(const std::string_view& version)
+    {
+        Major = 0;
+        Minor = 0;
+        Patch = 0;
+
+        std::array<uint32_t*, 2> values{ &Minor, &Patch };
+        std::string_view remaining = version;
+
+        if (!ReadNextNumber(remaining, Major))
+        {
+            return false;
+        }
+
+        for(size_t i = 0; i < values.size(); i++)
+        {
+            if(remaining.empty())
+            {
+                return true;
+            }
+
+            if(remaining[0] != '.')
+            {
+                return false;
+            }
+
+            remaining = { remaining.data() + 1, remaining.size() - 1 };
+            if(!ReadNextNumber(remaining, *values[i]))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     bool Version::operator == (const Version& version) const
