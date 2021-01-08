@@ -687,6 +687,36 @@ namespace Molten
         }
     }
 
+    TEST(Utility, BypassList_Move)
+    {
+        {
+            ListType list;
+            NormalLane normalLane = list.GetLane<ListType::NormalLaneType>();
+            PartialLane partialLane = list.GetLane<ListType::PartialLaneType>();
+
+            partialLane.PushBack(TestData1{ 1 });
+            normalLane.PushBack(TestData1{ 2 });
+            partialLane.PushBack(TestData1{ 3 });
+            normalLane.PushBack(TestData1{ 4 });
+            partialLane.PushBack(TestData1{ 5 });
+            partialLane.PushBack(TestData1{ 6 });
+            normalLane.PushBack(TestData1{ 7 });
+            normalLane.PushBack(TestData1{ 8 });
+            partialLane.PushBack(TestData1{ 9 });
+
+            EXPECT_EQ(list.GetSize(), size_t{ 9 });
+            ListType movedList = std::move(list);
+            EXPECT_EQ(list.GetSize(), size_t{ 0 });
+            EXPECT_EQ(movedList.GetSize(), size_t{ 9 });
+
+            /*ListType movedList2;
+            EXPECT_EQ(movedList2.GetSize(), size_t{ 0 });
+            movedList2 = std::move(list);
+            EXPECT_EQ(movedList.GetSize(), size_t{ 0 });
+            EXPECT_EQ(movedList2.GetSize(), size_t{ 9 });*/
+        }
+    }
+
     TEST(Utility, BypassList_Benchmark)
     {
         auto stdListTest = [&](const size_t loops)
@@ -1053,8 +1083,84 @@ namespace Molten
 
                 itPrev = std::prev(itPrev);
                 EXPECT_EQ((*itPrev).value, size_t(1));
+            }       
+        }
+    }
+
+    TEST(Utility, BypassListIterator_ReverseTraverse)
+    {
+        { // std::next
+            ListType list;
+            NormalLane normalLane = list.GetLane<ListType::NormalLaneType>();
+            PartialLane partialLane = list.GetLane<ListType::PartialLaneType>();
+
+            partialLane.PushBack(TestData1{ 1 });
+            normalLane.PushBack(TestData1{ 2 });
+            partialLane.PushBack(TestData1{ 3 });
+
+            {
+                auto it = normalLane.rbegin();
+
+                auto itNext = it;
+                EXPECT_EQ((*itNext).value, size_t(3));
+
+                itNext = std::next(itNext);
+                EXPECT_EQ((*itNext).value, size_t(2));
+
+                itNext = std::next(itNext);
+                EXPECT_EQ((*itNext).value, size_t(1));
+
+                itNext = std::next(itNext);
+                EXPECT_EQ(itNext, normalLane.rend());
             }
-           
+            {
+                auto it = partialLane.rbegin();
+
+                auto itNext = it;
+                EXPECT_EQ((*itNext).value, size_t(3));
+
+                itNext = std::next(itNext);
+                EXPECT_EQ((*itNext).value, size_t(1));
+
+                itNext = std::next(itNext);
+                EXPECT_EQ(itNext, partialLane.rend());
+            }
+        }
+        { // std::prev
+            ListType list;
+            NormalLane normalLane = list.GetLane<ListType::NormalLaneType>();
+            PartialLane partialLane = list.GetLane<ListType::PartialLaneType>();
+
+            partialLane.PushBack(TestData1{ 1 });
+            normalLane.PushBack(TestData1{ 2 });
+            partialLane.PushBack(TestData1{ 3 });
+
+            {
+                auto it = normalLane.rend();
+
+                auto itPrev = std::prev(it);
+                EXPECT_EQ((*itPrev).value, size_t(1));
+
+                itPrev = std::prev(itPrev);
+                EXPECT_EQ((*itPrev).value, size_t(2));
+
+                itPrev = std::prev(itPrev);
+                EXPECT_EQ((*itPrev).value, size_t(3));
+
+                EXPECT_EQ(itPrev, normalLane.rbegin());
+            }
+            {
+                auto it = partialLane.rend();
+
+                auto itPrev = std::prev(it);
+                EXPECT_EQ((*itPrev).value, size_t(1));
+
+                itPrev = std::prev(itPrev);
+                EXPECT_EQ((*itPrev).value, size_t(3));
+
+                EXPECT_EQ(itPrev, partialLane.rbegin());
+            }
+
         }
     }
 

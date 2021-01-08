@@ -30,6 +30,7 @@
 #include "Molten/Gui/WidgetData.hpp"
 #include "Molten/Math/Vector.hpp"
 #include "Molten/System/Time.hpp"
+#include "Molten/System/UserInput.hpp"
 
 namespace Molten::Gui
 {
@@ -50,6 +51,8 @@ namespace Molten::Gui
 
         virtual ~Layer() = default;
 
+        virtual void PushUserInputEvents(std::vector<UserInput::Event>& inputEvents);
+
         virtual void Update(const Time& deltaTime) = 0;
 
         virtual void Draw(CanvasRenderer& renderer) = 0;
@@ -64,12 +67,17 @@ namespace Molten::Gui
         template<template<typename> typename TWidgetType, typename ... TArgs>
         WidgetTypePointer<TWidgetType<TSkin>> CreateChild(Widget<TSkin>& parent, TArgs ... args);
 
+        TSkin& GetSkin();
+        const TSkin& GetSkin() const;
+
     protected:
 
-        virtual bool OnAddChild(Widget<TSkin>* parent, WidgetPointer<TSkin> child) = 0;
+        virtual bool OnAddChild(Widget<TSkin>* parent, WidgetDataPointer<TSkin> childData) = 0;
 
-        static WidgetTreeData<TSkin>& GetWidgetTreeData(Widget<TSkin>& widget);
-        static WidgetRenderData& GetWidgetRenderData(Widget<TSkin>& widget);
+        WidgetData<TSkin>& GetWidgetData(Widget<TSkin>& widget);
+
+        /*static WidgetTreeData<TSkin>& GetWidgetTreeData(Widget<TSkin>& widget);
+        static WidgetRenderData& GetWidgetRenderData(Widget<TSkin>& widget);*/
 
         static bool CallWidgetOnAddChild(Widget<TSkin>* parent, WidgetPointer<TSkin> child);
 

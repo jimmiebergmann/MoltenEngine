@@ -33,9 +33,7 @@
 namespace Molten
 {
 
-    /**
-    * @brief Generic mouse class.
-    */
+    /** Generic mouse class. */
     class MOLTEN_API Mouse
     {
 
@@ -50,17 +48,13 @@ namespace Molten
             Backward
         };
 
-        /**
-        * @brief Checks if mouse button is currently pressed down.
-        */
+        /** Checks if mouse button is currently pressed down. */
         static bool IsDown(const Button button);
 
     };
 
 
-    /**
-    * @brief Generic keyboard class.
-    */
+    /** Generic keyboard class. */
     class MOLTEN_API Keyboard
     {
 
@@ -159,99 +153,93 @@ namespace Molten
             SuperRight
         };
 
-        /**
-        * @brief Checks if mouse button is currently pressed down.
-        */
+        /** Checks if mouse button is currently pressed down. */
         static bool IsDown(const Key key);
 
     };
 
 
-    /**
-    * @brief User input class.
-    *        A generic system to handle user input events.
-    *        The *-Pressed events are automatically pushed and
-    *        *-Down events are supposed to be pushed every update if the key or button is being held down.
-    */
+    /** User input class.
+     *  A generic system to handle user input events.
+     *  The *-Pressed events are automatically pushed and
+     *  *-Down events are supposed to be pushed every update if the key or button is being held down.
+     */
     class MOLTEN_API UserInput
     {
 
     public:
 
-        /**
-        * @brief Mouse event, describing the following event types:
-        *   - MouseButtonPressed
-        *   - MouseButtonDown
-        *   - MouseButtonReleased
-        */
+        /** Mouse event, describing the following event types:
+         *   - MouseButtonPressed
+         *   - MouseButtonDown
+         *   - MouseButtonReleased
+         */
         struct MOLTEN_API MouseButtonEvent
         {
             Mouse::Button button;
             Vector2i32 position;
         };
 
-        /**
-        * @brief Mouse event, describing the following event types:
-        *   - MouseMove
-        */
+        /** Mouse event, describing the following event types:
+         *   - MouseMove
+         */
         struct MOLTEN_API MouseMoveEvent
         {
             Vector2i32 position;
         };
 
-        /**
-        * @brief Keyboard event, describing the following event types:
-        *   - KeyPressed
-        *   - KeyDown
-        *   - KeyReleased
-        */
+        /** Keyboard event, describing the following event types:
+         *   - KeyPressed
+         *   - KeyDown
+         *   - KeyReleased
+         */
         struct MOLTEN_API KeyboardEvent
         {
             Keyboard::Key key;
         };
 
 
-        /**
-        * @brief Event object, containing information about 
-        */
+        enum class EventType : uint8_t
+        {
+            None,       ///< Initial value of event, ignored by user input container.
+            Mouse,      ///< Mouse event type, movement and button clicks.
+            Keyboard,   ///< Keyboard event type, key presses.
+        };
+
+        enum class EventSubType : uint8_t
+        {
+            None,                   ///< Initial value of event, ignored by user input container.
+
+            // Mouse events.
+            MouseButtonPressed,     ///< Mouse button was just pressed.
+            MouseButtonDown,        ///< Mouse button is down.
+            MouseButtonReleased,    ///< Mouse button was just released.
+            MouseMove,              ///< Mouse cursor moved.
+
+            // Keyboard events.
+            KeyPressed,             ///< Key was just pressed.
+            KeyDown,                ///< Key is down.
+            KeyReleased             ///< Key was just released.
+        };
+
+        /** Event object, containing information about  */
         class MOLTEN_API Event
         {
 
         public:
 
-            /**
-            * @brief User input interface enumerator.
-            */
-            enum class Type : uint8_t
-            {
-                None,                   ///< Initial value of event, ignored by user input container.
-
-                // Mouse events.
-                MouseButtonPressed,     ///< Mouse button was just pressed.
-                MouseButtonDown,        ///< Mouse button is down.
-                MouseButtonReleased,    ///< Mouse button was just released.
-                MouseMove,              ///< Mouse cursor moved.
-
-                // Keyboard events.
-                KeyPressed,             ///< Key was just pressed.
-                KeyDown,                ///< Key is down.
-                KeyReleased             ///< Key was just released.
-            };
-
-            /**
-            * @brief Constructor.
-            */
+            /** Constructors. */
+            /**@{*/
             Event();
+            Event(const EventType type, const EventSubType subType);
+            /**@}*/
 
-            /**
-            * @brief Type of event.
-            */
-            Type type;
+            EventType type; ///< Type of event.
+            EventSubType subType; ///< Sub type of event.
 
-            /**
-            * @brief Union of different events.
-            *        Check "type" to select the correct union member.
-            */
+            /** Union of different events.
+             *  Check "type" and "subtype" to select the correct union member.
+             */
             union
             {
                 MouseButtonEvent mouseButtonEvent;
@@ -266,62 +254,40 @@ namespace Molten
         static bool ConvertFromWin32Key(const uint32_t input, Keyboard::Key& output);
     #endif
 
-        /**
-        * @brief Constructor.
-        */
+        /** Constructor. */
         UserInput();
 
-        /**
-        * @brief Prepare and begin to record input events.
-        */
+        /** Prepare and begin to record input events. */
         void Begin();
 
-        /**
-        * @brief End user input recording.
-        *        Pushing repeated *-Down events.
-        */
+        /**  End user input recording. Pushing repeated *-Down events. */
         void End();
 
-        /**
-        * @brief Poll event from queue.
-        *
-        * @true if new event was polled, else false if no events are queued.
-        */
+        /** Poll event from queue.
+         *
+         * @true if new event was polled, else false if no events are queued.
+         */
         bool PollEvent(Event& event);
 
-        /**
-        * @brief Register keyboard press.
-        */
+        /** Register keyboard press. */
         void PressKey(const Keyboard::Key key);
 
-        /**
-        * @brief Register mouse button press.
-        */
+        /** Register mouse button press. */
         void PressMouseButton(const Mouse::Button button, const Vector2i32& position);
 
-        /**
-        * @brief Register keyboard release.
-        */
+        /** Register keyboard release. */
         void ReleaseKey(const Keyboard::Key key);
 
-        /**
-        * @brief Register mouse button release.
-        */
+        /** Register mouse button release. */
         void ReleaseMouseButton(const Mouse::Button button, const Vector2i32& position);
 
-        /**
-        * @brief Register mouse movement.
-        */
+        /** Register mouse movement. */
         void MoveMouse(const Vector2i32& position);
 
-        /**
-        * @brief Get number of queued events.
-        */
+        /** Get number of queued events. */
         size_t GetEventCount() const;
 
-        /**
-        * @brief Get last mouse recorded mouse position.
-        */
+        /** Get last mouse recorded mouse position. */
         Vector2i32 GetMousePosition() const;
 
     private:

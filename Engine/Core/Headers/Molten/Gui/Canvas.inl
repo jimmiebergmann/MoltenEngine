@@ -29,9 +29,10 @@ namespace Molten::Gui
 {
 
     template<typename TSkin>
-    inline Canvas<TSkin>::Canvas(CanvasRendererPointer renderer) :
+    inline Canvas<TSkin>::Canvas(Renderer& backendRenderer, CanvasRendererPointer renderer) :
+        m_backendRenderer(backendRenderer),
         m_renderer(renderer),
-        m_skin(*m_renderer.get()),
+        m_skin(backendRenderer, *m_renderer.get()),
         m_size(0.0f, 0.0f),
         m_scale(1.0f, 1.0f)
     {}
@@ -58,8 +59,28 @@ namespace Molten::Gui
     }
 
     template<typename TSkin>
+    inline void Canvas<TSkin>::PushUserInputEvent(const UserInput::Event& inputEvent)
+    {
+        m_userInputEvents.push_back(inputEvent);
+    }
+
+    template<typename TSkin>
     inline void Canvas<TSkin>::Update(const Time& deltaTime)
     {
+        if (m_userInputEvents.size())
+        {
+            for (auto it = m_activeLayers.rbegin(); it != m_activeLayers.rend(); it++)
+            {
+                auto& layer = *it;
+                layer->PushUserInputEvents(m_userInputEvents);
+                if (!m_userInputEvents.size())
+                {
+                    break;
+                }
+            }
+            m_userInputEvents.clear();
+        }
+
         for (auto& layers : m_activeLayers)
         {
             layers->Update(deltaTime);
@@ -116,7 +137,7 @@ namespace Molten::Gui
 
     template<typename TSkin>
     template<template<typename> typename TLayer>
-    LayerTypePointer<TLayer<TSkin>> Canvas<TSkin>::CreateChild(const LayerPosition position)
+    inline LayerTypePointer<TLayer<TSkin>> Canvas<TSkin>::CreateChild(const LayerPosition position)
     {
         static_assert(std::is_base_of<Gui::Layer<TSkin>, TLayer<TSkin>>::value, "TLayerType is not base of Layer.");
 

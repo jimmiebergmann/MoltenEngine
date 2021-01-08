@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -27,35 +27,31 @@
 #define MOLTEN_CORE_GUI_WIDGETS_BUTTONWIDGET_HPP
 
 #include "Molten/Gui/Widget.hpp"
-//#include "Molten/Gui/CanvasRenderer.hpp"
-//#include "Molten/System/Signal.hpp"
+#include "Molten/Gui/WidgetEvent.hpp"
+#include "Molten/System/Signal.hpp"
 
 namespace Molten::Gui
 {
 
     template<typename TSkin>
-    class Button : public Widget<TSkin>
+    class Button : public Widget<TSkin>, public WidgetEventHandler
     {
 
     public:
 
-        explicit Button(TSkin& skin);
+        static constexpr bool handleKeyboardEvents = false;
+        static constexpr bool handleMouseEvents = true;
 
-        //Signal<int> onPress;
+        Signal<int> onPress;
 
-        void Update(const Time& deltaTime) override;
+        explicit Button(WidgetData<TSkin>& data);
 
-        void Draw(CanvasRenderer& renderer) override;
-
-        Vector2f32 CalculateSize(const Vector2f32& grantedSize) override;
-
-        void CalculateChildrenGrantedSize(typename WidgetTreeData<TSkin>::Tree::template ConstLane<typename WidgetTreeData<TSkin>::Tree::PartialLaneType> children) override;
+        bool HandleEvent(const WidgetEvent& widgetEvent) override;
 
     private:
 
         bool OnAddChild(WidgetPointer<TSkin> child) override;
 
-        std::unique_ptr<WidgetSkin<Button>> m_skin;
     };
 
 }

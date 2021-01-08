@@ -89,15 +89,13 @@ namespace Molten::Gui
         }
     }
 
-    void CanvasRenderer::DrawRect(const Vector2f32& size, const Vector4f32& color)
+    void CanvasRenderer::DrawRect(const Bounds2f32& bounds, const Vector4f32& color)
     {
-        Vector2f32 position = m_positionStack.top();
-
         m_backendRenderer.BindPipeline(m_rectInstance.pipeline);
 
         m_backendRenderer.PushConstant(m_rectInstance.projectionLocation, m_projection);
-        m_backendRenderer.PushConstant(m_rectInstance.positionLocation, position);
-        m_backendRenderer.PushConstant(m_rectInstance.sizeLocation, size);
+        m_backendRenderer.PushConstant(m_rectInstance.positionLocation, bounds.low);
+        m_backendRenderer.PushConstant(m_rectInstance.sizeLocation, bounds.high - bounds.low);
         m_backendRenderer.PushConstant(m_rectInstance.colorLocation, color);
 
         m_backendRenderer.DrawVertexBuffer(m_rectInstance.indexBuffer, m_rectInstance.vertexBuffer);

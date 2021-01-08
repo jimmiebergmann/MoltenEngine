@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -32,28 +32,17 @@ namespace Molten::Gui
 {
 
     template<typename TSkin>
-    class VerticalGrid : public Widget<TSkin>
+    class VerticalGrid : public Widget<TSkin>/*, public TSkin::template WidgetSkin<VerticalGrid<TSkin>>*/
     {
 
     public:
 
-        explicit VerticalGrid(
-            TSkin& skin,
-            const float spacing = 0.0f,
-            const PaddingData& outerPadding = PaddingData(),
-            const PaddingData& innerPadding = PaddingData());
+        static constexpr bool handleKeyboardEvents = false;
+        static constexpr bool handleMouseEvents = false;
 
-        float spacing;
-        PaddingData outerPadding;
-        PaddingData innerPadding;
+        float cellSpacing;
 
-        void Update(const Time& deltaTime) override;
-
-        void Draw(CanvasRenderer& renderer) override;
-
-        Vector2f32 CalculateSize(const Vector2f32& grantedSize) override;
-
-        void CalculateChildrenGrantedSize(typename WidgetTreeData<TSkin>::Tree::template ConstLane<typename WidgetTreeData<TSkin>::Tree::PartialLaneType> children) override;
+        explicit VerticalGrid(WidgetData<TSkin>& data);
 
     private:
 

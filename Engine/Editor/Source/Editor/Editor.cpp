@@ -193,27 +193,32 @@ namespace Molten::Editor
     bool Editor::LoadGui()
     {
         m_canvasRenderer = Gui::CanvasRenderer::Create(*m_renderer, m_logger.get());
-        m_canvas = std::make_shared<Gui::Canvas<Gui::DefaultSkin>>(m_canvasRenderer);
+        m_canvas = std::make_shared<Gui::Canvas<Gui::DefaultSkin>>(*m_renderer, m_canvasRenderer);
 
         auto layer = m_canvas->CreateChild<Gui::RootLayer>(Gui::LayerPosition::Top);
-        auto grid = layer->CreateChild<Gui::VerticalGrid>(
-            10.0f, 
-            Gui::PaddingData{ 10.0f, 20.0f, 30.0f, 40.0f }, 
-            Gui::PaddingData{ 10.0f, 20.0f, 30.0f, 40.0f }
-        );
+        auto grid = layer->CreateChild<Gui::VerticalGrid>();
+        grid->margin = Gui::PaddingType{ 10.0f, 20.0f, 30.0f, 40.0f };
+        grid->padding = Gui::PaddingType{ 10.0f, 20.0f, 30.0f, 40.0f };
+
+        auto button1 = grid->CreateChild<Gui::Button>();
+        button1->onPress.Connect([&](int)
+        {
+            Logger::WriteInfo(m_logger.get(), "Pressed button 1.");
+        });
+
 
         grid->CreateChild<Gui::Spacer>();
 
-        auto grid2 = grid->CreateChild<Gui::VerticalGrid>(
-            5.0f,
-            Gui::PaddingData{ 5.0f, 5.0f, 5.0f, 5.0f },
-            Gui::PaddingData{ 5.0f, 5.0f, 5.0f, 5.0f }
-        );
+        auto grid2 = grid->CreateChild<Gui::VerticalGrid>();
+        grid2->margin = Gui::PaddingType{ 5.0f, 5.0f, 5.0f, 5.0f };
+        grid2->padding = Gui::PaddingType{ 15.0f, 25.0f, 5.0f, 5.0f };
+        grid2->cellSpacing = 10.0f;
+
         grid2->CreateChild<Gui::Button>();
         grid2->CreateChild<Gui::Button>();
 
         grid->CreateChild<Gui::Spacer>();
-        grid->CreateChild<Gui::Spacer>();
+        grid->CreateChild<Gui::Button>();
         grid->CreateChild<Gui::Button>();
 
         /*
@@ -245,9 +250,7 @@ namespace Molten::Editor
             return true;
         }
 
-        m_canvas->SetSize(m_window->GetSize());
-        m_canvas->SetScale(m_window->GetScale());
-        m_canvas->Update(Time::Zero);
+        UpdateCanvas();
 
         m_renderer->Resize(m_window->GetSize());
         m_renderer->BeginDraw();
@@ -291,6 +294,21 @@ namespace Molten::Editor
         }
 
         return true;
+    }
+
+    void Editor::UpdateCanvas()
+    {
+        auto& userInput = m_window->GetUserInput();
+
+        UserInput::Event inputEvent;
+        while (userInput.PollEvent(inputEvent))
+        {
+            m_canvas->PushUserInputEvent(inputEvent);
+        }
+
+        m_canvas->SetSize(m_window->GetSize());
+        m_canvas->SetScale(m_window->GetScale());
+        m_canvas->Update(Time::Zero);
     }
 
 }

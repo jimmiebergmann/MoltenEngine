@@ -29,6 +29,7 @@
 #include "Molten/Gui/GuiTypes.hpp"
 #include "Molten/Math/Vector.hpp"
 #include "Molten/Math/Matrix.hpp"
+#include "Molten/Math/Bounds.hpp"
 #include "Molten/System/Resource.hpp"
 #include <stack>
 
@@ -71,7 +72,7 @@ namespace Molten::Gui
 
         void PopPosition();
 
-        void DrawRect(const Vector2f32& size, const Vector4f32& color);
+        void DrawRect(const Bounds2f32& bounds, const Vector4f32& color);
 
         void EndDraw();
 

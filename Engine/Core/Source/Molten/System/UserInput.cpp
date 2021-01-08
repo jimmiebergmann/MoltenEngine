@@ -54,9 +54,14 @@ namespace Molten
 
     // Event of user input implementations.
     UserInput::Event::Event() :
-        type(Type::None)
-    { }
+        type(EventType::None),
+        subType(EventSubType::None)
+    {}
 
+    UserInput::Event::Event(const EventType type, const EventSubType subType) :
+        type(type),
+        subType(subType)
+    {}
 
     // User input implementations.
 #if MOLTEN_PLATFORM == MOLTEN_PLATFORM_WINDOWS
@@ -64,11 +69,11 @@ namespace Molten
     {
         switch (button)
         {
-        case Mouse::Button::Left: return VK_LBUTTON;
-        case Mouse::Button::Middle: return VK_MBUTTON;
-        case Mouse::Button::Right: return VK_RBUTTON;
-        case Mouse::Button::Backward: return VK_XBUTTON1;
-        case Mouse::Button::Forward: return VK_XBUTTON2;
+            case Mouse::Button::Left: return VK_LBUTTON;
+            case Mouse::Button::Middle: return VK_MBUTTON;
+            case Mouse::Button::Right: return VK_RBUTTON;
+            case Mouse::Button::Backward: return VK_XBUTTON1;
+            case Mouse::Button::Forward: return VK_XBUTTON2;
         }
         return 0;
     }
@@ -187,8 +192,7 @@ namespace Molten
     {
         if (m_prevPressedKeys.size())
         {
-            Event event;
-            event.type = Event::Type::KeyDown;
+            Event event(EventType::Keyboard, EventSubType::KeyDown);
             for (auto& key : m_prevPressedKeys)
             {
                 event.keyboardEvent.key = key;
@@ -197,8 +201,7 @@ namespace Molten
         }
         if (m_prevPressedMouseButtons.size())
         {
-            Event event;
-            event.type = Event::Type::MouseButtonDown;
+            Event event(EventType::Mouse, EventSubType::MouseButtonDown);
             event.mouseButtonEvent.position = m_mousePosition;
             for (auto& button : m_prevPressedMouseButtons)
             {
@@ -230,12 +233,11 @@ namespace Molten
 
         m_pressedKeys.insert(key);
 
-        Event event;       
+        Event event(EventType::Keyboard, EventSubType::KeyPressed);
         event.keyboardEvent.key = key;
 
-        event.type = Event::Type::KeyPressed;
         m_events.push_back(event);
-        event.type = Event::Type::KeyDown;
+        event.subType = EventSubType::KeyDown;
         m_events.push_back(event);
     }
 
@@ -251,13 +253,12 @@ namespace Molten
 
         m_pressedMouseButtons.insert(button);
 
-        Event event;       
+        Event event(EventType::Mouse, EventSubType::MouseButtonPressed);
         event.mouseButtonEvent.button = button;
         event.mouseButtonEvent.position = position;
-        
-        event.type = Event::Type::MouseButtonPressed;
+ 
         m_events.push_back(event);
-        event.type = Event::Type::MouseButtonDown;
+        event.subType = EventSubType::MouseButtonDown;
         m_events.push_back(event);  
     }
 
@@ -266,8 +267,7 @@ namespace Molten
         m_pressedKeys.erase(key);
         m_prevPressedKeys.erase(key);
 
-        Event event;
-        event.type = Event::Type::KeyReleased;
+        Event event(EventType::Keyboard, EventSubType::KeyReleased);
         event.keyboardEvent.key = key;
         m_events.push_back(event);
     }
@@ -279,8 +279,7 @@ namespace Molten
         m_pressedMouseButtons.erase(button);
         m_prevPressedMouseButtons.erase(button);
 
-        Event event;
-        event.type = Event::Type::MouseButtonReleased;
+        Event event(EventType::Mouse, EventSubType::MouseButtonReleased);
         event.mouseButtonEvent.button = button;
         event.mouseButtonEvent.position = position;
         m_events.push_back(event);      
@@ -290,8 +289,7 @@ namespace Molten
     {
         m_mousePosition = position;
 
-        Event event;
-        event.type = Event::Type::MouseMove;
+        Event event(EventType::Mouse, EventSubType::MouseMove);
         event.mouseMoveEvent.position = position;
         m_events.push_back(event);
     }

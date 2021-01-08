@@ -60,6 +60,8 @@ namespace Molten::Gui
     template<typename TWidgetType>
     using WidgetTypePointer = std::shared_ptr<TWidgetType>;
 
+    class WidgetEventHandler;
+
 }
 
 #endif

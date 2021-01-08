@@ -101,6 +101,7 @@ namespace Molten::Editor
         bool Tick();
         bool UpdateWindow();
         bool HandleWindowFocus();
+        void UpdateCanvas();
 
         std::atomic_bool m_isRunning;
         Semaphore& m_cancellationSemaphore;

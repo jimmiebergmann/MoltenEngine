@@ -110,7 +110,7 @@ namespace Molten
     using PartialConstLane = TreeType::PartialConstLane;
     using PartialIterator = TreeType::Iterator<TreeType::PartialLaneType>;
     using PartialConstIterator = TreeType::ConstIterator<TreeType::PartialLaneType>;
-
+    
     TEST(Utility, BypassTree_Empty)
     {
         TreeType tree;
@@ -121,21 +121,21 @@ namespace Molten
         EXPECT_EQ(partialLane.GetSize(), size_t(0));
     }
    
-    TEST(Utility, BypassTree_PushBackRoot)
+    TEST(Utility, BypassTree_InsertRootBack)
     {
         TreeType tree;
         NormalLane normalLane = tree.GetLane<TreeType::NormalLaneType>();
         PartialLane partialLane = tree.GetLane<TreeType::PartialLaneType>();
 
-        partialLane.PushBack(TestData1{ 1 });
-        normalLane.PushBack(TestData1{ 2 });
-        partialLane.PushBack(TestData1{ 3 });
-        normalLane.PushBack(TestData1{ 4 });
-        partialLane.PushBack(TestData1{ 5 });
-        partialLane.PushBack(TestData1{ 6 });
-        normalLane.PushBack(TestData1{ 7 });
-        normalLane.PushBack(TestData1{ 8 });
-        partialLane.PushBack(TestData1{ 9 });
+        tree.Insert(partialLane, normalLane.end(), TestData1{ 1 });
+        tree.Insert(normalLane, normalLane.end(), TestData1{ 2 });
+        tree.Insert(partialLane, normalLane.end(), TestData1{ 3 });
+        tree.Insert(normalLane, normalLane.end(), TestData1{ 4 });
+        tree.Insert(partialLane, normalLane.end(), TestData1{ 5 });
+        tree.Insert(partialLane, normalLane.end(), TestData1{ 6 });
+        tree.Insert(normalLane, normalLane.end(), TestData1{ 7 });
+        tree.Insert(normalLane, normalLane.end(), TestData1{ 8 });
+        tree.Insert(partialLane, normalLane.end(), TestData1{ 9 });
             
         EXPECT_EQ(normalLane.GetSize(), size_t(9));
         EXPECT_EQ(partialLane.GetSize(), size_t(5));
@@ -164,15 +164,16 @@ namespace Molten
         NormalLane normalLane = tree.GetLane<TreeType::NormalLaneType>();
         PartialLane partialLane = tree.GetLane<TreeType::PartialLaneType>();
  
-        partialLane.Insert(normalLane.begin(), TestData1{ 1 });
-        normalLane.Insert(normalLane.begin(), TestData1{ 2 });
-        partialLane.Insert(normalLane.begin(), TestData1{ 3 });
-        normalLane.Insert(normalLane.end(), TestData1{ 4 });
-        partialLane.Insert(normalLane.begin(), TestData1{ 5 });
-        partialLane.Insert(normalLane.end(), TestData1{ 6 });
-        normalLane.Insert(normalLane.begin(), TestData1{ 7 });
-        normalLane.Insert(normalLane.begin(), TestData1{ 8 });
-        partialLane.Insert(normalLane.begin(), TestData1{ 9 });
+     
+        tree.Insert(partialLane, normalLane.begin(), TestData1{ 1 });
+        tree.Insert(normalLane, normalLane.begin(), TestData1{ 2 });
+        tree.Insert(partialLane, normalLane.begin(), TestData1{ 3 });
+        tree.Insert(normalLane, normalLane.end(), TestData1{ 4 });
+        tree.Insert(partialLane, normalLane.begin(), TestData1{ 5 });
+        tree.Insert(partialLane, normalLane.end(), TestData1{ 6 });
+        tree.Insert(normalLane, normalLane.begin(), TestData1{ 7 });
+        tree.Insert(normalLane, normalLane.begin(), TestData1{ 8 });
+        tree.Insert(partialLane, normalLane.begin(), TestData1{ 9 });
  
         EXPECT_EQ(normalLane.GetSize(), size_t(9));
         EXPECT_EQ(partialLane.GetSize(), size_t(5));
@@ -194,17 +195,17 @@ namespace Molten
         } 
     }
 
-   
-    TEST(Utility, BypassTree_EraseAllMain)
+    TEST(Utility, BypassTree_EraseAllNormal)
     {
-
         {// 1 item.
             { 
                 TreeType tree;
                 NormalLane normalLane = tree.GetLane<TreeType::NormalLaneType>();
                 PartialLane partialLane = tree.GetLane<TreeType::PartialLaneType>();
 
-                partialLane.PushBack(TestData1{ 1 });
+                auto value1 = (*tree.Insert(partialLane, normalLane.end(), TestData1{ 1 })).GetValue().value;
+                EXPECT_EQ(value1, size_t{ 1 });
+
                 EXPECT_EQ(normalLane.GetSize(), size_t(1));
                 EXPECT_EQ(partialLane.GetSize(), size_t(1));
 
@@ -223,7 +224,9 @@ namespace Molten
                 NormalLane normalLane = tree.GetLane<TreeType::NormalLaneType>();
                 PartialLane partialLane = tree.GetLane<TreeType::PartialLaneType>();
 
-                normalLane.PushBack(TestData1{ 1 });
+                auto value1 = (*tree.Insert(normalLane, normalLane.end(), TestData1{ 1 })).GetValue().value;
+                EXPECT_EQ(value1, size_t{ 1 });
+
                 EXPECT_EQ(normalLane.GetSize(), size_t(1));
                 EXPECT_EQ(partialLane.GetSize(), size_t(0));
 
@@ -244,8 +247,12 @@ namespace Molten
                 NormalLane normalLane = tree.GetLane<TreeType::NormalLaneType>();
                 PartialLane partialLane = tree.GetLane<TreeType::PartialLaneType>();
 
-                partialLane.PushBack(TestData1{ 1 });
-                partialLane.PushBack(TestData1{ 2 });
+                auto value1 = (*tree.Insert(partialLane, normalLane.end(), TestData1{ 1 })).GetValue().value;
+                auto value2 = (*tree.Insert(partialLane, normalLane.end(), TestData1{ 2 })).GetValue().value;
+                EXPECT_EQ(value1, size_t{ 1 });
+                EXPECT_EQ(value2, size_t{ 2 });
+
+
                 EXPECT_EQ(normalLane.GetSize(), size_t(2));
                 EXPECT_EQ(partialLane.GetSize(), size_t(2));
 
@@ -275,8 +282,11 @@ namespace Molten
                 NormalLane normalLane = tree.GetLane<TreeType::NormalLaneType>();
                 PartialLane partialLane = tree.GetLane<TreeType::PartialLaneType>();
 
-                partialLane.PushBack(TestData1{ 1 });
-                partialLane.PushBack(TestData1{ 2 });
+                auto value1 = (*tree.Insert(partialLane, normalLane.end(), TestData1{ 1 })).GetValue().value;
+                auto value2 = (*tree.Insert(partialLane, normalLane.end(), TestData1{ 2 })).GetValue().value;
+                EXPECT_EQ(value1, size_t{ 1 });
+                EXPECT_EQ(value2, size_t{ 2 });
+
                 EXPECT_EQ(normalLane.GetSize(), size_t(2));
                 EXPECT_EQ(partialLane.GetSize(), size_t(2));
 
@@ -303,7 +313,7 @@ namespace Molten
             }
         }
     }
-  
+
     TEST(Utility, BypassTree_TraverseTreePushBack)
     { 
         {
@@ -312,9 +322,9 @@ namespace Molten
             { // Add data 
                 PartialLane partialLane = tree.GetLane<TreeType::PartialLaneType>();
 
-                partialLane.PushBack(TestData1{ 1 });
-                partialLane.PushBack(TestData1{ 2 });
-                partialLane.PushBack(TestData1{ 3 });
+                tree.Insert(partialLane, partialLane.end(), TestData1{ 1 });
+                tree.Insert(partialLane, partialLane.end(), TestData1{ 2 });
+                tree.Insert(partialLane, partialLane.end(), TestData1{ 3 });
 
                 auto it1 = partialLane.begin();
                 auto it2 = std::next(it1);
@@ -323,21 +333,21 @@ namespace Molten
                 auto& item1 = *it1;
                 auto& item3 = *it3;
 
-                PartialLane partialLane1 = item1.GetLane<TreeType::PartialLaneType>();
-                PartialLane partialLane3 = item3.GetLane<TreeType::PartialLaneType>();
+                PartialLane partialLane1 = item1.GetChildren().GetLane<TreeType::PartialLaneType>();
+                PartialLane partialLane3 = item3.GetChildren().GetLane<TreeType::PartialLaneType>();
 
-                partialLane1.PushBack(TestData1{ 11 });
-                partialLane1.PushBack(TestData1{ 12 });
+                tree.Insert(partialLane1, partialLane1.end(), TestData1{ 11 });
+                tree.Insert(partialLane1, partialLane1.end(), TestData1{ 12 });
 
-                partialLane3.PushBack(TestData1{ 31 });
-                partialLane3.PushBack(TestData1{ 32 });
-                partialLane3.PushBack(TestData1{ 33 });
+                tree.Insert(partialLane3, partialLane3.end(), TestData1{ 31 });
+                tree.Insert(partialLane3, partialLane3.end(), TestData1{ 32 });
+                tree.Insert(partialLane3, partialLane3.end(), TestData1{ 33 });
 
                 auto it11 = partialLane1.begin();
                 auto& item11 = *it11;
-                PartialLane partialLane11 = item11.GetLane<TreeType::PartialLaneType>();
+                PartialLane partialLane11 = item11.GetChildren().GetLane<TreeType::PartialLaneType>();
 
-                partialLane11.PushBack(TestData1{ 111 });
+                tree.Insert(partialLane11, partialLane11.end(), TestData1{ 111 });
             }
             { // Check data
                 NormalLane normalLane = tree.GetLane<TreeType::NormalLaneType>();
@@ -356,10 +366,10 @@ namespace Molten
                 auto& item3 = *it3;
                 EXPECT_EQ(item3.GetValue(), TestData1{ 3 });
                 
-                 // Second layer
-                PartialLane partialLane1 = item1.GetLane<TreeType::PartialLaneType>();
-                PartialLane partialLane2 = item2.GetLane<TreeType::PartialLaneType>();
-                PartialLane partialLane3 = item3.GetLane<TreeType::PartialLaneType>();
+                // Second layer
+                PartialLane partialLane1 = item1.GetChildren().GetLane<TreeType::PartialLaneType>();
+                PartialLane partialLane2 = item2.GetChildren().GetLane<TreeType::PartialLaneType>();
+                PartialLane partialLane3 = item3.GetChildren().GetLane<TreeType::PartialLaneType>();
 
                 EXPECT_EQ(partialLane1.GetSize(), size_t(2));
                 EXPECT_EQ(partialLane2.GetSize(), size_t(0));
@@ -382,11 +392,11 @@ namespace Molten
                 auto& item33 = *it33;
                 EXPECT_EQ(item33.GetValue(), TestData1{ 33 });
 
-                PartialLane partialLane11 = item11.GetLane<TreeType::PartialLaneType>();
-                PartialLane partialLane12 = item12.GetLane<TreeType::PartialLaneType>();
-                PartialLane partialLane31 = item31.GetLane<TreeType::PartialLaneType>();
-                PartialLane partialLane32 = item32.GetLane<TreeType::PartialLaneType>();
-                PartialLane partialLane33 = item33.GetLane<TreeType::PartialLaneType>();
+                PartialLane partialLane11 = item11.GetChildren().GetLane<TreeType::PartialLaneType>();
+                PartialLane partialLane12 = item12.GetChildren().GetLane<TreeType::PartialLaneType>();
+                PartialLane partialLane31 = item31.GetChildren().GetLane<TreeType::PartialLaneType>();
+                PartialLane partialLane32 = item32.GetChildren().GetLane<TreeType::PartialLaneType>();
+                PartialLane partialLane33 = item33.GetChildren().GetLane<TreeType::PartialLaneType>();
 
                 EXPECT_EQ(partialLane11.GetSize(), size_t(1));
                 EXPECT_EQ(partialLane12.GetSize(), size_t(0));
@@ -399,13 +409,13 @@ namespace Molten
                 auto& item111 = *it111;
                 EXPECT_EQ(item111.GetValue(), TestData1{ 111 });
 
-                PartialLane partialLane111 = item111.GetLane<TreeType::PartialLaneType>();
+                PartialLane partialLane111 = item111.GetChildren().GetLane<TreeType::PartialLaneType>();
                 EXPECT_EQ(partialLane111.GetSize(), size_t(0));
             }
         }
     }
     
-    TEST(Utility, BypassTree_ForEach)
+    TEST(Utility, BypassTree_ForEachPreorder)
     {
         {
             TreeType tree;
@@ -414,11 +424,9 @@ namespace Molten
                 NormalLane normalLane = tree.GetLane<TreeType::NormalLaneType>();
                 PartialLane partialLane = tree.GetLane<TreeType::PartialLaneType>();
 
-                tree.GetItem().GetValue() = TestData1{ 1337 };
-
-                normalLane.PushBack(TestData1{ 1 });
-                partialLane.PushBack(TestData1{ 2 });
-                partialLane.PushBack(TestData1{ 3 });
+                tree.Insert(normalLane, normalLane.end(), TestData1{ 1 });
+                tree.Insert(partialLane, partialLane.end(), TestData1{ 2 });
+                tree.Insert(partialLane, partialLane.end(), TestData1{ 3 });
 
                 auto it1 = normalLane.begin();
                 auto it2 = std::next(it1);
@@ -427,55 +435,130 @@ namespace Molten
                 auto& item1 = *it1;
                 auto& item3 = *it3;
 
-                PartialLane partialLane1 = item1.GetLane<TreeType::PartialLaneType>();
-                PartialLane partialLane3 = item3.GetLane<TreeType::PartialLaneType>();
+                PartialLane partialLane1 = item1.GetChildren().GetLane<TreeType::PartialLaneType>();
+                PartialLane partialLane3 = item3.GetChildren().GetLane<TreeType::PartialLaneType>();
 
-                partialLane1.PushBack(TestData1{ 11 });
-                partialLane1.PushBack(TestData1{ 12 });
+                tree.Insert(partialLane1, partialLane1.end(), TestData1{ 11 });
+                tree.Insert(partialLane1, partialLane1.end(), TestData1{ 12 });
 
-                partialLane3.PushBack(TestData1{ 31 });
-                partialLane3.PushBack(TestData1{ 32 });
-                partialLane3.PushBack(TestData1{ 33 });
+                tree.Insert(partialLane3, partialLane3.end(), TestData1{ 31 });
+                tree.Insert(partialLane3, partialLane3.end(), TestData1{ 32 });
+                tree.Insert(partialLane3, partialLane3.end(), TestData1{ 33 });
 
                 auto it11 = partialLane1.begin();
                 auto& item11 = *it11;
-                PartialLane partialLane11 = item11.GetLane<TreeType::PartialLaneType>();
+                PartialLane partialLane11 = item11.GetChildren().GetLane<TreeType::PartialLaneType>();
 
-                partialLane11.PushBack(TestData1{ 111 });
-            }          
-            {
-                std::vector<size_t> values;
-                tree.ForEachPreorder<TreeType::NormalLaneType>([&](TestData1& data)
-                {
-                    values.push_back(data.value);
-                });
-
-                ASSERT_EQ(values.size(), size_t(10));
-                EXPECT_EQ(values[0], size_t(1337));
-                EXPECT_EQ(values[1], size_t(1));
-                EXPECT_EQ(values[2], size_t(11));
-                EXPECT_EQ(values[3], size_t(111));
-                EXPECT_EQ(values[4], size_t(12));
-                EXPECT_EQ(values[5], size_t(2));
-                EXPECT_EQ(values[6], size_t(3));
-                EXPECT_EQ(values[7], size_t(31));
-                EXPECT_EQ(values[8], size_t(32));
-                EXPECT_EQ(values[9], size_t(33));
+                tree.Insert(partialLane11, partialLane11.end(), TestData1{ 111 });
             }
-            {
-                std::vector<size_t> values;
-                tree.ForEachPreorder<TreeType::PartialLaneType>([&](TestData1& data)
-                {
-                    values.push_back(data.value);
-                });
+            { // Forward
+                { // Pre
+                    std::vector<size_t> values = {
+                        1, 11, 111, 12, 2, 3, 31, 32, 33
+                    };
 
-                ASSERT_EQ(values.size(), size_t(6));
-                EXPECT_EQ(values[0], size_t(1337)); 
-                EXPECT_EQ(values[1], size_t(2));
-                EXPECT_EQ(values[2], size_t(3));
-                EXPECT_EQ(values[3], size_t(31));
-                EXPECT_EQ(values[4], size_t(32));
-                EXPECT_EQ(values[5], size_t(33));
+                    auto it = values.begin();
+
+                    tree.ForEachPreorder<TreeType::NormalLaneType>([&](TestData1& item)
+                    {
+                        ASSERT_NE(it, values.end());
+                        EXPECT_EQ(item.value, *it);
+                        ++it;
+                    });
+
+                    EXPECT_EQ(it, values.end());
+                }
+                { // Pre and post.
+                    std::vector<size_t> preValues = {
+                        1, 11, 111, 12, 2, 3, 31, 32, 33
+                    };
+                    std::vector<size_t> postValues = {
+                        111, 11, 12, 1, 2, 31, 32, 33, 3
+                    };
+
+                    auto preIt = preValues.begin();
+                    auto postIt = postValues.begin();
+
+                    tree.ForEachPreorder<TreeType::NormalLaneType>(
+                        [&](auto& item)
+                    {
+                        ASSERT_NE(preIt, preValues.end());
+                        EXPECT_EQ(item.value, *preIt);
+                        ++preIt;
+                    },
+                        [&](auto& item)
+                    {
+                        ASSERT_NE(postIt, postValues.end());
+                        EXPECT_EQ(item.value, *postIt);
+                        ++postIt;
+                    });
+
+                    EXPECT_EQ(preIt, preValues.end());
+                    EXPECT_EQ(postIt, postValues.end());
+                }
+                { // Pre
+                    std::vector<size_t> values = {
+                        2, 3, 31, 32, 33
+                    };
+
+                    auto it = values.begin();
+
+                    tree.ForEachPreorder<TreeType::PartialLaneType>([&](TestData1& item)
+                    {
+                        ASSERT_NE(it, values.end());
+                        EXPECT_EQ(item.value, *it);
+                        ++it;
+                    });
+
+                    EXPECT_EQ(it, values.end());
+                }
+                { // Pre and post.
+                    std::vector<size_t> preValues = {
+                        2, 3, 31, 32, 33
+                    };
+                    std::vector<size_t> postValues = {
+                        2, 31, 32, 33, 3
+                    };
+
+                    auto preIt = preValues.begin();
+                    auto postIt = postValues.begin();
+
+                    tree.ForEachPreorder<TreeType::PartialLaneType>(
+                        [&](auto& item)
+                    {
+                        ASSERT_NE(preIt, preValues.end());
+                        EXPECT_EQ(item.value, *preIt);
+                        ++preIt;
+                    },
+                        [&](auto& item)
+                    {
+                        ASSERT_NE(postIt, postValues.end());
+                        EXPECT_EQ(item.value, *postIt);
+                        ++postIt;
+                    });
+
+                    EXPECT_EQ(preIt, preValues.end());
+                    EXPECT_EQ(postIt, postValues.end());
+                }
+            }
+            { // Reverse
+                { // Pre
+                    std::vector<size_t> values = {
+                        33, 32, 31, 3, 2, 12, 111, 11, 1
+                    };
+
+                    auto it = values.begin();
+
+                    tree.ForEachReversePreorder<TreeType::NormalLaneType>([&](TestData1& item)
+                    {
+                        ASSERT_NE(it, values.end());
+                        EXPECT_EQ(item.value, *it);
+                        ++it;
+                    });
+
+                    EXPECT_EQ(it, values.end());
+                }
+
             }
         }
     }
@@ -486,11 +569,11 @@ namespace Molten
         NormalLane normalLane = tree.GetLane<TreeType::NormalLaneType>();
         PartialLane partialLane = tree.GetLane<TreeType::PartialLaneType>();
 
-        normalLane.PushBack(TestData1{ 1 });
-        partialLane.PushBack(TestData1{ 2 });
-        normalLane.PushBack(TestData1{ 3 });
-        partialLane.PushBack(TestData1{ 4 });
-        normalLane.PushBack(TestData1{ 5 });
+        tree.Insert(normalLane, normalLane.end(), TestData1{ 1 });
+        tree.Insert(partialLane, normalLane.end(), TestData1{ 2 });
+        tree.Insert(normalLane, normalLane.end(), TestData1{ 3 });
+        tree.Insert(partialLane, normalLane.end(), TestData1{ 4 });
+        tree.Insert(normalLane, normalLane.end(), TestData1{ 5 });
 
         // Non-const -> Non-const.
         NormalLane normalLane2;
@@ -531,35 +614,35 @@ namespace Molten
         EXPECT_EQ(partialConstLane5.GetSize(), size_t(2));
     }
 
-    TEST(Utility, BypassTreeIterator_IsEmpty)
+    TEST(Utility, BypassTreeIterator_IsValid)
     {
         {
             TreeType::Iterator<TreeType::NormalLaneType> it1;
-            EXPECT_TRUE(it1.IsEmpty());
+            EXPECT_TRUE(it1.IsValid());
 
             TreeType::Iterator<TreeType::PartialLaneType> it2;
-            EXPECT_TRUE(it2.IsEmpty());
+            EXPECT_TRUE(it2.IsValid());
 
             TreeType::ConstIterator<TreeType::NormalLaneType> it3;
-            EXPECT_TRUE(it3.IsEmpty());
+            EXPECT_TRUE(it3.IsValid());
 
             TreeType::ConstIterator<TreeType::PartialLaneType> it4;
-            EXPECT_TRUE(it4.IsEmpty());
+            EXPECT_TRUE(it4.IsValid());
         }
         {
             TreeType tree;
             TreeType::NormalLane rootLane = tree.GetLane<TreeType::NormalLaneType>();
-            EXPECT_FALSE(rootLane.begin().IsEmpty());
-            EXPECT_FALSE(rootLane.end().IsEmpty());
-            EXPECT_FALSE(rootLane.begin().IsEmpty());
-            EXPECT_FALSE(rootLane.end().IsEmpty());
+            EXPECT_FALSE(rootLane.begin().IsValid());
+            EXPECT_FALSE(rootLane.end().IsValid());
+            EXPECT_FALSE(rootLane.begin().IsValid());
+            EXPECT_FALSE(rootLane.end().IsValid());
             
             const TreeType& constTree = tree;
             TreeType::NormalConstLane constRootLane = constTree.GetLane<TreeType::NormalLaneType>();
-            EXPECT_FALSE(constRootLane.begin().IsEmpty());
-            EXPECT_FALSE(constRootLane.end().IsEmpty());
-            EXPECT_FALSE(constRootLane.begin().IsEmpty());
-            EXPECT_FALSE(constRootLane.end().IsEmpty());
+            EXPECT_FALSE(constRootLane.begin().IsValid());
+            EXPECT_FALSE(constRootLane.end().IsValid());
+            EXPECT_FALSE(constRootLane.begin().IsValid());
+            EXPECT_FALSE(constRootLane.end().IsValid());
         }
     }
 
@@ -601,11 +684,11 @@ namespace Molten
         NormalLane normalLane = tree.GetLane<TreeType::NormalLaneType>();
         PartialLane partialLane = tree.GetLane<TreeType::PartialLaneType>();
 
-        normalLane.PushBack(TestData1{ 1 });
-        partialLane.PushBack(TestData1{ 2 });
-        normalLane.PushBack(TestData1{ 3 });
-        partialLane.PushBack(TestData1{ 4 });
-        normalLane.PushBack(TestData1{ 5 });
+        tree.Insert(normalLane, normalLane.end(), TestData1{ 1 });
+        tree.Insert(partialLane, normalLane.end(), TestData1{ 2 });
+        tree.Insert(normalLane, normalLane.end(), TestData1{ 3 });
+        tree.Insert(partialLane, normalLane.end(), TestData1{ 4 });
+        tree.Insert(normalLane, normalLane.end(), TestData1{ 5 });
 
         // Non-const -> Non-const.
         NormalIterator normalIt = normalLane.begin();
@@ -656,15 +739,15 @@ namespace Molten
 
     TEST(Utility, BypassTreeIterator_Traverse)
     {
+        TreeType tree;
+        NormalLane normalLane = tree.GetLane<TreeType::NormalLaneType>();
+        PartialLane partialLane = tree.GetLane<TreeType::PartialLaneType>();
+
+        tree.Insert(partialLane, normalLane.end(), TestData1{ 1 });
+        tree.Insert(normalLane, normalLane.end(), TestData1{ 2 });
+        tree.Insert(partialLane, normalLane.end(), TestData1{ 3 });
+
         { // std::next
-            TreeType tree;
-            NormalLane normalLane = tree.GetLane<TreeType::NormalLaneType>();
-            PartialLane partialLane = tree.GetLane<TreeType::PartialLaneType>();
-
-            partialLane.PushBack(TestData1{ 1 });
-            normalLane.PushBack(TestData1{ 2 });
-            partialLane.PushBack(TestData1{ 3 });
-
             {
                 auto it = normalLane.begin();
 
@@ -694,14 +777,6 @@ namespace Molten
             }
         }
         { // std::prev
-            TreeType tree;
-            NormalLane normalLane = tree.GetLane<TreeType::NormalLaneType>();
-            PartialLane partialLane = tree.GetLane<TreeType::PartialLaneType>();
-
-            partialLane.PushBack(TestData1{ 1 });
-            normalLane.PushBack(TestData1{ 2 });
-            partialLane.PushBack(TestData1{ 3 });
-
             {
                 auto it = normalLane.end();
 
@@ -723,7 +798,6 @@ namespace Molten
                 itPrev = std::prev(itPrev);
                 EXPECT_EQ((*itPrev).GetValue(), TestData1{ 1 });
             }
-
         }
     }
 

@@ -26,47 +26,29 @@
 namespace Molten::Gui
 {
 
-    template<typename TSkin>
-    inline Padding<TSkin>::Padding(
-        TSkin& skin,
-        const float left,
-        const float top,
-        const float right,
-        const float bottom
-    ) :
-        PaddingData(left, top, right, bottom)
-    {
-        skin.template Create<Padding>(*this);
-    }
+    //template<typename TSkin>
+    //inline Padding<TSkin>::Padding(
+    //    TSkin& skin,
+    //    const float left,
+    //    const float top,
+    //    const float right,
+    //    const float bottom
+    //) :
+    //    PaddingData(left, top, right, bottom)
+    //{
+    //    //skin.template Create<Padding>(*this);
+    //}
 
-    template<typename TSkin>
-    inline void Padding<TSkin>::Update(const Time& /*deltaTime*/)
-    {
-    }
+    //template<typename TSkin>
+    //inline void Padding<TSkin>::Update(const Time& /*deltaTime*/)
+    //{
+    //}
 
-    template<typename TSkin>
-    inline void Padding<TSkin>::Draw(CanvasRenderer& /*renderer*/)
-    {
-    }
 
-    template<typename TSkin>
-    inline Vector2f32 Padding<TSkin>::CalculateSize(const Vector2f32& grantedSize)
-    {
-        return grantedSize;
-    }
-
-    template<typename TSkin>
-    inline void Padding<TSkin>::CalculateChildrenGrantedSize(typename WidgetTreeData<TSkin>::Tree::template ConstLane<typename WidgetTreeData<TSkin>::Tree::PartialLaneType> children)
-    {
-        Vector2f32 childSize = Widget<TSkin>::GetGrantedSize() - (low + high);
-
-        SetRenderData(children.begin(), low, childSize);
-    }
-
-    template<typename TSkin>
-    inline bool Padding<TSkin>::OnAddChild(WidgetPointer<TSkin> /*widget*/)
-    {
-        return true;
-    }
+    //template<typename TSkin>
+    //inline bool Padding<TSkin>::OnAddChild(WidgetPointer<TSkin> /*widget*/)
+    //{
+    //    return true;
+    //}
 
 }

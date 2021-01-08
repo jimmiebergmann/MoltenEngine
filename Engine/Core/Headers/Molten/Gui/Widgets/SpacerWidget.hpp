@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -32,12 +32,15 @@ namespace Molten::Gui
 {
 
     template<typename TSkin>
-    class Spacer : public Widget<TSkin>
+    class Spacer : public Widget<TSkin>/*, public TSkin::template WidgetSkin<Spacer<TSkin>>*/
     {
 
     public:
 
-        explicit Spacer(TSkin& skin);
+        static constexpr bool handleKeyboardEvents = false;
+        static constexpr bool handleMouseEvents = false;
+
+        explicit Spacer(WidgetData<TSkin>& data);
 
     };
 

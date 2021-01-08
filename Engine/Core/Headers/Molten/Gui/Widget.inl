@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -25,37 +25,38 @@
 
 namespace Molten::Gui
 {
-
     template<typename TSkin>
-    inline void Widget<TSkin>::Update(const Time&)
+    inline Widget<TSkin>::Widget(WidgetData<TSkin>& data) :
+        m_data(data)
     {}
 
     template<typename TSkin>
-    inline void Widget<TSkin>::Draw(CanvasRenderer&)
-    {}
-
-    template<typename TSkin>
-    inline Vector2f32 Widget<TSkin>::CalculateSize(const Vector2f32& grantedSize)
+    inline Layer<TSkin>& Widget<TSkin>::GetLayer()
     {
-        return grantedSize;
+        return *m_data.layer;
+    }
+    template<typename TSkin>
+    inline const Layer<TSkin>& Widget<TSkin>::GetLayer() const
+    {
+        return *m_data.layer;
     }
 
     template<typename TSkin>
-    inline void Widget<TSkin>::CalculateChildrenGrantedSize(typename WidgetTreeData<TSkin>::Tree::template ConstLane<WidgetTreeData<TSkin>::Tree::PartialLaneType>)
+    inline WidgetSkinBase& Widget<TSkin>::GetSkin()
     {
+        return *m_data.skin;
+    }
+    template<typename TSkin>
+    inline const WidgetSkinBase& Widget<TSkin>::GetSkin() const
+    {
+        return *m_data.skin;
     }
 
     template<typename TSkin>
     template<template<typename> typename TWidgetType, typename ... TArgs>
     inline WidgetTypePointer<TWidgetType<TSkin>> Widget<TSkin>::CreateChild(TArgs ... args)
     {
-        auto& widgetData = GetWidgetTreeData();
-        if(widgetData.layer == nullptr)
-        {
-            return nullptr;
-        }
-
-        return widgetData.layer->template CreateChild<TWidgetType>(*this, std::forward<TArgs>(args)...);
+        return GetLayer().template CreateChild<TWidgetType>(*this, std::forward<TArgs>(args)...);
     }
 
     template<typename TSkin>
@@ -65,53 +66,20 @@ namespace Molten::Gui
     }
 
     template<typename TSkin>
-    inline const WidgetRenderData& Widget<TSkin>::GetRenderData() const
+    inline void Widget<TSkin>::SetSkinState(WidgetSkinStateType state)
     {
-        return m_renderData;
+        m_data.widgetSkin->SetState(state);
     }
 
     template<typename TSkin>
-    inline const Vector2f32& Widget<TSkin>::GetGrantedSize() const
+    WidgetData<TSkin>& Widget<TSkin>::GetData()
     {
-        return m_renderData.grantedSize;
+        return m_data;
     }
-
     template<typename TSkin>
-    inline void Widget<TSkin>::SetRenderData(
-        typename WidgetTreeData<TSkin>::Tree::template ConstIterator<WidgetTreeData<TSkin>::Tree::PartialLaneType> it,
-        const Vector2f32& position,
-        const Vector2f32& grantedSize)
+    const WidgetData<TSkin>& Widget<TSkin>::GetData() const
     {
-        const auto& parentGrantedSize = GetGrantedSize();
-        auto& childRenderData = (*it).GetValue()->GetWidgetRenderData();
-
-        childRenderData.position = {
-            std::clamp(position.x, 0.0f, parentGrantedSize.x),
-            std::clamp(position.y, 0.0f, parentGrantedSize.y)
-        };
-
-        childRenderData.grantedSize = {
-            std::clamp(grantedSize.x, 0.0f, parentGrantedSize.x - childRenderData.position.x),
-            std::clamp(grantedSize.y, 0.0f, parentGrantedSize.y - childRenderData.position.y)
-        };
-    }
-
-    /*template<typename TSkin>
-    inline bool Widget<TSkin>::AddChild(WidgetPointer<TSkin> parent, WidgetPointer<TSkin> child)
-    {
-        return Layer<TSkin>::AddChild(parent, child);
-    }*/
-
-    template<typename TSkin>
-    inline WidgetTreeData<TSkin>& Widget<TSkin>::GetWidgetTreeData()
-    {
-        return m_treeData;
-    }
-
-    template<typename TSkin>
-    inline WidgetRenderData& Widget<TSkin>::GetWidgetRenderData()
-    {
-        return m_renderData;
+        return m_data;
     }
 
 }

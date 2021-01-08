@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -27,10 +27,11 @@
 #define MOLTEN_CORE_GUI_WIDGET_HPP
 
 #include "Molten/Gui/GuiTypes.hpp"
+#include "Molten/Gui/SpacingTypes.hpp"
 #include "Molten/Gui/WidgetData.hpp"
 #include "Molten/Gui/Layer.hpp"
-#include "Molten/Gui/Data/OutlineData.hpp"
 #include "Molten/Math/Vector.hpp"
+#include "Molten/Math/Bounds.hpp"
 #include "Molten/System/Time.hpp"
 #include <algorithm>
 
@@ -43,53 +44,44 @@ namespace Molten::Gui
 
     public:
 
-        Widget() = default;
+        MarginType margin;
+        PaddingType padding;
+
+        explicit Widget(WidgetData<TSkin>& data);
 
         virtual ~Widget() = default;
 
-        MarginData margin;
+        Layer<TSkin>& GetLayer();
+        const Layer<TSkin>& GetLayer() const;
 
-        virtual void Update(const Time& deltaTime);
-
-        virtual void Draw(CanvasRenderer& renderer);
-
-        virtual Vector2f32 CalculateSize(const Vector2f32& grantedSize);
-
-        virtual void CalculateChildrenGrantedSize(typename WidgetTreeData<TSkin>::Tree::template ConstLane<WidgetTreeData<TSkin>::Tree::PartialLaneType> children);
+        WidgetSkinBase& GetSkin();
+        const WidgetSkinBase& GetSkin() const;
 
         template<template<typename> typename TWidgetType, typename ... TArgs>
         WidgetTypePointer<TWidgetType<TSkin>> CreateChild(TArgs ... args);
 
     protected:
 
-        template<typename TWidget>
-        using WidgetSkin = typename TSkin::template WidgetSkin<TWidget>;
-
         virtual bool OnAddChild(WidgetPointer<TSkin> widget);
 
-        const WidgetRenderData& GetRenderData() const;
-        const Vector2f32& GetGrantedSize() const;
-
-        void SetRenderData(
-            typename WidgetTreeData<TSkin>::Tree::template ConstIterator<WidgetTreeData<TSkin>::Tree::PartialLaneType> it,
-            const Vector2f32& position,
-            const Vector2f32& grantedSize);
+        void SetSkinState(WidgetSkinStateType state);
 
     private:
-
-        WidgetTreeData<TSkin>& GetWidgetTreeData();
-        WidgetRenderData& GetWidgetRenderData();
         
+        template<typename TLayerSkin>
+        friend class Layer;
+
+        friend TSkin;
+
         Widget(const Widget&) = delete;
         Widget(Widget&&) = delete;
         Widget& operator= (const Widget&) = delete;
         Widget& operator= (Widget&&) = delete;
 
-        WidgetTreeData<TSkin> m_treeData;
-        WidgetRenderData m_renderData;
+        WidgetData<TSkin>& GetData();
+        const WidgetData<TSkin>& GetData() const;
 
-        template<typename TLayerSkin>
-        friend class Layer;
+        WidgetData<TSkin>& m_data;
 
     };
 

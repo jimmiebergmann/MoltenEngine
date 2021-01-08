@@ -26,15 +26,79 @@
 #ifndef MOLTEN_CORE_GUI_SKIN_HPP
 #define MOLTEN_CORE_GUI_SKIN_HPP
 
+#include "Molten/Math/Vector.hpp"
+#include "Molten/Math/Bounds.hpp"
+#include <memory>
 
 namespace Molten::Gui
 {
-    enum class SkinStateType
+    enum class WidgetSkinStateType
     {
         Normal,
         Disabled,
         Hovered,
         Pressed
+    };
+
+    class WidgetSkinBase
+    {
+
+    public:
+
+        WidgetSkinBase() :
+            m_state(WidgetSkinStateType::Normal)
+        {}
+
+        virtual ~WidgetSkinBase() = default;
+
+        virtual void Draw()
+        {
+
+        }
+
+        virtual void Update()
+        {
+        }
+
+        void SetState(const WidgetSkinStateType state)
+        {
+            m_state = state;
+        }
+
+        WidgetSkinStateType GetState() const
+        {
+            return m_state;
+        }
+
+        const Bounds2f32& GetGrantedBounds()
+        {
+            return m_grantedBounds;
+        }
+
+        void SetGrantedBounds(const Bounds2f32 grantedBounds)
+        {
+            m_grantedBounds = grantedBounds;
+        }   
+        
+    protected:
+
+        Bounds2f32& CalculateBounds(const Bounds2f32& margin)
+        {
+            m_grantedBounds = m_grantedBounds.RemoveMargins(margin);
+            m_grantedBounds.ClampHighToLow();
+            return m_grantedBounds;
+        }
+
+        Bounds2f32 CalculateContentBounds(const Bounds2f32& padding)
+        {
+            auto contentBounds = m_grantedBounds.RemoveMargins(padding);
+            contentBounds.ClampHighToLow();
+            return contentBounds;
+        }
+
+        WidgetSkinStateType m_state;
+        Bounds2f32 m_grantedBounds;
+
     };
 
 }

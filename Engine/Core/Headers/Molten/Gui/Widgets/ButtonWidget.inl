@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -26,32 +26,23 @@
 namespace Molten::Gui
 {
     template<typename TSkin>
-    inline Button<TSkin>::Button(TSkin& skin)
-    {
-        m_skin = skin.template Create<Button>(*this);
-    }
+    inline Button<TSkin>::Button(WidgetData<TSkin>& data) :
+        Widget<TSkin>(data)
+    {}
 
     template<typename TSkin>
-    inline void Button<TSkin>::Update(const Time& /*deltaTime*/)
+    inline bool Button<TSkin>::HandleEvent(const WidgetEvent& widgetEvent)
     {
-    }
-
-    template<typename TSkin>
-    inline void Button<TSkin>::Draw(CanvasRenderer& renderer)
-    {
-        m_skin->Draw(renderer, GetRenderData().size);
-    }
-
-    template<typename TSkin>
-    inline Vector2f32 Button<TSkin>::CalculateSize(const Vector2f32& grantedSize)
-    {
-        return grantedSize;
-    }
-
-    template<typename TSkin>
-    inline void Button<TSkin>::CalculateChildrenGrantedSize(typename WidgetTreeData<TSkin>::Tree::template ConstLane<typename WidgetTreeData<TSkin>::Tree::PartialLaneType> children)
-    {
-        SetRenderData(children.begin(), { 0.0f, 0.0f }, Widget<TSkin>::GetGrantedSize());
+        if (widgetEvent.type == WidgetEventType::Mouse)
+        {
+            switch (widgetEvent.subType)
+            {
+                case WidgetEventSubType::MouseEnter: SetSkinState(WidgetSkinStateType::Hovered); return true;
+                case WidgetEventSubType::MouseLeave: SetSkinState(WidgetSkinStateType::Normal); return true;
+                default: break;
+            }
+        }
+        return false;
     }
 
     template<typename TSkin>

@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,6 +23,8 @@
 *
 */
 
+//#include <iostream>
+
 namespace Molten::Gui
 {
 
@@ -34,51 +36,109 @@ namespace Molten::Gui
     {}
 
     template<typename TSkin>
+    void RootLayer<TSkin>::PushUserInputEvents(std::vector<UserInput::Event>& inputEvents)
+    {
+        std::vector<UserInput::Event> mouseEvents;
+        std::vector<UserInput::Event> keyboardEvents;
+
+        for (auto& inputEvent : inputEvents)
+        {
+            switch (inputEvent.type)
+            {
+                case UserInput::EventType::Mouse: mouseEvents.push_back(inputEvent);
+                case UserInput::EventType::Keyboard: keyboardEvents.push_back(inputEvent);
+                default: break;
+            }
+        }
+
+        /*for (auto& mouseEvent : mouseEvents)
+        {
+            std::cout << (int)mouseEvent.subType << "\n";
+        }*/
+
+        m_widgetTree.template ForEachReversePreorder<typename WidgetData<TSkin>::TreePartialLaneType>(
+            [&](auto& widgetData)
+        {
+            if (!mouseEvents.size())
+            {
+                return false;
+            }
+
+            if (widgetData->mouseEventHandler)
+            {
+                bool isHovered = widgetData->widget == m_hoveredWidget;
+
+                WidgetEvent widgetEvent;
+                widgetEvent.type = WidgetEventType::Mouse;
+
+                for (auto& mouseEvent : mouseEvents)
+                {
+                    widgetEvent.mouseEvent.position = mouseEvent.mouseMoveEvent.position;
+
+                    if (widgetData->widgetSkin->GetGrantedBounds().Intersects(mouseEvent.mouseMoveEvent.position))
+                    {
+                        if (m_hoveredWidget != widgetData->widget)
+                        {
+                            if (m_hoveredWidget)
+                            {
+                                widgetEvent.subType = WidgetEventSubType::MouseLeave;
+                                auto& leaveWidgetHandler = Layer<TSkin>::GetWidgetData(*m_hoveredWidget).mouseEventHandler;
+                                leaveWidgetHandler->HandleEvent(widgetEvent);
+                            }
+
+                            m_hoveredWidget = widgetData->widget;
+
+                            widgetEvent.subType = WidgetEventSubType::MouseEnter;
+                            auto& enterWidgetHandler = Layer<TSkin>::GetWidgetData(*m_hoveredWidget).mouseEventHandler;
+                            enterWidgetHandler->HandleEvent(widgetEvent);
+                        }
+
+                        if (widgetData->mouseEventHandler->HandleEvent(widgetEvent))
+                        {
+                            return false;
+                        }
+                    }
+                    else if (isHovered)
+                    {
+                        widgetEvent.subType = WidgetEventSubType::MouseLeave;
+                        auto& leaveWidgetHandler = Layer<TSkin>::GetWidgetData(*m_hoveredWidget).mouseEventHandler;
+                        leaveWidgetHandler->HandleEvent(widgetEvent);
+                        m_hoveredWidget = nullptr;
+                        isHovered = false;
+                    }
+                        
+                }
+            }
+
+            return true;
+        });
+    }
+
+    template<typename TSkin>
     inline void RootLayer<TSkin>::Update(const Time&)
     {
-        auto& rootWidget = m_widgetTree.GetItem().GetValue();
-        auto& rootWidgetRenderData = Layer<TSkin>::GetWidgetRenderData(*rootWidget);
-        rootWidgetRenderData.grantedSize = m_size;
-
-        m_widgetTree.template ForEachPreorder<TreePartialLaneType>(
-            [&](auto& widget)
+        // Update widget skins.
+        auto rootLane = m_widgetTree.GetLane<typename WidgetData<TSkin>::TreePartialLaneType>();
+        for (auto& rootWidget : rootLane)
         {
-            auto& widgetRenderData = Layer<TSkin>::GetWidgetRenderData(*widget);
+            rootWidget.GetValue()->widgetSkin->SetGrantedBounds({ { 0.0f, 0.0f }, m_size });
+        }
 
-            const Vector2f32 margin = widget->margin.low + widget->margin.high;
-            const Vector2f32 grantedChildSize = {
-                std::max(widgetRenderData.grantedSize.x - margin.x, 0.0f),
-                std::max(widgetRenderData.grantedSize.y - margin.y, 0.0f)
-            };
-
-            Vector2f32 size = widget->CalculateSize(grantedChildSize);
-            widgetRenderData.size = size;
-
-            auto& widgetTreeData = Layer<TSkin>::GetWidgetTreeData(*widget);
-            auto childLane = widgetTreeData.treeItem->template GetLane<TreePartialLaneType>();
-            if (childLane.begin() != childLane.end())
-            {
-                widget->CalculateChildrenGrantedSize(childLane);
-            }
+        m_widgetTree.template ForEachPreorder<typename WidgetData<TSkin>::TreePartialLaneType>(
+            [&](auto& widgetData)
+        {
+            widgetData->widgetSkin->Update();
         });
     }
 
     template<typename TSkin>
     inline void RootLayer<TSkin>::Draw(CanvasRenderer& renderer)
     {
-        m_widgetTree.template ForEachPreorder<TreePartialLaneType>(
-            [&](auto& widget)
+        m_widgetTree.template ForEachPreorder<typename WidgetData<TSkin>::TreePartialLaneType>(
+            [&](auto& widgetData)
         {
-            auto& renderData = Layer<TSkin>::GetWidgetRenderData(*widget);
-
             //renderer.MaskArea(renderData.position, renderData.size);
-            const Vector2f32 position = renderData.position + widget->margin.low;
-            renderer.PushPosition(position);
-            widget->Draw(renderer);
-        },
-            [&](auto&)
-        {
-            renderer.PopPosition();
+            widgetData->widgetSkin->Draw();
         });
     }
 
@@ -95,41 +155,39 @@ namespace Molten::Gui
     }
 
     template<typename TSkin>
-    inline bool RootLayer<TSkin>::OnAddChild(Widget<TSkin>* parent, WidgetPointer<TSkin> child)
+    inline bool RootLayer<TSkin>::OnAddChild(Widget<TSkin>* parent, WidgetDataPointer<TSkin> childData)
     {
         if (!parent)
         {
-            auto& rootWidget = m_widgetTree.GetItem().GetValue();
-            if (rootWidget)
+            auto normalLane = m_widgetTree.template GetLane<typename WidgetData<TSkin>::TreeNormalLaneType>();
+            auto partialLane = m_widgetTree.template GetLane<typename WidgetData<TSkin>::TreePartialLaneType>();
+            if (!normalLane.IsEmpty())
             {
                 return false;
             }
 
-            rootWidget = child;
-
-            auto& childData = Layer<TSkin>::GetWidgetTreeData(*child);
-            childData.treeItem = std::addressof(m_widgetTree.GetItem());
+            childData->tree = &m_widgetTree;
+            childData->iterator = m_widgetTree.Insert(partialLane, normalLane.end(), childData);
+            
+            m_widgetMap.insert({ childData->widget.get(), childData });
         }
         else
         {
-            auto& parentData = Layer<TSkin>::GetWidgetTreeData(*parent);
-
-            auto& childData = Layer<TSkin>::GetWidgetTreeData(*child);
-
-            if (Layer<TSkin>::CallWidgetOnAddChild(parent, child) == true)
+            auto parentIt = m_widgetMap.find(parent);
+            if (parentIt == m_widgetMap.end())
             {
-                auto partialLane = parentData.treeItem->template GetLane<TreePartialLaneType>();
-                auto it = partialLane.Insert(partialLane.end(), child);
-                childData.treeIterator = it;
-                childData.treeItem = std::addressof(*it);
+                return false;
             }
-            else
-            {
-                auto normalLane = parentData.treeItem->template GetLane<TreeNormalLaneType>();
-                auto it = normalLane.Insert(normalLane.end(), child);
-                childData.treeIterator = it;
-                childData.treeItem = std::addressof(*it);
-            }
+
+            auto* parentData = parentIt->second.get();
+            auto* parentTreeItem = std::addressof(*parentData->iterator);
+            auto parentNormalLane = parentTreeItem->GetChildren().template GetLane<typename WidgetData<TSkin>::TreeNormalLaneType>();
+            auto parentPartialLane = parentTreeItem->GetChildren().template GetLane<typename WidgetData<TSkin>::TreePartialLaneType>();
+
+            childData->tree = &m_widgetTree;
+            childData->iterator = m_widgetTree.Insert(parentPartialLane, parentNormalLane.end(), childData);
+            
+            m_widgetMap.insert({ childData->widget.get(), childData });
         }
 
         return true;

@@ -31,9 +31,11 @@
 #include "Molten/Gui/Layer.hpp"
 #include "Molten/Math/Vector.hpp"
 #include "Molten/System/Time.hpp"
+#include "Molten/System/UserInput.hpp"
 #include <memory>
 #include <list>
 #include <set>
+#include <vector>
 
 namespace Molten
 {
@@ -53,12 +55,14 @@ namespace Molten::Gui
 
     public:
 
-        explicit Canvas(CanvasRendererPointer renderer = nullptr);
+        explicit Canvas(Renderer& backendRenderer, CanvasRendererPointer renderer = nullptr);
         ~Canvas();
 
         void SetRenderer(CanvasRendererPointer renderer);
         CanvasRendererPointer GetRenderer();
         const CanvasRendererPointer GetRenderer() const;
+
+        void PushUserInputEvent(const UserInput::Event& inputEvent);
 
         void Update(const Time& deltaTime);
 
@@ -83,6 +87,7 @@ namespace Molten::Gui
         using LayerPointerList = std::list<LayerPointer<TSkin>>;
         using LayerPointerSet = std::set<LayerPointer<TSkin>>;
 
+        Renderer& m_backendRenderer;
         CanvasRendererPointer m_renderer;
         TSkin m_skin;
 
@@ -92,6 +97,8 @@ namespace Molten::Gui
      
         Vector2f32 m_size;
         Vector2f32 m_scale;
+
+        std::vector<UserInput::Event> m_userInputEvents;
 
     };
 

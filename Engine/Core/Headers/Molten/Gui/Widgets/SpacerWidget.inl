@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -27,9 +27,9 @@ namespace Molten::Gui
 {
 
     template<typename TSkin>
-    inline Spacer<TSkin>::Spacer(TSkin& skin)
-    {
-        skin.template Create<Spacer>(*this);
-    }
+    inline Spacer<TSkin>::Spacer(WidgetData<TSkin>& data) :
+        Widget<TSkin>(data)/*,
+        TSkin::template WidgetSkin<Spacer<TSkin>>(*data.skin, *this)*/
+    {}
 
 }

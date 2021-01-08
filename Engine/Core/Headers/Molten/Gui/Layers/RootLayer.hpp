@@ -28,9 +28,13 @@
 
 #include "Molten/Gui/GuiTypes.hpp"
 #include "Molten/Gui/Layer.hpp"
-#include "Molten/Gui/WidgetData.hpp"
+#include "Molten/Gui/Skin.hpp"
+#include "Molten/Gui/WidgetEvent.hpp"
 #include "Molten/Math/Vector.hpp"
+#include "Molten/Math/Bounds.hpp"
 #include "Molten/System/Time.hpp"
+#include <map>
+#include <algorithm>
 
 namespace Molten::Gui
 {
@@ -45,6 +49,8 @@ namespace Molten::Gui
 
         ~RootLayer() = default;
 
+        void PushUserInputEvents(std::vector<UserInput::Event>& inputEvents) override;
+
         void Update(const Time& deltaTime) override;
 
         void Draw(CanvasRenderer & renderer) override;
@@ -55,15 +61,15 @@ namespace Molten::Gui
 
     private:
 
-        bool OnAddChild(Widget<TSkin>* parent, WidgetPointer<TSkin> child) override;
+        bool OnAddChild(Widget<TSkin>* parent, WidgetDataPointer<TSkin> childData) override;
 
-        using TreeType = typename WidgetTreeData<TSkin>::Tree;
-        using TreeNormalLaneType = typename TreeType::NormalLaneType;
-        using TreePartialLaneType = typename TreeType::PartialLaneType;
+        typename WidgetData<TSkin>::Tree m_widgetTree;
+        WidgetDataMap<TSkin> m_widgetMap;
 
-        TreeType m_widgetTree;
         Vector2f32 m_size;
         Vector2f32 m_scale;
+        std::vector<UserInput::Event> m_userInputEvents;
+        WidgetPointer<TSkin> m_hoveredWidget;
 
     };
 

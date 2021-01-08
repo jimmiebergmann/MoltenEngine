@@ -34,21 +34,28 @@ namespace Molten::Gui
     {}
 
     template<typename TSkin>
+    inline void Layer<TSkin>::PushUserInputEvents(std::vector<UserInput::Event>& inputEvents)
+    {
+    }
+
+    template<typename TSkin>
     template<template<typename> typename TWidgetType, typename ... TArgs>
     inline WidgetTypePointer<TWidgetType<TSkin>> Layer<TSkin>::CreateChild(TArgs ... args)
     {
         static_assert(std::is_base_of<Gui::Widget<TSkin>, TWidgetType<TSkin>>::value, "TWidgetType is not base of Widget.");
 
-        auto widget = std::make_shared<TWidgetType<TSkin>>(m_skin, args...);
+        auto widgetData = std::make_shared<WidgetData<TSkin>>(this);
+        auto& widgetDataRef = *widgetData.get();
 
-        auto& childData = GetWidgetTreeData(*widget);
-        childData.layer = this;
-        childData.widget = widget.get();
+        auto widget = std::make_shared<TWidgetType<TSkin>>(*widgetData.get(), args...);
+        widgetData->widget = widget;
 
-        if (!OnAddChild(nullptr, widget))
+        if (!OnAddChild(nullptr, widgetData))
         {
             return nullptr;
         }
+
+        widgetData->widgetSkin = m_skin.template Create<TWidgetType<TSkin>>(*widget.get(), widgetDataRef);
 
         return widget;
     }
@@ -59,31 +66,35 @@ namespace Molten::Gui
     {
         static_assert(std::is_base_of<Gui::Widget<TSkin>, TWidgetType<TSkin>>::value, "TWidgetType is not base of Widget.");
 
-        auto& parentData = GetWidgetTreeData(parent);
-        auto* parentLayer = parentData.layer;
-        
-        if(parentLayer != this)
+        auto widgetData = std::make_shared<WidgetData<TSkin>>(this);
+        auto& widgetDataRef = *widgetData.get();
+
+        auto widget = std::make_shared<TWidgetType<TSkin>>(widgetDataRef, args...);
+        widgetData->widget = widget;
+
+        if constexpr (std::is_base_of_v<WidgetEventHandler, TWidgetType<TSkin>>)
+        {
+            if constexpr (TWidgetType<TSkin>::handleMouseEvents)
+            {
+                widgetData->mouseEventHandler = widget.get();
+            }
+            if constexpr (TWidgetType<TSkin>::handleKeyboardEvents)
+            {
+                widgetData->keyboardEventHandler = widget.get();
+            }
+        }
+
+        if (!OnAddChild(&parent, widgetData))
         {
             return nullptr;
         }
 
-        auto widget = std::make_shared<TWidgetType<TSkin>>(m_skin, args...);
-
-        auto& childData = GetWidgetTreeData(*widget);
-        childData.layer = this;
-        childData.widget = widget.get();
-
-        if (!OnAddChild(&parent, widget))
-        {
-            return nullptr;
-        }
-
-        
+        widgetData->widgetSkin = m_skin.template Create<TWidgetType<TSkin>>(*widget.get(), widgetDataRef);
 
         return widget;
     }
 
-    template<typename TSkin>
+    /*template<typename TSkin>
     inline WidgetTreeData<TSkin>& Layer<TSkin>::GetWidgetTreeData(Widget<TSkin>& widget)
     {
         return widget.m_treeData;
@@ -93,12 +104,29 @@ namespace Molten::Gui
     inline WidgetRenderData& Layer<TSkin>::GetWidgetRenderData(Widget<TSkin>& widget)
     {
         return widget.m_renderData;
+    }*/
+
+    template<typename TSkin>
+    inline TSkin& Layer<TSkin>::GetSkin()
+    {
+        return m_skin;
+    }
+    template<typename TSkin>
+    inline const TSkin& Layer<TSkin>::GetSkin() const
+    {
+        return m_skin;
     }
 
     template<typename TSkin>
     inline bool Layer<TSkin>::CallWidgetOnAddChild(Widget<TSkin>* parent, WidgetPointer<TSkin> child)
     {
         return parent->OnAddChild(child);
+    }
+
+    template<typename TSkin>
+    inline WidgetData<TSkin>& Layer<TSkin>::GetWidgetData(Widget<TSkin>& widget)
+    {
+        return widget.GetData();
     }
    
 }

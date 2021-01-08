@@ -31,11 +31,14 @@
 namespace Molten::Gui
 {
 
-    template<typename TSkin>
+    /*template<typename TSkin>
     class Padding : public Widget<TSkin>, public PaddingData
     {
 
     public:
+
+        static constexpr bool handleKeyboardEvents = false;
+        static constexpr bool handleMouseEvents = false;
 
         explicit Padding(
             TSkin& skin,
@@ -46,17 +49,17 @@ namespace Molten::Gui
 
         void Update(const Time& deltaTime) override;
 
-        void Draw(CanvasRenderer& renderer) override;
+        //void Draw(CanvasRenderer& renderer) override;
 
-        Vector2f32 CalculateSize(const Vector2f32& grantedSize) override;
+        //Vector2f32 CalculateSize(const Vector2f32& grantedSize) override;
 
-        void CalculateChildrenGrantedSize(typename WidgetTreeData<TSkin>::Tree::template ConstLane<typename WidgetTreeData<TSkin>::Tree::PartialLaneType> children) override;
+       // void CalculateChildrenGrantedSize(typename WidgetTreeData<TSkin>::Tree::template ConstLane<typename WidgetTreeData<TSkin>::Tree::PartialLaneType> children) override;
 
     private:
 
         bool OnAddChild(WidgetPointer<TSkin>) override;
 
-    };
+    };*/
 
 }
 

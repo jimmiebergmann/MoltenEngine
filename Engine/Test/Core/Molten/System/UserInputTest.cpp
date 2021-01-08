@@ -50,12 +50,14 @@ namespace Molten
 
             EXPECT_EQ(userInput.GetEventCount(), size_t(2)); 
             EXPECT_TRUE(userInput.PollEvent(event));
-            EXPECT_EQ(event.type, UserInput::Event::Type::MouseButtonPressed);
+            EXPECT_EQ(event.type, UserInput::EventType::Mouse);
+            EXPECT_EQ(event.subType, UserInput::EventSubType::MouseButtonPressed);
             EXPECT_EQ(event.mouseButtonEvent.button, Mouse::Button::Left);
             EXPECT_EQ(event.mouseButtonEvent.position, Vector2i32(100, 200));
 
             EXPECT_TRUE(userInput.PollEvent(event));
-            EXPECT_EQ(event.type, UserInput::Event::Type::MouseButtonDown);
+            EXPECT_EQ(event.type, UserInput::EventType::Mouse);
+            EXPECT_EQ(event.subType, UserInput::EventSubType::MouseButtonDown);
             EXPECT_EQ(event.mouseButtonEvent.button, Mouse::Button::Left);
             EXPECT_EQ(event.mouseButtonEvent.position, Vector2i32(100, 200));
 
@@ -71,7 +73,8 @@ namespace Molten
             EXPECT_EQ(userInput.GetEventCount(), size_t(1));
             {
                 EXPECT_TRUE(userInput.PollEvent(event));
-                EXPECT_EQ(event.type, UserInput::Event::Type::MouseButtonDown);
+                EXPECT_EQ(event.type, UserInput::EventType::Mouse);
+                EXPECT_EQ(event.subType, UserInput::EventSubType::MouseButtonDown);
                 EXPECT_EQ(event.mouseButtonEvent.button, Mouse::Button::Left);
                 EXPECT_EQ(event.mouseButtonEvent.position, Vector2i32(100, 200));
 
@@ -88,7 +91,8 @@ namespace Molten
             EXPECT_EQ(userInput.GetEventCount(), size_t(1));
             {
                 EXPECT_TRUE(userInput.PollEvent(event));
-                EXPECT_EQ(event.type, UserInput::Event::Type::MouseButtonReleased);
+                EXPECT_EQ(event.type, UserInput::EventType::Mouse);
+                EXPECT_EQ(event.subType, UserInput::EventSubType::MouseButtonReleased);
                 EXPECT_EQ(event.mouseButtonEvent.button, Mouse::Button::Left);
                 EXPECT_EQ(event.mouseButtonEvent.position, Vector2i32(100, 200));
 
