@@ -23,8 +23,6 @@
 *
 */
 
-//#include <iostream>
-
 namespace Molten::Gui
 {
 
@@ -51,67 +49,16 @@ namespace Molten::Gui
             }
         }
 
-        /*for (auto& mouseEvent : mouseEvents)
+        for (auto& mouseEvent : mouseEvents)
         {
-            std::cout << (int)mouseEvent.subType << "\n";
-        }*/
-
-        m_widgetTree.template ForEachReversePreorder<typename WidgetData<TSkin>::TreePartialLaneType>(
-            [&](auto& widgetData)
-        {
-            if (!mouseEvents.size())
+            switch (mouseEvent.subType)
             {
-                return false;
+                case UserInput::EventSubType::MouseMove: HandleMouseMove(mouseEvent); break;
+                case UserInput::EventSubType::MouseButtonPressed: HandleMousePressed(mouseEvent); break;
+                case UserInput::EventSubType::MouseButtonReleased: HandleMouseReleased(mouseEvent); break;
+                default: break;
             }
-
-            if (widgetData->mouseEventHandler)
-            {
-                bool isHovered = widgetData->widget == m_hoveredWidget;
-
-                WidgetEvent widgetEvent;
-                widgetEvent.type = WidgetEventType::Mouse;
-
-                for (auto& mouseEvent : mouseEvents)
-                {
-                    widgetEvent.mouseEvent.position = mouseEvent.mouseMoveEvent.position;
-
-                    if (widgetData->widgetSkin->GetGrantedBounds().Intersects(mouseEvent.mouseMoveEvent.position))
-                    {
-                        if (m_hoveredWidget != widgetData->widget)
-                        {
-                            if (m_hoveredWidget)
-                            {
-                                widgetEvent.subType = WidgetEventSubType::MouseLeave;
-                                auto& leaveWidgetHandler = Layer<TSkin>::GetWidgetData(*m_hoveredWidget).mouseEventHandler;
-                                leaveWidgetHandler->HandleEvent(widgetEvent);
-                            }
-
-                            m_hoveredWidget = widgetData->widget;
-
-                            widgetEvent.subType = WidgetEventSubType::MouseEnter;
-                            auto& enterWidgetHandler = Layer<TSkin>::GetWidgetData(*m_hoveredWidget).mouseEventHandler;
-                            enterWidgetHandler->HandleEvent(widgetEvent);
-                        }
-
-                        if (widgetData->mouseEventHandler->HandleEvent(widgetEvent))
-                        {
-                            return false;
-                        }
-                    }
-                    else if (isHovered)
-                    {
-                        widgetEvent.subType = WidgetEventSubType::MouseLeave;
-                        auto& leaveWidgetHandler = Layer<TSkin>::GetWidgetData(*m_hoveredWidget).mouseEventHandler;
-                        leaveWidgetHandler->HandleEvent(widgetEvent);
-                        m_hoveredWidget = nullptr;
-                        isHovered = false;
-                    }
-                        
-                }
-            }
-
-            return true;
-        });
+        }
     }
 
     template<typename TSkin>
@@ -191,6 +138,134 @@ namespace Molten::Gui
         }
 
         return true;
+    }
+
+    template<typename TSkin>
+    void RootLayer<TSkin>::HandleMouseMove(UserInput::Event& mouseEvent)
+    {
+        bool hitWidget = false;
+
+        m_widgetTree.template ForEachReversePreorder<typename WidgetData<TSkin>::TreePartialLaneType>(
+            [&](auto& widgetData)
+        {
+            if (!widgetData->mouseEventHandler)
+            {
+                return true;
+            }
+
+            if (widgetData->widgetSkin->GetGrantedBounds().Intersects(mouseEvent.mouseMoveEvent.position))
+            {
+                WidgetEvent widgetEvent;
+                widgetEvent.type = WidgetEventType::Mouse;
+
+                if (m_hoveredWidget && m_hoveredWidget != widgetData->widget)
+                {
+                    widgetEvent.subType = WidgetEventSubType::MouseLeave;
+                    widgetEvent.mouseEvent.position = mouseEvent.mouseMoveEvent.position;
+                    auto& leaveWidgetHandler = Layer<TSkin>::GetWidgetData(*m_hoveredWidget).mouseEventHandler;
+                    leaveWidgetHandler->HandleEvent(widgetEvent);
+                }
+
+                m_hoveredWidget = widgetData->widget;
+
+                widgetEvent.subType = WidgetEventSubType::MouseEnter;
+                widgetEvent.mouseEvent.position = mouseEvent.mouseMoveEvent.position;
+                auto& leaveWidgetHandler = Layer<TSkin>::GetWidgetData(*m_hoveredWidget).mouseEventHandler;
+                leaveWidgetHandler->HandleEvent(widgetEvent);
+
+                hitWidget = true;
+
+                return false;
+            }
+
+            return true;
+        });
+
+        if (!hitWidget && m_hoveredWidget)
+        {
+            WidgetEvent widgetEvent;
+            widgetEvent.type = WidgetEventType::Mouse;
+            widgetEvent.subType = WidgetEventSubType::MouseLeave;
+            widgetEvent.mouseEvent.position = mouseEvent.mouseMoveEvent.position;
+            auto& leaveWidgetHandler = Layer<TSkin>::GetWidgetData(*m_hoveredWidget).mouseEventHandler;
+            leaveWidgetHandler->HandleEvent(widgetEvent);
+        }
+    }
+
+    template<typename TSkin>
+    void RootLayer<TSkin>::HandleMousePressed(UserInput::Event& mouseEvent)
+    {
+        m_widgetTree.template ForEachReversePreorder<typename WidgetData<TSkin>::TreePartialLaneType>(
+            [&](auto& widgetData)
+        {
+            if (widgetData->widgetSkin->GetGrantedBounds().Intersects(mouseEvent.mouseButtonEvent.position))
+            {
+                if (!widgetData->mouseEventHandler)
+                {
+                    return true;
+                }
+
+                WidgetEvent widgetEvent;
+                widgetEvent.type = WidgetEventType::Mouse;
+
+                if (m_hoveredWidget != widgetData->widget)
+                {
+                    if(m_hoveredWidget)
+                    {
+                        widgetEvent.subType = WidgetEventSubType::MouseLeave;
+                        widgetEvent.mouseEvent.position = mouseEvent.mouseButtonEvent.position;
+                        auto& leaveWidgetHandler = Layer<TSkin>::GetWidgetData(*m_hoveredWidget).mouseEventHandler;
+                        leaveWidgetHandler->HandleEvent(widgetEvent);
+                    }
+                    m_hoveredWidget = widgetData->widget;
+
+                    widgetEvent.subType = WidgetEventSubType::MouseEnter;
+                    widgetEvent.mouseEvent.position = mouseEvent.mouseButtonEvent.position;
+                    auto& enterWidgetHandler = Layer<TSkin>::GetWidgetData(*m_hoveredWidget).mouseEventHandler;
+                    enterWidgetHandler->HandleEvent(widgetEvent);
+                }
+
+                m_pressedWidget = widgetData->widget;
+
+                widgetEvent.subType = WidgetEventSubType::MousePress;
+                widgetEvent.mouseEvent.position = mouseEvent.mouseButtonEvent.position;
+
+                auto& widgetHandler = Layer<TSkin>::GetWidgetData(*m_pressedWidget).mouseEventHandler;
+                widgetHandler->HandleEvent(widgetEvent);
+
+                return false;
+            }
+            return true;
+        });
+    }
+
+    template<typename TSkin>
+    void RootLayer<TSkin>::HandleMouseReleased(UserInput::Event& mouseEvent)
+    {
+        if (!m_pressedWidget)
+        {
+            return;
+        }
+
+        WidgetEvent widgetEvent;
+        widgetEvent.type = WidgetEventType::Mouse;
+        widgetEvent.mouseEvent.position = mouseEvent.mouseButtonEvent.position;
+
+        auto& widgetData = Layer<TSkin>::GetWidgetData(*m_pressedWidget);
+
+        if (widgetData.widgetSkin->GetGrantedBounds().Intersects(mouseEvent.mouseButtonEvent.position))
+        {
+            widgetEvent.subType = WidgetEventSubType::MouseReleaseIn;
+        }
+        else
+        {
+            widgetEvent.subType = WidgetEventSubType::MouseReleaseOut;
+        }
+
+        auto* widgetHandler = widgetData.mouseEventHandler;
+        widgetHandler->HandleEvent(widgetEvent);
+
+        m_pressedWidget = nullptr;
     }
 
 

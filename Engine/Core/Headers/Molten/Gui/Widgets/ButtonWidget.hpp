@@ -52,6 +52,8 @@ namespace Molten::Gui
 
         bool OnAddChild(WidgetPointer<TSkin> child) override;
 
+        bool m_pressed;
+
     };
 
 }

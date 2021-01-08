@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -63,6 +63,10 @@ namespace Molten::Gui
 
         bool OnAddChild(Widget<TSkin>* parent, WidgetDataPointer<TSkin> childData) override;
 
+        void HandleMouseMove(UserInput::Event& mouseEvent);
+        void HandleMousePressed(UserInput::Event& mouseEvent);
+        void HandleMouseReleased(UserInput::Event& mouseEvent);
+
         typename WidgetData<TSkin>::Tree m_widgetTree;
         WidgetDataMap<TSkin> m_widgetMap;
 
@@ -70,6 +74,7 @@ namespace Molten::Gui
         Vector2f32 m_scale;
         std::vector<UserInput::Event> m_userInputEvents;
         WidgetPointer<TSkin> m_hoveredWidget;
+        WidgetPointer<TSkin> m_pressedWidget;
 
     };
 

@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -59,15 +59,13 @@ namespace Molten::Gui
 
             void Draw() override
             {
-                if (m_state == WidgetSkinStateType::Normal)
+                switch (m_state)
                 {
-                    skin.m_canvasRenderer.DrawRect(m_grantedBounds, Vector4f32{ 1.0f, 0.0f, 0.0f, 1.0f });
-                }
-                else
-                {
-                    skin.m_canvasRenderer.DrawRect(m_grantedBounds, Vector4f32{ 0.0f, 1.0f, 0.0f, 1.0f });
-                }
-                
+                    case WidgetSkinStateType::Hovered: skin.m_canvasRenderer.DrawRect(m_grantedBounds, Vector4f32{ 0.0f, 1.0f, 0.0f, 1.0f }); break;
+                    case WidgetSkinStateType::Pressed: skin.m_canvasRenderer.DrawRect(m_grantedBounds, Vector4f32{ 0.0f, 0.0f, 1.0f, 1.0f }); break;
+                    case WidgetSkinStateType::Disabled: skin.m_canvasRenderer.DrawRect(m_grantedBounds, Vector4f32{ 0.7f, 0.7, 0.7f, 1.0f }); break;
+                    default: skin.m_canvasRenderer.DrawRect(m_grantedBounds, Vector4f32{ 1.0f, 0.0f, 0.0f, 1.0f }); break;
+                }                
             }
 
             void Update() override

@@ -42,10 +42,11 @@ namespace Molten::Gui
     {
         None,
         MouseEnter,     ///< Mouse cursur entered widget and is hovering widget.
-        MouseLeave,     ///< Mouse cursur leaved the widget and is not longer hovering widget.
-        MouseMove,      ///< Mouse moved over widget. This event must occur after a MouseEnter event.
-        MousePress,     ///< Mouse button was pressed while hovering widget.
-        MouseRelease    ///< Mouse button was released while hovering widget.
+        MouseLeave,     ///< Mouse cursur leaved the widget and is not longer hovering widget. This event can only occur after a MouseEnter event.
+        MouseMove,      ///< Mouse moved over widget. This event can only occur after a MouseEnter event.
+        MousePress,     ///< Mouse button was pressed while hovering widget. This event can only occur after a MouseEnter event.
+        MouseReleaseIn, ///< Mouse button was released while hovering widget. This event can only occur after a MousePress event.
+        MouseReleaseOut ///< Mouse button was released while not hovering widget. This event can only occur after a MousePress event.
     };
 
 
