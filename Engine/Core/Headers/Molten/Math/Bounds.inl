@@ -69,6 +69,12 @@ namespace Molten
     {}
 
     template<typename T>
+    inline constexpr Vector<2, T> Bounds<2, T>::GetSize()
+    {
+        return high - low;
+    }
+
+    template<typename T>
     inline constexpr bool Bounds<2, T>::Intersects(const Vector2<T>& point) const
     {
         return 
@@ -82,34 +88,51 @@ namespace Molten
         return {
             std::max(low.x, bounds.low.x),
             std::max(low.y, bounds.low.y),
-            std::min(high.y, bounds.high.y),
+            std::min(high.x, bounds.high.x),
             std::min(high.y, bounds.high.y)
         };
     }
 
     template<typename T>
-    constexpr void Bounds<2, T>::ClampHighToLow()
+    constexpr Bounds<2, T>& Bounds<2, T>::ClampHighToLow()
     {
         high.x = std::max(high.x, low.x);
         high.y = std::max(high.y, low.y);
+        return *this;
     }
 
     template<typename T>
     constexpr bool Bounds<2, T>::IsEmpty() const
     {
-        return high.x <= low.x || high.z <= low.z;
+        return high.x <= low.x || high.y <= low.y;
     }
 
     template<typename T>
-    constexpr Bounds<2, T> Bounds<2, T>::RemoveMargins(const Bounds<2, T>& margins) const
+    constexpr Bounds<2, T> Bounds<2, T>::WithMargins(const Bounds<2, T>& margins) const
+    {
+        return { low - margins.low, high + margins.high };
+    }
+
+    template<typename T>
+    constexpr Bounds<2, T> Bounds<2, T>::WithoutMargins(const Bounds<2, T>& margins) const
     {
         return { low + margins.low, high - margins.high };
     }
 
     template<typename T>
-    constexpr Bounds<2, T> Bounds<2, T>::AddMargins(const Bounds<2, T>& margins) const
+    constexpr Bounds<2, T>& Bounds<2, T>::AddMargins(const Bounds<2, T>& margins)
     {
-        return { low - margins.low, high + margins.high };
+        low -= margins.low;
+        high += margins.high;
+        return *this;
+    }
+
+    template<typename T>
+    constexpr Bounds<2, T>& Bounds<2, T>::RemoveMargins(const Bounds<2, T>& margins)
+    {
+        low += margins.low;
+        high -= margins.high;
+        return *this;
     }
 
 
@@ -143,6 +166,12 @@ namespace Molten
     {}
 
     template<typename T>
+    inline constexpr Vector<3, T> Bounds<3, T>::GetSize()
+    {
+        return high - low;
+    }
+
+    template<typename T>
     inline constexpr bool Bounds<3, T>::Intersects(const Vector3<T>& point) const
     {
         return 
@@ -158,24 +187,25 @@ namespace Molten
             std::max(low.x, bounds.low.x),
             std::max(low.y, bounds.low.y),
             std::max(low.z, bounds.low.z),
-            std::min(high.y, bounds.high.y),
+            std::min(high.x, bounds.high.x),
             std::min(high.y, bounds.high.y),
             std::min(high.z, bounds.high.z)
         };
     }
 
     template<typename T>
-    constexpr void Bounds<3, T>::ClampHighToLow()
+    constexpr Bounds<3, T>& Bounds<3, T>::ClampHighToLow()
     {
         high.x = std::max(high.x, low.x);
         high.y = std::max(high.y, low.y);
         high.z = std::max(high.z, low.z);
+        return *this;
     }
 
     template<typename T>
     constexpr bool Bounds<3, T>::IsEmpty() const
     {
-        return high.x <= low.x || high.z <= low.z || high.z <= low.z;
+        return high.x <= low.x || high.y <= low.y || high.z <= low.z;
     }
 
 }

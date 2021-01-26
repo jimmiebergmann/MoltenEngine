@@ -23,29 +23,23 @@
 *
 */
 
-#ifndef MOLTEN_CORE_GUI_WIDGETS_SPACERWIDGET_HPP
-#define MOLTEN_CORE_GUI_WIDGETS_SPACERWIDGET_HPP
-
-#include "Molten/Gui/Widget.hpp"
-
 namespace Molten::Gui
 {
 
     template<typename TSkin>
-    class Spacer : public Widget<TSkin>
+    DockingWidget<TSkin>::DockingWidget(
+        WidgetData<TSkin>& data,
+        const Vector2f32& size,
+        const DockingPosition position
+    ) :
+        Widget<TSkin>(data, size),
+        m_initialPosition(position)
+    {}
+
+    template<typename TSkin>
+    DockingPosition DockingWidget<TSkin>::GetInitialPosition() const
     {
-
-    public:
-
-        static constexpr bool handleKeyboardEvents = false;
-        static constexpr bool handleMouseEvents = false;
-
-        explicit Spacer(WidgetData<TSkin>& data);
-
-    };
+        return m_initialPosition;
+    }
 
 }
-
-#include "Molten/Gui/Widgets/SpacerWidget.inl"
-
-#endif

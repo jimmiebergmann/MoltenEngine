@@ -29,11 +29,11 @@ namespace Molten::Gui
 {
 
     template<typename TSkin>
-    inline Layer<TSkin>::Layer(TSkin& skin) :
-        m_skin(skin)
+    inline Layer<TSkin>::Layer(WidgetData<TSkin>& data) :
+        Widget<TSkin>(data)
     {}
 
-    template<typename TSkin>
+    /*template<typename TSkin>
     inline void Layer<TSkin>::PushUserInputEvents(std::vector<UserInput::Event>& inputEvents)
     {
     }
@@ -94,18 +94,6 @@ namespace Molten::Gui
         return widget;
     }
 
-    /*template<typename TSkin>
-    inline WidgetTreeData<TSkin>& Layer<TSkin>::GetWidgetTreeData(Widget<TSkin>& widget)
-    {
-        return widget.m_treeData;
-    }
-
-    template<typename TSkin>
-    inline WidgetRenderData& Layer<TSkin>::GetWidgetRenderData(Widget<TSkin>& widget)
-    {
-        return widget.m_renderData;
-    }*/
-
     template<typename TSkin>
     inline TSkin& Layer<TSkin>::GetSkin()
     {
@@ -127,6 +115,6 @@ namespace Molten::Gui
     inline WidgetData<TSkin>& Layer<TSkin>::GetWidgetData(Widget<TSkin>& widget)
     {
         return widget.GetData();
-    }
+    }*/
    
 }

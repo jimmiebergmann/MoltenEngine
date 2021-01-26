@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -28,12 +28,16 @@
 #include "Molten/Logger.hpp"
 
 #include "Molten/Gui/CanvasRenderer.hpp"
-#include "Molten/Gui/Layers/RootLayer.hpp"
-#include "Molten/Gui/Widget.hpp"
+
+//#include "Molten/Gui/Layers/DockingLayer.hpp"
+//#include "Molten/Gui/Layers/RootLayer.hpp"
+
 #include "Molten/Gui/Widgets/ButtonWidget.hpp"
 #include "Molten/Gui/Widgets/PaddingWidget.hpp"
 #include "Molten/Gui/Widgets/VerticalGridWidget.hpp"
 #include "Molten/Gui/Widgets/SpacerWidget.hpp"
+#include "Molten/Gui/Widgets/PaneWidget.hpp"
+#include "Molten/Gui/Widgets/DockerWidget.hpp"
 
 
 /*#include "Molten/Window/Window.hpp"
@@ -195,8 +199,9 @@ namespace Molten::Editor
         m_canvasRenderer = Gui::CanvasRenderer::Create(*m_renderer, m_logger.get());
         m_canvas = std::make_shared<Gui::Canvas<Gui::DefaultSkin>>(*m_renderer, m_canvasRenderer);
 
-        auto layer = m_canvas->CreateChild<Gui::RootLayer>(Gui::LayerPosition::Top);
-        auto grid = layer->CreateChild<Gui::VerticalGrid>();
+
+        // PANE BUTTON TEST
+        /*auto grid = m_canvas->CreateChild<Gui::VerticalGrid>();
         grid->margin = Gui::PaddingType{ 10.0f, 20.0f, 30.0f, 40.0f };
         grid->padding = Gui::PaddingType{ 10.0f, 20.0f, 30.0f, 40.0f };
 
@@ -205,7 +210,6 @@ namespace Molten::Editor
         {
             Logger::WriteInfo(m_logger.get(), "Pressed button 1.");
         });
-
 
         grid->CreateChild<Gui::Spacer>();
 
@@ -219,7 +223,19 @@ namespace Molten::Editor
 
         grid->CreateChild<Gui::Spacer>();
         grid->CreateChild<Gui::Button>();
-        grid->CreateChild<Gui::Button>();
+        grid->CreateChild<Gui::Spacer>();
+        grid->CreateChild<Gui::Pane>(Vector2f32{ 200.0f, 200.0f });*/
+
+
+        // DOCKER TEST
+        auto docker = m_canvas->CreateChild<Gui::Docker>();
+        auto pane1 = docker->CreateChild<Gui::Pane>(Vector2f32{ 100.0f, 100.0f }, Gui::DockingPosition::Right);
+        pane1->CreateChild<Gui::Button>();
+
+        auto pane2 = docker->CreateChild<Gui::Pane>(Vector2f32{ 200.0f, 200.0f }, Gui::DockingPosition::Right);
+        pane2->CreateChild<Gui::Button>();
+        pane2->CreateChild<Gui::Button>();
+
 
         /*
         Gui::Widget<Gui::DefaultSkin>::CreateChild<Gui::Spacer>(grid);

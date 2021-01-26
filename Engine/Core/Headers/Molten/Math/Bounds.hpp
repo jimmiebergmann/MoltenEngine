@@ -80,20 +80,29 @@ namespace Molten
             const T right,
             const T bottom);    
 
+        /** Get size of bounds */
+        constexpr Vector<2, T> GetSize();
+
         /** Checks if point is inside of bounds. */
         constexpr bool Intersects(const Vector2<T>& point) const;
 
         /** Returns a new bounds that represent the union of two(this and another) bounds. */
         constexpr Bounds<2, T> Union(const Bounds<2, T>& bounds) const;
 
-        /** Removes margins from bounds and causing the bounds to shrink. */
-        constexpr Bounds<2, T> RemoveMargins(const Bounds<2, T>& margins) const;
+        /** Creates bounds by growing current bounds by margins. */
+        constexpr Bounds<2, T> WithMargins(const Bounds<2, T>& margins) const;
+
+        /** Creates bounds by shrinking current bounds by margins. */
+        constexpr Bounds<2, T> WithoutMargins(const Bounds<2, T>& margins) const;
 
         /** Adds margins to bounds and causing the bounds to grow. */
-        constexpr Bounds<2, T> AddMargins(const Bounds<2, T>& margins) const;
+        constexpr Bounds<2, T>& AddMargins(const Bounds<2, T>& margins);
+
+        /** Removes margins from bounds and causing the bounds to shrink. */
+        constexpr Bounds<2, T>& RemoveMargins(const Bounds<2, T>& margins);
 
         /** Clamps high values to low values if high < low. */
-        constexpr void ClampHighToLow();
+        constexpr Bounds<2, T>& ClampHighToLow();
 
         /** Checks if area of bounds are < 0. */
         constexpr bool IsEmpty() const;
@@ -148,6 +157,9 @@ namespace Molten
             const T bottom,
             const T far);
 
+        /** Get size of bounds */
+        constexpr Vector<3, T> GetSize();
+
         /** Checks if point is inside of bounds. */
         constexpr bool Intersects(const Vector3<T>& point) const;
 
@@ -155,7 +167,7 @@ namespace Molten
         constexpr Bounds<3, T> Union(const Bounds<3, T>& bounds) const;
 
         /** Clamps high values to low values if high < low. */
-        constexpr void ClampHighToLow();
+        constexpr Bounds<3, T>& ClampHighToLow();
 
         /** Checks if area of bounds are < 0. */
         constexpr bool IsEmpty() const;

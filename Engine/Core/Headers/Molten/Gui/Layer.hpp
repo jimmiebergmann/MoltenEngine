@@ -26,6 +26,7 @@
 #ifndef MOLTEN_CORE_GUI_LAYER_HPP
 #define MOLTEN_CORE_GUI_LAYER_HPP
 
+#include "Molten/Gui/Widget.hpp"
 #include "Molten/Gui/GuiTypes.hpp"
 #include "Molten/Gui/WidgetData.hpp"
 #include "Molten/Math/Vector.hpp"
@@ -42,14 +43,14 @@ namespace Molten::Gui
     };
 
     template<typename TSkin>
-    class Layer
+    class Layer : public Widget<TSkin>
     {
 
     public:
 
-        explicit Layer(TSkin& skin);
+        explicit Layer(WidgetData<TSkin>& data);
 
-        virtual ~Layer() = default;
+        /*virtual ~Layer() = default;
 
         virtual void PushUserInputEvents(std::vector<UserInput::Event>& inputEvents);
 
@@ -68,20 +69,17 @@ namespace Molten::Gui
         WidgetTypePointer<TWidgetType<TSkin>> CreateChild(Widget<TSkin>& parent, TArgs ... args);
 
         TSkin& GetSkin();
-        const TSkin& GetSkin() const;
+        const TSkin& GetSkin() const;*/
 
     protected:
 
-        virtual bool OnAddChild(Widget<TSkin>* parent, WidgetDataPointer<TSkin> childData) = 0;
+        /*virtual bool OnAddChild(Widget<TSkin>* parent, WidgetDataPointer<TSkin> childData) = 0;
 
         WidgetData<TSkin>& GetWidgetData(Widget<TSkin>& widget);
 
-        /*static WidgetTreeData<TSkin>& GetWidgetTreeData(Widget<TSkin>& widget);
-        static WidgetRenderData& GetWidgetRenderData(Widget<TSkin>& widget);*/
-
         static bool CallWidgetOnAddChild(Widget<TSkin>* parent, WidgetPointer<TSkin> child);
-
-        TSkin& m_skin;
+        
+        TSkin& m_skin;*/
 
     private:
 

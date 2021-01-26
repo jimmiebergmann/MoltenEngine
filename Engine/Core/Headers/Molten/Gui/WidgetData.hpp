@@ -32,6 +32,10 @@
 #include "Molten/Math/Vector.hpp"
 #include "Molten/Math/Bounds.hpp"
 
+// Test
+#include <functional>
+#include "Molten/Gui/WidgetEvent.hpp"
+
 namespace Molten::Gui
 {
 
@@ -56,27 +60,54 @@ namespace Molten::Gui
         using TreeNormalConstIterator = typename Tree::template ConstIterator<TreeNormalLaneType>;
         using TreePartialIterator = typename Tree::template Iterator<TreePartialLaneType>;
         using TreePartialConstIterator = typename Tree::template ConstIterator<TreePartialLaneType>;
- 
-        WidgetData(Layer<TSkin>* layer) :
+
+        WidgetData() :
+            canvas(nullptr),
+            layer(nullptr),
             tree(nullptr),
-            layer(layer),
-            widgetSkin(nullptr),
-            mouseEventHandler(nullptr),
-            keyboardEventHandler(nullptr)
+            widgetSkin(nullptr)
         {}
+
+        WidgetPointer<TSkin> GetWidget()
+        {
+            return widget;
+        }
+
+        TreePartialLane GetChildrenNormalLane()
+        {
+            return (*iterator).GetChildren().template GetLane<TreeNormalLaneType>();
+        }
 
         TreePartialLane GetChildrenPartialLane()
         {
             return (*iterator).GetChildren().template GetLane<TreePartialLaneType>();
         }
 
+        const Bounds2f32& GetGrantedBounds() const
+        {
+            return m_grantedBounds;
+        }
+
+        void SetGrantedBounds(const Bounds2f32& grantedBounds)
+        {
+            m_grantedBounds = grantedBounds;
+        }
+
+
+        // Should be private:
+        Canvas<TSkin>* canvas;
+        Layer<TSkin>* layer;
         Tree* tree;
         TreeNormalIterator iterator;
-        Layer<TSkin>* layer;
         WidgetPointer<TSkin> widget;
         std::unique_ptr<WidgetSkinBase> widgetSkin;
-        WidgetEventHandler* mouseEventHandler;
-        WidgetEventHandler* keyboardEventHandler;
+
+        std::function<bool(const WidgetEvent&)> mouseEventFunction;
+
+    private:
+
+        Bounds2f32 m_grantedBounds;
+
 
     };
 

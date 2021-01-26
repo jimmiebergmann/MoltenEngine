@@ -31,6 +31,19 @@ namespace Molten::Gui
     {}
 
     template<typename TSkin>
+    inline Widget<TSkin>::Widget(
+        WidgetData<TSkin>& data,
+        const Vector2f32& size
+    ) :
+        size(size),
+        m_data(data)
+    {}
+
+    template<typename TSkin>
+    void Widget<TSkin>::Update()
+    {}
+
+    /*template<typename TSkin>
     inline Layer<TSkin>& Widget<TSkin>::GetLayer()
     {
         return *m_data.layer;
@@ -50,19 +63,24 @@ namespace Molten::Gui
     inline const WidgetSkinBase& Widget<TSkin>::GetSkin() const
     {
         return *m_data.skin;
-    }
+    }*/
 
     template<typename TSkin>
     template<template<typename> typename TWidgetType, typename ... TArgs>
     inline WidgetTypePointer<TWidgetType<TSkin>> Widget<TSkin>::CreateChild(TArgs ... args)
     {
-        return GetLayer().template CreateChild<TWidgetType>(*this, std::forward<TArgs>(args)...);
+        return m_data.canvas->template CreateChild<TWidgetType>(*this, std::forward<TArgs>(args)...);
     }
 
     template<typename TSkin>
     inline bool Widget<TSkin>::OnAddChild(WidgetPointer<TSkin>)
     {
         return false;
+    }
+
+    template<typename TSkin>
+    void Widget<TSkin>::OnAddChild(WidgetData<TSkin>& childData)
+    {
     }
 
     template<typename TSkin>
@@ -80,6 +98,37 @@ namespace Molten::Gui
     const WidgetData<TSkin>& Widget<TSkin>::GetData() const
     {
         return m_data;
+    }
+
+    template<typename TSkin>
+    typename WidgetData<TSkin>::TreeNormalLane Widget<TSkin>::GetChildrenNormalLane()
+    {
+        return (*m_data.iterator).GetChildren().template GetLane<typename WidgetData<TSkin>::TreeNormalLaneType>();
+    }
+
+    template<typename TSkin>
+    typename WidgetData<TSkin>::TreePartialLane Widget<TSkin>::GetChildrenPartialLane()
+    {
+        return (*m_data.iterator).GetChildren().template GetLane<typename WidgetData<TSkin>::TreePartialLaneType>();
+    }
+
+    template<typename TSkin>
+    const Bounds2f32& Widget<TSkin>::GetGrantedBounds() const
+    {
+        return m_data.GetGrantedBounds();
+    }
+
+    template<typename TSkin>
+    void Widget<TSkin>::SetGrantedBounds(const Bounds2f32& grantedBounds)
+    {
+        m_data.SetGrantedBounds(grantedBounds);
+    }
+
+    template<typename TSkin>
+    void Widget<TSkin>::ApplyMarginsToGrantedBounds()
+    {
+        auto grantedBounds = m_data.GetGrantedBounds().WithoutMargins(margin).ClampHighToLow();
+        m_data.SetGrantedBounds(grantedBounds);
     }
 
 }

@@ -27,40 +27,24 @@ namespace Molten::Gui
 {
 
     template<typename TSkin>
-    inline VerticalGrid<TSkin>::VerticalGrid(WidgetData<TSkin>& data) :
-        Widget<TSkin>(data),
-        cellSpacing(0.0f)
+    inline Pane<TSkin>::Pane(
+        WidgetData<TSkin>& data,
+        const Vector2f32& size,
+        const DockingPosition position
+    ) :
+        DockingWidget<TSkin>(data, size, position)
     {}
 
     template<typename TSkin>
-    inline bool VerticalGrid<TSkin>::OnAddChild(WidgetPointer<TSkin> /*widget*/)
+    void Pane<TSkin>::Update()
     {
-        return true;
+       ApplyMarginsToGrantedBounds();
     }
 
     template<typename TSkin>
-    void VerticalGrid<TSkin>::Update()
+    bool Pane<TSkin>::HandleEvent(const WidgetEvent& /*widgetEvent*/)
     {
-        ApplyMarginsToGrantedBounds();
-        auto contentBounds = GetGrantedBounds().WithoutMargins(padding).ClampHighToLow();
-
-        auto childLane = GetData().GetChildrenPartialLane();
-
-        const float halfChildSpacing = childLane.GetSize() > 1 ? cellSpacing * 0.5f : 0.0f;
-        const float verticalIncrease = (contentBounds.right - contentBounds.left) / static_cast<float>(childLane.GetSize()) - halfChildSpacing;
-        Bounds2f32 childBounds = { contentBounds.left, contentBounds.top, contentBounds.left, contentBounds.bottom }; 
-            
-        for (auto& child : childLane)
-        {
-            childBounds.left = childBounds.right;
-            childBounds.right += verticalIncrease;
-
-            auto& childData = child.GetValue();
-            auto childGrantedBounds = childBounds;
-            childData->SetGrantedBounds(childGrantedBounds);
-
-            childBounds.right += cellSpacing;
-        }
+        return false;
     }
 
 }

@@ -22,7 +22,7 @@
 * SOFTWARE.
 *
 */
-
+/*
 #ifndef MOLTEN_CORE_GUI_ROOTLAYER_HPP
 #define MOLTEN_CORE_GUI_ROOTLAYER_HPP
 
@@ -82,4 +82,4 @@ namespace Molten::Gui
 
 #include "Molten/Gui/Layers/RootLayer.inl"
 
-#endif
+#endif*/

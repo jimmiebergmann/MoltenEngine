@@ -23,7 +23,7 @@
 *
 */
 
-namespace Molten::Gui
+/*namespace Molten::Gui
 {
 
     template<typename TSkin>
@@ -269,4 +269,4 @@ namespace Molten::Gui
     }
 
 
-}
+}*/

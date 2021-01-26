@@ -53,11 +53,6 @@ namespace Molten::Gui
 
         virtual void Draw()
         {
-
-        }
-
-        virtual void Update()
-        {
         }
 
         void SetState(const WidgetSkinStateType state)
@@ -69,35 +64,10 @@ namespace Molten::Gui
         {
             return m_state;
         }
-
-        const Bounds2f32& GetGrantedBounds()
-        {
-            return m_grantedBounds;
-        }
-
-        void SetGrantedBounds(const Bounds2f32 grantedBounds)
-        {
-            m_grantedBounds = grantedBounds;
-        }   
         
     protected:
 
-        Bounds2f32& CalculateBounds(const Bounds2f32& margin)
-        {
-            m_grantedBounds = m_grantedBounds.RemoveMargins(margin);
-            m_grantedBounds.ClampHighToLow();
-            return m_grantedBounds;
-        }
-
-        Bounds2f32 CalculateContentBounds(const Bounds2f32& padding)
-        {
-            auto contentBounds = m_grantedBounds.RemoveMargins(padding);
-            contentBounds.ClampHighToLow();
-            return contentBounds;
-        }
-
         WidgetSkinStateType m_state;
-        Bounds2f32 m_grantedBounds;
 
     };
 

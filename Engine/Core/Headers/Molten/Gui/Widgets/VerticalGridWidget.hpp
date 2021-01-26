@@ -32,7 +32,7 @@ namespace Molten::Gui
 {
 
     template<typename TSkin>
-    class VerticalGrid : public Widget<TSkin>/*, public TSkin::template WidgetSkin<VerticalGrid<TSkin>>*/
+    class VerticalGrid : public Widget<TSkin>
     {
 
     public:
@@ -43,6 +43,8 @@ namespace Molten::Gui
         float cellSpacing;
 
         explicit VerticalGrid(WidgetData<TSkin>& data);
+
+        void Update() override;
 
     private:
 

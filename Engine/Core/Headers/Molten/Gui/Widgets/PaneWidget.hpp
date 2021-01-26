@@ -23,29 +23,37 @@
 *
 */
 
-#ifndef MOLTEN_CORE_GUI_WIDGETS_SPACERWIDGET_HPP
-#define MOLTEN_CORE_GUI_WIDGETS_SPACERWIDGET_HPP
+#ifndef MOLTEN_CORE_GUI_WIDGETS_PANEWIDGET_HPP
+#define MOLTEN_CORE_GUI_WIDGETS_PANEWIDGET_HPP
 
-#include "Molten/Gui/Widget.hpp"
+#include "Molten/Gui/DockingWidget.hpp"
+#include "Molten/Gui/WidgetEvent.hpp"
 
 namespace Molten::Gui
 {
 
     template<typename TSkin>
-    class Spacer : public Widget<TSkin>
+    class Pane : public DockingWidget<TSkin>, public WidgetEventHandler
     {
 
     public:
 
         static constexpr bool handleKeyboardEvents = false;
-        static constexpr bool handleMouseEvents = false;
+        static constexpr bool handleMouseEvents = true;
 
-        explicit Spacer(WidgetData<TSkin>& data);
+        explicit Pane(
+            WidgetData<TSkin>& data,
+            const Vector2f32& size,
+            const DockingPosition position = DockingPosition::Left);
+
+        void Update() override;
+
+        bool HandleEvent(const WidgetEvent& widgetEvent) override;
 
     };
 
 }
 
-#include "Molten/Gui/Widgets/SpacerWidget.inl"
+#include "Molten/Gui/Widgets/PaneWidget.inl"
 
 #endif

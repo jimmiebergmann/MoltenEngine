@@ -32,6 +32,21 @@ namespace Molten::Gui
     {}
 
     template<typename TSkin>
+    void Button<TSkin>::Update()
+    {
+        ApplyMarginsToGrantedBounds();
+
+        auto childLane = GetChildrenPartialLane();
+
+        if (childLane.GetSize() > 0)
+        {
+            auto& childData = (*childLane.begin()).GetValue();
+            auto contentBounds = GetGrantedBounds().WithoutMargins(padding).ClampHighToLow();
+            childData->SetGrantedBounds(contentBounds);
+        }
+    }
+
+    template<typename TSkin>
     inline bool Button<TSkin>::HandleEvent(const WidgetEvent& widgetEvent)
     {
         if (widgetEvent.type == WidgetEventType::Mouse)

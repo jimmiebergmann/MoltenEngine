@@ -44,30 +44,69 @@ namespace Molten::Gui
 
     public:
 
+        Vector2f32 size;
         MarginType margin;
         PaddingType padding;
 
         explicit Widget(WidgetData<TSkin>& data);
+        Widget(WidgetData<TSkin>& data, const Vector2f32& size);
 
         virtual ~Widget() = default;
 
-        Layer<TSkin>& GetLayer();
+        virtual void Update();
+
+        /*Layer<TSkin>& GetLayer();
         const Layer<TSkin>& GetLayer() const;
 
         WidgetSkinBase& GetSkin();
-        const WidgetSkinBase& GetSkin() const;
+        const WidgetSkinBase& GetSkin() const;*/
 
         template<template<typename> typename TWidgetType, typename ... TArgs>
         WidgetTypePointer<TWidgetType<TSkin>> CreateChild(TArgs ... args);
 
     protected:
 
-        virtual bool OnAddChild(WidgetPointer<TSkin> widget);
+        virtual bool OnAddChild(WidgetPointer<TSkin> child); // Delete
+
+        virtual void OnAddChild(WidgetData<TSkin>& childData);
 
         void SetSkinState(WidgetSkinStateType state);
 
+        WidgetData<TSkin>& GetData();
+        const WidgetData<TSkin>& GetData() const;
+
+        typename WidgetData<TSkin>::TreeNormalLane GetChildrenNormalLane();
+        typename WidgetData<TSkin>::TreePartialLane GetChildrenPartialLane();
+
+        const Bounds2f32& GetGrantedBounds() const;
+
+        void SetGrantedBounds(const Bounds2f32& grantedBounds);
+
+        void ApplyMarginsToGrantedBounds();
+
+       /* Bounds2f& ApplyMargin();
+
+        Bounds2f& ApplyMargin();*/
+
+        /*Bounds2f32& CalculateBounds(const Bounds2f32& margin)
+        {
+            m_grantedBounds = m_grantedBounds.RemoveMargins(margin);
+            m_grantedBounds.ClampHighToLow();
+            return m_grantedBounds;
+        }
+
+        Bounds2f32 CalculateContentBounds(const Bounds2f32& padding)
+        {
+            auto contentBounds = m_grantedBounds.RemoveMargins(padding);
+            contentBounds.ClampHighToLow();
+            return contentBounds;
+        }*/
+
     private:
         
+        template<typename TLayerSkin>
+        friend class Canvas;
+
         template<typename TLayerSkin>
         friend class Layer;
 
@@ -78,13 +117,9 @@ namespace Molten::Gui
         Widget& operator= (const Widget&) = delete;
         Widget& operator= (Widget&&) = delete;
 
-        WidgetData<TSkin>& GetData();
-        const WidgetData<TSkin>& GetData() const;
-
         WidgetData<TSkin>& m_data;
 
     };
-
 
 }
 

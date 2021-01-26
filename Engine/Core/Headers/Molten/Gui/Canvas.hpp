@@ -27,6 +27,10 @@
 #define MOLTEN_CORE_GUI_CANVAS_HPP
 
 #include "Molten/Gui/GuiTypes.hpp"
+#include "Molten/Gui/DockingWidget.hpp"
+#include "Molten/Gui/Widgets/DockerWidget.hpp"
+#include "Molten/Gui/WidgetData.hpp"
+#include "Molten/Gui/WidgetEvent.hpp"
 #include "Molten/Gui/CanvasRenderer.hpp"
 #include "Molten/Gui/Layer.hpp"
 #include "Molten/Math/Vector.hpp"
@@ -74,8 +78,20 @@ namespace Molten::Gui
         const Vector2f32& GetSize() const;
         const Vector2f32& GetScale() const;
 
-        template<template<typename> typename TLayer>
-        LayerTypePointer<TLayer<TSkin>> CreateChild(const LayerPosition position = LayerPosition::Top);
+        //template<template<typename> typename TLayer>
+        //LayerTypePointer<TLayer<TSkin>> CreateChild(const LayerPosition position = LayerPosition::Top);
+
+        //template<template<typename> typename TWidgetType, typename ... TArgs>
+        //WidgetTypePointer<TWidgetType<TSkin>> CreateChild(TArgs ... args);
+
+        //template<template<typename> typename TLayerType, typename ... TArgs>
+        //LayerTypePointer<TLayerType<TSkin>> CreateRootLayer(TArgs ... args);
+
+        template<template<typename> typename TWidgetType, typename ... TArgs>
+        WidgetTypePointer<TWidgetType<TSkin>> CreateChild(TArgs ... args);
+
+        template<template<typename> typename TWidgetType, typename ... TArgs>
+        WidgetTypePointer<TWidgetType<TSkin>> CreateChild(Widget<TSkin>& parent, TArgs ... args);
 
     private:
 
@@ -84,21 +100,37 @@ namespace Molten::Gui
         Canvas& operator= (Canvas&&) = delete;
         Canvas& operator= (const Canvas&) = delete;
 
-        using LayerPointerList = std::list<LayerPointer<TSkin>>;
-        using LayerPointerSet = std::set<LayerPointer<TSkin>>;
+        void UpdateUserInputs();
+        void UpdateWidgetSkins();
+
+        void HandleMouseMove(UserInput::Event& mouseEvent);
+        void HandleMousePressed(UserInput::Event& mouseEvent);
+        void HandleMouseReleased(UserInput::Event& mouseEvent);
+
+
+        //bool AddWidgetToTree(Widget<TSkin>* parent, WidgetDataPointer<TSkin> childData);
+
+        //using LayerPointerList = std::list<LayerPointer<TSkin>>;
+        //using LayerPointerSet = std::set<LayerPointer<TSkin>>;
 
         Renderer& m_backendRenderer;
         CanvasRendererPointer m_renderer;
-        TSkin m_skin;
 
-        LayerPointerSet m_allLayers;
-        LayerPointerList m_activeLayers;
-        LayerPointerSet m_inactiveLayers;       
+        TSkin m_skin;
+        typename WidgetData<TSkin>::Tree m_widgetTree;
+
+        //LayerPointerSet m_allLayers;
+        //LayerPointerList m_activeLayers;
+        //LayerPointerSet m_inactiveLayers;       
      
         Vector2f32 m_size;
         Vector2f32 m_scale;
 
         std::vector<UserInput::Event> m_userInputEvents;
+        WidgetPointer<TSkin> m_hoveredWidget;
+        WidgetPointer<TSkin> m_pressedWidget;
+
+        
 
     };
 

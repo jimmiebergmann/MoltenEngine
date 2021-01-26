@@ -46,6 +46,8 @@ namespace Molten::Gui
 
         explicit Button(WidgetData<TSkin>& data);
 
+        void Update() override;
+
         bool HandleEvent(const WidgetEvent& widgetEvent) override;
 
     private:
