@@ -69,7 +69,7 @@ namespace Molten
     {}
 
     template<typename T>
-    inline constexpr Vector<2, T> Bounds<2, T>::GetSize()
+    inline constexpr Vector<2, T> Bounds<2, T>::GetSize() const
     {
         return high - low;
     }
@@ -91,20 +91,6 @@ namespace Molten
             std::min(high.x, bounds.high.x),
             std::min(high.y, bounds.high.y)
         };
-    }
-
-    template<typename T>
-    constexpr Bounds<2, T>& Bounds<2, T>::ClampHighToLow()
-    {
-        high.x = std::max(high.x, low.x);
-        high.y = std::max(high.y, low.y);
-        return *this;
-    }
-
-    template<typename T>
-    constexpr bool Bounds<2, T>::IsEmpty() const
-    {
-        return high.x <= low.x || high.y <= low.y;
     }
 
     template<typename T>
@@ -133,6 +119,32 @@ namespace Molten
         low += margins.low;
         high -= margins.high;
         return *this;
+    }
+
+    template<typename T>
+    constexpr Bounds<2, T>& Bounds<2, T>::ClampHighToLow()
+    {
+        high.x = std::max(high.x, low.x);
+        high.y = std::max(high.y, low.y);
+        return *this;
+    }
+
+    template<typename T>
+    constexpr bool Bounds<2, T>::IsEmpty() const
+    {
+        return high.x <= low.x || high.y <= low.y;
+    }
+
+    template<typename T>
+    constexpr bool Bounds<2, T>::operator == (const Bounds<2, T>& rhs) const
+    {
+        return high == rhs.high && low == rhs.low;
+    }
+
+    template<typename T>
+    constexpr bool Bounds<2, T>::operator != (const Bounds<2, T>& rhs) const
+    {
+        return high != rhs.high || low != rhs.low;
     }
 
 
@@ -166,7 +178,7 @@ namespace Molten
     {}
 
     template<typename T>
-    inline constexpr Vector<3, T> Bounds<3, T>::GetSize()
+    inline constexpr Vector<3, T> Bounds<3, T>::GetSize() const
     {
         return high - low;
     }
@@ -206,6 +218,18 @@ namespace Molten
     constexpr bool Bounds<3, T>::IsEmpty() const
     {
         return high.x <= low.x || high.y <= low.y || high.z <= low.z;
+    }
+
+    template<typename T>
+    constexpr bool Bounds<3, T>::operator == (const Bounds<3, T>& rhs) const
+    {
+        return high == rhs.high && low == rhs.low;
+    }
+
+    template<typename T>
+    constexpr bool Bounds<3, T>::operator != (const Bounds<3, T>& rhs) const
+    {
+        return high != rhs.high || low != rhs.low;
     }
 
 }

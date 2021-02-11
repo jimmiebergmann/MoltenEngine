@@ -23,6 +23,8 @@
 *
 */
 
+#include <iostream>
+
 namespace Molten::Gui
 {
 
@@ -31,6 +33,7 @@ namespace Molten::Gui
     template<typename TSkin>
     inline Docker<TSkin>::Docker(WidgetData<TSkin>& data) :
         Widget<TSkin>(data),
+        m_forceUpdateBounds(false),
         m_rootGrid(nullptr),
         m_pressedEdge(nullptr)
     { }
@@ -39,7 +42,14 @@ namespace Molten::Gui
     void Docker<TSkin>::Update()
     {
         ApplyMarginsToGrantedBounds();
-        UpdateBounds();
+
+        if (m_forceUpdateBounds || m_oldGrantedBounds != GetGrantedBounds())
+        {
+            m_forceUpdateBounds = false;
+            CalculateBounds(); 
+        }
+
+        m_oldGrantedBounds = GetGrantedBounds();
     }
 
     template<typename TSkin>
@@ -60,17 +70,8 @@ namespace Molten::Gui
     Docker<TSkin>::WidgetElement::WidgetElement(
         WidgetData<TSkin>& widgetData
     ) :
-        widgetData(&widgetData),
-        dynamicSize(IsDynamicSize(widgetData)),
-        size(dynamicSize == false ? widgetData.GetWidget()->size : Vector2f32{ 0.0f, 0.0f })
+        widgetData(&widgetData)
     {}
-
-    template<typename TSkin>
-    bool Docker<TSkin>::WidgetElement::IsDynamicSize(WidgetData<TSkin>& widgetData)
-    {
-        auto* widget = widgetData.GetWidget().get();
-        return widget->size.x <= 0.0f || widget->size.y <= 0.0f;
-    }
 
 
     // Docker grid element implementations.
@@ -111,20 +112,35 @@ namespace Molten::Gui
 
     // Docker element implementations.
     template<typename TSkin>
-    Docker<TSkin>::Element::Element(WidgetElement* widgetElement) :
+    Docker<TSkin>::Element::Element(WidgetElement* widgetElement, Element* parent) :
+        parent(parent),
         type(ElementType::Widget),
         data(widgetElement),
+        dynamicSize(IsDynamicSize(*widgetElement->widgetData)),
+        size(GetDirectionalMinSize(widgetElement->widgetData->GetWidget()->size)),
+        calculatedSize(size),
         prevEdge(nullptr),
         nextEdge(nullptr)
     {}
 
     template<typename TSkin>
-    Docker<TSkin>::Element::Element(std::unique_ptr<GridElement>&& gridElement) :
+    Docker<TSkin>::Element::Element(std::unique_ptr<GridElement>&& gridElement, Element* parent) :
+        parent(parent),
         type(ElementType::Grid),
         data(std::move(gridElement)),
+        dynamicSize(true),
+        size(GetDirectionalMinSize({0.0f, 0.0f})),
+        calculatedSize(size),
         prevEdge(nullptr),
         nextEdge(nullptr)
     {}
+
+    template<typename TSkin>
+    bool Docker<TSkin>::Element::IsDynamicSize(WidgetData<TSkin>& widgetData)
+    {
+        auto* widget = widgetData.GetWidget().get();
+        return widget->size.x <= 0.0f || widget->size.y <= 0.0f;
+    }
 
 
     // Docker edge implementations.
@@ -183,177 +199,12 @@ namespace Molten::Gui
             lowElementPtr->nextEdge = newEdgePtr;
             highElementPtr->prevEdge = newEdgePtr;
         }
+
+        m_forceUpdateBounds = true;
     }
 
     template<typename TSkin>
-    bool Docker<TSkin>::HandleMouseEvent(const WidgetEventSubType subType, const WidgetEvent::MouseEvent& mouseEvent)
-    {
-        switch (subType)
-        {
-            case WidgetEventSubType::MousePress:
-            {
-                // Edge bounds press
-                m_pressedEdge = FindIntersectingEdge(mouseEvent.position);
-                if (m_pressedEdge)
-                {
-                    m_prevMousePosition = mouseEvent.position;
-                    return true;
-                }
-
-                // Drag bounds press.
-                // ..
-
-            } break;
-            case WidgetEventSubType::MouseEnter: // MouseMove FIX IN Canvas.inl
-            {
-                if (m_pressedEdge)
-                {
-                    if (m_pressedEdge->direction == Direction::Horizontal)
-                    {
-
-                    }
-                    else
-                    {
-                        auto edgeDiff = mouseEvent.position.x - m_prevMousePosition.x;
-                        m_pressedEdge->bounds.left += edgeDiff;
-                        m_pressedEdge->bounds.right += edgeDiff;
-
-                        if (m_pressedEdge->nextElement)
-                        {
-                            auto* widgetElement = std::get<WidgetElement*>(m_pressedEdge->nextElement->data);
-                            widgetElement->size.x -= edgeDiff;
-                        }
-                        /*if (m_pressedEdge->prevElement)
-                        {
-                            auto* widgetElement = std::get<WidgetElement*>(m_pressedEdge->prevElement->data);
-                            widgetElement->size.x += edgeDiff;
-                        }*/
-                    }
-
-                    m_prevMousePosition = mouseEvent.position;
-                    return true;
-                }
-            } break;
-            case WidgetEventSubType::MouseReleaseIn:
-            case WidgetEventSubType::MouseReleaseOut:
-            {
-                if (m_pressedEdge)
-                {
-                    m_pressedEdge = nullptr;
-                    return true;
-                }
-            } break;
-            default: break;
-        }
-
-        return false;
-    }
-
-    template<typename TSkin>
-    void Docker<TSkin>::UpdateBounds()
-    {
-        if (!m_rootGrid)
-        {
-            return;
-        }
-   
-        UpdateGridElementBounds(*m_rootGrid.get(), GetGrantedBounds());
-    }
-
-    template<typename TSkin>
-    void Docker<TSkin>::UpdateGridElementBounds(GridElement& gridElement, const Bounds2f32& grantedBounds)
-    {
-        if (gridElement.direction == Direction::Horizontal)
-        {
-            UpdateDirectionalGridElementBounds<Direction::Horizontal>(gridElement, grantedBounds);
-        }
-        else
-        {
-            UpdateDirectionalGridElementBounds<Direction::Vertical>(gridElement, grantedBounds);
-        }
-    }
-
-    template<typename TSkin>
-    template<typename Docker<TSkin>::Direction VDirection>
-    void Docker<TSkin>::UpdateDirectionalGridElementBounds(GridElement& gridElement, const Bounds2f32& grantedBounds)
-    {
-        auto boundsLeft = grantedBounds;
-
-        auto it = gridElement.elements.rbegin();
-        for (; it != gridElement.elements.rend(); it++)
-        {
-            if (boundsLeft.IsEmpty())
-            {
-                break;
-            }
-
-            auto& element = *it;
-
-            if (element->type == ElementType::Widget)
-            {
-                auto* widgetElement = std::get<WidgetElement*>(element->data);
-                float width = GetDirectionalSizeElement<VDirection>(widgetElement->size);
-                auto widgetBounds = CutDirectionalHighBounds<VDirection>(boundsLeft, width);
-
-                widgetElement->widgetData->SetGrantedBounds(widgetBounds);
-
-                if (element->prevEdge)
-                {
-                    element->prevEdge->bounds = Bounds2f32(widgetBounds.left, widgetBounds.top, widgetBounds.left, widgetBounds.bottom)
-                        .WithMargins({ 5.0f, 0.0f, 5.0f, 0.0f});
-                }
-            }
-            else
-            {
-                // GRID ???
-            }
-        }
-
-        // Dummy widget hiding
-        for (; it != gridElement.elements.rend(); it++)
-        {
-            auto& element = *it;
-
-            if (element->type == ElementType::Widget)
-            {
-                auto* widgetElement = std::get<WidgetElement*>(element->data);
-                widgetElement->widgetData->SetGrantedBounds({ 0.0f, 0.0f, 0.0f, 0.0f });
-            }
-            else
-            {
-                // GRID ???
-            }
-        }
-    }
-
-    /*template<typename TSkin>
-    template<typename Docker<TSkin>::Direction VDirection>
-    float Docker<TSkin>::GetDirectionalBoundsSize(const Bounds2f32& bounds)
-    {
-        if constexpr (VDirection == Direction::Horizontal)
-        {
-            return bounds.right - bounds.left;
-        }
-        else
-        {
-            return bounds.bottom - bounds.top;
-        }
-    }*/
-
-    template<typename TSkin>
-    void Docker<TSkin>::UpdateWidgetElementBounds(WidgetElement& widgetElement, const Bounds2f32& grantedBounds)
-    {
-        /*element.bounds = boundsLeft;
-
-        if (element.type == ElementType::Widget)
-        {
-            auto* widgetData = element.data.widgetData;
-            widgetData->SetGrantedBounds(boundsLeft);
-        }*/
-    }
-
-    template<typename TSkin>
-    constexpr typename Docker<TSkin>::Direction typename Docker<TSkin>::FlipDirection(const Direction direction)
+    constexpr typename Docker<TSkin>::Direction Docker<TSkin>::FlipDirection(const Direction direction)
     {
         return direction == Direction::Horizontal ? Direction::Vertical : Direction::Horizontal;
     }
@@ -371,8 +222,310 @@ namespace Molten::Gui
     }
 
     template<typename TSkin>
+    bool Docker<TSkin>::HandleMouseEvent(const WidgetEventSubType subType, const WidgetEvent::MouseEvent& mouseEvent)
+    {
+        switch (subType)
+        {
+            case WidgetEventSubType::MousePress: return HandleMousePressEvent(mouseEvent);
+            case WidgetEventSubType::MouseEnter: return HandleMouseMoveEvent(mouseEvent); // MouseMove FIX IN Canvas.inl 
+            case WidgetEventSubType::MouseReleaseIn:
+            case WidgetEventSubType::MouseReleaseOut: return HandleMouseReleaseEvent(mouseEvent);
+            default: break;
+        }
+
+        return false;
+    }
+
+    template<typename TSkin>
+    bool Docker<TSkin>::HandleMousePressEvent(const WidgetEvent::MouseEvent& mouseEvent)
+    {
+        // Edge bounds press
+        m_pressedEdge = FindIntersectingEdge(mouseEvent.position);
+        if (m_pressedEdge)
+        {
+            m_prevMousePosition = mouseEvent.position;
+            return true;
+        }
+
+        // Drag bounds press.
+        // ..
+
+        return false;
+    }
+
+    template<typename TSkin>
+    bool Docker<TSkin>::HandleMouseMoveEvent(const WidgetEvent::MouseEvent& mouseEvent)
+    {
+        if (!m_pressedEdge)
+        {
+            return false;
+        }
+       
+        auto mouseMovement = Vector2f32(mouseEvent.position) - m_prevMousePosition;
+        bool movedEdge = false;
+       
+        if (m_pressedEdge->direction == Direction::Horizontal)
+        {
+            movedEdge = HandleDirectionalEdgeMovement<Direction::Horizontal>(mouseMovement.y);
+        }
+        else
+        {
+            movedEdge = HandleDirectionalEdgeMovement<Direction::Vertical>(mouseMovement.x);
+        }
+
+        if (movedEdge)
+        {
+            m_forceUpdateBounds = true;
+            m_prevMousePosition = mouseEvent.position;
+        }       
+
+        return true;
+    }
+
+    template<typename TSkin>
+    bool Docker<TSkin>::HandleMouseReleaseEvent(const WidgetEvent::MouseEvent& mouseEvent)
+    {
+        if (m_pressedEdge)
+        {
+            m_pressedEdge = nullptr;
+            return true;
+        }
+
+        return false;
+    }
+
+    template<typename TSkin>
+    template<typename Docker<TSkin>::Direction VEdgeDirection>
+    bool Docker<TSkin>::HandleDirectionalEdgeMovement(float movement)
+    {      
+        movement = LockEdgeMovement<VEdgeDirection>(movement, *m_pressedEdge);
+        if (movement == 0.0f)
+        {
+            return false;
+        }
+
+        auto* prevElement = m_pressedEdge->prevElement;
+        auto* nextElement = m_pressedEdge->nextElement;
+        if (prevElement && nextElement && prevElement->dynamicSize && nextElement->dynamicSize)
+        {
+            prevElement->size.x += movement;
+            nextElement->size.x -= movement;
+        }
+        else
+        {
+            if (prevElement)
+            {
+                if (!prevElement->dynamicSize)
+                {
+                    prevElement->size.x += movement;
+                }
+            }
+            if (nextElement)
+            {
+                if (!nextElement->dynamicSize)
+                {
+                    nextElement->size.x -= movement;
+                }
+            }
+        }
+       
+        
+        return true;
+    }
+
+    template<typename TSkin>
+    template<typename Docker<TSkin>::Direction VEdgeDirection>
+    constexpr float Docker<TSkin>::LockEdgeMovement(const float movement, const Edge& edge)
+    {
+        auto calculateMinMovement = [](const Element* element, float decrease)
+        {
+            constexpr Direction flippedDirection = FlipDirection(VEdgeDirection);
+
+            auto elementWidth = GetDirectionalWidth<FlipDirection(VEdgeDirection)>(element->size);
+            auto allowedDecrease = elementWidth - m_minElementWidth;
+            auto overshoot = -std::min(allowedDecrease - decrease, 0.0f);
+            return decrease - overshoot;
+        };
+
+        auto newMovement = movement;
+
+        if (newMovement < 0.0f)
+        {
+            newMovement = -calculateMinMovement(edge.prevElement, -newMovement);
+        }
+        else if (newMovement > 0.0f)
+        {
+            newMovement = calculateMinMovement(edge.nextElement, newMovement);
+        }
+
+        return newMovement;
+    }
+
+    template<typename TSkin>
+    void Docker<TSkin>::CalculateBounds()
+    {
+        if (!m_rootGrid)
+        {
+            return;
+        }
+   
+        CalculateGridElementBounds(*m_rootGrid.get(), GetGrantedBounds());
+    }
+
+    template<typename TSkin>
+    void Docker<TSkin>::CalculateGridElementBounds(GridElement& gridElement, const Bounds2f32& grantedBounds)
+    {
+        if (gridElement.direction == Direction::Horizontal)
+        {
+            CalculateDirectionalGridElementSizes<Direction::Horizontal>(gridElement, grantedBounds);
+        }
+        else
+        {
+            CalculateDirectionalGridElementSizes<Direction::Vertical>(gridElement, grantedBounds);
+        }
+    }
+
+    template<typename TSkin>
     template<typename Docker<TSkin>::Direction VDirection>
-    constexpr float Docker<TSkin>::GetDirectionalSizeElement(const Vector2f32& size)
+    void Docker<TSkin>::CalculateDirectionalGridElementSizes(GridElement& gridElement, const Bounds2f32& grantedBounds)
+    {
+        /*
+        
+        float totalStaticWidth = 0.0f;
+        float totalDynamicWidth = 0.0f;
+        std::vector<Element*> dynamicElements = {}
+
+        // CalculateElementSizes<VDirection>(totalStaticWidth, totalDynamicWidth, dynamicElements)
+        // CalculateDynamicSizes<VDirection>(...);
+        // SetElementBounds<VDirection>(...);
+
+
+        */
+
+
+
+        const auto grantedSize = grantedBounds.GetSize();
+        const float grantedWidth = GetDirectionalWidth<VDirection>(grantedSize);
+        auto widthLeft = grantedWidth;
+
+        float totalStaticWidth = 0.0f;
+        float totalDynamicWidth = 0.0f;
+        std::vector<Element*> dynamicElements = {};     
+
+        // Iterate until widthleft is empty.
+        auto it = gridElement.elements.rbegin();
+        for (; it != gridElement.elements.rend(); it++)
+        {
+            if (widthLeft <= 0.0f)
+            {
+                break;
+            }
+
+            auto& element = *it;
+            if (element->type == ElementType::Widget) // Widget
+            {
+                //auto* widgetElement = std::get<WidgetElement*>(element->data);
+
+                if (element->dynamicSize)
+                {     
+                    float minWidth = GetDirectionalMinWidth<VDirection>(element->size);
+                    SetDirectionalWidth<VDirection>(element->calculatedSize, minWidth);
+                    CutWidth(widthLeft, m_minElementWidth);
+                    totalDynamicWidth += minWidth;
+
+                    dynamicElements.push_back(element.get());
+                }
+                else
+                {
+                    float minWidth = GetDirectionalMinWidth<VDirection>(element->size);
+                    CutAndClampWidth(widthLeft, minWidth);
+                    SetDirectionalWidth<VDirection>(element->calculatedSize, minWidth);
+                    totalStaticWidth += minWidth;
+                }
+            }
+            else // Grid
+            {
+                // WHAT SHOULD WE DO HERE???
+                /*
+                //auto& childGridElement = std::get<std::unique_ptr<GridElement>>(element->data);
+
+                float minWidth = GetDirectionalMinWidth<VDirection>(element->size);
+
+                CutWidth(widthLeft, minWidth);
+                dynamicElements.push_back(element.get());*/
+            }
+        }
+
+        // Calculate dynamic sizes
+        const auto availableDynamicWidth = (grantedWidth - totalStaticWidth) - totalDynamicWidth;
+        const auto partialDynamicWidth = dynamicElements.size() ? availableDynamicWidth / static_cast<float>(dynamicElements.size()) : 0.0f;
+
+        auto dynamicWidthLeft = availableDynamicWidth;
+        for (auto* dynamicElement : dynamicElements)
+        {
+            dynamicWidthLeft -= partialDynamicWidth;
+            AddDirectionalWidth<VDirection>(dynamicElement->calculatedSize, partialDynamicWidth);
+            SetDirectionalWidth<VDirection>(dynamicElement->size, GetDirectionalWidth<VDirection>(dynamicElement->calculatedSize));
+        }
+
+        // Hide invisible elements.
+        HideElements(it, gridElement.elements.rend());
+
+        // Set bounds from calculate sizes.
+        auto endIt = it;
+        auto boundsLeft = grantedBounds;
+        for (it = gridElement.elements.rbegin(); it != endIt; it++)
+        {
+            auto* element = (*it).get();
+            auto elementWidth = GetDirectionalWidth<VDirection>(element->calculatedSize);
+            auto elementBounds = CutDirectionalBounds<VDirection>(boundsLeft, elementWidth);
+            
+            if (element->type == ElementType::Widget) // Widget
+            {
+                auto* widgetElement = std::get<WidgetElement*>(element->data);
+                widgetElement->widgetData->SetGrantedBounds(elementBounds);
+
+                auto* prevEdge = element->prevEdge;
+                if (prevEdge)
+                {
+                    prevEdge->bounds = Bounds2f32(elementBounds.left, grantedBounds.top, elementBounds.left, grantedBounds.bottom)
+                        .AddMargins({ 5.0f, 0.0f, 5.0f, 0.0f});
+                }
+            }
+            else // Grid
+            {
+                // WHAT SHOULD WE DO HERE???
+            }
+        }
+
+    }
+
+    template<typename TSkin>
+    constexpr Vector2f32 Docker<TSkin>::GetDirectionalMinSize(const Vector2f32& size)
+    {
+        return {
+            std::max(size.x, m_minElementWidth),
+            std::max(size.y, m_minElementWidth)
+        };
+    }
+
+    template<typename TSkin>
+    template<typename Docker<TSkin>::Direction VDirection>
+    constexpr float Docker<TSkin>::GetDirectionalMinWidth(const Vector2f32& size)
+    {
+        if constexpr (VDirection == Direction::Horizontal)
+        {
+            return std::max(size.x, m_minElementWidth);
+        }
+        else
+        {
+            return std::max(size.y, m_minElementWidth);
+        }
+    }
+
+    template<typename TSkin>
+    template<typename Docker<TSkin>::Direction VDirection>
+    constexpr float Docker<TSkin>::GetDirectionalWidth(const Vector2f32& size)
     {
         if constexpr (VDirection == Direction::Horizontal)
         {
@@ -386,7 +539,76 @@ namespace Molten::Gui
 
     template<typename TSkin>
     template<typename Docker<TSkin>::Direction VDirection>
-    Bounds2f32 Docker<TSkin>::CutDirectionalHighBounds(Bounds2f32& grantedBounds, const float size)
+    constexpr float Docker<TSkin>::GetDirectionalHeight(const Vector2f32& size)
+    {
+        if constexpr (VDirection == Direction::Horizontal)
+        {
+            return size.y;
+        }
+        else
+        {
+            return size.x;
+        }
+    }
+
+    template<typename TSkin>
+    template<typename Docker<TSkin>::Direction VDirection>
+    constexpr void Docker<TSkin>::SetDirectionalWidth(Vector2f32& size, const float width)
+    {
+        if constexpr (VDirection == Direction::Horizontal)
+        {
+            size.x = width;
+        }
+        else
+        {
+            size.y = width;
+        }
+    }
+
+    template<typename TSkin>
+    template<typename Docker<TSkin>::Direction VDirection>
+    constexpr void Docker<TSkin>::AddDirectionalWidth(Vector2f32& size, const float width)
+    {
+        if constexpr (VDirection == Direction::Horizontal)
+        {
+            size.x += width;
+        }
+        else
+        {
+            size.y += width;
+        }
+    }
+
+    template<typename TSkin>
+    constexpr void Docker<TSkin>::CutWidth(float& widthLeft, const float width)
+    {
+        if (width > widthLeft)
+        {
+            widthLeft = 0.0f;
+        }
+        else
+        {
+            widthLeft -= width;
+        }
+    }
+
+    template<typename TSkin>
+    constexpr void Docker<TSkin>::CutAndClampWidth(float& widthLeft, float& width)
+    {
+        if (width > widthLeft)
+        {
+            width = widthLeft;
+            widthLeft = 0.0f;
+        }
+        else
+        {
+            widthLeft -= width;
+        }
+    }
+
+    template<typename TSkin>
+    template<typename Docker<TSkin>::Direction VDirection>
+    constexpr Bounds2f32 Docker<TSkin>::CutDirectionalBounds(Bounds2f32& grantedBounds, const float size)
     {
         const auto grantedSize = grantedBounds.GetSize();
         auto newBounds = grantedBounds;
@@ -410,6 +632,27 @@ namespace Molten::Gui
             grantedBounds.ClampHighToLow();
 
             return newBounds;
+        }
+    }
+
+    template<typename TSkin>
+    template<typename TIterator>
+    void Docker<TSkin>::HideElements(TIterator begin, TIterator end)
+    {
+        for (; begin != end; begin++)
+        {
+            auto& element = *begin;
+
+            if (element->type == ElementType::Widget)
+            {
+                auto* widgetElement = std::get<WidgetElement*>(element->data);
+                widgetElement->widgetData->SetGrantedBounds({ 0.0f, 0.0f, 0.0f, 0.0f });
+            }
+            else // Grid
+            {
+                auto& gridElement = std::get<std::unique_ptr<GridElement>>(element->data);
+                HideElements(gridElement->elements.rbegin(), gridElement->elements.rend());
+            }
         }
     }
 

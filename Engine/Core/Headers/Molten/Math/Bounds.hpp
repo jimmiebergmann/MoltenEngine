@@ -81,7 +81,7 @@ namespace Molten
             const T bottom);    
 
         /** Get size of bounds */
-        constexpr Vector<2, T> GetSize();
+        constexpr Vector<2, T> GetSize() const;
 
         /** Checks if point is inside of bounds. */
         constexpr bool Intersects(const Vector2<T>& point) const;
@@ -106,6 +106,12 @@ namespace Molten
 
         /** Checks if area of bounds are < 0. */
         constexpr bool IsEmpty() const;
+
+        /** Operators. */
+        /**@{*/
+        constexpr bool operator == (const Bounds<2, T>& rhs) const;
+        constexpr bool operator != (const Bounds<2, T>& rhs) const;
+        /**@}*/
 
         MOLTEN_ANONYMOUS_STRUCTURE_BEGIN
         union
@@ -158,7 +164,7 @@ namespace Molten
             const T far);
 
         /** Get size of bounds */
-        constexpr Vector<3, T> GetSize();
+        constexpr Vector<3, T> GetSize() const;
 
         /** Checks if point is inside of bounds. */
         constexpr bool Intersects(const Vector3<T>& point) const;
@@ -171,6 +177,12 @@ namespace Molten
 
         /** Checks if area of bounds are < 0. */
         constexpr bool IsEmpty() const;
+
+        /** Operators. */
+        /**@{*/
+        constexpr bool operator == (const Bounds<3, T>& rhs) const;
+        constexpr bool operator != (const Bounds<3, T>& rhs) const;
+        /**@}*/
 
         MOLTEN_ANONYMOUS_STRUCTURE_BEGIN
         union

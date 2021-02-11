@@ -60,10 +60,11 @@ namespace Molten::Gui
     private:
   
         struct Element;
+        using Elements = std::vector<std::unique_ptr<Element>>;
         struct WidgetElement;
         struct GridElement;
         struct Edge;
-
+        
         enum class Direction
         {
             Horizontal,
@@ -87,18 +88,11 @@ namespace Molten::Gui
             explicit WidgetElement(WidgetData<TSkin>& widgetData);
 
             WidgetData<TSkin>* widgetData;
-            bool dynamicSize;
-            Vector2f32 size;
-
-        private:
-
-            static bool IsDynamicSize(WidgetData<TSkin>& widgetData);
+            
         };
 
         struct GridElement
-        {
-            using Elements = std::vector<std::unique_ptr<Element>>;
-
+        {           
             GridElement(Direction direction);
 
             template<typename TElementValue>
@@ -113,15 +107,24 @@ namespace Molten::Gui
 
         struct Element
         {
-            Element(WidgetElement* widgetElement);
-            Element(std::unique_ptr<GridElement>&& gridElement);
+            Element(WidgetElement* widgetElement, Element* parent);
+            Element(std::unique_ptr<GridElement>&& gridElement, Element* parent);
 
             using Type = std::variant<WidgetElement*, std::unique_ptr<GridElement>>;
 
+            Element* parent;
+
             const ElementType type;
             Type data;
+
+            bool dynamicSize;
+            Vector2f32 size;
+            Vector2f32 calculatedSize;
+
             Edge* prevEdge;
             Edge* nextEdge;
+
+            static bool IsDynamicSize(WidgetData<TSkin>& widgetData);
         };
 
         struct Edge
@@ -140,30 +143,63 @@ namespace Molten::Gui
 
         void OnAddChild(WidgetData<TSkin>& childData) override;
 
-        bool HandleMouseEvent(const WidgetEventSubType subType, const WidgetEvent::MouseEvent& mouseEvent);
-
-        void UpdateBounds();
-
-        static void UpdateGridElementBounds(GridElement& gridElement, const Bounds2f32& grantedBounds);
-        template<Direction VDirection>
-        static void UpdateDirectionalGridElementBounds(GridElement& gridElement, const Bounds2f32& grantedBounds);
-        //template<Direction VDirection>
-        //static float GetDirectionalBoundsSize(const Bounds2f32& bounds);
-        static void UpdateWidgetElementBounds(WidgetElement& widgetElement, const Bounds2f32& grantedBounds);
-
         static constexpr Direction FlipDirection(const Direction direction);
         static constexpr Direction GetInsertDirection(DockingPosition position);
         static constexpr ElementPosition GetInsertPosition(DockingPosition position);
 
-        template<Direction VDirection>
-        static constexpr float GetDirectionalSizeElement(const Vector2f32& size);
+        bool HandleMouseEvent(const WidgetEventSubType subType, const WidgetEvent::MouseEvent& mouseEvent);
+        bool HandleMousePressEvent(const WidgetEvent::MouseEvent& mouseEvent);
+        bool HandleMouseMoveEvent(const WidgetEvent::MouseEvent& mouseEvent);
+        bool HandleMouseReleaseEvent(const WidgetEvent::MouseEvent& mouseEvent);
+
+        template<Direction VEdgeDirection>
+        bool HandleDirectionalEdgeMovement(float movement);
+
+        template<Direction VEdgeDirection>
+        static constexpr float LockEdgeMovement(const float movement, const Edge& edge);
+
+        void CalculateBounds();
+
+        static void CalculateGridElementBounds(GridElement& gridElement, const Bounds2f32& grantedBounds);
 
         template<Direction VDirection>
-        static Bounds2f32 CutDirectionalHighBounds(Bounds2f32& grantedBounds, const float size);
+        static void CalculateDirectionalGridElementSizes(GridElement& gridElement, const Bounds2f32& grantedBound);
+
+        static constexpr Vector2f32 GetDirectionalMinSize(const Vector2f32& size);
+
+        template<Direction VDirection>
+        static constexpr float GetDirectionalMinWidth(const Vector2f32& size);
+
+        template<Direction VDirection>
+        static constexpr float GetDirectionalWidth(const Vector2f32& size);
+
+        template<Direction VDirection>
+        static constexpr float GetDirectionalHeight(const Vector2f32& size);
+
+        template<Direction VDirection>
+        static constexpr void SetDirectionalWidth(Vector2f32& size, const float width);
+
+        template<Direction VDirection>
+        static constexpr void AddDirectionalWidth(Vector2f32& size, const float width);
+
+        static constexpr void CutWidth(float& widthLeft, const float width);
+        static constexpr void CutAndClampWidth(float& widthLeft, float& width);      
+
+        template<Direction VDirection>
+        static constexpr Bounds2f32 CutDirectionalBounds(Bounds2f32& grantedBounds, const float size);
+
+        template<typename TIterator>
+        static void HideElements(TIterator begin, TIterator end);
 
         Edge* FindIntersectingEdge(const Vector2f32& point);  
 
+
+        static constexpr float m_minElementWidth = 10.0f;
+        static constexpr float m_gridWidth = 5.0f;
+
         Bounds2f32 m_oldGrantedBounds;
+        bool m_forceUpdateBounds;
+
         std::unique_ptr<GridElement> m_rootGrid;
         std::set<std::unique_ptr<Edge>> m_edges;
         std::set<std::unique_ptr<WidgetElement>> m_widgetElements;

@@ -229,13 +229,18 @@ namespace Molten::Editor
 
         // DOCKER TEST
         auto docker = m_canvas->CreateChild<Gui::Docker>();
-        auto pane1 = docker->CreateChild<Gui::Pane>(Vector2f32{ 100.0f, 100.0f }, Gui::DockingPosition::Right);
-        pane1->CreateChild<Gui::Button>();
+        docker->margin = { 2.0f, 2.0f, 2.0f, 2.0f };
+        /*auto pane1 =*/ docker->CreateChild<Gui::Pane>(Vector2f32{ 100.0f, 100.0f }, Gui::DockingPosition::Right);
+       // pane1->CreateChild<Gui::Button>();
 
-        auto pane2 = docker->CreateChild<Gui::Pane>(Vector2f32{ 200.0f, 200.0f }, Gui::DockingPosition::Right);
-        pane2->CreateChild<Gui::Button>();
-        pane2->CreateChild<Gui::Button>();
+        docker->CreateChild<Gui::Pane>(Vector2f32{ 0.0f, 0.0f }, Gui::DockingPosition::Right);
+        docker->CreateChild<Gui::Pane>(Vector2f32{ 0.0f, 0.0f }, Gui::DockingPosition::Right);
 
+        docker->CreateChild<Gui::Pane>(Vector2f32{ 200.0f, 200.0f }, Gui::DockingPosition::Right);
+        /*auto pane2 =*/ docker->CreateChild<Gui::Pane>(Vector2f32{ 200.0f, 200.0f }, Gui::DockingPosition::Right);
+        //pane2->CreateChild<Gui::Button>();
+        //pane2->CreateChild<Gui::Button>();
+        
 
         /*
         Gui::Widget<Gui::DefaultSkin>::CreateChild<Gui::Spacer>(grid);
