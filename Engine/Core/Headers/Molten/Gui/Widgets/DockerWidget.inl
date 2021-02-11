@@ -112,8 +112,8 @@ namespace Molten::Gui
 
     // Docker element implementations.
     template<typename TSkin>
-    Docker<TSkin>::Element::Element(WidgetElement* widgetElement, Element* parent) :
-        parent(parent),
+    Docker<TSkin>::Element::Element(WidgetElement* widgetElement/*, Element* parent*/) :
+        //parent(parent),
         type(ElementType::Widget),
         data(widgetElement),
         dynamicSize(IsDynamicSize(*widgetElement->widgetData)),
@@ -124,8 +124,8 @@ namespace Molten::Gui
     {}
 
     template<typename TSkin>
-    Docker<TSkin>::Element::Element(std::unique_ptr<GridElement>&& gridElement, Element* parent) :
-        parent(parent),
+    Docker<TSkin>::Element::Element(std::unique_ptr<GridElement>&& gridElement/*, Element* parent*/) :
+        //parent(parent),
         type(ElementType::Grid),
         data(std::move(gridElement)),
         dynamicSize(true),
@@ -159,6 +159,16 @@ namespace Molten::Gui
         direction(direction),
         prevElement(prevElement),
         nextElement(nextElement)
+    {}
+
+    // Docker calculated elements implementations.
+    template<typename TSkin>
+    Docker<TSkin>::CalculatedGridElements::CalculatedGridElements(GridElement& gridElement, const Bounds2f32& grantedBounds) :
+        gridElement(gridElement),
+        grantedSize(grantedBounds.GetSize()),
+        grantedBounds(grantedBounds),
+        totalStaticWidth(0.0f),
+        totalDynamicWidth(0.0f)
     {}
 
 
@@ -308,8 +318,11 @@ namespace Molten::Gui
         auto* nextElement = m_pressedEdge->nextElement;
         if (prevElement && nextElement && prevElement->dynamicSize && nextElement->dynamicSize)
         {
-            prevElement->size.x += movement;
-            nextElement->size.x -= movement;
+            //prevElement->size.x += movement;
+           // nextElement->size.x -= movement;
+
+            AddDirectionalHeight<VEdgeDirection>(prevElement->size, movement);
+            AddDirectionalHeight<VEdgeDirection>(nextElement->size, -movement);
         }
         else
         {
@@ -317,14 +330,16 @@ namespace Molten::Gui
             {
                 if (!prevElement->dynamicSize)
                 {
-                    prevElement->size.x += movement;
+                    //prevElement->size.x += movement;
+                    AddDirectionalHeight<VEdgeDirection>(prevElement->size, movement);
                 }
             }
             if (nextElement)
             {
                 if (!nextElement->dynamicSize)
                 {
-                    nextElement->size.x -= movement;
+                    //nextElement->size.x -= movement;
+                    AddDirectionalHeight<VEdgeDirection>(nextElement->size, -movement);
                 }
             }
         }
@@ -389,30 +404,31 @@ namespace Molten::Gui
     template<typename Docker<TSkin>::Direction VDirection>
     void Docker<TSkin>::CalculateDirectionalGridElementSizes(GridElement& gridElement, const Bounds2f32& grantedBounds)
     {
-        /*
-        
-        float totalStaticWidth = 0.0f;
-        float totalDynamicWidth = 0.0f;
-        std::vector<Element*> dynamicElements = {}
+        CalculatedGridElements calculatedGridElements(gridElement, grantedBounds);
+       
+        CalculateElementSizes<VDirection>(calculatedGridElements);
 
-        // CalculateElementSizes<VDirection>(totalStaticWidth, totalDynamicWidth, dynamicElements)
-        // CalculateDynamicSizes<VDirection>(...);
-        // SetElementBounds<VDirection>(...);
+        if(!calculatedGridElements.dynamicElements.empty())
+        {
+            BalanceCalculatedDynamicElements<VDirection>(calculatedGridElements);
+        }
+        if(calculatedGridElements.dynamicElements.empty() && !calculatedGridElements.staticElements.empty())
+        {
+            BalanceCalculatedStaticElements<VDirection>(calculatedGridElements);
+        }
 
+        SetCalculatedElementBounds<VDirection>(calculatedGridElements);
+    }
 
-        */
-
-
-
-        const auto grantedSize = grantedBounds.GetSize();
-        const float grantedWidth = GetDirectionalWidth<VDirection>(grantedSize);
+    template<typename TSkin>
+    template<typename Docker<TSkin>::Direction VDirection>
+    void Docker<TSkin>::CalculateElementSizes(CalculatedGridElements& calculatedGridElements)
+    {
+        const float grantedWidth = GetDirectionalWidth<VDirection>(calculatedGridElements.grantedSize);
         auto widthLeft = grantedWidth;
 
-        float totalStaticWidth = 0.0f;
-        float totalDynamicWidth = 0.0f;
-        std::vector<Element*> dynamicElements = {};     
-
         // Iterate until widthleft is empty.
+        auto& gridElement = calculatedGridElements.gridElement;
         auto it = gridElement.elements.rbegin();
         for (; it != gridElement.elements.rend(); it++)
         {
@@ -424,62 +440,100 @@ namespace Molten::Gui
             auto& element = *it;
             if (element->type == ElementType::Widget) // Widget
             {
-                //auto* widgetElement = std::get<WidgetElement*>(element->data);
-
                 if (element->dynamicSize)
-                {     
+                {
                     float minWidth = GetDirectionalMinWidth<VDirection>(element->size);
                     SetDirectionalWidth<VDirection>(element->calculatedSize, minWidth);
                     CutWidth(widthLeft, m_minElementWidth);
-                    totalDynamicWidth += minWidth;
+                    calculatedGridElements.totalDynamicWidth += minWidth;
 
-                    dynamicElements.push_back(element.get());
+                    calculatedGridElements.dynamicElements.push_back(element.get());
                 }
                 else
                 {
                     float minWidth = GetDirectionalMinWidth<VDirection>(element->size);
                     CutAndClampWidth(widthLeft, minWidth);
                     SetDirectionalWidth<VDirection>(element->calculatedSize, minWidth);
-                    totalStaticWidth += minWidth;
+                    calculatedGridElements.totalStaticWidth += minWidth;
+
+                    calculatedGridElements.staticElements.push_back(element.get());
                 }
             }
             else // Grid
             {
                 // WHAT SHOULD WE DO HERE???
-                /*
-                //auto& childGridElement = std::get<std::unique_ptr<GridElement>>(element->data);
-
-                float minWidth = GetDirectionalMinWidth<VDirection>(element->size);
-
-                CutWidth(widthLeft, minWidth);
-                dynamicElements.push_back(element.get());*/
             }
-        }
-
-        // Calculate dynamic sizes
-        const auto availableDynamicWidth = (grantedWidth - totalStaticWidth) - totalDynamicWidth;
-        const auto partialDynamicWidth = dynamicElements.size() ? availableDynamicWidth / static_cast<float>(dynamicElements.size()) : 0.0f;
-
-        auto dynamicWidthLeft = availableDynamicWidth;
-        for (auto* dynamicElement : dynamicElements)
-        {
-            dynamicWidthLeft -= partialDynamicWidth;
-            AddDirectionalWidth<VDirection>(dynamicElement->calculatedSize, partialDynamicWidth);
-            SetDirectionalWidth<VDirection>(dynamicElement->size, GetDirectionalWidth<VDirection>(dynamicElement->calculatedSize));
         }
 
         // Hide invisible elements.
         HideElements(it, gridElement.elements.rend());
 
-        // Set bounds from calculate sizes.
-        auto endIt = it;
+        calculatedGridElements.activeElementsBegin = gridElement.elements.rbegin();
+        calculatedGridElements.activeElementsEnd = it;
+    }
+
+    template<typename TSkin>
+    template<typename Docker<TSkin>::Direction VDirection>
+    void Docker<TSkin>::BalanceCalculatedDynamicElements(CalculatedGridElements& calculatedGridElements)
+    {
+        if (calculatedGridElements.dynamicElements.empty())
+        {
+            return;
+        }
+
+        const float grantedWidth = GetDirectionalWidth<VDirection>(calculatedGridElements.grantedSize);
+
+        const auto availableWidth = (grantedWidth - calculatedGridElements.totalStaticWidth) - calculatedGridElements.totalDynamicWidth;
+        const auto partialWidth = availableWidth / static_cast<float>(calculatedGridElements.dynamicElements.size());
+
+        auto dynamicWidthLeft = availableWidth;
+        for (auto* element : calculatedGridElements.dynamicElements)
+        {
+            dynamicWidthLeft -= partialWidth;
+            AddDirectionalWidth<VDirection>(element->calculatedSize, partialWidth);
+            SetDirectionalWidth<VDirection>(element->size, GetDirectionalWidth<VDirection>(element->calculatedSize));
+        }
+    }
+
+    template<typename TSkin>
+    template<typename Docker<TSkin>::Direction VDirection>
+    void Docker<TSkin>::BalanceCalculatedStaticElements(CalculatedGridElements& calculatedGridElements)
+    {
+        if (calculatedGridElements.staticElements.empty())
+        {
+            return;
+        }
+
+        const float grantedWidth = GetDirectionalWidth<VDirection>(calculatedGridElements.grantedSize);
+
+        const auto availableWidth = grantedWidth - calculatedGridElements.totalStaticWidth;
+        const auto partialWidth = availableWidth / static_cast<float>(calculatedGridElements.staticElements.size());
+
+        auto dynamicWidthLeft = availableWidth;
+        for (auto* element : calculatedGridElements.staticElements)
+        {
+            dynamicWidthLeft -= partialWidth;
+            AddDirectionalWidth<VDirection>(element->calculatedSize, partialWidth);
+            SetDirectionalWidth<VDirection>(element->size, GetDirectionalWidth<VDirection>(element->calculatedSize));
+        }
+    }
+
+    template<typename TSkin>
+    template<typename Docker<TSkin>::Direction VDirection>
+    void Docker<TSkin>::SetCalculatedElementBounds(CalculatedGridElements& calculatedGridElements)
+    {
+        auto begin = calculatedGridElements.activeElementsBegin;
+        auto end = calculatedGridElements.activeElementsEnd;
+        
+        auto grantedBounds = calculatedGridElements.grantedBounds;
         auto boundsLeft = grantedBounds;
-        for (it = gridElement.elements.rbegin(); it != endIt; it++)
+
+        for (auto it = begin; it != end; it++)
         {
             auto* element = (*it).get();
             auto elementWidth = GetDirectionalWidth<VDirection>(element->calculatedSize);
             auto elementBounds = CutDirectionalBounds<VDirection>(boundsLeft, elementWidth);
-            
+
             if (element->type == ElementType::Widget) // Widget
             {
                 auto* widgetElement = std::get<WidgetElement*>(element->data);
@@ -488,8 +542,17 @@ namespace Molten::Gui
                 auto* prevEdge = element->prevEdge;
                 if (prevEdge)
                 {
-                    prevEdge->bounds = Bounds2f32(elementBounds.left, grantedBounds.top, elementBounds.left, grantedBounds.bottom)
-                        .AddMargins({ 5.0f, 0.0f, 5.0f, 0.0f});
+                    if constexpr (VDirection == Direction::Horizontal)
+                    {
+                        prevEdge->bounds = Bounds2f32(elementBounds.left, grantedBounds.top, elementBounds.left, grantedBounds.bottom)
+                            .AddMargins({ 5.0f, 0.0f, 5.0f, 0.0f });
+                    }
+                    else
+                    {
+                        prevEdge->bounds = Bounds2f32(grantedBounds.left, elementBounds.top, grantedBounds.right, elementBounds.top)
+                            .AddMargins({ 0.0f, 5.0f, 0.0f, 5.0f });
+                    }
+                   
                 }
             }
             else // Grid
@@ -497,7 +560,6 @@ namespace Molten::Gui
                 // WHAT SHOULD WE DO HERE???
             }
         }
-
     }
 
     template<typename TSkin>
@@ -567,6 +629,20 @@ namespace Molten::Gui
 
     template<typename TSkin>
     template<typename Docker<TSkin>::Direction VDirection>
+    constexpr void Docker<TSkin>::SetDirectionalHeight(Vector2f32& size, const float height)
+    {
+        if constexpr (VDirection == Direction::Horizontal)
+        {
+            size.y = height;
+        }
+        else
+        {
+            size.x = height;
+        }
+    }
+
+    template<typename TSkin>
+    template<typename Docker<TSkin>::Direction VDirection>
     constexpr void Docker<TSkin>::AddDirectionalWidth(Vector2f32& size, const float width)
     {
         if constexpr (VDirection == Direction::Horizontal)
@@ -576,6 +652,20 @@ namespace Molten::Gui
         else
         {
             size.y += width;
+        }
+    }
+
+    template<typename TSkin>
+    template<typename Docker<TSkin>::Direction VDirection>
+    constexpr void Docker<TSkin>::AddDirectionalHeight(Vector2f32& size, const float height)
+    {
+        if constexpr (VDirection == Direction::Horizontal)
+        {
+            size.y += height;
+        }
+        else
+        {
+            size.x += height;
         }
     }
 

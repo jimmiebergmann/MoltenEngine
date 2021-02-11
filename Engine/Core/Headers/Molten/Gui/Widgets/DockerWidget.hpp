@@ -107,12 +107,12 @@ namespace Molten::Gui
 
         struct Element
         {
-            Element(WidgetElement* widgetElement, Element* parent);
-            Element(std::unique_ptr<GridElement>&& gridElement, Element* parent);
+            Element(WidgetElement* widgetElement/*, Element* parent*/);
+            Element(std::unique_ptr<GridElement>&& gridElement/*, Element* parent*/);
 
             using Type = std::variant<WidgetElement*, std::unique_ptr<GridElement>>;
 
-            Element* parent;
+            //Element* parent;
 
             const ElementType type;
             Type data;
@@ -140,6 +140,23 @@ namespace Molten::Gui
             Element* nextElement;
         };
 
+        struct CalculatedGridElements
+        {
+            CalculatedGridElements(GridElement& gridElement, const Bounds2f32& grantedBounds);
+
+            using ElementIterator = typename Elements::reverse_iterator;
+
+            GridElement& gridElement;
+            const Bounds2f32 grantedBounds;
+            const Vector2f32 grantedSize;
+            float totalStaticWidth;
+            float totalDynamicWidth;
+            std::vector<Element*> staticElements;
+            std::vector<Element*> dynamicElements;
+            ElementIterator activeElementsBegin;
+            ElementIterator activeElementsEnd;
+        };
+
 
         void OnAddChild(WidgetData<TSkin>& childData) override;
 
@@ -158,6 +175,7 @@ namespace Molten::Gui
         template<Direction VEdgeDirection>
         static constexpr float LockEdgeMovement(const float movement, const Edge& edge);
 
+
         void CalculateBounds();
 
         static void CalculateGridElementBounds(GridElement& gridElement, const Bounds2f32& grantedBounds);
@@ -165,7 +183,21 @@ namespace Molten::Gui
         template<Direction VDirection>
         static void CalculateDirectionalGridElementSizes(GridElement& gridElement, const Bounds2f32& grantedBound);
 
+        template<Direction VDirection>
+        static void CalculateElementSizes(CalculatedGridElements& calculatedGridElements);
+
+        template<Direction VDirection>
+        static void BalanceCalculatedDynamicElements(CalculatedGridElements& calculatedGridElements);
+
+        template<Direction VDirection>
+        static void BalanceCalculatedStaticElements(CalculatedGridElements& calculatedGridElements);
+
+        template<Direction VDirection>
+        static void SetCalculatedElementBounds(CalculatedGridElements& calculatedGridElements);
+
+
         static constexpr Vector2f32 GetDirectionalMinSize(const Vector2f32& size);
+
 
         template<Direction VDirection>
         static constexpr float GetDirectionalMinWidth(const Vector2f32& size);
@@ -176,11 +208,20 @@ namespace Molten::Gui
         template<Direction VDirection>
         static constexpr float GetDirectionalHeight(const Vector2f32& size);
 
+
         template<Direction VDirection>
         static constexpr void SetDirectionalWidth(Vector2f32& size, const float width);
 
         template<Direction VDirection>
+        static constexpr void SetDirectionalHeight(Vector2f32& size, const float height);
+
+
+        template<Direction VDirection>
         static constexpr void AddDirectionalWidth(Vector2f32& size, const float width);
+
+        template<Direction VDirection>
+        static constexpr void AddDirectionalHeight(Vector2f32& size, const float height);
+
 
         static constexpr void CutWidth(float& widthLeft, const float width);
         static constexpr void CutAndClampWidth(float& widthLeft, float& width);      
