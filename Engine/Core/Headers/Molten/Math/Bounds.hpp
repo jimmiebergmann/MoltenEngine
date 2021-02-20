@@ -89,6 +89,9 @@ namespace Molten
         /** Returns a new bounds that represent the union of two(this and another) bounds. */
         constexpr Bounds<2, T> Union(const Bounds<2, T>& bounds) const;
 
+        /** Move lower and highter value by a given distance. */
+        constexpr Bounds<2, T>& Move(const Vector2f32& distance);
+
         /** Creates bounds by growing current bounds by margins. */
         constexpr Bounds<2, T> WithMargins(const Bounds<2, T>& margins) const;
 
@@ -171,6 +174,9 @@ namespace Molten
 
         /** Returns a new bounds that represent the union of two(this and another) bounds. */
         constexpr Bounds<3, T> Union(const Bounds<3, T>& bounds) const;
+
+        /** Move lower and highter value by a given distance. */
+        constexpr Bounds<3, T>& Move(const Vector3f32& distance);
 
         /** Clamps high values to low values if high < low. */
         constexpr Bounds<3, T>& ClampHighToLow();

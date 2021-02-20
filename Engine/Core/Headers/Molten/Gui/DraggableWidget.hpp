@@ -23,23 +23,25 @@
 *
 */
 
+#ifndef MOLTEN_CORE_GUI_DRAGGABLEWIDGET_HPP
+#define MOLTEN_CORE_GUI_DRAGGABLEWIDGET_HPP
+
+#include "Molten/Math/Bounds.hpp"
+
 namespace Molten::Gui
 {
 
-    template<typename TSkin>
-    DockingWidget<TSkin>::DockingWidget(
-        WidgetData<TSkin>& data,
-        const Vector2f32& size,
-        const DockingPosition position
-    ) :
-        Widget<TSkin>(data, size),
-        m_initialPosition(position)
-    {}
-
-    template<typename TSkin>
-    DockingPosition DockingWidget<TSkin>::GetInitialPosition() const
+    class DraggableWidget
     {
-        return m_initialPosition;
-    }
+
+    public:
+
+        virtual ~DraggableWidget() = default;
+
+        virtual const Bounds2f32& GetDragBounds() const = 0;
+
+    };
 
 }
+
+#endif

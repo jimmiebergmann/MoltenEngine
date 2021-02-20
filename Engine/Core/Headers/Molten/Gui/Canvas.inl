@@ -115,80 +115,6 @@ namespace Molten::Gui
         return m_scale;
     }
 
-    /*template<typename TSkin>
-    template<template<typename> typename TLayer>
-    inline LayerTypePointer<TLayer<TSkin>> Canvas<TSkin>::CreateChild(const LayerPosition position)
-    {
-        static_assert(std::is_base_of<Gui::Layer<TSkin>, TLayer<TSkin>>::value, "TLayerType is not base of Layer.");
-
-        auto layer = std::make_shared<TLayer<TSkin>>(m_skin);
-
-        m_allLayers.insert(layer);
-
-        if (position == LayerPosition::Top)
-        {
-            m_activeLayers.push_back(layer);
-        }
-        else
-        {
-            m_activeLayers.push_front(layer);
-        }
-
-        return layer;
-        return nullptr;
-    }*/
-
-    //template<typename TSkin>
-    //template<template<typename> typename TWidgetType, typename ... TArgs>
-    //WidgetTypePointer<TWidgetType<TSkin>> Canvas<TSkin>::CreateChild(TArgs ... args)
-    //{
-    //    static_assert(std::is_base_of<Gui::Widget<TSkin>, TWidgetType<TSkin>>::value, "TWidgetType is not base of Widget.");
-
-    //    /*auto widgetData = std::make_shared<WidgetData<TSkin>>(this);
-    //    auto& widgetDataRef = *widgetData.get();
-
-    //    auto widget = std::make_shared<TWidgetType<TSkin>>(*widgetData.get(), args...);
-    //    widgetData->widget = widget;
-
-    //    if (!AddWidgetToTree(nullptr, widgetData))
-    //    {
-    //        return nullptr;
-    //    }
-
-    //    widgetData->widgetSkin = m_skin.template Create<TWidgetType<TSkin>>(*widget.get(), widgetDataRef);
-
-    //    return widget;*/
-
-    //    return nullptr;
-    //}
-
-    /*template<typename TSkin>
-    template<template<typename> typename TLayerType, typename ... TArgs>
-    LayerTypePointer<TLayerType<TSkin>> Canvas<TSkin>::CreateRootLayer(TArgs ... args)
-    {
-        static_assert(std::is_base_of<Gui::Layer<TSkin>, TLayerType<TSkin>>::value, "TLayerType is not base of Molten::Gui::Layer.");
-
-        auto normalLane = m_widgetTree.template GetLane<typename WidgetData<TSkin>::TreeNormalLaneType>();
-        auto partialLane = m_widgetTree.template GetLane<typename WidgetData<TSkin>::TreePartialLaneType>();
-
-        if (!normalLane.IsEmpty())
-        {
-            return nullptr;
-        }
-
-        auto widgetData = std::make_shared<WidgetData<TSkin>>();
-        auto layer = std::make_shared<TLayerType<TSkin>>(*widgetData.get(), args...);
-
-        widgetData->canvas = this;
-        widgetData->layer = nullptr;
-        widgetData->tree = &m_widgetTree;
-        widgetData->iterator = m_widgetTree.Insert(partialLane, normalLane.end(), widgetData);
-        widgetData->widget = layer;
-        widgetData->widgetSkin = m_skin.template Create<TLayerType<TSkin>>(*layer.get(), *widgetData.get());
-
-        return layer;
-    } */
-
     template<typename TSkin>
     template<template<typename> typename TWidgetType, typename ... TArgs>
     WidgetTypePointer<TWidgetType<TSkin>> Canvas<TSkin>::CreateChild(TArgs ... args)
@@ -213,29 +139,12 @@ namespace Molten::Gui
         widgetData->widget = widget;
         widgetData->widgetSkin = m_skin.template Create<TWidgetType<TSkin>>(*widget.get(), *widgetData.get());
 
-        if constexpr (std::is_base_of_v<DockingWidget<TSkin>, TWidgetType<TSkin>>)
-        {
-            auto* parentDockerWidget = dynamic_cast<Docker<TSkin>*>(parentData.widget.get());
-            if (parentDockerWidget != nullptr)
-            {
-                auto* eventHandler = static_cast<WidgetEventHandler*>(widget.get());
-                auto* parentEventHandler = static_cast<WidgetEventHandler*>(parentDockerWidget);
-                widgetData->mouseEventFunction = [handler = eventHandler, parentHandler = parentEventHandler](const WidgetEvent& widgetEvent)
-                {
-                    if (parentHandler->HandleEvent(widgetEvent))
-                    {
-                        return true;
-                    }
-                    return handler->HandleEvent(widgetEvent);
-                };
-            }
-        }
-        else if constexpr (std::is_base_of_v<WidgetEventHandler, TWidgetType<TSkin>>)
+        if constexpr (std::is_base_of_v<WidgetEventHandler, TWidgetType<TSkin>>)
         {
             auto* eventHandler = static_cast<WidgetEventHandler*>(widget.get());
             widgetData->mouseEventFunction = [handler = eventHandler](const WidgetEvent& widgetEvent)
             {
-                return handler->HandleEvent(widgetEvent);;
+                return handler->HandleEvent(widgetEvent);
             };
         }
 
@@ -263,13 +172,15 @@ namespace Molten::Gui
         widgetData->widget = widget;
         widgetData->widgetSkin = m_skin.template Create<TWidgetType<TSkin>>(*widget.get(), *widgetData.get());       
 
-        if constexpr (std::is_base_of_v<DockingWidget<TSkin>, TWidgetType<TSkin>>)
+        parentData.widget->OnAddChild(*widgetData.get());
+
+        auto* parentWidget = parentData.widget.get();
+        auto* parentEventHandler = dynamic_cast<WidgetEventHandler*>(parentWidget);
+        if (parentEventHandler && parentWidget->GetOverrideChildrenMouseEvents())
         {
-            auto* parentDockerWidget = dynamic_cast<Docker<TSkin>*>(parentData.widget.get());
-            if (parentDockerWidget != nullptr)
+            if constexpr (std::is_base_of_v<WidgetEventHandler, TWidgetType<TSkin>>)
             {
                 auto* eventHandler = static_cast<WidgetEventHandler*>(widget.get());
-                auto* parentEventHandler = static_cast<WidgetEventHandler*>(parentDockerWidget);
                 widgetData->mouseEventFunction = [handler = eventHandler, parentHandler = parentEventHandler](const WidgetEvent& widgetEvent)
                 {
                     if (parentHandler->HandleEvent(widgetEvent))
@@ -279,21 +190,22 @@ namespace Molten::Gui
                     return handler->HandleEvent(widgetEvent);
                 };
             }
-        }
-        else if constexpr (std::is_base_of_v<WidgetEventHandler, TWidgetType<TSkin>>)
-        {
-            if constexpr (TWidgetType<TSkin>::handleMouseEvents)
+            else
             {
-                auto* eventHandler = static_cast<WidgetEventHandler*>(widget.get());
-                widgetData->mouseEventFunction = [handler = eventHandler](const WidgetEvent& widgetEvent)
+                widgetData->mouseEventFunction = [parentHandler = parentEventHandler](const WidgetEvent& widgetEvent)
                 {
-                    return handler->HandleEvent(widgetEvent);
+                    return parentHandler->HandleEvent(widgetEvent);
                 };
             }
+        }  
+        else if(std::is_base_of_v<WidgetEventHandler, TWidgetType<TSkin>>)
+        {
+            auto* eventHandler = static_cast<WidgetEventHandler*>(widget.get());
+            widgetData->mouseEventFunction = [handler = eventHandler](const WidgetEvent& widgetEvent)
+            {
+                return handler->HandleEvent(widgetEvent);
+            };
         }
-
-        //parentData.widget->OnAddChild(widget);
-        parentData.widget->OnAddChild(*widgetData.get());
 
         return widget;
     }
@@ -470,45 +382,5 @@ namespace Molten::Gui
 
         m_pressedWidget = nullptr;
     }
-
-
-    //template<typename TSkin>
-    //inline bool Canvas<TSkin>::AddWidgetToTree(Widget<TSkin>* parent, WidgetDataPointer<TSkin> childData)
-    //{
-    //    if (!parent)
-    //    {
-    //        /*auto normalLane = m_widgetTree.template GetLane<typename WidgetData<TSkin>::TreeNormalLaneType>();
-    //        auto partialLane = m_widgetTree.template GetLane<typename WidgetData<TSkin>::TreePartialLaneType>();
-    //        if (!normalLane.IsEmpty())
-    //        {
-    //            return false;
-    //        }
-
-    //        childData->tree = &m_widgetTree;
-    //        childData->iterator = m_widgetTree.Insert(partialLane, normalLane.end(), childData);*/
-
-    //        //m_widgetMap.insert({ childData->widget.get(), childData });
-    //    }
-    //    else
-    //    {
-    //        /*auto parentIt = m_widgetMap.find(parent);
-    //        if (parentIt == m_widgetMap.end())
-    //        {
-    //            return false;
-    //        }*/
-
-    //       /* auto* parentData = parentIt->second.get();
-    //        auto* parentTreeItem = std::addressof(*parentData->iterator);
-    //        auto parentNormalLane = parentTreeItem->GetChildren().template GetLane<typename WidgetData<TSkin>::TreeNormalLaneType>();
-    //        auto parentPartialLane = parentTreeItem->GetChildren().template GetLane<typename WidgetData<TSkin>::TreePartialLaneType>();
-
-    //        childData->tree = &m_widgetTree;
-    //        childData->iterator = m_widgetTree.Insert(parentPartialLane, parentNormalLane.end(), childData);
-    //        */
-    //        //m_widgetMap.insert({ childData->widget.get(), childData });
-    //    }
-
-    //    return true;
-    //}
 
 }

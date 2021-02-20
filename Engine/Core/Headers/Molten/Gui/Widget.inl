@@ -25,13 +25,15 @@
 
 namespace Molten::Gui
 {
+
+    // Widget base class implementations.
     template<typename TSkin>
-    inline Widget<TSkin>::Widget(WidgetData<TSkin>& data) :
+    Widget<TSkin>::Widget(WidgetData<TSkin>& data) :
         m_data(data)
     {}
 
     template<typename TSkin>
-    inline Widget<TSkin>::Widget(
+    Widget<TSkin>::Widget(
         WidgetData<TSkin>& data,
         const Vector2f32& size
     ) :
@@ -40,40 +42,24 @@ namespace Molten::Gui
     {}
 
     template<typename TSkin>
+    bool Widget<TSkin>::GetOverrideChildrenMouseEvents() const
+    {
+        return overrideChildrenMouseEvents;
+    }
+
+    template<typename TSkin>
     void Widget<TSkin>::Update()
     {}
 
-    /*template<typename TSkin>
-    inline Layer<TSkin>& Widget<TSkin>::GetLayer()
-    {
-        return *m_data.layer;
-    }
-    template<typename TSkin>
-    inline const Layer<TSkin>& Widget<TSkin>::GetLayer() const
-    {
-        return *m_data.layer;
-    }
-
-    template<typename TSkin>
-    inline WidgetSkinBase& Widget<TSkin>::GetSkin()
-    {
-        return *m_data.skin;
-    }
-    template<typename TSkin>
-    inline const WidgetSkinBase& Widget<TSkin>::GetSkin() const
-    {
-        return *m_data.skin;
-    }*/
-
     template<typename TSkin>
     template<template<typename> typename TWidgetType, typename ... TArgs>
-    inline WidgetTypePointer<TWidgetType<TSkin>> Widget<TSkin>::CreateChild(TArgs ... args)
+    WidgetTypePointer<TWidgetType<TSkin>> Widget<TSkin>::CreateChild(TArgs ... args)
     {
         return m_data.canvas->template CreateChild<TWidgetType>(*this, std::forward<TArgs>(args)...);
     }
 
     template<typename TSkin>
-    inline bool Widget<TSkin>::OnAddChild(WidgetPointer<TSkin>)
+    bool Widget<TSkin>::OnAddChild(WidgetPointer<TSkin>)
     {
         return false;
     }
@@ -84,7 +70,7 @@ namespace Molten::Gui
     }
 
     template<typename TSkin>
-    inline void Widget<TSkin>::SetSkinState(WidgetSkinStateType state)
+    void Widget<TSkin>::SetSkinState(WidgetSkinStateType state)
     {
         m_data.widgetSkin->SetState(state);
     }
@@ -129,6 +115,27 @@ namespace Molten::Gui
     {
         auto grantedBounds = m_data.GetGrantedBounds().WithoutMargins(margin).ClampHighToLow();
         m_data.SetGrantedBounds(grantedBounds);
+    }
+
+
+    // Widget mixin implementations.
+    template<typename TSkin, typename TWidget>
+    WidgetMixin<TSkin, TWidget>::WidgetMixin(WidgetData<TSkin>& data):
+        Widget<TSkin>(data)
+    {}
+
+    template<typename TSkin, typename TWidget>
+    WidgetMixin<TSkin, TWidget>::WidgetMixin(
+        WidgetData<TSkin>& data,
+        const Vector2f32& size
+    ) :
+        Widget<TSkin>(data, size)
+    {}
+
+    template<typename TSkin, typename TWidget>
+    bool WidgetMixin<TSkin, TWidget>::GetOverrideChildrenMouseEvents() const
+    {
+        return TWidget::overrideChildrenMouseEvents;
     }
 
 }

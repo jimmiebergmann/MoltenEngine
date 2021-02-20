@@ -153,6 +153,9 @@ namespace Molten
         /** Set current title of window. */
         virtual void SetTitle(const std::string& title) = 0;
 
+        /** Set current cursor.*/
+        virtual void SetCursor(const Mouse::Cursor cursor) = 0;
+
         /** Get current DPI of window. */
         virtual Vector2ui32 GetDpi() const = 0;
 

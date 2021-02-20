@@ -27,7 +27,7 @@
 #define MOLTEN_CORE_GUI_CANVAS_HPP
 
 #include "Molten/Gui/GuiTypes.hpp"
-#include "Molten/Gui/DockingWidget.hpp"
+//#include "Molten/Gui/DockingWidget.hpp"
 #include "Molten/Gui/Widgets/DockerWidget.hpp"
 #include "Molten/Gui/WidgetData.hpp"
 #include "Molten/Gui/WidgetEvent.hpp"
@@ -78,15 +78,6 @@ namespace Molten::Gui
         const Vector2f32& GetSize() const;
         const Vector2f32& GetScale() const;
 
-        //template<template<typename> typename TLayer>
-        //LayerTypePointer<TLayer<TSkin>> CreateChild(const LayerPosition position = LayerPosition::Top);
-
-        //template<template<typename> typename TWidgetType, typename ... TArgs>
-        //WidgetTypePointer<TWidgetType<TSkin>> CreateChild(TArgs ... args);
-
-        //template<template<typename> typename TLayerType, typename ... TArgs>
-        //LayerTypePointer<TLayerType<TSkin>> CreateRootLayer(TArgs ... args);
-
         template<template<typename> typename TWidgetType, typename ... TArgs>
         WidgetTypePointer<TWidgetType<TSkin>> CreateChild(TArgs ... args);
 
@@ -107,21 +98,11 @@ namespace Molten::Gui
         void HandleMousePressed(UserInput::Event& mouseEvent);
         void HandleMouseReleased(UserInput::Event& mouseEvent);
 
-
-        //bool AddWidgetToTree(Widget<TSkin>* parent, WidgetDataPointer<TSkin> childData);
-
-        //using LayerPointerList = std::list<LayerPointer<TSkin>>;
-        //using LayerPointerSet = std::set<LayerPointer<TSkin>>;
-
         Renderer& m_backendRenderer;
         CanvasRendererPointer m_renderer;
 
         TSkin m_skin;
-        typename WidgetData<TSkin>::Tree m_widgetTree;
-
-        //LayerPointerSet m_allLayers;
-        //LayerPointerList m_activeLayers;
-        //LayerPointerSet m_inactiveLayers;       
+        typename WidgetData<TSkin>::Tree m_widgetTree;    
      
         Vector2f32 m_size;
         Vector2f32 m_scale;
@@ -129,8 +110,6 @@ namespace Molten::Gui
         std::vector<UserInput::Event> m_userInputEvents;
         WidgetPointer<TSkin> m_hoveredWidget;
         WidgetPointer<TSkin> m_pressedWidget;
-
-        
 
     };
 

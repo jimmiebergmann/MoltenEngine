@@ -94,7 +94,7 @@ namespace Molten::Editor
             Clock tickTimer;
             while(m_isRunning)
             {
-                m_fpsLimiter.Reset();
+                m_fpsLimiter.Reset();               
 
                 m_deltaTime = tickTimer.GetTime();
                 tickTimer.Reset();
@@ -230,16 +230,25 @@ namespace Molten::Editor
         // DOCKER TEST
         auto docker = m_canvas->CreateChild<Gui::Docker>();
         docker->margin = { 2.0f, 2.0f, 2.0f, 2.0f };
-        /*auto pane1 =*/ docker->CreateChild<Gui::Pane>(Vector2f32{ 100.0f, 100.0f }, Gui::DockingPosition::Right);
-       // pane1->CreateChild<Gui::Button>();
 
-        docker->CreateChild<Gui::Pane>(Vector2f32{ 0.0f, 0.0f }, Gui::DockingPosition::Right);
-        docker->CreateChild<Gui::Pane>(Vector2f32{ 0.0f, 0.0f }, Gui::DockingPosition::Right);
+        docker->onCursorChange.Connect([&](Mouse::Cursor cursor)
+        {
+            m_window->SetCursor(cursor);
+        });
 
-        docker->CreateChild<Gui::Pane>(Vector2f32{ 200.0f, 200.0f }, Gui::DockingPosition::Right);
-        /*auto pane2 =*/ docker->CreateChild<Gui::Pane>(Vector2f32{ 200.0f, 200.0f }, Gui::DockingPosition::Right);
-        //pane2->CreateChild<Gui::Button>();
-        //pane2->CreateChild<Gui::Button>();
+        auto pane1 = docker->CreateChild<Gui::Pane>(Gui::DockingPosition::Left, true, Vector2f32{ 100.0f, 100.0f });
+        docker->CreateChild<Gui::Pane>(Gui::DockingPosition::Right, false, Vector2f32{ 100.0f, 100.0f });
+        docker->CreateChild<Gui::Pane>(Gui::DockingPosition::Bottom, false, Vector2f32{ 100.0f, 100.0f });
+        auto pane4 = docker->CreateChild<Gui::Pane>(Gui::DockingPosition::Right, false, Vector2f32{ 100.0f, 100.0f });
+        docker->CreateChild<Gui::Pane>(Gui::DockingPosition::Top, false, Vector2f32{ 100.0f, 100.0f });
+        docker->CreateChild<Gui::Pane>(Gui::DockingPosition::Left, false, Vector2f32{ 100.0f, 100.0f });
+
+
+        pane1->CreateChild<Gui::Button>();
+        pane4->CreateChild<Gui::Button>();
+
+
+        
         
 
         /*
@@ -289,7 +298,7 @@ namespace Molten::Editor
         {
             const auto fps = 1.0f / m_deltaTime.AsSeconds<double>();
             m_window->SetTitle(m_windowTitle + " - FPS: " + std::to_string(fps));
-
+            
             m_windowTitleUpdateClock.Reset();
         }
        
@@ -329,7 +338,7 @@ namespace Molten::Editor
 
         m_canvas->SetSize(m_window->GetSize());
         m_canvas->SetScale(m_window->GetScale());
-        m_canvas->Update(Time::Zero);
+        m_canvas->Update(m_deltaTime);
     }
 
 }

@@ -29,11 +29,6 @@
 #include "Molten/Gui/GuiTypes.hpp"
 #include "Molten/Gui/SpacingTypes.hpp"
 #include "Molten/Gui/WidgetData.hpp"
-#include "Molten/Gui/Layer.hpp"
-#include "Molten/Math/Vector.hpp"
-#include "Molten/Math/Bounds.hpp"
-#include "Molten/System/Time.hpp"
-#include <algorithm>
 
 namespace Molten::Gui
 {
@@ -44,29 +39,29 @@ namespace Molten::Gui
 
     public:
 
+        static constexpr bool overrideChildrenMouseEvents = false;
+
         Vector2f32 size;
         MarginType margin;
         PaddingType padding;
 
         explicit Widget(WidgetData<TSkin>& data);
-        Widget(WidgetData<TSkin>& data, const Vector2f32& size);
+        Widget(
+            WidgetData<TSkin>& data,
+            const Vector2f32& size);
 
         virtual ~Widget() = default;
 
+        virtual bool GetOverrideChildrenMouseEvents() const;
+
         virtual void Update();
-
-        /*Layer<TSkin>& GetLayer();
-        const Layer<TSkin>& GetLayer() const;
-
-        WidgetSkinBase& GetSkin();
-        const WidgetSkinBase& GetSkin() const;*/
 
         template<template<typename> typename TWidgetType, typename ... TArgs>
         WidgetTypePointer<TWidgetType<TSkin>> CreateChild(TArgs ... args);
 
     protected:
 
-        virtual bool OnAddChild(WidgetPointer<TSkin> child); // Delete
+        virtual bool OnAddChild(WidgetPointer<TSkin> child); // Delete (???)
 
         virtual void OnAddChild(WidgetData<TSkin>& childData);
 
@@ -84,31 +79,13 @@ namespace Molten::Gui
 
         void ApplyMarginsToGrantedBounds();
 
-       /* Bounds2f& ApplyMargin();
-
-        Bounds2f& ApplyMargin();*/
-
-        /*Bounds2f32& CalculateBounds(const Bounds2f32& margin)
-        {
-            m_grantedBounds = m_grantedBounds.RemoveMargins(margin);
-            m_grantedBounds.ClampHighToLow();
-            return m_grantedBounds;
-        }
-
-        Bounds2f32 CalculateContentBounds(const Bounds2f32& padding)
-        {
-            auto contentBounds = m_grantedBounds.RemoveMargins(padding);
-            contentBounds.ClampHighToLow();
-            return contentBounds;
-        }*/
-
     private:
         
         template<typename TLayerSkin>
         friend class Canvas;
 
         template<typename TLayerSkin>
-        friend class Layer;
+        friend class Layer; // Delete due to obsolete template?
 
         friend TSkin;
 
@@ -118,6 +95,22 @@ namespace Molten::Gui
         Widget& operator= (Widget&&) = delete;
 
         WidgetData<TSkin>& m_data;
+
+    };
+
+
+    template<typename TSkin, typename TWidget>
+    class WidgetMixin : public Widget<TSkin>
+    {
+
+    public:
+
+        explicit WidgetMixin(WidgetData<TSkin>& data);
+        WidgetMixin(
+            WidgetData<TSkin>& data,
+            const Vector2f32& size);
+
+        virtual bool GetOverrideChildrenMouseEvents() const override;
 
     };
 

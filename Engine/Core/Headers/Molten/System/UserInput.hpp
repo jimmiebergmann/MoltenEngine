@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -46,6 +46,14 @@ namespace Molten
             Right,
             Forward,
             Backward
+        };
+
+        enum class Cursor
+        {
+            Normal,         ///< Normal arrow.
+            SizeLeftRight,  ///< Arrows left and right 
+            SizeUpDown,     ///< Arrows up and down
+            SizeAll         ///< Arrows pointing in all four directions, left, right, up and down.
         };
 
         /** Checks if mouse button is currently pressed down. */

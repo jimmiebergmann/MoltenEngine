@@ -231,6 +231,10 @@ namespace Molten
     {
     }
 
+    void WindowX11::SetCursor(const Mouse::Cursor /*cursor*/)
+    {
+    }
+
     Vector2ui32 WindowX11::GetDpi() const
     {
         return { 96, 96 };

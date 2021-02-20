@@ -142,6 +142,9 @@ namespace Molten
         /** Get title of window, being rendered in client area. */
         virtual std::string GetTitle() const override;
 
+        /** Set current cursor.*/
+        virtual void SetCursor(const Mouse::Cursor cursor) override;
+
         /** Get user input of window.
          *  The method Update is being called and managed by the window.
          */
@@ -220,6 +223,7 @@ namespace Molten
         Vector2i32 m_position;
         std::string m_title;
         Vector2ui32 m_dpi;
+        Mouse::Cursor m_cursor;
 
         UserInput m_userInput;
 

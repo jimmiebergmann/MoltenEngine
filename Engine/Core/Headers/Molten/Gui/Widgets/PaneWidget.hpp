@@ -26,14 +26,15 @@
 #ifndef MOLTEN_CORE_GUI_WIDGETS_PANEWIDGET_HPP
 #define MOLTEN_CORE_GUI_WIDGETS_PANEWIDGET_HPP
 
-#include "Molten/Gui/DockingWidget.hpp"
+#include "Molten/Gui/Widget.hpp"
+#include "Molten/Gui/DraggableWidget.hpp"
 #include "Molten/Gui/WidgetEvent.hpp"
 
 namespace Molten::Gui
 {
 
     template<typename TSkin>
-    class Pane : public DockingWidget<TSkin>, public WidgetEventHandler
+    class Pane : public Widget<TSkin>, public DraggableWidget, public WidgetEventHandler
     {
 
     public:
@@ -43,12 +44,17 @@ namespace Molten::Gui
 
         explicit Pane(
             WidgetData<TSkin>& data,
-            const Vector2f32& size,
-            const DockingPosition position = DockingPosition::Left);
+            const Vector2f32& size);
 
         void Update() override;
 
         bool HandleEvent(const WidgetEvent& widgetEvent) override;
+
+        const Bounds2f32& GetDragBounds() const override;
+
+    private:
+
+        Bounds2f32 m_dragBounds;
 
     };
 

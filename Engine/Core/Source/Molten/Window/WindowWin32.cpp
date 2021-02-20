@@ -155,7 +155,8 @@ namespace Molten
         m_size(0, 0),
         m_position(0, 0),
         m_title(""),
-        m_dpi(96, 96)
+        m_dpi(96, 96),
+        m_cursor(Mouse::Cursor::Normal)
     {
     }
 
@@ -437,6 +438,11 @@ namespace Molten
         m_title = title;
     }
 
+    void WindowWin32::SetCursor(const Mouse::Cursor cursor)
+    {
+        m_cursor = cursor;
+    }
+
     Vector2ui32 WindowWin32::GetDpi() const
     {
         return m_dpi;
@@ -662,6 +668,25 @@ namespace Molten
 
             m_position = position;
             OnMove(m_position);
+        } break;
+        case WM_SETCURSOR:
+        {
+            if (LOWORD(lParam) == HTCLIENT)
+            {
+                auto cursorName = IDC_ARROW;
+                switch (m_cursor)
+                {
+                    case Mouse::Cursor::SizeLeftRight: cursorName = IDC_SIZEWE; break;
+                    case Mouse::Cursor::SizeUpDown: cursorName = IDC_SIZENS; break;
+                    case Mouse::Cursor::SizeAll: cursorName = IDC_SIZEALL; break;
+                    default: break;
+                }
+
+                auto hCursor = ::LoadCursorA(NULL, cursorName);
+                ::SetCursor(hCursor);
+                return 0;
+            }
+           
         } break;
         case WM_ERASEBKGND: return 0;
         // Keyboard events.

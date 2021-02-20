@@ -29,22 +29,42 @@ namespace Molten::Gui
     template<typename TSkin>
     inline Pane<TSkin>::Pane(
         WidgetData<TSkin>& data,
-        const Vector2f32& size,
-        const DockingPosition position
+        const Vector2f32& size
     ) :
-        DockingWidget<TSkin>(data, size, position)
+        Widget<TSkin>(data, size)
     {}
 
     template<typename TSkin>
     void Pane<TSkin>::Update()
     {
        ApplyMarginsToGrantedBounds();
+
+       auto& grantedBounds = GetGrantedBounds();
+
+       m_dragBounds = grantedBounds;
+       m_dragBounds.bottom = m_dragBounds.top + 20.0f;
+
+       auto childLane = GetChildrenPartialLane();
+
+       if (childLane.GetSize() > 0)
+       {
+           auto& childData = (*childLane.begin()).GetValue();
+           auto contentBounds = grantedBounds.WithoutMargins(padding).ClampHighToLow();
+           childData->SetGrantedBounds(contentBounds);
+       }
+
     }
 
     template<typename TSkin>
     bool Pane<TSkin>::HandleEvent(const WidgetEvent& /*widgetEvent*/)
     {
         return false;
+    }
+
+    template<typename TSkin>
+    const Bounds2f32& Pane<TSkin>::GetDragBounds() const
+    {
+        return m_dragBounds;
     }
 
 }

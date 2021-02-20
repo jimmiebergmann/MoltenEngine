@@ -94,6 +94,14 @@ namespace Molten
     }
 
     template<typename T>
+    constexpr Bounds<2, T>& Bounds<2, T>::Move(const Vector2f32& distance)
+    {
+        low += distance;
+        high += distance;
+        return *this;
+    }
+
+    template<typename T>
     constexpr Bounds<2, T> Bounds<2, T>::WithMargins(const Bounds<2, T>& margins) const
     {
         return { low - margins.low, high + margins.high };
@@ -203,6 +211,14 @@ namespace Molten
             std::min(high.y, bounds.high.y),
             std::min(high.z, bounds.high.z)
         };
+    }
+
+    template<typename T>
+    constexpr Bounds<3, T>& Bounds<3, T>::Move(const Vector3f32& distance)
+    {
+        low += distance;
+        high += distance;
+        return *this;
     }
 
     template<typename T>

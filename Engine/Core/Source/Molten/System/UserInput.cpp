@@ -37,6 +37,7 @@ namespace Molten
     {
         return ((::GetKeyState(UserInput::ConvertToWin32Button(button)) & 0x100) != 0);
     }
+
 #elif MOLTEN_PLATFORM == MOLTEN_PLATFORM_LINUX
 
     bool Mouse::IsDown(const Button)
