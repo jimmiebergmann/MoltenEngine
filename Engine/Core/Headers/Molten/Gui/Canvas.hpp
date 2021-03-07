@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -27,7 +27,6 @@
 #define MOLTEN_CORE_GUI_CANVAS_HPP
 
 #include "Molten/Gui/GuiTypes.hpp"
-//#include "Molten/Gui/DockingWidget.hpp"
 #include "Molten/Gui/Widgets/DockerWidget.hpp"
 #include "Molten/Gui/WidgetData.hpp"
 #include "Molten/Gui/WidgetEvent.hpp"
@@ -40,6 +39,7 @@
 #include <list>
 #include <set>
 #include <vector>
+#include <functional>
 
 namespace Molten
 {
@@ -84,6 +84,18 @@ namespace Molten::Gui
         template<template<typename> typename TWidgetType, typename ... TArgs>
         WidgetTypePointer<TWidgetType<TSkin>> CreateChild(Widget<TSkin>& parent, TArgs ... args);
 
+        /** This function call makes the provided widget to receive all mouse events, 
+          * regardless of child widgets on top being hovered or pressed, until the mouse button is released.
+          */
+        void OverrideMouseEventsUntilMouseRelease(Widget<TSkin>& widget);
+        void OverrideMouseEventsReset();
+
+        /** This function makes it possible to draw on top of all other drawn widgets in the canvas.
+          * Draw commands are executed in Draw() after the regular widget tree draw calls are made.
+          * Pushed commands are removed from the draw command queue after drawn.
+          */
+        void PushTopDrawCommand(std::function<void()> && drawCommand);
+
     private:
 
         Canvas(Canvas&&) = delete;
@@ -91,12 +103,22 @@ namespace Molten::Gui
         Canvas& operator= (Canvas&&) = delete;
         Canvas& operator= (const Canvas&) = delete;
 
-        void UpdateUserInputs();
-        void UpdateWidgetSkins();
+        void UpdateUserInputs(); 
+        
+        void UpdateTreeMouseInputs(const UserInput::Event& mouseEvent);
+        void HandleTreeMouseMove(const UserInput::Event& mouseEvent);
+        void HandleTreeMouseButtonPressed(const UserInput::Event& mouseEvent);
+        void HandleTreeMouseButtonReleased(const UserInput::Event& mouseEvent);
+        
+        void UpdateModalMouseInputs(const UserInput::Event& mouseEvent);
+        void HandleModalMouseMove(const UserInput::Event& mouseEvent);
+        void HandleModalMouseButtonPressed(const UserInput::Event& mouseEvent);
+        void HandleModalMouseButtonReleased(const UserInput::Event& mouseEvent);
 
-        void HandleMouseMove(UserInput::Event& mouseEvent);
-        void HandleMousePressed(UserInput::Event& mouseEvent);
-        void HandleMouseReleased(UserInput::Event& mouseEvent);
+        void HandleMouseMoveTriggers(WidgetData<TSkin>& widgetData, const Vector2i32& position);
+        void TriggerMouseMoveEvent(WidgetData<TSkin>& widgetData, const Vector2f32& position, const WidgetEventSubType subType);
+
+        void UpdateWidgetSkins();
 
         Renderer& m_backendRenderer;
         CanvasRendererPointer m_renderer;
@@ -109,8 +131,10 @@ namespace Molten::Gui
 
         std::vector<UserInput::Event> m_userInputEvents;
         WidgetPointer<TSkin> m_hoveredWidget;
-        WidgetPointer<TSkin> m_pressedWidget;
-
+        Widget<TSkin>* m_pressedWidget;
+        Widget<TSkin>* m_widgetOverrideMouseEvents;
+        void(Canvas<TSkin>::* m_mouseInputUpdate)(const UserInput::Event&);
+        std::vector<std::function<void()>> m_topDrawCommands;
     };
 
 }

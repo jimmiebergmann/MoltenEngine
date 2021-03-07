@@ -33,6 +33,7 @@
 #include <memory>
 #include <vector>
 #include <map>
+#include <set>
 #include <queue>
 #include <list>
 #include <limits>
@@ -52,32 +53,48 @@ namespace Molten::Gui
     };
 
     template<typename TSkin>
-    class Docker : public WidgetMixin<TSkin, Docker<TSkin>>, public WidgetEventHandler
+    class Docker : public WidgetMixin<TSkin, Docker>, public WidgetEventHandler
     {
 
     public:
+
+        static constexpr bool overrideChildrenMouseEvents = true;
+        static constexpr bool handleKeyboardEvents = false;
+        static constexpr bool handleMouseEvents = true;
+
+        float edgeWidth = WidgetSkinType::edgeWidth;
+        float spacing = WidgetSkinType::spacing;
+        float widgetDragActivationDistance = WidgetSkinType::widgetDragActivationDistance;
+        Vector2f32 minElementSize = { 30.0f, 30.0f };
+
+        Signal<Mouse::Cursor> onCursorChange;
 
         struct State
         {
             enum class Type
             {
                 Normal,
-                MoveEdge
+                EdgeDrag,
+                LeafDrag
+            };
+          
+            struct LeafDragState
+            {
+                Bounds2f32 dockingBounds;
             };
 
+            State();
+            explicit State(const LeafDragState& leafDragState);
+
             Type type;
+
+            union
+            {
+                LeafDragState leafDragState;
+            };
         };
 
-        static constexpr bool overrideChildrenMouseEvents = true;
-        static constexpr bool handleKeyboardEvents = false;
-        static constexpr bool handleMouseEvents = true;
-
-        float edgeWidth = 10.0f;
-        float spacing = 10.0f;
-
-        Signal<Mouse::Cursor> onCursorChange;
-
-        explicit Docker(WidgetData<TSkin>& data);
+        explicit Docker(WidgetDataMixin<TSkin, Docker>& data);
 
         template<template<typename> typename TWidgetType, typename ... TArgs>
         WidgetTypePointer<TWidgetType<TSkin>> CreateChild(
@@ -93,15 +110,15 @@ namespace Molten::Gui
 
         using Widget<TSkin>::CreateChild;
 
-        struct Element;
-        struct Leaf;
-        struct Grid;
+        class Element;
+        class Leaf;
+        class Grid;
         struct Edge;
         struct PendingLeafInsert;
-        struct CalculatedGridResult;
 
         using ElementPointer = std::unique_ptr<Element>;
         using ElementPointerList = std::list<ElementPointer>;
+        using ElementPointerIterator = typename ElementPointerList::iterator;
         using LeafPointer = std::unique_ptr<Leaf>;
         using GridPointer = std::unique_ptr<Grid>;
         using EdgePointer = std::unique_ptr<Edge>;
@@ -125,50 +142,118 @@ namespace Molten::Gui
             Grid
         };
 
-        struct Leaf
+        class Leaf
         {
+
+        public:
+
             Leaf(
-                WidgetData<TSkin>* widgetData,
+                WidgetData<TSkin>* widgetData, 
                 const bool isDynamic);
+
+            Leaf(const Leaf&) = delete;
+            Leaf(Leaf&&) = delete;
+            Leaf& operator =(const Leaf&) = delete;
+            Leaf& operator =(Leaf&&) = delete;
+
+            Element* AsElement();
 
             bool IsDynamic() const;
 
             WidgetData<TSkin>* widgetData;
             DraggableWidget* draggableWidget;
             bool isDynamic;
+
+        private:
+
+            friend class Element;
+            Element* m_owner;
         };
 
-        struct Grid
+        class Grid
         {
+
+        public:
+
             explicit Grid(Direction direction);
 
-            std::pair<Element*, Element*> InsertElement(ElementPointer&& element, const ElementPosition position);
+            Grid(const Grid&) = delete;
+            Grid(Grid&&) = delete;
+            Grid& operator =(const Grid&) = delete;
+            Grid& operator =(Grid&&) = delete;
+
+            Element* AsElement();
 
             bool IsDynamic() const;
-
+         
             Direction direction;
             ElementPointerList elements;
-            CalculatedGridResult calculatedResult;
+            std::set<Element*> dynamicElements;
+
+        private:
+
+            friend class Element;
+            Element* m_owner;
+
         };
 
-        struct Element
+        class Element
         {
+
+        public:
+
             using Type = std::variant<LeafPointer, GridPointer>;
 
-            explicit Element(LeafPointer&& leaf);
-            explicit Element(GridPointer&& grid); 
+            Element(
+                LeafPointer&& leaf, 
+                const Vector2f32& requestedSize);
+
+            explicit Element(GridPointer&& grid);
+
+            Element(const Element&) = delete;
+            Element(Element&&) = delete;
+            Element& operator =(const Element&) = delete;
+            Element& operator =(Element&&) = delete;  
+
+            ElementType GetType() const;    
+            
+            Leaf* GetLeaf();
+            Grid* GetGrid();   
+
+            Element* GetParent();
+
+            template<typename TCallback>
+            auto VisitData(TCallback && callback);
 
             bool IsDynamic() const;
 
-            Vector2f32 size;
-            Vector2f32 calculatedSize;
-            Bounds2f32 bounds;
+            EdgePointer InsertElement(
+                ElementPointer&& element,
+                const DockingPosition position);
+            
+            std::pair<ElementPointer, Edge*> ExtractElement(Element* element);
+            
+            Edge* m_prevEdge; // Make private?
+            Edge* m_nextEdge; // Make private?
 
-            const ElementType type;
-            Type data;  
+            Vector2f32 minSize;
+            Vector2f32 requestedSize;
+            Vector2f32 renderSize;
+            Bounds2f32 bounds;   // Move to leaf?
 
-            Edge* prevEdge;
-            Edge* nextEdge;
+        private:
+
+            std::pair<Element*, typename ElementPointerList::iterator> InsertElementPreProcess(const DockingPosition position);
+            void TransformToGrid(const Direction direction);
+            void MergeGrid();
+
+            void AddDynamicElement(Element* element);
+            void RemoveDynamicElement(Element* element);
+
+            ElementType m_type;
+            Type m_data;
+            Element* m_parent;
+
         };
 
         struct Edge
@@ -182,27 +267,8 @@ namespace Molten::Gui
 
             Bounds2f32 bounds;
             Direction direction;
-            Element* prevElement;
-            Element* nextElement;
-        };
-
-        struct CalculatedGridResult
-        {
-            explicit CalculatedGridResult(Grid& grid);
-
-            void Clear();
-
-            using ElementIterator = typename ElementPointerList::reverse_iterator;
-
-            Grid& grid;
-            Bounds2f32 grantedBounds;
-            Vector2f32 grantedSize;
-            float totalStaticWidth;
-            float totalDynamicWidth;
-            std::vector<Element*> staticElements;
-            std::vector<Element*> dynamicElements;
-            ElementIterator activeElementsBegin;
-            ElementIterator activeElementsEnd;
+            Element* m_prevElement;
+            Element* m_nextElement;
         };
 
         struct PendingLeafInsert
@@ -217,21 +283,12 @@ namespace Molten::Gui
             WidgetData<TSkin>* widgetData;
         };
 
-        /** Child insert or deletion functions. */
+        /** Child insert, move or deletion functions. */
         /**@{*/
         bool InsertNewLeafs();
         void InsertLeaf(PendingLeafInsert& pendingLeaf);
 
-        void InsertElementInGrid(
-            GridPointer& grid,
-            ElementPointer&& element,
-            const ElementPosition insertPosition);
-
-        ElementPointer TransformElementToGrid(
-            ElementPointer&& oldElement,
-            ElementPointer&& newElement,
-            const Direction gridDirectionn,
-            const ElementPosition insertPosition);
+        ElementPointer ExtractElement(Element* element);
 
         static constexpr Direction GetInsertDirection(DockingPosition position);
         static constexpr ElementPosition GetInsertPosition(DockingPosition position);
@@ -241,14 +298,22 @@ namespace Molten::Gui
         /**@{*/
         void SetCursor(const Mouse::Cursor cursor);
 
-        bool HandleMouseEvent(const WidgetEventSubType subType, const WidgetEvent::MouseEvent& mouseEvent);
-        bool HandleMousePressEvent(const WidgetEvent::MouseEvent& mouseEvent);
-        bool HandleMouseMoveEvent(const WidgetEvent::MouseEvent& mouseEvent);
-        bool HandleMouseReleaseEvent(const WidgetEvent::MouseEvent& mouseEvent);
+        void ActivateNormalUpdate();
+        void ActivateEdgeDragUpdate(Edge* pressedEdge, const Vector2f32& mousePosition);
+        void ActivateLeafDragUpdate(Leaf* pressedLeaf, const Vector2f32& mousePosition);
 
-        bool HandleEdgeMovement(const WidgetEvent::MouseEvent& mouseEvent);
-        bool HandleLeafMovement(const WidgetEvent::MouseEvent& mouseEvent);
-        bool HandleMouseHover(const WidgetEvent::MouseEvent& mouseEvent);
+        bool HandleNormalMouseEvent(const WidgetEvent& widgetEvent);
+        bool HandleEdgeDragMouseEvent(const WidgetEvent& widgetEvent);
+        bool HandleLeafDragMouseEvent(const WidgetEvent& widgetEvent);
+
+        bool HandleNormalMousePressEvent(const WidgetEvent::MouseEvent& mouseEvent);
+        bool HandleNormalMouseMoveEvent(const WidgetEvent::MouseEvent& mouseEvent);
+
+        bool HandleEdgeDragMouseMoveEvent(const WidgetEvent::MouseEvent& mouseEvent);
+        bool HandleEdgeDragMouseReleaseEvent(const WidgetEvent::MouseEvent& mouseEvent);
+
+        bool HandleLeafDragMouseMoveEvent(const WidgetEvent::MouseEvent& mouseEvent);
+        bool HandleLeafDragMouseReleaseEvent(const WidgetEvent::MouseEvent& mouseEvent);
 
         template<Direction VEdgeDirection>
         bool HandleDirectionalEdgeMovement(Edge& edge, float movement);
@@ -257,93 +322,99 @@ namespace Molten::Gui
         static constexpr float LockEdgeMovement(const Edge& edge, const float movement);
 
         Edge* FindIntersectingEdge(const Vector2f32& point);
-        Element* FindIntersectingDraggableLeaf(const Vector2f32& point);
+        Leaf* FindIntersectingDraggableLeaf(const Vector2f32& point);
+        Leaf* FindIntersectingLeaf(const Vector2f32& point);
+
         /**@}*/
 
         /** Bounds calculation functions. */
         /**@{*/
         void CalculateBounds();
 
+        void PreCalculateElementBounds(Element& element);
+        void PreCalculateElementBounds(Element& element, Leaf& leaf);
+        void PreCalculateElementBounds(Element& element, Grid& grid);
+        template<Direction VGridDirection>
+        void PreCalculateElementBounds(Element& element, Grid& grid);
+
         void CalculateElementBounds(Element& element, const Bounds2f32& grantedBounds);
-        void CalculateElementBounds(Leaf& leaf, const Bounds2f32& grantedBounds);
-        void CalculateElementBounds(Grid& grid, const Bounds2f32& grantedBounds);
-
+        void CalculateElementBounds(Element& element, Leaf& leaf, const Bounds2f32& grantedBounds);
+        void CalculateElementBounds(Element& element, Grid& grid, const Bounds2f32& grantedBounds);
         template<Direction VGridDirection>
-        void CalculateGridBounds(Grid& grid, const Bounds2f32& grantedBound);
-
-        template<Direction VGridDirection>
-        void CalculateGridElementsBounds(CalculatedGridResult& calculatedGridResult);
-
-        template<Direction VGridDirection>
-        void BalanceGridDynamicElements(const CalculatedGridResult& calculatedGridResult);
-
-        template<Direction VGridDirection>
-        void BalanceGridStaticElements(const CalculatedGridResult& calculatedGridResult);
-
-        template<Direction VGridDirection>
-        void SetGridElementBounds(const CalculatedGridResult& calculatedGridResult);
-
-        template<Direction VEdgeDirection>
-        void SetElementPrevEdgeBounds(Element& element, const Bounds2f32& grantedBounds);
+        void CalculateElementBounds(Element& element, Grid& grid, const Bounds2f32& grantedBound);
 
         template<typename TIterator>
         void HideElements(TIterator begin, TIterator end);
+
+        template<Direction VGridDirection>
+        static constexpr void DirectionalShrinkBounds(Bounds2f32& bounds, float shrinkValue);
+        template<Direction VGridDirection>
+        static constexpr void DirectionalShrinkBounds(Bounds2f32& bounds, Bounds2f32& shrinkedBounds, float shrinkValue);
+
+        template<Direction VEdgeDirection>
+        void SetElementPrevEdgeBounds(Element& element, const Bounds2f32& grantedBounds);
         /**@}*/
 
         /** Directional and other helper functions. */
         /**@{*/
         static constexpr Direction FlipDirection(const Direction direction);
 
-        static constexpr Vector2f32 GetDirectionalMinSize(const Vector2f32& size);
-
-        template<Direction VDirection>
-        static constexpr float GetDirectionalMinWidth(const Vector2f32& size);
-
         template<Direction VDirection>
         static constexpr float GetDirectionalWidth(const Vector2f32& size);
-
-        template<Direction VDirection>
-        static constexpr float GetDirectionalHeight(const Vector2f32& size);
-
 
         template<Direction VDirection>
         static constexpr void SetDirectionalWidth(Vector2f32& size, const float width);
 
         template<Direction VDirection>
-        static constexpr void SetDirectionalHeight(Vector2f32& size, const float height);
-
-
-        template<Direction VDirection>
         static constexpr void AddDirectionalWidth(Vector2f32& size, const float width);
-
         template<Direction VDirection>
         static constexpr void AddDirectionalHeight(Vector2f32& size, const float height);
 
+        static bool GetDockingPositionInElement(const Vector2f32& mousePosition, Leaf& leaf, Bounds2f32& dockingBounds, DockingPosition& position);
+        /**@}*/    
 
-        static constexpr void CutWidth(float& widthLeft, const float width);
-        static constexpr void CutAndClampWidth(float& widthLeft, float& width);      
+        struct EdgeDragData
+        {
+            EdgeDragData();
+            void Reset();
 
-        template<Direction VDirection>
-        static constexpr Bounds2f32 CutDirectionalBounds(Bounds2f32& grantedBounds, const float size);
-        /**@}*/
-        
+            Edge* pressedEdge;
+            Vector2f32 prevMousePosition;
+        };
 
-        static constexpr float m_minElementWidth = 10.0f;
-        
+        struct LeafDragData
+        {
+            LeafDragData();
+            void Reset();
+
+            Leaf* pressedLeaf;        
+            Vector2f32 initialMousePosition;
+            Leaf* dockingLeaf;
+            DockingPosition dockingPosition;
+            bool dragIsActivated;
+        };
+
+
         typename State::Type m_stateType;
         Mouse::Cursor m_currentCursor;
         ElementPointer m_rootElement;
-        std::set<EdgePointer> m_edges;
-        std::set<Element*> m_leafElements;
+        
+        // Updates.
+        bool(Docker<TSkin>::* m_mouseInputUpdateFunc)(const WidgetEvent&);
+        bool m_forceUpdateBounds;
+        Bounds2f32 m_oldGrantedBounds;      
+        
+        // Leaf insert.
         std::queue<PendingLeafInsertPointer> m_leafInsertQueue;
         std::map<Widget<TSkin>*, PendingLeafInsertPointer> m_leafInsertMap;
-        Edge* m_pressedEdge;
-        Element* m_pressedLeafElement;
-        Vector2f32 m_prevMousePosition;
-        Bounds2f32 m_oldGrantedBounds;
-        bool m_forceUpdateBounds;
         
-        friend struct TSkin::template WidgetSkin<Docker<TSkin>>;
+        // Edges.
+        std::set<EdgePointer> m_edges;
+        EdgeDragData m_edgeDragData;
+
+        // Leafs.
+        std::set<Leaf*> m_leafs;
+        LeafDragData m_leafDragData;
 
     };
 

@@ -26,48 +26,51 @@
 namespace Molten::Gui
 {
 
+    // Widget data implementations.
     template<typename TSkin>
-    inline Pane<TSkin>::Pane(
-        WidgetDataMixin<TSkin, Pane>& data,
-        const Vector2f32& size
-    ) :
-        WidgetMixin<TSkin, Pane>(data, size)
+    WidgetData<TSkin>::WidgetData() :
+        canvas(nullptr),
+        layer(nullptr),
+        tree(nullptr),
+        widgetSkin(nullptr)
     {}
 
     template<typename TSkin>
-    void Pane<TSkin>::Update()
+    WidgetPointer<TSkin> WidgetData<TSkin>::GetWidget()
     {
-       ApplyMarginsToGrantedBounds();
-
-       auto& grantedBounds = GetGrantedBounds();
-
-       m_dragBounds = grantedBounds;
-       m_dragBounds.bottom = m_dragBounds.top + 20.0f;
-
-       auto childLane = GetChildrenPartialLane();
-
-       if (childLane.GetSize() > 0)
-       {
-           auto& childData = (*childLane.begin()).GetValue();
-           auto contentBounds = grantedBounds
-               .WithoutMargins({0.0f, 20.0f, 0.0f, 0.0f})
-               .WithoutMargins(padding).
-               ClampHighToLow();
-           childData->SetGrantedBounds(contentBounds);
-       }
-
+        return widget;
     }
 
     template<typename TSkin>
-    bool Pane<TSkin>::HandleEvent(const WidgetEvent& /*widgetEvent*/)
+    typename WidgetData<TSkin>::TreeNormalLane WidgetData<TSkin>::GetChildrenNormalLane()
     {
-        return false;
+        return (*iterator).GetChildren().template GetLane<TreeNormalLaneType>();
     }
 
     template<typename TSkin>
-    const Bounds2f32& Pane<TSkin>::GetDragBounds() const
+    typename WidgetData<TSkin>::TreePartialLane WidgetData<TSkin>::GetChildrenPartialLane()
     {
-        return m_dragBounds;
+        return (*iterator).GetChildren().template GetLane<TreePartialLaneType>();
     }
+
+    template<typename TSkin>
+    const Bounds2f32& WidgetData<TSkin>::GetGrantedBounds() const
+    {
+        return m_grantedBounds;
+    }
+
+    template<typename TSkin>
+    void WidgetData<TSkin>::SetGrantedBounds(const Bounds2f32& grantedBounds)
+    {
+        m_grantedBounds = grantedBounds;
+    }
+
+
+    // Widget data mixin implementations.
+    template<typename TSkin, template<typename> typename TWidget>
+    WidgetDataMixin<TSkin, TWidget>::WidgetDataMixin() :
+        WidgetData<TSkin>(),
+        widgetSkinMixin(nullptr)
+    {}
 
 }

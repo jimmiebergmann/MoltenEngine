@@ -28,13 +28,11 @@
 
 #include "Molten/Gui/GuiTypes.hpp"
 #include "Molten/Gui/Skin.hpp"
+#include "Molten/Gui/WidgetEvent.hpp"
 #include "Molten/Utility/BypassTree.hpp"
 #include "Molten/Math/Vector.hpp"
 #include "Molten/Math/Bounds.hpp"
-
-// Test
 #include <functional>
-#include "Molten/Gui/WidgetEvent.hpp"
 
 namespace Molten::Gui
 {
@@ -61,57 +59,49 @@ namespace Molten::Gui
         using TreePartialIterator = typename Tree::template Iterator<TreePartialLaneType>;
         using TreePartialConstIterator = typename Tree::template ConstIterator<TreePartialLaneType>;
 
-        WidgetData() :
-            canvas(nullptr),
-            layer(nullptr),
-            tree(nullptr),
-            widgetSkin(nullptr)
-        {}
+        WidgetData();
 
-        WidgetPointer<TSkin> GetWidget()
-        {
-            return widget;
-        }
+        WidgetPointer<TSkin> GetWidget();
 
-        TreePartialLane GetChildrenNormalLane()
-        {
-            return (*iterator).GetChildren().template GetLane<TreeNormalLaneType>();
-        }
+        TreeNormalLane GetChildrenNormalLane();
+        TreePartialLane GetChildrenPartialLane();
 
-        TreePartialLane GetChildrenPartialLane()
-        {
-            return (*iterator).GetChildren().template GetLane<TreePartialLaneType>();
-        }
+        const Bounds2f32& GetGrantedBounds() const;
 
-        const Bounds2f32& GetGrantedBounds() const
-        {
-            return m_grantedBounds;
-        }
+        void SetGrantedBounds(const Bounds2f32& grantedBounds);
 
-        void SetGrantedBounds(const Bounds2f32& grantedBounds)
-        {
-            m_grantedBounds = grantedBounds;
-        }
-
-
-        // Should be private:
         Canvas<TSkin>* canvas;
         Layer<TSkin>* layer;
         Tree* tree;
         TreeNormalIterator iterator;
         WidgetPointer<TSkin> widget;
         std::unique_ptr<WidgetSkinBase> widgetSkin;
-
-        std::function<bool(const WidgetEvent&)> mouseEventFunction;
+        std::function<Widget<TSkin>*(const WidgetEvent&)> mouseEventFunction;
 
     private:
 
         Bounds2f32 m_grantedBounds;
 
+    };
+
+    template<typename TSkin, template<typename> typename TWidget>
+    struct WidgetDataMixin : WidgetData<TSkin>
+    {
+
+    public:
+
+        WidgetDataMixin();
+
+        virtual ~WidgetDataMixin() = default;
+
+        using WidgetSkinMixin = typename TSkin::template WidgetSkin<TWidget<TSkin>>;
+
+        WidgetSkinMixin* widgetSkinMixin;
 
     };
 
-
 }
+
+#include "Molten/Gui/WidgetData.inl"
 
 #endif

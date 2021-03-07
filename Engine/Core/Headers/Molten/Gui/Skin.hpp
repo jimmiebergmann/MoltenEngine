@@ -32,22 +32,12 @@
 
 namespace Molten::Gui
 {
-    enum class WidgetSkinStateType
-    {
-        Normal,
-        Disabled,
-        Hovered,
-        Pressed
-    };
-
     class WidgetSkinBase
     {
 
     public:
 
-        WidgetSkinBase() :
-            m_state(WidgetSkinStateType::Normal)
-        {}
+        WidgetSkinBase() = default;
 
         virtual ~WidgetSkinBase() = default;
 
@@ -55,19 +45,41 @@ namespace Molten::Gui
         {
         }
 
-        void SetState(const WidgetSkinStateType state)
+    };
+
+    template<typename TWidget>
+    class WidgetSkinMixin : public WidgetSkinBase
+    {
+
+    public:
+
+        using State = typename TWidget::State;
+
+        WidgetSkinMixin() :
+            m_state{}
+        {}
+
+        virtual ~WidgetSkinMixin() = default;
+
+        void SetState(const State& state)
         {
             m_state = state;
+            OnStateChange(m_state);
         }
 
-        WidgetSkinStateType GetState() const
+        const State& GetState() const
         {
             return m_state;
         }
-        
-    protected:
 
-        WidgetSkinStateType m_state;
+        virtual void OnStateChange(const State& /*state*/)
+        {
+        }
+
+    private:
+
+        State m_state;
+
 
     };
 

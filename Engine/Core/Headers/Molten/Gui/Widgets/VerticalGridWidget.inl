@@ -33,12 +33,6 @@ namespace Molten::Gui
     {}
 
     template<typename TSkin>
-    inline bool VerticalGrid<TSkin>::OnAddChild(WidgetPointer<TSkin> /*widget*/)
-    {
-        return true;
-    }
-
-    template<typename TSkin>
     void VerticalGrid<TSkin>::Update()
     {
         ApplyMarginsToGrantedBounds();

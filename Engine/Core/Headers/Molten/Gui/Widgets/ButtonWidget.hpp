@@ -34,7 +34,7 @@ namespace Molten::Gui
 {
 
     template<typename TSkin>
-    class Button : public Widget<TSkin>, public WidgetEventHandler
+    class Button : public WidgetMixin<TSkin, Button>, public WidgetEventHandler
     {
 
     public:
@@ -44,15 +44,21 @@ namespace Molten::Gui
 
         Signal<int> onPress;
 
-        explicit Button(WidgetData<TSkin>& data);
+        enum class State
+        {
+            Normal,
+            Disabled,
+            Hovered,
+            Pressed
+        };
+
+        explicit Button(WidgetDataMixin<TSkin, Button>& data);
 
         void Update() override;
 
         bool HandleEvent(const WidgetEvent& widgetEvent) override;
 
     private:
-
-        bool OnAddChild(WidgetPointer<TSkin> child) override;
 
         bool m_pressed;
 

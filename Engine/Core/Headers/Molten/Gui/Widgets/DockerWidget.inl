@@ -26,26 +26,47 @@
 namespace Molten::Gui
 {
 
+    // Docket state implementations.
+    template<typename TSkin>
+    Docker<TSkin>::State::State() :
+        type(Type::Normal),
+        leafDragState{ Bounds2f32{} }
+    {}
+
+    template<typename TSkin>
+    Docker<TSkin>::State::State(const LeafDragState& leafDragState) :
+        type(Type::LeafDrag),
+        leafDragState(leafDragState)
+    {}
+
+
     // Docker public implementations.
     template<typename TSkin>
-    inline Docker<TSkin>::Docker(WidgetData<TSkin>& data) :
-        WidgetMixin<TSkin, Docker<TSkin>>(data),
-        m_stateType(State::Type::Normal),
+    Docker<TSkin>::Docker(WidgetDataMixin<TSkin, Docker>& data) :
+        WidgetMixin<TSkin, Docker>(data),  
+        m_stateType{},
         m_currentCursor(Mouse::Cursor::Normal),
+        m_rootElement(nullptr),
+        m_mouseInputUpdateFunc(&Docker<TSkin>::HandleNormalMouseEvent),
         m_forceUpdateBounds(false),
-        m_pressedEdge(nullptr),
-        m_pressedLeafElement(nullptr)    
+        m_oldGrantedBounds{},
+        m_leafInsertQueue{},
+        m_leafInsertMap{},
+        m_edges{},
+        m_edgeDragData{},
+        m_leafs{},
+        m_leafDragData{}
     { }
 
     template<typename TSkin>
     template<template<typename> typename TWidgetType, typename ... TArgs>
-    inline WidgetTypePointer<TWidgetType<TSkin>> Docker<TSkin>::CreateChild(
+    WidgetTypePointer<TWidgetType<TSkin>> Docker<TSkin>::CreateChild(
         const DockingPosition position,
         const bool dynamic,
         TArgs ... args)
     {
         auto widget = Widget<TSkin>::CreateChild<TWidgetType>(std::forward<TArgs>(args)...);
-  
+
         auto it = m_leafInsertMap.find(widget.get());
         if (it == m_leafInsertMap.end())
         {
@@ -76,6 +97,14 @@ namespace Molten::Gui
         }
 
         m_oldGrantedBounds = GetGrantedBounds();
+
+        if (GetSkinState<State>().type == State::Type::LeafDrag && m_leafDragData.dragIsActivated) // Ugly stuff going on here.
+        {
+            GetDataMixin().canvas->PushTopDrawCommand([this]()
+            {
+                GetDataMixin().widgetSkinMixin->DrawLeafDocking();
+            });
+        }
     }
 
     template<typename TSkin>
@@ -83,7 +112,7 @@ namespace Molten::Gui
     {
         switch (widgetEvent.type)
         {
-            case WidgetEventType::Mouse: return HandleMouseEvent(widgetEvent.subType, widgetEvent.mouseEvent);
+            case WidgetEventType::Mouse: return (*this.*m_mouseInputUpdateFunc)(widgetEvent); break;
             default: break;
         }
 
@@ -91,9 +120,9 @@ namespace Molten::Gui
     }
 
     template<typename TSkin>
-    inline void Docker<TSkin>::OnAddChild(WidgetData<TSkin>& childData)
+    void Docker<TSkin>::OnAddChild(WidgetData<TSkin>& childData)
     {
-        auto* widget = childData.GetWidget().get();
+        auto* widget = childData.GetWidget().get(); // FIX! Add new function for getting raw pointer to widget.
 
         bool isDynamic = widget->size.x <= 0.0f || widget->size.y <= 0.0f;
         auto pendingLeaf = std::make_shared<PendingLeafInsert>(DockingPosition::Right, isDynamic, &childData);
@@ -105,11 +134,21 @@ namespace Molten::Gui
 
     // Docker leaf implementations.
     template<typename TSkin>
-    Docker<TSkin>::Leaf::Leaf(WidgetData<TSkin>* widgetData, const bool isDynamic) :
+    Docker<TSkin>::Leaf::Leaf(
+        WidgetData<TSkin>* widgetData,
+        const bool isDynamic
+    ) :
+        m_owner(nullptr),
         widgetData(widgetData),
-        draggableWidget(dynamic_cast<DraggableWidget*>(widgetData->GetWidget().get())),
+        draggableWidget(dynamic_cast<DraggableWidget*>(widgetData->GetWidget().get())), // FIX! Add new function for getting raw pointer to widget.
         isDynamic(isDynamic)
     {}
+
+    template<typename TSkin>
+    typename Docker<TSkin>::Element* Docker<TSkin>::Leaf::AsElement()
+    {
+        return m_owner;
+    }
 
     template<typename TSkin>
     bool Docker<TSkin>::Leaf::IsDynamic() const
@@ -121,69 +160,381 @@ namespace Molten::Gui
     // Docker grid implementations.
     template<typename TSkin>
     Docker<TSkin>::Grid::Grid(Direction direction) :
-        direction(direction),
-        calculatedResult(*this)
+        m_owner(nullptr),
+        direction(direction)
     {}
 
     template<typename TSkin>
-    std::pair<typename Docker<TSkin>::Element*, typename Docker<TSkin>::Element*> Docker<TSkin>::Grid::InsertElement(ElementPointer&& element, const ElementPosition position)
+    typename Docker<TSkin>::Element* Docker<TSkin>::Grid::AsElement()
     {
-        auto it = position == ElementPosition::First ? elements.begin() : elements.end();
-        auto* prevElementPtr = elements.empty() ? nullptr : (position == ElementPosition::First ? elements.front().get() : elements.back().get());
-        auto* newElementPtr = element.get();
-
-        elements.insert(it, std::move(element));
-
-        // Make prev element to high and next element to low if we insert in front(first/left).
-        if (position == ElementPosition::First)
-        {
-            std::swap(prevElementPtr, newElementPtr);
-        }
-
-        return { prevElementPtr, newElementPtr };
+        return m_owner;
     }
 
     template<typename TSkin>
     bool Docker<TSkin>::Grid::IsDynamic() const
     {
-        for (auto& element : elements)
-        {
-            if (element->IsDynamic())
-            {
-                return true;
-            }
-        }
-        return false;
+        return !dynamicElements.empty();
     }
 
 
     // Docker element implementations.
     template<typename TSkin>
-    Docker<TSkin>::Element::Element(LeafPointer&& leaf) :
-        size(GetDirectionalMinSize(leaf->widgetData->GetWidget()->size)),
-        calculatedSize(size),
-        type(ElementType::Leaf),
-        data(std::move(leaf)),
-        prevEdge(nullptr),
-        nextEdge(nullptr)
-    {}
+    Docker<TSkin>::Element::Element(LeafPointer&& leaf, const Vector2f32& requestedSize) :
+        m_type(ElementType::Leaf),
+        m_data(std::move(leaf)),
+        m_parent(nullptr),
+        m_prevEdge(nullptr),
+        m_nextEdge(nullptr),
+        requestedSize(requestedSize)
+    {
+        std::get<LeafPointer>(m_data)->m_owner = this;
+    }
 
     template<typename TSkin>
     Docker<TSkin>::Element::Element(GridPointer&& grid) :
-        size(GetDirectionalMinSize({ 0.0f, 0.0f })),
-        calculatedSize(size),
-        type(ElementType::Grid),
-        data(std::move(grid)),
-        prevEdge(nullptr),
-        nextEdge(nullptr)
-    {}
+        m_type(ElementType::Grid),
+        m_data(std::move(grid)),
+        m_parent(nullptr),
+        m_prevEdge(nullptr),
+        m_nextEdge(nullptr)
+    {
+        auto& gridData = std::get<GridPointer>(m_data);
+        gridData->m_owner = this;
+
+        for (auto& element : gridData->elements)
+        {
+            element->m_parent = this;
+        }
+    }
+
+    template<typename TSkin>
+    typename Docker<TSkin>::ElementType Docker<TSkin>::Element::GetType() const
+    {
+        return m_type;
+    }
+
+    template<typename TSkin>
+    typename Docker<TSkin>::Leaf* Docker<TSkin>::Element::GetLeaf()
+    {
+        return std::get<LeafPointer>(m_data).get();
+    }
+
+    template<typename TSkin>
+    typename Docker<TSkin>::Grid* Docker<TSkin>::Element::GetGrid()
+    {
+        return std::get<GridPointer>(m_data).get();
+    }
+
+    template<typename TSkin>
+    typename Docker<TSkin>::Element* Docker<TSkin>::Element::GetParent()
+    {
+        return m_parent;
+    }
+
+    template<typename TSkin>
+    template<typename TCallback>
+    auto Docker<TSkin>::Element::VisitData(TCallback&& callback)
+    {
+        return std::visit(callback, m_data);
+    }
 
     template<typename TSkin>
     bool Docker<TSkin>::Element::IsDynamic() const
-    {     
-        return std::visit(
-            [&](const auto& element) { return element->IsDynamic(); },
-            data);
+    {
+        return std::visit([&](auto& data)
+        {
+            return data->IsDynamic();
+        }, m_data);
+    }
+
+    template<typename TSkin>
+    typename Docker<TSkin>::EdgePointer Docker<TSkin>::Element::InsertElement(
+        ElementPointer&& element,
+        const DockingPosition position)
+    {   
+        auto [insertElement, insertIt] = InsertElementPreProcess(position);
+
+        auto* newElementPtr = element.get();
+        newElementPtr->m_parent = insertElement;
+
+        auto* insertGrid = insertElement->GetGrid();
+        auto insertedIt = insertGrid->elements.insert(insertIt, std::move(element));
+        
+        insertElement->AddDynamicElement(newElementPtr);
+
+        // Create new grid if needed.
+        Element* prevElementPtr = insertedIt->get() != insertGrid->elements.front().get() ? std::prev(insertedIt)->get() : nullptr;
+        Element* nextElementPtr = insertedIt->get() != insertGrid->elements.back().get() ? std::next(insertedIt)->get() : nullptr;
+
+        EdgePointer newEdge = nullptr;
+
+        if (prevElementPtr && nextElementPtr)
+        {
+            newEdge = std::make_unique<Edge>(FlipDirection(insertGrid->direction), prevElementPtr, newElementPtr);
+            newElementPtr->m_prevEdge = newEdge.get();
+            newElementPtr->m_nextEdge = nextElementPtr->m_prevEdge;
+            prevElementPtr->m_nextEdge = newEdge.get();
+
+            if (nextElementPtr->m_prevEdge)
+            {
+                nextElementPtr->m_prevEdge->m_prevElement = newElementPtr;
+            }
+        }
+        else if (prevElementPtr)
+        {
+            newEdge = std::make_unique<Edge>(FlipDirection(insertGrid->direction), prevElementPtr, newElementPtr);
+            newElementPtr->m_prevEdge = newEdge.get();
+            prevElementPtr->m_nextEdge = newEdge.get();
+        }
+        else if (nextElementPtr)
+        {
+            newEdge = std::make_unique<Edge>(FlipDirection(insertGrid->direction), newElementPtr, nextElementPtr);
+            newElementPtr->m_nextEdge = newEdge.get();
+            nextElementPtr->m_prevEdge = newEdge.get();
+        }
+
+        return newEdge;
+    }
+
+    template<typename TSkin>
+    std::pair<typename Docker<TSkin>::ElementPointer, typename Docker<TSkin>::Edge*> Docker<TSkin>::Element::ExtractElement(Element* element)
+    {
+        if (m_type != ElementType::Grid)
+        {
+            return { nullptr, nullptr };
+        }
+
+        auto& grid = std::get<GridPointer>(m_data);
+
+        // Find extract and erase from grid.
+        auto elementIt = std::find_if(grid->elements.begin(), grid->elements.end(), [&](auto& child)
+        {
+            return child.get() == element;
+        });
+
+        if (elementIt == grid->elements.end())
+        {
+            return { nullptr, nullptr };
+        }
+
+        auto extractedElement = std::move(*elementIt);
+        auto* extractedElementPtr = extractedElement.get();
+
+        grid->elements.erase(elementIt);
+
+        RemoveDynamicElement(extractedElementPtr);
+
+        // Transform to this grid to a leaf or merge this grid if needed.
+        MergeGrid();
+
+        // Remove at least one edge if possible.
+        Edge* extactedEdge = nullptr;
+        if ((extactedEdge = extractedElementPtr->m_prevEdge) != nullptr)
+        {
+            auto* nextEdge = extractedElementPtr->m_nextEdge;
+            auto* prevElement = extactedEdge->m_prevElement;
+
+            if (prevElement)
+            {
+                prevElement->m_nextEdge = nextEdge;
+            }
+            if (nextEdge)
+            {
+                nextEdge->m_prevElement = prevElement;
+            }
+        }
+        else if ((extactedEdge = extractedElementPtr->m_nextEdge) != nullptr)
+        {
+            auto* prevEdge = extractedElementPtr->m_prevEdge;
+            auto* nextElement = extactedEdge->m_nextElement;
+
+            if (nextElement)
+            {
+                nextElement->m_prevEdge = prevEdge;
+            }
+            if (prevEdge)
+            {
+                prevEdge->m_nextElement = nextElement;
+            }
+        }
+
+        // Final cleanup and return extractions.
+        extractedElementPtr->m_parent = nullptr;
+        extractedElementPtr->m_prevEdge = nullptr;
+        extractedElementPtr->m_nextEdge = nullptr;
+
+        return { std::move(extractedElement), extactedEdge };
+    }
+
+
+    template<typename TSkin>
+    std::pair<typename Docker<TSkin>::Element*, typename Docker<TSkin>::ElementPointerList::iterator> Docker<TSkin>::Element::InsertElementPreProcess(const DockingPosition position)
+    {
+        const auto gridDirection = GetInsertDirection(position); 
+        const auto insertPosition = GetInsertPosition(position);
+
+        Element* insertElement = nullptr;
+        ElementPointerList::iterator insertIterator = {};
+
+        if (m_type == ElementType::Grid)
+        {
+            if (GetGrid()->direction != gridDirection)
+            {
+                TransformToGrid(gridDirection);
+            }
+            insertElement = this;
+            insertIterator = insertPosition == ElementPosition::First ? GetGrid()->elements.begin() : GetGrid()->elements.end();
+        }
+        else // Leaf
+        {
+            if (m_parent)
+            {
+                auto* parentGrid = m_parent->GetGrid();
+                if (parentGrid->direction != gridDirection)
+                {
+                    TransformToGrid(gridDirection);
+                    insertElement = this;
+                    insertIterator = insertPosition == ElementPosition::First ? GetGrid()->elements.begin() : GetGrid()->elements.end();
+                }
+                else
+                {
+                    insertElement = m_parent;
+                    insertIterator = std::find_if(parentGrid->elements.begin(), parentGrid->elements.end(), [&](auto& child)
+                    {
+                        return child.get() == this;
+                    });
+                    if (insertIterator != parentGrid->elements.end())
+                    {
+                        if (insertPosition == ElementPosition::Last)
+                        {
+                            insertIterator = std::next(insertIterator);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                TransformToGrid(gridDirection);
+                insertElement = this;
+                insertIterator = insertPosition == ElementPosition::First ? GetGrid()->elements.begin() : GetGrid()->elements.end();
+            }
+        }
+
+        return { insertElement, insertIterator };
+    }
+
+    template<typename TSkin>
+    void Docker<TSkin>::Element::TransformToGrid(const Direction direction)
+    {
+        ElementPointer newElement = nullptr;
+
+        if (m_type == ElementType::Grid)
+        {
+            auto& grid = std::get<GridPointer>(m_data);
+            if (grid->direction == direction)
+            {
+                return;
+            }
+
+            newElement = std::make_unique<Element>(std::move(std::get<GridPointer>(m_data)));         
+        }
+        else // Leaf
+        {
+            newElement = std::make_unique<Element>(std::move(std::get<LeafPointer>(m_data)), requestedSize); // FIX? Move "move" to a step before?
+        }
+
+        auto* newElementPtr = newElement.get();
+        newElementPtr->m_parent = this;
+        
+        auto newGrid = std::make_unique<Grid>(direction);
+        newGrid->m_owner = this;
+        newGrid->elements.push_back(std::move(newElement));
+        if (newElementPtr->IsDynamic())
+        {
+            newGrid->dynamicElements.insert(newElementPtr);
+        }
+  
+        m_data = std::move(newGrid);
+        m_type = ElementType::Grid;
+    }
+
+    template<typename TSkin>
+    void Docker<TSkin>::Element::MergeGrid()
+    {
+        if (m_type != ElementType::Grid)
+        {
+            return;
+        }
+
+        auto& grid = std::get<GridPointer>(m_data);
+        if (grid->elements.size() != 1)
+        {
+            return;
+        }
+
+        auto& child = grid->elements.front();
+        if (child->m_type == ElementType::Grid)
+        {
+            auto extractedGrid = std::move(std::get<GridPointer>(child->m_data));
+            extractedGrid->m_owner = this;
+
+            grid->direction = extractedGrid->direction;
+            grid->elements = std::move(extractedGrid->elements);
+            grid->dynamicElements = std::move(extractedGrid->dynamicElements);
+
+            for (auto& element : grid->elements)
+            {
+                element->m_parent = this;
+            }
+        }
+        else // Leaf
+        {           
+            requestedSize = child->requestedSize;   
+
+            auto extractedLeaf = std::move(std::get<LeafPointer>(child->m_data));
+            extractedLeaf->m_owner = this;
+            m_data = std::move(extractedLeaf);
+            m_type = ElementType::Leaf;
+        }
+    }
+
+    template<typename TSkin>
+    void Docker<TSkin>::Element::AddDynamicElement(Element* element)
+    {
+        if (!element->IsDynamic())
+        {
+            return;
+        }
+
+        auto* grid = GetGrid();
+
+        auto wasDynamic = !grid->dynamicElements.empty();
+        grid->dynamicElements.insert(element);
+        auto isDynamic = !grid->dynamicElements.empty();
+
+        if (m_parent && !wasDynamic && isDynamic)
+        {
+            m_parent->AddDynamicElement(this);
+        }
+    }
+
+    template<typename TSkin>
+    void Docker<TSkin>::Element::RemoveDynamicElement(Element* element)
+    {
+        if (!element->IsDynamic())
+        {
+            return;
+        }
+
+        auto* grid = GetGrid();
+        auto wasDynamic = !grid->dynamicElements.empty();
+        grid->dynamicElements.erase(element);
+        auto isDynamic = !grid->dynamicElements.empty();
+
+        if (m_parent && wasDynamic && !isDynamic)
+        {
+            m_parent->RemoveDynamicElement(this);
+        }
     }
 
 
@@ -201,34 +552,14 @@ namespace Molten::Gui
             std::numeric_limits<float>::min()
         ),
         direction(direction),
-        prevElement(prevElement),
-        nextElement(nextElement)
+        m_prevElement(prevElement),
+        m_nextElement(nextElement)
     {}
 
     template<typename TSkin>
     Mouse::Cursor Docker<TSkin>::Edge::GetSizeCursor() const
     {
         return direction == Direction::Horizontal ? Mouse::Cursor::SizeUpDown : Mouse::Cursor::SizeLeftRight;
-    }
-
-
-    // Docker calculated grid result implementations.
-    template<typename TSkin>
-    Docker<TSkin>::CalculatedGridResult::CalculatedGridResult(Grid& grid) :
-        grid(grid),
-        totalStaticWidth(0.0f),
-        totalDynamicWidth(0.0f)
-    {}
-
-    template<typename TSkin>
-    void Docker<TSkin>::CalculatedGridResult::Clear()
-    {
-        grantedSize = {};
-        grantedBounds = {};
-        staticElements.clear();
-        dynamicElements.clear();
-        totalStaticWidth = 0.0f;
-        totalDynamicWidth = 0.0f;
     }
 
 
@@ -269,70 +600,57 @@ namespace Molten::Gui
     template<typename TSkin>
     void Docker<TSkin>::InsertLeaf(PendingLeafInsert& pendingLeaf)
     {
-        const auto position = pendingLeaf.position;
-        const auto insertPosition = GetInsertPosition(position);
-        const auto gridDirection = GetInsertDirection(position); 
+        auto newLeaf = std::make_unique<Leaf>(pendingLeaf.widgetData, pendingLeaf.isDynamic);
+        m_leafs.insert(newLeaf.get());
 
-        auto newLeaf = std::make_unique<Leaf>(pendingLeaf.widgetData, pendingLeaf.isDynamic);     
-        //m_leafs.insert(newLeaf.get());
-        auto newElement = std::make_unique<Element>(std::move(newLeaf));  
-        m_leafElements.insert(newElement.get());
+        const auto widgetSize = pendingLeaf.widgetData->GetWidget()->size; // FIX! Add new function for getting raw pointer to widget.
+        const auto requestedSize = pendingLeaf.isDynamic ?
+            minElementSize :
+            Vector2f32{
+                std::max(minElementSize.x, widgetSize.x),
+                std::max(minElementSize.y, widgetSize.y)
+        };
 
-        if (!m_rootElement)
+        auto newElement = std::make_unique<Element>(std::move(newLeaf), requestedSize);
+
+        if (m_rootElement)
+        {
+            auto newEdge = m_rootElement->InsertElement(std::move(newElement), pendingLeaf.position);
+            if (newEdge)
+            {
+                m_edges.insert(std::move(newEdge));
+            }
+        }
+        else
         {
             m_rootElement = std::move(newElement);
-        }
-        else if (m_rootElement->type == ElementType::Leaf) // Leaf
-        {
-            m_rootElement = TransformElementToGrid(std::move(m_rootElement), std::move(newElement), gridDirection, insertPosition);
-        }
-        else // Grid
-        {
-            auto& grid = std::get<GridPointer>(m_rootElement->data);
-            if (grid->direction != gridDirection)
-            {
-                m_rootElement = TransformElementToGrid(std::move(m_rootElement), std::move(newElement), gridDirection, insertPosition);
-            }
-            else
-            {
-                InsertElementInGrid(grid, std::move(newElement), insertPosition);
-            }
-        }
+        } 
     }
 
     template<typename TSkin>
-    void Docker<TSkin>::InsertElementInGrid(
-        GridPointer& grid,
-        ElementPointer&& element,
-        const ElementPosition insertPosition)
+    typename Docker<TSkin>::ElementPointer Docker<TSkin>::ExtractElement(Element* element)
     {
-        auto [lowElementPtr, highElementPtr] = grid->InsertElement(std::move(element), insertPosition);
-
-        if (lowElementPtr && highElementPtr)
+        auto* parent = element->GetParent();
+        if (!parent)
         {
-            auto edgeDirection = FlipDirection(grid->direction);
-            auto newEdge = std::make_unique<Edge>(edgeDirection, lowElementPtr, highElementPtr);
-
-            lowElementPtr->nextEdge = newEdge.get();
-            highElementPtr->prevEdge = newEdge.get();
-
-            m_edges.insert(std::move(newEdge));
+            return nullptr;
         }
-    }
 
-    template<typename TSkin>
-    typename Docker<TSkin>::ElementPointer Docker<TSkin>::TransformElementToGrid(
-        ElementPointer&& oldElement,
-        ElementPointer&& newElement,
-        const Direction gridDirection,
-        const ElementPosition insertPosition)
-    {
-        auto newGrid = std::make_unique<Grid>(gridDirection);
-        
-        newGrid->elements.push_back(std::move(oldElement));
-        InsertElementInGrid(newGrid, std::move(newElement), insertPosition);
+        auto [extractedElement, extractedEdge] = parent->ExtractElement(element);
 
-        return std::make_unique<Element>(std::move(newGrid));
+        if (extractedEdge)
+        {
+            auto edgeIt = std::find_if(m_edges.begin(), m_edges.end(), [&](auto& edge)
+            {
+                return edge.get() == extractedEdge;
+            });
+            if (edgeIt != m_edges.end())
+            {
+                m_edges.erase(edgeIt);
+            }        
+        }
+
+        return std::move(extractedElement);
     }
 
     template<typename TSkin>
@@ -358,14 +676,49 @@ namespace Molten::Gui
     }
 
     template<typename TSkin>
-    bool Docker<TSkin>::HandleMouseEvent(const WidgetEventSubType subType, const WidgetEvent::MouseEvent& mouseEvent)
+    void Docker<TSkin>::ActivateNormalUpdate()
     {
-        switch (subType)
+        m_edgeDragData.Reset();
+        m_leafDragData.Reset();
+
+        m_mouseInputUpdateFunc = &Docker<TSkin>::HandleNormalMouseEvent;
+    }
+
+    template<typename TSkin>
+    void Docker<TSkin>::ActivateEdgeDragUpdate(Edge* pressedEdge, const Vector2f32& mousePosition)
+    {
+        m_edgeDragData.Reset();
+        m_leafDragData.Reset();
+
+        m_edgeDragData.pressedEdge = pressedEdge;
+        m_edgeDragData.prevMousePosition = mousePosition;
+
+        m_mouseInputUpdateFunc = &Docker<TSkin>::HandleEdgeDragMouseEvent;
+        GetData().canvas->OverrideMouseEventsUntilMouseRelease(*this);
+        SetCursor(pressedEdge->GetSizeCursor());
+    }
+
+    template<typename TSkin>
+    void Docker<TSkin>::ActivateLeafDragUpdate(Leaf* pressedLeaf, const Vector2f32& mousePosition)
+    {
+        m_edgeDragData.Reset();
+        m_leafDragData.Reset();
+
+        m_leafDragData.pressedLeaf = pressedLeaf;
+        m_leafDragData.initialMousePosition = mousePosition;
+
+        m_mouseInputUpdateFunc = &Docker<TSkin>::HandleLeafDragMouseEvent;
+        GetData().canvas->OverrideMouseEventsUntilMouseRelease(*this);
+    }
+
+    template<typename TSkin>
+    bool Docker<TSkin>::HandleNormalMouseEvent(const WidgetEvent& widgetEvent)
+    {
+        switch (widgetEvent.subType)
         {
-            case WidgetEventSubType::MousePress: return HandleMousePressEvent(mouseEvent);
-            case WidgetEventSubType::MouseEnter: return HandleMouseMoveEvent(mouseEvent); // MouseMove FIX IN Canvas.inl 
-            case WidgetEventSubType::MouseReleaseIn:
-            case WidgetEventSubType::MouseReleaseOut: return HandleMouseReleaseEvent(mouseEvent);
+            case WidgetEventSubType::MouseButtonPressed: return HandleNormalMousePressEvent(widgetEvent.mouseEvent);
+            case WidgetEventSubType::MouseMove: return HandleNormalMouseMoveEvent(widgetEvent.mouseEvent);
+            case WidgetEventSubType::MouseLeave: SetCursor(Mouse::Cursor::Normal); break;
             default: break;
         }
 
@@ -373,22 +726,47 @@ namespace Molten::Gui
     }
 
     template<typename TSkin>
-    bool Docker<TSkin>::HandleMousePressEvent(const WidgetEvent::MouseEvent& mouseEvent)
+    bool Docker<TSkin>::HandleEdgeDragMouseEvent(const WidgetEvent& widgetEvent)
     {
-        m_pressedEdge = nullptr;
-        m_pressedLeafElement = nullptr;
-
-        // Edge bounds press
-        m_pressedEdge = FindIntersectingEdge(mouseEvent.position);
-        if (m_pressedEdge)
+        switch(widgetEvent.subType)
         {
-            m_prevMousePosition = mouseEvent.position;
+            case WidgetEventSubType::MouseMove: return HandleEdgeDragMouseMoveEvent(widgetEvent.mouseEvent);
+            case WidgetEventSubType::MouseButtonReleasedIn:
+            case WidgetEventSubType::MouseButtonReleasedOut: return HandleEdgeDragMouseReleaseEvent(widgetEvent.mouseEvent);
+            default: break;
+        }
+
+        return false;
+    }
+
+    template<typename TSkin>
+    bool Docker<TSkin>::HandleLeafDragMouseEvent(const WidgetEvent& widgetEvent)
+    {
+        switch(widgetEvent.subType)
+        {
+            case WidgetEventSubType::MouseMove: return HandleLeafDragMouseMoveEvent(widgetEvent.mouseEvent);
+            case WidgetEventSubType::MouseButtonReleasedIn:
+            case WidgetEventSubType::MouseButtonReleasedOut: return HandleLeafDragMouseReleaseEvent(widgetEvent.mouseEvent);
+            default: break;
+        }
+
+        return false;
+    }
+
+    template<typename TSkin>
+    bool Docker<TSkin>::HandleNormalMousePressEvent(const WidgetEvent::MouseEvent& mouseEvent)
+    {
+        auto* pressedEdge = FindIntersectingEdge(mouseEvent.position);
+        if (pressedEdge)
+        {         
+            ActivateEdgeDragUpdate(pressedEdge, mouseEvent.position);
             return true;
         }
 
-        m_pressedLeafElement = FindIntersectingDraggableLeaf(mouseEvent.position);
-        if (m_pressedLeafElement)
+        auto* pressedLeaf = FindIntersectingDraggableLeaf(mouseEvent.position);
+        if (pressedLeaf)
         {
+            ActivateLeafDragUpdate(pressedLeaf, mouseEvent.position);
             return true;
         }
 
@@ -396,132 +774,160 @@ namespace Molten::Gui
     }
 
     template<typename TSkin>
-    bool Docker<TSkin>::HandleMouseMoveEvent(const WidgetEvent::MouseEvent& mouseEvent)
+    bool Docker<TSkin>::HandleNormalMouseMoveEvent(const WidgetEvent::MouseEvent& mouseEvent)
     {
-        if (HandleEdgeMovement(mouseEvent))
+        auto* hoveredEdge = FindIntersectingEdge(mouseEvent.position);
+        if (hoveredEdge)
         {
-            return true;
+            SetCursor(hoveredEdge->GetSizeCursor());
         }
-        if (HandleLeafMovement(mouseEvent))
+        else
         {
-            return true;
-        }        
-        if (HandleMouseHover(mouseEvent))
-        {
-            return true;
+            SetCursor(Mouse::Cursor::Normal);
         }
-
-        return false;
+        return true;
     }
 
     template<typename TSkin>
-    bool Docker<TSkin>::HandleMouseReleaseEvent(const WidgetEvent::MouseEvent& mouseEvent)
+    bool Docker<TSkin>::HandleEdgeDragMouseMoveEvent(const WidgetEvent::MouseEvent& mouseEvent)
     {
-        if (m_pressedEdge || m_pressedLeafElement)
-        {
-            m_pressedEdge = nullptr;
-            m_pressedLeafElement = nullptr;
-            return true;
-        }
-
-        return false;
-    }
-
-    template<typename TSkin>
-    bool Docker<TSkin>::HandleEdgeMovement(const WidgetEvent::MouseEvent& mouseEvent)
-    {
-        if (!m_pressedEdge)
+        if (!m_edgeDragData.pressedEdge)
         {
             return false;
         }
 
-        auto mouseMovement = Vector2f32(mouseEvent.position) - m_prevMousePosition;
+        SetCursor(m_edgeDragData.pressedEdge->GetSizeCursor());
+
+        auto mouseMovement = Vector2f32(mouseEvent.position) - m_edgeDragData.prevMousePosition;
         bool movedEdge = false;
 
-        if (m_pressedEdge->direction == Direction::Horizontal)
+        if (m_edgeDragData.pressedEdge->direction == Direction::Horizontal)
         {
-            movedEdge = HandleDirectionalEdgeMovement<Direction::Horizontal>(*m_pressedEdge, mouseMovement.y);
+            movedEdge = HandleDirectionalEdgeMovement<Direction::Horizontal>(*m_edgeDragData.pressedEdge, mouseMovement.y);
         }
         else
         {
-            movedEdge = HandleDirectionalEdgeMovement<Direction::Vertical>(*m_pressedEdge, mouseMovement.x);
+            movedEdge = HandleDirectionalEdgeMovement<Direction::Vertical>(*m_edgeDragData.pressedEdge, mouseMovement.x);
         }
 
         if (movedEdge)
         {
             m_forceUpdateBounds = true;
-            m_prevMousePosition = mouseEvent.position;
+            m_edgeDragData.prevMousePosition = mouseEvent.position;
         }
 
         return true;
     }
 
     template<typename TSkin>
-    bool Docker<TSkin>::HandleLeafMovement(const WidgetEvent::MouseEvent& mouseEvent)
+    bool Docker<TSkin>::HandleEdgeDragMouseReleaseEvent(const WidgetEvent::MouseEvent& mouseEvent)
     {
-        if (!m_pressedLeafElement)
-        {
-            return false;
-        }
+        SetCursor(Mouse::Cursor::Normal);
+        ActivateNormalUpdate();
+        SetSkinState(State{});
 
-        //auto& leaf = *std::get<LeafPointer>(m_pressedLeafElement->data);
-
-        // No implementation yet.
-        return false;
+        return true;
     }
 
     template<typename TSkin>
-    bool Docker<TSkin>::HandleMouseHover(const WidgetEvent::MouseEvent& mouseEvent)
+    bool Docker<TSkin>::HandleLeafDragMouseMoveEvent(const WidgetEvent::MouseEvent& mouseEvent)
     {
-        if (auto* edge = FindIntersectingEdge(mouseEvent.position))
+        if (!m_leafDragData.dragIsActivated)
         {
-            SetCursor(edge->GetSizeCursor());
-            return true;
+            float distance = (m_leafDragData.initialMousePosition - mouseEvent.position).Length();
+            if (distance < widgetDragActivationDistance)
+            {
+                return false;
+                
+            }
+            m_leafDragData.dragIsActivated = true;
         }
-        
-        SetCursor(Mouse::Cursor::Normal);
-        return false;
+
+        SetCursor(Mouse::Cursor::SizeAll);
+
+        auto* leaf = FindIntersectingLeaf(mouseEvent.position);
+        if (!leaf || leaf == m_leafDragData.pressedLeaf)
+        {
+            SetSkinState(State{ });
+            return false;
+        }
+
+        Bounds2f32 dockingBounds = {};
+        if (GetDockingPositionInElement(mouseEvent.position, *leaf, dockingBounds, m_leafDragData.dockingPosition))
+        {
+            m_leafDragData.dockingLeaf = leaf;
+            SetSkinState(State{ State::LeafDragState{ dockingBounds } });
+        }
+        else
+        {
+            m_leafDragData.dockingLeaf = nullptr;
+            SetSkinState(State{ });
+        }
+
+        return true;
     }
 
+    template<typename TSkin>
+    bool Docker<TSkin>::HandleLeafDragMouseReleaseEvent(const WidgetEvent::MouseEvent& mouseEvent)
+    {
+        if (m_leafDragData.dockingLeaf && m_leafDragData.pressedLeaf)
+        {
+            auto* fromElementPtr = m_leafDragData.pressedLeaf->AsElement();
+            auto* toElementPtr = m_leafDragData.dockingLeaf->AsElement();
+
+            if (fromElementPtr && toElementPtr)
+            {
+                ElementPointer fromElement = ExtractElement(fromElementPtr);
+                if (fromElement)
+                {
+                    toElementPtr = m_leafDragData.dockingLeaf->AsElement(); // Get as element again. Very important to do after a call to ExtractElement.
+                    auto newEdge = toElementPtr->InsertElement(std::move(fromElement), m_leafDragData.dockingPosition);
+                    if (newEdge)
+                    {
+                        m_edges.insert(std::move(newEdge));
+                    }
+
+                    m_forceUpdateBounds = true;
+                }
+            }
+        }
+
+        SetCursor(Mouse::Cursor::Normal);
+        ActivateNormalUpdate();
+        SetSkinState(State{});
+
+        return true;
+    }
 
     template<typename TSkin>
     template<typename Docker<TSkin>::Direction VEdgeDirection>
     bool Docker<TSkin>::HandleDirectionalEdgeMovement(Edge& edge, float movement)
-    {      
-        movement = LockEdgeMovement<VEdgeDirection>(edge, movement);
+    {   
+        constexpr Direction flippedDirection = FlipDirection(VEdgeDirection);
+        
+        auto* prevElement = edge.m_prevElement;
+        auto* nextElement = edge.m_nextElement;
+
+        movement = std::max(
+            movement,
+            GetDirectionalWidth<flippedDirection>(prevElement->minSize) - GetDirectionalWidth<flippedDirection>(prevElement->renderSize));
+        
+        movement = std::min(
+            movement,
+            GetDirectionalWidth<flippedDirection>(nextElement->renderSize) - GetDirectionalWidth<flippedDirection>(nextElement->minSize));
+              
         if (movement == 0.0f)
         {
             return false;
-        }
+        }        
 
-        auto* prevElement = edge.prevElement;
-        auto* nextElement = edge.nextElement;
-
-        const bool prevIsDynamic = prevElement && prevElement->IsDynamic();
-        const bool nextIsDynamic = nextElement && nextElement->IsDynamic();
-        const bool prevAndNextIsDynamic = prevIsDynamic && nextIsDynamic;
-        
-        if (prevAndNextIsDynamic)
+        if (prevElement)
         {
-            AddDirectionalHeight<VEdgeDirection>(prevElement->size, movement);
-            AddDirectionalHeight<VEdgeDirection>(nextElement->size, -movement);
+            AddDirectionalHeight<VEdgeDirection>(prevElement->requestedSize, movement);
         }
-        else
+        if (nextElement)
         {
-            if (prevElement)
-            {
-                if (!prevElement->IsDynamic())
-                {
-                    AddDirectionalHeight<VEdgeDirection>(prevElement->size, movement);
-                }
-            }
-            if (nextElement)
-            {
-                if (!nextElement->IsDynamic())
-                {
-                    AddDirectionalHeight<VEdgeDirection>(nextElement->size, -movement);
-                }
-            }
+            AddDirectionalHeight<VEdgeDirection>(nextElement->requestedSize, -movement);
         }
          
         return true;
@@ -569,18 +975,30 @@ namespace Molten::Gui
     }
 
     template<typename TSkin>
-    typename Docker<TSkin>::Element* Docker<TSkin>::FindIntersectingDraggableLeaf(const Vector2f32& point)
+    typename Docker<TSkin>::Leaf* Docker<TSkin>::FindIntersectingDraggableLeaf(const Vector2f32& point)
     {
-        for (auto& leafElement : m_leafElements)
+        for (auto* leaf : m_leafs)
         {
-            auto& leaf = std::get<LeafPointer>(leafElement->data);
             auto* draggableWidget = leaf->draggableWidget;
             if (draggableWidget && draggableWidget->GetDragBounds().Intersects(point))
             {
-                return leafElement;
+                return leaf;
             }
         }
 
+        return nullptr;
+    }
+
+    template<typename TSkin>
+    typename Docker<TSkin>::Leaf* Docker<TSkin>::FindIntersectingLeaf(const Vector2f32& point)
+    {
+        for (auto* leaf : m_leafs)
+        {
+            if (leaf->AsElement()->bounds.Intersects(point))
+            {
+                return leaf;
+            }
+        }
         return nullptr;
     }
 
@@ -592,176 +1010,260 @@ namespace Molten::Gui
             return;
         }
 
+        PreCalculateElementBounds(*m_rootElement.get());
         CalculateElementBounds(*m_rootElement.get(), GetGrantedBounds());
     }
 
     template<typename TSkin>
-    void  Docker<TSkin>::CalculateElementBounds(Element& element, const Bounds2f32& grantedBounds)
+    void Docker<TSkin>::PreCalculateElementBounds(Element& element)
     {
-        std::visit([&](auto& data) 
-        {            
-            CalculateElementBounds(*data.get(), grantedBounds);
-        }, element.data);
+        element.VisitData([&](auto& data)
+        {
+            PreCalculateElementBounds(element, *data.get());
+        });
     }
 
     template<typename TSkin>
-    void Docker<TSkin>::CalculateElementBounds(Leaf& leaf, const Bounds2f32& grantedBounds)
+    void Docker<TSkin>::PreCalculateElementBounds(Element& element, Leaf& leaf)
     {
-        leaf.widgetData->SetGrantedBounds(grantedBounds);
+        element.minSize = minElementSize;
+        element.renderSize = minElementSize;
     }
-    
+
     template<typename TSkin>
-    void Docker<TSkin>::CalculateElementBounds(Grid& grid, const Bounds2f32& grantedBounds)
+    void Docker<TSkin>::PreCalculateElementBounds(Element& element, Grid& grid )
     {
         if (grid.direction == Direction::Horizontal)
         {
-            CalculateGridBounds<Direction::Horizontal>(grid, grantedBounds);
+            PreCalculateElementBounds<Direction::Horizontal>(element, grid);
         }
         else
         {
-            CalculateGridBounds<Direction::Vertical>(grid, grantedBounds);
+            PreCalculateElementBounds<Direction::Vertical>(element, grid);
         }
     }
 
     template<typename TSkin>
     template<typename Docker<TSkin>::Direction VGridDirection>
-    void Docker<TSkin>::CalculateGridBounds(Grid& grid, const Bounds2f32& grantedBounds)
-    {     
-        grid.calculatedResult.Clear();
-        grid.calculatedResult.grantedBounds = grantedBounds;
-        grid.calculatedResult.grantedSize = grantedBounds.GetSize();
-
-        CalculateGridElementsBounds<VGridDirection>(grid.calculatedResult);
-
-        if(!grid.calculatedResult.dynamicElements.empty())
-        {
-            BalanceGridDynamicElements<VGridDirection>(grid.calculatedResult);
-        }
-        if(grid.calculatedResult.dynamicElements.empty() && !grid.calculatedResult.staticElements.empty())
-        {
-            BalanceGridStaticElements<VGridDirection>(grid.calculatedResult);
-        }
-
-        SetGridElementBounds<VGridDirection>(grid.calculatedResult);
-    }
-
-    template<typename TSkin>
-    template<typename Docker<TSkin>::Direction VGridDirection>
-    void Docker<TSkin>::CalculateGridElementsBounds(CalculatedGridResult& calculatedGridResult)
+    void Docker<TSkin>::PreCalculateElementBounds(Element& element, Grid& grid)
     {
-        const float grantedWidth = GetDirectionalWidth<VGridDirection>(calculatedGridResult.grantedSize);
-        auto widthLeft = grantedWidth;
+        auto minSize = Vector2f32{ };
+        auto requestedSize = Vector2f32{ };
 
-        // Iterate until widthleft is empty.
-        auto& grid = calculatedGridResult.grid;
+        for (auto& childPtr : grid.elements)
+        {
+            auto& child = *childPtr.get();
+            PreCalculateElementBounds(child);
+
+            if constexpr (VGridDirection == Direction::Horizontal)
+            {
+                minSize.x += child.minSize.x;
+                requestedSize.x += child.requestedSize.x;
+
+                if (child.minSize.y > minSize.y)
+                {
+                    minSize.y = child.minSize.y;
+                }
+                if (child.requestedSize.y > requestedSize.y)
+                {
+                    requestedSize.y = child.requestedSize.y;
+                }
+            }
+            else
+            {
+                minSize.y += child.minSize.y;
+                requestedSize.y += child.requestedSize.y;
+
+                if (child.minSize.x > minSize.x)
+                {
+                    minSize.x = child.minSize.x;
+                }
+                if (child.requestedSize.x > requestedSize.x)
+                {
+                    requestedSize.x = child.requestedSize.x;
+                }
+            }        
+        }
+
+        element.minSize = minSize;
+        element.renderSize = minSize;
+
+        SetDirectionalWidth<VGridDirection>(element.requestedSize, GetDirectionalWidth<VGridDirection>(requestedSize));
+    }
+
+    template<typename TSkin>
+    void Docker<TSkin>::CalculateElementBounds(Element& element, const Bounds2f32& grantedBounds)
+    {
+        element.VisitData([&](auto& data)
+        {
+            CalculateElementBounds(element , *data.get(), grantedBounds);
+        });
+    }
+
+    template<typename TSkin>
+    void Docker<TSkin>::CalculateElementBounds(Element& element, Leaf& leaf, const Bounds2f32& grantedBounds)
+    {
+        leaf.widgetData->SetGrantedBounds(grantedBounds);
+    }
+
+    template<typename TSkin>
+    void Docker<TSkin>::CalculateElementBounds(Element& element, Grid& grid, const Bounds2f32& grantedBounds)
+    {
+        if (grid.direction == Direction::Horizontal)
+        {
+            return CalculateElementBounds<Direction::Horizontal>(element, grid, grantedBounds);
+        }
+        else
+        {
+            return CalculateElementBounds<Direction::Vertical>(element, grid, grantedBounds);
+        }
+    }
+
+    template<typename TSkin>
+    template<typename Docker<TSkin>::Direction VGridDirection>
+    void Docker<TSkin>::CalculateElementBounds(Element& element, Grid& grid, const Bounds2f32& grantedBounds)
+    {
+        if (grid.elements.empty())
+        {
+            return;
+        }
+
+        const auto grantedSize = grantedBounds.GetSize();
+        const auto spacingTotalWidth = grid.elements.size() > 1 ? static_cast<float>(grid.elements.size() - 1) * spacing : 0.0f;
+        const auto grantedWidth = GetDirectionalWidth<VGridDirection>(grantedSize) - spacingTotalWidth;
+        const auto requestedWidth = GetDirectionalWidth<VGridDirection>(element.requestedSize);
+        auto widthDiff = grantedWidth - requestedWidth;
+
+        // Distribute dynamic size.
+        if (!grid.dynamicElements.empty())
+        {
+            auto partialWidthDiff = widthDiff / static_cast<float>(grid.dynamicElements.size());
+            for (auto it = grid.dynamicElements.rbegin(); it != grid.dynamicElements.rend(); it++)
+            {
+                auto& childElement = *(*it);
+
+                auto childPartialWidthDiff = std::max(
+                    partialWidthDiff, 
+                    GetDirectionalWidth<VGridDirection>(childElement.minSize) - GetDirectionalWidth<VGridDirection>(childElement.requestedSize));
+
+                AddDirectionalWidth<VGridDirection>(childElement.requestedSize, childPartialWidthDiff);
+                childElement.renderSize = childElement.requestedSize;
+
+                widthDiff -= childPartialWidthDiff;
+            }
+        }
+
+        // Distribute remaining diff
+        for (auto it = grid.elements.begin(); it != grid.elements.end(); it++)
+        {
+            auto& childElement = *it->get();
+
+            if (childElement.IsDynamic())
+            {
+                continue;
+            }
+                
+            auto childWidthDiff = std::max(
+                widthDiff, 
+                GetDirectionalWidth<VGridDirection>(childElement.minSize) - GetDirectionalWidth<VGridDirection>(childElement.requestedSize));
+
+            childElement.renderSize = childElement.requestedSize;
+            AddDirectionalWidth<VGridDirection>(childElement.renderSize, childWidthDiff);
+
+            widthDiff -= childWidthDiff;
+        }
+
+        // Set bounds.
+        constexpr Direction flippedDirection = FlipDirection(VGridDirection);
+        auto boundsLeft = grantedBounds;
+        auto elementBounds = Bounds2f32{ };
+
         auto it = grid.elements.rbegin();
         for (; it != grid.elements.rend(); it++)
         {
-            if (widthLeft <= 0.0f)
+            if (boundsLeft.IsEmpty())
             {
                 break;
             }
 
-            auto& element = *it;
+            auto& childElement = *it->get();
 
-            std::visit([&](auto& data)
-            {
-                if (data->IsDynamic())
-                {
-                    float minWidth = GetDirectionalMinWidth<VGridDirection>(element->size);
-                    SetDirectionalWidth<VGridDirection>(element->calculatedSize, minWidth);
-                    CutWidth(widthLeft, m_minElementWidth);
+            DirectionalShrinkBounds<VGridDirection>(boundsLeft, elementBounds, GetDirectionalWidth<VGridDirection>(childElement.renderSize));
 
-                    calculatedGridResult.totalDynamicWidth += minWidth;
-                    calculatedGridResult.dynamicElements.push_back(element.get());
-                }
-                else
-                {
-                    float minWidth = GetDirectionalMinWidth<VGridDirection>(element->size);
-                    CutAndClampWidth(widthLeft, minWidth);
-                    SetDirectionalWidth<VGridDirection>(element->calculatedSize, minWidth);
+            childElement.bounds = elementBounds;
+            SetElementPrevEdgeBounds<flippedDirection>(childElement, grantedBounds);
 
-                    calculatedGridResult.totalStaticWidth += minWidth;
-                    calculatedGridResult.staticElements.push_back(element.get());
-                }
-            }, element->data);
+            CalculateElementBounds(childElement, elementBounds);
+
+            DirectionalShrinkBounds<VGridDirection>(boundsLeft, spacing);
         }
 
-        // Hide invisible elements.
         HideElements(it, grid.elements.rend());
-
-        calculatedGridResult.activeElementsBegin = grid.elements.rbegin();
-        calculatedGridResult.activeElementsEnd = it;
     }
 
     template<typename TSkin>
-    template<typename Docker<TSkin>::Direction VGridDirection>
-    void Docker<TSkin>::BalanceGridDynamicElements(const CalculatedGridResult& calculatedGridResult)
+    template<typename TIterator>
+    void Docker<TSkin>::HideElements(TIterator begin, TIterator end)
     {
-        if (calculatedGridResult.dynamicElements.empty())
+        // FIX, should implement partial tree node removal and use it instead of SetGrantedBounds.
+        for (; begin != end; begin++)
         {
-            return;
-        }
+            auto& element = *begin;
 
-        const auto grantedWidth = GetDirectionalWidth<VGridDirection>(calculatedGridResult.grantedSize);
-        const auto availableWidth = (grantedWidth - calculatedGridResult.totalStaticWidth) - calculatedGridResult.totalDynamicWidth;
-        const auto partialWidth = availableWidth / static_cast<float>(calculatedGridResult.dynamicElements.size());
-
-        auto dynamicWidthLeft = availableWidth;
-        for (auto* element : calculatedGridResult.dynamicElements)
-        {
-            dynamicWidthLeft -= partialWidth;
-            AddDirectionalWidth<VGridDirection>(element->calculatedSize, partialWidth);
-            SetDirectionalWidth<VGridDirection>(element->size, GetDirectionalWidth<VGridDirection>(element->calculatedSize));
-        }
-    }
-
-    template<typename TSkin>
-    template<typename Docker<TSkin>::Direction VGridDirection>
-    void Docker<TSkin>::BalanceGridStaticElements(const CalculatedGridResult& calculatedGridResult)
-    {
-        if (calculatedGridResult.staticElements.empty())
-        {
-            return;
-        }
-        
-        const auto grantedWidth = GetDirectionalWidth<VGridDirection>(calculatedGridResult.grantedSize);
-        const auto availableWidth = grantedWidth - calculatedGridResult.totalStaticWidth;
-        const auto partialWidth = availableWidth / static_cast<float>(calculatedGridResult.staticElements.size());
-
-        auto dynamicWidthLeft = availableWidth;
-        for (auto* element : calculatedGridResult.staticElements)
-        {
-            dynamicWidthLeft -= partialWidth;
-            AddDirectionalWidth<VGridDirection>(element->calculatedSize, partialWidth);
-            SetDirectionalWidth<VGridDirection>(element->size, GetDirectionalWidth<VGridDirection>(element->calculatedSize));
+            if (element->GetType() == ElementType::Leaf) // Leaf
+            {
+                auto* leaf = element->GetLeaf();
+                leaf->widgetData->SetGrantedBounds({ 0.0f, 0.0f, 0.0f, 0.0f });
+            }
+            else // Grid
+            {
+                auto* grid = element->GetGrid();
+                HideElements(grid->elements.rbegin(), grid->elements.rend());
+            }
         }
     }
 
     template<typename TSkin>
     template<typename Docker<TSkin>::Direction VGridDirection>
-    void Docker<TSkin>::SetGridElementBounds(const CalculatedGridResult& calculatedGridResult)
+    constexpr void Docker<TSkin>::DirectionalShrinkBounds(Bounds2f32& bounds, float shrinkValue)
     {
-        constexpr Direction flippedDirection = FlipDirection(VGridDirection);
-
-        auto begin = calculatedGridResult.activeElementsBegin;
-        auto end = calculatedGridResult.activeElementsEnd;
-        
-        auto grantedBounds = calculatedGridResult.grantedBounds;
-        auto boundsLeft = grantedBounds;
-
-        for (auto it = begin; it != end; it++)
+        if constexpr (VGridDirection == Direction::Horizontal)
         {
-            auto& element = *it->get();
-            auto elementWidth = GetDirectionalWidth<VGridDirection>(element.calculatedSize);
-            auto elementBounds = CutDirectionalBounds<VGridDirection>(boundsLeft, elementWidth);
+            float shrinkPosition = std::max(bounds.left, bounds.right - shrinkValue);
+            bounds.right -= std::abs(shrinkPosition - bounds.right);
+        }
+        else
+        {
+            float shrinkPosition = std::max(bounds.top, bounds.bottom - shrinkValue);
+            bounds.bottom -= std::abs(shrinkPosition - bounds.bottom);
+        }
+    }
 
-            element.bounds = elementBounds;
+    template<typename TSkin>
+    template<typename Docker<TSkin>::Direction VGridDirection>
+    constexpr void Docker<TSkin>::DirectionalShrinkBounds(Bounds2f32& bounds, Bounds2f32& shrinkedBounds, float shrinkValue)
+    {
+        if constexpr (VGridDirection == Direction::Horizontal)
+        {
+            float shrinkPosition = std::max(bounds.left, bounds.right - shrinkValue);
+            shrinkValue = std::abs(shrinkPosition - bounds.right);
 
-            CalculateElementBounds(element, elementBounds);  
-            SetElementPrevEdgeBounds<flippedDirection>(element, grantedBounds);
+            shrinkedBounds = {
+                bounds.right - shrinkValue, bounds.top, bounds.right, bounds.bottom
+            };
 
-            CutDirectionalBounds<VGridDirection>(boundsLeft, spacing);   
+            bounds.right -= shrinkValue;
+        }
+        else
+        {
+            float shrinkPosition = std::max(bounds.top, bounds.bottom - shrinkValue);
+            shrinkValue = std::abs(shrinkPosition - bounds.bottom);
+
+            shrinkedBounds = {
+                bounds.left, bounds.bottom - shrinkValue, bounds.right, bounds.bottom
+            };
+
+            bounds.bottom -= shrinkValue;
         }
     }
 
@@ -769,7 +1271,7 @@ namespace Molten::Gui
     template<typename Docker<TSkin>::Direction VEdgeDirection>
     void Docker<TSkin>::SetElementPrevEdgeBounds(Element& element, const Bounds2f32& grantedBounds)
     {
-        auto* prevEdge = element.prevEdge;
+        auto* prevEdge = element.m_prevEdge;
         if (prevEdge)
         {
             float edgeWidthHalf = edgeWidth * 0.5f;
@@ -791,53 +1293,9 @@ namespace Molten::Gui
     }
 
     template<typename TSkin>
-    template<typename TIterator>
-    void Docker<TSkin>::HideElements(TIterator begin, TIterator end)
-    {
-        for (; begin != end; begin++)
-        {
-            auto& element = *begin;
-
-            if (element->type == ElementType::Leaf) // Leaf
-            {
-                auto& leaf = std::get<LeafPointer>(element->data);
-                leaf->widgetData->SetGrantedBounds({ 0.0f, 0.0f, 0.0f, 0.0f });
-            }
-            else // Grid
-            {
-                auto& grid = std::get<GridPointer>(element->data);
-                HideElements(grid->elements.rbegin(), grid->elements.rend());
-            }
-        }
-    }
-
-    template<typename TSkin>
     constexpr typename Docker<TSkin>::Direction Docker<TSkin>::FlipDirection(const Direction direction)
     {
         return direction == Direction::Horizontal ? Direction::Vertical : Direction::Horizontal;
-    }
-
-    template<typename TSkin>
-    constexpr Vector2f32 Docker<TSkin>::GetDirectionalMinSize(const Vector2f32& size)
-    {
-        return {
-            std::max(size.x, m_minElementWidth),
-            std::max(size.y, m_minElementWidth)
-        };
-    }
-
-    template<typename TSkin>
-    template<typename Docker<TSkin>::Direction VDirection>
-    constexpr float Docker<TSkin>::GetDirectionalMinWidth(const Vector2f32& size)
-    {
-        if constexpr (VDirection == Direction::Horizontal)
-        {
-            return std::max(size.x, m_minElementWidth);
-        }
-        else
-        {
-            return std::max(size.y, m_minElementWidth);
-        }
     }
 
     template<typename TSkin>
@@ -856,20 +1314,6 @@ namespace Molten::Gui
 
     template<typename TSkin>
     template<typename Docker<TSkin>::Direction VDirection>
-    constexpr float Docker<TSkin>::GetDirectionalHeight(const Vector2f32& size)
-    {
-        if constexpr (VDirection == Direction::Horizontal)
-        {
-            return size.y;
-        }
-        else
-        {
-            return size.x;
-        }
-    }
-
-    template<typename TSkin>
-    template<typename Docker<TSkin>::Direction VDirection>
     constexpr void Docker<TSkin>::SetDirectionalWidth(Vector2f32& size, const float width)
     {
         if constexpr (VDirection == Direction::Horizontal)
@@ -879,20 +1323,6 @@ namespace Molten::Gui
         else
         {
             size.y = width;
-        }
-    }
-
-    template<typename TSkin>
-    template<typename Docker<TSkin>::Direction VDirection>
-    constexpr void Docker<TSkin>::SetDirectionalHeight(Vector2f32& size, const float height)
-    {
-        if constexpr (VDirection == Direction::Horizontal)
-        {
-            size.y = height;
-        }
-        else
-        {
-            size.x = height;
         }
     }
 
@@ -925,59 +1355,106 @@ namespace Molten::Gui
     }
 
     template<typename TSkin>
-    constexpr void Docker<TSkin>::CutWidth(float& widthLeft, const float width)
+    bool Docker<TSkin>::GetDockingPositionInElement(
+        const Vector2f32& mousePosition,
+        Leaf& leaf,
+        Bounds2f32& dockingBounds,
+        DockingPosition& position)
     {
-        if (width > widthLeft)
+        auto* element = leaf.AsElement();
+        if (!element)
         {
-            widthLeft = 0.0f;
+            return false;
         }
-        else
+
+        auto oneThirdSize = element->bounds.GetSize() / 3.0f;
+
+        // Wow, WTF, optimize this, please...
+        const auto leftBounds = Bounds2f32{ 
+            element->bounds.left,
+            element->bounds.top + oneThirdSize.y,
+            element->bounds.left + oneThirdSize.x,
+            element->bounds.bottom - oneThirdSize.y
+        };
+        if (leftBounds.Intersects(mousePosition))
         {
-            widthLeft -= width;
+            dockingBounds = leftBounds;
+            position = DockingPosition::Left;
+            return true;
         }
+
+        const auto topBounds = Bounds2f32{
+           element->bounds.left + oneThirdSize.x,
+           element->bounds.top,
+           element->bounds.right - oneThirdSize.x,
+           element->bounds.top + oneThirdSize.y
+        };
+        if (topBounds.Intersects(mousePosition))
+        {
+            dockingBounds = topBounds;
+            position = DockingPosition::Top;
+            return true;
+        }
+
+        const auto rightBounds = Bounds2f32{
+           element->bounds.right - oneThirdSize.x,
+           element->bounds.top + oneThirdSize.y,
+           element->bounds.right,
+           element->bounds.bottom - oneThirdSize.y
+        };
+        if (rightBounds.Intersects(mousePosition))
+        {
+            dockingBounds = rightBounds;
+            position = DockingPosition::Right;
+            return true;
+        }
+
+        const auto bottomBounds = Bounds2f32{
+           element->bounds.left + oneThirdSize.x,
+           element->bounds.bottom - oneThirdSize.y,
+           element->bounds.right - oneThirdSize.x,
+           element->bounds.bottom
+        };
+        if (bottomBounds.Intersects(mousePosition))
+        {
+            dockingBounds = bottomBounds;
+            position = DockingPosition::Bottom;
+            return true;
+        }
+
+        return false;
     }
 
     template<typename TSkin>
-    constexpr void Docker<TSkin>::CutAndClampWidth(float& widthLeft, float& width)
+    Docker<TSkin>::EdgeDragData::EdgeDragData() :
+        pressedEdge(nullptr),
+        prevMousePosition(0.0f, 0.0f)
+    { }
+
+    template<typename TSkin>
+    void Docker<TSkin>::EdgeDragData::Reset()
     {
-        if (width > widthLeft)
-        {
-            width = widthLeft;
-            widthLeft = 0.0f;
-        }
-        else
-        {
-            widthLeft -= width;
-        }
+        pressedEdge = nullptr;
+        prevMousePosition = { 0.0f, 0.0f };
     }
 
     template<typename TSkin>
-    template<typename Docker<TSkin>::Direction VDirection>
-    constexpr Bounds2f32 Docker<TSkin>::CutDirectionalBounds(Bounds2f32& grantedBounds, const float size)
+    Docker<TSkin>::LeafDragData::LeafDragData() :
+        pressedLeaf(nullptr),
+        initialMousePosition(0.0f, 0.0f),
+        dockingLeaf(nullptr),
+        dockingPosition(DockingPosition::Left),
+        dragIsActivated(false)
+    {}
+    
+    template<typename TSkin>
+    void Docker<TSkin>::LeafDragData::Reset()
     {
-        const auto grantedSize = grantedBounds.GetSize();
-        auto newBounds = grantedBounds;
-
-        if constexpr (VDirection == Direction::Horizontal)
-        {
-            auto newEdge = std::max(grantedBounds.left, grantedBounds.right - size);
-            newBounds.left = newEdge;
-
-            grantedBounds.right -= size;
-            grantedBounds.ClampHighToLow();
-
-            return newBounds;
-        }
-        else
-        {
-            auto newEdge = std::max(grantedBounds.top, grantedBounds.bottom - size);
-            newBounds.top = newEdge;
-
-            grantedBounds.bottom -= size;
-            grantedBounds.ClampHighToLow();
-
-            return newBounds;
-        }
+        pressedLeaf = nullptr;
+        initialMousePosition = {0.0f, 0.0f};
+        dockingLeaf = nullptr;
+        dockingPosition = DockingPosition::Left;
+        dragIsActivated = false;
     }
 
 }

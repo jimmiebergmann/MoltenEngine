@@ -61,11 +61,9 @@ namespace Molten::Gui
 
     protected:
 
-        virtual bool OnAddChild(WidgetPointer<TSkin> child); // Delete (???)
-
         virtual void OnAddChild(WidgetData<TSkin>& childData);
 
-        void SetSkinState(WidgetSkinStateType state);
+        virtual void OnRemoveChild(WidgetData<TSkin>& childData); // NOT IN USE YET.
 
         WidgetData<TSkin>& GetData();
         const WidgetData<TSkin>& GetData() const;
@@ -99,18 +97,37 @@ namespace Molten::Gui
     };
 
 
-    template<typename TSkin, typename TWidget>
+    template<typename TSkin, template<typename> typename TWidget>
     class WidgetMixin : public Widget<TSkin>
     {
 
     public:
 
-        explicit WidgetMixin(WidgetData<TSkin>& data);
+       
+        virtual bool GetOverrideChildrenMouseEvents() const override;
+
+    protected:
+
+        explicit WidgetMixin(WidgetDataMixin<TSkin, TWidget>& data);
+
         WidgetMixin(
-            WidgetData<TSkin>& data,
+            WidgetDataMixin<TSkin, TWidget>& data,
             const Vector2f32& size);
 
-        virtual bool GetOverrideChildrenMouseEvents() const override;
+        template<typename TState>
+        const TState& GetSkinState() const;
+
+        template<typename TState>
+        void SetSkinState(const TState& state);
+
+        WidgetDataMixin<TSkin, TWidget>& GetDataMixin();
+        const WidgetDataMixin<TSkin, TWidget>& GetDataMixin() const;
+
+        using WidgetSkinType = typename TSkin::template WidgetSkin<TWidget<TSkin>>;
+        
+    private:  
+
+        WidgetDataMixin<TSkin, TWidget>& m_dataMixin;
 
     };
 

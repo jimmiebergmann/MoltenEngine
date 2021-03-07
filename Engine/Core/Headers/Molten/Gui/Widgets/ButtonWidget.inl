@@ -26,8 +26,8 @@
 namespace Molten::Gui
 {
     template<typename TSkin>
-    inline Button<TSkin>::Button(WidgetData<TSkin>& data) :
-        Widget<TSkin>(data),
+    inline Button<TSkin>::Button(WidgetDataMixin<TSkin, Button>& data) :
+        WidgetMixin<TSkin, Button>(data),
         m_pressed(false)
     {}
 
@@ -53,21 +53,15 @@ namespace Molten::Gui
         {
             switch (widgetEvent.subType)
             {
-                case WidgetEventSubType::MouseEnter: SetSkinState(m_pressed ? WidgetSkinStateType::Pressed : WidgetSkinStateType::Hovered); return true;
-                case WidgetEventSubType::MouseLeave: SetSkinState(m_pressed ? WidgetSkinStateType::Pressed : WidgetSkinStateType::Normal); return true;
-                case WidgetEventSubType::MousePress: SetSkinState(WidgetSkinStateType::Pressed); m_pressed = true; return true;
-                case WidgetEventSubType::MouseReleaseIn: SetSkinState(WidgetSkinStateType::Hovered); onPress(0); m_pressed = false; return true;
-                case WidgetEventSubType::MouseReleaseOut: SetSkinState(WidgetSkinStateType::Normal); m_pressed = false; return true;
+                case WidgetEventSubType::MouseEnter: SetSkinState(m_pressed ? State::Pressed : State::Hovered); return true;
+                case WidgetEventSubType::MouseLeave: SetSkinState(m_pressed ? State::Pressed : State::Normal); return true;
+                case WidgetEventSubType::MouseButtonPressed: SetSkinState(State::Pressed); m_pressed = true; return true;
+                case WidgetEventSubType::MouseButtonReleasedIn: SetSkinState(State::Hovered); onPress(0); m_pressed = false; return true;
+                case WidgetEventSubType::MouseButtonReleasedOut: SetSkinState(State::Normal); m_pressed = false; return true;
                 default: break;
             }
         }
         return false;
-    }
-
-    template<typename TSkin>
-    inline bool Button<TSkin>::OnAddChild(WidgetPointer<TSkin> /*widget*/)
-    {
-        return true;
     }
 
 }

@@ -46,10 +46,6 @@ namespace Molten::Gui
 
         void Update() override;
 
-    private:
-
-        bool OnAddChild(WidgetPointer<TSkin> widget) override;
-
     };
 
 }

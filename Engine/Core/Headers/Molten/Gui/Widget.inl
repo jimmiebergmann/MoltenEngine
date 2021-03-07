@@ -59,20 +59,13 @@ namespace Molten::Gui
     }
 
     template<typename TSkin>
-    bool Widget<TSkin>::OnAddChild(WidgetPointer<TSkin>)
-    {
-        return false;
-    }
-
-    template<typename TSkin>
     void Widget<TSkin>::OnAddChild(WidgetData<TSkin>& childData)
     {
     }
 
     template<typename TSkin>
-    void Widget<TSkin>::SetSkinState(WidgetSkinStateType state)
+    void Widget<TSkin>::OnRemoveChild(WidgetData<TSkin>& childData)
     {
-        m_data.widgetSkin->SetState(state);
     }
 
     template<typename TSkin>
@@ -119,23 +112,57 @@ namespace Molten::Gui
 
 
     // Widget mixin implementations.
-    template<typename TSkin, typename TWidget>
-    WidgetMixin<TSkin, TWidget>::WidgetMixin(WidgetData<TSkin>& data):
-        Widget<TSkin>(data)
-    {}
-
-    template<typename TSkin, typename TWidget>
-    WidgetMixin<TSkin, TWidget>::WidgetMixin(
-        WidgetData<TSkin>& data,
-        const Vector2f32& size
-    ) :
-        Widget<TSkin>(data, size)
-    {}
-
-    template<typename TSkin, typename TWidget>
+    template<typename TSkin, template<typename> typename TWidget>
     bool WidgetMixin<TSkin, TWidget>::GetOverrideChildrenMouseEvents() const
     {
-        return TWidget::overrideChildrenMouseEvents;
+        return TWidget<TSkin>::overrideChildrenMouseEvents;
+    }
+
+    template<typename TSkin, template<typename> typename TWidget>
+    WidgetMixin<TSkin, TWidget>::WidgetMixin(WidgetDataMixin<TSkin, TWidget>& data) :
+        Widget<TSkin>(data),
+        m_dataMixin(data)
+    {}
+
+    template<typename TSkin, template<typename> typename TWidget>
+    WidgetMixin<TSkin, TWidget>::WidgetMixin(
+        WidgetDataMixin<TSkin, TWidget>& data,
+        const Vector2f32& size
+    ) :
+        Widget<TSkin>(data, size),
+        m_dataMixin(data)
+    {}
+
+
+    template<typename TSkin, template<typename> typename TWidget>
+    template<typename TState>
+    const TState& WidgetMixin<TSkin, TWidget>::GetSkinState() const
+    {
+        static_assert(std::is_same_v<TState, typename TWidget<TSkin>::State>,
+            "Passed invalid widget state type to WidgetMixin<...>::GetSkinState.");
+
+        return m_dataMixin.widgetSkinMixin->GetState();
+    }
+    template<typename TSkin, template<typename> typename TWidget>
+    template<typename TState>
+    void WidgetMixin<TSkin, TWidget>::SetSkinState(const TState& state)
+    {
+        static_assert(std::is_same_v<TState, typename TWidget<TSkin>::State>, 
+            "Passed invalid widget state type to WidgetMixin<...>::SetSkinState.");
+
+        m_dataMixin.widgetSkinMixin->SetState(state);
+    }
+
+    template<typename TSkin, template<typename> typename TWidget>
+    WidgetDataMixin<TSkin, TWidget>& WidgetMixin<TSkin, TWidget>::GetDataMixin()
+    {
+        return m_dataMixin;
+    }
+
+    template<typename TSkin, template<typename> typename TWidget>
+    const WidgetDataMixin<TSkin, TWidget>& WidgetMixin<TSkin, TWidget>::GetDataMixin() const
+    {
+        return m_dataMixin;
     }
 
 }

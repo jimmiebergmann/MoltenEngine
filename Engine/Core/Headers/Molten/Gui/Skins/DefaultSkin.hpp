@@ -55,34 +55,48 @@ namespace Molten::Gui
 
         // Widgets
         template<>
-        struct WidgetSkin<Button<DefaultSkin>> : WidgetSkinBase
+        struct WidgetSkin<Button<DefaultSkin>> : WidgetSkinMixin<Button<DefaultSkin>>
         {
+
+            static constexpr bool test = true;
 
             WidgetSkin(DefaultSkin& skin, Button<DefaultSkin>& button, WidgetData<DefaultSkin>& buttonData) :
                 skin(skin),
                 button(button),
-                buttonData(buttonData)
+                buttonData(buttonData),
+                color{ 1.0f, 0.0f, 0.0f, 1.0f }
             {}
 
             void Draw() override
             {
-                switch (m_state)
+                skin.m_canvasRenderer.DrawRect(buttonData.GetGrantedBounds(), color);
+            }
+
+            void OnStateChange(const State& state) override
+            {
+                switch (state)
                 {
-                    case WidgetSkinStateType::Normal: skin.m_canvasRenderer.DrawRect(buttonData.GetGrantedBounds(), Vector4f32{ 1.0f, 0.0f, 0.0f, 1.0f }); break;
-                    case WidgetSkinStateType::Hovered: skin.m_canvasRenderer.DrawRect(buttonData.GetGrantedBounds(), Vector4f32{ 0.0f, 1.0f, 0.0f, 1.0f }); break;
-                    case WidgetSkinStateType::Pressed: skin.m_canvasRenderer.DrawRect(buttonData.GetGrantedBounds(), Vector4f32{ 0.0f, 0.0f, 1.0f, 1.0f }); break;
-                    case WidgetSkinStateType::Disabled: skin.m_canvasRenderer.DrawRect(buttonData.GetGrantedBounds(), Vector4f32{ 0.7f, 0.7, 0.7f, 1.0f }); break;
-                }                
+                    case State::Normal: color = Vector4f32{ 1.0f, 0.0f, 0.0f, 1.0f }; break;
+                    case State::Hovered: color = Vector4f32{ 0.0f, 1.0f, 0.0f, 1.0f }; break;
+                    case State::Pressed: color = Vector4f32{ 0.0f, 0.0f, 1.0f, 1.0f }; break;
+                    case State::Disabled: color = Vector4f32{ 0.7f, 0.7, 0.7f, 1.0f }; break;
+                }
             }
 
             DefaultSkin& skin;
             Button<DefaultSkin>& button;
             WidgetData<DefaultSkin>& buttonData;
+            Vector4f32 color;
         };
 
         template<>
-        struct WidgetSkin<Docker<DefaultSkin>> : WidgetSkinBase
+        struct WidgetSkin<Docker<DefaultSkin>> : WidgetSkinMixin<Docker<DefaultSkin>>
         {
+
+            static constexpr float edgeWidth = 10.0f;
+            static constexpr float spacing = 10.0f;
+            static constexpr float widgetDragActivationDistance = 5.0f;
+
 
             WidgetSkin(DefaultSkin& skin, Docker<DefaultSkin>& widget, WidgetData<DefaultSkin>& widgetData) :
                 skin(skin),
@@ -90,9 +104,9 @@ namespace Molten::Gui
                 widgetData(widgetData)
             {}
 
-            void Draw()
+            void DrawLeafDocking()
             {
-
+                skin.m_canvasRenderer.DrawRect(GetState().leafDragState.dockingBounds, Vector4f32{ 0.4f, 0.4f, 1.0f, 0.4f });
             }
 
             DefaultSkin& skin;
@@ -109,11 +123,6 @@ namespace Molten::Gui
                 widgetData(widgetData)
             {}
 
-            void Draw()
-            {
-                
-            }
-
             DefaultSkin& skin;
             Spacer<DefaultSkin>& widget;
             WidgetData<DefaultSkin>& widgetData;
@@ -128,10 +137,6 @@ namespace Molten::Gui
                 verticalGridData(verticalGridData)
             {}
 
-            void Draw()
-            { 
-            }
-
             DefaultSkin& skin;
             VerticalGrid<DefaultSkin>& verticalGrid;
             WidgetData<DefaultSkin>& verticalGridData;
@@ -143,8 +148,7 @@ namespace Molten::Gui
             WidgetSkin(DefaultSkin& skin, Pane<DefaultSkin>& pane, WidgetData<DefaultSkin>& paneData) :
                 skin(skin),
                 pane(pane),
-                paneData(paneData)//,
-               // m_showBounds(false)
+                paneData(paneData)
             {}
 
             void Draw() override
@@ -155,31 +159,11 @@ namespace Molten::Gui
 
                 skin.m_canvasRenderer.DrawRect(grantedBounds, Vector4f32{ 0.2f, 0.2f, 0.2f, 1.0f });
                 skin.m_canvasRenderer.DrawRect(contentBounds, Vector4f32{ 0.8f, 0.8f, 0.8f, 1.0f });
-
-               /* if (m_showBounds)
-                {
-                    skin.m_canvasRenderer.DrawRect(m_edgeBounds, Vector4f32{ 0.0f, 0.0f, 0.0f, 1.0f });
-                }*/
-
             }
-
-            /*void ShowEdge(const Bounds2f32& edgeBounds)
-            {
-                m_showBounds = true;
-                m_edgeBounds = edgeBounds;
-            }
-
-            void HideEdge()
-            {
-                m_showBounds = false;
-            }*/
 
             DefaultSkin& skin;
             Pane<DefaultSkin>& pane;
             WidgetData<DefaultSkin>& paneData;
-
-            /*bool m_showBounds;
-            Bounds2f32 m_edgeBounds;*/
         };
 
 

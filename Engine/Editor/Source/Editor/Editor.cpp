@@ -199,7 +199,6 @@ namespace Molten::Editor
         m_canvasRenderer = Gui::CanvasRenderer::Create(*m_renderer, m_logger.get());
         m_canvas = std::make_shared<Gui::Canvas<Gui::DefaultSkin>>(*m_renderer, m_canvasRenderer);
 
-
         // PANE BUTTON TEST
         /*auto grid = m_canvas->CreateChild<Gui::VerticalGrid>();
         grid->margin = Gui::PaddingType{ 10.0f, 20.0f, 30.0f, 40.0f };
@@ -235,21 +234,28 @@ namespace Molten::Editor
         {
             m_window->SetCursor(cursor);
         });
-
+       
         auto pane1 = docker->CreateChild<Gui::Pane>(Gui::DockingPosition::Left, true, Vector2f32{ 100.0f, 100.0f });
+        pane1->padding = { 4.0f, 4.0f, 4.0f, 4.0f };
         docker->CreateChild<Gui::Pane>(Gui::DockingPosition::Right, false, Vector2f32{ 100.0f, 100.0f });
         docker->CreateChild<Gui::Pane>(Gui::DockingPosition::Bottom, false, Vector2f32{ 100.0f, 100.0f });
         auto pane4 = docker->CreateChild<Gui::Pane>(Gui::DockingPosition::Right, false, Vector2f32{ 100.0f, 100.0f });
+        pane4->padding = { 4.0f, 4.0f, 4.0f, 4.0f };
+        docker->CreateChild<Gui::Pane>(Gui::DockingPosition::Right, false, Vector2f32{ 100.0f, 100.0f });
+        docker->CreateChild<Gui::Pane>(Gui::DockingPosition::Right, false, Vector2f32{ 100.0f, 100.0f });
+        
         docker->CreateChild<Gui::Pane>(Gui::DockingPosition::Top, false, Vector2f32{ 100.0f, 100.0f });
         docker->CreateChild<Gui::Pane>(Gui::DockingPosition::Left, false, Vector2f32{ 100.0f, 100.0f });
 
+        auto vertGrid1 = pane1->CreateChild<Gui::VerticalGrid>();
+        vertGrid1->CreateChild<Gui::Button>();
+        vertGrid1->CreateChild<Gui::Button>();
 
-        pane1->CreateChild<Gui::Button>();
         pane4->CreateChild<Gui::Button>();
-
-
         
         
+
+
 
         /*
         Gui::Widget<Gui::DefaultSkin>::CreateChild<Gui::Spacer>(grid);

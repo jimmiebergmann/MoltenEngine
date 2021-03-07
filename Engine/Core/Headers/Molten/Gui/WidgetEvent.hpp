@@ -41,12 +41,12 @@ namespace Molten::Gui
     enum class WidgetEventSubType : uint8_t
     {
         None,
-        MouseEnter,     ///< Mouse cursur entered widget and is hovering widget.
-        MouseLeave,     ///< Mouse cursur leaved the widget and is not longer hovering widget. This event can only occur after a MouseEnter event.
-        MouseMove,      ///< Mouse moved over widget. This event can only occur after a MouseEnter event.
-        MousePress,     ///< Mouse button was pressed while hovering widget. This event can only occur after a MouseEnter event.
-        MouseReleaseIn, ///< Mouse button was released while hovering widget. This event can only occur after a MousePress event.
-        MouseReleaseOut ///< Mouse button was released while not hovering widget. This event can only occur after a MousePress event.
+        MouseEnter,             ///< Mouse cursur entered widget and is hovering widget.
+        MouseLeave,             ///< Mouse cursur leaved the widget and is not longer hovering widget. This event can only occur after a MouseEnter event.
+        MouseMove,              ///< Mouse moved over widget. This event can only occur after a MouseEnter event.
+        MouseButtonPressed,     ///< Mouse button was pressed while hovering widget. This event can only occur after a MouseEnter event.
+        MouseButtonReleasedIn,  ///< Mouse button was released while hovering widget. This event can only occur after a MousePressed event.
+        MouseButtonReleasedOut  ///< Mouse button was released while not hovering widget. This event can only occur after a MousePressed event.
     };
 
 
@@ -55,13 +55,18 @@ namespace Molten::Gui
     {
         struct MouseEvent
         {
+            MouseEvent() :
+                button(Mouse::Button::Left)
+            {}
+
             Vector2i32 position;
             Mouse::Button button;
         };
 
         WidgetEvent() :
             type(WidgetEventType::None),
-            subType(WidgetEventSubType::None)
+            subType(WidgetEventSubType::None),
+            mouseEvent()
         {}
 
         WidgetEventType type;
@@ -85,8 +90,6 @@ namespace Molten::Gui
         virtual bool HandleEvent(const WidgetEvent& widgetEvent) = 0;
 
     };
-
-
 
 }
 
