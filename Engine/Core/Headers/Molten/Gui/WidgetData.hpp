@@ -61,7 +61,7 @@ namespace Molten::Gui
 
         WidgetData();
 
-        WidgetPointer<TSkin> GetWidget();
+        Widget<TSkin>* GetWidget();
 
         TreeNormalLane GetChildrenNormalLane();
         TreePartialLane GetChildrenPartialLane();

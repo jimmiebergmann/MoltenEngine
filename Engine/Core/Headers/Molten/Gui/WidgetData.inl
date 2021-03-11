@@ -36,9 +36,9 @@ namespace Molten::Gui
     {}
 
     template<typename TSkin>
-    WidgetPointer<TSkin> WidgetData<TSkin>::GetWidget()
+    Widget<TSkin>* WidgetData<TSkin>::GetWidget()
     {
-        return widget;
+        return widget.get();
     }
 
     template<typename TSkin>

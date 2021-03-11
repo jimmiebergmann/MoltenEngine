@@ -206,7 +206,8 @@ namespace Molten::Gui
 
             Element(
                 LeafPointer&& leaf, 
-                const Vector2f32& requestedSize);
+                const Vector2f32& requestedSize,
+                const Vector2f32& minSize);
 
             explicit Element(GridPointer&& grid);
 
@@ -222,19 +223,30 @@ namespace Molten::Gui
 
             Element* GetParent();
 
+            Edge* GetPrevEdge();
+            Edge* GetNextEdge();
+            void SetPrevEdge(Edge* edge);
+            void SetNextEdge(Edge* edge);
+
             template<typename TCallback>
             auto VisitData(TCallback && callback);
 
             bool IsDynamic() const;
 
-            EdgePointer InsertElement(
+            [[nodiscard]] EdgePointer InsertElement(
                 ElementPointer&& element,
                 const DockingPosition position);
-            
-            std::pair<ElementPointer, Edge*> ExtractElement(Element* element);
-            
-            Edge* m_prevEdge; // Make private?
-            Edge* m_nextEdge; // Make private?
+
+            [[nodiscard]] std::pair<ElementPointer, Edge*> Extract();
+
+            [[nodiscard]] std::pair<ElementPointer, Edge*> ExtractElement(Element* element);
+
+            void UpdateConstraintsFromChildren();
+            void UpdateConstraintsFromChildren(const Direction direction);
+            template<Direction VDirection>
+            void UpdateConstraintsFromChildren();
+
+            void UpdateParentsConstraints();
 
             Vector2f32 minSize;
             Vector2f32 requestedSize;
@@ -243,16 +255,39 @@ namespace Molten::Gui
 
         private:
 
-            std::pair<Element*, typename ElementPointerList::iterator> InsertElementPreProcess(const DockingPosition position);
-            void TransformToGrid(const Direction direction);
-            void MergeGrid();
+            void TransformLeafToGrid(Direction direction);
 
-            void AddDynamicElement(Element* element);
-            void RemoveDynamicElement(Element* element);
+            void TransformGridToFlipperGrid();
+
+            void TransformToChild();
+
+            void TransformToChildLeaf();
+
+            void TransformToChildGrid();
+
+            EdgePointer InsertElementInGrid(
+                ElementPointer&& element,
+                const ElementPosition position);
+
+            EdgePointer InsertElementInGrid(
+                ElementPointer&& element,
+                const typename ElementPointerList::iterator it);
+
+            EdgePointer InsertElementInParentGrid(
+                ElementPointer&& element,
+                Element* neighborElement,
+                const ElementPosition position);
+
+            void AddDynamicElementFromParents(Element* element);
+            void RemoveDynamicElementFromParents(Element* element);
+
+            [[nodiscard]] Edge* ExtractEdge(Element* element);
 
             ElementType m_type;
             Type m_data;
             Element* m_parent;
+            Edge* m_prevEdge;
+            Edge* m_nextEdge;
 
         };
 
@@ -317,9 +352,6 @@ namespace Molten::Gui
 
         template<Direction VEdgeDirection>
         bool HandleDirectionalEdgeMovement(Edge& edge, float movement);
-     
-        template<Direction VEdgeDirection>
-        static constexpr float LockEdgeMovement(const Edge& edge, const float movement);
 
         Edge* FindIntersectingEdge(const Vector2f32& point);
         Leaf* FindIntersectingDraggableLeaf(const Vector2f32& point);
@@ -330,13 +362,6 @@ namespace Molten::Gui
         /** Bounds calculation functions. */
         /**@{*/
         void CalculateBounds();
-
-        void PreCalculateElementBounds(Element& element);
-        void PreCalculateElementBounds(Element& element, Leaf& leaf);
-        void PreCalculateElementBounds(Element& element, Grid& grid);
-        template<Direction VGridDirection>
-        void PreCalculateElementBounds(Element& element, Grid& grid);
-
         void CalculateElementBounds(Element& element, const Bounds2f32& grantedBounds);
         void CalculateElementBounds(Element& element, Leaf& leaf, const Bounds2f32& grantedBounds);
         void CalculateElementBounds(Element& element, Grid& grid, const Bounds2f32& grantedBounds);
@@ -363,7 +388,13 @@ namespace Molten::Gui
         static constexpr float GetDirectionalWidth(const Vector2f32& size);
 
         template<Direction VDirection>
+        static constexpr float GetDirectionalHeight(const Vector2f32& size);
+
+        template<Direction VDirection>
         static constexpr void SetDirectionalWidth(Vector2f32& size, const float width);
+
+        template<Direction VDirection>
+        static constexpr void SetDirectionalHeight(Vector2f32& size, const float height);
 
         template<Direction VDirection>
         static constexpr void AddDirectionalWidth(Vector2f32& size, const float width);
