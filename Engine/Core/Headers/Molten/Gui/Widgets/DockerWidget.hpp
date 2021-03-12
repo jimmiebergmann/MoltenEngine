@@ -265,6 +265,10 @@ namespace Molten::Gui
 
             void TransformToChildGrid();
 
+            void TransformToParentGrid();
+
+            void SetChildrensParentToThis();
+
             EdgePointer InsertElementInGrid(
                 ElementPointer&& element,
                 const ElementPosition position);
@@ -363,7 +367,7 @@ namespace Molten::Gui
         /**@{*/
         void CalculateBounds();
         void CalculateElementBounds(Element& element, const Bounds2f32& grantedBounds);
-        void CalculateElementBounds(Element& element, Leaf& leaf, const Bounds2f32& grantedBounds);
+        static void CalculateElementBounds(Element& element, Leaf& leaf, const Bounds2f32& grantedBounds);
         void CalculateElementBounds(Element& element, Grid& grid, const Bounds2f32& grantedBounds);
         template<Direction VGridDirection>
         void CalculateElementBounds(Element& element, Grid& grid, const Bounds2f32& grantedBound);

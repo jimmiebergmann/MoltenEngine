@@ -542,6 +542,90 @@ namespace Molten::Gui
         auto extractedData = std::move(std::get<GridPointer>(firstElement->m_data));
         extractedData->m_owner = this;
         m_data = std::move(extractedData);
+
+        SetChildrensParentToThis();
+
+        if (m_parent && m_parent->m_type == ElementType::Grid)
+        {
+            auto parentGrid = m_parent->GetGrid();
+            if (GetGrid()->direction == parentGrid->direction)
+            {
+                TransformToParentGrid();
+            }
+        }
+    }
+
+    template<typename TSkin>
+    void Docker<TSkin>::Element::TransformToParentGrid()
+    {
+        auto& parentGrid = std::get<GridPointer>(m_parent->m_data);
+
+        auto it = std::find_if(parentGrid->elements.begin(), parentGrid->elements.end(), [&](auto& child)
+        {
+            return child.get() == this;
+        });
+
+        if(it == parentGrid->elements.end())
+        {
+            return;
+        }
+
+        auto* newPrevElement = it->get() != parentGrid->elements.front().get() ? std::prev(it)->get() : nullptr;
+        auto* newNextElement = it->get() != parentGrid->elements.back().get() ? std::next(it)->get() : nullptr;
+
+        auto extractedGrid = std::move(*it);
+        it = parentGrid->elements.erase(it);
+
+        auto& grid = std::get<GridPointer>(extractedGrid->m_data);
+
+        auto* oldFirstElement = grid->elements.front().get();
+        auto* oldLastElement = grid->elements.back().get();
+
+        // Insert this elements to parent grid.
+        for(auto eIt = grid->elements.rbegin(); eIt != grid->elements.rend(); eIt++)
+        {
+            (*eIt)->m_parent = m_parent;
+            it = parentGrid->elements.insert(it, std::move(*eIt));
+        }
+
+        // Erase this elements from parent's dynamic elements.
+        auto deIt = parentGrid->dynamicElements.find(this);
+        if(deIt != parentGrid->dynamicElements.end())
+        {
+            parentGrid->dynamicElements.erase(deIt);
+            m_parent->RemoveDynamicElementFromParents(m_parent);
+        }
+
+        // Add thid elements dynamic elements to this
+        for(auto* dynamicElement : grid->dynamicElements)
+        {
+            parentGrid->dynamicElements.insert(dynamicElement);
+            m_parent->AddDynamicElementFromParents(m_parent);
+        }
+
+        if (newPrevElement && newPrevElement->GetNextEdge())
+        {
+            newPrevElement->GetNextEdge()->m_nextElement = oldFirstElement;
+            oldFirstElement->SetPrevEdge(newPrevElement->GetNextEdge());
+        }
+        if (newNextElement && newNextElement->GetPrevEdge())
+        {
+            newNextElement->GetPrevEdge()->m_prevElement = oldLastElement;
+            oldLastElement->SetNextEdge(newNextElement->GetPrevEdge());
+        }
+
+        m_prevEdge = nullptr;
+        m_nextEdge = nullptr;
+    }
+
+    template<typename TSkin>
+    void Docker<TSkin>::Element::SetChildrensParentToThis()
+    {
+        auto& grid = std::get<GridPointer>(m_data);
+        for(auto& element : grid->elements)
+        {
+            element->m_parent = this;
+        }
     }
 
     template<typename TSkin>
@@ -594,6 +678,7 @@ namespace Molten::Gui
 
             prevElement->SetNextEdge(newEdge.get());
             element->SetPrevEdge(newEdge.get());
+            element->SetNextEdge(nextEdge);
             nextEdge->m_prevElement = element.get();
         }
 
