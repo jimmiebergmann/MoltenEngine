@@ -31,8 +31,8 @@
 namespace Molten::Gui
 {
 
-    template<typename TSkin>
-    class Spacer : public Widget<TSkin>
+    template<typename TTheme>
+    class Spacer : public Widget<TTheme>
     {
 
     public:
@@ -40,7 +40,7 @@ namespace Molten::Gui
         static constexpr bool handleKeyboardEvents = false;
         static constexpr bool handleMouseEvents = false;
 
-        explicit Spacer(WidgetData<TSkin>& data);
+        explicit Spacer(WidgetData<TTheme>& data);
 
     };
 

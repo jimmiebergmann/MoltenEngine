@@ -53,7 +53,7 @@ namespace Molten::Gui
     class CanvasRenderer;
 
 
-    template<typename TSkin>
+    template<typename TTheme>
     class Canvas
     {
 
@@ -78,16 +78,16 @@ namespace Molten::Gui
         const Vector2f32& GetSize() const;
         const Vector2f32& GetScale() const;
 
-        template<template<typename> typename TWidgetType, typename ... TArgs>
-        WidgetTypePointer<TWidgetType<TSkin>> CreateChild(TArgs ... args);
+        template<template<typename> typename TWidget, typename ... TArgs>
+        WidgetTypePointer<TWidget<TTheme>> CreateChild(TArgs ... args);
 
-        template<template<typename> typename TWidgetType, typename ... TArgs>
-        WidgetTypePointer<TWidgetType<TSkin>> CreateChild(Widget<TSkin>& parent, TArgs ... args);
+        template<template<typename> typename TWidget, typename ... TArgs>
+        WidgetTypePointer<TWidget<TTheme>> CreateChild(Widget<TTheme>& parent, TArgs ... args);
 
         /** This function call makes the provided widget to receive all mouse events, 
           * regardless of child widgets on top being hovered or pressed, until the mouse button is released.
           */
-        void OverrideMouseEventsUntilMouseRelease(Widget<TSkin>& widget);
+        void OverrideMouseEventsUntilMouseRelease(Widget<TTheme>& widget);
         void OverrideMouseEventsReset();
 
         /** This function makes it possible to draw on top of all other drawn widgets in the canvas.
@@ -115,25 +115,25 @@ namespace Molten::Gui
         void HandleModalMouseButtonPressed(const UserInput::Event& mouseEvent);
         void HandleModalMouseButtonReleased(const UserInput::Event& mouseEvent);
 
-        void HandleMouseMoveTriggers(WidgetData<TSkin>& widgetData, const Vector2i32& position);
-        void TriggerMouseMoveEvent(WidgetData<TSkin>& widgetData, const Vector2f32& position, const WidgetEventSubType subType);
+        void HandleMouseMoveTriggers(WidgetData<TTheme>& widgetData, const Vector2i32& position);
+        void TriggerMouseMoveEvent(WidgetData<TTheme>& widgetData, const Vector2f32& position, const WidgetEventSubType subType);
 
         void UpdateWidgetSkins();
 
         Renderer& m_backendRenderer;
         CanvasRendererPointer m_renderer;
 
-        TSkin m_skin;
-        typename WidgetData<TSkin>::Tree m_widgetTree;    
+        TTheme m_skin;
+        typename WidgetData<TTheme>::Tree m_widgetTree;    
      
         Vector2f32 m_size;
         Vector2f32 m_scale;
 
         std::vector<UserInput::Event> m_userInputEvents;
-        WidgetPointer<TSkin> m_hoveredWidget;
-        Widget<TSkin>* m_pressedWidget;
-        Widget<TSkin>* m_widgetOverrideMouseEvents;
-        void(Canvas<TSkin>::* m_mouseInputUpdate)(const UserInput::Event&);
+        WidgetPointer<TTheme> m_hoveredWidget;
+        Widget<TTheme>* m_pressedWidget;
+        Widget<TTheme>* m_widgetOverrideMouseEvents;
+        void(Canvas<TTheme>::* m_mouseInputUpdate)(const UserInput::Event&);
         std::vector<std::function<void()>> m_topDrawCommands;
     };
 

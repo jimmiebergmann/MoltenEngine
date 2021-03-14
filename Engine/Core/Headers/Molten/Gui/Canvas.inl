@@ -28,8 +28,8 @@
 namespace Molten::Gui
 {
 
-    template<typename TSkin>
-    inline Canvas<TSkin>::Canvas(Renderer& backendRenderer, CanvasRendererPointer renderer) :
+    template<typename TTheme>
+    Canvas<TTheme>::Canvas(Renderer& backendRenderer, CanvasRendererPointer renderer) :
         m_backendRenderer(backendRenderer),
         m_renderer(renderer),
         m_skin(backendRenderer, *m_renderer.get()),
@@ -37,49 +37,51 @@ namespace Molten::Gui
         m_scale(1.0f, 1.0f),
         m_pressedWidget(nullptr),
         m_widgetOverrideMouseEvents(nullptr),
-        m_mouseInputUpdate(&Canvas<TSkin>::UpdateTreeMouseInputs)
+        m_mouseInputUpdate(&Canvas<TTheme>::UpdateTreeMouseInputs)
     {}
 
-    template<typename TSkin>
-    inline Canvas<TSkin>::~Canvas()
+    template<typename TTheme>
+    Canvas<TTheme>::~Canvas()
     {}
 
-    template<typename TSkin>
-    inline void Canvas<TSkin>::SetRenderer(CanvasRendererPointer renderer)
+    template<typename TTheme>
+    void Canvas<TTheme>::SetRenderer(CanvasRendererPointer renderer)
     {
         m_renderer = renderer;
     }
 
-    template<typename TSkin>
-    inline CanvasRendererPointer Canvas<TSkin>::GetRenderer()
+    template<typename TTheme>
+    CanvasRendererPointer Canvas<TTheme>::GetRenderer()
     {
         return m_renderer;
     }
-    template<typename TSkin>
-    inline const CanvasRendererPointer Canvas<TSkin>::GetRenderer() const
+    template<typename TTheme>
+    const CanvasRendererPointer Canvas<TTheme>::GetRenderer() const
     {
         return m_renderer;
     }
 
-    template<typename TSkin>
-    inline void Canvas<TSkin>::PushUserInputEvent(const UserInput::Event& inputEvent)
+    template<typename TTheme>
+    void Canvas<TTheme>::PushUserInputEvent(const UserInput::Event& inputEvent)
     {
         m_userInputEvents.push_back(inputEvent);
     }
 
-    template<typename TSkin>
-    inline void Canvas<TSkin>::Update(const Time& /*deltaTime*/)
+    template<typename TTheme>
+    void Canvas<TTheme>::Update(const Time& /*deltaTime*/)
     {
         UpdateUserInputs();
         UpdateWidgetSkins();
     }
 
-    template<typename TSkin>
-    inline void Canvas<TSkin>::Draw()
+    template<typename TTheme>
+    void Canvas<TTheme>::Draw()
     {
         m_renderer->BeginDraw();
 
-        m_widgetTree.template ForEachPreorder<typename WidgetData<TSkin>::TreePartialLaneType>(
+        m_renderer->DrawRect({ { 0.0f, 0.0f }, m_size }, m_skin.backgroundColor);
+
+        m_widgetTree.template ForEachPreorder<typename WidgetData<TTheme>::TreePartialLaneType>(
             [&](auto& widgetData)
         {
             //renderer.MaskArea(renderData.position, renderData.size);
@@ -95,8 +97,8 @@ namespace Molten::Gui
         m_renderer->EndDraw();
     }
 
-    template<typename TSkin>
-    inline void Canvas<TSkin>::SetSize(const Vector2f32& size)
+    template<typename TTheme>
+    void Canvas<TTheme>::SetSize(const Vector2f32& size)
     {
         if (size != m_size && size.x != 0.0f && size.y != 0.0f)
         {
@@ -106,43 +108,46 @@ namespace Molten::Gui
         m_size = size;
     }
 
-    template<typename TSkin>
-    inline void Canvas<TSkin>::SetScale(const Vector2f32& scale)
+    template<typename TTheme>
+    void Canvas<TTheme>::SetScale(const Vector2f32& scale)
     {
         m_scale = scale;
     }
 
-    template<typename TSkin>
-    inline const Vector2f32& Canvas<TSkin>::GetSize() const
+    template<typename TTheme>
+    const Vector2f32& Canvas<TTheme>::GetSize() const
     {
         return m_size;
     }
 
-    template<typename TSkin>
-    inline const Vector2f32& Canvas<TSkin>::GetScale() const
+    template<typename TTheme>
+    const Vector2f32& Canvas<TTheme>::GetScale() const
     {
         return m_scale;
     }
 
-    template<typename TSkin>
-    template<template<typename> typename TWidgetType, typename ... TArgs>
-    WidgetTypePointer<TWidgetType<TSkin>> Canvas<TSkin>::CreateChild(TArgs ... args)
+    template<typename TTheme>
+    template<template<typename> typename TWidget, typename ... TArgs>
+    WidgetTypePointer<TWidget<TTheme>> Canvas<TTheme>::CreateChild(TArgs ... args)
     {
-        static_assert(std::is_base_of_v<Widget<TSkin>, TWidgetType<TSkin>>, "TWidgetType is not base of Molten::Gui::Widget.");
+        constexpr bool usingWidgetMixin = std::is_base_of_v<WidgetMixin<TTheme, TWidget>, TWidget<TTheme>>;
+        constexpr bool usingWidgetSkinMixin = std::is_base_of_v<WidgetSkinMixin<TTheme, TWidget>, WidgetSkin<TTheme, TWidget>>;
 
-        auto normalLane = m_widgetTree.template GetLane<typename WidgetData<TSkin>::TreeNormalLaneType>();
-        auto partialLane = m_widgetTree.template GetLane<typename WidgetData<TSkin>::TreePartialLaneType>();
+        static_assert(std::is_base_of_v<Widget<TTheme>, TWidget<TTheme>>, "TWidget is not base of Widget<TTheme>.");
+        static_assert(!usingWidgetMixin || usingWidgetSkinMixin, "Using TWidgetMixin but WidgetSkinMixin<TTheme, TWidget> is not base of WidgetSkin<TTheme, TWidget>.");
+
+        using WidgetDataType = std::conditional_t<usingWidgetMixin, WidgetDataMixin<TTheme, TWidget>, WidgetData<TTheme>>;
+
+        auto normalLane = m_widgetTree.template GetLane<typename WidgetData<TTheme>::TreeNormalLaneType>();
+        auto partialLane = m_widgetTree.template GetLane<typename WidgetData<TTheme>::TreePartialLaneType>();
 
         if (!normalLane.IsEmpty())
         {
             return nullptr;
         }
 
-        constexpr bool usingWidgetMixin = std::is_base_of_v<WidgetMixin<TSkin, TWidgetType>, TWidgetType<TSkin>>;
-        using WidgetDataType = std::conditional_t<usingWidgetMixin, WidgetDataMixin<TSkin, TWidgetType>, WidgetData<TSkin>>;
-
         auto widgetData = std::make_shared<WidgetDataType>();
-        auto widget = std::make_shared<TWidgetType<TSkin>>(*widgetData.get(), args...);
+        auto widget = std::make_shared<TWidget<TTheme>>(*widgetData, args...);
 
         widgetData->canvas = this;
         widgetData->layer = nullptr;
@@ -150,17 +155,17 @@ namespace Molten::Gui
         widgetData->iterator = m_widgetTree.Insert(partialLane, normalLane.end(), widgetData);
         widgetData->widget = widget;
         
-        auto widgetSkin = m_skin.template Create<TWidgetType<TSkin>>(*widget.get(), *widgetData.get());
+        auto widgetSkin = m_skin.template Create<TWidget>(*widget, *widgetData);
         if constexpr (usingWidgetMixin == true)
         {
             widgetData->widgetSkinMixin = widgetSkin.get();
         }
         widgetData->widgetSkin = std::move(widgetSkin);
 
-        if constexpr (std::is_base_of_v<WidgetEventHandler, TWidgetType<TSkin>>)
+        if constexpr (std::is_base_of_v<WidgetEventHandler, TWidget<TTheme>>)
         {
             auto* eventHandler = static_cast<WidgetEventHandler*>(widget.get());
-            widgetData->mouseEventFunction = [handler = eventHandler, widget = widget.get()](const WidgetEvent& widgetEvent) -> Widget<TSkin>*
+            widgetData->mouseEventFunction = [handler = eventHandler, widget = widget.get()](const WidgetEvent& widgetEvent) -> Widget<TTheme>*
             {
                 handler->HandleEvent(widgetEvent);
                 return widget;
@@ -170,22 +175,25 @@ namespace Molten::Gui
         return widget;
     }
 
-    template<typename TSkin>
-    template<template<typename> typename TWidgetType, typename ... TArgs>
-    WidgetTypePointer<TWidgetType<TSkin>> Canvas<TSkin>::CreateChild(Widget<TSkin>& parent, TArgs ... args)
+    template<typename TTheme>
+    template<template<typename> typename TWidget, typename ... TArgs>
+    WidgetTypePointer<TWidget<TTheme>> Canvas<TTheme>::CreateChild(Widget<TTheme>& parent, TArgs ... args)
     {
-        static_assert(std::is_base_of_v<Widget<TSkin>, TWidgetType<TSkin>>, "TWidgetType is not base of Molten::Gui::Widget.");
+        constexpr bool usingWidgetMixin = std::is_base_of_v<WidgetMixin<TTheme, TWidget>, TWidget<TTheme>>;
+        constexpr bool usingWidgetSkinMixin = std::is_base_of_v<WidgetSkinMixin<TTheme, TWidget>, WidgetSkin<TTheme, TWidget>>;
+
+        static_assert(std::is_base_of_v<Widget<TTheme>, TWidget<TTheme>>, "TWidget is not base of Widget<TTheme>.");
+        static_assert(!usingWidgetMixin || usingWidgetSkinMixin, "Using TWidgetMixin but WidgetSkinMixin<TTheme, TWidget> is not base of WidgetSkin<TTheme, TWidget>.");
+
+        using WidgetDataType = std::conditional_t<usingWidgetMixin, WidgetDataMixin<TTheme, TWidget>, WidgetData<TTheme>>;
 
         auto& parentData = parent.GetData();
         auto* parentTreeItem = std::addressof(*parentData.iterator);
-        auto normalLane = parentTreeItem->GetChildren().template GetLane<typename WidgetData<TSkin>::TreeNormalLaneType>();
-        auto partialLane = parentTreeItem->GetChildren().template GetLane<typename WidgetData<TSkin>::TreePartialLaneType>();
-        
-        constexpr bool usingWidgetMixin = std::is_base_of_v<WidgetMixin<TSkin, TWidgetType>, TWidgetType<TSkin>>;
-        using WidgetDataType = std::conditional_t<usingWidgetMixin, WidgetDataMixin<TSkin, TWidgetType>, WidgetData<TSkin>>;
-     
+        auto normalLane = parentTreeItem->GetChildren().template GetLane<typename WidgetData<TTheme>::TreeNormalLaneType>();
+        auto partialLane = parentTreeItem->GetChildren().template GetLane<typename WidgetData<TTheme>::TreePartialLaneType>();
+
         auto widgetData = std::make_shared<WidgetDataType>();
-        auto widget = std::make_shared<TWidgetType<TSkin>>(*widgetData.get(), args...);
+        auto widget = std::make_shared<TWidget<TTheme>>(*widgetData, args...);
         
         widgetData->canvas = this;
         widgetData->layer = nullptr;
@@ -193,25 +201,25 @@ namespace Molten::Gui
         widgetData->iterator = m_widgetTree.Insert(partialLane, normalLane.end(), widgetData);
         widgetData->widget = widget;  
 
-        auto widgetSkin = m_skin.template Create<TWidgetType<TSkin>>(*widget.get(), *widgetData.get());
+        auto widgetSkin = m_skin.template Create<TWidget>(*widget, *widgetData);
         if constexpr (usingWidgetMixin == true)
         {
             widgetData->widgetSkinMixin = widgetSkin.get();
         }
         widgetData->widgetSkin = std::move(widgetSkin);
 
-        parentData.widget->OnAddChild(*widgetData.get());
+        parentData.widget->OnAddChild(*widgetData);
 
         auto* parentWidget = parentData.widget.get();
         auto* parentEventHandler = dynamic_cast<WidgetEventHandler*>(parentWidget);
         if (parentEventHandler && parentWidget->GetOverrideChildrenMouseEvents())
         {
-            if constexpr (std::is_base_of_v<WidgetEventHandler, TWidgetType<TSkin>>)
+            if constexpr (std::is_base_of_v<WidgetEventHandler, TWidget<TTheme>>)
             {
                 auto* eventHandler = static_cast<WidgetEventHandler*>(widget.get());
                 widgetData->mouseEventFunction = 
                     [handler = eventHandler, widget = widget.get(), parentHandler = parentEventHandler, parent = parentWidget]
-                    (const WidgetEvent& widgetEvent)  -> Widget<TSkin>*
+                    (const WidgetEvent& widgetEvent)  -> Widget<TTheme>*
                     {
                         if (parentHandler->HandleEvent(widgetEvent))
                         {
@@ -223,7 +231,7 @@ namespace Molten::Gui
             }
             else
             {
-                widgetData->mouseEventFunction = [parentHandler = parentEventHandler, parent = parentWidget](const WidgetEvent& widgetEvent)  -> Widget<TSkin>*
+                widgetData->mouseEventFunction = [parentHandler = parentEventHandler, parent = parentWidget](const WidgetEvent& widgetEvent)  -> Widget<TTheme>*
                 {
                     parentHandler->HandleEvent(widgetEvent);
                     return parent;
@@ -232,10 +240,10 @@ namespace Molten::Gui
         }  
         else 
         {
-            if constexpr (std::is_base_of_v<WidgetEventHandler, TWidgetType<TSkin>>)
+            if constexpr (std::is_base_of_v<WidgetEventHandler, TWidget<TTheme>>)
             {
                 auto* eventHandler = static_cast<WidgetEventHandler*>(widget.get());
-                widgetData->mouseEventFunction = [handler = eventHandler, widget = widget.get()](const WidgetEvent& widgetEvent)->Widget<TSkin>*
+                widgetData->mouseEventFunction = [handler = eventHandler, widget = widget.get()](const WidgetEvent& widgetEvent)->Widget<TTheme>*
                 {
                     handler->HandleEvent(widgetEvent);
                     return widget;
@@ -246,35 +254,34 @@ namespace Molten::Gui
         return widget;
     }
 
-    template<typename TSkin>
-    void Canvas<TSkin>::OverrideMouseEventsUntilMouseRelease(Widget<TSkin>& widget)
+    template<typename TTheme>
+    void Canvas<TTheme>::OverrideMouseEventsUntilMouseRelease(Widget<TTheme>& widget)
     {
-        m_mouseInputUpdate = &Canvas<TSkin>::UpdateModalMouseInputs;
+        m_mouseInputUpdate = &Canvas<TTheme>::UpdateModalMouseInputs;
         m_widgetOverrideMouseEvents = &widget;
     }
 
-    template<typename TSkin>
-    void Canvas<TSkin>::OverrideMouseEventsReset()
+    template<typename TTheme>
+    void Canvas<TTheme>::OverrideMouseEventsReset()
     {
-        m_mouseInputUpdate = &Canvas<TSkin>::UpdateTreeMouseInputs;
+        m_mouseInputUpdate = &Canvas<TTheme>::UpdateTreeMouseInputs;
         m_widgetOverrideMouseEvents = nullptr;
     }
 
-    template<typename TSkin>
-    void Canvas<TSkin>::PushTopDrawCommand(std::function<void()>&& drawCommand)
+    template<typename TTheme>
+    void Canvas<TTheme>::PushTopDrawCommand(std::function<void()>&& drawCommand)
     {
         m_topDrawCommands.push_back(drawCommand);
     }
 
-    template<typename TSkin>
-    void Canvas<TSkin>::UpdateUserInputs()
+    template<typename TTheme>
+    void Canvas<TTheme>::UpdateUserInputs()
     {
         for (auto& inputEvent : m_userInputEvents)
         {
             switch (inputEvent.type)
             {
                 case UserInput::EventType::Mouse: (*this.*m_mouseInputUpdate)(inputEvent); break;
-                case UserInput::EventType::Keyboard: break;
                 default: break;
             }
         }
@@ -282,8 +289,8 @@ namespace Molten::Gui
         m_userInputEvents.clear();
     }
 
-    template<typename TSkin>
-    void Canvas<TSkin>::UpdateTreeMouseInputs(const UserInput::Event& mouseEvent)
+    template<typename TTheme>
+    void Canvas<TTheme>::UpdateTreeMouseInputs(const UserInput::Event& mouseEvent)
     {
         switch (mouseEvent.subType)
         {
@@ -294,12 +301,12 @@ namespace Molten::Gui
         }      
     }
 
-    template<typename TSkin>
-    void Canvas<TSkin>::HandleTreeMouseMove(const UserInput::Event& mouseEvent)
+    template<typename TTheme>
+    void Canvas<TTheme>::HandleTreeMouseMove(const UserInput::Event& mouseEvent)
     {
         bool hitWidget = false;
 
-        m_widgetTree.template ForEachReversePreorder<typename WidgetData<TSkin>::TreePartialLaneType>(
+        m_widgetTree.template ForEachReversePreorder<typename WidgetData<TTheme>::TreePartialLaneType>(
             [&](auto& widgetData)
         {
             if (!widgetData->mouseEventFunction)
@@ -325,12 +332,12 @@ namespace Molten::Gui
         }
     }
 
-    template<typename TSkin>
-    void Canvas<TSkin>::HandleTreeMouseButtonPressed(const UserInput::Event& mouseEvent)
+    template<typename TTheme>
+    void Canvas<TTheme>::HandleTreeMouseButtonPressed(const UserInput::Event& mouseEvent)
     {
         bool hitWidget = false;
 
-        m_widgetTree.template ForEachReversePreorder<typename WidgetData<TSkin>::TreePartialLaneType>(
+        m_widgetTree.template ForEachReversePreorder<typename WidgetData<TTheme>::TreePartialLaneType>(
             [&](auto& widgetData)
         {
             if (widgetData->GetGrantedBounds().Intersects(mouseEvent.mouseButtonEvent.position))
@@ -364,8 +371,8 @@ namespace Molten::Gui
         });
     }
 
-    template<typename TSkin>
-    void Canvas<TSkin>::HandleTreeMouseButtonReleased(const UserInput::Event& mouseEvent)
+    template<typename TTheme>
+    void Canvas<TTheme>::HandleTreeMouseButtonReleased(const UserInput::Event& mouseEvent)
     {
         if (!m_pressedWidget)
         {
@@ -393,12 +400,12 @@ namespace Molten::Gui
         m_pressedWidget = nullptr;
     }
 
-    template<typename TSkin>
-    void Canvas<TSkin>::UpdateModalMouseInputs(const UserInput::Event& mouseEvent)
+    template<typename TTheme>
+    void Canvas<TTheme>::UpdateModalMouseInputs(const UserInput::Event& mouseEvent)
     {
         if (m_widgetOverrideMouseEvents == nullptr)
         {
-            m_mouseInputUpdate = &Canvas<TSkin>::UpdateModalMouseInputs;
+            m_mouseInputUpdate = &Canvas<TTheme>::UpdateModalMouseInputs;
             UpdateTreeMouseInputs(mouseEvent);
         }
 
@@ -411,21 +418,21 @@ namespace Molten::Gui
         }
     }
 
-    template<typename TSkin>
-    void Canvas<TSkin>::HandleModalMouseMove(const UserInput::Event& mouseEvent)
+    template<typename TTheme>
+    void Canvas<TTheme>::HandleModalMouseMove(const UserInput::Event& mouseEvent)
     {
         const auto& position = mouseEvent.mouseMoveEvent.position;
         TriggerMouseMoveEvent(m_pressedWidget->GetData(), position, WidgetEventSubType::MouseMove);
     }
     
-    template<typename TSkin>
-    void Canvas<TSkin>::HandleModalMouseButtonPressed(const UserInput::Event& mouseEvent)
+    template<typename TTheme>
+    void Canvas<TTheme>::HandleModalMouseButtonPressed(const UserInput::Event& mouseEvent)
     {
         // Nothing here.
     }
     
-    template<typename TSkin>
-    void Canvas<TSkin>::HandleModalMouseButtonReleased(const UserInput::Event& mouseEvent)
+    template<typename TTheme>
+    void Canvas<TTheme>::HandleModalMouseButtonReleased(const UserInput::Event& mouseEvent)
     {
         OverrideMouseEventsReset();
 
@@ -455,8 +462,8 @@ namespace Molten::Gui
         m_pressedWidget = nullptr;
     }
 
-    template<typename TSkin>
-    void Canvas<TSkin>::HandleMouseMoveTriggers(WidgetData<TSkin>& widgetData, const Vector2i32& position)
+    template<typename TTheme>
+    void Canvas<TTheme>::HandleMouseMoveTriggers(WidgetData<TTheme>& widgetData, const Vector2i32& position)
     {
         if (m_hoveredWidget != widgetData.widget)
         {
@@ -472,8 +479,8 @@ namespace Molten::Gui
         m_hoveredWidget = widgetData.widget;
     }
 
-    template<typename TSkin>
-    void Canvas<TSkin>::TriggerMouseMoveEvent(WidgetData<TSkin>& widgetData, const Vector2f32& position, const WidgetEventSubType subType)
+    template<typename TTheme>
+    void Canvas<TTheme>::TriggerMouseMoveEvent(WidgetData<TTheme>& widgetData, const Vector2f32& position, const WidgetEventSubType subType)
     {
         WidgetEvent widgetEvent;
         widgetEvent.type = WidgetEventType::Mouse;
@@ -482,16 +489,16 @@ namespace Molten::Gui
         widgetData.mouseEventFunction(widgetEvent);
     }
 
-    template<typename TSkin>
-    void Canvas<TSkin>::UpdateWidgetSkins()
+    template<typename TTheme>
+    void Canvas<TTheme>::UpdateWidgetSkins()
     {
-        auto rootLane = m_widgetTree.GetLane<typename WidgetData<TSkin>::TreePartialLaneType>();
+        auto rootLane = m_widgetTree.template GetLane<typename WidgetData<TTheme>::TreePartialLaneType>();
         for (auto& rootWidget : rootLane)
         {
             rootWidget.GetValue()->SetGrantedBounds({ { 0.0f, 0.0f }, m_size });
         }
 
-        m_widgetTree.template ForEachPreorder<typename WidgetData<TSkin>::TreePartialLaneType>(
+        m_widgetTree.template ForEachPreorder<typename WidgetData<TTheme>::TreePartialLaneType>(
             [&](auto& widgetData)
         {
             widgetData->widget->Update();

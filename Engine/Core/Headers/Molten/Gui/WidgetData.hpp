@@ -27,29 +27,28 @@
 #define MOLTEN_CORE_GUI_WIDGETDATA_HPP
 
 #include "Molten/Gui/GuiTypes.hpp"
-#include "Molten/Gui/Skin.hpp"
+#include "Molten/Gui/WidgetSkin.hpp"
 #include "Molten/Gui/WidgetEvent.hpp"
 #include "Molten/Utility/BypassTree.hpp"
-#include "Molten/Math/Vector.hpp"
 #include "Molten/Math/Bounds.hpp"
 #include <functional>
 
 namespace Molten::Gui
 {
 
-    template<typename TSkin>
+    template<typename TTheme>
     struct WidgetData;
 
-    template<typename TSkin>
-    using WidgetDataPointer = std::shared_ptr<WidgetData<TSkin>>;
+    template<typename TTheme>
+    using WidgetDataPointer = std::shared_ptr<WidgetData<TTheme>>;
 
-    template<typename TSkin>
-    using WidgetDataMap = std::unordered_map<Widget<TSkin>*, WidgetDataPointer<TSkin>>;
+    template<typename TTheme>
+    using WidgetDataMap = std::unordered_map<Widget<TTheme>*, WidgetDataPointer<TTheme>>;
 
-    template<typename TSkin>
+    template<typename TTheme>
     struct WidgetData
     {
-        using Tree = typename Molten::BypassTree<WidgetDataPointer<TSkin>>;
+        using Tree = BypassTree<WidgetDataPointer<TTheme>>;
         using TreeNormalLaneType = typename Tree::NormalLaneType;
         using TreePartialLaneType = typename Tree::PartialLaneType;
         using TreePartialLane = typename Tree::template Lane<TreePartialLaneType>;
@@ -61,7 +60,7 @@ namespace Molten::Gui
 
         WidgetData();
 
-        Widget<TSkin>* GetWidget();
+        Widget<TTheme>* GetWidget();
 
         TreeNormalLane GetChildrenNormalLane();
         TreePartialLane GetChildrenPartialLane();
@@ -70,13 +69,13 @@ namespace Molten::Gui
 
         void SetGrantedBounds(const Bounds2f32& grantedBounds);
 
-        Canvas<TSkin>* canvas;
-        Layer<TSkin>* layer;
+        Canvas<TTheme>* canvas;
+        Layer<TTheme>* layer;
         Tree* tree;
         TreeNormalIterator iterator;
-        WidgetPointer<TSkin> widget;
+        WidgetPointer<TTheme> widget;
         std::unique_ptr<WidgetSkinBase> widgetSkin;
-        std::function<Widget<TSkin>*(const WidgetEvent&)> mouseEventFunction;
+        std::function<Widget<TTheme>*(const WidgetEvent&)> mouseEventFunction;
 
     private:
 
@@ -84,19 +83,17 @@ namespace Molten::Gui
 
     };
 
-    template<typename TSkin, template<typename> typename TWidget>
-    struct WidgetDataMixin : WidgetData<TSkin>
+    template<typename TTheme, template<typename> typename TWidget>
+    struct WidgetDataMixin : WidgetData<TTheme>
     {
-
-    public:
 
         WidgetDataMixin();
 
         virtual ~WidgetDataMixin() = default;
 
-        using WidgetSkinMixin = typename TSkin::template WidgetSkin<TWidget<TSkin>>;
+        using WidgetSkinMixinType = WidgetSkin<TTheme, TWidget>;
 
-        WidgetSkinMixin* widgetSkinMixin;
+        WidgetSkinMixinType* widgetSkinMixin;
 
     };
 

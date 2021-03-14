@@ -27,84 +27,84 @@ namespace Molten::Gui
 {
 
     // Widget base class implementations.
-    template<typename TSkin>
-    Widget<TSkin>::Widget(WidgetData<TSkin>& data) :
+    template<typename TTheme>
+    Widget<TTheme>::Widget(WidgetData<TTheme>& data) :
         m_data(data)
     {}
 
-    template<typename TSkin>
-    Widget<TSkin>::Widget(
-        WidgetData<TSkin>& data,
+    template<typename TTheme>
+    Widget<TTheme>::Widget(
+        WidgetData<TTheme>& data,
         const Vector2f32& size
     ) :
         size(size),
         m_data(data)
     {}
 
-    template<typename TSkin>
-    bool Widget<TSkin>::GetOverrideChildrenMouseEvents() const
+    template<typename TTheme>
+    bool Widget<TTheme>::GetOverrideChildrenMouseEvents() const
     {
         return overrideChildrenMouseEvents;
     }
 
-    template<typename TSkin>
-    void Widget<TSkin>::Update()
+    template<typename TTheme>
+    void Widget<TTheme>::Update()
     {}
 
-    template<typename TSkin>
+    template<typename TTheme>
     template<template<typename> typename TWidgetType, typename ... TArgs>
-    WidgetTypePointer<TWidgetType<TSkin>> Widget<TSkin>::CreateChild(TArgs ... args)
+    WidgetTypePointer<TWidgetType<TTheme>> Widget<TTheme>::CreateChild(TArgs ... args)
     {
         return m_data.canvas->template CreateChild<TWidgetType>(*this, std::forward<TArgs>(args)...);
     }
 
-    template<typename TSkin>
-    void Widget<TSkin>::OnAddChild(WidgetData<TSkin>& childData)
+    template<typename TTheme>
+    void Widget<TTheme>::OnAddChild(WidgetData<TTheme>& childData)
     {
     }
 
-    template<typename TSkin>
-    void Widget<TSkin>::OnRemoveChild(WidgetData<TSkin>& childData)
+    template<typename TTheme>
+    void Widget<TTheme>::OnRemoveChild(WidgetData<TTheme>& childData)
     {
     }
 
-    template<typename TSkin>
-    WidgetData<TSkin>& Widget<TSkin>::GetData()
+    template<typename TTheme>
+    WidgetData<TTheme>& Widget<TTheme>::GetData()
     {
         return m_data;
     }
-    template<typename TSkin>
-    const WidgetData<TSkin>& Widget<TSkin>::GetData() const
+    template<typename TTheme>
+    const WidgetData<TTheme>& Widget<TTheme>::GetData() const
     {
         return m_data;
     }
 
-    template<typename TSkin>
-    typename WidgetData<TSkin>::TreeNormalLane Widget<TSkin>::GetChildrenNormalLane()
+    template<typename TTheme>
+    typename WidgetData<TTheme>::TreeNormalLane Widget<TTheme>::GetChildrenNormalLane()
     {
-        return (*m_data.iterator).GetChildren().template GetLane<typename WidgetData<TSkin>::TreeNormalLaneType>();
+        return (*m_data.iterator).GetChildren().template GetLane<typename WidgetData<TTheme>::TreeNormalLaneType>();
     }
 
-    template<typename TSkin>
-    typename WidgetData<TSkin>::TreePartialLane Widget<TSkin>::GetChildrenPartialLane()
+    template<typename TTheme>
+    typename WidgetData<TTheme>::TreePartialLane Widget<TTheme>::GetChildrenPartialLane()
     {
-        return (*m_data.iterator).GetChildren().template GetLane<typename WidgetData<TSkin>::TreePartialLaneType>();
+        return (*m_data.iterator).GetChildren().template GetLane<typename WidgetData<TTheme>::TreePartialLaneType>();
     }
 
-    template<typename TSkin>
-    const Bounds2f32& Widget<TSkin>::GetGrantedBounds() const
+    template<typename TTheme>
+    const Bounds2f32& Widget<TTheme>::GetGrantedBounds() const
     {
         return m_data.GetGrantedBounds();
     }
 
-    template<typename TSkin>
-    void Widget<TSkin>::SetGrantedBounds(const Bounds2f32& grantedBounds)
+    template<typename TTheme>
+    void Widget<TTheme>::SetGrantedBounds(const Bounds2f32& grantedBounds)
     {
         m_data.SetGrantedBounds(grantedBounds);
     }
 
-    template<typename TSkin>
-    void Widget<TSkin>::ApplyMarginsToGrantedBounds()
+    template<typename TTheme>
+    void Widget<TTheme>::ApplyMarginsToGrantedBounds()
     {
         auto grantedBounds = m_data.GetGrantedBounds().WithoutMargins(margin).ClampHighToLow();
         m_data.SetGrantedBounds(grantedBounds);
@@ -112,55 +112,54 @@ namespace Molten::Gui
 
 
     // Widget mixin implementations.
-    template<typename TSkin, template<typename> typename TWidget>
-    bool WidgetMixin<TSkin, TWidget>::GetOverrideChildrenMouseEvents() const
+    template<typename TTheme, template<typename> typename TWidget>
+    bool WidgetMixin<TTheme, TWidget>::GetOverrideChildrenMouseEvents() const
     {
-        return TWidget<TSkin>::overrideChildrenMouseEvents;
+        return TWidget<TTheme>::overrideChildrenMouseEvents;
     }
 
-    template<typename TSkin, template<typename> typename TWidget>
-    WidgetMixin<TSkin, TWidget>::WidgetMixin(WidgetDataMixin<TSkin, TWidget>& data) :
-        Widget<TSkin>(data),
+    template<typename TTheme, template<typename> typename TWidget>
+    WidgetMixin<TTheme, TWidget>::WidgetMixin(WidgetDataMixin<TTheme, TWidget>& data) :
+        Widget<TTheme>(data),
         m_dataMixin(data)
     {}
 
-    template<typename TSkin, template<typename> typename TWidget>
-    WidgetMixin<TSkin, TWidget>::WidgetMixin(
-        WidgetDataMixin<TSkin, TWidget>& data,
+    template<typename TTheme, template<typename> typename TWidget>
+    WidgetMixin<TTheme, TWidget>::WidgetMixin(
+        WidgetDataMixin<TTheme, TWidget>& data,
         const Vector2f32& size
     ) :
-        Widget<TSkin>(data, size),
+        Widget<TTheme>(data, size),
         m_dataMixin(data)
     {}
 
-
-    template<typename TSkin, template<typename> typename TWidget>
+    template<typename TTheme, template<typename> typename TWidget>
     template<typename TState>
-    const TState& WidgetMixin<TSkin, TWidget>::GetSkinState() const
+    const TState& WidgetMixin<TTheme, TWidget>::GetSkinState() const
     {
-        static_assert(std::is_same_v<TState, typename TWidget<TSkin>::State>,
-            "Passed invalid widget state type to WidgetMixin<...>::GetSkinState.");
+        static_assert(std::is_same_v<TState, typename TWidget<TTheme>::State>,
+            "Passed invalid widget state type to WidgetMixin<TTheme, TWidget>::GetSkinState.");
 
         return m_dataMixin.widgetSkinMixin->GetState();
     }
-    template<typename TSkin, template<typename> typename TWidget>
+    template<typename TTheme, template<typename> typename TWidget>
     template<typename TState>
-    void WidgetMixin<TSkin, TWidget>::SetSkinState(const TState& state)
+    void WidgetMixin<TTheme, TWidget>::SetSkinState(const TState& state)
     {
-        static_assert(std::is_same_v<TState, typename TWidget<TSkin>::State>, 
-            "Passed invalid widget state type to WidgetMixin<...>::SetSkinState.");
+        static_assert(std::is_same_v<TState, typename TWidget<TTheme>::State>,
+            "Passed invalid widget state type to WidgetMixin<TTheme, TWidget>::SetSkinState.");
 
         m_dataMixin.widgetSkinMixin->SetState(state);
     }
 
-    template<typename TSkin, template<typename> typename TWidget>
-    WidgetDataMixin<TSkin, TWidget>& WidgetMixin<TSkin, TWidget>::GetDataMixin()
+    template<typename TTheme, template<typename> typename TWidget>
+    WidgetDataMixin<TTheme, TWidget>& WidgetMixin<TTheme, TWidget>::GetDataMixin()
     {
         return m_dataMixin;
     }
 
-    template<typename TSkin, template<typename> typename TWidget>
-    const WidgetDataMixin<TSkin, TWidget>& WidgetMixin<TSkin, TWidget>::GetDataMixin() const
+    template<typename TTheme, template<typename> typename TWidget>
+    const WidgetDataMixin<TTheme, TWidget>& WidgetMixin<TTheme, TWidget>::GetDataMixin() const
     {
         return m_dataMixin;
     }

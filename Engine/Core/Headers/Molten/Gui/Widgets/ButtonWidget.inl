@@ -25,14 +25,14 @@
 
 namespace Molten::Gui
 {
-    template<typename TSkin>
-    inline Button<TSkin>::Button(WidgetDataMixin<TSkin, Button>& data) :
-        WidgetMixin<TSkin, Button>(data),
+    template<typename TTheme>
+    Button<TTheme>::Button(WidgetDataMixin<TTheme, Button>& data) :
+        WidgetMixin<TTheme, Button>(data),
         m_pressed(false)
     {}
 
-    template<typename TSkin>
-    void Button<TSkin>::Update()
+    template<typename TTheme>
+    void Button<TTheme>::Update()
     {
         ApplyMarginsToGrantedBounds();
 
@@ -46,8 +46,8 @@ namespace Molten::Gui
         }
     }
 
-    template<typename TSkin>
-    inline bool Button<TSkin>::HandleEvent(const WidgetEvent& widgetEvent)
+    template<typename TTheme>
+    bool Button<TTheme>::HandleEvent(const WidgetEvent& widgetEvent)
     {
         if (widgetEvent.type == WidgetEventType::Mouse)
         {

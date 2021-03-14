@@ -26,14 +26,14 @@
 namespace Molten::Gui
 {
 
-    template<typename TSkin>
-    inline VerticalGrid<TSkin>::VerticalGrid(WidgetData<TSkin>& data) :
-        Widget<TSkin>(data),
+    template<typename TTheme>
+    VerticalGrid<TTheme>::VerticalGrid(WidgetData<TTheme>& data) :
+        Widget<TTheme>(data),
         cellSpacing(0.0f)
     {}
 
-    template<typename TSkin>
-    void VerticalGrid<TSkin>::Update()
+    template<typename TTheme>
+    void VerticalGrid<TTheme>::Update()
     {
         ApplyMarginsToGrantedBounds();
         auto contentBounds = GetGrantedBounds().WithoutMargins(padding).ClampHighToLow();

@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,66 +23,40 @@
 *
 */
 
-#ifndef MOLTEN_CORE_GUI_SKIN_HPP
-#define MOLTEN_CORE_GUI_SKIN_HPP
-
-#include "Molten/Math/Vector.hpp"
-#include "Molten/Math/Bounds.hpp"
-#include <memory>
-
 namespace Molten::Gui
 {
-    class WidgetSkinBase
+
+    // Widget skin base implementations.
+    inline void WidgetSkinBase::Draw()
     {
+    }
 
-    public:
 
-        WidgetSkinBase() = default;
-
-        virtual ~WidgetSkinBase() = default;
-
-        virtual void Draw()
-        {
-        }
-
-    };
-
-    template<typename TWidget>
-    class WidgetSkinMixin : public WidgetSkinBase
+    // Widget skin mixin implementations.
+    template<typename TTheme, template<typename> typename TWidget>
+    WidgetSkinMixin<TTheme, TWidget>::WidgetSkinMixin(const WidgetSkinDescriptor<TTheme, TWidget>& descriptor) :
+        m_state{},
+        theme(descriptor.theme),
+        widget(descriptor.widget),
+        widgetData(descriptor.widgetData)
+    {}
+     
+    template<typename TTheme, template<typename> typename TWidget>
+    void WidgetSkinMixin<TTheme, TWidget>::SetState(const State& state)
     {
+        m_state = state;
+        OnStateChange(m_state);
+    }
 
-    public:
+    template<typename TTheme, template<typename> typename TWidget>
+    const typename WidgetSkinMixin<TTheme, TWidget>::State& WidgetSkinMixin<TTheme, TWidget>::GetState() const
+    {
+        return m_state;
+    }
 
-        using State = typename TWidget::State;
-
-        WidgetSkinMixin() :
-            m_state{}
-        {}
-
-        virtual ~WidgetSkinMixin() = default;
-
-        void SetState(const State& state)
-        {
-            m_state = state;
-            OnStateChange(m_state);
-        }
-
-        const State& GetState() const
-        {
-            return m_state;
-        }
-
-        virtual void OnStateChange(const State& /*state*/)
-        {
-        }
-
-    private:
-
-        State m_state;
-
-
-    };
+    template<typename TTheme, template<typename> typename TWidget>
+    void WidgetSkinMixin<TTheme, TWidget>::OnStateChange(const State&)
+    {
+    }
 
 }
-
-#endif

@@ -33,8 +33,8 @@
 namespace Molten::Gui
 {
 
-    template<typename TSkin>
-    class Button : public WidgetMixin<TSkin, Button>, public WidgetEventHandler
+    template<typename TTheme>
+    class Button : public WidgetMixin<TTheme, Button>, public WidgetEventHandler
     {
 
     public:
@@ -52,7 +52,7 @@ namespace Molten::Gui
             Pressed
         };
 
-        explicit Button(WidgetDataMixin<TSkin, Button>& data);
+        explicit Button(WidgetDataMixin<TTheme, Button>& data);
 
         void Update() override;
 

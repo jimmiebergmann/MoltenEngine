@@ -52,8 +52,8 @@ namespace Molten::Gui
         Bottom
     };
 
-    template<typename TSkin>
-    class Docker : public WidgetMixin<TSkin, Docker>, public WidgetEventHandler
+    template<typename TTheme>
+    class Docker : public WidgetMixin<TTheme, Docker>, public WidgetEventHandler
     {
 
     public:
@@ -94,21 +94,21 @@ namespace Molten::Gui
             };
         };
 
-        explicit Docker(WidgetDataMixin<TSkin, Docker>& data);
+        explicit Docker(WidgetDataMixin<TTheme, Docker>& data);
 
         template<template<typename> typename TWidgetType, typename ... TArgs>
-        WidgetTypePointer<TWidgetType<TSkin>> CreateChild(
+        WidgetTypePointer<TWidgetType<TTheme>> CreateChild(
             const DockingPosition position,
             const bool dynamic,
             TArgs ... args);
 
         void Update() override;
         bool HandleEvent(const WidgetEvent& widgetEvent) override;
-        void OnAddChild(WidgetData<TSkin>& childData) override;
+        void OnAddChild(WidgetData<TTheme>& childData) override;
 
     private:
 
-        using Widget<TSkin>::CreateChild;
+        using Widget<TTheme>::CreateChild;
 
         class Element;
         class Leaf;
@@ -148,7 +148,7 @@ namespace Molten::Gui
         public:
 
             Leaf(
-                WidgetData<TSkin>* widgetData, 
+                WidgetData<TTheme>* widgetData,
                 const bool isDynamic);
 
             Leaf(const Leaf&) = delete;
@@ -160,7 +160,7 @@ namespace Molten::Gui
 
             bool IsDynamic() const;
 
-            WidgetData<TSkin>* widgetData;
+            WidgetData<TTheme>* widgetData;
             DraggableWidget* draggableWidget;
             bool isDynamic;
 
@@ -315,11 +315,11 @@ namespace Molten::Gui
             PendingLeafInsert(
                 const DockingPosition position,
                 const bool isDynamic,
-                WidgetData<TSkin>* widgetData);
+                WidgetData<TTheme>* widgetData);
 
             DockingPosition position;
             bool isDynamic;
-            WidgetData<TSkin>* widgetData;
+            WidgetData<TTheme>* widgetData;
         };
 
         /** Child insert, move or deletion functions. */
@@ -435,13 +435,13 @@ namespace Molten::Gui
         ElementPointer m_rootElement;
         
         // Updates.
-        bool(Docker<TSkin>::* m_mouseInputUpdateFunc)(const WidgetEvent&);
+        bool(Docker<TTheme>::* m_mouseInputUpdateFunc)(const WidgetEvent&);
         bool m_forceUpdateBounds;
         Bounds2f32 m_oldGrantedBounds;      
         
         // Leaf insert.
         std::queue<PendingLeafInsertPointer> m_leafInsertQueue;
-        std::map<Widget<TSkin>*, PendingLeafInsertPointer> m_leafInsertMap;
+        std::map<Widget<TTheme>*, PendingLeafInsertPointer> m_leafInsertMap;
         
         // Edges.
         std::set<EdgePointer> m_edges;

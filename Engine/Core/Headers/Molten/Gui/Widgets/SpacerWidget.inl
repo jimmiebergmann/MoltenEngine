@@ -26,9 +26,9 @@
 namespace Molten::Gui
 {
 
-    template<typename TSkin>
-    inline Spacer<TSkin>::Spacer(WidgetData<TSkin>& data) :
-        Widget<TSkin>(data)
+    template<typename TTheme>
+    Spacer<TTheme>::Spacer(WidgetData<TTheme>& data) :
+        Widget<TTheme>(data)
     {}
 
 }

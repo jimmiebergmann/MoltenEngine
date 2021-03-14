@@ -33,7 +33,7 @@
 namespace Molten::Gui
 {
 
-    template<typename TSkin>
+    template<typename TTheme>
     class Widget
     {
 
@@ -41,13 +41,15 @@ namespace Molten::Gui
 
         static constexpr bool overrideChildrenMouseEvents = false;
 
+        enum class State{ };
+
         Vector2f32 size;
         MarginType margin;
         PaddingType padding;
 
-        explicit Widget(WidgetData<TSkin>& data);
+        explicit Widget(WidgetData<TTheme>& data);
         Widget(
-            WidgetData<TSkin>& data,
+            WidgetData<TTheme>& data,
             const Vector2f32& size);
 
         virtual ~Widget() = default;
@@ -57,19 +59,19 @@ namespace Molten::Gui
         virtual void Update();
 
         template<template<typename> typename TWidgetType, typename ... TArgs>
-        WidgetTypePointer<TWidgetType<TSkin>> CreateChild(TArgs ... args);
+        WidgetTypePointer<TWidgetType<TTheme>> CreateChild(TArgs ... args);
 
     protected:
 
-        virtual void OnAddChild(WidgetData<TSkin>& childData);
+        virtual void OnAddChild(WidgetData<TTheme>& childData);
 
-        virtual void OnRemoveChild(WidgetData<TSkin>& childData); // NOT IN USE YET.
+        virtual void OnRemoveChild(WidgetData<TTheme>& childData); // NOT IN USE YET.
 
-        WidgetData<TSkin>& GetData();
-        const WidgetData<TSkin>& GetData() const;
+        WidgetData<TTheme>& GetData();
+        const WidgetData<TTheme>& GetData() const;
 
-        typename WidgetData<TSkin>::TreeNormalLane GetChildrenNormalLane();
-        typename WidgetData<TSkin>::TreePartialLane GetChildrenPartialLane();
+        typename WidgetData<TTheme>::TreeNormalLane GetChildrenNormalLane();
+        typename WidgetData<TTheme>::TreePartialLane GetChildrenPartialLane();
 
         const Bounds2f32& GetGrantedBounds() const;
 
@@ -85,33 +87,32 @@ namespace Molten::Gui
         template<typename TLayerSkin>
         friend class Layer; // Delete due to obsolete template?
 
-        friend TSkin;
+        friend TTheme;
 
         Widget(const Widget&) = delete;
         Widget(Widget&&) = delete;
         Widget& operator= (const Widget&) = delete;
         Widget& operator= (Widget&&) = delete;
 
-        WidgetData<TSkin>& m_data;
+        WidgetData<TTheme>& m_data;
 
     };
 
 
-    template<typename TSkin, template<typename> typename TWidget>
-    class WidgetMixin : public Widget<TSkin>
+    template<typename TTheme, template<typename> typename TWidget>
+    class WidgetMixin : public Widget<TTheme>
     {
 
     public:
-
-       
-        virtual bool GetOverrideChildrenMouseEvents() const override;
+   
+        bool GetOverrideChildrenMouseEvents() const override;
 
     protected:
 
-        explicit WidgetMixin(WidgetDataMixin<TSkin, TWidget>& data);
+        explicit WidgetMixin(WidgetDataMixin<TTheme, TWidget>& data);
 
         WidgetMixin(
-            WidgetDataMixin<TSkin, TWidget>& data,
+            WidgetDataMixin<TTheme, TWidget>& data,
             const Vector2f32& size);
 
         template<typename TState>
@@ -120,14 +121,14 @@ namespace Molten::Gui
         template<typename TState>
         void SetSkinState(const TState& state);
 
-        WidgetDataMixin<TSkin, TWidget>& GetDataMixin();
-        const WidgetDataMixin<TSkin, TWidget>& GetDataMixin() const;
+        WidgetDataMixin<TTheme, TWidget>& GetDataMixin();
+        const WidgetDataMixin<TTheme, TWidget>& GetDataMixin() const;
 
-        using WidgetSkinType = typename TSkin::template WidgetSkin<TWidget<TSkin>>;
+        using WidgetSkinType = WidgetSkin<TTheme, TWidget>;
         
     private:  
 
-        WidgetDataMixin<TSkin, TWidget>& m_dataMixin;
+        WidgetDataMixin<TTheme, TWidget>& m_dataMixin;
 
     };
 

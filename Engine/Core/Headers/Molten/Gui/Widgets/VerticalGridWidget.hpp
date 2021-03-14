@@ -31,8 +31,8 @@
 namespace Molten::Gui
 {
 
-    template<typename TSkin>
-    class VerticalGrid : public Widget<TSkin>
+    template<typename TTheme>
+    class VerticalGrid : public Widget<TTheme>
     {
 
     public:
@@ -42,7 +42,7 @@ namespace Molten::Gui
 
         float cellSpacing;
 
-        explicit VerticalGrid(WidgetData<TSkin>& data);
+        explicit VerticalGrid(WidgetData<TTheme>& data);
 
         void Update() override;
 

@@ -33,8 +33,8 @@
 namespace Molten::Gui
 {
 
-    template<typename TSkin>
-    class Pane : public WidgetMixin<TSkin, Pane>, public DraggableWidget, public WidgetEventHandler
+    template<typename TTheme>
+    class Pane : public WidgetMixin<TTheme, Pane>, public DraggableWidget, public WidgetEventHandler
     {
 
     public:
@@ -43,7 +43,7 @@ namespace Molten::Gui
         static constexpr bool handleMouseEvents = true;
 
         explicit Pane(
-            WidgetDataMixin<TSkin, Pane>& data,
+            WidgetDataMixin<TTheme, Pane>& data,
             const Vector2f32& size);
 
         void Update() override;

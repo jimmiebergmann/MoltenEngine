@@ -27,49 +27,49 @@ namespace Molten::Gui
 {
 
     // Widget data implementations.
-    template<typename TSkin>
-    WidgetData<TSkin>::WidgetData() :
+    template<typename TTheme>
+    WidgetData<TTheme>::WidgetData() :
         canvas(nullptr),
         layer(nullptr),
         tree(nullptr),
         widgetSkin(nullptr)
     {}
 
-    template<typename TSkin>
-    Widget<TSkin>* WidgetData<TSkin>::GetWidget()
+    template<typename TTheme>
+    Widget<TTheme>* WidgetData<TTheme>::GetWidget()
     {
         return widget.get();
     }
 
-    template<typename TSkin>
-    typename WidgetData<TSkin>::TreeNormalLane WidgetData<TSkin>::GetChildrenNormalLane()
+    template<typename TTheme>
+    typename WidgetData<TTheme>::TreeNormalLane WidgetData<TTheme>::GetChildrenNormalLane()
     {
         return (*iterator).GetChildren().template GetLane<TreeNormalLaneType>();
     }
 
-    template<typename TSkin>
-    typename WidgetData<TSkin>::TreePartialLane WidgetData<TSkin>::GetChildrenPartialLane()
+    template<typename TTheme>
+    typename WidgetData<TTheme>::TreePartialLane WidgetData<TTheme>::GetChildrenPartialLane()
     {
         return (*iterator).GetChildren().template GetLane<TreePartialLaneType>();
     }
 
-    template<typename TSkin>
-    const Bounds2f32& WidgetData<TSkin>::GetGrantedBounds() const
+    template<typename TTheme>
+    const Bounds2f32& WidgetData<TTheme>::GetGrantedBounds() const
     {
         return m_grantedBounds;
     }
 
-    template<typename TSkin>
-    void WidgetData<TSkin>::SetGrantedBounds(const Bounds2f32& grantedBounds)
+    template<typename TTheme>
+    void WidgetData<TTheme>::SetGrantedBounds(const Bounds2f32& grantedBounds)
     {
         m_grantedBounds = grantedBounds;
     }
 
 
     // Widget data mixin implementations.
-    template<typename TSkin, template<typename> typename TWidget>
-    WidgetDataMixin<TSkin, TWidget>::WidgetDataMixin() :
-        WidgetData<TSkin>(),
+    template<typename TTheme, template<typename> typename TWidget>
+    WidgetDataMixin<TTheme, TWidget>::WidgetDataMixin() :
+        WidgetData<TTheme>(),
         widgetSkinMixin(nullptr)
     {}
 

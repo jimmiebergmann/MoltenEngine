@@ -27,27 +27,27 @@ namespace Molten::Gui
 {
 
     // Docket state implementations.
-    template<typename TSkin>
-    Docker<TSkin>::State::State() :
+    template<typename TTheme>
+    Docker<TTheme>::State::State() :
         type(Type::Normal),
         leafDragState{ Bounds2f32{} }
     {}
 
-    template<typename TSkin>
-    Docker<TSkin>::State::State(const LeafDragState& leafDragState) :
+    template<typename TTheme>
+    Docker<TTheme>::State::State(const LeafDragState& leafDragState) :
         type(Type::LeafDrag),
         leafDragState(leafDragState)
     {}
 
 
     // Docker public implementations.
-    template<typename TSkin>
-    Docker<TSkin>::Docker(WidgetDataMixin<TSkin, Docker>& data) :
-        WidgetMixin<TSkin, Docker>(data),  
+    template<typename TTheme>
+    Docker<TTheme>::Docker(WidgetDataMixin<TTheme, Docker>& data) :
+        WidgetMixin<TTheme, Docker>(data),
         m_stateType{},
         m_currentCursor(Mouse::Cursor::Normal),
         m_rootElement(nullptr),
-        m_mouseInputUpdateFunc(&Docker<TSkin>::HandleNormalMouseEvent),
+        m_mouseInputUpdateFunc(&Docker<TTheme>::HandleNormalMouseEvent),
         m_forceUpdateBounds(false),
         m_oldGrantedBounds{},
         m_leafInsertQueue{},
@@ -58,14 +58,14 @@ namespace Molten::Gui
         m_leafDragData{}
     { }
 
-    template<typename TSkin>
+    template<typename TTheme>
     template<template<typename> typename TWidgetType, typename ... TArgs>
-    WidgetTypePointer<TWidgetType<TSkin>> Docker<TSkin>::CreateChild(
+    WidgetTypePointer<TWidgetType<TTheme>> Docker<TTheme>::CreateChild(
         const DockingPosition position,
         const bool dynamic,
         TArgs ... args)
     {
-        auto widget = Widget<TSkin>::template CreateChild<TWidgetType>(std::forward<TArgs>(args)...);
+        auto widget = Widget<TTheme>::template CreateChild<TWidgetType>(std::forward<TArgs>(args)...);
 
         auto it = m_leafInsertMap.find(widget.get());
         if (it == m_leafInsertMap.end())
@@ -80,8 +80,8 @@ namespace Molten::Gui
         return widget;
     }
 
-    template<typename TSkin>
-    void Docker<TSkin>::Update()
+    template<typename TTheme>
+    void Docker<TTheme>::Update()
     {
         if (InsertNewLeafs())
         {
@@ -107,8 +107,8 @@ namespace Molten::Gui
         }
     }
 
-    template<typename TSkin>
-    bool Docker<TSkin>::HandleEvent(const WidgetEvent& widgetEvent)
+    template<typename TTheme>
+    bool Docker<TTheme>::HandleEvent(const WidgetEvent& widgetEvent)
     {
         switch (widgetEvent.type)
         {
@@ -119,8 +119,8 @@ namespace Molten::Gui
         return false;
     }
 
-    template<typename TSkin>
-    void Docker<TSkin>::OnAddChild(WidgetData<TSkin>& childData)
+    template<typename TTheme>
+    void Docker<TTheme>::OnAddChild(WidgetData<TTheme>& childData)
     {
         auto* widget = childData.GetWidget();
 
@@ -133,9 +133,9 @@ namespace Molten::Gui
 
 
     // Docker leaf implementations.
-    template<typename TSkin>
-    Docker<TSkin>::Leaf::Leaf(
-        WidgetData<TSkin>* widgetData,
+    template<typename TTheme>
+    Docker<TTheme>::Leaf::Leaf(
+        WidgetData<TTheme>* widgetData,
         const bool isDynamic
     ) :       
         widgetData(widgetData),
@@ -144,42 +144,42 @@ namespace Molten::Gui
         m_owner(nullptr)
     {}
 
-    template<typename TSkin>
-    typename Docker<TSkin>::Element* Docker<TSkin>::Leaf::AsElement()
+    template<typename TTheme>
+    typename Docker<TTheme>::Element* Docker<TTheme>::Leaf::AsElement()
     {
         return m_owner;
     }
 
-    template<typename TSkin>
-    bool Docker<TSkin>::Leaf::IsDynamic() const
+    template<typename TTheme>
+    bool Docker<TTheme>::Leaf::IsDynamic() const
     {
         return isDynamic;
     }
 
 
     // Docker grid implementations.
-    template<typename TSkin>
-    Docker<TSkin>::Grid::Grid(Direction direction) :
+    template<typename TTheme>
+    Docker<TTheme>::Grid::Grid(Direction direction) :
         direction(direction),
         m_owner(nullptr)
     {}
 
-    template<typename TSkin>
-    typename Docker<TSkin>::Element* Docker<TSkin>::Grid::AsElement()
+    template<typename TTheme>
+    typename Docker<TTheme>::Element* Docker<TTheme>::Grid::AsElement()
     {
         return m_owner;
     }
 
-    template<typename TSkin>
-    bool Docker<TSkin>::Grid::IsDynamic() const
+    template<typename TTheme>
+    bool Docker<TTheme>::Grid::IsDynamic() const
     {
         return !dynamicElements.empty();
     }
 
 
     // Docker element implementations.
-    template<typename TSkin>
-    Docker<TSkin>::Element::Element(
+    template<typename TTheme>
+    Docker<TTheme>::Element::Element(
         LeafPointer&& leaf,
         const Vector2f32& requestedSize,
         const Vector2f32& minSize
@@ -195,8 +195,8 @@ namespace Molten::Gui
         std::get<LeafPointer>(m_data)->m_owner = this;
     }
 
-    template<typename TSkin>
-    Docker<TSkin>::Element::Element(GridPointer&& grid) :
+    template<typename TTheme>
+    Docker<TTheme>::Element::Element(GridPointer&& grid) :
         m_type(ElementType::Grid),
         m_data(std::move(grid)),
         m_parent(nullptr),
@@ -212,63 +212,63 @@ namespace Molten::Gui
         }
     }
 
-    template<typename TSkin>
-    typename Docker<TSkin>::ElementType Docker<TSkin>::Element::GetType() const
+    template<typename TTheme>
+    typename Docker<TTheme>::ElementType Docker<TTheme>::Element::GetType() const
     {
         return m_type;
     }
 
-    template<typename TSkin>
-    typename Docker<TSkin>::Leaf* Docker<TSkin>::Element::GetLeaf()
+    template<typename TTheme>
+    typename Docker<TTheme>::Leaf* Docker<TTheme>::Element::GetLeaf()
     {
         return std::get<LeafPointer>(m_data).get();
     }
 
-    template<typename TSkin>
-    typename Docker<TSkin>::Grid* Docker<TSkin>::Element::GetGrid()
+    template<typename TTheme>
+    typename Docker<TTheme>::Grid* Docker<TTheme>::Element::GetGrid()
     {
         return std::get<GridPointer>(m_data).get();
     }
 
-    template<typename TSkin>
-    typename Docker<TSkin>::Element* Docker<TSkin>::Element::GetParent()
+    template<typename TTheme>
+    typename Docker<TTheme>::Element* Docker<TTheme>::Element::GetParent()
     {
         return m_parent;
     }
 
-    template<typename TSkin>
-    typename Docker<TSkin>::Edge* Docker<TSkin>::Element::GetPrevEdge()
+    template<typename TTheme>
+    typename Docker<TTheme>::Edge* Docker<TTheme>::Element::GetPrevEdge()
     {
         return m_prevEdge;
     }
 
-    template<typename TSkin>
-    typename Docker<TSkin>::Edge* Docker<TSkin>::Element::GetNextEdge()
+    template<typename TTheme>
+    typename Docker<TTheme>::Edge* Docker<TTheme>::Element::GetNextEdge()
     {
         return m_nextEdge;
     }
 
-    template<typename TSkin>
-    void Docker<TSkin>::Element::SetPrevEdge(Edge* edge)
+    template<typename TTheme>
+    void Docker<TTheme>::Element::SetPrevEdge(Edge* edge)
     {
         m_prevEdge = edge;
     }
 
-    template<typename TSkin>
-    void Docker<TSkin>::Element::SetNextEdge(Edge* edge)
+    template<typename TTheme>
+    void Docker<TTheme>::Element::SetNextEdge(Edge* edge)
     {
         m_nextEdge = edge;
     }
 
-    template<typename TSkin>
+    template<typename TTheme>
     template<typename TCallback>
-    auto Docker<TSkin>::Element::VisitData(TCallback&& callback)
+    auto Docker<TTheme>::Element::VisitData(TCallback&& callback)
     {
         return std::visit(callback, m_data);
     }
 
-    template<typename TSkin>
-    bool Docker<TSkin>::Element::IsDynamic() const
+    template<typename TTheme>
+    bool Docker<TTheme>::Element::IsDynamic() const
     {
         return std::visit([&](auto& data)
         {
@@ -276,8 +276,8 @@ namespace Molten::Gui
         }, m_data);
     }
 
-    template<typename TSkin>
-    typename Docker<TSkin>::EdgePointer Docker<TSkin>::Element::InsertElement(
+    template<typename TTheme>
+    typename Docker<TTheme>::EdgePointer Docker<TTheme>::Element::InsertElement(
         ElementPointer&& element,
         const DockingPosition position)
     {   
@@ -306,8 +306,8 @@ namespace Molten::Gui
         return InsertElementInGrid(std::move(element), GetInsertPosition(position));
     }
 
-    template<typename TSkin>
-    std::pair<typename Docker<TSkin>::ElementPointer, typename Docker<TSkin>::Edge*> Docker<TSkin>::Element::Extract()
+    template<typename TTheme>
+    std::pair<typename Docker<TTheme>::ElementPointer, typename Docker<TTheme>::Edge*> Docker<TTheme>::Element::Extract()
     {
         if (!m_parent)
         {
@@ -317,8 +317,8 @@ namespace Molten::Gui
         return m_parent->ExtractElement(this);
     }
 
-    template<typename TSkin>
-    std::pair<typename Docker<TSkin>::ElementPointer, typename Docker<TSkin>::Edge*> Docker<TSkin>::Element::ExtractElement(Element* element)
+    template<typename TTheme>
+    std::pair<typename Docker<TTheme>::ElementPointer, typename Docker<TTheme>::Edge*> Docker<TTheme>::Element::ExtractElement(Element* element)
     {
         if (!element || m_type != ElementType::Grid)
         {
@@ -364,8 +364,8 @@ namespace Molten::Gui
         return { std::move(extractedElement), extractedEdge };
     }
 
-    template<typename TSkin>
-    void Docker<TSkin>::Element::UpdateConstraintsFromChildren()
+    template<typename TTheme>
+    void Docker<TTheme>::Element::UpdateConstraintsFromChildren()
     {
         if (m_type != ElementType::Grid)
         {
@@ -413,8 +413,8 @@ namespace Molten::Gui
         }
     }
 
-    template<typename TSkin>
-    void Docker<TSkin>::Element::UpdateConstraintsFromChildren(const Direction direction)
+    template<typename TTheme>
+    void Docker<TTheme>::Element::UpdateConstraintsFromChildren(const Direction direction)
     {
         if (m_type != ElementType::Grid)
         {
@@ -431,17 +431,17 @@ namespace Molten::Gui
         }
     }
 
-    template<typename TSkin>
-    template<typename Docker<TSkin>::Direction VDirection>
-    void Docker<TSkin>::Element::UpdateConstraintsFromChildren()
+    template<typename TTheme>
+    template<typename Docker<TTheme>::Direction VDirection>
+    void Docker<TTheme>::Element::UpdateConstraintsFromChildren()
     {
         auto oldHeight = GetDirectionalHeight<VDirection>(requestedSize);
         UpdateConstraintsFromChildren();
         SetDirectionalHeight<VDirection>(requestedSize, oldHeight);
     }
 
-    template<typename TSkin>
-    void Docker<TSkin>::Element::UpdateParentsConstraints()
+    template<typename TTheme>
+    void Docker<TTheme>::Element::UpdateParentsConstraints()
     {
         auto* parent = m_parent;
         while (parent)
@@ -451,8 +451,8 @@ namespace Molten::Gui
         }
     }
 
-    template<typename TSkin>
-    void Docker<TSkin>::Element::TransformLeafToGrid(Direction direction)
+    template<typename TTheme>
+    void Docker<TTheme>::Element::TransformLeafToGrid(Direction direction)
     {
         auto& leaf = std::get<LeafPointer>(m_data);
         auto leafData = std::move(leaf);
@@ -469,8 +469,8 @@ namespace Molten::Gui
         InsertElementInGrid(std::move(oldChildElement), ElementPosition::First);
     }
 
-    template<typename TSkin>
-    void Docker<TSkin>::Element::TransformGridToFlipperGrid()
+    template<typename TTheme>
+    void Docker<TTheme>::Element::TransformGridToFlipperGrid()
     {
         auto& grid = std::get<GridPointer>(m_data);
         auto gridDirection = grid->direction;
@@ -490,8 +490,8 @@ namespace Molten::Gui
         InsertElementInGrid(std::move(oldChildElement), ElementPosition::First);
     }
 
-    template<typename TSkin>
-    void Docker<TSkin>::Element::TransformToChild()
+    template<typename TTheme>
+    void Docker<TTheme>::Element::TransformToChild()
     {
         auto& grid = std::get<GridPointer>(m_data);
 
@@ -511,8 +511,8 @@ namespace Molten::Gui
 
     }
 
-    template<typename TSkin>
-    void Docker<TSkin>::Element::TransformToChildLeaf()
+    template<typename TTheme>
+    void Docker<TTheme>::Element::TransformToChildLeaf()
     {
         auto& grid = std::get<GridPointer>(m_data);
 
@@ -528,8 +528,8 @@ namespace Molten::Gui
         m_type = ElementType::Leaf;
     }
 
-    template<typename TSkin>
-    void Docker<TSkin>::Element::TransformToChildGrid()
+    template<typename TTheme>
+    void Docker<TTheme>::Element::TransformToChildGrid()
     {
         auto& grid = std::get<GridPointer>(m_data);
 
@@ -555,8 +555,8 @@ namespace Molten::Gui
         }
     }
 
-    template<typename TSkin>
-    void Docker<TSkin>::Element::TransformToParentGrid()
+    template<typename TTheme>
+    void Docker<TTheme>::Element::TransformToParentGrid()
     {
         auto& parentGrid = std::get<GridPointer>(m_parent->m_data);
 
@@ -618,8 +618,8 @@ namespace Molten::Gui
         m_nextEdge = nullptr;
     }
 
-    template<typename TSkin>
-    void Docker<TSkin>::Element::SetChildrensParentToThis()
+    template<typename TTheme>
+    void Docker<TTheme>::Element::SetChildrensParentToThis()
     {
         auto& grid = std::get<GridPointer>(m_data);
         for(auto& element : grid->elements)
@@ -628,8 +628,8 @@ namespace Molten::Gui
         }
     }
 
-    template<typename TSkin>
-    typename Docker<TSkin>::EdgePointer Docker<TSkin>::Element::InsertElementInGrid(
+    template<typename TTheme>
+    typename Docker<TTheme>::EdgePointer Docker<TTheme>::Element::InsertElementInGrid(
         ElementPointer&& element,
         const ElementPosition position)
     {
@@ -638,8 +638,8 @@ namespace Molten::Gui
         return InsertElementInGrid(std::move(element), it);
     }
 
-    template<typename TSkin>
-    typename Docker<TSkin>::EdgePointer Docker<TSkin>::Element::InsertElementInGrid(
+    template<typename TTheme>
+    typename Docker<TTheme>::EdgePointer Docker<TTheme>::Element::InsertElementInGrid(
         ElementPointer&& element,
         const typename ElementPointerList::iterator it)
     {
@@ -698,8 +698,8 @@ namespace Molten::Gui
         return newEdge;
     }
 
-    template<typename TSkin>
-    typename Docker<TSkin>::EdgePointer Docker<TSkin>::Element::InsertElementInParentGrid(
+    template<typename TTheme>
+    typename Docker<TTheme>::EdgePointer Docker<TTheme>::Element::InsertElementInParentGrid(
         ElementPointer&& element,
         Element* neighborElement,
         const ElementPosition position)
@@ -719,8 +719,8 @@ namespace Molten::Gui
         return m_parent->InsertElementInGrid(std::move(element), it);
     }
 
-    template<typename TSkin>
-    void Docker<TSkin>::Element::AddDynamicElementFromParents(Element* element)
+    template<typename TTheme>
+    void Docker<TTheme>::Element::AddDynamicElementFromParents(Element* element)
     {
         auto* parent = m_parent;
 
@@ -741,8 +741,8 @@ namespace Molten::Gui
         }
     }
 
-    template<typename TSkin>
-    void Docker<TSkin>::Element::RemoveDynamicElementFromParents(Element* element)
+    template<typename TTheme>
+    void Docker<TTheme>::Element::RemoveDynamicElementFromParents(Element* element)
     {
         auto* parent = m_parent;
 
@@ -763,8 +763,8 @@ namespace Molten::Gui
         }
     }
 
-    template<typename TSkin>
-    typename Docker<TSkin>::Edge* Docker<TSkin>::Element::ExtractEdge(Element* element)
+    template<typename TTheme>
+    typename Docker<TTheme>::Edge* Docker<TTheme>::Element::ExtractEdge(Element* element)
     {
         Edge* extactedEdge = nullptr;
         if ((extactedEdge = element->m_prevEdge) != nullptr)
@@ -807,8 +807,8 @@ namespace Molten::Gui
 
 
     // Docker edge implementations.
-    template<typename TSkin>
-    Docker<TSkin>::Edge::Edge(
+    template<typename TTheme>
+    Docker<TTheme>::Edge::Edge(
         Direction direction,
         Element* prevElement,
         Element* nextElement
@@ -824,19 +824,19 @@ namespace Molten::Gui
         m_nextElement(nextElement)
     {}
 
-    template<typename TSkin>
-    Mouse::Cursor Docker<TSkin>::Edge::GetSizeCursor() const
+    template<typename TTheme>
+    Mouse::Cursor Docker<TTheme>::Edge::GetSizeCursor() const
     {
         return direction == Direction::Horizontal ? Mouse::Cursor::SizeUpDown : Mouse::Cursor::SizeLeftRight;
     }
 
 
     // Docker widget queued item implementations.
-    template<typename TSkin>
-    Docker<TSkin>::PendingLeafInsert::PendingLeafInsert(
+    template<typename TTheme>
+    Docker<TTheme>::PendingLeafInsert::PendingLeafInsert(
         const DockingPosition position,
         const bool isDynamic,
-        WidgetData<TSkin>* widgetData
+        WidgetData<TTheme>* widgetData
     ) :
         position(position),
         isDynamic(isDynamic),
@@ -845,8 +845,8 @@ namespace Molten::Gui
 
 
     // Private docket implementations.
-    template<typename TSkin>
-    bool Docker<TSkin>::InsertNewLeafs()
+    template<typename TTheme>
+    bool Docker<TTheme>::InsertNewLeafs()
     {
         m_leafInsertMap.clear();
         
@@ -865,8 +865,8 @@ namespace Molten::Gui
         return true;
     }
 
-    template<typename TSkin>
-    void Docker<TSkin>::InsertLeaf(PendingLeafInsert& pendingLeaf)
+    template<typename TTheme>
+    void Docker<TTheme>::InsertLeaf(PendingLeafInsert& pendingLeaf)
     {
         auto newLeaf = std::make_unique<Leaf>(pendingLeaf.widgetData, pendingLeaf.isDynamic);
         m_leafs.insert(newLeaf.get());
@@ -888,8 +888,8 @@ namespace Molten::Gui
         } 
     }
 
-    template<typename TSkin>
-    typename Docker<TSkin>::ElementPointer Docker<TSkin>::ExtractElement(Element* element)
+    template<typename TTheme>
+    typename Docker<TTheme>::ElementPointer Docker<TTheme>::ExtractElement(Element* element)
     {
         auto [extractedElement, extractedEdge] = element->Extract();
 
@@ -908,20 +908,20 @@ namespace Molten::Gui
         return std::move(extractedElement);
     }
 
-    template<typename TSkin>
-    constexpr typename Docker<TSkin>::Direction Docker<TSkin>::GetInsertDirection(DockingPosition position)
+    template<typename TTheme>
+    constexpr typename Docker<TTheme>::Direction Docker<TTheme>::GetInsertDirection(DockingPosition position)
     {
         return position == DockingPosition::Left || position == DockingPosition::Right ? Direction::Horizontal : Direction::Vertical;
     }
 
-    template<typename TSkin>
-    constexpr typename Docker<TSkin>::ElementPosition Docker<TSkin>::GetInsertPosition(DockingPosition position)
+    template<typename TTheme>
+    constexpr typename Docker<TTheme>::ElementPosition Docker<TTheme>::GetInsertPosition(DockingPosition position)
     {
         return position == DockingPosition::Left || position == DockingPosition::Top ? ElementPosition::First : ElementPosition::Last;
     }
 
-    template<typename TSkin>
-    void Docker<TSkin>::SetCursor(const Mouse::Cursor cursor)
+    template<typename TTheme>
+    void Docker<TTheme>::SetCursor(const Mouse::Cursor cursor)
     {
         if (m_currentCursor != cursor)
         {
@@ -930,17 +930,17 @@ namespace Molten::Gui
         }
     }
 
-    template<typename TSkin>
-    void Docker<TSkin>::ActivateNormalUpdate()
+    template<typename TTheme>
+    void Docker<TTheme>::ActivateNormalUpdate()
     {
         m_edgeDragData.Reset();
         m_leafDragData.Reset();
 
-        m_mouseInputUpdateFunc = &Docker<TSkin>::HandleNormalMouseEvent;
+        m_mouseInputUpdateFunc = &Docker<TTheme>::HandleNormalMouseEvent;
     }
 
-    template<typename TSkin>
-    void Docker<TSkin>::ActivateEdgeDragUpdate(Edge* pressedEdge, const Vector2f32& mousePosition)
+    template<typename TTheme>
+    void Docker<TTheme>::ActivateEdgeDragUpdate(Edge* pressedEdge, const Vector2f32& mousePosition)
     {
         m_edgeDragData.Reset();
         m_leafDragData.Reset();
@@ -948,13 +948,13 @@ namespace Molten::Gui
         m_edgeDragData.pressedEdge = pressedEdge;
         m_edgeDragData.prevMousePosition = mousePosition;
 
-        m_mouseInputUpdateFunc = &Docker<TSkin>::HandleEdgeDragMouseEvent;
+        m_mouseInputUpdateFunc = &Docker<TTheme>::HandleEdgeDragMouseEvent;
         GetData().canvas->OverrideMouseEventsUntilMouseRelease(*this);
         SetCursor(pressedEdge->GetSizeCursor());
     }
 
-    template<typename TSkin>
-    void Docker<TSkin>::ActivateLeafDragUpdate(Leaf* pressedLeaf, const Vector2f32& mousePosition)
+    template<typename TTheme>
+    void Docker<TTheme>::ActivateLeafDragUpdate(Leaf* pressedLeaf, const Vector2f32& mousePosition)
     {
         m_edgeDragData.Reset();
         m_leafDragData.Reset();
@@ -962,12 +962,12 @@ namespace Molten::Gui
         m_leafDragData.pressedLeaf = pressedLeaf;
         m_leafDragData.initialMousePosition = mousePosition;
 
-        m_mouseInputUpdateFunc = &Docker<TSkin>::HandleLeafDragMouseEvent;
+        m_mouseInputUpdateFunc = &Docker<TTheme>::HandleLeafDragMouseEvent;
         GetData().canvas->OverrideMouseEventsUntilMouseRelease(*this);
     }
 
-    template<typename TSkin>
-    bool Docker<TSkin>::HandleNormalMouseEvent(const WidgetEvent& widgetEvent)
+    template<typename TTheme>
+    bool Docker<TTheme>::HandleNormalMouseEvent(const WidgetEvent& widgetEvent)
     {
         switch (widgetEvent.subType)
         {
@@ -980,8 +980,8 @@ namespace Molten::Gui
         return false;
     }
 
-    template<typename TSkin>
-    bool Docker<TSkin>::HandleEdgeDragMouseEvent(const WidgetEvent& widgetEvent)
+    template<typename TTheme>
+    bool Docker<TTheme>::HandleEdgeDragMouseEvent(const WidgetEvent& widgetEvent)
     {
         switch(widgetEvent.subType)
         {
@@ -994,8 +994,8 @@ namespace Molten::Gui
         return false;
     }
 
-    template<typename TSkin>
-    bool Docker<TSkin>::HandleLeafDragMouseEvent(const WidgetEvent& widgetEvent)
+    template<typename TTheme>
+    bool Docker<TTheme>::HandleLeafDragMouseEvent(const WidgetEvent& widgetEvent)
     {
         switch(widgetEvent.subType)
         {
@@ -1008,8 +1008,8 @@ namespace Molten::Gui
         return false;
     }
 
-    template<typename TSkin>
-    bool Docker<TSkin>::HandleNormalMousePressEvent(const WidgetEvent::MouseEvent& mouseEvent)
+    template<typename TTheme>
+    bool Docker<TTheme>::HandleNormalMousePressEvent(const WidgetEvent::MouseEvent& mouseEvent)
     {
         auto* pressedEdge = FindIntersectingEdge(mouseEvent.position);
         if (pressedEdge)
@@ -1028,8 +1028,8 @@ namespace Molten::Gui
         return false;
     }
 
-    template<typename TSkin>
-    bool Docker<TSkin>::HandleNormalMouseMoveEvent(const WidgetEvent::MouseEvent& mouseEvent)
+    template<typename TTheme>
+    bool Docker<TTheme>::HandleNormalMouseMoveEvent(const WidgetEvent::MouseEvent& mouseEvent)
     {
         auto* hoveredEdge = FindIntersectingEdge(mouseEvent.position);
         if (hoveredEdge)
@@ -1043,8 +1043,8 @@ namespace Molten::Gui
         return true;
     }
 
-    template<typename TSkin>
-    bool Docker<TSkin>::HandleEdgeDragMouseMoveEvent(const WidgetEvent::MouseEvent& mouseEvent)
+    template<typename TTheme>
+    bool Docker<TTheme>::HandleEdgeDragMouseMoveEvent(const WidgetEvent::MouseEvent& mouseEvent)
     {
         if (!m_edgeDragData.pressedEdge)
         {
@@ -1074,8 +1074,8 @@ namespace Molten::Gui
         return true;
     }
 
-    template<typename TSkin>
-    bool Docker<TSkin>::HandleEdgeDragMouseReleaseEvent(const WidgetEvent::MouseEvent& mouseEvent)
+    template<typename TTheme>
+    bool Docker<TTheme>::HandleEdgeDragMouseReleaseEvent(const WidgetEvent::MouseEvent& mouseEvent)
     {
         SetCursor(Mouse::Cursor::Normal);
         ActivateNormalUpdate();
@@ -1084,8 +1084,8 @@ namespace Molten::Gui
         return true;
     }
 
-    template<typename TSkin>
-    bool Docker<TSkin>::HandleLeafDragMouseMoveEvent(const WidgetEvent::MouseEvent& mouseEvent)
+    template<typename TTheme>
+    bool Docker<TTheme>::HandleLeafDragMouseMoveEvent(const WidgetEvent::MouseEvent& mouseEvent)
     {
         if (!m_leafDragData.dragIsActivated)
         {
@@ -1122,8 +1122,8 @@ namespace Molten::Gui
         return true;
     }
 
-    template<typename TSkin>
-    bool Docker<TSkin>::HandleLeafDragMouseReleaseEvent(const WidgetEvent::MouseEvent& mouseEvent)
+    template<typename TTheme>
+    bool Docker<TTheme>::HandleLeafDragMouseReleaseEvent(const WidgetEvent::MouseEvent& mouseEvent)
     {
         if (m_leafDragData.dockingLeaf && m_leafDragData.pressedLeaf && m_leafDragData.dockingLeaf != m_leafDragData.pressedLeaf)
         {
@@ -1156,9 +1156,9 @@ namespace Molten::Gui
         return true;
     }
 
-    template<typename TSkin>
-    template<typename Docker<TSkin>::Direction VEdgeDirection>
-    bool Docker<TSkin>::HandleDirectionalEdgeMovement(Edge& edge, float movement)
+    template<typename TTheme>
+    template<typename Docker<TTheme>::Direction VEdgeDirection>
+    bool Docker<TTheme>::HandleDirectionalEdgeMovement(Edge& edge, float movement)
     {   
         constexpr Direction flippedDirection = FlipDirection(VEdgeDirection);
         
@@ -1190,8 +1190,8 @@ namespace Molten::Gui
         return true;
     }
 
-    template<typename TSkin>
-    typename Docker<TSkin>::Edge* Docker<TSkin>::FindIntersectingEdge(const Vector2f32& point)
+    template<typename TTheme>
+    typename Docker<TTheme>::Edge* Docker<TTheme>::FindIntersectingEdge(const Vector2f32& point)
     {
         for (auto& edge : m_edges)
         {
@@ -1203,8 +1203,8 @@ namespace Molten::Gui
         return nullptr;
     }
 
-    template<typename TSkin>
-    typename Docker<TSkin>::Leaf* Docker<TSkin>::FindIntersectingDraggableLeaf(const Vector2f32& point)
+    template<typename TTheme>
+    typename Docker<TTheme>::Leaf* Docker<TTheme>::FindIntersectingDraggableLeaf(const Vector2f32& point)
     {
         for (auto* leaf : m_leafs)
         {
@@ -1218,8 +1218,8 @@ namespace Molten::Gui
         return nullptr;
     }
 
-    template<typename TSkin>
-    typename Docker<TSkin>::Leaf* Docker<TSkin>::FindIntersectingLeaf(const Vector2f32& point)
+    template<typename TTheme>
+    typename Docker<TTheme>::Leaf* Docker<TTheme>::FindIntersectingLeaf(const Vector2f32& point)
     {
         for (auto* leaf : m_leafs)
         {
@@ -1231,8 +1231,8 @@ namespace Molten::Gui
         return nullptr;
     }
 
-    template<typename TSkin>
-    void Docker<TSkin>::CalculateBounds()
+    template<typename TTheme>
+    void Docker<TTheme>::CalculateBounds()
     {
         if (!m_rootElement)
         {
@@ -1242,8 +1242,8 @@ namespace Molten::Gui
         CalculateElementBounds(*m_rootElement.get(), GetGrantedBounds());
     }
 
-    template<typename TSkin>
-    void Docker<TSkin>::CalculateElementBounds(Element& element, const Bounds2f32& grantedBounds)
+    template<typename TTheme>
+    void Docker<TTheme>::CalculateElementBounds(Element& element, const Bounds2f32& grantedBounds)
     {
         element.VisitData([&](auto& data)
         {
@@ -1251,14 +1251,14 @@ namespace Molten::Gui
         });
     }
 
-    template<typename TSkin>
-    void Docker<TSkin>::CalculateElementBounds(Element& element, Leaf& leaf, const Bounds2f32& grantedBounds)
+    template<typename TTheme>
+    void Docker<TTheme>::CalculateElementBounds(Element& element, Leaf& leaf, const Bounds2f32& grantedBounds)
     {
         leaf.widgetData->SetGrantedBounds(grantedBounds);
     }
 
-    template<typename TSkin>
-    void Docker<TSkin>::CalculateElementBounds(Element& element, Grid& grid, const Bounds2f32& grantedBounds)
+    template<typename TTheme>
+    void Docker<TTheme>::CalculateElementBounds(Element& element, Grid& grid, const Bounds2f32& grantedBounds)
     {
         if (grid.direction == Direction::Horizontal)
         {
@@ -1270,9 +1270,9 @@ namespace Molten::Gui
         }
     }
 
-    template<typename TSkin>
-    template<typename Docker<TSkin>::Direction VGridDirection>
-    void Docker<TSkin>::CalculateElementBounds(Element& element, Grid& grid, const Bounds2f32& grantedBounds)
+    template<typename TTheme>
+    template<typename Docker<TTheme>::Direction VGridDirection>
+    void Docker<TTheme>::CalculateElementBounds(Element& element, Grid& grid, const Bounds2f32& grantedBounds)
     {
         if (grid.elements.empty())
         {
@@ -1353,9 +1353,9 @@ namespace Molten::Gui
         element.template UpdateConstraintsFromChildren<VGridDirection>();
     }
 
-    template<typename TSkin>
+    template<typename TTheme>
     template<typename TIterator>
-    void Docker<TSkin>::HideElements(TIterator begin, TIterator end)
+    void Docker<TTheme>::HideElements(TIterator begin, TIterator end)
     {
         // FIX, should implement partial tree node removal and use it instead of SetGrantedBounds.
         for (; begin != end; begin++)
@@ -1375,9 +1375,9 @@ namespace Molten::Gui
         }
     }
 
-    template<typename TSkin>
-    template<typename Docker<TSkin>::Direction VGridDirection>
-    constexpr void Docker<TSkin>::DirectionalShrinkBounds(Bounds2f32& bounds, float shrinkValue)
+    template<typename TTheme>
+    template<typename Docker<TTheme>::Direction VGridDirection>
+    constexpr void Docker<TTheme>::DirectionalShrinkBounds(Bounds2f32& bounds, float shrinkValue)
     {
         if constexpr (VGridDirection == Direction::Horizontal)
         {
@@ -1391,9 +1391,9 @@ namespace Molten::Gui
         }
     }
 
-    template<typename TSkin>
-    template<typename Docker<TSkin>::Direction VGridDirection>
-    constexpr void Docker<TSkin>::DirectionalShrinkBounds(Bounds2f32& bounds, Bounds2f32& shrinkedBounds, float shrinkValue)
+    template<typename TTheme>
+    template<typename Docker<TTheme>::Direction VGridDirection>
+    constexpr void Docker<TTheme>::DirectionalShrinkBounds(Bounds2f32& bounds, Bounds2f32& shrinkedBounds, float shrinkValue)
     {
         if constexpr (VGridDirection == Direction::Horizontal)
         {
@@ -1419,9 +1419,9 @@ namespace Molten::Gui
         }
     }
 
-    template<typename TSkin>
-    template<typename Docker<TSkin>::Direction VEdgeDirection>
-    void Docker<TSkin>::SetElementPrevEdgeBounds(Element& element, const Bounds2f32& grantedBounds)
+    template<typename TTheme>
+    template<typename Docker<TTheme>::Direction VEdgeDirection>
+    void Docker<TTheme>::SetElementPrevEdgeBounds(Element& element, const Bounds2f32& grantedBounds)
     {
         auto* prevEdge = element.GetPrevEdge();
         if (prevEdge)
@@ -1444,15 +1444,15 @@ namespace Molten::Gui
         }
     }
 
-    template<typename TSkin>
-    constexpr typename Docker<TSkin>::Direction Docker<TSkin>::FlipDirection(const Direction direction)
+    template<typename TTheme>
+    constexpr typename Docker<TTheme>::Direction Docker<TTheme>::FlipDirection(const Direction direction)
     {
         return direction == Direction::Horizontal ? Direction::Vertical : Direction::Horizontal;
     }
 
-    template<typename TSkin>
-    template<typename Docker<TSkin>::Direction VDirection>
-    constexpr float Docker<TSkin>::GetDirectionalWidth(const Vector2f32& size)
+    template<typename TTheme>
+    template<typename Docker<TTheme>::Direction VDirection>
+    constexpr float Docker<TTheme>::GetDirectionalWidth(const Vector2f32& size)
     {
         if constexpr (VDirection == Direction::Horizontal)
         {
@@ -1464,9 +1464,9 @@ namespace Molten::Gui
         }
     }
 
-    template<typename TSkin>
-    template<typename Docker<TSkin>::Direction VDirection>
-    constexpr float Docker<TSkin>::GetDirectionalHeight(const Vector2f32& size)
+    template<typename TTheme>
+    template<typename Docker<TTheme>::Direction VDirection>
+    constexpr float Docker<TTheme>::GetDirectionalHeight(const Vector2f32& size)
     {
         if constexpr (VDirection == Direction::Horizontal)
         {
@@ -1478,9 +1478,9 @@ namespace Molten::Gui
         }
     }
 
-    template<typename TSkin>
-    template<typename Docker<TSkin>::Direction VDirection>
-    constexpr void Docker<TSkin>::SetDirectionalWidth(Vector2f32& size, const float width)
+    template<typename TTheme>
+    template<typename Docker<TTheme>::Direction VDirection>
+    constexpr void Docker<TTheme>::SetDirectionalWidth(Vector2f32& size, const float width)
     {
         if constexpr (VDirection == Direction::Horizontal)
         {
@@ -1492,9 +1492,9 @@ namespace Molten::Gui
         }
     }
 
-    template<typename TSkin>
-    template<typename Docker<TSkin>::Direction VDirection>
-    constexpr void Docker<TSkin>::SetDirectionalHeight(Vector2f32& size, const float height)
+    template<typename TTheme>
+    template<typename Docker<TTheme>::Direction VDirection>
+    constexpr void Docker<TTheme>::SetDirectionalHeight(Vector2f32& size, const float height)
     {
         if constexpr (VDirection == Direction::Horizontal)
         {
@@ -1506,9 +1506,9 @@ namespace Molten::Gui
         }
     }
 
-    template<typename TSkin>
-    template<typename Docker<TSkin>::Direction VDirection>
-    constexpr void Docker<TSkin>::AddDirectionalWidth(Vector2f32& size, const float width)
+    template<typename TTheme>
+    template<typename Docker<TTheme>::Direction VDirection>
+    constexpr void Docker<TTheme>::AddDirectionalWidth(Vector2f32& size, const float width)
     {
         if constexpr (VDirection == Direction::Horizontal)
         {
@@ -1520,9 +1520,9 @@ namespace Molten::Gui
         }
     }
 
-    template<typename TSkin>
-    template<typename Docker<TSkin>::Direction VDirection>
-    constexpr void Docker<TSkin>::AddDirectionalHeight(Vector2f32& size, const float height)
+    template<typename TTheme>
+    template<typename Docker<TTheme>::Direction VDirection>
+    constexpr void Docker<TTheme>::AddDirectionalHeight(Vector2f32& size, const float height)
     {
         if constexpr (VDirection == Direction::Horizontal)
         {
@@ -1534,8 +1534,8 @@ namespace Molten::Gui
         }
     }
 
-    template<typename TSkin>
-    bool Docker<TSkin>::GetDockingPositionInElement(
+    template<typename TTheme>
+    bool Docker<TTheme>::GetDockingPositionInElement(
         const Vector2f32& mousePosition,
         Leaf& leaf,
         Bounds2f32& dockingBounds,
@@ -1605,21 +1605,21 @@ namespace Molten::Gui
         return false;
     }
 
-    template<typename TSkin>
-    Docker<TSkin>::EdgeDragData::EdgeDragData() :
+    template<typename TTheme>
+    Docker<TTheme>::EdgeDragData::EdgeDragData() :
         pressedEdge(nullptr),
         prevMousePosition(0.0f, 0.0f)
     { }
 
-    template<typename TSkin>
-    void Docker<TSkin>::EdgeDragData::Reset()
+    template<typename TTheme>
+    void Docker<TTheme>::EdgeDragData::Reset()
     {
         pressedEdge = nullptr;
         prevMousePosition = { 0.0f, 0.0f };
     }
 
-    template<typename TSkin>
-    Docker<TSkin>::LeafDragData::LeafDragData() :
+    template<typename TTheme>
+    Docker<TTheme>::LeafDragData::LeafDragData() :
         pressedLeaf(nullptr),
         initialMousePosition(0.0f, 0.0f),
         dockingLeaf(nullptr),
@@ -1627,8 +1627,8 @@ namespace Molten::Gui
         dragIsActivated(false)
     {}
     
-    template<typename TSkin>
-    void Docker<TSkin>::LeafDragData::Reset()
+    template<typename TTheme>
+    void Docker<TTheme>::LeafDragData::Reset()
     {
         pressedLeaf = nullptr;
         initialMousePosition = {0.0f, 0.0f};

@@ -26,16 +26,16 @@
 namespace Molten::Gui
 {
 
-    template<typename TSkin>
-    inline Pane<TSkin>::Pane(
-        WidgetDataMixin<TSkin, Pane>& data,
+    template<typename TTheme>
+    Pane<TTheme>::Pane(
+        WidgetDataMixin<TTheme, Pane>& data,
         const Vector2f32& size
     ) :
-        WidgetMixin<TSkin, Pane>(data, size)
+        WidgetMixin<TTheme, Pane>(data, size)
     {}
 
-    template<typename TSkin>
-    void Pane<TSkin>::Update()
+    template<typename TTheme>
+    void Pane<TTheme>::Update()
     {
        ApplyMarginsToGrantedBounds();
 
