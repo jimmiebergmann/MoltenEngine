@@ -32,7 +32,7 @@ namespace Molten::Gui
     Canvas<TTheme>::Canvas(Renderer& backendRenderer, CanvasRendererPointer renderer) :
         m_backendRenderer(backendRenderer),
         m_renderer(renderer),
-        m_skin(backendRenderer, *m_renderer.get()),
+        m_theme(backendRenderer, *m_renderer.get()),
         m_size(0.0f, 0.0f),
         m_scale(1.0f, 1.0f),
         m_pressedWidget(nullptr),
@@ -79,7 +79,7 @@ namespace Molten::Gui
     {
         m_renderer->BeginDraw();
 
-        m_renderer->DrawRect({ { 0.0f, 0.0f }, m_size }, m_skin.backgroundColor);
+        m_renderer->DrawRect({ { 0.0f, 0.0f }, m_size }, m_theme.backgroundColor);
 
         m_widgetTree.template ForEachPreorder<typename WidgetData<TTheme>::TreePartialLaneType>(
             [&](auto& widgetData)
@@ -155,7 +155,7 @@ namespace Molten::Gui
         widgetData->iterator = m_widgetTree.Insert(partialLane, normalLane.end(), widgetData);
         widgetData->widget = widget;
         
-        auto widgetSkin = m_skin.template Create<TWidget>(*widget, *widgetData);
+        auto widgetSkin = m_theme.template Create<TWidget>(*widget, *widgetData);
         if constexpr (usingWidgetMixin == true)
         {
             widgetData->widgetSkinMixin = widgetSkin.get();
@@ -201,7 +201,7 @@ namespace Molten::Gui
         widgetData->iterator = m_widgetTree.Insert(partialLane, normalLane.end(), widgetData);
         widgetData->widget = widget;  
 
-        auto widgetSkin = m_skin.template Create<TWidget>(*widget, *widgetData);
+        auto widgetSkin = m_theme.template Create<TWidget>(*widget, *widgetData);
         if constexpr (usingWidgetMixin == true)
         {
             widgetData->widgetSkinMixin = widgetSkin.get();

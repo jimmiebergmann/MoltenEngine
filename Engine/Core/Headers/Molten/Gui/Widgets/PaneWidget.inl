@@ -42,7 +42,7 @@ namespace Molten::Gui
        auto& grantedBounds = GetGrantedBounds();
 
        m_dragBounds = grantedBounds;
-       m_dragBounds.bottom = m_dragBounds.top + 20.0f;
+       m_dragBounds.bottom = m_dragBounds.top + WidgetSkinType::headerBarHeight;
 
        auto childLane = GetChildrenPartialLane();
 

@@ -96,8 +96,8 @@ namespace Molten::Gui
 
         explicit Docker(WidgetDataMixin<TTheme, Docker>& data);
 
-        template<template<typename> typename TWidgetType, typename ... TArgs>
-        WidgetTypePointer<TWidgetType<TTheme>> CreateChild(
+        template<template<typename> typename TWidget, typename ... TArgs>
+        WidgetTypePointer<TWidget<TTheme>> CreateChild(
             const DockingPosition position,
             const bool dynamic,
             TArgs ... args);

@@ -58,8 +58,8 @@ namespace Molten::Gui
 
         virtual void Update();
 
-        template<template<typename> typename TWidgetType, typename ... TArgs>
-        WidgetTypePointer<TWidgetType<TTheme>> CreateChild(TArgs ... args);
+        template<template<typename> typename TWidget, typename ... TArgs>
+        WidgetTypePointer<TWidget<TTheme>> CreateChild(TArgs ... args);
 
     protected:
 

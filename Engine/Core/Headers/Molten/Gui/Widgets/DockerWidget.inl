@@ -59,13 +59,13 @@ namespace Molten::Gui
     { }
 
     template<typename TTheme>
-    template<template<typename> typename TWidgetType, typename ... TArgs>
-    WidgetTypePointer<TWidgetType<TTheme>> Docker<TTheme>::CreateChild(
+    template<template<typename> typename TWidget, typename ... TArgs>
+    WidgetTypePointer<TWidget<TTheme>> Docker<TTheme>::CreateChild(
         const DockingPosition position,
         const bool dynamic,
         TArgs ... args)
     {
-        auto widget = Widget<TTheme>::template CreateChild<TWidgetType>(std::forward<TArgs>(args)...);
+        auto widget = Widget<TTheme>::template CreateChild<TWidget>(std::forward<TArgs>(args)...);
 
         auto it = m_leafInsertMap.find(widget.get());
         if (it == m_leafInsertMap.end())

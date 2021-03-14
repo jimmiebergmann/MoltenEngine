@@ -142,6 +142,9 @@ namespace Molten::Gui
     template<>
     struct WidgetSkin<EditorTheme, Pane> : WidgetSkinMixin<EditorTheme, Pane>
     {
+
+        static constexpr float headerBarHeight = 30.0f;
+
         WidgetSkin(const WidgetSkinDescriptor<EditorTheme, Pane>& descriptor) :
             WidgetSkinMixin<EditorTheme, Pane>(descriptor)
         {}
@@ -152,7 +155,7 @@ namespace Molten::Gui
 
             theme.m_canvasRenderer.DrawRect(grantedBounds, Vector4f32{ 0.43f, 0.45f, 0.49f, 1.0f });                
             theme.m_canvasRenderer.DrawRect(
-                grantedBounds.WithoutMargins({ 0.0f, 30.0f, 0.0f, 0.0f }),
+                grantedBounds.WithoutMargins({ 0.0f, headerBarHeight, 0.0f, 0.0f }),
                 Vector4f32{ 0.24f, 0.25f, 0.27f, 1.0f });
         }
 

@@ -44,8 +44,6 @@ namespace Molten::Gui
     class Layer;
     template<typename TTheme>
     using LayerPointer = std::shared_ptr<Layer<TTheme>>;
-    template<typename TTheme>
-    using LayerWeakPointer = std::weak_ptr<Layer<TTheme>>;
     
     template<typename TLayerType>
     using LayerTypePointer = std::shared_ptr<TLayerType>;
@@ -54,8 +52,6 @@ namespace Molten::Gui
     class Widget;
     template<typename TTheme>
     using WidgetPointer = std::shared_ptr<Widget<TTheme>>;
-    template<typename TTheme>
-    using WidgetWeakPointer = std::shared_ptr<Widget<TTheme>>;
 
     template<typename TWidget>
     using WidgetTypePointer = std::shared_ptr<TWidget>;

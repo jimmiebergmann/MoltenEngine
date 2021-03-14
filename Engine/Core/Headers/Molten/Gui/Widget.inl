@@ -52,10 +52,10 @@ namespace Molten::Gui
     {}
 
     template<typename TTheme>
-    template<template<typename> typename TWidgetType, typename ... TArgs>
-    WidgetTypePointer<TWidgetType<TTheme>> Widget<TTheme>::CreateChild(TArgs ... args)
+    template<template<typename> typename TWidget, typename ... TArgs>
+    WidgetTypePointer<TWidget<TTheme>> Widget<TTheme>::CreateChild(TArgs ... args)
     {
-        return m_data.canvas->template CreateChild<TWidgetType>(*this, std::forward<TArgs>(args)...);
+        return m_data.canvas->template CreateChild<TWidget>(*this, std::forward<TArgs>(args)...);
     }
 
     template<typename TTheme>

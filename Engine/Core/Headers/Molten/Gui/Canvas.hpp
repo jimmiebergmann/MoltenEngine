@@ -123,7 +123,7 @@ namespace Molten::Gui
         Renderer& m_backendRenderer;
         CanvasRendererPointer m_renderer;
 
-        TTheme m_skin;
+        TTheme m_theme;
         typename WidgetData<TTheme>::Tree m_widgetTree;    
      
         Vector2f32 m_size;
