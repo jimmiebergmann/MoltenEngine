@@ -1254,7 +1254,16 @@ namespace Molten::Gui
     template<typename TTheme>
     void Docker<TTheme>::CalculateElementBounds(Element& element, Leaf& leaf, const Bounds2f32& grantedBounds)
     {
-        leaf.widgetData->SetGrantedBounds(grantedBounds);
+        if(grantedBounds.IsEmpty())
+        {
+            leaf.widgetData->HideWidget();
+        }
+        else
+        {
+            leaf.widgetData->SetGrantedBounds(grantedBounds);
+            leaf.widgetData->ShowWidget();
+        }
+        
     }
 
     template<typename TTheme>
@@ -1357,7 +1366,6 @@ namespace Molten::Gui
     template<typename TIterator>
     void Docker<TTheme>::HideElements(TIterator begin, TIterator end)
     {
-        // FIX, should implement partial tree node removal and use it instead of SetGrantedBounds.
         for (; begin != end; begin++)
         {
             auto& element = *begin;
@@ -1365,7 +1373,7 @@ namespace Molten::Gui
             if (element->GetType() == ElementType::Leaf) // Leaf
             {
                 auto* leaf = element->GetLeaf();
-                leaf->widgetData->SetGrantedBounds({ 0.0f, 0.0f, 0.0f, 0.0f });
+                leaf->widgetData->HideWidget();
             }
             else // Grid
             {

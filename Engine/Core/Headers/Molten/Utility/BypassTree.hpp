@@ -87,6 +87,11 @@ namespace Molten
         template<template <bool, bool, typename, typename> class TIterator, bool IsItConst, bool IsItReverse, typename TItLaneType>
         TIterator<false, IsItReverse, TItLaneType, Item> Erase(TIterator<IsItConst, IsItReverse, TItLaneType, Item> it);
 
+        template<template <bool, bool, typename, typename> class TIterator, bool IsItConst, bool IsItReverse>
+        void EnableInPartialLane(TIterator<IsItConst, IsItReverse, NormalLaneType, Item> it);
+        template<template <bool, bool, typename, typename> class TIterator, bool IsItConst, bool IsItReverse, typename TItLaneType>
+        void DisableInPartialLane(TIterator<IsItConst, IsItReverse, TItLaneType, Item> it);
+
         template<typename TLaneType, typename TCallback>
         void ForEachPreorder(TCallback&& callback);
         template<typename TLaneType, typename TCallback, typename TPostCallback>

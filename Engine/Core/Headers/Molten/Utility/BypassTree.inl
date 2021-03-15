@@ -31,28 +31,28 @@ namespace Molten
     // Byspass tree implementations.
     template<typename T>
     template<typename TLaneType>
-    inline typename BypassTree<T>::template Lane<TLaneType> BypassTree<T>::GetLane()
+    typename BypassTree<T>::template Lane<TLaneType> BypassTree<T>::GetLane()
     {
         return m_list.template GetLane<TLaneType>();
     }
 
     template<typename T>
     template<typename TLaneType>
-    inline typename BypassTree<T>::template ConstLane<TLaneType> BypassTree<T>::GetLane() const
+    typename BypassTree<T>::template ConstLane<TLaneType> BypassTree<T>::GetLane() const
     {
         return m_list.template GetLane<TLaneType>();
     }
 
     template<typename T>
     template<typename TLaneType, template <bool, bool, typename, typename> class TIterator, bool IsItConst, bool IsItReverse, typename TItLaneType>
-    inline typename BypassTree<T>::template Iterator<typename TLaneType::LaneType> BypassTree<T>::Insert(TLaneType& lane, TIterator<IsItConst, IsItReverse, TItLaneType, Item> position, const Type& value)
+    typename BypassTree<T>::template Iterator<typename TLaneType::LaneType> BypassTree<T>::Insert(TLaneType& lane, TIterator<IsItConst, IsItReverse, TItLaneType, Item> position, const Type& value)
     {
         auto& parent = lane.GetList();
         return lane.Insert(position, std::move( Item{ parent, value } ));
     }
     template<typename T>
     template<typename TLaneType, template <bool, bool, typename, typename> class TIterator, bool IsItConst, bool IsItReverse, typename TItLaneType>
-    inline typename BypassTree<T>::template Iterator<typename TLaneType::LaneType> BypassTree<T>::Insert(TLaneType& lane, TIterator<IsItConst, IsItReverse, TItLaneType, Item> position, Type&& value)
+    typename BypassTree<T>::template Iterator<typename TLaneType::LaneType> BypassTree<T>::Insert(TLaneType& lane, TIterator<IsItConst, IsItReverse, TItLaneType, Item> position, Type&& value)
     {
         auto& parent = lane.GetList();
         return lane.Insert(position, std::move(Item{ parent, std::move(value) }) );
@@ -60,15 +60,31 @@ namespace Molten
 
     template<typename T>
     template<template <bool, bool, typename, typename> class TIterator, bool IsItConst, bool IsItReverse, typename TItLaneType>
-    inline TIterator<false, IsItReverse, TItLaneType, typename BypassTree<T>::Item> BypassTree<T>::Erase(TIterator<IsItConst, IsItReverse, TItLaneType, Item> it)
+    TIterator<false, IsItReverse, TItLaneType, typename BypassTree<T>::Item> BypassTree<T>::Erase(TIterator<IsItConst, IsItReverse, TItLaneType, Item> it)
     {
         auto& list = it.GetList();
         return list.Erase(it);
     }
 
     template<typename T>
+    template<template <bool, bool, typename, typename> class TIterator, bool IsItConst, bool IsItReverse>
+    void BypassTree<T>::EnableInPartialLane(TIterator<IsItConst, IsItReverse, NormalLaneType, Item> it)
+    {
+        auto& list = it.GetList();
+        list.EnableInPartialLane(it);
+    }
+
+    template<typename T>
+    template<template <bool, bool, typename, typename> class TIterator, bool IsItConst, bool IsItReverse, typename TItLaneType>
+    void BypassTree<T>::DisableInPartialLane(TIterator<IsItConst, IsItReverse, TItLaneType, Item> it)
+    {
+        auto& list = it.GetList();
+        list.DisableInPartialLane(it);
+    }
+
+    template<typename T>
     template<typename TLaneType, typename TCallback>
-    inline void BypassTree<T>::ForEachPreorder(TCallback&& callback)
+    void BypassTree<T>::ForEachPreorder(TCallback&& callback)
     {
         struct State
         {
@@ -115,7 +131,7 @@ namespace Molten
 
     template<typename T>
     template<typename TLaneType, typename TCallback, typename TPostCallback>
-    inline void BypassTree<T>::ForEachPreorder(TCallback&& preCallback, TPostCallback&& postCallback)
+    void BypassTree<T>::ForEachPreorder(TCallback&& preCallback, TPostCallback&& postCallback)
     {
         struct State
         {
@@ -192,7 +208,7 @@ namespace Molten
 
     template<typename T>
     template<typename TLaneType, typename TCallback>
-    inline void BypassTree<T>::ForEachReversePreorder(TCallback&& callback)
+    void BypassTree<T>::ForEachReversePreorder(TCallback&& callback)
     {
         struct State
         {

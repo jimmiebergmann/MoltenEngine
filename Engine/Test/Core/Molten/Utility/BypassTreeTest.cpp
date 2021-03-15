@@ -414,6 +414,80 @@ namespace Molten
             }
         }
     }
+
+    TEST(Utility, BypassTree_EnableDisablePartialLane)
+    {
+        {
+            TreeType tree;
+            NormalLane normalLane = tree.GetLane<TreeType::NormalLaneType>();
+            PartialLane partialLane = tree.GetLane<TreeType::PartialLaneType>();
+
+            { // Add data
+                tree.Insert(normalLane, normalLane.end(), TestData1{ 1 });
+                tree.Insert(partialLane, partialLane.end(), TestData1{ 2 });
+                tree.Insert(partialLane, partialLane.end(), TestData1{ 3 });
+
+                auto it1 = normalLane.begin();
+                auto it2 = std::next(it1);
+                auto it3 = std::next(it2);
+
+                auto& item1 = *it1;
+                auto& item3 = *it3;
+
+                PartialLane partialLane1 = item1.GetChildren().GetLane<TreeType::PartialLaneType>();
+                PartialLane partialLane3 = item3.GetChildren().GetLane<TreeType::PartialLaneType>();
+
+                tree.Insert(partialLane1, partialLane1.end(), TestData1{ 11 });
+                tree.Insert(partialLane1, partialLane1.end(), TestData1{ 12 });
+
+                tree.Insert(partialLane3, partialLane3.end(), TestData1{ 31 });
+                tree.Insert(partialLane3, partialLane3.end(), TestData1{ 32 });
+                tree.Insert(partialLane3, partialLane3.end(), TestData1{ 33 });
+
+                auto it11 = partialLane1.begin();
+                auto& item11 = *it11;
+                PartialLane partialLane11 = item11.GetChildren().GetLane<TreeType::PartialLaneType>();
+
+                tree.Insert(partialLane11, partialLane11.end(), TestData1{ 111 });
+            }
+            { // Enable first root item.
+                tree.EnableInPartialLane(normalLane.begin());
+
+                std::vector<size_t> values = {
+                        1, 11, 111, 12, 2, 3, 31, 32, 33
+                };
+
+                auto it = values.begin();
+
+                tree.ForEachPreorder<TreeType::PartialLaneType>([&](TestData1& item)
+                {
+                    ASSERT_NE(it, values.end());
+                    EXPECT_EQ(item.value, *it);
+                    ++it;
+                });
+
+                EXPECT_EQ(it, values.end());
+            }
+            { // Disable first root item.
+                tree.DisableInPartialLane(normalLane.begin());
+
+                std::vector<size_t> values = {
+                    2, 3, 31, 32, 33
+                };
+
+                auto it = values.begin();
+
+                tree.ForEachPreorder<TreeType::PartialLaneType>([&](TestData1& item)
+                {
+                    ASSERT_NE(it, values.end());
+                    EXPECT_EQ(item.value, *it);
+                    ++it;
+                });
+
+                EXPECT_EQ(it, values.end());
+            }
+        }
+    }
     
     TEST(Utility, BypassTree_ForEachPreorder)
     {

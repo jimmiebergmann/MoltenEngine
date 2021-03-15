@@ -136,6 +136,12 @@ namespace Molten
         template<template <bool, bool, typename, typename> class TIterator, bool IsItConst, bool IsItReverse, typename TItLaneType>
         TIterator<false, IsItReverse, TItLaneType, Type> Erase(TIterator<IsItConst, IsItReverse, TItLaneType, Type> it);
 
+        template<template <bool, bool, typename, typename> class TIterator, bool IsItConst, bool IsOtherReverse>
+        void EnableInPartialLane(TIterator<IsItConst, IsOtherReverse, BypassListNormalLane, Type> it);
+
+        template<template <bool, bool, typename, typename> class TIterator, bool IsItConst, bool IsOtherReverse, typename TItLaneType>
+        void DisableInPartialLane(TIterator<IsItConst, IsOtherReverse, TItLaneType, Type> it);
+
     private:
 
         void InternalClearAllItems();
@@ -230,6 +236,11 @@ namespace Molten
         template<template <bool, bool, typename, typename> class TIterator, bool IsItConst, bool IsOtherReverse, typename TItLaneType>
         TIterator<false, IsOtherReverse, TItLaneType, Type> Erase(TIterator<IsItConst, IsOtherReverse, TItLaneType, Type> it);
 
+        template<template <bool, bool, typename, typename> class TIterator, bool IsItConst, bool IsOtherReverse>
+        void EnableInPartialLane(TIterator<IsItConst, IsOtherReverse, BypassListNormalLane, Type> it);
+        template<template <bool, bool, typename, typename> class TIterator, bool IsItConst, bool IsOtherReverse, typename TItLaneType>
+        void DisableInPartialLane(TIterator<IsItConst, IsOtherReverse, TItLaneType, Type> it);
+
     private:
 
         bool InternalIsInPartialLane(Item* item);
@@ -248,7 +259,7 @@ namespace Molten
         Item* InternalFindPrevPartialItem(Item* item);
 
         template<typename TProcessLaneType>
-        void InternalErase(Item* node);
+        void InternalErase(Item* item);
 
         List* m_list;
         DataLanes* m_dataLanes;

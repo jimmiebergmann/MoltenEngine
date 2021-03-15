@@ -62,6 +62,9 @@ namespace Molten::Gui
 
         Widget<TTheme>* GetWidget();
 
+        void ShowWidget();
+        void HideWidget();
+
         TreeNormalLane GetChildrenNormalLane();
         TreePartialLane GetChildrenPartialLane();
 

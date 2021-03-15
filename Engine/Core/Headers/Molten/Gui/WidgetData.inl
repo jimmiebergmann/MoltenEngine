@@ -42,6 +42,18 @@ namespace Molten::Gui
     }
 
     template<typename TTheme>
+    void WidgetData<TTheme>::ShowWidget()
+    {
+        tree->EnableInPartialLane(iterator);
+    }
+
+    template<typename TTheme>
+    void WidgetData<TTheme>::HideWidget()
+    {
+        tree->DisableInPartialLane(iterator);
+    }
+
+    template<typename TTheme>
     typename WidgetData<TTheme>::TreeNormalLane WidgetData<TTheme>::GetChildrenNormalLane()
     {
         return (*iterator).GetChildren().template GetLane<TreeNormalLaneType>();

@@ -905,6 +905,234 @@ namespace Molten
         }
     }
 
+    TEST(Utility, BypassList_EnablePartialLane)
+    {
+        ListType list;
+        NormalLane normalLane = list.GetLane<ListType::NormalLaneType>();
+        PartialLane partialLane = list.GetLane<ListType::PartialLaneType>();
+
+        normalLane.PushBack(TestData1{ 1 });
+        partialLane.PushBack(TestData1{ 2 });
+        normalLane.PushBack(TestData1{ 3 });
+        partialLane.PushBack(TestData1{ 4 });
+        normalLane.PushBack(TestData1{ 5 });
+        partialLane.PushBack(TestData1{ 6 });
+
+        {
+            if (!CompareListContent<TestData1>(
+                normalLane.begin(),
+                normalLane.end(),
+                { {1}, {2}, {3}, {4}, {5}, {6} }))
+            {
+                ADD_FAILURE();
+            }
+            if (!CompareListContent<TestData1>(
+                partialLane.begin(),
+                partialLane.end(),
+                { {2}, {4}, {6} }))
+            {
+                ADD_FAILURE();
+            }
+        }
+
+        { // Enable first.
+            list.EnableInPartialLane(normalLane.begin());
+
+            if (!CompareListContent<TestData1>(
+                normalLane.begin(),
+                normalLane.end(),
+                { {1}, {2}, {3}, {4}, {5}, {6} }))
+            {
+                ADD_FAILURE();
+            }
+            if (!CompareListContent<TestData1>(
+                partialLane.begin(),
+                partialLane.end(),
+                { {1}, {2}, {4}, {6} }))
+            {
+                ADD_FAILURE();
+            }
+        }
+        { // Enable last.
+            list.EnableInPartialLane(++normalLane.rbegin());
+
+            if (!CompareListContent<TestData1>(
+                normalLane.begin(),
+                normalLane.end(),
+                { {1}, {2}, {3}, {4}, {5}, {6} }))
+            {
+                ADD_FAILURE();
+            }
+            if (!CompareListContent<TestData1>(
+                partialLane.begin(),
+                partialLane.end(),
+                { {1}, {2}, {4}, {5}, {6} }))
+            {
+                ADD_FAILURE();
+            }
+        }
+        { // Enable middle.
+            list.EnableInPartialLane(++(++normalLane.begin()));
+
+            if (!CompareListContent<TestData1>(
+                normalLane.begin(),
+                normalLane.end(),
+                { {1}, {2}, {3}, {4}, {5}, {6} }))
+            {
+                ADD_FAILURE();
+            }
+            if (!CompareListContent<TestData1>(
+                partialLane.begin(),
+                partialLane.end(),
+                { {1}, {2}, {3}, {4}, {5}, {6} }))
+            {
+                ADD_FAILURE();
+            }
+        }
+    }
+
+    TEST(Utility, BypassList_DisablePartialLane)
+    {
+        {
+            ListType list;
+            NormalLane normalLane = list.GetLane<ListType::NormalLaneType>();
+            PartialLane partialLane = list.GetLane<ListType::PartialLaneType>();
+
+            partialLane.PushBack(TestData1{ 1 });
+            partialLane.PushBack(TestData1{ 2 });
+            partialLane.PushBack(TestData1{ 3 });
+            partialLane.PushBack(TestData1{ 4 });
+            partialLane.PushBack(TestData1{ 5 });
+            partialLane.PushBack(TestData1{ 6 });
+
+            {
+                if (!CompareListContent<TestData1>(
+                    normalLane.begin(),
+                    normalLane.end(),
+                    { {1}, {2}, {3}, {4}, {5}, {6} }))
+                {
+                    ADD_FAILURE();
+                }
+                if (!CompareListContent<TestData1>(
+                    partialLane.begin(),
+                    partialLane.end(),
+                    { {1}, {2}, {3}, {4}, {5}, {6} }))
+                {
+                    ADD_FAILURE();
+                }
+            }
+
+            { // Disable first.
+                list.DisableInPartialLane(normalLane.begin());
+
+                if (!CompareListContent<TestData1>(
+                    normalLane.begin(),
+                    normalLane.end(),
+                    { {1}, {2}, {3}, {4}, {5}, {6} }))
+                {
+                    ADD_FAILURE();
+                }
+                if (!CompareListContent<TestData1>(
+                    partialLane.begin(),
+                    partialLane.end(),
+                    { {2}, {3}, {4}, {5}, {6} }))
+                {
+                    ADD_FAILURE();
+                }
+            }
+            { // Disable second.
+                list.DisableInPartialLane(++normalLane.begin());
+
+                if (!CompareListContent<TestData1>(
+                    normalLane.begin(),
+                    normalLane.end(),
+                    { {1}, {2}, {3}, {4}, {5}, {6} }))
+                {
+                    ADD_FAILURE();
+                }
+                if (!CompareListContent<TestData1>(
+                    partialLane.begin(),
+                    partialLane.end(),
+                    {  {3}, {4}, {5}, {6} }))
+                {
+                    ADD_FAILURE();
+                }
+            }
+            { // Disable last.
+                list.DisableInPartialLane(normalLane.rbegin());
+
+                if (!CompareListContent<TestData1>(
+                    normalLane.begin(),
+                    normalLane.end(),
+                    { {1}, {2}, {3}, {4}, {5}, {6} }))
+                {
+                    ADD_FAILURE();
+                }
+                if (!CompareListContent<TestData1>(
+                    partialLane.begin(),
+                    partialLane.end(),
+                    { {3}, {4}, {5} }))
+                {
+                    ADD_FAILURE();
+                }
+            }
+            { // Disable last from partial lane.
+                list.DisableInPartialLane(partialLane.rbegin());
+
+                if (!CompareListContent<TestData1>(
+                    normalLane.begin(),
+                    normalLane.end(),
+                    { {1}, {2}, {3}, {4}, {5}, {6} }))
+                {
+                    ADD_FAILURE();
+                }
+                if (!CompareListContent<TestData1>(
+                    partialLane.begin(),
+                    partialLane.end(),
+                    { {3}, {4} }))
+                {
+                    ADD_FAILURE();
+                }
+            }
+            { // Disable first from partial lane.
+                list.DisableInPartialLane(partialLane.begin());
+
+                if (!CompareListContent<TestData1>(
+                    normalLane.begin(),
+                    normalLane.end(),
+                    { {1}, {2}, {3}, {4}, {5}, {6} }))
+                {
+                    ADD_FAILURE();
+                }
+                if (!CompareListContent<TestData1>(
+                    partialLane.begin(),
+                    partialLane.end(),
+                    { {4} }))
+                {
+                    ADD_FAILURE();
+                }
+            }
+            { // Disable remaining from partial lane.
+                list.DisableInPartialLane(partialLane.begin());
+
+                if (!CompareListContent<TestData1>(
+                    normalLane.begin(),
+                    normalLane.end(),
+                    { {1}, {2}, {3}, {4}, {5}, {6} }))
+                {
+                    ADD_FAILURE();
+                }
+                if (!CompareListContent<TestData1>(
+                    partialLane.begin(),
+                    partialLane.end(),
+                    { }))
+                {
+                    ADD_FAILURE();
+                }
+            }
+        }
+    }
+
     TEST(Utility, BypassListLane_LaneCopy)
     {
         ListType list;

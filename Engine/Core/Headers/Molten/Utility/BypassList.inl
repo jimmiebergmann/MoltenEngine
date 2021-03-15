@@ -29,7 +29,7 @@ namespace Molten
 
     // Bypass list implementations.
     template<typename T>
-    inline BypassList<T>::BypassList() :
+    BypassList<T>::BypassList() :
         m_beginItem(new Item(this)),
         m_endItem(new Item(this)),
         m_dataLanes(std::make_tuple(BypassListDataLane<BypassListNormalLane, T>{ m_beginItem, m_endItem }, BypassListDataLane<BypassListPartialLane, T>{ m_beginItem, m_endItem }))
@@ -41,13 +41,13 @@ namespace Molten
     }
 
     template<typename T>
-    inline BypassList<T>::~BypassList()
+    BypassList<T>::~BypassList()
     {
         InternalClearAllItems();
     }
 
     template<typename T>
-    inline BypassList<T>::BypassList(BypassList&& list) noexcept :
+    BypassList<T>::BypassList(BypassList&& list) noexcept :
         m_beginItem(new Item(this)),
         m_endItem(new Item(this)),
         m_dataLanes(std::make_tuple(BypassListDataLane<BypassListNormalLane, T>{ m_beginItem, m_endItem }, BypassListDataLane<BypassListPartialLane, T>{ m_beginItem, m_endItem }))
@@ -92,7 +92,7 @@ namespace Molten
     }
 
     template<typename T>
-    inline BypassList<T>& BypassList<T>::operator =(BypassList&& list) noexcept
+    BypassList<T>& BypassList<T>::operator =(BypassList&& list) noexcept
     {
         InternalClearAllItems();
 
@@ -113,25 +113,25 @@ namespace Molten
 
     template<typename T>
     template<typename TLaneType>
-    inline typename BypassList<T>::template Lane<TLaneType> BypassList<T>::GetLane()
+    typename BypassList<T>::template Lane<TLaneType> BypassList<T>::GetLane()
     {
         return Lane<TLaneType>(this, &m_dataLanes);
     }
     template<typename T>
     template<typename TLaneType>
-    inline typename BypassList<T>::template ConstLane<TLaneType> BypassList<T>::GetLane() const
+    typename BypassList<T>::template ConstLane<TLaneType> BypassList<T>::GetLane() const
     {
         return ConstLane<TLaneType>(this, &m_dataLanes);
     }
 
     template<typename T>
-    inline size_t BypassList<T>::GetSize() const
+    size_t BypassList<T>::GetSize() const
     {
         return std::get<DataLane<NormalLaneType>>(m_dataLanes).size;
     }
 
     template<typename T>
-    inline void BypassList<T>::Clear()
+    void BypassList<T>::Clear()
     {
         auto* currentItem = m_beginItem->nextNormal;
         while (currentItem != m_endItem)
@@ -150,7 +150,21 @@ namespace Molten
     }
 
     template<typename T>
-    inline void BypassList<T>::InternalClearAllItems()
+    template<template <bool, bool, typename, typename> class TIterator, bool IsItConst, bool IsOtherReverse>
+    void BypassList<T>::EnableInPartialLane(TIterator<IsItConst, IsOtherReverse, BypassListNormalLane, T> it)
+    {
+        return GetLane<NormalLaneType>().EnableInPartialLane(it);
+    }
+
+    template<typename T>
+    template<template <bool, bool, typename, typename> class TIterator, bool IsItConst, bool IsOtherReverse, typename TItLaneType>
+    void BypassList<T>::DisableInPartialLane(TIterator<IsItConst, IsOtherReverse, TItLaneType, T> it)
+    {
+        return GetLane<NormalLaneType>().DisableInPartialLane(it);
+    }
+
+    template<typename T>
+    void BypassList<T>::InternalClearAllItems()
     {
         Clear();
         delete m_beginItem;
@@ -161,20 +175,20 @@ namespace Molten
  
     // Bypass list lane interface implementations.
     template<bool IsConst, typename TLaneType, typename T>
-    inline BypassListLaneInterface<IsConst, TLaneType, T>::BypassListLaneInterface() :
+    BypassListLaneInterface<IsConst, TLaneType, T>::BypassListLaneInterface() :
         m_list(nullptr),
         m_dataLanes(nullptr)
     {}
 
     template<bool IsConst, typename TLaneType, typename T>
-    inline BypassListLaneInterface<IsConst, TLaneType, T>::BypassListLaneInterface(List* list, DataLanes* dataLanes) :
+    BypassListLaneInterface<IsConst, TLaneType, T>::BypassListLaneInterface(List* list, DataLanes* dataLanes) :
         m_list(list),
         m_dataLanes(dataLanes)
     {}
 
     template<bool IsConst, typename TLaneType, typename T>
     template<bool IsOtherConst, typename TLaneTypeOther>
-    inline BypassListLaneInterface<IsConst, TLaneType, T>::BypassListLaneInterface(const BypassListLaneInterface<IsOtherConst, TLaneTypeOther, Type>& lane) :
+    BypassListLaneInterface<IsConst, TLaneType, T>::BypassListLaneInterface(const BypassListLaneInterface<IsOtherConst, TLaneTypeOther, Type>& lane) :
         m_list(lane.m_list),
         m_dataLanes(lane.m_dataLanes)
     {
@@ -187,7 +201,7 @@ namespace Molten
 
     template<bool IsConst, typename TLaneType, typename T>
     template<bool IsOtherConst, typename TLaneTypeOther>
-    inline BypassListLaneInterface<IsConst, TLaneType, T>&
+    BypassListLaneInterface<IsConst, TLaneType, T>&
         BypassListLaneInterface<IsConst, TLaneType, T>::operator = (const BypassListLaneInterface<IsOtherConst, TLaneTypeOther, Type>& lane)
     {
         static_assert(IsConst || !IsOtherConst,
@@ -202,26 +216,26 @@ namespace Molten
     }
 
     template<bool IsConst, typename TLaneType, typename T>
-    inline bool BypassListLaneInterface<IsConst, TLaneType, T>::IsValid() const
+    bool BypassListLaneInterface<IsConst, TLaneType, T>::IsValid() const
     {
         return m_dataLanes == nullptr;
     }
 
     template<bool IsConst, typename TLaneType, typename T>
-    inline bool BypassListLaneInterface<IsConst, TLaneType, T>::IsEmpty() const
+    bool BypassListLaneInterface<IsConst, TLaneType, T>::IsEmpty() const
     {
         return m_dataLanes == nullptr || std::get<DataLane<TLaneType>>(*m_dataLanes).size == 0;
     }
 
     template<bool IsConst, typename TLaneType, typename T>
-    inline size_t BypassListLaneInterface<IsConst, TLaneType, T>::GetSize() const
+    size_t BypassListLaneInterface<IsConst, TLaneType, T>::GetSize() const
     {
         MOLTEN_DEBUG_ASSERT(m_dataLanes != nullptr, "Cannot get size from empty bypass list lane.");
         return std::get<DataLane<TLaneType>>(*m_dataLanes).size;
     }
 
     template<bool IsConst, typename TLaneType, typename T>
-    inline typename BypassListLaneInterface<IsConst, TLaneType, T>::List& BypassListLaneInterface<IsConst, TLaneType, T>::GetList()
+    typename BypassListLaneInterface<IsConst, TLaneType, T>::List& BypassListLaneInterface<IsConst, TLaneType, T>::GetList()
     {
         MOLTEN_DEBUG_ASSERT(m_list != nullptr, "Cannot get list from empty bypass list lane.");
         return *m_list;
@@ -229,7 +243,7 @@ namespace Molten
 
     template<bool IsConst, typename TLaneType, typename T>
     template<bool IsConstLane>
-    inline std::enable_if_t<!IsConstLane, typename BypassListLaneInterface<IsConst, TLaneType, T>::Iterator> BypassListLaneInterface<IsConst, TLaneType, T>::begin()
+    std::enable_if_t<!IsConstLane, typename BypassListLaneInterface<IsConst, TLaneType, T>::Iterator> BypassListLaneInterface<IsConst, TLaneType, T>::begin()
     {
         MOLTEN_DEBUG_ASSERT(m_dataLanes != nullptr, "Cannot get begin iterator from empty bypass list lane.");
         auto* root = std::get<DataLane<TLaneType>>(*m_dataLanes).root;
@@ -238,7 +252,7 @@ namespace Molten
     }
     template<bool IsConst, typename TLaneType, typename T>
     template<bool IsConstLane>
-    inline std::enable_if_t<!IsConstLane, typename BypassListLaneInterface<IsConst, TLaneType, T>::ConstIterator> BypassListLaneInterface<IsConst, TLaneType, T>::begin() const
+    std::enable_if_t<!IsConstLane, typename BypassListLaneInterface<IsConst, TLaneType, T>::ConstIterator> BypassListLaneInterface<IsConst, TLaneType, T>::begin() const
     {
         MOLTEN_DEBUG_ASSERT(m_dataLanes != nullptr, "Cannot get begin iterator from empty bypass list lane.");
         auto* root = std::get<DataLane<TLaneType>>(*m_dataLanes).root;
@@ -247,7 +261,7 @@ namespace Molten
     }
     template<bool IsConst, typename TLaneType, typename T>
     template<bool IsConstLane>
-    inline std::enable_if_t<IsConstLane, typename BypassListLaneInterface<IsConst, TLaneType, T>::Iterator> BypassListLaneInterface<IsConst, TLaneType, T>::begin() const
+    std::enable_if_t<IsConstLane, typename BypassListLaneInterface<IsConst, TLaneType, T>::Iterator> BypassListLaneInterface<IsConst, TLaneType, T>::begin() const
     {
         MOLTEN_DEBUG_ASSERT(m_dataLanes != nullptr, "Cannot get begin const iterator from empty bypass list lane.");
         auto* root = std::get<DataLane<TLaneType>>(*m_dataLanes).root;
@@ -257,7 +271,7 @@ namespace Molten
 
     template<bool IsConst, typename TLaneType, typename T>
     template<bool IsConstLane>
-    inline std::enable_if_t<!IsConstLane, typename BypassListLaneInterface<IsConst, TLaneType, T>::ReverseIterator> BypassListLaneInterface<IsConst, TLaneType, T>::rbegin()
+    std::enable_if_t<!IsConstLane, typename BypassListLaneInterface<IsConst, TLaneType, T>::ReverseIterator> BypassListLaneInterface<IsConst, TLaneType, T>::rbegin()
     {
         MOLTEN_DEBUG_ASSERT(m_dataLanes != nullptr, "Cannot get rbegin iterator from empty bypass list lane.");
         auto* tail = std::get<DataLane<TLaneType>>(*m_dataLanes).tail;
@@ -266,7 +280,7 @@ namespace Molten
     }
     template<bool IsConst, typename TLaneType, typename T>
     template<bool IsConstLane>
-    inline std::enable_if_t<!IsConstLane, typename BypassListLaneInterface<IsConst, TLaneType, T>::ReverseConstIterator> BypassListLaneInterface<IsConst, TLaneType, T>::rbegin() const
+    std::enable_if_t<!IsConstLane, typename BypassListLaneInterface<IsConst, TLaneType, T>::ReverseConstIterator> BypassListLaneInterface<IsConst, TLaneType, T>::rbegin() const
     {
         MOLTEN_DEBUG_ASSERT(m_dataLanes != nullptr, "Cannot get rbegin iterator from empty bypass list lane.");
         auto* tail = std::get<DataLane<TLaneType>>(*m_dataLanes).tail;
@@ -275,7 +289,7 @@ namespace Molten
     }
     template<bool IsConst, typename TLaneType, typename T>
     template<bool IsConstLane>
-    inline std::enable_if_t<IsConstLane, typename BypassListLaneInterface<IsConst, TLaneType, T>::ReverseIterator> BypassListLaneInterface<IsConst, TLaneType, T>::rbegin() const
+    std::enable_if_t<IsConstLane, typename BypassListLaneInterface<IsConst, TLaneType, T>::ReverseIterator> BypassListLaneInterface<IsConst, TLaneType, T>::rbegin() const
     {
         MOLTEN_DEBUG_ASSERT(m_dataLanes != nullptr, "Cannot get rbegin const iterator from empty bypass list lane.");
         auto* tail = std::get<DataLane<TLaneType>>(*m_dataLanes).tail;
@@ -285,21 +299,21 @@ namespace Molten
 
     template<bool IsConst, typename TLaneType, typename T>
     template<bool IsConstLane>
-    inline std::enable_if_t<!IsConstLane, typename BypassListLaneInterface<IsConst, TLaneType, T>::Iterator> BypassListLaneInterface<IsConst, TLaneType, T>::end()
+    std::enable_if_t<!IsConstLane, typename BypassListLaneInterface<IsConst, TLaneType, T>::Iterator> BypassListLaneInterface<IsConst, TLaneType, T>::end()
     {
         MOLTEN_DEBUG_ASSERT(m_dataLanes != nullptr, "Cannot get end iterator from empty bypass list lane.");
         return Iterator(std::get<DataLane<TLaneType>>(*m_dataLanes).tail);
     }
     template<bool IsConst, typename TLaneType, typename T>
     template<bool IsConstLane>
-    inline std::enable_if_t<!IsConstLane, typename BypassListLaneInterface<IsConst, TLaneType, T>::ConstIterator> BypassListLaneInterface<IsConst, TLaneType, T>::end() const
+    std::enable_if_t<!IsConstLane, typename BypassListLaneInterface<IsConst, TLaneType, T>::ConstIterator> BypassListLaneInterface<IsConst, TLaneType, T>::end() const
     {
         MOLTEN_DEBUG_ASSERT(m_dataLanes != nullptr, "Cannot get end iterator from empty bypass list lane.");
         return ConstIterator(std::get<DataLane<TLaneType>>(*m_dataLanes).tail);
     }
     template<bool IsConst, typename TLaneType, typename T>
     template<bool IsConstLane>
-    inline std::enable_if_t<IsConstLane, typename BypassListLaneInterface<IsConst, TLaneType, T>::Iterator> BypassListLaneInterface<IsConst, TLaneType, T>::end() const
+    std::enable_if_t<IsConstLane, typename BypassListLaneInterface<IsConst, TLaneType, T>::Iterator> BypassListLaneInterface<IsConst, TLaneType, T>::end() const
     {
         MOLTEN_DEBUG_ASSERT(m_dataLanes != nullptr, "Cannot get end const iterator from empty bypass list lane.");
         return Iterator(std::get<DataLane<TLaneType>>(*m_dataLanes).tail);
@@ -307,28 +321,28 @@ namespace Molten
 
     template<bool IsConst, typename TLaneType, typename T>
     template<bool IsConstLane>
-    inline std::enable_if_t<!IsConstLane, typename BypassListLaneInterface<IsConst, TLaneType, T>::ReverseIterator> BypassListLaneInterface<IsConst, TLaneType, T>::rend()
+    std::enable_if_t<!IsConstLane, typename BypassListLaneInterface<IsConst, TLaneType, T>::ReverseIterator> BypassListLaneInterface<IsConst, TLaneType, T>::rend()
     {
         MOLTEN_DEBUG_ASSERT(m_dataLanes != nullptr, "Cannot get rend iterator from empty bypass list lane.");
         return ReverseIterator(std::get<DataLane<TLaneType>>(*m_dataLanes).root);
     }
     template<bool IsConst, typename TLaneType, typename T>
     template<bool IsConstLane>
-    inline std::enable_if_t<!IsConstLane, typename BypassListLaneInterface<IsConst, TLaneType, T>::ReverseConstIterator> BypassListLaneInterface<IsConst, TLaneType, T>::rend() const
+    std::enable_if_t<!IsConstLane, typename BypassListLaneInterface<IsConst, TLaneType, T>::ReverseConstIterator> BypassListLaneInterface<IsConst, TLaneType, T>::rend() const
     {
         MOLTEN_DEBUG_ASSERT(m_dataLanes != nullptr, "Cannot get rend iterator from empty bypass list lane.");
         return ReverseConstIterator(std::get<DataLane<TLaneType>>(*m_dataLanes).root);
     }
     template<bool IsConst, typename TLaneType, typename T>
     template<bool IsConstLane>
-    inline std::enable_if_t<IsConstLane, typename BypassListLaneInterface<IsConst, TLaneType, T>::ReverseIterator> BypassListLaneInterface<IsConst, TLaneType, T>::rend() const
+    std::enable_if_t<IsConstLane, typename BypassListLaneInterface<IsConst, TLaneType, T>::ReverseIterator> BypassListLaneInterface<IsConst, TLaneType, T>::rend() const
     {
         MOLTEN_DEBUG_ASSERT(m_dataLanes != nullptr, "Cannot get rend const iterator from empty bypass list lane.");
         return ReverseIterator(std::get<DataLane<TLaneType>>(*m_dataLanes).root);
     }
 
     template<bool IsConst, typename TLaneType, typename T>
-    inline void BypassListLaneInterface<IsConst, TLaneType, T>::PushBack(const Type& value)
+    void BypassListLaneInterface<IsConst, TLaneType, T>::PushBack(const Type& value)
     {
         static_assert(!IsConst, "Cannot push back to const lane.");
 
@@ -342,7 +356,7 @@ namespace Molten
         }
     }
     template<bool IsConst, typename TLaneType, typename T>
-    inline void BypassListLaneInterface<IsConst, TLaneType, T>::PushBack(Type&& value)
+    void BypassListLaneInterface<IsConst, TLaneType, T>::PushBack(Type&& value)
     {
         static_assert(!IsConst, "Cannot push back to const lane.");
 
@@ -357,7 +371,7 @@ namespace Molten
     }
 
     template<bool IsConst, typename TLaneType, typename T>
-    inline void BypassListLaneInterface<IsConst, TLaneType, T>::PushFront(const Type& value)
+    void BypassListLaneInterface<IsConst, TLaneType, T>::PushFront(const Type& value)
     {
         static_assert(!IsConst, "Cannot push back to const lane.");
 
@@ -371,7 +385,7 @@ namespace Molten
         }
     }
     template<bool IsConst, typename TLaneType, typename T>
-    inline void BypassListLaneInterface<IsConst, TLaneType, T>::PushFront(Type&& value)
+    void BypassListLaneInterface<IsConst, TLaneType, T>::PushFront(Type&& value)
     {
         static_assert(!IsConst, "Cannot push front to const lane.");
 
@@ -387,7 +401,7 @@ namespace Molten
 
     template<bool IsConst, typename TLaneType, typename T>
     template<template <bool, bool, typename, typename> class TIterator, bool IsItConst, bool IsOtherReverse, typename TItLaneType>
-    inline typename BypassListLaneInterface<IsConst, TLaneType, T>::Iterator 
+    typename BypassListLaneInterface<IsConst, TLaneType, T>::Iterator 
         BypassListLaneInterface<IsConst, TLaneType, T>::Insert(TIterator<IsItConst, IsOtherReverse, TItLaneType, Type> position, const Type& value)
     {
         static_assert(!IsConst, "Cannot insert to const lane.");
@@ -407,7 +421,7 @@ namespace Molten
     }
     template<bool IsConst, typename TLaneType, typename T>
     template<template <bool, bool, typename, typename> class TIterator, bool IsItConst, bool IsOtherReverse, typename TItLaneType>
-    inline typename BypassListLaneInterface<IsConst, TLaneType, T>::Iterator 
+    typename BypassListLaneInterface<IsConst, TLaneType, T>::Iterator 
         BypassListLaneInterface<IsConst, TLaneType, T>::Insert(TIterator<IsItConst, IsOtherReverse, TItLaneType, Type> position, Type&& value)
     {
         static_assert(!IsConst, "Cannot insert to const lane.");
@@ -429,7 +443,7 @@ namespace Molten
 
     template<bool IsConst, typename TLaneType, typename T>
     template<template <bool, bool, typename, typename> class TIterator, bool IsItConst, bool IsOtherReverse, typename TItLaneType>
-    inline TIterator<false, IsOtherReverse, TItLaneType, T> BypassListLaneInterface<IsConst, TLaneType, T>::Erase(TIterator<IsItConst, IsOtherReverse, TItLaneType, T> it)
+    TIterator<false, IsOtherReverse, TItLaneType, T> BypassListLaneInterface<IsConst, TLaneType, T>::Erase(TIterator<IsItConst, IsOtherReverse, TItLaneType, T> it)
     {
         static_assert(!IsConst, "Cannot erase from const lane.");
 
@@ -461,7 +475,42 @@ namespace Molten
     }
 
     template<bool IsConst, typename TLaneType, typename T>
-    inline bool BypassListLaneInterface<IsConst, TLaneType, T>::InternalIsInPartialLane(Item* item)
+    template<template <bool, bool, typename, typename> class TIterator, bool IsItConst, bool IsOtherReverse>
+    void BypassListLaneInterface<IsConst, TLaneType, T>::EnableInPartialLane(TIterator<IsItConst, IsOtherReverse, BypassListNormalLane, T> it)
+    {
+        static_assert(!IsConst, "Cannot enable partial lane from const lane.");
+        static_assert(!std::is_same_v<TLaneType, PartialLaneType>, "Cannot enable partial lane from partial lane interface.");      
+
+        Item* item = it.m_currentItem;
+        MOLTEN_DEBUG_ASSERT(item != nullptr, "Cannot enable partial lane item of from empty iterator.");
+        MOLTEN_DEBUG_ASSERT(item != std::get<DataLane<BypassListNormalLane>>(*m_dataLanes).root, "Cannot enable partial lane rend iterator.");
+        MOLTEN_DEBUG_ASSERT(item != std::get<DataLane<BypassListNormalLane>>(*m_dataLanes).tail, "Cannot enable partial lane end iterator.");
+
+        if (!InternalIsInPartialLane(item))
+        {
+            InternalInsertPartial(it, item);
+        }
+    }
+
+    template<bool IsConst, typename TLaneType, typename T>
+    template<template <bool, bool, typename, typename> class TIterator, bool IsItConst, bool IsOtherReverse, typename TItLaneType>
+    void BypassListLaneInterface<IsConst, TLaneType, T>::DisableInPartialLane(TIterator<IsItConst, IsOtherReverse, TItLaneType, T> it)
+    {
+        static_assert(!IsConst, "Cannot disable partial lane from const lane.");
+
+        Item* item = it.m_currentItem;
+        MOLTEN_DEBUG_ASSERT(item != nullptr, "Cannot enable partial lane item of from empty iterator.");
+        MOLTEN_DEBUG_ASSERT(item != std::get<DataLane<BypassListNormalLane>>(*m_dataLanes).root, "Cannot disable partial lane rend iterator.");
+        MOLTEN_DEBUG_ASSERT(item != std::get<DataLane<BypassListNormalLane>>(*m_dataLanes).tail, "Cannot disable partial lane end iterator.");
+
+        if (InternalIsInPartialLane(item))
+        {
+            InternalErase<PartialLaneType>(item);
+        }
+    }
+
+    template<bool IsConst, typename TLaneType, typename T>
+    bool BypassListLaneInterface<IsConst, TLaneType, T>::InternalIsInPartialLane(Item* item)
     {
         auto* next = BypassListLaneTraits<PartialLaneType>::GetNext(item);
         auto& laneData = std::get<DataLane<PartialLaneType>>(*m_dataLanes);
@@ -471,7 +520,7 @@ namespace Molten
 
     template<bool IsConst, typename TLaneType, typename T>
     template<typename TProcessLaneType>
-    inline void BypassListLaneInterface<IsConst, TLaneType, T>::InternalPushBack(Item* item)
+    void BypassListLaneInterface<IsConst, TLaneType, T>::InternalPushBack(Item* item)
     {
         auto& laneData = std::get<DataLane<TProcessLaneType>>(*m_dataLanes);
         auto* endItem = laneData.tail;
@@ -482,12 +531,12 @@ namespace Molten
         BypassListLaneTraits<TProcessLaneType>::SetPrev(laneData.tail, item);
         BypassListLaneTraits<TProcessLaneType>::SetNext(preEndItem, item);
 
-        laneData.size++;
+        ++laneData.size;
     }
 
     template<bool IsConst, typename TLaneType, typename T>
     template<typename TProcessLaneType>
-    inline void BypassListLaneInterface<IsConst, TLaneType, T>::InternalPushFront(Item* item)
+    void BypassListLaneInterface<IsConst, TLaneType, T>::InternalPushFront(Item* item)
     {
         auto& laneData = std::get<DataLane<TProcessLaneType>>(*m_dataLanes);
         auto* beginItem = laneData.root;
@@ -498,12 +547,12 @@ namespace Molten
         BypassListLaneTraits<TProcessLaneType>::SetNext(laneData.root, item);
         BypassListLaneTraits<TProcessLaneType>::SetPrev(nextBeginItem, item);
 
-        laneData.size++;
+        ++laneData.size;
     }
 
     template<bool IsConst, typename TLaneType, typename T>
     template<template <bool, bool, typename, typename> class TIterator, bool IsItConst, bool IsItReverse, typename TItLaneType>
-    inline void BypassListLaneInterface<IsConst, TLaneType, T>::InternalInsertNormal(TIterator<IsItConst, IsItReverse, TItLaneType, Type> position, Item* item)
+    void BypassListLaneInterface<IsConst, TLaneType, T>::InternalInsertNormal(TIterator<IsItConst, IsItReverse, TItLaneType, Type> position, Item* item)
     {
         Item* positionItem = position.m_currentItem;
         auto& laneData = std::get<DataLane<NormalLaneType>>(*m_dataLanes);
@@ -514,12 +563,12 @@ namespace Molten
         BypassListLaneTraits<NormalLaneType>::SetPrev(positionItem, item);
         BypassListLaneTraits<NormalLaneType>::SetNext(prevItem, item);
 
-        laneData.size++;
+        ++laneData.size;
     }
 
     template<bool IsConst, typename TLaneType, typename T>
     template<template <bool, bool, typename, typename> class TIterator, bool IsItConst, bool IsItReverse, typename TItLaneType>
-    inline void BypassListLaneInterface<IsConst, TLaneType, T>::InternalInsertPartial(TIterator<IsItConst, IsItReverse, TItLaneType, Type> position, Item* item)
+    void BypassListLaneInterface<IsConst, TLaneType, T>::InternalInsertPartial(TIterator<IsItConst, IsItReverse, TItLaneType, Type> position, Item* item)
     {
         Item* positionItem = position.m_currentItem;
         auto& laneData = std::get<DataLane<PartialLaneType>>(*m_dataLanes);
@@ -551,11 +600,11 @@ namespace Molten
             BypassListLaneTraits<PartialLaneType>::SetPrev(oldRoot, item);
         }
 
-        laneData.size++;
+        ++laneData.size;
     }
 
     template<bool IsConst, typename TLaneType, typename T>
-    inline typename BypassListLaneInterface<IsConst, TLaneType, T>::Item* 
+    typename BypassListLaneInterface<IsConst, TLaneType, T>::Item* 
         BypassListLaneInterface<IsConst, TLaneType, T>::InternalFindPrevPartialItem(Item* item)
     {
         auto* currentItem = BypassListLaneTraits<NormalLaneType>::GetPrev(item);
@@ -569,14 +618,14 @@ namespace Molten
             }
 
             currentItem = BypassListLaneTraits<NormalLaneType>::GetPrev(currentItem);
-        };
+        }
 
         return nullptr;
     }
 
     template<bool IsConst, typename TLaneType, typename T>
     template<typename TProcessLaneType>
-    inline void BypassListLaneInterface<IsConst, TLaneType, T>::InternalErase(Item* item)
+    void BypassListLaneInterface<IsConst, TLaneType, T>::InternalErase(Item* item)
     {
         auto& laneData = std::get<DataLane<TProcessLaneType>>(*m_dataLanes);
         auto* prev = BypassListLaneTraits<TProcessLaneType>::GetPrev(item);
@@ -600,24 +649,30 @@ namespace Molten
             BypassListLaneTraits<TProcessLaneType>::SetPrev(next, prev);
         }
 
-        laneData.size--;
+        if constexpr(std::is_same_v<TProcessLaneType, PartialLaneType>)
+        {
+            item->prevPartial = nullptr;
+            item->nextPartial = nullptr;
+        }
+
+        --laneData.size;
     }
 
 
     // Bypass list iterator interface implementations.
     template<bool IsConst, bool IsReverse, typename TLaneType, typename T>
-    inline BypassListIteratorInterface<IsConst, IsReverse, TLaneType, T>::BypassListIteratorInterface() :
+    BypassListIteratorInterface<IsConst, IsReverse, TLaneType, T>::BypassListIteratorInterface() :
         m_currentItem(nullptr)
     {}
 
     template<bool IsConst, bool IsReverse, typename TLaneType, typename T>
-    inline BypassListIteratorInterface<IsConst, IsReverse, TLaneType, T>::BypassListIteratorInterface(Item* item) :
+    BypassListIteratorInterface<IsConst, IsReverse, TLaneType, T>::BypassListIteratorInterface(Item* item) :
         m_currentItem(item)
     {}
 
     template<bool IsConst, bool IsReverse, typename TLaneType, typename T>
     template<bool IsOtherConst, typename TLaneTypeOther>
-    inline BypassListIteratorInterface<IsConst, IsReverse, TLaneType, T>::BypassListIteratorInterface(const BypassListIteratorInterface<IsOtherConst, IsReverse, TLaneTypeOther, Type>& it) :
+    BypassListIteratorInterface<IsConst, IsReverse, TLaneType, T>::BypassListIteratorInterface(const BypassListIteratorInterface<IsOtherConst, IsReverse, TLaneTypeOther, Type>& it) :
         m_currentItem(it.m_currentItem)
     {
         static_assert(IsConst || !IsOtherConst,
@@ -629,7 +684,7 @@ namespace Molten
 
     template<bool IsConst, bool IsReverse, typename TLaneType, typename T>
     template<bool IsOtherConst, typename TLaneTypeOther>
-    inline BypassListIteratorInterface<IsConst, IsReverse, TLaneType, T>&
+    BypassListIteratorInterface<IsConst, IsReverse, TLaneType, T>&
         BypassListIteratorInterface<IsConst, IsReverse, TLaneType, T>::operator = (const BypassListIteratorInterface<IsOtherConst, IsReverse, TLaneTypeOther, Type>& it)
     {
         static_assert(IsConst || !IsOtherConst,
@@ -643,13 +698,13 @@ namespace Molten
     }
 
     template<bool IsConst, bool IsReverse, typename TLaneType, typename T>
-    inline bool BypassListIteratorInterface<IsConst, IsReverse, TLaneType, T>::IsValid() const
+    bool BypassListIteratorInterface<IsConst, IsReverse, TLaneType, T>::IsValid() const
     {
         return m_currentItem == nullptr;
     }
 
     template<bool IsConst, bool IsReverse, typename TLaneType, typename T>
-    inline typename  BypassListIteratorInterface<IsConst, IsReverse, TLaneType, T>::List& 
+    typename  BypassListIteratorInterface<IsConst, IsReverse, TLaneType, T>::List& 
         BypassListIteratorInterface<IsConst, IsReverse, TLaneType, T>::GetList()
     {
         MOLTEN_DEBUG_ASSERT(m_currentItem != nullptr, "Cannot get list from iterator with nullptr item.");
@@ -658,7 +713,7 @@ namespace Molten
 
     template<bool IsConst, bool IsReverse, typename TLaneType, typename T>
     template<bool IsConstIterator>
-    inline std::enable_if_t<!IsConstIterator, typename BypassListIteratorInterface<IsConst, IsReverse, TLaneType, T>::Reference> 
+    std::enable_if_t<!IsConstIterator, typename BypassListIteratorInterface<IsConst, IsReverse, TLaneType, T>::Reference> 
         BypassListIteratorInterface<IsConst, IsReverse, TLaneType, T>::operator *()
     {
         MOLTEN_DEBUG_ASSERT(m_currentItem != nullptr, "Cannot dereference iterator of nullptr item.");
@@ -668,7 +723,7 @@ namespace Molten
 
     template<bool IsConst, bool IsReverse, typename TLaneType, typename T>
     template<bool IsConstIterator>
-    inline std::enable_if_t<IsConstIterator, typename BypassListIteratorInterface<IsConst, IsReverse, TLaneType, T>::Reference> 
+    std::enable_if_t<IsConstIterator, typename BypassListIteratorInterface<IsConst, IsReverse, TLaneType, T>::Reference> 
         BypassListIteratorInterface<IsConst, IsReverse, TLaneType, T>::operator *() const
     {
         MOLTEN_DEBUG_ASSERT(m_currentItem != nullptr, "Cannot dereference iterator of nullptr item.");
@@ -677,7 +732,7 @@ namespace Molten
     }
 
     template<bool IsConst, bool IsReverse, typename TLaneType, typename T>
-    inline typename BypassListIteratorInterface<IsConst, IsReverse, TLaneType, T>::Iterator& 
+    typename BypassListIteratorInterface<IsConst, IsReverse, TLaneType, T>::Iterator& 
         BypassListIteratorInterface<IsConst, IsReverse, TLaneType, T>::operator ++ () // Pre
     {
         MOLTEN_DEBUG_ASSERT(m_currentItem != nullptr, "Current bypass list item is nullptr.");
@@ -696,7 +751,7 @@ namespace Molten
     }
 
     template<bool IsConst, bool IsReverse, typename TLaneType, typename T>
-    inline typename BypassListIteratorInterface<IsConst, IsReverse, TLaneType, T>::Iterator&
+    typename BypassListIteratorInterface<IsConst, IsReverse, TLaneType, T>::Iterator&
         BypassListIteratorInterface<IsConst, IsReverse, TLaneType, T>::operator -- () // Pre
     {
         MOLTEN_DEBUG_ASSERT(m_currentItem != nullptr, "Current bypass list item is nullptr.");
@@ -715,7 +770,7 @@ namespace Molten
     }
 
     template<bool IsConst, bool IsReverse, typename TLaneType, typename T>
-    inline typename BypassListIteratorInterface<IsConst, IsReverse, TLaneType, T>::Iterator
+    typename BypassListIteratorInterface<IsConst, IsReverse, TLaneType, T>::Iterator
         BypassListIteratorInterface<IsConst, IsReverse, TLaneType, T>::operator ++ (int) // Post
     {
         MOLTEN_DEBUG_ASSERT(m_currentItem != nullptr, "Current bypass list item is nullptr.");
@@ -735,7 +790,7 @@ namespace Molten
     }
     
     template<bool IsConst, bool IsReverse, typename TLaneType, typename T>
-    inline typename BypassListIteratorInterface<IsConst, IsReverse, TLaneType, T>::Iterator 
+    typename BypassListIteratorInterface<IsConst, IsReverse, TLaneType, T>::Iterator 
         BypassListIteratorInterface<IsConst, IsReverse, TLaneType, T>::operator -- (int) // Post
     {
         MOLTEN_DEBUG_ASSERT(m_currentItem != nullptr, "Current bypass list item is nullptr.");
@@ -755,13 +810,13 @@ namespace Molten
     }
     
     template<bool IsConst, bool IsReverse, typename TLaneType, typename T>
-    inline bool BypassListIteratorInterface<IsConst, IsReverse, TLaneType, T>::operator == (const BypassListIteratorInterface<IsConst, IsReverse, TLaneType, T>& rhs) const
+    bool BypassListIteratorInterface<IsConst, IsReverse, TLaneType, T>::operator == (const BypassListIteratorInterface<IsConst, IsReverse, TLaneType, T>& rhs) const
     {
         return m_currentItem == rhs.m_currentItem;
     }
 
     template<bool IsConst, bool IsReverse, typename TLaneType, typename T>
-    inline bool BypassListIteratorInterface<IsConst, IsReverse, TLaneType, T>::operator != (const BypassListIteratorInterface<IsConst, IsReverse, TLaneType, T>& rhs) const
+    bool BypassListIteratorInterface<IsConst, IsReverse, TLaneType, T>::operator != (const BypassListIteratorInterface<IsConst, IsReverse, TLaneType, T>& rhs) const
     {
         return m_currentItem != rhs.m_currentItem;
     }
@@ -769,7 +824,7 @@ namespace Molten
 
     // Bypass list item implementations.
     template<typename T>
-    inline BypassListItem<T>::BypassListItem(List* list) :
+    BypassListItem<T>::BypassListItem(List* list) :
         list(list),
         content(nullptr),
         prevNormal(nullptr),
@@ -779,7 +834,7 @@ namespace Molten
     {}
 
     template<typename T>
-    inline BypassListItem<T>::BypassListItem(List* list, const Type& valueCopy) :
+    BypassListItem<T>::BypassListItem(List* list, const Type& valueCopy) :
         list(list),
         content(new Content(valueCopy)),
         prevNormal(nullptr),
@@ -789,7 +844,7 @@ namespace Molten
     {}
 
     template<typename T>
-    inline BypassListItem<T>::BypassListItem(List* list, Type&& valueMove) :
+    BypassListItem<T>::BypassListItem(List* list, Type&& valueMove) :
         list(list),
         content(new Content(std::move(valueMove))),
         prevNormal(nullptr),
@@ -799,32 +854,32 @@ namespace Molten
     {}
 
     template<typename T>
-    inline BypassListItem<T>::~BypassListItem()
+    BypassListItem<T>::~BypassListItem()
     {
         delete content;
     }
 
     template<typename T>
-    inline BypassListItem<T>::Content::Content(const Type& valueCopy) :
+    BypassListItem<T>::Content::Content(const Type& valueCopy) :
         value{ valueCopy }
     {}
 
     template<typename T>
-    inline BypassListItem<T>::Content::Content(Type&& valueMove) :
+    BypassListItem<T>::Content::Content(Type&& valueMove) :
         value{ std::move(valueMove) }
     {}
 
 
     // Bypass list data lane implementations.
     template<typename TLaneType, typename T>
-    inline BypassListDataLane<TLaneType, T>::BypassListDataLane(Item* rootItem, Item* tailItem) :
+    BypassListDataLane<TLaneType, T>::BypassListDataLane(Item* rootItem, Item* tailItem) :
         root(rootItem),
         tail(tailItem),
         size(0)
     {}
 
     template<typename TLaneType, typename T>
-    inline BypassListDataLane<TLaneType, T>::BypassListDataLane(BypassListDataLane<TLaneType, T>&& lane) noexcept :
+    BypassListDataLane<TLaneType, T>::BypassListDataLane(BypassListDataLane<TLaneType, T>&& lane) noexcept :
         root(lane.root),
         tail(lane.tail),
         size(lane.size)
@@ -835,7 +890,7 @@ namespace Molten
     }
 
     template<typename TLaneType, typename T>
-    inline BypassListDataLane<TLaneType, T>& BypassListDataLane<TLaneType, T>::operator =(BypassListDataLane<TLaneType, T>&& lane) noexcept
+    BypassListDataLane<TLaneType, T>& BypassListDataLane<TLaneType, T>::operator =(BypassListDataLane<TLaneType, T>&& lane) noexcept
     {
         root = lane.root;
         lane.root = nullptr;
@@ -851,52 +906,52 @@ namespace Molten
     // Bypass list lane traits implementations.
     template<>
     template<typename T>
-    inline BypassListItem<T>* BypassListLaneTraits<BypassListNormalLane>::GetPrev(BypassListItem<T>* item)
+    BypassListItem<T>* BypassListLaneTraits<BypassListNormalLane>::GetPrev(BypassListItem<T>* item)
     {
         return item->prevNormal;
     }
     template<>
     template<typename T>
-    inline BypassListItem<T>* BypassListLaneTraits<BypassListPartialLane>::GetPrev(BypassListItem<T>* item)
+    BypassListItem<T>* BypassListLaneTraits<BypassListPartialLane>::GetPrev(BypassListItem<T>* item)
     {
         return item->prevPartial;
     }
 
     template<>
     template<typename T>
-    inline BypassListItem<T>* BypassListLaneTraits<BypassListNormalLane>::GetNext(BypassListItem<T>* item)
+    BypassListItem<T>* BypassListLaneTraits<BypassListNormalLane>::GetNext(BypassListItem<T>* item)
     {
         return item->nextNormal;
     }
     template<>
     template<typename T>
-    inline BypassListItem<T>* BypassListLaneTraits<BypassListPartialLane>::GetNext(BypassListItem<T>* item)
+    BypassListItem<T>* BypassListLaneTraits<BypassListPartialLane>::GetNext(BypassListItem<T>* item)
     {
         return item->nextPartial;
     }
 
     template<>
     template<typename T>
-    inline void BypassListLaneTraits<BypassListNormalLane>::SetPrev(BypassListItem<T>* item, BypassListItem<T>* prev)
+    void BypassListLaneTraits<BypassListNormalLane>::SetPrev(BypassListItem<T>* item, BypassListItem<T>* prev)
     {
         item->prevNormal = prev;
     }
     template<>
     template<typename T>
-    inline void BypassListLaneTraits<BypassListPartialLane>::SetPrev(BypassListItem<T>* item, BypassListItem<T>* prev)
+    void BypassListLaneTraits<BypassListPartialLane>::SetPrev(BypassListItem<T>* item, BypassListItem<T>* prev)
     {
         item->prevPartial = prev;
     }
 
     template<>
     template<typename T>
-    inline void BypassListLaneTraits<BypassListNormalLane>::SetNext(BypassListItem<T>* item, BypassListItem<T>* next)
+    void BypassListLaneTraits<BypassListNormalLane>::SetNext(BypassListItem<T>* item, BypassListItem<T>* next)
     {
         item->nextNormal = next;
     }
     template<>
     template<typename T>
-    inline void BypassListLaneTraits<BypassListPartialLane>::SetNext(BypassListItem<T>* item, BypassListItem<T>* next)
+    void BypassListLaneTraits<BypassListPartialLane>::SetNext(BypassListItem<T>* item, BypassListItem<T>* next)
     {
         item->nextPartial = next;
     }
