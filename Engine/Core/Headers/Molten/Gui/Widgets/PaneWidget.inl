@@ -58,14 +58,14 @@ namespace Molten::Gui
 
     }
 
-    template<typename TSkin>
-    bool Pane<TSkin>::HandleEvent(const WidgetEvent& /*widgetEvent*/)
+    template<typename TTheme>
+    bool Pane<TTheme>::OnMouseEvent(const WidgetMouseEvent& widgetMouseEvent)
     {
         return false;
     }
 
-    template<typename TSkin>
-    const Bounds2f32& Pane<TSkin>::GetDragBounds() const
+    template<typename TTheme>
+    const Bounds2f32& Pane<TTheme>::GetDragBounds() const
     {
         return m_dragBounds;
     }

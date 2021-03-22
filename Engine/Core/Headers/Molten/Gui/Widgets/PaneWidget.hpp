@@ -34,7 +34,7 @@ namespace Molten::Gui
 {
 
     template<typename TTheme>
-    class Pane : public WidgetMixin<TTheme, Pane>, public DraggableWidget, public WidgetEventHandler
+    class Pane : public WidgetMixin<TTheme, Pane>, public WidgetMouseEventHandler, public DraggableWidget
     {
 
     public:
@@ -48,7 +48,7 @@ namespace Molten::Gui
 
         void Update() override;
 
-        bool HandleEvent(const WidgetEvent& widgetEvent) override;
+        bool OnMouseEvent(const WidgetMouseEvent& widgetMouseEvent) override;
 
         const Bounds2f32& GetDragBounds() const override;
 

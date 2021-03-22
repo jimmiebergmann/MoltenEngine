@@ -27,8 +27,8 @@ namespace Molten::Gui
 {
 
     template<typename TTheme>
-    VerticalGrid<TTheme>::VerticalGrid(WidgetData<TTheme>& data) :
-        Widget<TTheme>(data),
+    VerticalGrid<TTheme>::VerticalGrid(WidgetDataMixin<TTheme, VerticalGrid>& data) :
+        WidgetMixin<TTheme, VerticalGrid>(data),
         cellSpacing(0.0f)
     {}
 

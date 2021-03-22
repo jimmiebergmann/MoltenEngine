@@ -34,7 +34,7 @@ namespace Molten::Gui
 {
 
     template<typename TTheme>
-    class Button : public WidgetMixin<TTheme, Button>, public WidgetEventHandler
+    class Button : public WidgetMixin<TTheme, Button>, public WidgetMouseEventHandler
     {
 
     public:
@@ -56,7 +56,7 @@ namespace Molten::Gui
 
         void Update() override;
 
-        bool HandleEvent(const WidgetEvent& widgetEvent) override;
+        bool OnMouseEvent(const WidgetMouseEvent& widgetMouseEvent) override;
 
     private:
 

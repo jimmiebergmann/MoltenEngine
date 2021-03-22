@@ -50,8 +50,7 @@ namespace Molten::Gui
 
         Vector4f32 backgroundColor = { 0.11f, 0.11f, 0.13f, 1.0f};
 
-        explicit EditorTheme(Renderer& renderer, CanvasRenderer& canvasRenderer) :
-            m_renderer(renderer),
+        explicit EditorTheme(CanvasRenderer& canvasRenderer) :
             m_canvasRenderer(canvasRenderer)
         {
         }
@@ -67,7 +66,6 @@ namespace Molten::Gui
         template<typename TTheme, template<typename> typename TWidget>
         friend struct WidgetSkin;
 
-        Renderer& m_renderer;
         CanvasRenderer& m_canvasRenderer;
 
     };

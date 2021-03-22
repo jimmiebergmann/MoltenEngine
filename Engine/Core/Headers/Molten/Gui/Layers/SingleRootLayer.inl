@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,42 +23,21 @@
 *
 */
 
-#ifndef MOLTEN_CORE_GUI_GUITYPES_HPP
-#define MOLTEN_CORE_GUI_GUITYPES_HPP
-
-#include "Molten/Types.hpp"
-#include <memory>
-
 namespace Molten::Gui
 {
-
-    template<typename TTheme>
-    class Canvas;
-    template<typename TTheme>
-    using CanvasPointer = std::shared_ptr<Canvas<TTheme>>;
-
-    class CanvasRenderer;
-    using CanvasRendererPointer = std::shared_ptr<CanvasRenderer>;
-
-    template<typename TTheme>
-    class Layer;
-
-    template<typename TTheme>
-    using LayerPointer = std::shared_ptr<Layer<TTheme>>;
     
-    template<typename TLayerType>
-    using LayerTypePointer = std::shared_ptr<TLayerType>;
+    template<typename TTheme>
+    SingleRootLayer<TTheme>::SingleRootLayer(
+        TTheme& theme,
+        LayerData<TTheme>& data
+    ) :
+        Layer<TTheme>(theme, data)
+    {}
 
     template<typename TTheme>
-    class Widget;
-    template<typename TTheme>
-    using WidgetPointer = std::shared_ptr<Widget<TTheme>>;
-
-    template<typename TWidget>
-    using WidgetTypePointer = std::shared_ptr<TWidget>;
-
-    class WidgetEventHandler;
+    bool SingleRootLayer<TTheme>::AllowsMultipleRoots()
+    {
+        return false;
+    }
 
 }
-
-#endif

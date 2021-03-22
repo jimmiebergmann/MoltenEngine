@@ -732,6 +732,26 @@ namespace Molten
     }
 
     template<bool IsConst, bool IsReverse, typename TLaneType, typename T>
+    template<bool IsConstIterator>
+    std::enable_if_t<!IsConstIterator, typename BypassListIteratorInterface<IsConst, IsReverse, TLaneType, T>::Pointer>
+        BypassListIteratorInterface<IsConst, IsReverse, TLaneType, T>::operator ->()
+    {
+        MOLTEN_DEBUG_ASSERT(m_currentItem != nullptr, "Cannot dereference iterator of nullptr item.");
+        MOLTEN_DEBUG_ASSERT(m_currentItem->content != nullptr, "Cannot dereference iterator of nullptr item content.");
+        return &m_currentItem->content->value;
+    }
+
+    template<bool IsConst, bool IsReverse, typename TLaneType, typename T>
+    template<bool IsConstIterator>
+    std::enable_if_t<IsConstIterator, typename BypassListIteratorInterface<IsConst, IsReverse, TLaneType, T>::Pointer>
+        BypassListIteratorInterface<IsConst, IsReverse, TLaneType, T>::operator ->() const
+    {
+        MOLTEN_DEBUG_ASSERT(m_currentItem != nullptr, "Cannot dereference iterator of nullptr item.");
+        MOLTEN_DEBUG_ASSERT(m_currentItem->content != nullptr, "Cannot dereference iterator of nullptr item content.");
+        return &m_currentItem->content->value;
+    }
+
+    template<bool IsConst, bool IsReverse, typename TLaneType, typename T>
     typename BypassListIteratorInterface<IsConst, IsReverse, TLaneType, T>::Iterator& 
         BypassListIteratorInterface<IsConst, IsReverse, TLaneType, T>::operator ++ () // Pre
     {

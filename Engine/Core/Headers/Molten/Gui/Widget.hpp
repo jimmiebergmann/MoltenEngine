@@ -26,12 +26,15 @@
 #ifndef MOLTEN_CORE_GUI_WIDGET_HPP
 #define MOLTEN_CORE_GUI_WIDGET_HPP
 
-#include "Molten/Gui/GuiTypes.hpp"
 #include "Molten/Gui/SpacingTypes.hpp"
 #include "Molten/Gui/WidgetData.hpp"
 
 namespace Molten::Gui
 {
+
+    template<typename TTheme, template<typename> typename TWidget>
+    struct WidgetSkin;
+
 
     template<typename TTheme>
     class Widget
@@ -59,9 +62,15 @@ namespace Molten::Gui
         virtual void Update();
 
         template<template<typename> typename TWidget, typename ... TArgs>
-        WidgetTypePointer<TWidget<TTheme>> CreateChild(TArgs ... args);
+        TWidget<TTheme>* CreateChild(TArgs ... args);
 
     protected:
+
+        template<typename TLayerSkin>
+        friend class Canvas;
+
+        template<typename TLayerSkin>
+        friend class Layer;
 
         virtual void OnAddChild(WidgetData<TTheme>& childData);
 
@@ -81,14 +90,6 @@ namespace Molten::Gui
 
     private:
         
-        template<typename TLayerSkin>
-        friend class Canvas;
-
-        template<typename TLayerSkin>
-        friend class Layer; // Delete due to obsolete template?
-
-        friend TTheme;
-
         Widget(const Widget&) = delete;
         Widget(Widget&&) = delete;
         Widget& operator= (const Widget&) = delete;
@@ -109,20 +110,26 @@ namespace Molten::Gui
 
     protected:
 
+        template<typename TLayerSkin>
+        friend class Canvas;
+
+        template<typename TLayerSkin>
+        friend class Layer;
+
         explicit WidgetMixin(WidgetDataMixin<TTheme, TWidget>& data);
 
         WidgetMixin(
             WidgetDataMixin<TTheme, TWidget>& data,
             const Vector2f32& size);
 
+        WidgetDataMixin<TTheme, TWidget>& GetDataMixin();
+        const WidgetDataMixin<TTheme, TWidget>& GetDataMixin() const;
+
         template<typename TState>
         const TState& GetSkinState() const;
 
         template<typename TState>
         void SetSkinState(const TState& state);
-
-        WidgetDataMixin<TTheme, TWidget>& GetDataMixin();
-        const WidgetDataMixin<TTheme, TWidget>& GetDataMixin() const;
 
         using WidgetSkinType = WidgetSkin<TTheme, TWidget>;
         

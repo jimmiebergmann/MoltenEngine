@@ -31,66 +31,81 @@
 namespace Molten::Gui
 {
 
-    enum class WidgetEventType : uint8_t
+    enum class WidgetMouseEventType : uint8_t
     {
-        None,
-        Mouse,
-        Keyboard
-    };
-
-    enum class WidgetEventSubType : uint8_t
-    {
-        None,
-        MouseEnter,             ///< Mouse cursur entered widget and is hovering widget.
-        MouseLeave,             ///< Mouse cursur leaved the widget and is not longer hovering widget. This event can only occur after a MouseEnter event.
+        MouseEnter,             ///< Mouse cursor entered widget and is hovering widget.
+        MouseLeave,             ///< Mouse cursor leaved the widget and is not longer hovering widget. This event can only occur after a MouseEnter event.
         MouseMove,              ///< Mouse moved over widget. This event can only occur after a MouseEnter event.
         MouseButtonPressed,     ///< Mouse button was pressed while hovering widget. This event can only occur after a MouseEnter event.
         MouseButtonReleasedIn,  ///< Mouse button was released while hovering widget. This event can only occur after a MousePressed event.
         MouseButtonReleasedOut  ///< Mouse button was released while not hovering widget. This event can only occur after a MousePressed event.
     };
 
-
-    /** User input event handled by widget. */
-    struct WidgetEvent
+    enum class WidgetKeyboardEventType : uint8_t
     {
-        struct MouseEvent
-        {
-            MouseEvent() :
-                button(Mouse::Button::Left)
-            {}
-
-            Vector2i32 position;
-            Mouse::Button button;
-        };
-
-        WidgetEvent() :
-            type(WidgetEventType::None),
-            subType(WidgetEventSubType::None),
-            mouseEvent()
-        {}
-
-        WidgetEventType type;
-        WidgetEventSubType subType;
-
-        union
-        {
-            MouseEvent mouseEvent;
-        };
+        KeyDown,             ///< Key is held down while widget is active.
+        KeyPressed,          ///< Key is initially pressed down while widget is active.
+        KeyReleased,         ///< Key is released while widget is active.
     };
 
+    struct WidgetMouseEvent
+    {
+        explicit WidgetMouseEvent(
+            const WidgetMouseEventType type,
+            const Vector2i32 position = { 0, 0 },
+            const Mouse::Button button = Mouse::Button::Left);
 
-    /** Base class for all widget types that handles user input events. */
-    class WidgetEventHandler
+        WidgetMouseEventType type;
+        Vector2i32 position;
+        Mouse::Button button;
+    };
+
+    struct WidgetKeyboardEvent
+    {
+        WidgetKeyboardEvent(
+            const WidgetKeyboardEventType type,
+            const Keyboard::Key key);
+
+        WidgetKeyboardEventType type;
+        Keyboard::Key key;
+    };
+
+    class WidgetMouseEventHandler
     {
 
     public:
 
-        virtual ~WidgetEventHandler() = default;
+        WidgetMouseEventHandler() = default;
+        virtual ~WidgetMouseEventHandler() = default;
 
-        virtual bool HandleEvent(const WidgetEvent& widgetEvent) = 0;
+        WidgetMouseEventHandler(const WidgetMouseEventHandler&) = default;
+        WidgetMouseEventHandler(WidgetMouseEventHandler&&) = default;
+        WidgetMouseEventHandler& operator=(const WidgetMouseEventHandler&) = default;
+        WidgetMouseEventHandler& operator=(WidgetMouseEventHandler&&) = default;
+
+        virtual bool OnMouseEvent(const WidgetMouseEvent& widgetMouseEvent) = 0;
+
+    };
+
+    class WidgetKeyboardEventHandler
+    {
+
+    public:
+
+        WidgetKeyboardEventHandler() = default;
+        virtual ~WidgetKeyboardEventHandler() = default;
+
+        WidgetKeyboardEventHandler(const WidgetKeyboardEventHandler&) = default;
+        WidgetKeyboardEventHandler(WidgetKeyboardEventHandler&&) = default;
+        WidgetKeyboardEventHandler& operator=(const WidgetKeyboardEventHandler&) = default;
+        WidgetKeyboardEventHandler& operator=(WidgetKeyboardEventHandler&&) = default;
+
+        virtual bool OnKeyboardEvent(const WidgetKeyboardEvent& widgetKeyboardEvent) = 0;
 
     };
 
 }
+
+#include "Molten/Gui/WidgetEvent.inl"
 
 #endif

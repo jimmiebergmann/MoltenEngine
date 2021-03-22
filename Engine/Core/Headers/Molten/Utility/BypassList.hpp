@@ -288,6 +288,7 @@ namespace Molten
         using List = typename std::conditional_t<IsConst, const BypassList<Type>, BypassList<Type>>;
         using LaneType = TLaneType;
         using Type = value_type;
+        using Pointer = pointer;
         using Reference = reference;
         using Iterator = BypassListIteratorInterface<IsConst, IsReverse, LaneType, Type>;
         using Item = BypassListItem<Type>;
@@ -309,6 +310,11 @@ namespace Molten
         std::enable_if_t<!IsConstIterator, Reference> operator *();
         template<bool IsConstIterator = IsConst>
         std::enable_if_t<IsConstIterator, Reference> operator *() const;
+
+        template<bool IsConstIterator = IsConst>
+        std::enable_if_t<!IsConstIterator, Pointer> operator ->();
+        template<bool IsConstIterator = IsConst>
+        std::enable_if_t<IsConstIterator, Pointer> operator ->() const;
 
         Iterator& operator ++ ();
         Iterator& operator -- ();

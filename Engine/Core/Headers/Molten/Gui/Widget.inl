@@ -53,9 +53,9 @@ namespace Molten::Gui
 
     template<typename TTheme>
     template<template<typename> typename TWidget, typename ... TArgs>
-    WidgetTypePointer<TWidget<TTheme>> Widget<TTheme>::CreateChild(TArgs ... args)
+    TWidget<TTheme>* Widget<TTheme>::CreateChild(TArgs ... args)
     {
-        return m_data.canvas->template CreateChild<TWidget>(*this, std::forward<TArgs>(args)...);
+        return m_data.GetLayer()->template CreateChild<TWidget>(*this, std::forward<TArgs>(args)...);
     }
 
     template<typename TTheme>
@@ -82,13 +82,13 @@ namespace Molten::Gui
     template<typename TTheme>
     typename WidgetData<TTheme>::TreeNormalLane Widget<TTheme>::GetChildrenNormalLane()
     {
-        return (*m_data.iterator).GetChildren().template GetLane<typename WidgetData<TTheme>::TreeNormalLaneType>();
+        return m_data.GetChildrenNormalLane();
     }
 
     template<typename TTheme>
     typename WidgetData<TTheme>::TreePartialLane Widget<TTheme>::GetChildrenPartialLane()
     {
-        return (*m_data.iterator).GetChildren().template GetLane<typename WidgetData<TTheme>::TreePartialLaneType>();
+        return m_data.GetChildrenPartialLane();
     }
 
     template<typename TTheme>
@@ -134,13 +134,24 @@ namespace Molten::Gui
     {}
 
     template<typename TTheme, template<typename> typename TWidget>
+    WidgetDataMixin<TTheme, TWidget>& WidgetMixin<TTheme, TWidget>::GetDataMixin()
+    {
+        return m_dataMixin;
+    }
+    template<typename TTheme, template<typename> typename TWidget>
+    const WidgetDataMixin<TTheme, TWidget>& WidgetMixin<TTheme, TWidget>::GetDataMixin() const
+    {
+        return m_dataMixin;
+    }
+
+    template<typename TTheme, template<typename> typename TWidget>
     template<typename TState>
     const TState& WidgetMixin<TTheme, TWidget>::GetSkinState() const
     {
         static_assert(std::is_same_v<TState, typename TWidget<TTheme>::State>,
             "Passed invalid widget state type to WidgetMixin<TTheme, TWidget>::GetSkinState.");
 
-        return m_dataMixin.widgetSkinMixin->GetState();
+        return m_dataMixin.GetWidgetSkinMixin->GetState();
     }
     template<typename TTheme, template<typename> typename TWidget>
     template<typename TState>
@@ -149,19 +160,7 @@ namespace Molten::Gui
         static_assert(std::is_same_v<TState, typename TWidget<TTheme>::State>,
             "Passed invalid widget state type to WidgetMixin<TTheme, TWidget>::SetSkinState.");
 
-        m_dataMixin.widgetSkinMixin->SetState(state);
-    }
-
-    template<typename TTheme, template<typename> typename TWidget>
-    WidgetDataMixin<TTheme, TWidget>& WidgetMixin<TTheme, TWidget>::GetDataMixin()
-    {
-        return m_dataMixin;
-    }
-
-    template<typename TTheme, template<typename> typename TWidget>
-    const WidgetDataMixin<TTheme, TWidget>& WidgetMixin<TTheme, TWidget>::GetDataMixin() const
-    {
-        return m_dataMixin;
+        m_dataMixin.GetWidgetSkinMixin()->SetState(state);
     }
 
 }

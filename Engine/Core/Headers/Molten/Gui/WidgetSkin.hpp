@@ -30,7 +30,7 @@ namespace Molten::Gui
 {
 
     template<typename TTheme>
-    struct WidgetData;
+    class WidgetData;
 
     template<typename TTheme, template<typename> typename TWidget>
     struct WidgetSkin;
@@ -45,6 +45,7 @@ namespace Molten::Gui
     };
 
 
+    /** Widget skin base class. Widget skins should inherit from WidgetSkinMixin instead of this class template.*/
     class WidgetSkinBase
     {
 
@@ -63,6 +64,7 @@ namespace Molten::Gui
     };
 
 
+    /** Base class for all widget skin types. */
     template<typename TTheme, template<typename> typename TWidget>
     class WidgetSkinMixin : public WidgetSkinBase
     {
@@ -72,7 +74,7 @@ namespace Molten::Gui
         using State = typename TWidget<TTheme>::State;
 
         WidgetSkinMixin(const WidgetSkinDescriptor<TTheme, TWidget>& descriptor);
-        virtual ~WidgetSkinMixin() = default;
+        ~WidgetSkinMixin() override = default;
 
         WidgetSkinMixin(const WidgetSkinMixin&) = delete;
         WidgetSkinMixin(WidgetSkinMixin&&) = delete;

@@ -56,18 +56,28 @@ namespace Molten::Gui
         m_edgeDragData{},
         m_leafs{},
         m_leafDragData{}
-    { }
+    {
+        //auto overlay = GetData().GetCanvas()->GetTopFloatingLayer()->CreateHiddenChild<DockerOverlay>();
+
+        /*
+        m_overlayData = GetData().GetCanvas()->CreateOverlayWidget<DockerOverlay>(this);
+        m_overlayData = CreateOverlayWidget<DockerOverlay>();
+        m_overlayData->SetGrantedBounds({});
+        m_overlayData->ShowWidget();
+        */
+
+    }
 
     template<typename TTheme>
     template<template<typename> typename TWidget, typename ... TArgs>
-    WidgetTypePointer<TWidget<TTheme>> Docker<TTheme>::CreateChild(
+    TWidget<TTheme>* Docker<TTheme>::CreateChild(
         const DockingPosition position,
         const bool dynamic,
         TArgs ... args)
     {
-        auto widget = Widget<TTheme>::template CreateChild<TWidget>(std::forward<TArgs>(args)...);
+        auto* widget = Widget<TTheme>::template CreateChild<TWidget>(std::forward<TArgs>(args)...);
 
-        auto it = m_leafInsertMap.find(widget.get());
+        auto it = m_leafInsertMap.find(widget);
         if (it == m_leafInsertMap.end())
         {
             return widget;
@@ -98,25 +108,20 @@ namespace Molten::Gui
 
         m_oldGrantedBounds = GetGrantedBounds();
 
-        if (GetSkinState<State>().type == State::Type::LeafDrag && m_leafDragData.dragIsActivated) // Ugly stuff going on here.
+        // FIX: CREATE AN WIDGET IN THE CANVAS OVERLAY LAYER.
+        /*if (GetSkinState<State>().type == State::Type::LeafDrag && m_leafDragData.dragIsActivated) // Ugly stuff going on here.
         {
             GetDataMixin().canvas->PushTopDrawCommand([this]()
             {
                 GetDataMixin().widgetSkinMixin->DrawLeafDocking();
             });
-        }
+        }*/
     }
 
     template<typename TTheme>
-    bool Docker<TTheme>::HandleEvent(const WidgetEvent& widgetEvent)
+    bool Docker<TTheme>::OnMouseEvent(const WidgetMouseEvent& widgetMouseEvent)
     {
-        switch (widgetEvent.type)
-        {
-            case WidgetEventType::Mouse: return (*this.*m_mouseInputUpdateFunc)(widgetEvent); break;
-            default: break;
-        }
-
-        return false;
+        return (*this.*m_mouseInputUpdateFunc)(widgetMouseEvent);
     }
 
     template<typename TTheme>
@@ -949,7 +954,7 @@ namespace Molten::Gui
         m_edgeDragData.prevMousePosition = mousePosition;
 
         m_mouseInputUpdateFunc = &Docker<TTheme>::HandleEdgeDragMouseEvent;
-        GetData().canvas->OverrideMouseEventsUntilMouseRelease(*this);
+        GetData().GetCanvas()->OverrideMouseEventsUntilMouseRelease(*this);
         SetCursor(pressedEdge->GetSizeCursor());
     }
 
@@ -963,17 +968,17 @@ namespace Molten::Gui
         m_leafDragData.initialMousePosition = mousePosition;
 
         m_mouseInputUpdateFunc = &Docker<TTheme>::HandleLeafDragMouseEvent;
-        GetData().canvas->OverrideMouseEventsUntilMouseRelease(*this);
+        GetData().GetCanvas()->OverrideMouseEventsUntilMouseRelease(*this);
     }
 
     template<typename TTheme>
-    bool Docker<TTheme>::HandleNormalMouseEvent(const WidgetEvent& widgetEvent)
+    bool Docker<TTheme>::HandleNormalMouseEvent(const WidgetMouseEvent& widgetMouseEvent)
     {
-        switch (widgetEvent.subType)
+        switch (widgetMouseEvent.type)
         {
-            case WidgetEventSubType::MouseButtonPressed: return HandleNormalMousePressEvent(widgetEvent.mouseEvent);
-            case WidgetEventSubType::MouseMove: return HandleNormalMouseMoveEvent(widgetEvent.mouseEvent);
-            case WidgetEventSubType::MouseLeave: SetCursor(Mouse::Cursor::Normal); break;
+            case WidgetMouseEventType::MouseButtonPressed: return HandleNormalMousePressEvent(widgetMouseEvent);
+            case WidgetMouseEventType::MouseMove: return HandleNormalMouseMoveEvent(widgetMouseEvent);
+            case WidgetMouseEventType::MouseLeave: SetCursor(Mouse::Cursor::Normal); break;
             default: break;
         }
 
@@ -981,13 +986,13 @@ namespace Molten::Gui
     }
 
     template<typename TTheme>
-    bool Docker<TTheme>::HandleEdgeDragMouseEvent(const WidgetEvent& widgetEvent)
+    bool Docker<TTheme>::HandleEdgeDragMouseEvent(const WidgetMouseEvent& widgetMouseEvent)
     {
-        switch(widgetEvent.subType)
+        switch(widgetMouseEvent.type)
         {
-            case WidgetEventSubType::MouseMove: return HandleEdgeDragMouseMoveEvent(widgetEvent.mouseEvent);
-            case WidgetEventSubType::MouseButtonReleasedIn:
-            case WidgetEventSubType::MouseButtonReleasedOut: return HandleEdgeDragMouseReleaseEvent(widgetEvent.mouseEvent);
+            case WidgetMouseEventType::MouseMove: return HandleEdgeDragMouseMoveEvent(widgetMouseEvent);
+            case WidgetMouseEventType::MouseButtonReleasedIn:
+            case WidgetMouseEventType::MouseButtonReleasedOut: return HandleEdgeDragMouseReleaseEvent(widgetMouseEvent);
             default: break;
         }
 
@@ -995,13 +1000,13 @@ namespace Molten::Gui
     }
 
     template<typename TTheme>
-    bool Docker<TTheme>::HandleLeafDragMouseEvent(const WidgetEvent& widgetEvent)
+    bool Docker<TTheme>::HandleLeafDragMouseEvent(const WidgetMouseEvent& widgetMouseEvent)
     {
-        switch(widgetEvent.subType)
+        switch(widgetMouseEvent.type)
         {
-            case WidgetEventSubType::MouseMove: return HandleLeafDragMouseMoveEvent(widgetEvent.mouseEvent);
-            case WidgetEventSubType::MouseButtonReleasedIn:
-            case WidgetEventSubType::MouseButtonReleasedOut: return HandleLeafDragMouseReleaseEvent(widgetEvent.mouseEvent);
+            case WidgetMouseEventType::MouseMove: return HandleLeafDragMouseMoveEvent(widgetMouseEvent);
+            case WidgetMouseEventType::MouseButtonReleasedIn:
+            case WidgetMouseEventType::MouseButtonReleasedOut: return HandleLeafDragMouseReleaseEvent(widgetMouseEvent);
             default: break;
         }
 
@@ -1009,19 +1014,19 @@ namespace Molten::Gui
     }
 
     template<typename TTheme>
-    bool Docker<TTheme>::HandleNormalMousePressEvent(const WidgetEvent::MouseEvent& mouseEvent)
+    bool Docker<TTheme>::HandleNormalMousePressEvent(const WidgetMouseEvent& widgetMouseEvent)
     {
-        auto* pressedEdge = FindIntersectingEdge(mouseEvent.position);
+        auto* pressedEdge = FindIntersectingEdge(widgetMouseEvent.position);
         if (pressedEdge)
         {         
-            ActivateEdgeDragUpdate(pressedEdge, mouseEvent.position);
+            ActivateEdgeDragUpdate(pressedEdge, widgetMouseEvent.position);
             return true;
         }
 
-        auto* pressedLeaf = FindIntersectingDraggableLeaf(mouseEvent.position);
+        auto* pressedLeaf = FindIntersectingDraggableLeaf(widgetMouseEvent.position);
         if (pressedLeaf)
         {
-            ActivateLeafDragUpdate(pressedLeaf, mouseEvent.position);
+            ActivateLeafDragUpdate(pressedLeaf, widgetMouseEvent.position);
             return true;
         }
 
@@ -1029,9 +1034,9 @@ namespace Molten::Gui
     }
 
     template<typename TTheme>
-    bool Docker<TTheme>::HandleNormalMouseMoveEvent(const WidgetEvent::MouseEvent& mouseEvent)
+    bool Docker<TTheme>::HandleNormalMouseMoveEvent(const WidgetMouseEvent& widgetMouseEvent)
     {
-        auto* hoveredEdge = FindIntersectingEdge(mouseEvent.position);
+        auto* hoveredEdge = FindIntersectingEdge(widgetMouseEvent.position);
         if (hoveredEdge)
         {
             SetCursor(hoveredEdge->GetSizeCursor());
@@ -1044,7 +1049,7 @@ namespace Molten::Gui
     }
 
     template<typename TTheme>
-    bool Docker<TTheme>::HandleEdgeDragMouseMoveEvent(const WidgetEvent::MouseEvent& mouseEvent)
+    bool Docker<TTheme>::HandleEdgeDragMouseMoveEvent(const WidgetMouseEvent& widgetMouseEvent)
     {
         if (!m_edgeDragData.pressedEdge)
         {
@@ -1053,7 +1058,7 @@ namespace Molten::Gui
 
         SetCursor(m_edgeDragData.pressedEdge->GetSizeCursor());
 
-        auto mouseMovement = Vector2f32(mouseEvent.position) - m_edgeDragData.prevMousePosition;
+        auto mouseMovement = Vector2f32(widgetMouseEvent.position) - m_edgeDragData.prevMousePosition;
         bool movedEdge = false;
 
         if (m_edgeDragData.pressedEdge->direction == Direction::Horizontal)
@@ -1068,14 +1073,14 @@ namespace Molten::Gui
         if (movedEdge)
         {
             m_forceUpdateBounds = true;
-            m_edgeDragData.prevMousePosition = mouseEvent.position;
+            m_edgeDragData.prevMousePosition = widgetMouseEvent.position;
         }
 
         return true;
     }
 
     template<typename TTheme>
-    bool Docker<TTheme>::HandleEdgeDragMouseReleaseEvent(const WidgetEvent::MouseEvent& mouseEvent)
+    bool Docker<TTheme>::HandleEdgeDragMouseReleaseEvent(const WidgetMouseEvent& widgetMouseEvent)
     {
         SetCursor(Mouse::Cursor::Normal);
         ActivateNormalUpdate();
@@ -1085,11 +1090,11 @@ namespace Molten::Gui
     }
 
     template<typename TTheme>
-    bool Docker<TTheme>::HandleLeafDragMouseMoveEvent(const WidgetEvent::MouseEvent& mouseEvent)
+    bool Docker<TTheme>::HandleLeafDragMouseMoveEvent(const WidgetMouseEvent& widgetMouseEvent)
     {
         if (!m_leafDragData.dragIsActivated)
         {
-            const float distance = (m_leafDragData.initialMousePosition - mouseEvent.position).Length();
+            const float distance = (m_leafDragData.initialMousePosition - widgetMouseEvent.position).Length();
             if (distance < widgetDragActivationDistance)
             {
                 return false;
@@ -1100,7 +1105,7 @@ namespace Molten::Gui
 
         SetCursor(Mouse::Cursor::SizeAll);
 
-        auto* leaf = FindIntersectingLeaf(mouseEvent.position);
+        auto* leaf = FindIntersectingLeaf(widgetMouseEvent.position);
         if (!leaf || leaf == m_leafDragData.pressedLeaf)
         {
             SetSkinState(State{ });
@@ -1108,7 +1113,7 @@ namespace Molten::Gui
         }
 
         Bounds2f32 dockingBounds = {};
-        if (GetDockingPositionInElement(mouseEvent.position, *leaf, dockingBounds, m_leafDragData.dockingPosition))
+        if (GetDockingPositionInElement(widgetMouseEvent.position, *leaf, dockingBounds, m_leafDragData.dockingPosition))
         {
             m_leafDragData.dockingLeaf = leaf;
             SetSkinState(State{ State::LeafDragState{ dockingBounds } });
@@ -1123,7 +1128,7 @@ namespace Molten::Gui
     }
 
     template<typename TTheme>
-    bool Docker<TTheme>::HandleLeafDragMouseReleaseEvent(const WidgetEvent::MouseEvent& mouseEvent)
+    bool Docker<TTheme>::HandleLeafDragMouseReleaseEvent(const WidgetMouseEvent& widgetMouseEvent)
     {
         if (m_leafDragData.dockingLeaf && m_leafDragData.pressedLeaf && m_leafDragData.dockingLeaf != m_leafDragData.pressedLeaf)
         {

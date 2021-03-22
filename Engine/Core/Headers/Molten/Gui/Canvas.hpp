@@ -26,24 +26,17 @@
 #ifndef MOLTEN_CORE_GUI_CANVAS_HPP
 #define MOLTEN_CORE_GUI_CANVAS_HPP
 
-#include "Molten/Gui/GuiTypes.hpp"
-#include "Molten/Gui/Widgets/DockerWidget.hpp"
+#include "Molten/Gui/Layers/MultiRootLayer.hpp"
 #include "Molten/Gui/WidgetData.hpp"
 #include "Molten/Gui/WidgetEvent.hpp"
 #include "Molten/Gui/CanvasRenderer.hpp"
-#include "Molten/Gui/Layer.hpp"
 #include "Molten/Math/Vector.hpp"
 #include "Molten/System/Time.hpp"
 #include "Molten/System/UserInput.hpp"
-#include <memory>
-#include <list>
-#include <set>
 #include <vector>
-#include <functional>
 
 namespace Molten
 {
-    class Renderer;
     class Logger;
 }
 
@@ -59,12 +52,13 @@ namespace Molten::Gui
 
     public:
 
-        explicit Canvas(Renderer& backendRenderer, CanvasRendererPointer renderer = nullptr);
-        ~Canvas();
+        explicit Canvas(CanvasRenderer& canvasRenderer);
+        ~Canvas() = default;
 
-        void SetRenderer(CanvasRendererPointer renderer);
-        CanvasRendererPointer GetRenderer();
-        const CanvasRendererPointer GetRenderer() const;
+        Canvas(Canvas&&) = delete;
+        Canvas(const Canvas&) = delete;
+        Canvas& operator= (Canvas&&) = delete;
+        Canvas& operator= (const Canvas&) = delete;
 
         void PushUserInputEvent(const UserInput::Event& inputEvent);
 
@@ -75,66 +69,60 @@ namespace Molten::Gui
         void SetSize(const Vector2f32& size);
         void SetScale(const Vector2f32& scale);
 
-        const Vector2f32& GetSize() const;
-        const Vector2f32& GetScale() const;
+        [[nodiscard]] const Vector2f32& GetSize() const;
+        [[nodiscard]] const Vector2f32& GetScale() const;
 
-        template<template<typename> typename TWidget, typename ... TArgs>
-        WidgetTypePointer<TWidget<TTheme>> CreateChild(TArgs ... args);
-
-        template<template<typename> typename TWidget, typename ... TArgs>
-        WidgetTypePointer<TWidget<TTheme>> CreateChild(Widget<TTheme>& parent, TArgs ... args);
+        /**
+         * Creates a new layer and inserts it at a given position.
+         */
+        template<template<typename> typename TLayer, typename ... TArgs>
+        [[nodiscard]] TLayer<TTheme>* CreateLayer(const LayerPosition position, TArgs ... args);
 
         /** This function call makes the provided widget to receive all mouse events, 
-          * regardless of child widgets on top being hovered or pressed, until the mouse button is released.
-          */
+         * regardless of child widgets on top being hovered or pressed, until the mouse button is released.
+         */
         void OverrideMouseEventsUntilMouseRelease(Widget<TTheme>& widget);
         void OverrideMouseEventsReset();
 
-        /** This function makes it possible to draw on top of all other drawn widgets in the canvas.
-          * Draw commands are executed in Draw() after the regular widget tree draw calls are made.
-          * Pushed commands are removed from the draw command queue after drawn.
-          */
-        void PushTopDrawCommand(std::function<void()> && drawCommand);
-
     private:
 
-        Canvas(Canvas&&) = delete;
-        Canvas(const Canvas&) = delete;
-        Canvas& operator= (Canvas&&) = delete;
-        Canvas& operator= (const Canvas&) = delete;
+        /**
+         * Internal function for creating and inserting a new layer at provided iterator position.
+         */
+        template<template<typename> typename TLayer, typename ... TArgs>
+        [[nodiscard]] TLayer<TTheme>* InternalCreateLayer(
+            typename LayerData<TTheme>::ListNormalIterator position,
+            TArgs ... args);
 
         void UpdateUserInputs(); 
         
-        void UpdateTreeMouseInputs(const UserInput::Event& mouseEvent);
-        void HandleTreeMouseMove(const UserInput::Event& mouseEvent);
-        void HandleTreeMouseButtonPressed(const UserInput::Event& mouseEvent);
-        void HandleTreeMouseButtonReleased(const UserInput::Event& mouseEvent);
+        void UpdateNormalMouseInputs(const UserInput::Event& mouseEvent);
+        void HandleNormalMouseMove(const UserInput::Event& mouseEvent);
+        void HandleNormalMouseButtonPressed(const UserInput::Event& mouseEvent);
+        void HandleNormalMouseButtonReleased(const UserInput::Event& mouseEvent);
         
         void UpdateModalMouseInputs(const UserInput::Event& mouseEvent);
-        void HandleModalMouseMove(const UserInput::Event& mouseEvent);
+        /*void HandleModalMouseMove(const UserInput::Event& mouseEvent);
         void HandleModalMouseButtonPressed(const UserInput::Event& mouseEvent);
         void HandleModalMouseButtonReleased(const UserInput::Event& mouseEvent);
 
         void HandleMouseMoveTriggers(WidgetData<TTheme>& widgetData, const Vector2i32& position);
-        void TriggerMouseMoveEvent(WidgetData<TTheme>& widgetData, const Vector2f32& position, const WidgetEventSubType subType);
+        void TriggerMouseMoveEvent(WidgetData<TTheme>& widgetData, const Vector2f32& position, const WidgetEventSubType subType);*/
 
-        void UpdateWidgetSkins();
-
-        Renderer& m_backendRenderer;
-        CanvasRendererPointer m_renderer;
-
-        TTheme m_theme;
-        typename WidgetData<TTheme>::Tree m_widgetTree;    
+        CanvasRenderer& m_canvasRenderer;
      
         Vector2f32 m_size;
         Vector2f32 m_scale;
 
+        TTheme m_theme;
+        typename LayerData<TTheme>::List m_layers;
+        MultiRootLayer<TTheme>* m_overlayLayer;
+
         std::vector<UserInput::Event> m_userInputEvents;
-        WidgetPointer<TTheme> m_hoveredWidget;
-        Widget<TTheme>* m_pressedWidget;
+        MultiLayerRepository<TTheme> m_multiLayerRepository;
         Widget<TTheme>* m_widgetOverrideMouseEvents;
         void(Canvas<TTheme>::* m_mouseInputUpdate)(const UserInput::Event&);
-        std::vector<std::function<void()>> m_topDrawCommands;
+
     };
 
 }

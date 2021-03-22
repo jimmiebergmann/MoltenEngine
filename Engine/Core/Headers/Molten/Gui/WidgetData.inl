@@ -28,41 +28,119 @@ namespace Molten::Gui
 
     // Widget data implementations.
     template<typename TTheme>
-    WidgetData<TTheme>::WidgetData() :
-        canvas(nullptr),
-        layer(nullptr),
-        tree(nullptr),
-        widgetSkin(nullptr)
+    WidgetData<TTheme>::WidgetData(
+        Canvas<TTheme>* canvas,
+        Layer<TTheme>* layer
+    ):
+        m_canvas(canvas),
+        m_layer(layer),
+        m_tree(nullptr),
+        m_widgetSkin(nullptr)
     {}
 
     template<typename TTheme>
-    Widget<TTheme>* WidgetData<TTheme>::GetWidget()
+    Canvas<TTheme>* WidgetData<TTheme>::GetCanvas()
     {
-        return widget.get();
+        return m_canvas;
+    }
+    template<typename TTheme>
+    const Canvas<TTheme>* WidgetData<TTheme>::GetCanvas() const
+    {
+        return m_canvas;
     }
 
     template<typename TTheme>
-    void WidgetData<TTheme>::ShowWidget()
+    Layer<TTheme>* WidgetData<TTheme>::GetLayer()
     {
-        tree->EnableInPartialLane(iterator);
+        return m_layer;
+    }
+    template<typename TTheme>
+    const Layer<TTheme>* WidgetData<TTheme>::GetLayer() const
+    {
+        return m_layer;
     }
 
     template<typename TTheme>
-    void WidgetData<TTheme>::HideWidget()
+    typename WidgetData<TTheme>::Tree* WidgetData<TTheme>::GetTree()
     {
-        tree->DisableInPartialLane(iterator);
+        return m_tree;
+    }
+    template<typename TTheme>
+    const typename WidgetData<TTheme>::Tree* WidgetData<TTheme>::GetTree() const
+    {
+        return m_tree;
+    }
+
+    template<typename TTheme>
+    typename WidgetData<TTheme>::TreeNormalIterator WidgetData<TTheme>::GetTreeNormalIterator()
+    {
+        return m_treeIterator;
+    }
+    template<typename TTheme>
+    typename WidgetData<TTheme>::TreeNormalConstIterator WidgetData<TTheme>::GetTreeNormalIterator() const
+    {
+        return m_treeIterator;
+    }
+
+    template<typename TTheme>
+    typename WidgetData<TTheme>::TreePartialIterator WidgetData<TTheme>::GetTreePartialIterator()
+    {
+        return m_treeIterator;
+    }
+    template<typename TTheme>
+    typename WidgetData<TTheme>::TreePartialConstIterator WidgetData<TTheme>::GetTreePartialIterator() const
+    {
+        return m_treeIterator;
     }
 
     template<typename TTheme>
     typename WidgetData<TTheme>::TreeNormalLane WidgetData<TTheme>::GetChildrenNormalLane()
     {
-        return (*iterator).GetChildren().template GetLane<TreeNormalLaneType>();
+        return (*m_treeIterator).GetChildren().template GetLane<TreeNormalLaneType>();
+    }
+    template<typename TTheme>
+    typename WidgetData<TTheme>::TreeNormalConstLane WidgetData<TTheme>::GetChildrenNormalLane() const
+    {
+        return (*m_treeIterator).GetChildren().template GetLane<TreeNormalLaneType>();
     }
 
     template<typename TTheme>
     typename WidgetData<TTheme>::TreePartialLane WidgetData<TTheme>::GetChildrenPartialLane()
     {
-        return (*iterator).GetChildren().template GetLane<TreePartialLaneType>();
+        return (*m_treeIterator).GetChildren().template GetLane<TreePartialLaneType>();
+    }
+    template<typename TTheme>
+    typename WidgetData<TTheme>::TreePartialConstLane WidgetData<TTheme>::GetChildrenPartialLane() const
+    {
+        return (*m_treeIterator).GetChildren().template GetLane<TreePartialLaneType>();
+    }
+
+    template<typename TTheme>
+    Widget<TTheme>* WidgetData<TTheme>::GetWidget()
+    {
+        return m_widget.get();
+    }
+    template<typename TTheme>
+    const Widget<TTheme>* WidgetData<TTheme>::GetWidget() const
+    {
+        return m_widget.get();
+    }
+
+    template<typename TTheme>
+    WidgetSkinBase* WidgetData<TTheme>::GetWidgetSkin()
+    {
+        return m_widgetSkin;
+    }
+    template<typename TTheme>
+    const WidgetSkinBase* WidgetData<TTheme>::GetWidgetSkin() const
+    {
+        return m_widgetSkin;
+    }
+
+    template<typename TTheme>
+    const typename WidgetData<TTheme>::MouseEventFunction& WidgetData<TTheme>::GetMouseEventFunction() const
+    {
+        return m_mouseEventFunction;
     }
 
     template<typename TTheme>
@@ -77,12 +155,82 @@ namespace Molten::Gui
         m_grantedBounds = grantedBounds;
     }
 
+    template<typename TTheme>
+    void WidgetData<TTheme>::ShowWidget()
+    {
+        m_tree->EnableInPartialLane(m_treeIterator);
+    }
+
+    template<typename TTheme>
+    void WidgetData<TTheme>::HideWidget()
+    {
+        m_tree->DisableInPartialLane(m_treeIterator);
+    }
+
+    template<typename TTheme>
+    void WidgetData<TTheme>::Initialize(
+        Tree* tree,
+        TreeNormalIterator iterator,
+        std::unique_ptr<Widget<TTheme>>&& widget,
+        WidgetSkinBase* widgetSkin,
+        MouseEventFunction&& mouseEventFunction)
+    {
+        m_tree = tree;
+        m_treeIterator = iterator;
+        m_widget = std::move(widget);
+        m_widgetSkin = widgetSkin;
+    }
+
 
     // Widget data mixin implementations.
     template<typename TTheme, template<typename> typename TWidget>
-    WidgetDataMixin<TTheme, TWidget>::WidgetDataMixin() :
-        WidgetData<TTheme>(),
-        widgetSkinMixin(nullptr)
+    WidgetDataMixin<TTheme, TWidget>::WidgetDataMixin(
+        Canvas<TTheme>* canvas,
+        Layer<TTheme>* layer
+    ) :
+        WidgetData<TTheme>(canvas, layer),
+        m_widgetMixin(nullptr)
     {}
+
+    template<typename TTheme, template<typename> typename TWidget>
+    WidgetMixin<TTheme, TWidget>* WidgetDataMixin<TTheme, TWidget>::GetWidgetMixin()
+    {
+        return m_widgetMixin;
+    }
+    template<typename TTheme, template<typename> typename TWidget>
+    const WidgetMixin<TTheme, TWidget>* WidgetDataMixin<TTheme, TWidget>::GetWidgetMixin() const
+    {
+        return m_widgetMixin;
+    }
+
+    template<typename TTheme, template<typename> typename TWidget>
+    WidgetSkinMixin<TTheme, TWidget>* WidgetDataMixin<TTheme, TWidget>::GetWidgetSkinMixin()
+    {
+        return m_widgetSkinMixin.get();
+    }
+    template<typename TTheme, template<typename> typename TWidget>
+    const WidgetSkinMixin<TTheme, TWidget>* WidgetDataMixin<TTheme, TWidget>::GetWidgetSkinMixin() const
+    {
+        return m_widgetSkinMixin.get();
+    }
+
+    template<typename TTheme, template<typename> typename TWidget>
+    void WidgetDataMixin<TTheme, TWidget>::InitializeMixin(
+        typename WidgetData<TTheme>::Tree* tree,
+        typename WidgetData<TTheme>::TreeNormalIterator iterator,
+        std::unique_ptr<WidgetMixin<TTheme, TWidget>>&& widget,
+        std::unique_ptr<WidgetSkinMixin<TTheme, TWidget>>&& widgetSkinMixin,
+        typename WidgetData<TTheme>::MouseEventFunction&& mouseEventFunction)
+    {
+        m_widgetMixin = widget.get();
+        m_widgetSkinMixin = std::move(widgetSkinMixin);
+
+        WidgetData<TTheme>::Initialize(
+            tree,
+            iterator,
+            std::move(widget),
+            m_widgetSkinMixin.get(),
+            std::move(mouseEventFunction));
+    }
 
 }

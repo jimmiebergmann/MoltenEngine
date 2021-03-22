@@ -23,98 +23,237 @@
 *
 */
 
-#include <type_traits>
-
 namespace Molten::Gui
 {
 
-    template<typename TSkin>
-    inline Layer<TSkin>::Layer(WidgetData<TSkin>& data) :
-        Widget<TSkin>(data)
+    // Multi layer repository implementations.
+    template<typename TTheme>
+    MultiLayerRepository<TTheme>::MultiLayerRepository() :
+        hoveredWidget(nullptr),
+        pressedWidget(nullptr)
     {}
 
-    /*template<typename TSkin>
-    inline void Layer<TSkin>::PushUserInputEvents(std::vector<UserInput::Event>& inputEvents)
+
+    // Layer implementations.
+    template<typename TTheme>
+    Layer<TTheme>::Layer(
+        TTheme& theme,
+        LayerData<TTheme>& data
+    ) :
+        m_theme(theme),
+        m_data(data),
+        m_size(0.0f, 0.0f),
+        m_scale(1.0f, 1.0f)
+    {}
+
+    template<typename TTheme>
+    bool Layer<TTheme>::HandleUserInput(
+        const UserInput::Event& userInputEvent,
+        MultiLayerRepository<TTheme>& multiLayerRepository)
     {
+        return false;
     }
 
-    template<typename TSkin>
-    template<template<typename> typename TWidgetType, typename ... TArgs>
-    inline WidgetTypePointer<TWidgetType<TSkin>> Layer<TSkin>::CreateChild(TArgs ... args)
+    template<typename TTheme>
+    void Layer<TTheme>::Update(const Time& deltaTime)
     {
-        static_assert(std::is_base_of<Gui::Widget<TSkin>, TWidgetType<TSkin>>::value, "TWidgetType is not base of Widget.");
+        auto rootLane = m_widgetTree.template GetLane<typename WidgetData<TTheme>::TreePartialLaneType>();
+        for (auto& rootWidget : rootLane)
+        {
+            rootWidget.GetValue()->SetGrantedBounds({ { 0.0f, 0.0f }, m_size });
+        }
 
-        auto widgetData = std::make_shared<WidgetData<TSkin>>(this);
-        auto& widgetDataRef = *widgetData.get();
+        m_widgetTree.template ForEachPreorder<typename WidgetData<TTheme>::TreePartialLaneType>(
+            [&](auto& widgetData)
+        {
+            widgetData->GetWidget()->Update();
+        });
+    }
 
-        auto widget = std::make_shared<TWidgetType<TSkin>>(*widgetData.get(), args...);
-        widgetData->widget = widget;
+    template<typename TTheme>
+    void Layer<TTheme>::Draw()
+    {
+        m_widgetTree.template ForEachPreorder<typename WidgetData<TTheme>::TreePartialLaneType>(
+            [&](auto& widgetData)
+        {
+            //renderer.MaskArea(renderData.position, renderData.size);
+            widgetData->GetWidgetSkin()->Draw();
+        });
+    }
 
-        if (!OnAddChild(nullptr, widgetData))
+    template<typename TTheme>
+    void Layer<TTheme>::SetSize(const Vector2f32& size)
+    {
+        m_size = size;
+    }
+
+    template<typename TTheme>
+    void Layer<TTheme>::SetScale(const Vector2f32& scale)
+    {
+        m_scale = scale;
+    }
+
+    template<typename TTheme>
+    template<template<typename> typename TWidget, typename ... TArgs>
+    TWidget<TTheme>* Layer<TTheme>::CreateChild(TArgs ... args)
+    {
+        auto normalLane = m_widgetTree.template GetLane<typename WidgetData<TTheme>::TreeNormalLaneType>();
+        if (!AllowsMultipleRoots() && !normalLane.IsEmpty())
         {
             return nullptr;
         }
 
-        widgetData->widgetSkin = m_skin.template Create<TWidgetType<TSkin>>(*widget.get(), widgetDataRef);
+        auto partialLane = m_widgetTree.template GetLane<typename WidgetData<TTheme>::TreePartialLaneType>();
 
-        return widget;
+        return InternalCreateChild<TWidget, TArgs...>(partialLane, normalLane.end(), nullptr, args...);
     }
 
-    template<typename TSkin>
-    template<template<typename> typename TWidgetType, typename ... TArgs>
-    inline WidgetTypePointer<TWidgetType<TSkin>> Layer<TSkin>::CreateChild(Widget<TSkin>& parent, TArgs ... args)
+    template<typename TTheme>
+    template<template<typename> typename TWidget, typename ... TArgs>
+    TWidget<TTheme>* Layer<TTheme>::CreateChild(
+        Widget<TTheme>& parent,
+        TArgs ... args)
     {
-        static_assert(std::is_base_of<Gui::Widget<TSkin>, TWidgetType<TSkin>>::value, "TWidgetType is not base of Widget.");
+        auto& parentWidgetData = parent.GetData();
+        auto parentNormalLane = parentWidgetData.GetChildrenNormalLane();
+        auto parentPartialLane = parentWidgetData.GetChildrenPartialLane();
 
-        auto widgetData = std::make_shared<WidgetData<TSkin>>(this);
-        auto& widgetDataRef = *widgetData.get();
-
-        auto widget = std::make_shared<TWidgetType<TSkin>>(widgetDataRef, args...);
-        widgetData->widget = widget;
-
-        if constexpr (std::is_base_of_v<WidgetEventHandler, TWidgetType<TSkin>>)
-        {
-            if constexpr (TWidgetType<TSkin>::handleMouseEvents)
-            {
-                widgetData->mouseEventHandler = widget.get();
-            }
-            if constexpr (TWidgetType<TSkin>::handleKeyboardEvents)
-            {
-                widgetData->keyboardEventHandler = widget.get();
-            }
-        }
-
-        if (!OnAddChild(&parent, widgetData))
-        {
-            return nullptr;
-        }
-
-        widgetData->widgetSkin = m_skin.template Create<TWidgetType<TSkin>>(*widget.get(), widgetDataRef);
-
-        return widget;
+        return InternalCreateChild<TWidget, TArgs...>(parentPartialLane, parentNormalLane.end(), &parent, args...);
     }
 
-    template<typename TSkin>
-    inline TSkin& Layer<TSkin>::GetSkin()
+    template<typename TTheme>
+    TTheme& Layer<TTheme>::GetTheme()
     {
-        return m_skin;
+        return m_theme;
     }
-    template<typename TSkin>
-    inline const TSkin& Layer<TSkin>::GetSkin() const
+    template<typename TTheme>
+    const TTheme& Layer<TTheme>::GetTheme() const
     {
-        return m_skin;
+        return m_theme;
     }
 
-    template<typename TSkin>
-    inline bool Layer<TSkin>::CallWidgetOnAddChild(Widget<TSkin>* parent, WidgetPointer<TSkin> child)
+    template<typename TTheme>
+    LayerData<TTheme>& Layer<TTheme>::GetData()
     {
-        return parent->OnAddChild(child);
+        return m_data;
+    }
+    template<typename TTheme>
+    const LayerData<TTheme>& Layer<TTheme>::GetData() const
+    {
+        return m_data;
     }
 
-    template<typename TSkin>
-    inline WidgetData<TSkin>& Layer<TSkin>::GetWidgetData(Widget<TSkin>& widget)
+    template<typename TTheme>
+    typename WidgetData<TTheme>::Tree& Layer<TTheme>::GetWidgetTree()
+    {
+        return m_widgetTree;
+    }
+    template<typename TTheme>
+    const typename WidgetData<TTheme>::Tree& Layer<TTheme>::GetWidgetTree() const
+    {
+        return m_widgetTree;
+    }
+
+    template<typename TTheme>
+    template<template<typename> typename TWidget>
+    WidgetData<TTheme>& Layer<TTheme>::GetWidgetData(TWidget<TTheme>& widget)
     {
         return widget.GetData();
-    }*/
+    }
+    template<typename TTheme>
+    template<template<typename> typename TWidget>
+    const WidgetData<TTheme>& Layer<TTheme>::GetWidgetData(const Widget<TTheme>& widget)
+    {
+        return widget.GetData();
+    }
+
+    template<typename TTheme>
+    template<template<typename> typename TWidget, typename ... TArgs, typename TLane, typename TTreeIterator>
+    TWidget<TTheme>* Layer<TTheme>::InternalCreateChild(
+        TLane& lane,
+        TTreeIterator iterator,
+        Widget<TTheme>* parent,
+        TArgs ... args)
+    {
+        static_assert(std::is_base_of_v<WidgetMixin<TTheme, TWidget>, TWidget<TTheme>>, "WidgetMixin<TTheme, TWidget> is not a base of TWidget<TTheme>.");
+
+        auto widgetDataMixin = std::make_unique<WidgetDataMixin<TTheme, TWidget>>(m_data.GetCanvas(), this);
+        auto* widgetDataMixinPointer = widgetDataMixin.get();
+        
+        auto widgetDataIt = m_widgetTree.Insert(lane, iterator, std::move(widgetDataMixin));
+
+        auto widget = std::make_unique<TWidget<TTheme>>(*widgetDataMixinPointer, args...);
+        auto* widgetPointer = widget.get();
+
+        auto widgetSkin = GetTheme().template Create<TWidget>(*widgetPointer, *widgetDataMixinPointer);
+
+        widgetDataMixinPointer->InitializeMixin(
+            &m_widgetTree,
+            widgetDataIt,
+            std::move(widget),
+            std::move(widgetSkin),
+            CreateChildMouseEventFunction(widgetPointer, parent));
+
+        if(parent)
+        {
+            auto& parentWidgetData = parent->GetData();
+            parentWidgetData.GetWidget()->OnAddChild(*widgetDataMixinPointer);
+        }
+
+        return widgetPointer;
+    }
+
+    template<typename TTheme>
+    template<template<typename> typename TWidget>
+    typename WidgetData<TTheme>::MouseEventFunction Layer<TTheme>::CreateChildMouseEventFunction(
+        TWidget<TTheme>* child,
+        Widget<TTheme>* parent)
+    {
+        //if (parentEventHandler && parentWidget->GetOverrideChildrenMouseEvents())
+        //{
+        //    if constexpr (std::is_base_of_v<WidgetEventHandler, TWidget<TTheme>>)
+        //    {
+        //        /*auto* eventHandler = static_cast<WidgetEventHandler*>(widget.get());
+        //        widgetData->mouseEventFunction =
+        //            [handler = eventHandler, widget = widget.get(), parentHandler = parentEventHandler, parent = parentWidget]
+        //        (const WidgetEvent& widgetEvent)->Widget<TTheme>*
+        //        {
+        //            if (parentHandler->HandleEvent(widgetEvent))
+        //            {
+        //                return parent;
+        //            }
+        //            handler->HandleEvent(widgetEvent);
+        //            return widget;
+        //        };*/
+        //    }
+        //    else
+        //    {
+        //       /* widgetData->mouseEventFunction = [parentHandler = parentEventHandler, parent = parentWidget](const WidgetEvent& widgetEvent)  -> Widget<TTheme>*
+        //        {
+        //            parentHandler->HandleEvent(widgetEvent);
+        //            return parent;
+        //        };*/
+        //    }
+        //}
+        //else
+        //{
+        //    if constexpr (std::is_base_of_v<WidgetEventHandler, TWidget<TTheme>>)
+        //    {
+        //       /* auto* eventHandler = static_cast<WidgetEventHandler*>(widget.get());
+        //        widgetData->mouseEventFunction = [handler = eventHandler, widget = widget.get()](const WidgetEvent& widgetEvent)->Widget<TTheme>*
+        //        {
+        //            handler->HandleEvent(widgetEvent);
+        //            return widget;
+        //        };*/
+        //    }
+        //}
+
+        /*return [](const WidgetMouseEvent&) -> Widget<TTheme>*
+        {
+            return nullptr;
+        };*/
+
+        return nullptr;
+    }
    
 }

@@ -47,19 +47,16 @@ namespace Molten::Gui
     }
 
     template<typename TTheme>
-    bool Button<TTheme>::HandleEvent(const WidgetEvent& widgetEvent)
+    bool Button<TTheme>::OnMouseEvent(const WidgetMouseEvent& widgetMouseEvent)
     {
-        if (widgetEvent.type == WidgetEventType::Mouse)
+        switch (widgetMouseEvent.type)
         {
-            switch (widgetEvent.subType)
-            {
-                case WidgetEventSubType::MouseEnter: SetSkinState(m_pressed ? State::Pressed : State::Hovered); return true;
-                case WidgetEventSubType::MouseLeave: SetSkinState(m_pressed ? State::Pressed : State::Normal); return true;
-                case WidgetEventSubType::MouseButtonPressed: SetSkinState(State::Pressed); m_pressed = true; return true;
-                case WidgetEventSubType::MouseButtonReleasedIn: SetSkinState(State::Hovered); onPress(0); m_pressed = false; return true;
-                case WidgetEventSubType::MouseButtonReleasedOut: SetSkinState(State::Normal); m_pressed = false; return true;
-                default: break;
-            }
+            case WidgetMouseEventType::MouseEnter: SetSkinState(m_pressed ? State::Pressed : State::Hovered); return true;
+            case WidgetMouseEventType::MouseLeave: SetSkinState(m_pressed ? State::Pressed : State::Normal); return true;
+            case WidgetMouseEventType::MouseButtonPressed: SetSkinState(State::Pressed); m_pressed = true; return true;
+            case WidgetMouseEventType::MouseButtonReleasedIn: SetSkinState(State::Hovered); onPress(0); m_pressed = false; return true;
+            case WidgetMouseEventType::MouseButtonReleasedOut: SetSkinState(State::Normal); m_pressed = false; return true;
+            default: break;
         }
         return false;
     }

@@ -281,7 +281,7 @@ namespace Molten
 
     template<typename T>
     BypassTreeItem<T>::BypassTreeItem(List& parent, T&& value) :
-        m_value(value),
+        m_value(std::move(value)),
         m_parent(&parent)
     {}
 

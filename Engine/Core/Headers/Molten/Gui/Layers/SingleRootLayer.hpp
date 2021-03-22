@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,42 +23,37 @@
 *
 */
 
-#ifndef MOLTEN_CORE_GUI_GUITYPES_HPP
-#define MOLTEN_CORE_GUI_GUITYPES_HPP
 
-#include "Molten/Types.hpp"
-#include <memory>
+#ifndef MOLTEN_CORE_GUI_LAYERS_SINGLEEROOTGLAYER_HPP
+#define MOLTEN_CORE_GUI_LAYERS_SINGLEEROOTGLAYER_HPP
+
+#include "Molten/Gui/Layer.hpp"
 
 namespace Molten::Gui
 {
 
     template<typename TTheme>
-    class Canvas;
-    template<typename TTheme>
-    using CanvasPointer = std::shared_ptr<Canvas<TTheme>>;
+    class SingleRootLayer : public Layer<TTheme>
+    {
 
-    class CanvasRenderer;
-    using CanvasRendererPointer = std::shared_ptr<CanvasRenderer>;
+    public:
 
-    template<typename TTheme>
-    class Layer;
+        SingleRootLayer(
+            TTheme& theme,
+            LayerData<TTheme>& data);
+        ~SingleRootLayer() override = default;
 
-    template<typename TTheme>
-    using LayerPointer = std::shared_ptr<Layer<TTheme>>;
-    
-    template<typename TLayerType>
-    using LayerTypePointer = std::shared_ptr<TLayerType>;
+        SingleRootLayer(SingleRootLayer&&) = delete;
+        SingleRootLayer(const SingleRootLayer&) = delete;
+        SingleRootLayer& operator= (SingleRootLayer&&) = delete;
+        SingleRootLayer& operator= (const SingleRootLayer&) = delete;
 
-    template<typename TTheme>
-    class Widget;
-    template<typename TTheme>
-    using WidgetPointer = std::shared_ptr<Widget<TTheme>>;
+        bool AllowsMultipleRoots() override;
 
-    template<typename TWidget>
-    using WidgetTypePointer = std::shared_ptr<TWidget>;
-
-    class WidgetEventHandler;
+    };
 
 }
+
+#include "Molten/Gui/Layers/SingleRootLayer.inl"
 
 #endif

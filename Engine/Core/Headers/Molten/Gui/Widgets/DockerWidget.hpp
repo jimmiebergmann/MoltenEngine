@@ -53,7 +53,7 @@ namespace Molten::Gui
     };
 
     template<typename TTheme>
-    class Docker : public WidgetMixin<TTheme, Docker>, public WidgetEventHandler
+    class Docker : public WidgetMixin<TTheme, Docker>, public WidgetMouseEventHandler
     {
 
     public:
@@ -97,13 +97,15 @@ namespace Molten::Gui
         explicit Docker(WidgetDataMixin<TTheme, Docker>& data);
 
         template<template<typename> typename TWidget, typename ... TArgs>
-        WidgetTypePointer<TWidget<TTheme>> CreateChild(
+        TWidget<TTheme>* CreateChild(
             const DockingPosition position,
             const bool dynamic,
             TArgs ... args);
 
         void Update() override;
-        bool HandleEvent(const WidgetEvent& widgetEvent) override;
+
+        bool OnMouseEvent(const WidgetMouseEvent& widgetMouseEvent) override;
+
         void OnAddChild(WidgetData<TTheme>& childData) override;
 
     private:
@@ -341,18 +343,18 @@ namespace Molten::Gui
         void ActivateEdgeDragUpdate(Edge* pressedEdge, const Vector2f32& mousePosition);
         void ActivateLeafDragUpdate(Leaf* pressedLeaf, const Vector2f32& mousePosition);
 
-        bool HandleNormalMouseEvent(const WidgetEvent& widgetEvent);
-        bool HandleEdgeDragMouseEvent(const WidgetEvent& widgetEvent);
-        bool HandleLeafDragMouseEvent(const WidgetEvent& widgetEvent);
+        bool HandleNormalMouseEvent(const WidgetMouseEvent& widgetMouseEvent);
+        bool HandleEdgeDragMouseEvent(const WidgetMouseEvent& widgetMouseEvent);
+        bool HandleLeafDragMouseEvent(const WidgetMouseEvent& widgetMouseEvent);
 
-        bool HandleNormalMousePressEvent(const WidgetEvent::MouseEvent& mouseEvent);
-        bool HandleNormalMouseMoveEvent(const WidgetEvent::MouseEvent& mouseEvent);
+        bool HandleNormalMousePressEvent(const WidgetMouseEvent& widgetMouseEvent);
+        bool HandleNormalMouseMoveEvent(const WidgetMouseEvent& widgetMouseEvent);
 
-        bool HandleEdgeDragMouseMoveEvent(const WidgetEvent::MouseEvent& mouseEvent);
-        bool HandleEdgeDragMouseReleaseEvent(const WidgetEvent::MouseEvent& mouseEvent);
+        bool HandleEdgeDragMouseMoveEvent(const WidgetMouseEvent& widgetMouseEvent);
+        bool HandleEdgeDragMouseReleaseEvent(const WidgetMouseEvent& widgetMouseEvent);
 
-        bool HandleLeafDragMouseMoveEvent(const WidgetEvent::MouseEvent& mouseEvent);
-        bool HandleLeafDragMouseReleaseEvent(const WidgetEvent::MouseEvent& mouseEvent);
+        bool HandleLeafDragMouseMoveEvent(const WidgetMouseEvent& widgetMouseEvent);
+        bool HandleLeafDragMouseReleaseEvent(const WidgetMouseEvent& widgetMouseEvent);
 
         template<Direction VEdgeDirection>
         bool HandleDirectionalEdgeMovement(Edge& edge, float movement);
@@ -429,13 +431,12 @@ namespace Molten::Gui
             bool dragIsActivated;
         };
 
-
         typename State::Type m_stateType;
         Mouse::Cursor m_currentCursor;
         ElementPointer m_rootElement;
         
         // Updates.
-        bool(Docker<TTheme>::* m_mouseInputUpdateFunc)(const WidgetEvent&);
+        bool(Docker<TTheme>::* m_mouseInputUpdateFunc)(const WidgetMouseEvent&);
         bool m_forceUpdateBounds;
         Bounds2f32 m_oldGrantedBounds;      
         
