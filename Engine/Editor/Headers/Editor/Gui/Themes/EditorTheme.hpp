@@ -112,11 +112,20 @@ namespace Molten::Gui
             WidgetSkinMixin<EditorTheme, Docker>(descriptor)
         {}
 
-        void DrawLeafDocking()
-        {
-            theme.m_canvasRenderer.DrawRect(GetState().leafDragState.dockingBounds, Vector4f32{ 0.4f, 0.4f, 1.0f, 0.4f });
-        }
+    };
 
+    template<>
+    struct WidgetSkin<EditorTheme, DockerOverlay> : WidgetSkinMixin<EditorTheme, DockerOverlay>
+    {
+        WidgetSkin(const WidgetSkinDescriptor<EditorTheme, DockerOverlay>& descriptor) :
+            WidgetSkinMixin<EditorTheme, DockerOverlay>(descriptor)
+        {}
+
+        void Draw() override
+        {
+            const Bounds2f32 overlayBounds = { widget.position, widget.position + widget.size };
+            theme.m_canvasRenderer.DrawRect(overlayBounds, Vector4f32{ 0.4f, 0.4f, 1.0f, 0.4f });
+        }
     };
 
     template<>

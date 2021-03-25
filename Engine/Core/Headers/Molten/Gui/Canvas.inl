@@ -36,6 +36,7 @@ namespace Molten::Gui
         m_theme(m_canvasRenderer),
         m_overlayLayer(nullptr),
         m_widgetOverrideMouseEvents(nullptr),
+        m_buttonOverrideMouseEvents(Mouse::Button::Left),
         m_mouseInputUpdate(&Canvas<TTheme>::UpdateNormalMouseInputs)     
     {
         auto normalLane = m_layers.template GetLane<typename LayerData<TTheme>::ListNormalLaneType>();
@@ -107,149 +108,31 @@ namespace Molten::Gui
         return m_scale;
     }
 
-    /*
-    template<typename TTheme>
-    template<template<typename> typename TWidget, typename ... TArgs>
-    WidgetTypePointer<TWidget<TTheme>> Canvas<TTheme>::CreateChild(TArgs ... args)
-    {
-        constexpr bool usingWidgetMixin = std::is_base_of_v<WidgetMixin<TTheme, TWidget>, TWidget<TTheme>>;
-        constexpr bool usingWidgetSkinMixin = std::is_base_of_v<WidgetSkinMixin<TTheme, TWidget>, WidgetSkin<TTheme, TWidget>>;
-
-        static_assert(std::is_base_of_v<Widget<TTheme>, TWidget<TTheme>>, "TWidget is not base of Widget<TTheme>.");
-        static_assert(!usingWidgetMixin || usingWidgetSkinMixin, "Using TWidgetMixin but WidgetSkinMixin<TTheme, TWidget> is not base of WidgetSkin<TTheme, TWidget>.");
-
-        using WidgetDataType = std::conditional_t<usingWidgetMixin, WidgetDataMixin<TTheme, TWidget>, WidgetData<TTheme>>;
-
-        auto normalLane = m_widgetTree.template GetLane<typename WidgetData<TTheme>::TreeNormalLaneType>();
-        auto partialLane = m_widgetTree.template GetLane<typename WidgetData<TTheme>::TreePartialLaneType>();
-
-        if (!normalLane.IsEmpty())
-        {
-            return nullptr;
-        }
-
-        auto widgetData = std::make_shared<WidgetDataType>();
-        auto widget = std::make_shared<TWidget<TTheme>>(*widgetData, args...);
-
-        widgetData->canvas = this;
-        widgetData->layer = nullptr;
-        widgetData->tree = &m_widgetTree;
-        widgetData->iterator = m_widgetTree.Insert(partialLane, normalLane.end(), widgetData);
-        widgetData->widget = widget;
-        
-        auto widgetSkin = m_theme.template Create<TWidget>(*widget, *widgetData);
-        if constexpr (usingWidgetMixin == true)
-        {
-            widgetData->widgetSkinMixin = widgetSkin.get();
-        }
-        widgetData->widgetSkin = std::move(widgetSkin);
-
-        if constexpr (std::is_base_of_v<WidgetEventHandler, TWidget<TTheme>>)
-        {
-            auto* eventHandler = static_cast<WidgetEventHandler*>(widget.get());
-            widgetData->mouseEventFunction = [handler = eventHandler, widget = widget.get()](const WidgetEvent& widgetEvent) -> Widget<TTheme>*
-            {
-                handler->HandleEvent(widgetEvent);
-                return widget;
-            };
-        }
-
-        return widget;
-    }
-
-    template<typename TTheme>
-    template<template<typename> typename TWidget, typename ... TArgs>
-    WidgetTypePointer<TWidget<TTheme>> Canvas<TTheme>::CreateChild(Widget<TTheme>& parent, TArgs ... args)
-    {
-        constexpr bool usingWidgetMixin = std::is_base_of_v<WidgetMixin<TTheme, TWidget>, TWidget<TTheme>>;
-        constexpr bool usingWidgetSkinMixin = std::is_base_of_v<WidgetSkinMixin<TTheme, TWidget>, WidgetSkin<TTheme, TWidget>>;
-
-        static_assert(std::is_base_of_v<Widget<TTheme>, TWidget<TTheme>>, "TWidget is not base of Widget<TTheme>.");
-        static_assert(!usingWidgetMixin || usingWidgetSkinMixin, "Using TWidgetMixin but WidgetSkinMixin<TTheme, TWidget> is not base of WidgetSkin<TTheme, TWidget>.");
-
-        using WidgetDataType = std::conditional_t<usingWidgetMixin, WidgetDataMixin<TTheme, TWidget>, WidgetData<TTheme>>;
-
-        auto& parentData = parent.GetData();
-        auto* parentTreeItem = std::addressof(*parentData.iterator);
-        auto normalLane = parentTreeItem->GetChildren().template GetLane<typename WidgetData<TTheme>::TreeNormalLaneType>();
-        auto partialLane = parentTreeItem->GetChildren().template GetLane<typename WidgetData<TTheme>::TreePartialLaneType>();
-
-        auto widgetData = std::make_shared<WidgetDataType>();
-        auto widget = std::make_shared<TWidget<TTheme>>(*widgetData, args...);
-        
-        widgetData->canvas = this;
-        widgetData->layer = nullptr;
-        widgetData->tree = &m_widgetTree;
-        widgetData->iterator = m_widgetTree.Insert(partialLane, normalLane.end(), widgetData);
-        widgetData->widget = widget;  
-
-        auto widgetSkin = m_theme.template Create<TWidget>(*widget, *widgetData);
-        if constexpr (usingWidgetMixin == true)
-        {
-            widgetData->widgetSkinMixin = widgetSkin.get();
-        }
-        widgetData->widgetSkin = std::move(widgetSkin);
-
-        parentData.widget->OnAddChild(*widgetData);
-
-        auto* parentWidget = parentData.widget.get();
-        auto* parentEventHandler = dynamic_cast<WidgetEventHandler*>(parentWidget);
-        if (parentEventHandler && parentWidget->GetOverrideChildrenMouseEvents())
-        {
-            if constexpr (std::is_base_of_v<WidgetEventHandler, TWidget<TTheme>>)
-            {
-                auto* eventHandler = static_cast<WidgetEventHandler*>(widget.get());
-                widgetData->mouseEventFunction = 
-                    [handler = eventHandler, widget = widget.get(), parentHandler = parentEventHandler, parent = parentWidget]
-                    (const WidgetEvent& widgetEvent)  -> Widget<TTheme>*
-                    {
-                        if (parentHandler->HandleEvent(widgetEvent))
-                        {
-                            return parent;
-                        }
-                        handler->HandleEvent(widgetEvent);
-                        return widget;
-                    };
-            }
-            else
-            {
-                widgetData->mouseEventFunction = [parentHandler = parentEventHandler, parent = parentWidget](const WidgetEvent& widgetEvent)  -> Widget<TTheme>*
-                {
-                    parentHandler->HandleEvent(widgetEvent);
-                    return parent;
-                };
-            }
-        }  
-        else 
-        {
-            if constexpr (std::is_base_of_v<WidgetEventHandler, TWidget<TTheme>>)
-            {
-                auto* eventHandler = static_cast<WidgetEventHandler*>(widget.get());
-                widgetData->mouseEventFunction = [handler = eventHandler, widget = widget.get()](const WidgetEvent& widgetEvent)->Widget<TTheme>*
-                {
-                    handler->HandleEvent(widgetEvent);
-                    return widget;
-                };
-            }
-        }
-
-        return widget;
-    }*/
-
     template<typename TTheme>
     template<template<typename> typename TLayer, typename ... TArgs>
     TLayer<TTheme>* Canvas<TTheme>::CreateLayer(const LayerPosition position, TArgs ... args)
     {
         auto normalLane = m_layers.template GetLane<typename LayerData<TTheme>::ListNormalLaneType>();
-        auto insertPosition = position == LayerPosition::Bottom ? normalLane.begin() : --normalLane.end();
+        auto insertPosition = position == LayerPosition::Bottom ? normalLane.begin() : (normalLane.GetSize() > 0 ? std::prev(normalLane.end()) : normalLane.end());
         return InternalCreateLayer<TLayer>(insertPosition, args...);
     }
 
     template<typename TTheme>
-    void Canvas<TTheme>::OverrideMouseEventsUntilMouseRelease(Widget<TTheme>& widget)
+    template<template<typename> typename TWidget, typename ... TArgs>
+    ManagedWidget<TTheme, TWidget> Canvas<TTheme>::CreateOverlayChild(TArgs ... args)
+    {
+        auto* widget = m_overlayLayer->template CreateChild<TWidget>();
+        return { *m_overlayLayer, *widget };
+    }
+
+    template<typename TTheme>
+    void Canvas<TTheme>::OverrideMouseEventsUntilMouseRelease(
+        Widget<TTheme>& widget,
+        Mouse::Button button)
     {
         m_mouseInputUpdate = &Canvas<TTheme>::UpdateModalMouseInputs;
         m_widgetOverrideMouseEvents = &widget;
+        m_buttonOverrideMouseEvents = button;
     }
 
     template<typename TTheme>
@@ -326,137 +209,47 @@ namespace Molten::Gui
             }
         }
 
-        if(m_multiLayerRepository.hoveredWidget)
+        if(m_multiLayerRepository.hoveredWidgetData)
         {
-
-
-            m_multiLayerRepository.hoveredWidget = nullptr;
+            m_multiLayerRepository.ResetHoveredWidget(mouseEvent.mouseMoveEvent.position);
         }
     }
 
     template<typename TTheme>
     void Canvas<TTheme>::HandleNormalMouseButtonPressed(const UserInput::Event& mouseEvent)
     {
-
+        auto layerPartialLane = m_layers.template GetLane<typename LayerData<TTheme>::ListPartialLaneType>();
+        for (auto it = layerPartialLane.rbegin(); it != layerPartialLane.rend(); it++)
+        {
+            auto& layerData = *it;
+            if (layerData->GetLayer()->HandleUserInput(mouseEvent, m_multiLayerRepository))
+            {
+                return;
+            }
+        }
     }
 
     template<typename TTheme>
     void Canvas<TTheme>::HandleNormalMouseButtonReleased(const UserInput::Event& mouseEvent)
     {
-
+        auto layerPartialLane = m_layers.template GetLane<typename LayerData<TTheme>::ListPartialLaneType>();
+        for (auto it = layerPartialLane.rbegin(); it != layerPartialLane.rend(); it++)
+        {
+            auto& layerData = *it;
+            if (layerData->GetLayer()->HandleUserInput(mouseEvent, m_multiLayerRepository))
+            {
+                return;
+            }
+        }
     }
-
-
-    /*
-    
-     */
-
-    //template<typename TTheme>
-    //void Canvas<TTheme>::HandleTreeMouseMove(const UserInput::Event& mouseEvent)
-    //{
-    //    /*bool hitWidget = false;
-
-    //    m_widgetTree.template ForEachReversePreorder<typename WidgetData<TTheme>::TreePartialLaneType>(
-    //        [&](auto& widgetData)
-    //    {
-    //        if (!widgetData->mouseEventFunction)
-    //        {
-    //            return true;
-    //        }
-
-    //        hitWidget = true;
-
-    //        if (widgetData->GetGrantedBounds().Intersects(mouseEvent.mouseMoveEvent.position))
-    //        {
-    //            HandleMouseMoveTriggers(*widgetData, mouseEvent.mouseMoveEvent.position);
-    //            return false;
-    //        }
-
-    //        return true;
-    //    });
-
-    //    if (!hitWidget && m_hoveredWidget)
-    //    {
-    //        TriggerMouseMoveEvent(m_hoveredWidget->GetData(), mouseEvent.mouseMoveEvent.position, WidgetEventSubType::MouseLeave);
-    //        m_hoveredWidget = nullptr;
-    //    }*/
-    //}
-
-    //template<typename TTheme>
-    //void Canvas<TTheme>::HandleTreeMouseButtonPressed(const UserInput::Event& mouseEvent)
-    //{
-    //    /*bool hitWidget = false;
-
-    //    m_widgetTree.template ForEachReversePreorder<typename WidgetData<TTheme>::TreePartialLaneType>(
-    //        [&](auto& widgetData)
-    //    {
-    //        if (widgetData->GetGrantedBounds().Intersects(mouseEvent.mouseButtonEvent.position))
-    //        {
-    //            if (!widgetData->mouseEventFunction)
-    //            {
-    //                return true;
-    //            }
-
-    //            hitWidget = true;
-
-    //            HandleMouseMoveTriggers(*widgetData, mouseEvent.mouseButtonEvent.position);
-
-    //            WidgetEvent widgetEvent;
-    //            widgetEvent.type = WidgetEventType::Mouse;
-    //            widgetEvent.subType = WidgetEventSubType::MouseButtonPressed;
-    //            widgetEvent.mouseEvent.position = mouseEvent.mouseButtonEvent.position;
-    //            widgetEvent.mouseEvent.button = mouseEvent.mouseButtonEvent.button;
-    //            m_pressedWidget = widgetData->mouseEventFunction(widgetEvent);
-
-    //            return false;
-    //        }
-
-    //        if (!hitWidget && m_hoveredWidget)
-    //        {
-    //            TriggerMouseMoveEvent(m_hoveredWidget->GetData(), mouseEvent.mouseMoveEvent.position, WidgetEventSubType::MouseLeave);
-    //            m_hoveredWidget = nullptr;
-    //        }
-
-    //        return true;
-    //    });*/
-    //}
-
-    //template<typename TTheme>
-    //void Canvas<TTheme>::HandleTreeMouseButtonReleased(const UserInput::Event& mouseEvent)
-    //{
-    //    /*if (!m_pressedWidget)
-    //    {
-    //        return;
-    //    }
-
-    //    WidgetEvent widgetEvent;
-    //    widgetEvent.type = WidgetEventType::Mouse;
-    //    widgetEvent.mouseEvent.button = mouseEvent.mouseButtonEvent.button;
-    //    widgetEvent.mouseEvent.position = mouseEvent.mouseButtonEvent.position;
-
-    //    auto& widgetData = m_pressedWidget->GetData();
-
-    //    if (widgetData.GetGrantedBounds().Intersects(mouseEvent.mouseButtonEvent.position))
-    //    {
-    //        widgetEvent.subType = WidgetEventSubType::MouseButtonReleasedIn;
-    //    }
-    //    else
-    //    {
-    //        widgetEvent.subType = WidgetEventSubType::MouseButtonReleasedOut;
-    //    }
-
-    //    widgetData.GetMouseEventFunction()(widgetEvent);
-
-    //    m_pressedWidget = nullptr;*/
-    //}
 
     template<typename TTheme>
     void Canvas<TTheme>::UpdateModalMouseInputs(const UserInput::Event& mouseEvent)
     {
-        /*if (m_widgetOverrideMouseEvents == nullptr)
+        if (m_widgetOverrideMouseEvents == nullptr)
         {
             m_mouseInputUpdate = &Canvas<TTheme>::UpdateModalMouseInputs;
-            UpdateTreeMouseInputs(mouseEvent);
+            UpdateNormalMouseInputs(mouseEvent);
         }
 
         switch (mouseEvent.subType)
@@ -465,78 +258,34 @@ namespace Molten::Gui
             case UserInput::EventSubType::MouseButtonPressed: HandleModalMouseButtonPressed(mouseEvent); break;
             case UserInput::EventSubType::MouseButtonReleased: HandleModalMouseButtonReleased(mouseEvent); break;
             default: break;
-        }*/
+        }
     }
 
-    //template<typename TTheme>
-    //void Canvas<TTheme>::HandleModalMouseMove(const UserInput::Event& mouseEvent)
-    //{
-    //    const auto& position = mouseEvent.mouseMoveEvent.position;
-    //    TriggerMouseMoveEvent(m_pressedWidget->GetData(), position, WidgetEventSubType::MouseMove);
-    //}
-    //
-    //template<typename TTheme>
-    //void Canvas<TTheme>::HandleModalMouseButtonPressed(const UserInput::Event& mouseEvent)
-    //{
-    //    // Nothing here.
-    //}
-    //
-    //template<typename TTheme>
-    //void Canvas<TTheme>::HandleModalMouseButtonReleased(const UserInput::Event& mouseEvent)
-    //{
-    //    /*OverrideMouseEventsReset();
+    template<typename TTheme>
+    void Canvas<TTheme>::HandleModalMouseMove(const UserInput::Event& mouseEvent)
+    {
+        auto& mouseMoveEvent = mouseEvent.mouseMoveEvent;
+        m_multiLayerRepository.HandleMouseMove(&m_widgetOverrideMouseEvents->GetData(), mouseMoveEvent.position);
+    }
 
-    //    if (!m_pressedWidget)
-    //    {
-    //        return;
-    //    }
+    template<typename TTheme>
+    void Canvas<TTheme>::HandleModalMouseButtonPressed(const UserInput::Event& mouseEvent)
+    {
+        auto& mouseButtonEvent = mouseEvent.mouseButtonEvent;
+        m_multiLayerRepository.HandleMouseButtonPress(&m_widgetOverrideMouseEvents->GetData(), mouseButtonEvent.position, mouseButtonEvent.button);
+    }
 
-    //    WidgetEvent widgetEvent;
-    //    widgetEvent.type = WidgetEventType::Mouse;
-    //    widgetEvent.mouseEvent.button = mouseEvent.mouseButtonEvent.button;
-    //    widgetEvent.mouseEvent.position = mouseEvent.mouseButtonEvent.position;
+    template<typename TTheme>
+    void Canvas<TTheme>::HandleModalMouseButtonReleased(const UserInput::Event& mouseEvent)
+    {
+        auto& mouseButtonEvent = mouseEvent.mouseButtonEvent;
+        m_multiLayerRepository.HandleMouseButtonRelease(mouseButtonEvent.position, mouseButtonEvent.button);
+        
+        if (mouseEvent.mouseButtonEvent.button == m_buttonOverrideMouseEvents)
+        {
+            OverrideMouseEventsReset();
+        }
 
-    //    auto& widgetData = m_pressedWidget->GetData();
-
-    //    if (widgetData.GetGrantedBounds().Intersects(mouseEvent.mouseButtonEvent.position))
-    //    {
-    //        widgetEvent.subType = WidgetEventSubType::MouseButtonReleasedIn;
-    //    }
-    //    else
-    //    {
-    //        widgetEvent.subType = WidgetEventSubType::MouseButtonReleasedOut;
-    //    }
-
-    //    widgetData.CallMouseEventFunction(widgetEvent);
-
-    //    m_pressedWidget = nullptr;*/
-    //}
-
-    //template<typename TTheme>
-    //void Canvas<TTheme>::HandleMouseMoveTriggers(WidgetData<TTheme>& widgetData, const Vector2i32& position)
-    //{
-    //    /*if (m_hoveredWidget != widgetData.widget)
-    //    {
-    //        if (m_hoveredWidget)
-    //        {
-    //            TriggerMouseMoveEvent(m_hoveredWidget->GetData(), position, WidgetEventSubType::MouseLeave);
-    //        }
-
-    //        TriggerMouseMoveEvent(widgetData, position, WidgetEventSubType::MouseEnter);
-    //    }
-
-    //    TriggerMouseMoveEvent(widgetData, position, WidgetEventSubType::MouseMove);
-    //    m_hoveredWidget = widgetData.widget;*/
-    //}
-
-    //template<typename TTheme>
-    //void Canvas<TTheme>::TriggerMouseMoveEvent(WidgetData<TTheme>& widgetData, const Vector2f32& position, const WidgetEventSubType subType)
-    //{
-    //    /*WidgetEvent widgetEvent;
-    //    widgetEvent.type = WidgetEventType::Mouse;
-    //    widgetEvent.subType = subType;
-    //    widgetEvent.mouseEvent.position = position;
-    //    widgetData.CallMouseEventFunction(widgetEvent);*/
-    //}
+    }
 
 }

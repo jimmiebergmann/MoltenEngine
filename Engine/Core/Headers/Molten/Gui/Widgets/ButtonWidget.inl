@@ -51,14 +51,14 @@ namespace Molten::Gui
     {
         switch (widgetMouseEvent.type)
         {
-            case WidgetMouseEventType::MouseEnter: SetSkinState(m_pressed ? State::Pressed : State::Hovered); return true;
-            case WidgetMouseEventType::MouseLeave: SetSkinState(m_pressed ? State::Pressed : State::Normal); return true;
-            case WidgetMouseEventType::MouseButtonPressed: SetSkinState(State::Pressed); m_pressed = true; return true;
-            case WidgetMouseEventType::MouseButtonReleasedIn: SetSkinState(State::Hovered); onPress(0); m_pressed = false; return true;
-            case WidgetMouseEventType::MouseButtonReleasedOut: SetSkinState(State::Normal); m_pressed = false; return true;
-            default: break;
+            case WidgetMouseEventType::MouseMove: break;
+            case WidgetMouseEventType::MouseEnter: SetSkinState(m_pressed ? State::Pressed : State::Hovered); break;
+            case WidgetMouseEventType::MouseLeave: SetSkinState(m_pressed ? State::Pressed : State::Normal); break;
+            case WidgetMouseEventType::MouseButtonPressed: SetSkinState(State::Pressed); m_pressed = true; break;
+            case WidgetMouseEventType::MouseButtonReleasedIn: SetSkinState(State::Hovered); onPress(0); m_pressed = false; break;
+            case WidgetMouseEventType::MouseButtonReleasedOut: SetSkinState(State::Normal); m_pressed = false; break;
         }
-        return false;
+        return true;
     }
 
 }

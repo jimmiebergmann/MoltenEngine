@@ -33,7 +33,7 @@ namespace Molten::Gui
     class WidgetData;
 
     template<typename TTheme, template<typename> typename TWidget>
-    struct WidgetSkin;
+    struct WidgetSkin {};
 
 
     template<typename TTheme, template<typename> typename TWidget>

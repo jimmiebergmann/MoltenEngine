@@ -31,7 +31,8 @@
 #include "Molten/Math/Vector.hpp"
 #include "Molten/System/Time.hpp"
 #include "Molten/System/UserInput.hpp"
-#include <memory>
+#include <vector>
+#include <algorithm>
 
 namespace Molten::Gui
 {
@@ -46,10 +47,35 @@ namespace Molten::Gui
     template<typename TTheme>
     struct MultiLayerRepository
     {
+        struct PressedWidget
+        {
+            PressedWidget(
+                WidgetData<TTheme>* widgetData,
+                Mouse::Button button);
+
+            WidgetData<TTheme>* widgetData;
+            Mouse::Button button;
+        };
+
         MultiLayerRepository();
 
-        Widget<TTheme>* hoveredWidget;
-        Widget<TTheme>* pressedWidget;
+        bool HandleMouseMove(
+            WidgetData<TTheme>* widgetData,
+            const Vector2f32& position);
+
+        bool HandleMouseButtonPress(
+            WidgetData<TTheme>* widgetData,
+            const Vector2f32& position,
+            const Mouse::Button button);
+
+        bool HandleMouseButtonRelease(
+            const Vector2f32& position,
+            const Mouse::Button button);
+
+        void ResetHoveredWidget(const Vector2f32& position);
+
+        WidgetData<TTheme>* hoveredWidgetData;
+        std::vector<PressedWidget> pressedWidgets;
     };
 
     /** Layer base class. Layers should inherit from LayerMixin instead of this class template.*/
@@ -120,6 +146,16 @@ namespace Molten::Gui
         [[nodiscard]] typename WidgetData<TTheme>::MouseEventFunction CreateChildMouseEventFunction(
             TWidget<TTheme>* child,
             Widget<TTheme>* parent);
+
+        bool HandleMouseMoveEvent(
+            const UserInput::MouseMoveEvent& mouseMoveEvent,
+            MultiLayerRepository<TTheme>& multiLayerRepository);
+        bool HandleMouseButtonPressedEvent(
+            const UserInput::MouseButtonEvent& mouseButtonEvent,
+            MultiLayerRepository<TTheme>& multiLayerRepository);
+        bool HandleMouseButtonReleasedEvent(
+            const UserInput::MouseButtonEvent& mouseButtonEvent,
+            MultiLayerRepository<TTheme>& multiLayerRepository);
 
         TTheme& m_theme;
         LayerData<TTheme>& m_data;       

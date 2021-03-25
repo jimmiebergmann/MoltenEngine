@@ -53,6 +53,9 @@ namespace Molten::Gui
     };
 
     template<typename TTheme>
+    class DockerOverlay;
+
+    template<typename TTheme>
     class Docker : public WidgetMixin<TTheme, Docker>, public WidgetMouseEventHandler
     {
 
@@ -237,7 +240,7 @@ namespace Molten::Gui
 
             [[nodiscard]] EdgePointer InsertElement(
                 ElementPointer&& element,
-                const DockingPosition position);
+                const DockingPosition dockingPosition);
 
             [[nodiscard]] std::pair<ElementPointer, Edge*> Extract();
 
@@ -273,7 +276,7 @@ namespace Molten::Gui
 
             EdgePointer InsertElementInGrid(
                 ElementPointer&& element,
-                const ElementPosition position);
+                const ElementPosition dockingPosition);
 
             EdgePointer InsertElementInGrid(
                 ElementPointer&& element,
@@ -282,7 +285,7 @@ namespace Molten::Gui
             EdgePointer InsertElementInParentGrid(
                 ElementPointer&& element,
                 Element* neighborElement,
-                const ElementPosition position);
+                const ElementPosition dockingPosition);
 
             void AddDynamicElementFromParents(Element* element);
             void RemoveDynamicElementFromParents(Element* element);
@@ -315,7 +318,7 @@ namespace Molten::Gui
         struct PendingLeafInsert
         {
             PendingLeafInsert(
-                const DockingPosition position,
+                const DockingPosition dockingPosition,
                 const bool isDynamic,
                 WidgetData<TTheme>* widgetData);
 
@@ -331,8 +334,8 @@ namespace Molten::Gui
 
         ElementPointer ExtractElement(Element* element);
 
-        static constexpr Direction GetInsertDirection(DockingPosition position);
-        static constexpr ElementPosition GetInsertPosition(DockingPosition position);
+        static constexpr Direction GetInsertDirection(DockingPosition dockingPosition);
+        static constexpr ElementPosition GetInsertPosition(DockingPosition dockingPosition);
         /**@}*/
 
         /** Input handling functions. */
@@ -340,8 +343,8 @@ namespace Molten::Gui
         void SetCursor(const Mouse::Cursor cursor);
 
         void ActivateNormalUpdate();
-        void ActivateEdgeDragUpdate(Edge* pressedEdge, const Vector2f32& mousePosition);
-        void ActivateLeafDragUpdate(Leaf* pressedLeaf, const Vector2f32& mousePosition);
+        void ActivateEdgeDragUpdate(Edge* pressedEdge, const Vector2f32& mousePosition, const Mouse::Button butto);
+        void ActivateLeafDragUpdate(Leaf* pressedLeaf, const Vector2f32& mousePosition, const Mouse::Button button);
 
         bool HandleNormalMouseEvent(const WidgetMouseEvent& widgetMouseEvent);
         bool HandleEdgeDragMouseEvent(const WidgetMouseEvent& widgetMouseEvent);
@@ -429,6 +432,7 @@ namespace Molten::Gui
             Leaf* dockingLeaf;
             DockingPosition dockingPosition;
             bool dragIsActivated;
+            ManagedWidget<TTheme, DockerOverlay> overlayWidget;
         };
 
         typename State::Type m_stateType;
@@ -451,6 +455,18 @@ namespace Molten::Gui
         // Leafs.
         std::set<Leaf*> m_leafs;
         LeafDragData m_leafDragData;
+
+    };
+
+
+    template<typename TTheme>
+    class DockerOverlay : public WidgetMixin<TTheme, DockerOverlay>
+    {
+
+    public:
+
+        explicit DockerOverlay(WidgetDataMixin<TTheme, DockerOverlay>& data);
+
 
     };
 

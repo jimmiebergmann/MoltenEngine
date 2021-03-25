@@ -27,7 +27,7 @@
 #define MOLTEN_CORE_GUI_CANVAS_HPP
 
 #include "Molten/Gui/Layers/MultiRootLayer.hpp"
-#include "Molten/Gui/WidgetData.hpp"
+#include "Molten/Gui/Widget.hpp"
 #include "Molten/Gui/WidgetEvent.hpp"
 #include "Molten/Gui/CanvasRenderer.hpp"
 #include "Molten/Math/Vector.hpp"
@@ -72,16 +72,23 @@ namespace Molten::Gui
         [[nodiscard]] const Vector2f32& GetSize() const;
         [[nodiscard]] const Vector2f32& GetScale() const;
 
-        /**
-         * Creates a new layer and inserts it at a given position.
-         */
+        /** Creates a new layer and inserts it at a given position. */
         template<template<typename> typename TLayer, typename ... TArgs>
         [[nodiscard]] TLayer<TTheme>* CreateLayer(const LayerPosition position, TArgs ... args);
+
+        /** Creates a new widget in the overlay layer.
+         * ManagedWidget is automatically destroy and removed from overlay at destruction.
+         */
+        template<template<typename> typename TWidget, typename ... TArgs>
+        [[nodiscard]] ManagedWidget<TTheme, TWidget> CreateOverlayChild(TArgs ... args);
 
         /** This function call makes the provided widget to receive all mouse events, 
          * regardless of child widgets on top being hovered or pressed, until the mouse button is released.
          */
-        void OverrideMouseEventsUntilMouseRelease(Widget<TTheme>& widget);
+        void OverrideMouseEventsUntilMouseRelease(
+            Widget<TTheme>& widget,
+            Mouse::Button button);
+
         void OverrideMouseEventsReset();
 
     private:
@@ -102,12 +109,9 @@ namespace Molten::Gui
         void HandleNormalMouseButtonReleased(const UserInput::Event& mouseEvent);
         
         void UpdateModalMouseInputs(const UserInput::Event& mouseEvent);
-        /*void HandleModalMouseMove(const UserInput::Event& mouseEvent);
+        void HandleModalMouseMove(const UserInput::Event& mouseEvent);
         void HandleModalMouseButtonPressed(const UserInput::Event& mouseEvent);
         void HandleModalMouseButtonReleased(const UserInput::Event& mouseEvent);
-
-        void HandleMouseMoveTriggers(WidgetData<TTheme>& widgetData, const Vector2i32& position);
-        void TriggerMouseMoveEvent(WidgetData<TTheme>& widgetData, const Vector2f32& position, const WidgetEventSubType subType);*/
 
         CanvasRenderer& m_canvasRenderer;
      
@@ -121,6 +125,7 @@ namespace Molten::Gui
         std::vector<UserInput::Event> m_userInputEvents;
         MultiLayerRepository<TTheme> m_multiLayerRepository;
         Widget<TTheme>* m_widgetOverrideMouseEvents;
+        Mouse::Button m_buttonOverrideMouseEvents;
         void(Canvas<TTheme>::* m_mouseInputUpdate)(const UserInput::Event&);
 
     };

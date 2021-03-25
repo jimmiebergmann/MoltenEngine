@@ -163,4 +163,60 @@ namespace Molten::Gui
         m_dataMixin.GetWidgetSkinMixin()->SetState(state);
     }
 
+    // Managed widget implementations.
+    template<typename TTheme, template<typename> typename TWidget>
+    ManagedWidget<TTheme, TWidget>::ManagedWidget() :
+        m_layer(nullptr),
+        m_widget(nullptr)
+    {}
+
+    template<typename TTheme, template<typename> typename TWidget>
+    ManagedWidget<TTheme, TWidget>::ManagedWidget(
+        Layer<TTheme>& layer,
+        TWidget<TTheme>& widget
+    ) :
+        m_layer(&layer),
+        m_widget(&widget)
+    {}
+
+    template<typename TTheme, template<typename> typename TWidget>
+    ManagedWidget<TTheme, TWidget>::~ManagedWidget()
+    {
+        if(m_widget)
+        {
+            // m_layer->DestroyChild(m_widget);
+        }
+    }
+
+    template<typename TTheme, template<typename> typename TWidget>
+    ManagedWidget<TTheme, TWidget>::ManagedWidget(ManagedWidget&& managedWidget) noexcept :
+        m_layer(managedWidget.m_layer),
+        m_widget(managedWidget.m_widget)
+    {
+        managedWidget.m_layer = nullptr;
+        managedWidget.m_widget = nullptr;
+    }
+
+    template<typename TTheme, template<typename> typename TWidget>
+    ManagedWidget<TTheme, TWidget>& ManagedWidget<TTheme, TWidget>::operator =(ManagedWidget<TTheme, TWidget>&& managedWidget) noexcept
+    {
+        m_layer = managedWidget.m_layer;
+        m_widget = managedWidget.m_widget;
+        managedWidget.m_layer = nullptr;
+        managedWidget.m_widget = nullptr;
+        return *this;
+    }
+
+    template<typename TTheme, template<typename> typename TWidget>
+    TWidget<TTheme>* ManagedWidget<TTheme, TWidget>::operator ->()
+    {
+        return m_widget;
+    }
+
+    template<typename TTheme, template<typename> typename TWidget>
+    const TWidget<TTheme>* ManagedWidget<TTheme, TWidget>::operator ->() const
+    {
+        return m_widget;
+    }
+
 }

@@ -201,8 +201,8 @@ namespace Molten::Editor
         m_canvasRenderer = Gui::CanvasRenderer::Create(*m_renderer, m_logger.get());
         m_canvas = std::make_shared<Gui::Canvas<Gui::EditorTheme>>(*m_canvasRenderer);
 
-        auto* bgLayer = m_canvas->CreateLayer<Gui::MultiRootLayer>(Gui::LayerPosition::Top);
-        bgLayer->CreateChild<Gui::Button>();
+        //auto* bgLayer = m_canvas->CreateLayer<Gui::MultiRootLayer>(Gui::LayerPosition::Top);
+        //bgLayer->CreateChild<Gui::Button>();
 
         auto* layer = m_canvas->CreateLayer<Gui::SingleRootLayer>(Gui::LayerPosition::Top);
 
@@ -246,8 +246,8 @@ namespace Molten::Editor
         docker->CreateChild<Gui::Pane>(Gui::DockingPosition::Left, false, Vector2f32{ 200.0f, 200.0f });
         docker->CreateChild<Gui::VerticalGrid>(Gui::DockingPosition::Right, true);
         docker->CreateChild<Gui::Pane>(Gui::DockingPosition::Bottom, false, Vector2f32{ 250.0f, 250.0f });
-        docker->CreateChild<Gui::Pane>(Gui::DockingPosition::Right, false, Vector2f32{ 300.0f, 200.0f });
-
+        docker->CreateChild<Gui::Pane>(Gui::DockingPosition::Right, false, Vector2f32{ 300.0f, 200.0f })->CreateChild<Gui::Button>();
+        
 
         /*auto pane1 = docker->CreateChild<Gui::Pane>(Gui::DockingPosition::Left, true, Vector2f32{ 100.0f, 100.0f });
         pane1->padding = { 4.0f, 4.0f, 4.0f, 4.0f };

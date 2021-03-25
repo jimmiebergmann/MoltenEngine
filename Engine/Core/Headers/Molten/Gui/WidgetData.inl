@@ -179,6 +179,7 @@ namespace Molten::Gui
         m_treeIterator = iterator;
         m_widget = std::move(widget);
         m_widgetSkin = widgetSkin;
+        m_mouseEventFunction = std::move(mouseEventFunction);
     }
 
 

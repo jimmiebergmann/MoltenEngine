@@ -57,15 +57,7 @@ namespace Molten::Gui
         m_leafs{},
         m_leafDragData{}
     {
-        //auto overlay = GetData().GetCanvas()->GetTopFloatingLayer()->CreateHiddenChild<DockerOverlay>();
-
-        /*
-        m_overlayData = GetData().GetCanvas()->CreateOverlayWidget<DockerOverlay>(this);
-        m_overlayData = CreateOverlayWidget<DockerOverlay>();
-        m_overlayData->SetGrantedBounds({});
-        m_overlayData->ShowWidget();
-        */
-
+        m_leafDragData.overlayWidget = GetData().GetCanvas()->CreateOverlayChild<DockerOverlay>();
     }
 
     template<typename TTheme>
@@ -107,15 +99,6 @@ namespace Molten::Gui
         }
 
         m_oldGrantedBounds = GetGrantedBounds();
-
-        // FIX: CREATE AN WIDGET IN THE CANVAS OVERLAY LAYER.
-        /*if (GetSkinState<State>().type == State::Type::LeafDrag && m_leafDragData.dragIsActivated) // Ugly stuff going on here.
-        {
-            GetDataMixin().canvas->PushTopDrawCommand([this]()
-            {
-                GetDataMixin().widgetSkinMixin->DrawLeafDocking();
-            });
-        }*/
     }
 
     template<typename TTheme>
@@ -284,31 +267,31 @@ namespace Molten::Gui
     template<typename TTheme>
     typename Docker<TTheme>::EdgePointer Docker<TTheme>::Element::InsertElement(
         ElementPointer&& element,
-        const DockingPosition position)
+        const DockingPosition dockingPosition)
     {   
-        const auto gridDirection = GetInsertDirection(position);
+        const auto gridDirection = GetInsertDirection(dockingPosition);
 
         if (m_type == ElementType::Grid)
         {
             auto* grid = GetGrid();
             if (gridDirection == grid->direction) // Use this grid, append to begining/end.
             {
-                return InsertElementInGrid(std::move(element), GetInsertPosition(position));
+                return InsertElementInGrid(std::move(element), GetInsertPosition(dockingPosition));
             }
 
             TransformGridToFlipperGrid();
-            return InsertElementInGrid(std::move(element), GetInsertPosition(position));
+            return InsertElementInGrid(std::move(element), GetInsertPosition(dockingPosition));
         }
 
         // Leaf
         if (m_parent && m_parent->m_type == ElementType::Grid && m_parent->GetGrid()->direction == gridDirection) // Append to parents grid.
         {
-            return InsertElementInParentGrid(std::move(element), this, GetInsertPosition(position));
+            return InsertElementInParentGrid(std::move(element), this, GetInsertPosition(dockingPosition));
         }
 
         // Transform this leaf to a grid and append.
-        TransformLeafToGrid(GetInsertDirection(position));
-        return InsertElementInGrid(std::move(element), GetInsertPosition(position));
+        TransformLeafToGrid(GetInsertDirection(dockingPosition));
+        return InsertElementInGrid(std::move(element), GetInsertPosition(dockingPosition));
     }
 
     template<typename TTheme>
@@ -636,10 +619,10 @@ namespace Molten::Gui
     template<typename TTheme>
     typename Docker<TTheme>::EdgePointer Docker<TTheme>::Element::InsertElementInGrid(
         ElementPointer&& element,
-        const ElementPosition position)
+        const ElementPosition dockingPosition)
     {
         auto& grid = std::get<GridPointer>(m_data);
-        auto it = position == ElementPosition::First ? grid->elements.begin() : grid->elements.end();
+        auto it = dockingPosition == ElementPosition::First ? grid->elements.begin() : grid->elements.end();
         return InsertElementInGrid(std::move(element), it);
     }
 
@@ -707,7 +690,7 @@ namespace Molten::Gui
     typename Docker<TTheme>::EdgePointer Docker<TTheme>::Element::InsertElementInParentGrid(
         ElementPointer&& element,
         Element* neighborElement,
-        const ElementPosition position)
+        const ElementPosition dockingPosition)
     {
         auto& parentGrid = std::get<GridPointer>(m_parent->m_data);
 
@@ -716,7 +699,7 @@ namespace Molten::Gui
             return child.get() == neighborElement;
         });
 
-        if(position == ElementPosition::Last)
+        if(dockingPosition == ElementPosition::Last)
         {
             ++it;
         }
@@ -839,11 +822,11 @@ namespace Molten::Gui
     // Docker widget queued item implementations.
     template<typename TTheme>
     Docker<TTheme>::PendingLeafInsert::PendingLeafInsert(
-        const DockingPosition position,
+        const DockingPosition dockingPosition,
         const bool isDynamic,
         WidgetData<TTheme>* widgetData
     ) :
-        position(position),
+        position(dockingPosition),
         isDynamic(isDynamic),
         widgetData(widgetData)
     {}
@@ -914,15 +897,15 @@ namespace Molten::Gui
     }
 
     template<typename TTheme>
-    constexpr typename Docker<TTheme>::Direction Docker<TTheme>::GetInsertDirection(DockingPosition position)
+    constexpr typename Docker<TTheme>::Direction Docker<TTheme>::GetInsertDirection(DockingPosition dockingPosition)
     {
-        return position == DockingPosition::Left || position == DockingPosition::Right ? Direction::Horizontal : Direction::Vertical;
+        return dockingPosition == DockingPosition::Left || dockingPosition == DockingPosition::Right ? Direction::Horizontal : Direction::Vertical;
     }
 
     template<typename TTheme>
-    constexpr typename Docker<TTheme>::ElementPosition Docker<TTheme>::GetInsertPosition(DockingPosition position)
+    constexpr typename Docker<TTheme>::ElementPosition Docker<TTheme>::GetInsertPosition(DockingPosition dockingPosition)
     {
-        return position == DockingPosition::Left || position == DockingPosition::Top ? ElementPosition::First : ElementPosition::Last;
+        return dockingPosition == DockingPosition::Left || dockingPosition == DockingPosition::Top ? ElementPosition::First : ElementPosition::Last;
     }
 
     template<typename TTheme>
@@ -945,7 +928,7 @@ namespace Molten::Gui
     }
 
     template<typename TTheme>
-    void Docker<TTheme>::ActivateEdgeDragUpdate(Edge* pressedEdge, const Vector2f32& mousePosition)
+    void Docker<TTheme>::ActivateEdgeDragUpdate(Edge* pressedEdge, const Vector2f32& mousePosition, const Mouse::Button button)
     {
         m_edgeDragData.Reset();
         m_leafDragData.Reset();
@@ -954,12 +937,12 @@ namespace Molten::Gui
         m_edgeDragData.prevMousePosition = mousePosition;
 
         m_mouseInputUpdateFunc = &Docker<TTheme>::HandleEdgeDragMouseEvent;
-        GetData().GetCanvas()->OverrideMouseEventsUntilMouseRelease(*this);
+        GetData().GetCanvas()->OverrideMouseEventsUntilMouseRelease(*this, button);
         SetCursor(pressedEdge->GetSizeCursor());
     }
 
     template<typename TTheme>
-    void Docker<TTheme>::ActivateLeafDragUpdate(Leaf* pressedLeaf, const Vector2f32& mousePosition)
+    void Docker<TTheme>::ActivateLeafDragUpdate(Leaf* pressedLeaf, const Vector2f32& mousePosition, const Mouse::Button button)
     {
         m_edgeDragData.Reset();
         m_leafDragData.Reset();
@@ -968,7 +951,7 @@ namespace Molten::Gui
         m_leafDragData.initialMousePosition = mousePosition;
 
         m_mouseInputUpdateFunc = &Docker<TTheme>::HandleLeafDragMouseEvent;
-        GetData().GetCanvas()->OverrideMouseEventsUntilMouseRelease(*this);
+        GetData().GetCanvas()->OverrideMouseEventsUntilMouseRelease(*this, button);
     }
 
     template<typename TTheme>
@@ -1019,14 +1002,14 @@ namespace Molten::Gui
         auto* pressedEdge = FindIntersectingEdge(widgetMouseEvent.position);
         if (pressedEdge)
         {         
-            ActivateEdgeDragUpdate(pressedEdge, widgetMouseEvent.position);
+            ActivateEdgeDragUpdate(pressedEdge, widgetMouseEvent.position, widgetMouseEvent.button);
             return true;
         }
 
         auto* pressedLeaf = FindIntersectingDraggableLeaf(widgetMouseEvent.position);
         if (pressedLeaf)
         {
-            ActivateLeafDragUpdate(pressedLeaf, widgetMouseEvent.position);
+            ActivateLeafDragUpdate(pressedLeaf, widgetMouseEvent.position, widgetMouseEvent.button);
             return true;
         }
 
@@ -1040,12 +1023,11 @@ namespace Molten::Gui
         if (hoveredEdge)
         {
             SetCursor(hoveredEdge->GetSizeCursor());
+            return true;
         }
-        else
-        {
-            SetCursor(Mouse::Cursor::Normal);
-        }
-        return true;
+
+        SetCursor(Mouse::Cursor::Normal);
+        return false;
     }
 
     template<typename TTheme>
@@ -1117,6 +1099,9 @@ namespace Molten::Gui
         {
             m_leafDragData.dockingLeaf = leaf;
             SetSkinState(State{ State::LeafDragState{ dockingBounds } });
+
+            m_leafDragData.overlayWidget->position = dockingBounds.low;
+            m_leafDragData.overlayWidget->size = dockingBounds.GetSize();
         }
         else
         {
@@ -1649,5 +1634,12 @@ namespace Molten::Gui
         dockingPosition = DockingPosition::Left;
         dragIsActivated = false;
     }
+
+
+    // Docker overlay implementations.
+    template<typename TTheme>
+    DockerOverlay<TTheme>::DockerOverlay(WidgetDataMixin<TTheme, DockerOverlay>& data) :
+        WidgetMixin<TTheme, DockerOverlay>(data)
+    {}
 
 }

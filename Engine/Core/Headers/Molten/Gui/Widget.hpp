@@ -46,6 +46,7 @@ namespace Molten::Gui
 
         enum class State{ };
 
+        Vector2f32 position;
         Vector2f32 size;
         MarginType margin;
         PaddingType padding;
@@ -136,6 +137,35 @@ namespace Molten::Gui
     private:  
 
         WidgetDataMixin<TTheme, TWidget>& m_dataMixin;
+
+    };
+
+
+    template<typename TTheme, template<typename> typename TWidget>
+    class ManagedWidget
+    {
+
+    public:
+
+        ManagedWidget();
+        ManagedWidget(
+            Layer<TTheme>& layer,
+            TWidget<TTheme>& widget);
+        ~ManagedWidget();
+
+        ManagedWidget(ManagedWidget&& managedWidget) noexcept;
+        ManagedWidget& operator =(ManagedWidget&& managedWidget) noexcept;
+
+        ManagedWidget(const ManagedWidget&) = delete;
+        ManagedWidget& operator =(const ManagedWidget&) = delete;
+
+        TWidget<TTheme>* operator ->();
+        const TWidget<TTheme>* operator ->() const;
+
+    private:
+
+        Layer<TTheme>* m_layer;
+        TWidget<TTheme>* m_widget;
 
     };
 

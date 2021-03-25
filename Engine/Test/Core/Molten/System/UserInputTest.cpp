@@ -31,6 +31,13 @@ namespace Molten
     TEST(System, UserInput_Mouse)
     {
         {
+            EXPECT_EQ(static_cast<uint8_t>(Mouse::Button::Left), uint8_t{ 0 });
+            EXPECT_EQ(static_cast<uint8_t>(Mouse::Button::Middle), uint8_t{ 1 });
+            EXPECT_EQ(static_cast<uint8_t>(Mouse::Button::Right), uint8_t{ 2 });
+            EXPECT_EQ(static_cast<uint8_t>(Mouse::Button::Forward), uint8_t{ 3 });
+            EXPECT_EQ(static_cast<uint8_t>(Mouse::Button::Backward), uint8_t{ 4 });
+        }
+        {
             EXPECT_NO_THROW(Mouse::IsDown(Mouse::Button::Left));
             EXPECT_NO_THROW(Mouse::IsDown(Mouse::Button::Middle));
             EXPECT_NO_THROW(Mouse::IsDown(Mouse::Button::Right));
@@ -43,12 +50,12 @@ namespace Molten
 
             userInput.Begin();
             {
-                EXPECT_EQ(userInput.GetEventCount(), size_t(0));
+                EXPECT_EQ(userInput.GetEventCount(), size_t{ 0 });
                 userInput.PressMouseButton(Mouse::Button::Left, Vector2i32(100, 200));
             }
             userInput.End();
 
-            EXPECT_EQ(userInput.GetEventCount(), size_t(2)); 
+            EXPECT_EQ(userInput.GetEventCount(), size_t{ 2 }); 
             EXPECT_TRUE(userInput.PollEvent(event));
             EXPECT_EQ(event.type, UserInput::EventType::Mouse);
             EXPECT_EQ(event.subType, UserInput::EventSubType::MouseButtonPressed);
@@ -62,7 +69,7 @@ namespace Molten
             EXPECT_EQ(event.mouseButtonEvent.position, Vector2i32(100, 200));
 
             EXPECT_FALSE(userInput.PollEvent(event));
-            EXPECT_EQ(userInput.GetEventCount(), size_t(0));
+            EXPECT_EQ(userInput.GetEventCount(), size_t{ 0 });
 
 
             userInput.Begin();
@@ -70,7 +77,7 @@ namespace Molten
             }
             userInput.End();
 
-            EXPECT_EQ(userInput.GetEventCount(), size_t(1));
+            EXPECT_EQ(userInput.GetEventCount(), size_t{ 1 });
             {
                 EXPECT_TRUE(userInput.PollEvent(event));
                 EXPECT_EQ(event.type, UserInput::EventType::Mouse);
@@ -79,7 +86,7 @@ namespace Molten
                 EXPECT_EQ(event.mouseButtonEvent.position, Vector2i32(100, 200));
 
                 EXPECT_FALSE(userInput.PollEvent(event));
-                EXPECT_EQ(userInput.GetEventCount(), size_t(0));
+                EXPECT_EQ(userInput.GetEventCount(), size_t{ 0 });
             }
 
             userInput.Begin();
@@ -88,7 +95,7 @@ namespace Molten
             }
             userInput.End();
 
-            EXPECT_EQ(userInput.GetEventCount(), size_t(1));
+            EXPECT_EQ(userInput.GetEventCount(), size_t{ 1 });
             {
                 EXPECT_TRUE(userInput.PollEvent(event));
                 EXPECT_EQ(event.type, UserInput::EventType::Mouse);
@@ -97,14 +104,14 @@ namespace Molten
                 EXPECT_EQ(event.mouseButtonEvent.position, Vector2i32(100, 200));
 
                 EXPECT_FALSE(userInput.PollEvent(event));
-                EXPECT_EQ(userInput.GetEventCount(), size_t(0));
+                EXPECT_EQ(userInput.GetEventCount(), size_t{ 0 });
             }
 
             userInput.Begin();
             {
             }
             userInput.End();
-            EXPECT_EQ(userInput.GetEventCount(), size_t(0));
+            EXPECT_EQ(userInput.GetEventCount(), size_t{ 0 });
 
         }
     }

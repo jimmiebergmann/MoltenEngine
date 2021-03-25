@@ -25,13 +25,152 @@
 
 namespace Molten::Gui
 {
-
     // Multi layer repository implementations.
     template<typename TTheme>
-    MultiLayerRepository<TTheme>::MultiLayerRepository() :
-        hoveredWidget(nullptr),
-        pressedWidget(nullptr)
+    MultiLayerRepository<TTheme>::PressedWidget::PressedWidget(
+        WidgetData<TTheme>* widgetData,
+        Mouse::Button button
+    ) :
+        widgetData(widgetData),
+        button(button)
     {}
+
+    template<typename TTheme>
+    MultiLayerRepository<TTheme>::MultiLayerRepository() :
+        hoveredWidgetData(nullptr)
+    {}
+
+
+    template<typename TTheme>
+    bool MultiLayerRepository<TTheme>::HandleMouseMove(
+        WidgetData<TTheme>* widgetData,
+        const Vector2f32& position)
+    {
+        
+        auto& mouseEventFunction = widgetData->GetMouseEventFunction();
+        if (!mouseEventFunction)
+        {
+            return false;
+        }
+
+        if (widgetData->GetGrantedBounds().Intersects(position))
+        {
+            if (hoveredWidgetData != widgetData)
+            {
+                const bool handledMouseEnter = mouseEventFunction(WidgetMouseEvent{ WidgetMouseEventType::MouseEnter, position }) != nullptr;
+                const bool handledMouseMove = mouseEventFunction(WidgetMouseEvent{ WidgetMouseEventType::MouseMove, position }) != nullptr;
+
+                if (handledMouseEnter || handledMouseMove)
+                {
+                    if (hoveredWidgetData != nullptr)
+                    {
+                        auto& hoveredWidgetMouseEventFunction = hoveredWidgetData->GetMouseEventFunction();
+                        hoveredWidgetMouseEventFunction(WidgetMouseEvent{ WidgetMouseEventType::MouseLeave, position });
+                    }
+
+                    hoveredWidgetData = widgetData;
+                    return true;
+                }
+            }
+            else if (hoveredWidgetData != nullptr)
+            {
+                auto& hoveredWidgetMouseEventFunction = hoveredWidgetData->GetMouseEventFunction();
+                const bool handledMouseMove = hoveredWidgetMouseEventFunction(WidgetMouseEvent{ WidgetMouseEventType::MouseMove, position });
+
+                if (!handledMouseMove)
+                {
+                    hoveredWidgetMouseEventFunction(WidgetMouseEvent{ WidgetMouseEventType::MouseLeave, position });
+                    hoveredWidgetData = nullptr;
+                    return false;
+                }
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    template<typename TTheme>
+    bool MultiLayerRepository<TTheme>::HandleMouseButtonPress(
+        WidgetData<TTheme>* widgetData,
+        const Vector2f32& position,
+        const Mouse::Button button)
+    {
+       auto& mouseEventFunction = widgetData->GetMouseEventFunction();
+       if (!mouseEventFunction)
+       {
+           return false;
+       }
+
+       if (widgetData->GetGrantedBounds().Intersects(position))
+       {
+           auto foundIt = std::find_if(pressedWidgets.begin(), pressedWidgets.end(),
+               [&](const auto& pressedWidget)
+           {
+               return pressedWidget.button == button;
+           });
+
+           if(foundIt == pressedWidgets.end())
+           {
+               const bool handledMouseButtonPress = mouseEventFunction(WidgetMouseEvent{ WidgetMouseEventType::MouseButtonPressed, position, button }) != nullptr;
+
+               if(handledMouseButtonPress)
+               {
+                   pressedWidgets.push_back({ widgetData, button });
+                   return true;
+               }
+           }
+           else
+           {
+               return true;
+           }
+       }
+
+       return false;
+    }
+
+    template<typename TTheme>
+    bool MultiLayerRepository<TTheme>::HandleMouseButtonRelease(
+        const Vector2f32& position,
+        const Mouse::Button button)
+    {
+        for(auto it = pressedWidgets.begin(); it != pressedWidgets.end();)
+        {
+            auto& pressedWidget = *it;
+            if(pressedWidget.button == button)
+            {
+                auto& widgetMouseEventFunction = pressedWidget.widgetData->GetMouseEventFunction();
+
+                if (pressedWidget.widgetData->GetGrantedBounds().Intersects(position))
+                {
+                    widgetMouseEventFunction(WidgetMouseEvent{ WidgetMouseEventType::MouseButtonReleasedIn, position, button });
+                }
+                else
+                {
+                    widgetMouseEventFunction(WidgetMouseEvent{ WidgetMouseEventType::MouseButtonReleasedOut, position, button });
+                }
+
+                it = pressedWidgets.erase(it);
+            }
+            else
+            {
+                ++it;
+            }
+        }
+
+        return false;
+    }
+
+    template<typename TTheme>
+    void MultiLayerRepository<TTheme>::ResetHoveredWidget(const Vector2f32& position)
+    {
+        if (hoveredWidgetData)
+        {
+            auto& hoveredWidgetMouseEventFunction = hoveredWidgetData->GetMouseEventFunction();
+            hoveredWidgetMouseEventFunction(WidgetMouseEvent{ WidgetMouseEventType::MouseLeave, position });
+        }
+        hoveredWidgetData = nullptr;
+    }
 
 
     // Layer implementations.
@@ -51,6 +190,17 @@ namespace Molten::Gui
         const UserInput::Event& userInputEvent,
         MultiLayerRepository<TTheme>& multiLayerRepository)
     {
+        if (userInputEvent.type == UserInput::EventType::Mouse)
+        {
+            switch (userInputEvent.subType)
+            {
+                case UserInput::EventSubType::MouseMove: return HandleMouseMoveEvent(userInputEvent.mouseMoveEvent, multiLayerRepository);
+                case UserInput::EventSubType::MouseButtonPressed: return HandleMouseButtonPressedEvent(userInputEvent.mouseButtonEvent, multiLayerRepository);
+                case UserInput::EventSubType::MouseButtonReleased: return HandleMouseButtonReleasedEvent(userInputEvent.mouseButtonEvent, multiLayerRepository);
+                default: break;
+            }
+        }
+
         return false;
     }
 
@@ -175,7 +325,10 @@ namespace Molten::Gui
         Widget<TTheme>* parent,
         TArgs ... args)
     {
-        static_assert(std::is_base_of_v<WidgetMixin<TTheme, TWidget>, TWidget<TTheme>>, "WidgetMixin<TTheme, TWidget> is not a base of TWidget<TTheme>.");
+        static_assert(std::is_base_of_v<WidgetMixin<TTheme, TWidget>, TWidget<TTheme>>,
+            "WidgetMixin<TTheme, TWidget> is not a base of TWidget<TTheme>.");
+        static_assert(std::is_base_of_v<WidgetSkinMixin<TTheme, TWidget>, WidgetSkin<TTheme, TWidget>>,
+            "WidgetSkinMixin<TTheme, TWidget> is not base of WidgetSkin<TTTheme, TWidget>.");
 
         auto widgetDataMixin = std::make_unique<WidgetDataMixin<TTheme, TWidget>>(m_data.GetCanvas(), this);
         auto* widgetDataMixinPointer = widgetDataMixin.get();
@@ -253,7 +406,69 @@ namespace Molten::Gui
             return nullptr;
         };*/
 
-        return nullptr;
+        if constexpr (std::is_base_of_v<WidgetMouseEventHandler, TWidget<TTheme>>)
+        {
+            auto* eventHandler = static_cast<WidgetMouseEventHandler*>(child);
+            return [childHandler = eventHandler, childWidget = child](const WidgetMouseEvent& widgetEvent) -> Widget<TTheme>*
+            {
+                return childHandler->OnMouseEvent(widgetEvent) ? childWidget : nullptr;
+            };
+        }
+        else
+        {
+            return nullptr;
+        }
+    }
+
+    template<typename TTheme>
+    bool Layer<TTheme>::HandleMouseMoveEvent(
+        const UserInput::MouseMoveEvent& mouseMoveEvent,
+        MultiLayerRepository<TTheme>& multiLayerRepository)
+    {
+        bool handledEvent = false;
+
+        m_widgetTree.template ForEachReversePreorder<typename WidgetData<TTheme>::TreePartialLaneType>(
+        [&](auto& widgetData) -> bool
+        {
+            if (multiLayerRepository.HandleMouseMove(widgetData.get(), mouseMoveEvent.position))
+            {
+                handledEvent = true;
+                return false;
+            }
+            return true;
+        });
+
+        return handledEvent;
+    }
+
+    template<typename TTheme>
+    bool Layer<TTheme>::HandleMouseButtonPressedEvent(
+        const UserInput::MouseButtonEvent& mouseButtonEvent,
+        MultiLayerRepository<TTheme>& multiLayerRepository)
+    {
+        bool handledEvent = false;
+
+        m_widgetTree.template ForEachReversePreorder<typename WidgetData<TTheme>::TreePartialLaneType>(
+            [&](auto& widgetData) -> bool
+        {
+            if(multiLayerRepository.HandleMouseButtonPress(widgetData.get(), mouseButtonEvent.position, mouseButtonEvent.button))
+            {
+                handledEvent = true;
+                return false;
+            }
+            return true;
+        });
+
+        return handledEvent;
+    }
+
+    template<typename TTheme>
+    bool Layer<TTheme>::HandleMouseButtonReleasedEvent(
+        const UserInput::MouseButtonEvent& mouseButtonEvent,
+        MultiLayerRepository<TTheme>& multiLayerRepository)
+    {
+        multiLayerRepository.HandleMouseButtonRelease(mouseButtonEvent.position, mouseButtonEvent.button);
+        return false;
     }
    
 }
