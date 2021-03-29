@@ -74,7 +74,7 @@ namespace Molten::Gui
     struct WidgetSkin<EditorTheme, Button> : WidgetSkinMixin<EditorTheme, Button>
     {
 
-        static constexpr bool test = true;
+        //static constexpr WidgetSize defaultSize = WidgetSize{ 100.0f, 20.0f };
 
         WidgetSkin(const WidgetSkinDescriptor<EditorTheme, Button>& descriptor) :
             WidgetSkinMixin<EditorTheme, Button>(descriptor),
@@ -123,7 +123,7 @@ namespace Molten::Gui
 
         void Draw() override
         {
-            const Bounds2f32 overlayBounds = { widget.position, widget.position + widget.size };
+            const Bounds2f32 overlayBounds = { widget.position, widget.position + widget.size.value };
             theme.m_canvasRenderer.DrawRect(overlayBounds, Vector4f32{ 0.4f, 0.4f, 1.0f, 0.4f });
         }
     };

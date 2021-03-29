@@ -35,7 +35,7 @@ namespace Molten::Gui
     template<typename TTheme>
     Widget<TTheme>::Widget(
         WidgetData<TTheme>& data,
-        const Vector2f32& size
+        const WidgetSize& size
     ) :
         size(size),
         m_data(data)
@@ -149,7 +149,7 @@ namespace Molten::Gui
     template<typename TTheme, template<typename> typename TWidget>
     WidgetMixin<TTheme, TWidget>::WidgetMixin(
         WidgetDataMixin<TTheme, TWidget>& data,
-        const Vector2f32& size
+        const WidgetSize& size
     ) :
         Widget<TTheme>(data, size),
         m_dataMixin(data)

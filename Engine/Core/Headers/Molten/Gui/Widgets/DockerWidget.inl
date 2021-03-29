@@ -112,7 +112,7 @@ namespace Molten::Gui
     {
         auto* widget = childData.GetWidget();
 
-        bool isDynamic = widget->size.x <= 0.0f || widget->size.y <= 0.0f;
+        bool isDynamic = widget->size.value.x <= 0.0f || widget->size.value.y <= 0.0f;
         auto pendingLeaf = std::make_shared<PendingLeafInsert>(DockingPosition::Right, isDynamic, &childData);
 
         m_leafInsertMap.insert({ widget, pendingLeaf });
@@ -901,7 +901,7 @@ namespace Molten::Gui
         m_leafs.insert(newLeaf.get());
         m_leafMap.insert({ pendingLeaf.widgetData->GetWidget(), newLeaf.get() });
 
-        const auto widgetSize = pendingLeaf.widgetData->GetWidget()->size;
+        const auto widgetSize = pendingLeaf.widgetData->GetWidget()->size.value;
         auto newElement = std::make_unique<Element>(std::move(newLeaf), widgetSize, minElementSize);
 
         if (m_rootElement)
@@ -1145,7 +1145,7 @@ namespace Molten::Gui
 
             m_leafDragData.overlayWidget = GetData().GetCanvas()->CreateOverlayChild<DockerOverlay>();
             m_leafDragData.overlayWidget->position = dockingBounds.low;
-            m_leafDragData.overlayWidget->size = dockingBounds.GetSize();
+            m_leafDragData.overlayWidget->size.value = dockingBounds.GetSize();
         }
         else
         {

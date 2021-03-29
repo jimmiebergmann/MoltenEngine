@@ -26,48 +26,35 @@
 namespace Molten::Gui
 {
 
-    template<typename TTheme>
-    Pane<TTheme>::Pane(
-        WidgetDataMixin<TTheme, Pane>& data,
-        const WidgetSize& size
-    ) :
-        WidgetMixin<TTheme, Pane>(data, size)
+    // Widget size implementations.
+    constexpr WidgetSize::WidgetSize() :
+        type(WidgetSizeType::Fixed)
     {}
 
-    template<typename TTheme>
-    void Pane<TTheme>::Update()
+    constexpr WidgetSize::WidgetSize(const ValueType& value) :
+        type(WidgetSizeType::Fixed),
+        value(value)
+    {}
+
+    constexpr WidgetSize::WidgetSize(const float x, const float y) :
+        type(WidgetSizeType::Fixed),
+        value(x, y)
+    {}
+
+    constexpr WidgetSize::WidgetSize(const WidgetSizeType type, const ValueType & value) :
+        type(type),
+        value(value)
+    {}
+
+    inline WidgetSize::ValueType WidgetSize::CalculateValue(const ValueType & fitSize, const ValueType & occupySize) const
     {
-       ApplyMarginsToGrantedBounds();
-
-       auto& grantedBounds = GetGrantedBounds();
-
-       m_dragBounds = grantedBounds;
-       m_dragBounds.bottom = m_dragBounds.top + WidgetSkinType::headerBarHeight;
-
-       auto childLane = GetChildrenPartialLane();
-
-       if (childLane.GetSize() > 0)
-       {
-           auto& childData = (*childLane.begin()).GetValue();
-           auto contentBounds = grantedBounds
-               .WithoutMargins({0.0f, 20.0f, 0.0f, 0.0f})
-               .WithoutMargins(padding).
-               ClampHighToLow();
-           childData->SetGrantedBounds(contentBounds);
-       }
-
-    }
-
-    template<typename TTheme>
-    bool Pane<TTheme>::OnMouseEvent(const WidgetMouseEvent& widgetMouseEvent)
-    {
-        return false;
-    }
-
-    template<typename TTheme>
-    const Bounds2f32& Pane<TTheme>::GetDragBounds() const
-    {
-        return m_dragBounds;
+        switch(type)
+        {
+            case WidgetSizeType::Fit: return fitSize;
+            case WidgetSizeType::Occupy: return occupySize;
+            default: break;
+        }
+        return value;
     }
 
 }

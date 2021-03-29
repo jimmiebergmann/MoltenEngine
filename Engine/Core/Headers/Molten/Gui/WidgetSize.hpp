@@ -23,51 +23,43 @@
 *
 */
 
+#ifndef MOLTEN_CORE_GUI_WIDGETSIZE_HPP
+#define MOLTEN_CORE_GUI_WIDGETSIZE_HPP
+
+#include "Molten/Math/Vector.hpp"
+
 namespace Molten::Gui
 {
 
-    template<typename TTheme>
-    Pane<TTheme>::Pane(
-        WidgetDataMixin<TTheme, Pane>& data,
-        const WidgetSize& size
-    ) :
-        WidgetMixin<TTheme, Pane>(data, size)
-    {}
-
-    template<typename TTheme>
-    void Pane<TTheme>::Update()
+    enum class WidgetSizeType
     {
-       ApplyMarginsToGrantedBounds();
+        Fixed,
+        Fit,
+        Occupy
+    };
 
-       auto& grantedBounds = GetGrantedBounds();
-
-       m_dragBounds = grantedBounds;
-       m_dragBounds.bottom = m_dragBounds.top + WidgetSkinType::headerBarHeight;
-
-       auto childLane = GetChildrenPartialLane();
-
-       if (childLane.GetSize() > 0)
-       {
-           auto& childData = (*childLane.begin()).GetValue();
-           auto contentBounds = grantedBounds
-               .WithoutMargins({0.0f, 20.0f, 0.0f, 0.0f})
-               .WithoutMargins(padding).
-               ClampHighToLow();
-           childData->SetGrantedBounds(contentBounds);
-       }
-
-    }
-
-    template<typename TTheme>
-    bool Pane<TTheme>::OnMouseEvent(const WidgetMouseEvent& widgetMouseEvent)
+    class WidgetSize
     {
-        return false;
-    }
 
-    template<typename TTheme>
-    const Bounds2f32& Pane<TTheme>::GetDragBounds() const
-    {
-        return m_dragBounds;
-    }
+    public:
+
+        using ValueType = Vector2f32;
+
+        constexpr WidgetSize();
+        ~WidgetSize() = default;
+        constexpr explicit WidgetSize(const ValueType& value);
+        constexpr WidgetSize(const float x, const float y);
+        constexpr explicit WidgetSize(const WidgetSizeType type, const ValueType& value = {});
+
+        ValueType CalculateValue(const ValueType& fitSize, const ValueType& occupySize) const;
+
+        WidgetSizeType type;
+        ValueType value;
+
+    };
 
 }
+
+#include "Molten/Gui/WidgetSize.inl"
+
+#endif

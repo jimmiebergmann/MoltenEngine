@@ -28,6 +28,7 @@
 
 #include "Molten/Gui/SpacingTypes.hpp"
 #include "Molten/Gui/WidgetData.hpp"
+#include "Molten/Gui/WidgetSize.hpp"
 
 namespace Molten::Gui
 {
@@ -53,14 +54,14 @@ namespace Molten::Gui
         enum class State{ };
 
         Vector2f32 position;
-        Vector2f32 size;
+        WidgetSize size;
         MarginType margin;
         PaddingType padding;
 
         explicit Widget(WidgetData<TTheme>& data);
         Widget(
             WidgetData<TTheme>& data,
-            const Vector2f32& size);
+            const WidgetSize& size);
 
         virtual ~Widget() = default;
 
@@ -133,7 +134,7 @@ namespace Molten::Gui
 
         WidgetMixin(
             WidgetDataMixin<TTheme, TWidget>& data,
-            const Vector2f32& size);
+            const WidgetSize& size);
 
         WidgetDataMixin<TTheme, TWidget>& GetDataMixin();
         const WidgetDataMixin<TTheme, TWidget>& GetDataMixin() const;

@@ -44,7 +44,7 @@ namespace Molten::Gui
 
         explicit Pane(
             WidgetDataMixin<TTheme, Pane>& data,
-            const Vector2f32& size);
+            const WidgetSize& size);
 
         void Update() override;
 
