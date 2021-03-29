@@ -32,6 +32,12 @@
 namespace Molten::Gui
 {
 
+    template<typename TTheme>
+    class Canvas;
+
+    template<typename TTheme>
+    class Layer;
+
     template<typename TTheme, template<typename> typename TWidget>
     struct WidgetSkin;
 
@@ -64,6 +70,12 @@ namespace Molten::Gui
 
         template<template<typename> typename TWidget, typename ... TArgs>
         TWidget<TTheme>* CreateChild(TArgs ... args);
+
+        [[nodiscard]] Canvas<TTheme>* GetCanvas();
+        [[nodiscard]] const Canvas<TTheme>* GetCanvas() const;
+
+        [[nodiscard]] Layer<TTheme>* GetLayer();
+        [[nodiscard]] const Layer<TTheme>* GetLayer() const;
 
     protected:
 
@@ -161,6 +173,8 @@ namespace Molten::Gui
 
         TWidget<TTheme>* operator ->();
         const TWidget<TTheme>* operator ->() const;
+
+        void Reset();
 
     private:
 

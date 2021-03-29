@@ -109,6 +109,9 @@ namespace Molten::Gui
         [[nodiscard]] TreePartialLane GetChildrenPartialLane();
         [[nodiscard]] TreePartialConstLane GetChildrenPartialLane() const;
 
+        [[nodiscard]] Widget<TTheme>* GetParentWidget();
+        [[nodiscard]] const Widget<TTheme>* GetParentWidget() const;
+
         [[nodiscard]] Widget<TTheme>* GetWidget();
         [[nodiscard]] const Widget<TTheme>* GetWidget() const;
 
@@ -128,6 +131,7 @@ namespace Molten::Gui
         void Initialize(
             Tree* tree,
             TreeNormalIterator iterator,
+            Widget<TTheme>* parentWidget,
             std::unique_ptr<Widget<TTheme>>&& widget,
             WidgetSkinBase* widgetSkin,
             MouseEventFunction&& mouseEventFunction);
@@ -138,6 +142,7 @@ namespace Molten::Gui
         Layer<TTheme>* m_layer;
         Tree* m_tree;
         TreeNormalIterator m_treeIterator;
+        Widget<TTheme>* m_parentWidget;
         std::unique_ptr<Widget<TTheme>> m_widget;
         WidgetSkinBase* m_widgetSkin;
         MouseEventFunction m_mouseEventFunction;
@@ -177,6 +182,7 @@ namespace Molten::Gui
         void InitializeMixin(
             typename WidgetData<TTheme>::Tree* tree,
             typename WidgetData<TTheme>::TreeNormalIterator iterator,
+            Widget<TTheme>* parentWidget,
             std::unique_ptr<WidgetMixin<TTheme, TWidget>>&& widget,
             std::unique_ptr<WidgetSkinMixin<TTheme, TWidget>>&& widgetSkinMixin,
             typename WidgetData<TTheme>::MouseEventFunction&& mouseEventFunction);

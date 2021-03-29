@@ -76,6 +76,8 @@ namespace Molten::Gui
         template<template<typename> typename TLayer, typename ... TArgs>
         [[nodiscard]] TLayer<TTheme>* CreateLayer(const LayerPosition position, TArgs ... args);
 
+        bool DestroyWidget(Widget<TTheme>* widget);
+
         /** Creates a new widget in the overlay layer.
          * ManagedWidget is automatically destroy and removed from overlay at destruction.
          */

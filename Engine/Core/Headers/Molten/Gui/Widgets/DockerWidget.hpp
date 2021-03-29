@@ -109,7 +109,10 @@ namespace Molten::Gui
 
         bool OnMouseEvent(const WidgetMouseEvent& widgetMouseEvent) override;
 
+    protected:
+
         void OnAddChild(WidgetData<TTheme>& childData) override;
+        void OnRemoveChild(WidgetData<TTheme>& childData) override;
 
     private:
 
@@ -454,6 +457,7 @@ namespace Molten::Gui
 
         // Leafs.
         std::set<Leaf*> m_leafs;
+        std::map<Widget<TTheme>*, Leaf*> m_leafMap;
         LeafDragData m_leafDragData;
 
     };

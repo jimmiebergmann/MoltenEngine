@@ -343,6 +343,7 @@ namespace Molten::Gui
         widgetDataMixinPointer->InitializeMixin(
             &m_widgetTree,
             widgetDataIt,
+            parent,
             std::move(widget),
             std::move(widgetSkin),
             CreateChildMouseEventFunction(widgetPointer, parent));

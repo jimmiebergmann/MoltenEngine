@@ -59,6 +59,28 @@ namespace Molten::Gui
     }
 
     template<typename TTheme>
+    Canvas<TTheme>* Widget<TTheme>::GetCanvas()
+    {
+        return m_data.GetCanvas();
+    }
+    template<typename TTheme>
+    const Canvas<TTheme>* Widget<TTheme>::GetCanvas() const
+    {
+        return m_data.GetCanvas();
+    }
+
+    template<typename TTheme>
+    Layer<TTheme>* Widget<TTheme>::GetLayer()
+    {
+        return m_data.GetLayer();
+    }
+    template<typename TTheme>
+    const Layer<TTheme>* Widget<TTheme>::GetLayer() const
+    {
+        return m_data.GetLayer();
+    }
+
+    template<typename TTheme>
     void Widget<TTheme>::OnAddChild(WidgetData<TTheme>& childData)
     {
     }
@@ -182,10 +204,7 @@ namespace Molten::Gui
     template<typename TTheme, template<typename> typename TWidget>
     ManagedWidget<TTheme, TWidget>::~ManagedWidget()
     {
-        if(m_widget)
-        {
-            // m_layer->DestroyChild(m_widget);
-        }
+        Reset();
     }
 
     template<typename TTheme, template<typename> typename TWidget>
@@ -200,6 +219,11 @@ namespace Molten::Gui
     template<typename TTheme, template<typename> typename TWidget>
     ManagedWidget<TTheme, TWidget>& ManagedWidget<TTheme, TWidget>::operator =(ManagedWidget<TTheme, TWidget>&& managedWidget) noexcept
     {
+        if(m_widget)
+        {
+            Reset();
+        }
+
         m_layer = managedWidget.m_layer;
         m_widget = managedWidget.m_widget;
         managedWidget.m_layer = nullptr;
@@ -217,6 +241,15 @@ namespace Molten::Gui
     const TWidget<TTheme>* ManagedWidget<TTheme, TWidget>::operator ->() const
     {
         return m_widget;
+    }
+
+    template<typename TTheme, template<typename> typename TWidget>
+    void ManagedWidget<TTheme, TWidget>::Reset()
+    {
+        if (m_widget)
+        {
+            m_widget->GetCanvas()->DestroyWidget(m_widget);
+        }
     }
 
 }

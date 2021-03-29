@@ -35,6 +35,7 @@ namespace Molten::Gui
         m_canvas(canvas),
         m_layer(layer),
         m_tree(nullptr),
+        m_parentWidget(nullptr),
         m_widgetSkin(nullptr)
     {}
 
@@ -116,6 +117,17 @@ namespace Molten::Gui
     }
 
     template<typename TTheme>
+    Widget<TTheme>* WidgetData<TTheme>::GetParentWidget()
+    {
+        return m_parentWidget;
+    }
+    template<typename TTheme>
+    const Widget<TTheme>* WidgetData<TTheme>::GetParentWidget() const
+    {
+        return m_parentWidget;
+    }
+
+    template<typename TTheme>
     Widget<TTheme>* WidgetData<TTheme>::GetWidget()
     {
         return m_widget.get();
@@ -171,12 +183,14 @@ namespace Molten::Gui
     void WidgetData<TTheme>::Initialize(
         Tree* tree,
         TreeNormalIterator iterator,
+        Widget<TTheme>* parentWidget,
         std::unique_ptr<Widget<TTheme>>&& widget,
         WidgetSkinBase* widgetSkin,
         MouseEventFunction&& mouseEventFunction)
     {
         m_tree = tree;
         m_treeIterator = iterator;
+        m_parentWidget = parentWidget;
         m_widget = std::move(widget);
         m_widgetSkin = widgetSkin;
         m_mouseEventFunction = std::move(mouseEventFunction);
@@ -219,6 +233,7 @@ namespace Molten::Gui
     void WidgetDataMixin<TTheme, TWidget>::InitializeMixin(
         typename WidgetData<TTheme>::Tree* tree,
         typename WidgetData<TTheme>::TreeNormalIterator iterator,
+        Widget<TTheme>* parentWidget,
         std::unique_ptr<WidgetMixin<TTheme, TWidget>>&& widget,
         std::unique_ptr<WidgetSkinMixin<TTheme, TWidget>>&& widgetSkinMixin,
         typename WidgetData<TTheme>::MouseEventFunction&& mouseEventFunction)
@@ -229,6 +244,7 @@ namespace Molten::Gui
         WidgetData<TTheme>::Initialize(
             tree,
             iterator,
+            parentWidget,
             std::move(widget),
             m_widgetSkinMixin.get(),
             std::move(mouseEventFunction));

@@ -118,6 +118,27 @@ namespace Molten::Gui
     }
 
     template<typename TTheme>
+    bool Canvas<TTheme>::DestroyWidget(Widget<TTheme>* widget)
+    {
+        if(!widget)
+        {
+            return false;
+        }  
+
+        auto& widgetData = widget->GetData();
+
+        auto* parentWidget = widgetData.GetParentWidget();
+        if(parentWidget)
+        {
+            parentWidget->OnRemoveChild(widgetData);
+        }
+
+        auto it = widgetData.GetTreeNormalIterator();
+        widgetData.GetTree()->Erase(it);
+        return true;
+    }
+
+    template<typename TTheme>
     template<template<typename> typename TWidget, typename ... TArgs>
     ManagedWidget<TTheme, TWidget> Canvas<TTheme>::CreateOverlayChild(TArgs ... args)
     {

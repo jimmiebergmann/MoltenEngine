@@ -57,7 +57,7 @@ namespace Molten::Gui
         m_leafs{},
         m_leafDragData{}
     {
-        m_leafDragData.overlayWidget = GetData().GetCanvas()->CreateOverlayChild<DockerOverlay>();
+        //m_leafDragData.overlayWidget = GetData().GetCanvas()->CreateOverlayChild<DockerOverlay>();
     }
 
     template<typename TTheme>
@@ -117,6 +117,47 @@ namespace Molten::Gui
 
         m_leafInsertMap.insert({ widget, pendingLeaf });
         m_leafInsertQueue.push(pendingLeaf);
+    }
+
+    template<typename TTheme>
+    void Docker<TTheme>::OnRemoveChild(WidgetData<TTheme>& childData)
+    {
+        // Remove leaf.
+        auto it1 = m_leafMap.find(childData.GetWidget());
+        if (it1 != m_leafMap.end())
+        {
+            auto* leaf = it1->second;
+            auto* element = leaf->AsElement();
+            ExtractElement(element);
+
+            auto leafIt = m_leafs.find(leaf);
+            if(leafIt != m_leafs.end())
+            {
+                m_leafs.erase(leafIt);
+            }
+        }
+
+        // Clean insert map.
+        auto it2 = m_leafInsertMap.find(childData.GetWidget());
+        if (it2 != m_leafInsertMap.end())
+        {
+            m_leafInsertMap.erase(it2);
+        }
+
+        // Clean up insert queue.
+        auto newInsertQueue = decltype(m_leafInsertQueue){};
+        while(!m_leafInsertQueue.empty())
+        {
+            auto& top = m_leafInsertQueue.front();
+            if(top->widgetData != &childData)
+            {
+                newInsertQueue.push(std::move(top));
+            }
+            m_leafInsertQueue.pop();
+        }
+        m_leafInsertQueue = std::move(newInsertQueue);
+
+        m_forceUpdateBounds = true;
     }
 
 
@@ -858,6 +899,7 @@ namespace Molten::Gui
     {
         auto newLeaf = std::make_unique<Leaf>(pendingLeaf.widgetData, pendingLeaf.isDynamic);
         m_leafs.insert(newLeaf.get());
+        m_leafMap.insert({ pendingLeaf.widgetData->GetWidget(), newLeaf.get() });
 
         const auto widgetSize = pendingLeaf.widgetData->GetWidget()->size;
         auto newElement = std::make_unique<Element>(std::move(newLeaf), widgetSize, minElementSize);
@@ -923,6 +965,7 @@ namespace Molten::Gui
     {
         m_edgeDragData.Reset();
         m_leafDragData.Reset();
+        m_leafDragData.overlayWidget = {};
 
         m_mouseInputUpdateFunc = &Docker<TTheme>::HandleNormalMouseEvent;
     }
@@ -1100,11 +1143,13 @@ namespace Molten::Gui
             m_leafDragData.dockingLeaf = leaf;
             SetSkinState(State{ State::LeafDragState{ dockingBounds } });
 
+            m_leafDragData.overlayWidget = GetData().GetCanvas()->CreateOverlayChild<DockerOverlay>();
             m_leafDragData.overlayWidget->position = dockingBounds.low;
             m_leafDragData.overlayWidget->size = dockingBounds.GetSize();
         }
         else
         {
+            m_leafDragData.overlayWidget = {};
             m_leafDragData.dockingLeaf = nullptr;
             SetSkinState(State{ });
         }

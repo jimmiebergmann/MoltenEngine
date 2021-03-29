@@ -243,11 +243,16 @@ namespace Molten::Editor
             m_window->SetCursor(cursor);
         });
 
-        docker->CreateChild<Gui::Pane>(Gui::DockingPosition::Left, false, Vector2f32{ 200.0f, 200.0f });
+        auto pane1 = docker->CreateChild<Gui::Pane>(Gui::DockingPosition::Left, false, Vector2f32{ 200.0f, 200.0f });
         docker->CreateChild<Gui::VerticalGrid>(Gui::DockingPosition::Right, true);
         docker->CreateChild<Gui::Pane>(Gui::DockingPosition::Bottom, false, Vector2f32{ 250.0f, 250.0f });
-        docker->CreateChild<Gui::Pane>(Gui::DockingPosition::Right, false, Vector2f32{ 300.0f, 200.0f })->CreateChild<Gui::Button>();
-        
+        auto button = docker->CreateChild<Gui::Pane>(Gui::DockingPosition::Right, false, Vector2f32{ 300.0f, 200.0f })->CreateChild<Gui::Button>();
+
+        button->onPress.Connect([&, pane1](int)
+        {
+            m_canvas->DestroyWidget(pane1);
+        });
+
 
         /*auto pane1 = docker->CreateChild<Gui::Pane>(Gui::DockingPosition::Left, true, Vector2f32{ 100.0f, 100.0f });
         pane1->padding = { 4.0f, 4.0f, 4.0f, 4.0f };
