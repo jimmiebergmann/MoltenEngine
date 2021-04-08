@@ -37,6 +37,9 @@
 #include "Molten/Gui/Widgets/PaneWidget.hpp"
 #include "Molten/Gui/Widgets/SpacerWidget.hpp"
 #include "Molten/Gui/Widgets/VerticalGridWidget.hpp"
+#include "Molten/Gui/Widgets/LabelWidget.hpp"
+
+#include "Molten/Gui/Font.hpp"
 
 #include <memory>
 
@@ -53,6 +56,7 @@ namespace Molten::Gui
         explicit EditorTheme(CanvasRenderer& canvasRenderer) :
             m_canvasRenderer(canvasRenderer)
         {
+            m_font.ReadFromFile("C:/Windows/Fonts/arial.ttf");
         }
 
         template<template<typename> typename TWidget>
@@ -67,6 +71,7 @@ namespace Molten::Gui
         friend struct WidgetSkin;
 
         CanvasRenderer& m_canvasRenderer;
+        Font m_font;
 
     };
 
@@ -143,6 +148,32 @@ namespace Molten::Gui
         WidgetSkin(const WidgetSkinDescriptor<EditorTheme, VerticalGrid>& descriptor) :
             WidgetSkinMixin<EditorTheme, VerticalGrid>(descriptor)
         {}
+
+    };
+
+    template<>
+    struct WidgetSkin<EditorTheme, Label> : WidgetSkinMixin<EditorTheme, Label>
+    {
+        WidgetSkin(const WidgetSkinDescriptor<EditorTheme, Label>& descriptor) :
+            WidgetSkinMixin<EditorTheme, Label>(descriptor)
+        {
+            // DUMMY TEST!
+            std::unique_ptr<uint8_t[]> buffer;
+            Vector2size dimensions;
+            theme.m_font.CreateBitmap(buffer, dimensions, widget.text, 96, 16);
+
+            m_texture = theme.m_canvasRenderer.CreateTexture(dimensions, buffer.get());         
+        }
+
+        void Draw() override
+        {
+            const Bounds2f32 bounds = { 0.0f, 0.0f, 100.0f, 100.0f };
+            theme.m_canvasRenderer.DrawRect(bounds, m_texture);
+        }
+
+    private:
+
+        CanvasRendererTexture m_texture;
 
     };
 

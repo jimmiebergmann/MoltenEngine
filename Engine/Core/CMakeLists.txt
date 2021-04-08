@@ -58,6 +58,14 @@ if(MOLTEN_ENABLE_OPENGL)
   find_package(OpenGL)
 endif()
 
+# FreeType2 configurations
+include(${CMAKE_CURRENT_SOURCE_DIR}/../CMake/FindFreeType2.cmake)
+if(Vulkan_FOUND)
+	add_subdirectory("${FreeType2_DIR}" "${FreeType2_DIR}")
+else()
+	message(SEND_ERROR "Cannot find FreeType2.")
+endif()
+
 include_directories ("${CoreHeadersDir}")
 include_directories ("${ThirdPartyDir}")
 add_library(Molten SHARED "${CoreSources}" "${CoreHeaders}")
@@ -110,6 +118,12 @@ if(MOLTEN_ENABLE_X11)
   target_compile_definitions(Molten PUBLIC "MOLTEN_ENABLE_X11")
 endif()
 
+if(FreeType2_FOUND)
+  target_include_directories(Molten PUBLIC "${FreeType2_INCLUDE}")
+  target_link_libraries(Molten "${FreeType2_LIBRARY}")
+  #target_compile_definitions(Molten PUBLIC "MOLTEN_ENABLE_VULKAN")
+endif()
+
 target_include_directories(Molten PUBLIC "${VendorDir}")
 
 
@@ -118,6 +132,7 @@ message("MOLTEN SUMMARY: ")
 message("Vulkan_FOUND:  ${Vulkan_FOUND}  ")
 message("Glslang_FOUND: ${Glslang_FOUND}")
 message("OpenGL_FOUND:  ${OpenGL_FOUND}")
+message("FreeType2_FOUND:  ${FreeType2_FOUND}")
 
 if(Glslang_FOUND)
   message("Vulkan_INCLUDE: ${Vulkan_INCLUDE}")
@@ -131,4 +146,9 @@ endif()
 
 if(Glslang_FOUND)
   message("OPENGL_LIBRARIES: ${OPENGL_LIBRARIES}")
+endif()
+
+if(FreeType2_FOUND)
+  message("FreeType2_INCLUDE: ${FreeType2_INCLUDE}")
+  message("FreeType2_LIBRARY: ${FreeType2_LIBRARY}")
 endif()

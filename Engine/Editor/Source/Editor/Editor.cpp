@@ -40,6 +40,7 @@
 #include "Molten/Gui/Widgets/SpacerWidget.hpp"
 #include "Molten/Gui/Widgets/PaneWidget.hpp"
 #include "Molten/Gui/Widgets/DockerWidget.hpp"
+#include "Molten/Gui/Widgets/LabelWidget.hpp"
 
 
 /*#include "Molten/Window/Window.hpp"
@@ -255,6 +256,8 @@ namespace Molten::Editor
 
         button->size.CalculateValue({}, {});
 
+        button->CreateChild<Gui::Label>("Hello world", 16);
+
 
         /*auto pane1 = docker->CreateChild<Gui::Pane>(Gui::DockingPosition::Left, true, Vector2f32{ 100.0f, 100.0f });
         pane1->padding = { 4.0f, 4.0f, 4.0f, 4.0f };
@@ -292,6 +295,8 @@ namespace Molten::Editor
 
     void Editor::Exit()
     {
+        m_renderer->WaitForDevice();
+
         m_isRunning = false;
         m_cancellationSemaphore.NotifyAll();
     }

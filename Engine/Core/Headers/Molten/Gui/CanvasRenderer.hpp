@@ -40,6 +40,7 @@ namespace Molten
     class VertexBuffer;
     class IndexBuffer;
     class Texture;
+    class DescriptorSet;
     class Logger;
 }
 
@@ -52,19 +53,46 @@ namespace Molten::Shader::Visual
 namespace Molten::Gui
 {
 
+    class CanvasRenderer;
+
+
+    class MOLTEN_API CanvasRendererTexture
+    {
+
+    public:
+
+        CanvasRendererTexture() = default;
+        CanvasRendererTexture(const CanvasRendererTexture&) = delete;
+        CanvasRendererTexture(CanvasRendererTexture&& canvasRendererTexture) noexcept;
+
+        CanvasRendererTexture& operator =(const CanvasRendererTexture&) = delete;
+        CanvasRendererTexture& operator =(CanvasRendererTexture&& canvasRendererTexture) noexcept;
+
+   /* private:
+
+        friend class CanvasRenderer;*/
+
+        Resource<Texture> texture;
+        Resource<DescriptorSet> descriptorSet;
+
+    };
+
+
     class MOLTEN_API CanvasRenderer
     {
 
     public:
 
-        static CanvasRendererPointer Create(Molten::Renderer& renderer, Logger * logger = nullptr, const Vector2f32& size = { 0.0f, 0.0f });
+        static CanvasRendererPointer Create(Renderer& renderer, Logger * logger = nullptr, const Vector2f32& size = { 0.0f, 0.0f });
 
-        CanvasRenderer(Molten::Renderer& renderer, Logger* logger = nullptr, const Vector2f32& size = {0.0f, 0.0f});
+        CanvasRenderer(Renderer& renderer, Logger* logger = nullptr, const Vector2f32& size = {0.0f, 0.0f});
         ~CanvasRenderer();
 
         void Close();
 
         void Resize(const Vector2f32& size);
+
+        CanvasRendererTexture CreateTexture(Vector2ui32 dimensions, const void* data);
 
         void BeginDraw();
 
@@ -74,7 +102,10 @@ namespace Molten::Gui
 
         void DrawRect(const Bounds2f32& bounds, const Vector4f32& color);
 
+        void DrawRect(const Bounds2f32& bounds, CanvasRendererTexture& texture);
+
         void EndDraw();
+
 
     private:
 
@@ -83,14 +114,13 @@ namespace Molten::Gui
         CanvasRenderer& operator =(const CanvasRenderer&) = delete;
         CanvasRenderer& operator =(CanvasRenderer&&) = delete;
 
-        struct RenderInstance
+        struct ColoredRectData
         {
-            RenderInstance();
+            ColoredRectData();
 
             Resource<Pipeline> pipeline;
             Resource<VertexBuffer> vertexBuffer;
             Resource<IndexBuffer> indexBuffer;
-            Resource<Texture> texture;
             Shader::Visual::VertexScript* vertexScript;
             Shader::Visual::FragmentScript* fragmentScript;
             uint32_t projectionLocation;
@@ -99,17 +129,35 @@ namespace Molten::Gui
             uint32_t colorLocation;
         };
 
-        void LoadRectRenderInstance();
-        static void DestroyRenderInstance(RenderInstance& instance);
+        struct TexturedRectData
+        {
+            TexturedRectData();
 
-        using PositionStack = std::stack<Vector2f32>;
+            Resource<Pipeline> pipeline;
+            Resource<VertexBuffer> vertexBuffer;
+            Resource<IndexBuffer> indexBuffer;
+            Shader::Visual::VertexScript* vertexScript;
+            Shader::Visual::FragmentScript* fragmentScript;
+            uint32_t projectionLocation;
+            uint32_t positionLocation;
+            uint32_t sizeLocation;
+        };
+
+        static void DestroyColoredRect(ColoredRectData& data);
+        static void DestroyTexturedRect(TexturedRectData& data);
+
+        void LoadColoredRect();
+        void LoadTexturedRect();
+       
+        //using PositionStack = std::stack<Vector2f32>;
 
         Logger* m_logger;
         Molten::Renderer& m_backendRenderer;
         Matrix4x4f32 m_projection;
-        RenderInstance m_rectInstance;
+        ColoredRectData m_coloredRect;
+        TexturedRectData m_texturedRect;
 
-        PositionStack m_positionStack;
+        //PositionStack m_positionStack;
 
     };
 

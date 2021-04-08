@@ -6,3 +6,6 @@
 	path = Engine/Vendor/ThirdParty/glslang
 	url = https://github.com/jimmiebergmann/glslang
 	shallow = true
+[submodule "Engine/Vendor/ThirdParty/FreeType2"]
+	path = Engine/Vendor/ThirdParty/FreeType2
+	url = https://github.com/jimmiebergmann/FreeType2
