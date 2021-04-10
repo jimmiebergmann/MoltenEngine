@@ -71,7 +71,6 @@ namespace Molten
 
         RenderResourceDeleter(const RenderResourceDeleter& renderResourceDeleter) = default;
         RenderResourceDeleter(RenderResourceDeleter&&) = default;
-
         RenderResourceDeleter& operator =(const RenderResourceDeleter& renderResourceDeleter) = default;
         RenderResourceDeleter& operator =(RenderResourceDeleter &&) = default;
 

@@ -23,25 +23,26 @@
 *
 */
 
-#include "Molten/Renderer/PushConstant.hpp"
+#include "Molten/Renderer/VertexBuffer.hpp"
 
 namespace Molten
 {
 
-    PushConstantLocation::PushConstantLocation() :
-        id(UnknownId),
-        location(UnknownLocation),
-        dataType(Shader::VariableDataType::Bool)
+    // Vertex buffer descriptor implementations.
+    VertexBufferDescriptor::VertexBufferDescriptor() :
+        vertexCount(0),
+        vertexSize(0),
+        data(nullptr)
     {}
 
-    PushConstantLocation::PushConstantLocation(
-        const uint32_t id,
-        const uint32_t location,
-        const Shader::VariableDataType dataType
+    VertexBufferDescriptor::VertexBufferDescriptor(
+        const uint32_t vertexCount,
+        const uint32_t vertexSize,
+        const void* data
     ) :
-        id(id),
-        location(location),
-        dataType(dataType)
+        vertexCount(vertexCount),
+        vertexSize(vertexSize),
+        data(data)
     {}
 
 }

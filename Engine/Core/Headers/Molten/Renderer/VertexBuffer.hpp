@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -60,12 +60,20 @@ namespace Molten
     /**
     * @brief Descriptor class of vertex buffer class.
     */
-    class MOLTEN_API VertexBufferDescriptor
+    struct MOLTEN_API VertexBufferDescriptor
     {
 
-    public:
+        VertexBufferDescriptor();
+        VertexBufferDescriptor(
+            const uint32_t vertexCount,
+            const uint32_t vertexSize,
+            const void* data);
+        ~VertexBufferDescriptor() = default;
 
-        VertexBufferDescriptor() = default;
+        VertexBufferDescriptor(const VertexBufferDescriptor&) = default;
+        VertexBufferDescriptor(VertexBufferDescriptor&&) = default;
+        VertexBufferDescriptor& operator =(const VertexBufferDescriptor&) = default;
+        VertexBufferDescriptor& operator =(VertexBufferDescriptor&&) = default;
 
         uint32_t vertexCount;
         uint32_t vertexSize;

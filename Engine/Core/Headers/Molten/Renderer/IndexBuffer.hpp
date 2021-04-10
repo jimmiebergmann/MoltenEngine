@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -58,12 +58,20 @@ namespace Molten
     };
 
     /** Descriptor class of index buffer class. */
-    class MOLTEN_API IndexBufferDescriptor
+    struct MOLTEN_API IndexBufferDescriptor
     {
 
-    public:
+        IndexBufferDescriptor();
+        IndexBufferDescriptor(
+            const uint32_t indexCount,
+            const void* data,
+            const IndexBuffer::DataType dataType);
+        ~IndexBufferDescriptor() = default;
 
-        IndexBufferDescriptor() = default;
+        IndexBufferDescriptor(const IndexBufferDescriptor&) = default;
+        IndexBufferDescriptor(IndexBufferDescriptor&&) = default;
+        IndexBufferDescriptor& operator =(const IndexBufferDescriptor&) = default;
+        IndexBufferDescriptor& operator =(IndexBufferDescriptor&&) = default;
 
         uint32_t indexCount;
         const void* data;   

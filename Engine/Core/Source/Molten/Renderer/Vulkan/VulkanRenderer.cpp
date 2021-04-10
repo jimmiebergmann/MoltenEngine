@@ -351,7 +351,7 @@ namespace Molten
         const auto it = locations.find(id);
         if (it == locations.end())
         {
-            return std::numeric_limits<uint32_t>::max();
+            return PushConstantLocation::UnknownLocation;
         }
 
         return it->second.location;

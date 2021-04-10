@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -52,15 +52,19 @@ namespace Molten
     };
 
     /** Descriptor class of texture class. */
-    class MOLTEN_API TextureDescriptor
+    struct MOLTEN_API TextureDescriptor
     {
-
-    public:
 
         TextureDescriptor();
         TextureDescriptor(
             const Vector2ui32& dimensions,
             const void* data);
+        ~TextureDescriptor() = default;
+
+        TextureDescriptor(const TextureDescriptor&) = default;
+        TextureDescriptor(TextureDescriptor&&) = default;
+        TextureDescriptor& operator =(const TextureDescriptor&) = default;
+        TextureDescriptor& operator =(TextureDescriptor&&) = default;
 
         Vector2ui32 dimensions;
         const void* data;

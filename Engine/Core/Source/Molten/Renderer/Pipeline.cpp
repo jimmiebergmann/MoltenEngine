@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -36,6 +36,22 @@ namespace Molten
         cullMode(Pipeline::CullMode::None),
         vertexScript(nullptr),
         fragmentScript(nullptr)
+    { }
+
+    PipelineDescriptor::PipelineDescriptor(
+        const Pipeline::Topology topology,
+        const Pipeline::PolygonMode polygonMode,
+        const Pipeline::FrontFace frontFace,
+        const Pipeline::CullMode cullMode,
+        Shader::Visual::VertexScript* vertexScript,
+        Shader::Visual::FragmentScript* fragmentScript
+    ) :
+        topology(topology),
+        polygonMode(polygonMode),
+        frontFace(frontFace),
+        cullMode(cullMode),
+        vertexScript(vertexScript),
+        fragmentScript(fragmentScript)
     { }
 
 }

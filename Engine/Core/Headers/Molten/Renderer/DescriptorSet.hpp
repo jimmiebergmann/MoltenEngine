@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -59,17 +59,21 @@ namespace Molten
 
     };
 
-
     /** Descriptor class of descriptor binding class. */
-    class MOLTEN_API DescriptorBinding
+    struct MOLTEN_API DescriptorBinding
     {
-
-    public:
 
         using BindingVariant = std::variant< 
             RenderResource<UniformBuffer>*,
             RenderResource<Texture>*
         >;
+
+        DescriptorBinding(
+            const uint32_t id,
+            RenderResource<UniformBuffer>& uniformBuffer);
+        DescriptorBinding(
+            const uint32_t id,
+            RenderResource<Texture>& texture);
 
         uint32_t id;
         BindingVariant binding;
@@ -77,12 +81,15 @@ namespace Molten
     };
 
     /** Descriptor class of descriptor set class. */
-    class MOLTEN_API DescriptorSetDescriptor
+    struct MOLTEN_API DescriptorSetDescriptor
     {
 
-    public:
-
         DescriptorSetDescriptor();
+        DescriptorSetDescriptor(
+            RenderResource<Pipeline>* pipeline,
+            const uint32_t id,
+            DescriptorBinding&& binding
+        );
         DescriptorSetDescriptor(
             RenderResource<Pipeline>* pipeline,
             const uint32_t id,
@@ -94,7 +101,6 @@ namespace Molten
         std::vector<DescriptorBinding> bindings;
 
     };
-
 
     /** Framed descriptor set resource object. */
     class MOLTEN_API FramedDescriptorSet
@@ -116,15 +122,20 @@ namespace Molten
     };
 
     /** Framed descriptor class of descriptor binding class. */
-    class MOLTEN_API FramedDescriptorBinding
+    struct MOLTEN_API FramedDescriptorBinding
     {
-
-    public:
 
         using BindingVariant = std::variant<
             RenderResource<FramedUniformBuffer>*,
             RenderResource<Texture>*
         >;
+
+        FramedDescriptorBinding(
+            const uint32_t id,
+            RenderResource<FramedUniformBuffer>& framedUniformBuffer);
+        FramedDescriptorBinding(
+            const uint32_t id,
+            RenderResource<Texture>& texture);
 
         uint32_t id;
         BindingVariant binding;
@@ -132,10 +143,8 @@ namespace Molten
     };
 
     /** Descriptor class of descriptor set class. */
-    class MOLTEN_API FramedDescriptorSetDescriptor
+    struct MOLTEN_API FramedDescriptorSetDescriptor
     {
-
-    public:
 
         FramedDescriptorSetDescriptor();
         FramedDescriptorSetDescriptor(
@@ -149,7 +158,6 @@ namespace Molten
         std::vector<FramedDescriptorBinding> bindings;
 
     };
-
 
     /** Data structures for mapping arbitrary indices to actually used indices in compiler shader. */
     /**@{*/
@@ -169,12 +177,12 @@ namespace Molten
     {
         MappedDescriptorSet();
         MappedDescriptorSet(const uint32_t index);
+        ~MappedDescriptorSet() = default;
 
-        MappedDescriptorSet(const MappedDescriptorSet& mappedDescriptorSet);
-        MappedDescriptorSet(MappedDescriptorSet&& mappedDescriptorSet);
-
-        MappedDescriptorSet& operator =(const MappedDescriptorSet& mappedDescriptorSet);
-        MappedDescriptorSet& operator =(MappedDescriptorSet&& mappedDescriptorSet);
+        MappedDescriptorSet(const MappedDescriptorSet& mappedDescriptorSet) = default;
+        MappedDescriptorSet(MappedDescriptorSet&& mappedDescriptorSet) noexcept;
+        MappedDescriptorSet& operator =(const MappedDescriptorSet& mappedDescriptorSet) = default;
+        MappedDescriptorSet& operator =(MappedDescriptorSet&& mappedDescriptorSet) noexcept;
 
         uint32_t index;
         MappedDescriptorBindings bindings;

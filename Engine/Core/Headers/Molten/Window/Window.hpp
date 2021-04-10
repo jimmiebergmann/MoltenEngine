@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -182,44 +182,6 @@ namespace Molten
          *  The method Update is being called and managed by the window.
          */
         virtual const UserInput& GetUserInput() const = 0;
-
-    #if MOLTEN_PLATFORM == MOLTEN_PLATFORM_WINDOWS
-       
-        /** Get win32 window handle. Only available on Windows. */
-        /**@{*/
-        virtual HWND GetWin32Window() = 0;
-        virtual const HWND GetWin32Window() const = 0;
-        /**@}*/
-
-        /** Get win32 device context handle. Only available on Windows. */
-        /**@{*/
-        virtual HDC GetWin32DeviceContext() = 0;
-        virtual const HDC GetWin32DeviceContext() const = 0;
-        /**@}*/
-
-        /** Get win32 instance handle. Only available on Windows.*/
-        /**@{*/
-        virtual HINSTANCE GetWin32Instance() = 0;
-        virtual const HINSTANCE GetWin32Instance() const = 0;
-        /**@}*/
-    
-    #elif MOLTEN_PLATFORM == MOLTEN_PLATFORM_LINUX
-       
-        /** Get X11 display Device. Only available on Linux. */
-        /**@{*/
-        virtual ::Display* GetX11DisplayDevice() = 0;
-        virtual const ::Display* GetX11DisplayDevice() const = 0;
-        /**@}*/
-
-        /** Get X11 window Device. Only available on Linux. */
-        /**@{*/
-        virtual ::Window GetX11WindowDevice() const = 0;
-        /**@}*/
-
-        /** Get X11 screen Device. Only available on Linux. */
-        virtual int GetX11ScreenDevice() const = 0;
-
-    #endif
 
     };
 

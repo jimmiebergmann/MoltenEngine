@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -99,7 +99,7 @@ namespace Molten::Gui
 
         const auto descriptorSetDescriptor = DescriptorSetDescriptor{
             &m_texturedRect.pipeline, 0,
-            {{ 0,  &texture }}
+            { 0,  texture }
         };
         auto descriptorSet = m_backendRenderer.CreateDescriptorSet(descriptorSetDescriptor);
         if (!descriptorSet)

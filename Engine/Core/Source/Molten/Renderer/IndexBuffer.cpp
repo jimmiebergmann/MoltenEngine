@@ -23,24 +23,25 @@
 *
 */
 
-#include "Molten/Renderer/PushConstant.hpp"
+#include "Molten/Renderer/IndexBuffer.hpp"
 
 namespace Molten
 {
 
-    PushConstantLocation::PushConstantLocation() :
-        id(UnknownId),
-        location(UnknownLocation),
-        dataType(Shader::VariableDataType::Bool)
+    // Index buffer descriptor implementations.
+    IndexBufferDescriptor::IndexBufferDescriptor() :
+        indexCount(0),
+        data(nullptr),
+        dataType(IndexBuffer::DataType::Uint16)
     {}
 
-    PushConstantLocation::PushConstantLocation(
-        const uint32_t id,
-        const uint32_t location,
-        const Shader::VariableDataType dataType
+    IndexBufferDescriptor::IndexBufferDescriptor(
+        const uint32_t indexCount,
+        const void* data,
+        const IndexBuffer::DataType dataType
     ) :
-        id(id),
-        location(location),
+        indexCount(indexCount),
+        data(data),
         dataType(dataType)
     {}
 

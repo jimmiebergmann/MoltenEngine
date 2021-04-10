@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -51,15 +51,19 @@ namespace Molten
     };
 
     /** Descriptor class of uniform buffer class. */
-    class MOLTEN_API UniformBufferDescriptor
+    struct MOLTEN_API UniformBufferDescriptor
     {
 
-    public:
-
         UniformBufferDescriptor();
-        UniformBufferDescriptor(const uint32_t size);
+        explicit UniformBufferDescriptor(const uint32_t size);
+        ~UniformBufferDescriptor() = default;
 
-        uint32_t size; ///< Size of buffer, in bytes.
+        UniformBufferDescriptor(const UniformBufferDescriptor&) = default;
+        UniformBufferDescriptor(UniformBufferDescriptor&&) = default;
+        UniformBufferDescriptor& operator =(const UniformBufferDescriptor&) = default;
+        UniformBufferDescriptor& operator =(UniformBufferDescriptor&&) = default;
+
+        uint32_t size; ///< Buffer size in bytes.
 
     };
 
@@ -85,15 +89,19 @@ namespace Molten
 
     
     /** Descriptor class of framed uniform buffer class. */
-    class MOLTEN_API FramedUniformBufferDescriptor
+    struct MOLTEN_API FramedUniformBufferDescriptor
     {
 
-    public:
-
         FramedUniformBufferDescriptor();
-        FramedUniformBufferDescriptor(const uint32_t size);
+        explicit FramedUniformBufferDescriptor(const uint32_t size);
+        ~FramedUniformBufferDescriptor() = default;
 
-        uint32_t size; ///< Size of buffer, in bytes.
+        FramedUniformBufferDescriptor(const FramedUniformBufferDescriptor&) = default;
+        FramedUniformBufferDescriptor(FramedUniformBufferDescriptor&&) = default;
+        FramedUniformBufferDescriptor& operator =(const FramedUniformBufferDescriptor&) = default;
+        FramedUniformBufferDescriptor& operator =(FramedUniformBufferDescriptor&&) = default;
+
+        uint32_t size;///< Buffer size in bytes.
 
     };
 

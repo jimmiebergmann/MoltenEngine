@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -481,25 +481,13 @@ namespace Molten
     {
         return m_window;
     }
-    const HWND WindowWin32::GetWin32Window() const
-    {
-        return m_window;
-    }
 
     HDC WindowWin32::GetWin32DeviceContext()
     {
         return m_deviceContext;
     }
-    const HDC WindowWin32::GetWin32DeviceContext() const
-    {
-        return m_deviceContext;
-    }
 
     HINSTANCE WindowWin32::GetWin32Instance()
-    {
-        return m_instance;
-    }
-    const HINSTANCE WindowWin32::GetWin32Instance() const
     {
         return m_instance;
     }

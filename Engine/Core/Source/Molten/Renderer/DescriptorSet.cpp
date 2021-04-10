@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -30,10 +30,38 @@
 namespace Molten
 {
 
+    // Descriptor binding implementations.
+    DescriptorBinding::DescriptorBinding(
+        const uint32_t id,
+        RenderResource<UniformBuffer>& uniformBuffer
+    ) :
+        id(id),
+        binding(&uniformBuffer)
+    {}
+
+    DescriptorBinding::DescriptorBinding(
+        const uint32_t id,
+        RenderResource<Texture>& texture
+    ) :
+        id(id),
+        binding(&texture)
+    {}
+
+
     // Descriptor set descriptor implementations.
     DescriptorSetDescriptor::DescriptorSetDescriptor() :
         pipeline(nullptr),
         id(std::numeric_limits<uint32_t>::max())
+    {}
+
+    DescriptorSetDescriptor::DescriptorSetDescriptor(
+        RenderResource<Pipeline>* pipeline,
+        const uint32_t id,
+        DescriptorBinding&& binding
+    ) :
+        pipeline(pipeline),
+        id(id),
+        bindings{ binding }
     {}
 
     DescriptorSetDescriptor::DescriptorSetDescriptor(
@@ -44,6 +72,24 @@ namespace Molten
         pipeline(pipeline),
         id(id),
         bindings(std::move(bindings))
+    {}
+
+
+    // Framed descriptor binding implementations.
+    FramedDescriptorBinding::FramedDescriptorBinding(
+        const uint32_t id,
+        RenderResource<FramedUniformBuffer>& framedUniformBuffer
+    ) :
+        id(id),
+        binding(&framedUniformBuffer)
+    {}
+
+    FramedDescriptorBinding::FramedDescriptorBinding(
+        const uint32_t id,
+        RenderResource<Texture>& texture
+    ) :
+        id(id),
+        binding(&texture)
     {}
 
 
@@ -83,26 +129,14 @@ namespace Molten
         index(index)
     {}
 
-    MappedDescriptorSet::MappedDescriptorSet(const MappedDescriptorSet& mappedDescriptorSet) :
-        index(mappedDescriptorSet.index),
-        bindings(mappedDescriptorSet.bindings)
-    {}
-
-    MappedDescriptorSet::MappedDescriptorSet(MappedDescriptorSet&& mappedDescriptorSet) :
+    MappedDescriptorSet::MappedDescriptorSet(MappedDescriptorSet&& mappedDescriptorSet) noexcept :
         index(mappedDescriptorSet.index),
         bindings(std::move(mappedDescriptorSet.bindings))
     {
         mappedDescriptorSet.index = std::numeric_limits<uint32_t>::max();
     }
 
-    MappedDescriptorSet& MappedDescriptorSet::operator =(const MappedDescriptorSet& mappedDescriptorSet)
-    {
-        index = mappedDescriptorSet.index;
-        bindings = mappedDescriptorSet.bindings;
-        return *this;
-    }
-
-    MappedDescriptorSet& MappedDescriptorSet::operator =(MappedDescriptorSet&& mappedDescriptorSet)
+    MappedDescriptorSet& MappedDescriptorSet::operator =(MappedDescriptorSet&& mappedDescriptorSet) noexcept
     {
         index = mappedDescriptorSet.index;
         bindings = std::move(mappedDescriptorSet.bindings);

@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -91,12 +91,23 @@ namespace Molten
     };
 
     /** Descriptor class of pipeline class. */
-    class MOLTEN_API PipelineDescriptor
+    struct MOLTEN_API PipelineDescriptor
     {
 
-    public:
-
         PipelineDescriptor();
+        PipelineDescriptor(
+            const Pipeline::Topology topology,
+            const Pipeline::PolygonMode polygonMode,
+            const Pipeline::FrontFace frontFace,
+            const Pipeline::CullMode cullMode,
+            Shader::Visual::VertexScript* vertexScript,
+            Shader::Visual::FragmentScript* fragmentScript);
+        ~PipelineDescriptor() = default;
+
+        PipelineDescriptor(const PipelineDescriptor&) = default;
+        PipelineDescriptor(PipelineDescriptor&&) = default;
+        PipelineDescriptor& operator =(const PipelineDescriptor&) = default;
+        PipelineDescriptor& operator =(PipelineDescriptor&&) = default;
         
         Pipeline::Topology topology;
         Pipeline::PolygonMode polygonMode;

@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -273,17 +273,13 @@ namespace Molten
     {
         return m_display;
     }
-    const ::Display* WindowX11::GetX11DisplayDevice() const
-    {
-        return m_display;
-    }
 
-    ::Window WindowX11::GetX11WindowDevice() const
+    ::Window WindowX11::GetX11WindowDevice()
     {
         return m_window;
     }
 
-    int WindowX11::GetX11ScreenDevice() const
+    int WindowX11::GetX11ScreenDevice()
     {
         return m_screen;
     }

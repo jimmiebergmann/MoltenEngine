@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -32,25 +32,28 @@
 namespace Molten
 {
 
-    /** Push constant location base class. */
-    /*class MOLTEN_API PushConstantLocation
+    struct MOLTEN_API PushConstantLocation
     {
 
-    protected:
+        static constexpr uint32_t UnknownId = std::numeric_limits<uint32_t>::max();
+        static constexpr uint32_t UnknownLocation = std::numeric_limits<uint32_t>::max();
 
-        PushConstantLocation() = default;
-        PushConstantLocation(const PushConstantLocation&) = delete;
-        PushConstantLocation(PushConstantLocation&&) = delete;
-        virtual ~PushConstantLocation() = default;
+        PushConstantLocation();
+        PushConstantLocation(
+            const uint32_t id,
+            const uint32_t location,
+            const Shader::VariableDataType dataType);
+        ~PushConstantLocation() = default;
 
-    };*/
+        PushConstantLocation(const PushConstantLocation&) = default;
+        PushConstantLocation(PushConstantLocation&&) = default;
+        PushConstantLocation& operator =(const PushConstantLocation&) = default;
+        PushConstantLocation& operator =(PushConstantLocation&&) = default;
 
-
-    struct PushConstantLocation
-    {
         uint32_t id;
         uint32_t location;
         Shader::VariableDataType dataType;
+
     };
 
     using PushConstantLocations = std::map<uint32_t, PushConstantLocation>;

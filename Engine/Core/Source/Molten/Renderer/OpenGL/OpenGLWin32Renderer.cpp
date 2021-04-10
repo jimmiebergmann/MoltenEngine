@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -30,10 +30,10 @@
 #if MOLTEN_PLATFORM == MOLTEN_PLATFORM_WINDOWS
 
 #include "Molten/Renderer/OpenGL/OpengGLFunctions.hpp"
+#include "Molten/Renderer/PushConstant.hpp"
 #include "Molten/Window/Window.hpp"
 #include "Molten/System/Exception.hpp"
-#include <vector>
-#include <limits>
+#include <array>
 
 namespace Molten
 {
@@ -184,7 +184,7 @@ namespace Molten
 
     uint32_t OpenGLWin32Renderer::GetPushConstantLocation(Pipeline& /*pipeline*/, const uint32_t /*id*/)
     {
-        return std::numeric_limits<uint32_t>::max();
+        return PushConstantLocation::UnknownLocation;
     }
 
     RenderResource<DescriptorSet> OpenGLWin32Renderer::CreateDescriptorSet(const DescriptorSetDescriptor& /*descriptor*/)
@@ -355,7 +355,7 @@ namespace Molten
 
     void OpenGLWin32Renderer::OpenBestVersion(HDC deviceContext, Version& version)
     {
-        static const std::vector<Version> versions =
+        static const std::array versions =
         {
             Version(4, 6),
             Version(4, 5),
