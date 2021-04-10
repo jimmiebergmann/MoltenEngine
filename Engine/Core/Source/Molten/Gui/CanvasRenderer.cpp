@@ -115,50 +115,30 @@ namespace Molten::Gui
     }
 
     void CanvasRenderer::BeginDraw()
-    {
-        /*while (!m_positionStack.empty())
-        {
-            m_positionStack.pop();
-        }
-        m_positionStack.push({ 0.0f, 0.0f });*/
-    }
-
-    void CanvasRenderer::PushPosition(const Vector2f32& position)
-    {
-        //Vector2f32 newPosition = (!m_positionStack.empty() ? m_positionStack.top() : Vector2f32{ 0.0f, 0.0f }) + position;
-        //m_positionStack.push(newPosition);
-    }
-
-    void CanvasRenderer::PopPosition()
-    {
-        /*if (!m_positionStack.empty())
-        {
-            m_positionStack.pop();
-        }*/
-    }
+    {}
 
     void CanvasRenderer::DrawRect(const Bounds2f32& bounds, const Vector4f32& color)
     {
-        m_backendRenderer.BindPipeline(m_coloredRect.pipeline);
+        m_backendRenderer.BindPipeline(*m_coloredRect.pipeline);
 
         m_backendRenderer.PushConstant(m_coloredRect.projectionLocation, m_projection);
         m_backendRenderer.PushConstant(m_coloredRect.positionLocation, bounds.low);
         m_backendRenderer.PushConstant(m_coloredRect.sizeLocation, bounds.high - bounds.low);
         m_backendRenderer.PushConstant(m_coloredRect.colorLocation, color);
 
-        m_backendRenderer.DrawVertexBuffer(m_coloredRect.indexBuffer, m_coloredRect.vertexBuffer);
+        m_backendRenderer.DrawVertexBuffer(*m_coloredRect.indexBuffer, *m_coloredRect.vertexBuffer);
     }
 
     void CanvasRenderer::DrawRect(const Bounds2f32& bounds, CanvasRendererTexture& texture)
     {
-        m_backendRenderer.BindPipeline(m_texturedRect.pipeline);
-        m_backendRenderer.BindDescriptorSet(texture.descriptorSet);
+        m_backendRenderer.BindPipeline(*m_texturedRect.pipeline);
+        m_backendRenderer.BindDescriptorSet(*texture.descriptorSet);
 
         m_backendRenderer.PushConstant(m_texturedRect.projectionLocation, m_projection);
         m_backendRenderer.PushConstant(m_texturedRect.positionLocation, bounds.low);
         m_backendRenderer.PushConstant(m_texturedRect.sizeLocation, bounds.high - bounds.low);
 
-        m_backendRenderer.DrawVertexBuffer(m_texturedRect.indexBuffer, m_texturedRect.vertexBuffer);
+        m_backendRenderer.DrawVertexBuffer(*m_texturedRect.indexBuffer, *m_texturedRect.vertexBuffer);
     }
 
     void CanvasRenderer::EndDraw()
@@ -306,10 +286,10 @@ namespace Molten::Gui
             throw Exception("Failed to create gui pipeline");
         }
 
-        m_coloredRect.projectionLocation = m_backendRenderer.GetPushConstantLocation(m_coloredRect.pipeline, 1);
-        m_coloredRect.positionLocation = m_backendRenderer.GetPushConstantLocation(m_coloredRect.pipeline, 2);
-        m_coloredRect.sizeLocation = m_backendRenderer.GetPushConstantLocation(m_coloredRect.pipeline, 3);
-        m_coloredRect.colorLocation = m_backendRenderer.GetPushConstantLocation(m_coloredRect.pipeline, 4);       
+        m_coloredRect.projectionLocation = m_backendRenderer.GetPushConstantLocation(*m_coloredRect.pipeline, 1);
+        m_coloredRect.positionLocation = m_backendRenderer.GetPushConstantLocation(*m_coloredRect.pipeline, 2);
+        m_coloredRect.sizeLocation = m_backendRenderer.GetPushConstantLocation(*m_coloredRect.pipeline, 3);
+        m_coloredRect.colorLocation = m_backendRenderer.GetPushConstantLocation(*m_coloredRect.pipeline, 4);
     }
 
     void CanvasRenderer::LoadTexturedRect()
@@ -449,9 +429,9 @@ namespace Molten::Gui
             throw Exception("Failed to create gui pipeline");
         }
 
-        m_texturedRect.projectionLocation = m_backendRenderer.GetPushConstantLocation(m_texturedRect.pipeline, 1);
-        m_texturedRect.positionLocation = m_backendRenderer.GetPushConstantLocation(m_texturedRect.pipeline, 2);
-        m_texturedRect.sizeLocation = m_backendRenderer.GetPushConstantLocation(m_texturedRect.pipeline, 3);
+        m_texturedRect.projectionLocation = m_backendRenderer.GetPushConstantLocation(*m_texturedRect.pipeline, 1);
+        m_texturedRect.positionLocation = m_backendRenderer.GetPushConstantLocation(*m_texturedRect.pipeline, 2);
+        m_texturedRect.sizeLocation = m_backendRenderer.GetPushConstantLocation(*m_texturedRect.pipeline, 3);
     }
 
     void CanvasRenderer::DestroyColoredRect(ColoredRectData& data)

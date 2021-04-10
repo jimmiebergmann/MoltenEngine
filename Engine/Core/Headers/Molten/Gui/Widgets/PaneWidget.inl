@@ -37,24 +37,24 @@ namespace Molten::Gui
     template<typename TTheme>
     void Pane<TTheme>::Update()
     {
-       ApplyMarginsToGrantedBounds();
+        this->ApplyMarginsToGrantedBounds();
 
-       auto& grantedBounds = GetGrantedBounds();
+        auto& grantedBounds = this->GetGrantedBounds();
 
-       m_dragBounds = grantedBounds;
-       m_dragBounds.bottom = m_dragBounds.top + WidgetSkinType::headerBarHeight;
+        m_dragBounds = grantedBounds;
+        m_dragBounds.bottom = m_dragBounds.top + WidgetSkinType::headerBarHeight;
 
-       auto childLane = GetChildrenPartialLane();
+        auto childLane = this->GetChildrenPartialLane();
 
-       if (childLane.GetSize() > 0)
-       {
-           auto& childData = (*childLane.begin()).GetValue();
-           auto contentBounds = grantedBounds
-               .WithoutMargins({0.0f, 20.0f, 0.0f, 0.0f})
-               .WithoutMargins(padding).
-               ClampHighToLow();
-           childData->SetGrantedBounds(contentBounds);
-       }
+        if (childLane.GetSize() > 0)
+        {
+            auto& childData = (*childLane.begin()).GetValue();
+            auto contentBounds = grantedBounds
+                .WithoutMargins({0.0f, 20.0f, 0.0f, 0.0f})
+                .WithoutMargins(this->padding)
+                .ClampHighToLow();
+            childData->SetGrantedBounds(contentBounds);
+        }
 
     }
 

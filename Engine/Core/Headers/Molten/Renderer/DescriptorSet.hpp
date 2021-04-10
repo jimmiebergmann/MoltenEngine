@@ -27,7 +27,7 @@
 #define MOLTEN_CORE_RENDERER_DESCRIPTORSET_HPP
 
 #include "Molten/Renderer/Shader.hpp"
-#include "Molten/System/Resource.hpp"
+#include "Molten/Renderer/RenderResource.hpp"
 #include <variant>
 #include <map>
 
@@ -67,8 +67,8 @@ namespace Molten
     public:
 
         using BindingVariant = std::variant< 
-            Resource<UniformBuffer>*,
-            Resource<Texture>*
+            RenderResource<UniformBuffer>*,
+            RenderResource<Texture>*
         >;
 
         uint32_t id;
@@ -84,12 +84,12 @@ namespace Molten
 
         DescriptorSetDescriptor();
         DescriptorSetDescriptor(
-            Resource<Pipeline>* pipeline,
+            RenderResource<Pipeline>* pipeline,
             const uint32_t id,
             std::vector<DescriptorBinding>&& bindings
         );
 
-        Resource<Pipeline>* pipeline;
+        RenderResource<Pipeline>* pipeline;
         uint32_t id;
         std::vector<DescriptorBinding> bindings;
 
@@ -122,8 +122,8 @@ namespace Molten
     public:
 
         using BindingVariant = std::variant<
-            Resource<FramedUniformBuffer>*,
-            Resource<Texture>*
+            RenderResource<FramedUniformBuffer>*,
+            RenderResource<Texture>*
         >;
 
         uint32_t id;
@@ -139,12 +139,12 @@ namespace Molten
 
         FramedDescriptorSetDescriptor();
         FramedDescriptorSetDescriptor(
-            Resource<Pipeline>* pipeline,
+            RenderResource<Pipeline>* pipeline,
             const uint32_t id,
             std::vector<FramedDescriptorBinding>&& bindings
         );
 
-        Resource<Pipeline>* pipeline;
+        RenderResource<Pipeline>* pipeline;
         uint32_t id;
         std::vector<FramedDescriptorBinding> bindings;
 

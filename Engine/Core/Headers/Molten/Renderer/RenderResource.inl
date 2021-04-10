@@ -23,32 +23,20 @@
 *
 */
 
-#include "Molten/Renderer/Renderer.hpp"
-#include "Molten/Renderer/OpenGL/OpenGLRenderer.hpp"
-#include "Molten/Renderer/Vulkan/VulkanRenderer.hpp"
-
 namespace Molten
 {
 
-    Renderer * Renderer::Create(const BackendApi backendApi)
-    {
-        switch (backendApi)
-        {
-        case BackendApi::OpenGL:
-#if MOLTEN_ENABLE_OPENGL
-            return new OpenGLRenderer;
-#else
-            break;
-#endif
-        case BackendApi::Vulkan:
-#if MOLTEN_ENABLE_VULKAN
-            return new VulkanRenderer;
-#else
-            break;
-#endif
-        }
+    // Render resource deleter implementations.
+    template<typename T>
+    RenderResourceDeleter<T>::RenderResourceDeleter(Renderer* renderer) :
+        RenderResourceDeleterHelper(renderer)
+    {}
 
-        return nullptr;
+    template<typename T>
+    void RenderResourceDeleter<T>::operator()(T* resource)
+    {
+        RenderResourceDeleterHelper::Destroy(*resource);
+        delete resource;
     }
 
 }

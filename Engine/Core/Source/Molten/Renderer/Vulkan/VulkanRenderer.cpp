@@ -345,10 +345,10 @@ namespace Molten
         return m_version;
     }
 
-    uint32_t VulkanRenderer::GetPushConstantLocation(Resource<Pipeline>& pipeline, const uint32_t id)
+    uint32_t VulkanRenderer::GetPushConstantLocation(Pipeline& pipeline, const uint32_t id)
     {
-        auto& locations = static_cast<VulkanPipeline*>(pipeline.get())->pushConstantLocations;
-        auto it = locations.find(id);
+        auto& locations = static_cast<VulkanPipeline&>(pipeline).pushConstantLocations;
+        const auto it = locations.find(id);
         if (it == locations.end())
         {
             return std::numeric_limits<uint32_t>::max();
@@ -357,7 +357,7 @@ namespace Molten
         return it->second.location;
     }
 
-    Resource<DescriptorSet> VulkanRenderer::CreateDescriptorSet(const DescriptorSetDescriptor& descriptor)
+    RenderResource<DescriptorSet> VulkanRenderer::CreateDescriptorSet(const DescriptorSetDescriptor& descriptor)
     {
         auto* vulkanPipeline = static_cast<VulkanPipeline*>(descriptor.pipeline->get());
 
@@ -442,7 +442,7 @@ namespace Molten
 
             std::visit([&](auto* bindingData) {
                 using T = std::decay_t<decltype(bindingData)>;
-                if constexpr (std::is_same_v<T, Resource<UniformBuffer>*>)
+                if constexpr (std::is_same_v<T, RenderResource<UniformBuffer>*>)
                 {
                     auto* vulkanBuffer = static_cast<VulkanUniformBuffer*>(bindingData->get());
                     const auto bufferHandle = vulkanBuffer->deviceBuffer.GetHandle(); //vulkanBuffer->frames[0].buffer.GetHandle();
@@ -451,7 +451,7 @@ namespace Molten
                     write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER; 
                     write.pBufferInfo = &bufferInfo;
                 }
-                else if constexpr (std::is_same_v<T, Resource<Texture>*>)
+                else if constexpr (std::is_same_v<T, RenderResource<Texture>*>)
                 {
                     auto* vulkanTexture = static_cast<VulkanTexture*>(bindingData->get());
                     const auto samplerHandle = vulkanTexture->imageSampler.GetHandle();
@@ -515,20 +515,14 @@ namespace Molten
 
         destroyer.Release();
 
-        auto deleter = [&](DescriptorSet& descriptorSet)
-        {
-            auto& vulkanDescriptorSet = static_cast<VulkanDescriptorSet&>(descriptorSet);
-            vkDestroyDescriptorPool(m_logicalDevice.GetHandle(), vulkanDescriptorSet.descriptorPool, nullptr);
-        };
-
-        return DerivedResource<VulkanDescriptorSet>::Create(
-            deleter,
+        return RenderResource<DescriptorSet>(new VulkanDescriptorSet{
             setIndex,
             descriptorSet,
-            descriptorPool);
+            descriptorPool
+        }, RenderResourceDeleter<DescriptorSet>{ this });
     }
 
-    Resource<FramedDescriptorSet> VulkanRenderer::CreateFramedDescriptorSet(const FramedDescriptorSetDescriptor& descriptor)
+    RenderResource<FramedDescriptorSet> VulkanRenderer::CreateFramedDescriptorSet(const FramedDescriptorSetDescriptor& descriptor)
     {
         auto* vulkanPipeline = static_cast<VulkanPipeline*>(descriptor.pipeline->get());
 
@@ -652,7 +646,7 @@ namespace Molten
             bool successfulVisit = true;
             std::visit([&](auto* bindingData) {
                 using T = std::decay_t<decltype(bindingData)>;
-                if constexpr (std::is_same_v<T, Resource<FramedUniformBuffer>*>)
+                if constexpr (std::is_same_v<T, RenderResource<FramedUniformBuffer>*>)
                 {
                     auto* vulkanBuffer = static_cast<VulkanFramedUniformBuffer*>(bindingData->get());
 
@@ -667,7 +661,7 @@ namespace Molten
 
                     CreateBufferInfos(setWrites, writeIndex, bindingIndex, deviceBuffers);
                 }
-                else if constexpr (std::is_same_v<T, Resource<Texture>*>)
+                else if constexpr (std::is_same_v<T, RenderResource<Texture>*>)
                 {
                     auto* vulkanTexture = static_cast<VulkanTexture*>(bindingData->get());
 
@@ -736,25 +730,19 @@ namespace Molten
 
         destroyer.Release();
 
-        auto deleter = [&](FramedDescriptorSet& framedDescriptorSet)
-        {
-            auto& vulkanFramedDescriptorSet = static_cast<VulkanFramedDescriptorSet&>(framedDescriptorSet);
-            vkDestroyDescriptorPool(m_logicalDevice.GetHandle(), vulkanFramedDescriptorSet.descriptorPool, nullptr);
-        };
-
-        return DerivedResource<VulkanFramedDescriptorSet>::Create(
-            deleter,
+        return RenderResource<FramedDescriptorSet>(new VulkanFramedDescriptorSet{
             setIndex,
             std::move(descriptorSets),
-            descriptorPool);
+            descriptorPool
+        }, RenderResourceDeleter<FramedDescriptorSet>{ this });
     }
 
-    Resource<Framebuffer> VulkanRenderer::CreateFramebuffer(const FramebufferDescriptor& descriptor)
+    RenderResource<Framebuffer> VulkanRenderer::CreateFramebuffer(const FramebufferDescriptor& descriptor)
     {
         return { };
     }
 
-    Resource<IndexBuffer> VulkanRenderer::CreateIndexBuffer(const IndexBufferDescriptor& descriptor)
+    RenderResource<IndexBuffer> VulkanRenderer::CreateIndexBuffer(const IndexBufferDescriptor& descriptor)
     {
         const auto bufferSize = static_cast<VkDeviceSize>(descriptor.indexCount) * GetIndexBufferDataTypeSize(descriptor.dataType);
 
@@ -786,13 +774,14 @@ namespace Molten
             return { };
         }
 
-        return DerivedResource<VulkanIndexBuffer>::CreateDefault(
+        return RenderResource<IndexBuffer>(new VulkanIndexBuffer{
             std::move(indexBuffer),
             descriptor.indexCount,
-            descriptor.dataType);
+            descriptor.dataType
+        }, RenderResourceDeleter<IndexBuffer>{ this });
     }
 
-    Resource<Pipeline> VulkanRenderer::CreatePipeline(const PipelineDescriptor& descriptor)
+    RenderResource<Pipeline> VulkanRenderer::CreatePipeline(const PipelineDescriptor& descriptor)
     {
         if (descriptor.vertexScript == nullptr)
         {
@@ -987,41 +976,17 @@ namespace Molten
 
         destroyer.Release();
 
-        auto deleter = [&](Pipeline& pipeline)
-        {
-            auto& vulkanPipeline = static_cast<VulkanPipeline&>(pipeline);
-
-            if (vulkanPipeline.graphicsPipeline)
-            {
-                vkDeviceWaitIdle(m_logicalDevice.GetHandle());
-                vkDestroyPipeline(m_logicalDevice.GetHandle(), vulkanPipeline.graphicsPipeline, nullptr);
-            }
-            if (vulkanPipeline.pipelineLayout)
-            {
-                vkDestroyPipelineLayout(m_logicalDevice.GetHandle(), vulkanPipeline.pipelineLayout, nullptr);
-            }
-            for (auto& setLayout : vulkanPipeline.descriptionSetLayouts)
-            {
-                vkDestroyDescriptorSetLayout(m_logicalDevice.GetHandle(), setLayout, nullptr);
-            }
-            for (auto& shaderModule : vulkanPipeline.shaderModules)
-            {
-                shaderModule.Destroy();
-            }
-        };
-
-
-        return DerivedResource<VulkanPipeline>::Create(
-            deleter,
+        return RenderResource<Pipeline>(new VulkanPipeline{
             graphicsPipeline,
             pipelineLayout,
             std::move(setLayouts),
             std::move(pushConstantLocations),
             std::move(shaderModules),
-            std::move(mappedDescriptorSets));
+            std::move(mappedDescriptorSets)
+        }, RenderResourceDeleter<Pipeline>{ this });
     }
 
-    Resource<Texture> VulkanRenderer::CreateTexture(const TextureDescriptor& descriptor)
+    RenderResource<Texture> VulkanRenderer::CreateTexture(const TextureDescriptor& descriptor)
     {
         const auto bufferSize = 
             static_cast<VkDeviceSize>(descriptor.dimensions.x) * 
@@ -1087,13 +1052,15 @@ namespace Molten
             return { };
         }
 
-        return DerivedResource<VulkanTexture>::CreateDefault(
+
+        return RenderResource<Texture>(new VulkanTexture{
             std::move(image),
             std::move(sampler),
-            imageView);
+            imageView
+        }, RenderResourceDeleter<Texture>{ this });
     }
 
-    Resource<UniformBuffer> VulkanRenderer::CreateUniformBuffer(const UniformBufferDescriptor& descriptor)
+    RenderResource<UniformBuffer> VulkanRenderer::CreateUniformBuffer(const UniformBufferDescriptor& descriptor)
     {
         Vulkan::Result<> result;
         Vulkan::DeviceBuffer deviceBuffer;
@@ -1103,11 +1070,12 @@ namespace Molten
             return { };
         }
 
-        return DerivedResource<VulkanUniformBuffer>::CreateDefault(
-            std::move(deviceBuffer));
+        return RenderResource<UniformBuffer>(new VulkanUniformBuffer{
+            std::move(deviceBuffer)
+        }, RenderResourceDeleter<UniformBuffer>{ this });
     }
 
-    Resource<FramedUniformBuffer> VulkanRenderer::CreateFramedUniformBuffer(const FramedUniformBufferDescriptor& descriptor)
+    RenderResource<FramedUniformBuffer> VulkanRenderer::CreateFramedUniformBuffer(const FramedUniformBufferDescriptor& descriptor)
     {
         std::vector<Vulkan::DeviceBuffer> deviceBuffers(m_swapChain.GetImageCount());
         Vulkan::Result<> result;
@@ -1120,11 +1088,12 @@ namespace Molten
             }
         }
 
-        return DerivedResource<VulkanFramedUniformBuffer>::CreateDefault(
-            std::move(deviceBuffers));
+        return RenderResource<FramedUniformBuffer>(new VulkanFramedUniformBuffer{
+            std::move(deviceBuffers)
+        }, RenderResourceDeleter<FramedUniformBuffer>{ this });
     }
 
-    Resource<VertexBuffer> VulkanRenderer::CreateVertexBuffer(const VertexBufferDescriptor& descriptor)
+    RenderResource<VertexBuffer> VulkanRenderer::CreateVertexBuffer(const VertexBufferDescriptor& descriptor)
     {
         const size_t bufferSize = 
             static_cast<VkDeviceSize>(static_cast<VkDeviceSize>(descriptor.vertexCount) *
@@ -1158,47 +1127,107 @@ namespace Molten
             return { };
         }
 
-        return DerivedResource<VulkanVertexBuffer>::CreateDefault(
+        return RenderResource<VertexBuffer>(new VulkanVertexBuffer{
             std::move(vertexBuffer),
             descriptor.vertexCount,
-            descriptor.vertexSize);
+            descriptor.vertexSize
+        }, RenderResourceDeleter<VertexBuffer>{ this });
     }
 
-    void VulkanRenderer::BindDescriptorSet(Resource<DescriptorSet>& descriptorSet)
+    void VulkanRenderer::Destroy(DescriptorSet& descriptorSet)
     {
-        auto* vulkanDescriptorSet = static_cast<VulkanDescriptorSet*>(descriptorSet.get());
+        auto& vulkanDescriptorSet = static_cast<VulkanDescriptorSet&>(descriptorSet);
+        vkDestroyDescriptorPool(m_logicalDevice.GetHandle(), vulkanDescriptorSet.descriptorPool, nullptr);
+    }
+
+    void VulkanRenderer::Destroy(FramedDescriptorSet& framedDescriptorSet)
+    {
+        auto& vulkanFramedDescriptorSet = static_cast<VulkanFramedDescriptorSet&>(framedDescriptorSet);
+        vkDestroyDescriptorPool(m_logicalDevice.GetHandle(), vulkanFramedDescriptorSet.descriptorPool, nullptr);
+    }
+
+    void VulkanRenderer::Destroy(Framebuffer& framebuffer)
+    {
+    }
+
+    void VulkanRenderer::Destroy(IndexBuffer& indexBuffer)
+    {
+    }
+
+    void VulkanRenderer::Destroy(Pipeline& pipeline)
+    {
+        auto& vulkanPipeline = static_cast<VulkanPipeline&>(pipeline);
+
+        if (vulkanPipeline.graphicsPipeline)
+        {
+            vkDeviceWaitIdle(m_logicalDevice.GetHandle());
+            vkDestroyPipeline(m_logicalDevice.GetHandle(), vulkanPipeline.graphicsPipeline, nullptr);
+        }
+        if (vulkanPipeline.pipelineLayout)
+        {
+            vkDestroyPipelineLayout(m_logicalDevice.GetHandle(), vulkanPipeline.pipelineLayout, nullptr);
+        }
+        for (auto& setLayout : vulkanPipeline.descriptionSetLayouts)
+        {
+            vkDestroyDescriptorSetLayout(m_logicalDevice.GetHandle(), setLayout, nullptr);
+        }
+        for (auto& shaderModule : vulkanPipeline.shaderModules)
+        {
+            shaderModule.Destroy();
+        }
+    }
+
+    void VulkanRenderer::Destroy(Texture& texture)
+    {
+    }
+
+    void VulkanRenderer::Destroy(UniformBuffer& uniformBuffer)
+    {
+    }
+
+    void VulkanRenderer::Destroy(FramedUniformBuffer& framedUniformBuffer)
+    {
+    }
+
+    void VulkanRenderer::Destroy(VertexBuffer& vertexBuffer)
+    {        
+    }
+
+    void VulkanRenderer::BindDescriptorSet(DescriptorSet& descriptorSet)
+    {
+        auto& vulkanDescriptorSet = static_cast<VulkanDescriptorSet&>(descriptorSet);
 
         vkCmdBindDescriptorSets(
             *m_currentCommandBuffer, 
             VK_PIPELINE_BIND_POINT_GRAPHICS, 
             m_currentPipeline->pipelineLayout,
-            vulkanDescriptorSet->index,
+            vulkanDescriptorSet.index,
             1,
-            &vulkanDescriptorSet->descriptorSet,
+            &vulkanDescriptorSet.descriptorSet,
             0,
             nullptr);
     }
 
-    void VulkanRenderer::BindFramedDescriptorSet(Resource<FramedDescriptorSet>& framedDescriptorSet)
+    void VulkanRenderer::BindFramedDescriptorSet(FramedDescriptorSet& framedDescriptorSet)
     {
-        auto* vulkanFramedDescriptorSet = static_cast<VulkanFramedDescriptorSet*>(framedDescriptorSet.get());
+        auto& vulkanFramedDescriptorSet = static_cast<VulkanFramedDescriptorSet&>(framedDescriptorSet);
 
         vkCmdBindDescriptorSets(
             *m_currentCommandBuffer,
             VK_PIPELINE_BIND_POINT_GRAPHICS,
             m_currentPipeline->pipelineLayout,
-            vulkanFramedDescriptorSet->index,
+            vulkanFramedDescriptorSet.index,
             1,
-            &vulkanFramedDescriptorSet->descriptorSets[m_swapChain.GetCurrentImageIndex()],
+            &vulkanFramedDescriptorSet.descriptorSets[m_swapChain.GetCurrentImageIndex()],
             0,
             nullptr);
     }
 
-    void VulkanRenderer::BindPipeline(Resource<Pipeline>& pipeline)
+    void VulkanRenderer::BindPipeline(Pipeline& pipeline)
     {
-        auto* vulkanPipeline = static_cast<VulkanPipeline*>(pipeline.get());
-        vkCmdBindPipeline(*m_currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkanPipeline->graphicsPipeline);
-        m_currentPipeline = vulkanPipeline;
+        auto& vulkanPipeline = static_cast<VulkanPipeline&>(pipeline);
+        vkCmdBindPipeline(*m_currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkanPipeline.graphicsPipeline);
+        m_currentPipeline = &vulkanPipeline;
     }
 
     void VulkanRenderer::BeginDraw()
@@ -1265,28 +1294,28 @@ namespace Molten
         m_beginDraw = true;
     }
 
-    void VulkanRenderer::DrawVertexBuffer(Resource<VertexBuffer>& vertexBuffer)
+    void VulkanRenderer::DrawVertexBuffer(VertexBuffer& vertexBuffer)
     {
-        auto* vulkanVertexBuffer = static_cast<VulkanVertexBuffer*>(vertexBuffer.get());
+        auto& vulkanVertexBuffer = static_cast<VulkanVertexBuffer&>(vertexBuffer);
 
-        VkBuffer vertexBuffers[] = { vulkanVertexBuffer->buffer.GetHandle() };
+        VkBuffer vertexBuffers[] = { vulkanVertexBuffer.buffer.GetHandle() };
         const VkDeviceSize offsets[] = { 0 };
 
         vkCmdBindVertexBuffers(*m_currentCommandBuffer, 0, 1, vertexBuffers, offsets);
-        vkCmdDraw(*m_currentCommandBuffer, static_cast<uint32_t>(vulkanVertexBuffer->vertexCount), 1, 0, 0);
+        vkCmdDraw(*m_currentCommandBuffer, static_cast<uint32_t>(vulkanVertexBuffer.vertexCount), 1, 0, 0);
     }
 
-    void VulkanRenderer::DrawVertexBuffer(Resource<IndexBuffer>& indexBuffer, Resource<VertexBuffer>& vertexBuffer)
+    void VulkanRenderer::DrawVertexBuffer(IndexBuffer& indexBuffer, VertexBuffer& vertexBuffer)
     {
-        auto* vulkanIndexBuffer = static_cast<VulkanIndexBuffer*>(indexBuffer.get());
-        auto* vulkanVertexBuffer = static_cast<VulkanVertexBuffer*>(vertexBuffer.get());
+        auto& vulkanIndexBuffer = static_cast<VulkanIndexBuffer&>(indexBuffer);
+        auto& vulkanVertexBuffer = static_cast<VulkanVertexBuffer&>(vertexBuffer);
 
-        VkBuffer vertexBuffers[] = { vulkanVertexBuffer->buffer.GetHandle() };
+        VkBuffer vertexBuffers[] = { vulkanVertexBuffer.buffer.GetHandle() };
         const VkDeviceSize offsets[] = { 0 };
 
         vkCmdBindVertexBuffers(*m_currentCommandBuffer, 0, 1, vertexBuffers, offsets);
-        vkCmdBindIndexBuffer(*m_currentCommandBuffer, vulkanIndexBuffer->buffer.GetHandle(), 0, GetIndexBufferDataType(vulkanIndexBuffer->dataType));
-        vkCmdDrawIndexed(*m_currentCommandBuffer, static_cast<uint32_t>(vulkanIndexBuffer->indexCount), 1, 0, 0, 0);
+        vkCmdBindIndexBuffer(*m_currentCommandBuffer, vulkanIndexBuffer.buffer.GetHandle(), 0, GetIndexBufferDataType(vulkanIndexBuffer.dataType));
+        vkCmdDrawIndexed(*m_currentCommandBuffer, static_cast<uint32_t>(vulkanIndexBuffer.indexCount), 1, 0, 0, 0);
     }
 
     void VulkanRenderer::PushConstant(const uint32_t location, const bool& value)
@@ -1349,7 +1378,7 @@ namespace Molten
         m_logicalDevice.WaitIdle();
     }
 
-    void VulkanRenderer::UpdateUniformBuffer(Resource<UniformBuffer>& uniformBuffer, const size_t offset, const size_t size, const void* data)
+    void VulkanRenderer::UpdateUniformBuffer(RenderResource<UniformBuffer>& uniformBuffer, const size_t offset, const size_t size, const void* data)
     {
         auto* vulkanUniformBuffer = static_cast<VulkanUniformBuffer*>(uniformBuffer.get());      
 
@@ -1360,7 +1389,7 @@ namespace Molten
         }
     }
 
-    void VulkanRenderer::UpdateFramedUniformBuffer(Resource<FramedUniformBuffer>& framedUniformBuffer, const size_t offset, const size_t size, const void* data)
+    void VulkanRenderer::UpdateFramedUniformBuffer(RenderResource<FramedUniformBuffer>& framedUniformBuffer, const size_t offset, const size_t size, const void* data)
     {
         auto* vulkanFramedUniformBuffer = static_cast<VulkanFramedUniformBuffer*>(framedUniformBuffer.get());
 

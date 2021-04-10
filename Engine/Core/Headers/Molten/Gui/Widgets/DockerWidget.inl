@@ -90,15 +90,15 @@ namespace Molten::Gui
             m_forceUpdateBounds = true;
         }
 
-        ApplyMarginsToGrantedBounds();
+        this->ApplyMarginsToGrantedBounds();
 
-        if (m_forceUpdateBounds || m_oldGrantedBounds != GetGrantedBounds())
+        if (m_forceUpdateBounds || m_oldGrantedBounds != this->GetGrantedBounds())
         {
             m_forceUpdateBounds = false;
             CalculateBounds(); 
         }
 
-        m_oldGrantedBounds = GetGrantedBounds();
+        m_oldGrantedBounds = this->GetGrantedBounds();
     }
 
     template<typename TTheme>
@@ -980,7 +980,7 @@ namespace Molten::Gui
         m_edgeDragData.prevMousePosition = mousePosition;
 
         m_mouseInputUpdateFunc = &Docker<TTheme>::HandleEdgeDragMouseEvent;
-        GetData().GetCanvas()->OverrideMouseEventsUntilMouseRelease(*this, button);
+        this->GetData().GetCanvas()->OverrideMouseEventsUntilMouseRelease(*this, button);
         SetCursor(pressedEdge->GetSizeCursor());
     }
 
@@ -994,7 +994,7 @@ namespace Molten::Gui
         m_leafDragData.initialMousePosition = mousePosition;
 
         m_mouseInputUpdateFunc = &Docker<TTheme>::HandleLeafDragMouseEvent;
-        GetData().GetCanvas()->OverrideMouseEventsUntilMouseRelease(*this, button);
+        this->GetData().GetCanvas()->OverrideMouseEventsUntilMouseRelease(*this, button);
     }
 
     template<typename TTheme>
@@ -1143,7 +1143,7 @@ namespace Molten::Gui
             m_leafDragData.dockingLeaf = leaf;
             SetSkinState(State{ State::LeafDragState{ dockingBounds } });
 
-            m_leafDragData.overlayWidget = GetData().GetCanvas()->CreateOverlayChild<DockerOverlay>();
+            m_leafDragData.overlayWidget = this->GetData().GetCanvas()->CreateOverlayChild<DockerOverlay>();
             m_leafDragData.overlayWidget->position = dockingBounds.low;
             m_leafDragData.overlayWidget->size.value = dockingBounds.GetSize();
         }
@@ -1274,7 +1274,7 @@ namespace Molten::Gui
             return;
         }
 
-        CalculateElementBounds(*m_rootElement.get(), GetGrantedBounds());
+        CalculateElementBounds(*m_rootElement.get(), this->GetGrantedBounds());
     }
 
     template<typename TTheme>

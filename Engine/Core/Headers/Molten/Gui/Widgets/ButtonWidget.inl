@@ -34,14 +34,14 @@ namespace Molten::Gui
     template<typename TTheme>
     void Button<TTheme>::Update()
     {
-        ApplyMarginsToGrantedBounds();
+        this->ApplyMarginsToGrantedBounds();
 
-        auto childLane = GetChildrenPartialLane();
+        auto childLane = this->GetChildrenPartialLane();
 
         if (childLane.GetSize() > 0)
         {
             auto& childData = (*childLane.begin()).GetValue();
-            auto contentBounds = GetGrantedBounds().WithoutMargins(padding).ClampHighToLow();
+            auto contentBounds = this->GetGrantedBounds().WithoutMargins(this->padding).ClampHighToLow();
             childData->SetGrantedBounds(contentBounds);
         }
     }

@@ -251,7 +251,12 @@ namespace Molten::Editor
 
         button->onPress.Connect([&, pane1](int)
         {
-            m_canvas->DestroyWidget(pane1);
+            static bool pressed = false;
+            if(!pressed)
+            {
+                m_canvas->DestroyWidget(pane1);
+                pressed = true;
+            }
         });
 
         button->size.CalculateValue({}, {});

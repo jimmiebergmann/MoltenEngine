@@ -146,7 +146,7 @@ namespace Molten::Gui
         void SetSkinState(const TState& state);
 
         using WidgetSkinType = WidgetSkin<TTheme, TWidget>;
-        
+
     private:  
 
         WidgetDataMixin<TTheme, TWidget>& m_dataMixin;

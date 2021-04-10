@@ -35,10 +35,10 @@ namespace Molten::Gui
     template<typename TTheme>
     void VerticalGrid<TTheme>::Update()
     {
-        ApplyMarginsToGrantedBounds();
-        auto contentBounds = GetGrantedBounds().WithoutMargins(padding).ClampHighToLow();
+        this->ApplyMarginsToGrantedBounds();
+        auto contentBounds = this->GetGrantedBounds().WithoutMargins(this->padding).ClampHighToLow();
 
-        auto childLane = GetData().GetChildrenPartialLane();
+        auto childLane = this->GetData().GetChildrenPartialLane();
 
         const float halfChildSpacing = childLane.GetSize() > 1 ? cellSpacing * 0.5f : 0.0f;
         const float verticalIncrease = (contentBounds.right - contentBounds.left) / static_cast<float>(childLane.GetSize()) - halfChildSpacing;

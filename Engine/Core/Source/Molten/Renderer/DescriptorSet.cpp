@@ -37,7 +37,7 @@ namespace Molten
     {}
 
     DescriptorSetDescriptor::DescriptorSetDescriptor(
-        Resource<Pipeline>* pipeline,
+        RenderResource<Pipeline>* pipeline,
         const uint32_t id,
         std::vector<DescriptorBinding>&& bindings
     ) :
@@ -54,7 +54,7 @@ namespace Molten
     {}
 
     FramedDescriptorSetDescriptor::FramedDescriptorSetDescriptor(
-        Resource<Pipeline>* pipeline,
+        RenderResource<Pipeline>* pipeline,
         const uint32_t id,
         std::vector<FramedDescriptorBinding>&& bindings
     ) :
