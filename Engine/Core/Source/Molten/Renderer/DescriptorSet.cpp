@@ -41,12 +41,27 @@ namespace Molten
 
     DescriptorBinding::DescriptorBinding(
         const uint32_t id,
-        RenderResource<Texture>& texture
+        CombinedTextureSampler1D&& combinedTextureSampler1D
     ) :
         id(id),
-        binding(&texture)
+        binding(combinedTextureSampler1D)
     {}
 
+    DescriptorBinding::DescriptorBinding(
+        const uint32_t id,
+        CombinedTextureSampler2D&& combinedTextureSampler2D
+    ) :
+        id(id),
+        binding(combinedTextureSampler2D)
+    {}
+
+    DescriptorBinding::DescriptorBinding(
+        const uint32_t id,
+        CombinedTextureSampler3D&& combinedTextureSampler3D
+    ) :
+        id(id),
+        binding(combinedTextureSampler3D)
+    {}
 
     // Descriptor set descriptor implementations.
     DescriptorSetDescriptor::DescriptorSetDescriptor() :
@@ -86,10 +101,26 @@ namespace Molten
 
     FramedDescriptorBinding::FramedDescriptorBinding(
         const uint32_t id,
-        RenderResource<Texture>& texture
+        CombinedTextureSampler1D&& combinedTextureSampler1D
     ) :
         id(id),
-        binding(&texture)
+        binding(combinedTextureSampler1D)
+    {}
+
+    FramedDescriptorBinding::FramedDescriptorBinding(
+        const uint32_t id,
+        CombinedTextureSampler2D&& combinedTextureSampler2D
+    ) :
+        id(id),
+        binding(combinedTextureSampler2D)
+    {}
+
+    FramedDescriptorBinding::FramedDescriptorBinding(
+        const uint32_t id,
+        CombinedTextureSampler3D&& combinedTextureSampler3D
+    ) :
+        id(id),
+        binding(combinedTextureSampler3D)
     {}
 
 

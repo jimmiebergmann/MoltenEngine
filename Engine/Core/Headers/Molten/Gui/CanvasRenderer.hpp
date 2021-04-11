@@ -31,6 +31,7 @@
 #include "Molten/Math/Matrix.hpp"
 #include "Molten/Math/Bounds.hpp"
 #include "Molten/Renderer/RenderResource.hpp"
+#include "Molten/Renderer/Sampler.hpp"
 
 namespace Molten
 {
@@ -127,6 +128,7 @@ namespace Molten::Gui
             RenderResource<Pipeline> pipeline;
             RenderResource<VertexBuffer> vertexBuffer;
             RenderResource<IndexBuffer> indexBuffer;
+            RenderResource<Sampler2D> sampler2D;
             Shader::Visual::VertexScript* vertexScript;
             Shader::Visual::FragmentScript* fragmentScript;
             uint32_t projectionLocation;

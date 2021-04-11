@@ -212,6 +212,21 @@ namespace Molten
         return { };
     }
 
+    RenderResource<Sampler1D> OpenGLWin32Renderer::CreateSampler(const SamplerDescriptor1D& /*descriptor*/)
+    {
+        return { };
+    }
+
+    RenderResource<Sampler2D> OpenGLWin32Renderer::CreateSampler(const SamplerDescriptor2D& /*descriptor*/)
+    {
+        return { };
+    }
+
+    RenderResource<Sampler3D> OpenGLWin32Renderer::CreateSampler(const SamplerDescriptor3D& /*descriptor*/)
+    {
+        return { };
+    }
+
     RenderResource<Texture> OpenGLWin32Renderer::CreateTexture(const TextureDescriptor& /*descriptor*/)
     {
         return { };
@@ -244,11 +259,23 @@ namespace Molten
     {
     }
 
-    void OpenGLWin32Renderer::Destroy(IndexBuffer& /*ndexBuffer*/)
+    void OpenGLWin32Renderer::Destroy(IndexBuffer& /*indexBuffer*/)
     {
     }
 
     void OpenGLWin32Renderer::Destroy(Pipeline& /*pipeline*/)
+    {
+    }
+
+    void OpenGLWin32Renderer::Destroy(Sampler1D& /*sampler1D*/)
+    {
+    }
+
+    void OpenGLWin32Renderer::Destroy(Sampler2D& /*sampler2D*/)
+    {
+    }
+
+    void OpenGLWin32Renderer::Destroy(Sampler3D& /*sampler3D*/)
     {
     }
 

@@ -99,7 +99,7 @@ namespace Molten::Gui
 
         const auto descriptorSetDescriptor = DescriptorSetDescriptor{
             &m_texturedRect.pipeline, 0,
-            { 0,  texture }
+            { 0,  { texture, *m_texturedRect.sampler2D } }
         };
         auto descriptorSet = m_backendRenderer.CreateDescriptorSet(descriptorSetDescriptor);
         if (!descriptorSet)
@@ -328,10 +328,16 @@ namespace Molten::Gui
             throw Exception("Failed to create index buffer.");
         }
 
-        static const uint8_t textureData[4][4] = {
-            { 255, 0, 0, 255 }, { 0, 255, 0, 255 },
-            { 0, 0, 255, 255 }, { 255, 255, 255, 255 }
-        };
+        SamplerDescriptor2D samplerDescriptor;
+        samplerDescriptor.magFilter = SamplerFilter::Nearest;
+        samplerDescriptor.minFilter = SamplerFilter::Nearest;
+        samplerDescriptor.wrapModes = { SamplerWrapMode::Repeat, SamplerWrapMode::Repeat };
+        
+        m_texturedRect.sampler2D = m_backendRenderer.CreateSampler(samplerDescriptor);
+        if (!m_texturedRect.sampler2D)
+        {
+            throw Exception("Failed to create texture sampler.");
+        }
 
         m_texturedRect.vertexScript = new Shader::Visual::VertexScript();
         m_texturedRect.fragmentScript = new Shader::Visual::FragmentScript();

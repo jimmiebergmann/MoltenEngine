@@ -105,6 +105,13 @@ namespace Molten
         /** Create pipeline object. */
         RenderResource<Pipeline> CreatePipeline(const PipelineDescriptor& descriptor) override;
 
+        /** Create sampler object. */
+        /**@{*/
+        RenderResource<Sampler1D> CreateSampler(const SamplerDescriptor1D& descriptor) override;
+        RenderResource<Sampler2D> CreateSampler(const SamplerDescriptor2D& descriptor) override;
+        RenderResource<Sampler3D> CreateSampler(const SamplerDescriptor3D& descriptor) override;
+        /**@}*/
+
         /** Create texture object. */
         RenderResource<Texture> CreateTexture(const TextureDescriptor& descriptor) override;
 
@@ -127,6 +134,9 @@ namespace Molten
         void Destroy(Framebuffer& framebuffer) override;
         void Destroy(IndexBuffer& indexBuffer) override;
         void Destroy(Pipeline& pipeline) override;
+        void Destroy(Sampler1D& sampler1D) override;
+        void Destroy(Sampler2D& sampler2D) override;
+        void Destroy(Sampler3D& sampler3D) override;
         void Destroy(Texture& texture) override;
         void Destroy(UniformBuffer& uniformBuffer) override;
         void Destroy(FramedUniformBuffer& framedUniformBuffer) override;

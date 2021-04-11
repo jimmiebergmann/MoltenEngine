@@ -210,6 +210,21 @@ namespace Molten
         return { };
     }
 
+    RenderResource<Sampler1D> OpenGLX11Renderer::CreateSampler(const SamplerDescriptor1D& /*descriptor*/)
+    {
+        return { };
+    }
+
+    RenderResource<Sampler2D> OpenGLX11Renderer::CreateSampler(const SamplerDescriptor2D& /*descriptor*/)
+    {
+        return { };
+    }
+
+    RenderResource<Sampler3D> OpenGLX11Renderer::CreateSampler(const SamplerDescriptor3D& /*descriptor*/)
+    {
+        return { };
+    }
+
     RenderResource<Texture> OpenGLX11Renderer::CreateTexture(const TextureDescriptor&)
     {
         return { };
@@ -242,11 +257,23 @@ namespace Molten
     {
     }
 
-    void OpenGLX11Renderer::Destroy(IndexBuffer& /*ndexBuffer*/)
+    void OpenGLX11Renderer::Destroy(IndexBuffer& /*indexBuffer*/)
     {
     }
 
     void OpenGLX11Renderer::Destroy(Pipeline& /*pipeline*/)
+    {
+    }
+
+    void OpenGLX11Renderer::Destroy(Sampler1D& /*sampler1D*/)
+    {
+    }
+
+    void OpenGLX11Renderer::Destroy(Sampler2D& /*sampler2D*/)
+    {
+    }
+
+    void OpenGLX11Renderer::Destroy(Sampler3D& /*sampler3D*/)
     {
     }
 

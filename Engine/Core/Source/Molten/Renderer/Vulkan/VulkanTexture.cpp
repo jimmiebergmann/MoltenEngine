@@ -32,11 +32,9 @@ namespace Molten
 
     VulkanTexture::VulkanTexture(
         Vulkan::Image&& image,
-        Vulkan::ImageSampler imageSampler,
         VkImageView imageView
     ) :
         image(std::move(image)),
-        imageSampler(std::move(imageSampler)),
         imageView(imageView)
     {}
 

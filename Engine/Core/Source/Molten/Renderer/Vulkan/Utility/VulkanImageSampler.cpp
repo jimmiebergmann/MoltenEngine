@@ -62,7 +62,15 @@ namespace Molten::Vulkan
         return *this;
     }
 
-    Result<> ImageSampler::Create(LogicalDevice& logicalDevice)
+    Result<> ImageSampler::Create(
+        LogicalDevice& logicalDevice,
+        VkFilter magFilter,
+        VkFilter minFilter,
+        VkSamplerAddressMode addressModeU,
+        VkSamplerAddressMode addressModeV,
+        VkSamplerAddressMode addressModeW,
+        VkBool32 anisotropyEnable,
+        float maxAnisotropy)
     {
         m_logicalDevice = &logicalDevice;
 
@@ -72,13 +80,13 @@ namespace Molten::Vulkan
 
         VkSamplerCreateInfo samplerInfo = {};
         samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-        samplerInfo.magFilter = VkFilter::VK_FILTER_NEAREST;
-        samplerInfo.minFilter = VkFilter::VK_FILTER_NEAREST;
-        samplerInfo.addressModeU = VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        samplerInfo.addressModeV = VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        samplerInfo.addressModeW = VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        samplerInfo.anisotropyEnable = VK_TRUE & logicalDevice.GetEnabledFeatures().samplerAnisotropy;
-        samplerInfo.maxAnisotropy = physicalDeviceLimits.maxSamplerAnisotropy;
+        samplerInfo.magFilter = magFilter;
+        samplerInfo.minFilter = minFilter;
+        samplerInfo.addressModeU = addressModeU;
+        samplerInfo.addressModeV = addressModeV;
+        samplerInfo.addressModeW = addressModeW;
+        samplerInfo.anisotropyEnable = anisotropyEnable & logicalDevice.GetEnabledFeatures().samplerAnisotropy;
+        samplerInfo.maxAnisotropy = std::min(maxAnisotropy, physicalDeviceLimits.maxSamplerAnisotropy);
         samplerInfo.borderColor = VkBorderColor::VK_BORDER_COLOR_INT_OPAQUE_BLACK;
         samplerInfo.unnormalizedCoordinates = VK_FALSE;
         samplerInfo.compareEnable = VK_FALSE;

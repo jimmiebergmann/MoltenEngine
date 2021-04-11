@@ -34,6 +34,7 @@
 #include "Molten/Renderer/Vulkan/VulkanFramebuffer.hpp"
 #include "Molten/Renderer/Vulkan/VulkanIndexBuffer.hpp"
 #include "Molten/Renderer/Vulkan/VulkanPipeline.hpp"
+#include "Molten/Renderer/Vulkan/VulkanSampler.hpp"
 #include "Molten/Renderer/Vulkan/VulkanTexture.hpp"
 #include "Molten/Renderer/Vulkan/VulkanUniformBuffer.hpp"
 #include "Molten/Renderer/Vulkan/VulkanVertexBuffer.hpp"
@@ -186,6 +187,27 @@ namespace Molten
             case Shader::BindingType::UniformBuffer: return VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         }
         throw Exception("Provided provided binding type is not handled.");
+    }
+
+    static VkFilter GetSamplerFilter(const SamplerFilter samplerFilter)
+    {
+        switch (samplerFilter)
+        {
+            case SamplerFilter::Nearest: return VkFilter::VK_FILTER_NEAREST;
+            case SamplerFilter::Linear: return VkFilter::VK_FILTER_NEAREST;
+        }
+        throw Exception("Provided provided sampler filter is not handled.");
+    }
+
+    static VkSamplerAddressMode GetSamplerAddressMode(const SamplerWrapMode samplerWrapMode)
+    {
+        switch (samplerWrapMode)
+        {
+            case SamplerWrapMode::Repeat: return VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_REPEAT;
+            case SamplerWrapMode::RepeatMirror: return VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
+            case SamplerWrapMode::Clamp: return VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE; // Or to border??
+        }
+        throw Exception("Provided provided sampler wrap mode is not handled.");
     }
 
     MOLTEN_UNSCOPED_ENUM_END
@@ -372,11 +394,11 @@ namespace Molten
         const auto& mappedSet = mappedSetIt->second;
         const uint32_t setIndex = mappedSet.index;
 
-        std::vector<VkDescriptorBufferInfo> bufferInfos;
-        std::vector<VkDescriptorImageInfo> imageInfos;
+        std::vector<std::unique_ptr<VkDescriptorBufferInfo>> bufferInfos;
+        std::vector<std::unique_ptr<VkDescriptorImageInfo>> imageInfos;
         std::vector<VkDescriptorPoolSize> poolSizes = {};
 
-        auto AddBindingToPool = [&](VkDescriptorType descriptorType)
+        auto addBindingToPool = [&](VkDescriptorType descriptorType)
         {
             auto it = std::find_if(poolSizes.begin(), poolSizes.end(), [&](VkDescriptorPoolSize& poolSize)
             {
@@ -396,27 +418,34 @@ namespace Molten
             poolSizes.push_back(poolSize);
         };
         
-        auto CreateBufferInfo = [&](VkBuffer buffer) -> VkDescriptorBufferInfo&
+        auto writeBufferInfo = [&](VkWriteDescriptorSet& write, VkBuffer buffer)
         {
-            AddBindingToPool(VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+            addBindingToPool(VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
 
-            VkDescriptorBufferInfo bufferInfo = {};
-            bufferInfo.buffer = buffer;
-            bufferInfo.offset = 0;
-            bufferInfo.range = VK_WHOLE_SIZE;
-            bufferInfos.push_back(bufferInfo);
-            return bufferInfos.back();
+            auto bufferInfo = std::make_unique<VkDescriptorBufferInfo>();
+            bufferInfo->buffer = buffer;
+            bufferInfo->offset = 0;
+            bufferInfo->range = VK_WHOLE_SIZE;
+
+            write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            write.pBufferInfo = bufferInfo.get();
+
+            bufferInfos.push_back(std::move(bufferInfo));
         };
-        auto CreateImageInfo = [&](VkSampler sampler, VkImageView imageView) -> VkDescriptorImageInfo&
+        auto writeImageInfo = [&](VkWriteDescriptorSet& write, VkSampler sampler, VkImageView imageView)
         {
-            AddBindingToPool(VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
+            addBindingToPool(VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
 
-            VkDescriptorImageInfo imageInfo = {};
-            imageInfo.sampler = sampler;
-            imageInfo.imageView = imageView;
-            imageInfo.imageLayout = VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            imageInfos.push_back(imageInfo);
-            return imageInfos.back();
+            auto imageInfo = std::make_unique<VkDescriptorImageInfo>();
+            imageInfo->sampler = sampler;
+            imageInfo->imageView = imageView;
+            imageInfo->imageLayout = VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+            write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            write.descriptorCount = 1;
+            write.pImageInfo = imageInfo.get();
+
+            imageInfos.push_back(std::move(imageInfo));      
         };
 
         const auto bindings = descriptor.bindings;
@@ -440,30 +469,35 @@ namespace Molten
             write.dstArrayElement = 0;
             write.descriptorCount = 1;
 
-            std::visit([&](auto* bindingData) {
+            std::visit([&](auto& bindingData) 
+            {
                 using T = std::decay_t<decltype(bindingData)>;
                 if constexpr (std::is_same_v<T, RenderResource<UniformBuffer>*>)
                 {
-                    auto* vulkanBuffer = static_cast<VulkanUniformBuffer*>(bindingData->get());
-                    const auto bufferHandle = vulkanBuffer->deviceBuffer.GetHandle(); //vulkanBuffer->frames[0].buffer.GetHandle();
-                    auto& bufferInfo = CreateBufferInfo(bufferHandle);
-
-                    write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER; 
-                    write.pBufferInfo = &bufferInfo;
+                    const auto bufferHandle = static_cast<VulkanUniformBuffer*>(bindingData->get())->deviceBuffer.GetHandle();
+                    writeBufferInfo(write, bufferHandle);
                 }
-                else if constexpr (std::is_same_v<T, RenderResource<Texture>*>)
+                else if constexpr (std::is_same_v<T, CombinedTextureSampler1D>)
                 {
-                    auto* vulkanTexture = static_cast<VulkanTexture*>(bindingData->get());
-                    const auto samplerHandle = vulkanTexture->imageSampler.GetHandle();
-                    auto& imageInfo = CreateImageInfo(samplerHandle, vulkanTexture->imageView);
-
-                    write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-                    write.descriptorCount = 1;
-                    write.pImageInfo = &imageInfo;
-                }   
+                    const auto imageView = static_cast<VulkanTexture*>(bindingData.texture->get())->imageView;
+                    const auto sampler = static_cast<VulkanSampler1D*>(bindingData.sampler)->imageSampler.GetHandle();
+                    writeImageInfo(write, sampler, imageView);
+                }
+                else if constexpr (std::is_same_v<T, CombinedTextureSampler2D>)
+                {
+                    const auto imageView = static_cast<VulkanTexture*>(bindingData.texture->get())->imageView;
+                    const auto sampler = static_cast<VulkanSampler2D*>(bindingData.sampler)->imageSampler.GetHandle();
+                    writeImageInfo(write, sampler, imageView);
+                }
+                else if constexpr (std::is_same_v<T, CombinedTextureSampler3D>)
+                {
+                    const auto imageView = static_cast<VulkanTexture*>(bindingData.texture->get())->imageView;
+                    const auto sampler = static_cast<VulkanSampler3D*>(bindingData.sampler)->imageSampler.GetHandle();
+                    writeImageInfo(write, sampler, imageView);
+                }
                 else
                 {
-                    static_assert(false, "Unknown binding type.");
+                    static_assert(false, "Unknown binding type." );
                 }
                     
             }, binding.binding);
@@ -571,7 +605,7 @@ namespace Molten
             poolSizes.push_back(poolSize);
         };
 
-        auto CreateBufferInfos = [&](
+        auto writeBufferInfos = [&](
             SetWritesType& writes,
             const size_t writesIndex,
             const uint32_t bindingIndex,
@@ -600,7 +634,7 @@ namespace Molten
             AddBindingToPool(descriptorType, swapChainImageCount);
         };
 
-        auto CreateImageInfo = [&](
+        auto writeImageInfos = [&](
             SetWritesType& writes,
             const size_t writesIndex,
             const uint32_t bindingIndex,
@@ -644,28 +678,39 @@ namespace Molten
             const uint32_t bindingIndex = mappedBinding.index;
 
             bool successfulVisit = true;
-            std::visit([&](auto* bindingData) {
+            std::visit([&](auto& bindingData)
+            {
                 using T = std::decay_t<decltype(bindingData)>;
                 if constexpr (std::is_same_v<T, RenderResource<FramedUniformBuffer>*>)
                 {
-                    auto* vulkanBuffer = static_cast<VulkanFramedUniformBuffer*>(bindingData->get());
-
-                    const auto& deviceBuffers = vulkanBuffer->deviceBuffers;
+                    const auto& deviceBuffers = static_cast<VulkanFramedUniformBuffer*>(bindingData->get())->deviceBuffers;
                     if (deviceBuffers.size() != swapChainImageCount)
                     {
                         Logger::WriteError(m_logger, "Buffer count(" + std::to_string(deviceBuffers.size()) +
-                            ") of framed buffer is mismatching with number of swap chain images(" + std::to_string(swapChainImageCount) +").");
+                            ") of framed buffer is mismatching with number of swap chain images(" + std::to_string(swapChainImageCount) + ").");
                         successfulVisit = false;
                         return;
                     }
 
-                    CreateBufferInfos(setWrites, writeIndex, bindingIndex, deviceBuffers);
+                    writeBufferInfos(setWrites, writeIndex, bindingIndex, deviceBuffers);
                 }
-                else if constexpr (std::is_same_v<T, RenderResource<Texture>*>)
+                else if constexpr (std::is_same_v<T, CombinedTextureSampler1D>)
                 {
-                    auto* vulkanTexture = static_cast<VulkanTexture*>(bindingData->get());
-
-                    CreateImageInfo(setWrites, writeIndex, bindingIndex, vulkanTexture->imageSampler.GetHandle(), vulkanTexture->image.GetHandle());
+                    const auto imageView = static_cast<VulkanTexture*>(bindingData.texture->get())->imageView;
+                    const auto sampler = static_cast<VulkanSampler1D*>(bindingData.sampler)->imageSampler.GetHandle();
+                    writeImageInfos(setWrites, writeIndex, bindingIndex, sampler, imageView);
+                }
+                else if constexpr (std::is_same_v<T, CombinedTextureSampler2D>)
+                {
+                    const auto imageView = static_cast<VulkanTexture*>(bindingData.texture->get())->imageView;
+                    const auto sampler = static_cast<VulkanSampler2D*>(bindingData.sampler)->imageSampler.GetHandle();
+                    writeImageInfos(setWrites, writeIndex, bindingIndex, sampler, imageView);
+                }
+                else if constexpr (std::is_same_v<T, CombinedTextureSampler3D>)
+                {
+                    const auto imageView = static_cast<VulkanTexture*>(bindingData.texture->get())->imageView;
+                    const auto sampler = static_cast<VulkanSampler3D*>(bindingData.sampler)->imageSampler.GetHandle();
+                    writeImageInfos(setWrites, writeIndex, bindingIndex, sampler, imageView);
                 }
                 else
                 {
@@ -986,6 +1031,99 @@ namespace Molten
         }, RenderResourceDeleter<Pipeline>{ this });
     }
 
+    RenderResource<Sampler1D> VulkanRenderer::CreateSampler(const SamplerDescriptor1D& descriptor)
+    {
+        const auto magFilter = GetSamplerFilter(descriptor.magFilter);
+        const auto minFilter = GetSamplerFilter(descriptor.minFilter);
+        const auto addressModeU = GetSamplerAddressMode(descriptor.wrapModes.c[0]);
+        const auto addressModeV = VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        const auto addressModeW = VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        const bool anisotropyEnable = descriptor.maxAnisotropy > 1;
+        const auto maxAnisotropy = static_cast<float>(descriptor.maxAnisotropy);
+
+        Vulkan::Result<> result;
+        Vulkan::ImageSampler imageSampler;
+        if (!(result = imageSampler.Create(
+            m_logicalDevice,
+            magFilter,
+            minFilter,
+            addressModeU,
+            addressModeV,
+            addressModeW,
+            anisotropyEnable,
+            maxAnisotropy)))
+        {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to create 1D image sampler");
+            return { };
+        }
+
+        return RenderResource<Sampler1D>(new VulkanSampler1D{
+            std::move(imageSampler)
+         }, RenderResourceDeleter<Sampler1D>{ this });
+    }
+
+    RenderResource<Sampler2D> VulkanRenderer::CreateSampler(const SamplerDescriptor2D& descriptor)
+    {
+        const auto magFilter = GetSamplerFilter(descriptor.magFilter);
+        const auto minFilter = GetSamplerFilter(descriptor.minFilter);
+        const auto addressModeU = GetSamplerAddressMode(descriptor.wrapModes.x);
+        const auto addressModeV = GetSamplerAddressMode(descriptor.wrapModes.y);
+        const auto addressModeW = VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        const bool anisotropyEnable = descriptor.maxAnisotropy > 1;
+        const auto maxAnisotropy = static_cast<float>(descriptor.maxAnisotropy);
+
+        Vulkan::Result<> result;
+        Vulkan::ImageSampler imageSampler;
+        if (!(result = imageSampler.Create(
+            m_logicalDevice,
+            magFilter,
+            minFilter,
+            addressModeU,
+            addressModeV,
+            addressModeW,
+            anisotropyEnable,
+            maxAnisotropy)))
+        {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to create 2D image sampler");
+            return { };
+        }
+
+        return RenderResource<Sampler2D>(new VulkanSampler2D{
+            std::move(imageSampler)
+        }, RenderResourceDeleter<Sampler2D>{ this });
+    }
+
+    RenderResource<Sampler3D> VulkanRenderer::CreateSampler(const SamplerDescriptor3D& descriptor)
+    {
+        const auto magFilter = GetSamplerFilter(descriptor.magFilter);
+        const auto minFilter = GetSamplerFilter(descriptor.minFilter);
+        const auto addressModeU = GetSamplerAddressMode(descriptor.wrapModes.x);
+        const auto addressModeV = GetSamplerAddressMode(descriptor.wrapModes.y);
+        const auto addressModeW = GetSamplerAddressMode(descriptor.wrapModes.x);
+        const bool anisotropyEnable = descriptor.maxAnisotropy > 1;
+        const auto maxAnisotropy = static_cast<float>(descriptor.maxAnisotropy);
+
+        Vulkan::Result<> result;
+        Vulkan::ImageSampler imageSampler;
+        if (!(result = imageSampler.Create(
+            m_logicalDevice,
+            magFilter,
+            minFilter,
+            addressModeU,
+            addressModeV,
+            addressModeW,
+            anisotropyEnable,
+            maxAnisotropy)))
+        {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to create 3D image sampler");
+            return { };
+        }
+
+        return RenderResource<Sampler3D>(new VulkanSampler3D{
+            std::move(imageSampler)
+        }, RenderResourceDeleter<Sampler3D>{ this });
+    }
+
     RenderResource<Texture> VulkanRenderer::CreateTexture(const TextureDescriptor& descriptor)
     {
         const auto bufferSize = 
@@ -1045,17 +1183,8 @@ namespace Molten
             return { };
         }
 
-        Vulkan::ImageSampler sampler;
-        if (!(result = sampler.Create(m_logicalDevice)))
-        {
-            Vulkan::Logger::WriteError(m_logger, result, "Failed to create image sampler");
-            return { };
-        }
-
-
         return RenderResource<Texture>(new VulkanTexture{
             std::move(image),
-            std::move(sampler),
             imageView
         }, RenderResourceDeleter<Texture>{ this });
     }
@@ -1146,11 +1275,11 @@ namespace Molten
         vkDestroyDescriptorPool(m_logicalDevice.GetHandle(), vulkanFramedDescriptorSet.descriptorPool, nullptr);
     }
 
-    void VulkanRenderer::Destroy(Framebuffer& framebuffer)
+    void VulkanRenderer::Destroy(Framebuffer& /*framebuffer*/)
     {
     }
 
-    void VulkanRenderer::Destroy(IndexBuffer& indexBuffer)
+    void VulkanRenderer::Destroy(IndexBuffer& /*indexBuffer*/)
     {
     }
 
@@ -1177,19 +1306,33 @@ namespace Molten
         }
     }
 
+    void VulkanRenderer::Destroy(Sampler1D& /*sampler1D*/)
+    {
+    }
+
+    void VulkanRenderer::Destroy(Sampler2D& /*sampler2D*/)
+    {
+    }
+
+    void VulkanRenderer::Destroy(Sampler3D& /*sampler3D*/)
+    {   
+    }
+
     void VulkanRenderer::Destroy(Texture& texture)
     {
+        auto& vulkanTexture = static_cast<VulkanTexture&>(texture);
+        vkDestroyImageView(m_logicalDevice.GetHandle(), vulkanTexture.imageView, nullptr);
     }
 
-    void VulkanRenderer::Destroy(UniformBuffer& uniformBuffer)
+    void VulkanRenderer::Destroy(UniformBuffer& /*uniformBuffer*/)
     {
     }
 
-    void VulkanRenderer::Destroy(FramedUniformBuffer& framedUniformBuffer)
+    void VulkanRenderer::Destroy(FramedUniformBuffer& /*framedUniformBuffer*/)
     {
     }
 
-    void VulkanRenderer::Destroy(VertexBuffer& vertexBuffer)
+    void VulkanRenderer::Destroy(VertexBuffer& /*vertexBuffer*/)
     {        
     }
 

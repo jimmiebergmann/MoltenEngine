@@ -54,7 +54,15 @@ namespace Molten::Vulkan
         ImageSampler(ImageSampler&& imageSampler) noexcept;
         ImageSampler& operator =(ImageSampler&& imageSampler) noexcept;
 
-        Result<> Create(LogicalDevice& logicalDevice);
+        Result<> Create(
+            LogicalDevice& logicalDevice,
+            VkFilter magFilter,
+            VkFilter minFilter,
+            VkSamplerAddressMode addressModeU,
+            VkSamplerAddressMode addressModeV,
+            VkSamplerAddressMode addressModeW,
+            VkBool32 anisotropyEnable,
+            float maxAnisotropy);
 
         void Destroy();
 

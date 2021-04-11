@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,38 +23,29 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_VULKANTEXTURE_HPP
-#define MOLTEN_CORE_RENDERER_VULKANTEXTURE_HPP
-
-#include "Molten/Renderer/Texture.hpp"
-
-#if defined(MOLTEN_ENABLE_VULKAN)
-#include "Molten/Renderer/Vulkan/VulkanHeaders.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanImage.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanImageSampler.hpp"
-
 namespace Molten
 {
 
-    class MOLTEN_API VulkanTexture : public Texture
-    {
+    // Sampler implementations.
+    template<size_t VDimensions>
+    SamplerDescriptor<VDimensions>::SamplerDescriptor() :
+        wrapModes(SamplerWrapMode::Repeat),
+        magFilter(SamplerFilter::Nearest),
+        minFilter(SamplerFilter::Nearest),
+        maxAnisotropy(0)
+    {}
 
-    public:
-
-        using Base = Texture;
-
-        VulkanTexture() = delete;
-        VulkanTexture(
-            Vulkan::Image&& image,
-            VkImageView imageView);
-
-        Vulkan::Image image;
-        VkImageView imageView;
-
-    };
+    template<size_t VDimensions>
+    SamplerDescriptor<VDimensions>::SamplerDescriptor(
+        const SamplerWrapModes wrapModes,
+        const SamplerFilter magFilter,
+        const SamplerFilter minFilter,
+        const uint32_t maxAnisotropy
+    ) :
+        wrapModes(wrapModes),
+        magFilter(magFilter),
+        minFilter(minFilter),
+        maxAnisotropy(maxAnisotropy)
+    {}
 
 }
-
-#endif
-
-#endif

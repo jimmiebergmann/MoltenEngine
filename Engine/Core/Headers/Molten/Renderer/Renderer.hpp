@@ -27,13 +27,14 @@
 #define MOLTEN_CORE_RENDERER_RENDERER_HPP
 
 #include "Molten/Renderer/RenderTarget.hpp"
+#include "Molten/Renderer/DescriptorSet.hpp"
 #include "Molten/Renderer/Framebuffer.hpp"
 #include "Molten/Renderer/IndexBuffer.hpp"
 #include "Molten/Renderer/Pipeline.hpp"
+#include "Molten/Renderer/Sampler.hpp"
 #include "Molten/Renderer/Texture.hpp"
 #include "Molten/Renderer/UniformBuffer.hpp"
 #include "Molten/Renderer/VertexBuffer.hpp"
-#include "Molten/Renderer/DescriptorSet.hpp"
 #include "Molten/Renderer/RenderResource.hpp"
 #include "Molten/System/Version.hpp"
 
@@ -112,6 +113,13 @@ namespace Molten
         /** Create pipeline object. */
         virtual RenderResource<Pipeline> CreatePipeline(const PipelineDescriptor& descriptor) = 0;
 
+        /** Create sampler object. */
+        /**@{*/
+        virtual RenderResource<Sampler1D> CreateSampler(const SamplerDescriptor1D& descriptor) = 0;
+        virtual RenderResource<Sampler2D> CreateSampler(const SamplerDescriptor2D& descriptor) = 0;
+        virtual RenderResource<Sampler3D> CreateSampler(const SamplerDescriptor3D& descriptor) = 0;
+        /**@}*/
+
         /** Create texture object. */
         virtual RenderResource<Texture> CreateTexture(const TextureDescriptor& descriptor) = 0;
 
@@ -134,6 +142,9 @@ namespace Molten
         virtual void Destroy(Framebuffer& framebuffer) = 0;
         virtual void Destroy(IndexBuffer& indexBuffer) = 0;
         virtual void Destroy(Pipeline& pipeline) = 0;
+        virtual void Destroy(Sampler1D& sampler1D) = 0;
+        virtual void Destroy(Sampler2D& sampler2D) = 0;
+        virtual void Destroy(Sampler3D& sampler3D) = 0;
         virtual void Destroy(Texture& texture) = 0;
         virtual void Destroy(UniformBuffer& uniformBuffer) = 0;
         virtual void Destroy(FramedUniformBuffer& framedUniformBuffer) = 0;

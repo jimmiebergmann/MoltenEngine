@@ -27,6 +27,7 @@
 #define MOLTEN_CORE_RENDERER_DESCRIPTORSET_HPP
 
 #include "Molten/Renderer/Shader.hpp"
+#include "Molten/Renderer/CombinedTextureSampler.hpp"
 #include "Molten/Renderer/RenderResource.hpp"
 #include <variant>
 #include <map>
@@ -65,7 +66,9 @@ namespace Molten
 
         using BindingVariant = std::variant< 
             RenderResource<UniformBuffer>*,
-            RenderResource<Texture>*
+            CombinedTextureSampler1D,
+            CombinedTextureSampler2D,
+            CombinedTextureSampler3D
         >;
 
         DescriptorBinding(
@@ -73,7 +76,13 @@ namespace Molten
             RenderResource<UniformBuffer>& uniformBuffer);
         DescriptorBinding(
             const uint32_t id,
-            RenderResource<Texture>& texture);
+            CombinedTextureSampler1D&& combinedTextureSampler1D);
+        DescriptorBinding(
+            const uint32_t id,
+            CombinedTextureSampler2D&& combinedTextureSampler2D);
+        DescriptorBinding(
+            const uint32_t id,
+            CombinedTextureSampler3D&& combinedTextureSampler3D);
 
         uint32_t id;
         BindingVariant binding;
@@ -87,7 +96,7 @@ namespace Molten
         DescriptorSetDescriptor();
         DescriptorSetDescriptor(
             RenderResource<Pipeline>* pipeline,
-            const uint32_t id,
+            const uint32_t setId,
             DescriptorBinding&& binding
         );
         DescriptorSetDescriptor(
@@ -127,7 +136,9 @@ namespace Molten
 
         using BindingVariant = std::variant<
             RenderResource<FramedUniformBuffer>*,
-            RenderResource<Texture>*
+            CombinedTextureSampler<1>,
+            CombinedTextureSampler<2>,
+            CombinedTextureSampler<3>
         >;
 
         FramedDescriptorBinding(
@@ -135,7 +146,13 @@ namespace Molten
             RenderResource<FramedUniformBuffer>& framedUniformBuffer);
         FramedDescriptorBinding(
             const uint32_t id,
-            RenderResource<Texture>& texture);
+            CombinedTextureSampler1D&& combinedTextureSampler1D);
+        FramedDescriptorBinding(
+            const uint32_t id,
+            CombinedTextureSampler2D&& combinedTextureSampler2D);
+        FramedDescriptorBinding(
+            const uint32_t id,
+            CombinedTextureSampler3D&& combinedTextureSampler3D);
 
         uint32_t id;
         BindingVariant binding;

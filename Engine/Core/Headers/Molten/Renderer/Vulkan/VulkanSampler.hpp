@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,37 +23,39 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_VULKANTEXTURE_HPP
-#define MOLTEN_CORE_RENDERER_VULKANTEXTURE_HPP
+#ifndef MOLTEN_CORE_RENDERER_VULKANSAMPLER_HPP
+#define MOLTEN_CORE_RENDERER_VULKANSAMPLER_HPP
 
-#include "Molten/Renderer/Texture.hpp"
+#include "Molten/Renderer/Sampler.hpp"
 
 #if defined(MOLTEN_ENABLE_VULKAN)
-#include "Molten/Renderer/Vulkan/VulkanHeaders.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanImage.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanImageSampler.hpp"
 
 namespace Molten
 {
 
-    class MOLTEN_API VulkanTexture : public Texture
+    template<size_t VDimensions>
+    class VulkanSampler : public Sampler<VDimensions>
     {
 
     public:
 
-        using Base = Texture;
+        using Base = Sampler<VDimensions>;
 
-        VulkanTexture() = delete;
-        VulkanTexture(
-            Vulkan::Image&& image,
-            VkImageView imageView);
+        VulkanSampler() = delete;
+        explicit VulkanSampler(Vulkan::ImageSampler&& imageSampler);
 
-        Vulkan::Image image;
-        VkImageView imageView;
+        Vulkan::ImageSampler imageSampler;
 
     };
 
+    using VulkanSampler1D = VulkanSampler<1>;
+    using VulkanSampler2D = VulkanSampler<2>;
+    using VulkanSampler3D = VulkanSampler<3>;
+
 }
+
+#include "Molten/Renderer/Vulkan/VulkanSampler.inl"
 
 #endif
 
