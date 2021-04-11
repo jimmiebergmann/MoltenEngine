@@ -210,6 +210,39 @@ namespace Molten
         throw Exception("Provided provided sampler wrap mode is not handled.");
     }
 
+    static VkBlendFactor GetBlendFactor(const Pipeline::BlendFunction blendFunction)
+    {
+        switch (blendFunction)
+        {
+            case Pipeline::BlendFunction::Zero: return VkBlendFactor::VK_BLEND_FACTOR_ZERO;
+            case Pipeline::BlendFunction::One: return VkBlendFactor::VK_BLEND_FACTOR_ONE;
+            case Pipeline::BlendFunction::SourceColor: return VkBlendFactor::VK_BLEND_FACTOR_SRC_COLOR;
+            case Pipeline::BlendFunction::SourceAlpha: return VkBlendFactor::VK_BLEND_FACTOR_SRC_ALPHA;
+            case Pipeline::BlendFunction::DestinationColor: return VkBlendFactor::VK_BLEND_FACTOR_DST_COLOR;
+            case Pipeline::BlendFunction::DestinationAlpha: return VkBlendFactor::VK_BLEND_FACTOR_DST_ALPHA;
+            case Pipeline::BlendFunction::OneMinusSourceColor: return VkBlendFactor::VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR;
+            case Pipeline::BlendFunction::OneMinusSourceAlpha: return VkBlendFactor::VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+            case Pipeline::BlendFunction::OneMinusDestinationColor: return VkBlendFactor::VK_BLEND_FACTOR_ONE_MINUS_DST_COLOR;
+            case Pipeline::BlendFunction::OneMinusDestinationAlpha: return VkBlendFactor::VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA;
+        }
+
+        throw Exception("Provided provided blend function is not handled.");
+    }
+
+    static VkBlendOp GetBlendOperator(const Pipeline::BlendOperator blendOperator)
+    {
+        switch (blendOperator)
+        {
+            case Pipeline::BlendOperator::Add: return VkBlendOp::VK_BLEND_OP_ADD;
+            case Pipeline::BlendOperator::Subtract: return VkBlendOp::VK_BLEND_OP_SUBTRACT;
+            case Pipeline::BlendOperator::ReverseSubtract: return VkBlendOp::VK_BLEND_OP_REVERSE_SUBTRACT;
+            case Pipeline::BlendOperator::Min: return VkBlendOp::VK_BLEND_OP_MIN;
+            case Pipeline::BlendOperator::Max: return VkBlendOp::VK_BLEND_OP_MAX;
+        }
+
+        throw Exception("Provided provided blend operator is not handled.");
+    }
+
     MOLTEN_UNSCOPED_ENUM_END
 
     static VkDeviceSize GetIndexBufferDataTypeSize(const IndexBuffer::DataType dataType)
@@ -945,16 +978,19 @@ namespace Molten
                 
         //VkPipelineDepthStencilStateCreateInfo depthStencilStateInfo = {};
 
+        auto& blendingDescriptor = descriptor.blending;
+        const auto blendOperator = GetBlendOperator(blendingDescriptor.blendOperator);
+
         VkPipelineColorBlendAttachmentState colorBlendAttachmentState = {};
         colorBlendAttachmentState.colorWriteMask =
             VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
         colorBlendAttachmentState.blendEnable = VK_TRUE;
-        colorBlendAttachmentState.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-        colorBlendAttachmentState.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-        colorBlendAttachmentState.colorBlendOp = VK_BLEND_OP_ADD;
-        colorBlendAttachmentState.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-        colorBlendAttachmentState.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-        colorBlendAttachmentState.alphaBlendOp = VK_BLEND_OP_ADD;
+        colorBlendAttachmentState.srcColorBlendFactor = GetBlendFactor(blendingDescriptor.sourceColor);
+        colorBlendAttachmentState.dstColorBlendFactor = GetBlendFactor(blendingDescriptor.destinationColor);
+        colorBlendAttachmentState.colorBlendOp = blendOperator;
+        colorBlendAttachmentState.srcAlphaBlendFactor = GetBlendFactor(blendingDescriptor.sourceAlpha);
+        colorBlendAttachmentState.dstAlphaBlendFactor = GetBlendFactor(blendingDescriptor.destinationAlpha);
+        colorBlendAttachmentState.alphaBlendOp = blendOperator;
 
         VkPipelineColorBlendStateCreateInfo colorBlendInfo = {};
         colorBlendInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;

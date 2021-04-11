@@ -29,6 +29,31 @@
 namespace Molten
 {
 
+    // Pipeline blending descriptor.
+    PipelineBlendingDescriptor::PipelineBlendingDescriptor() :
+        blendOperator(Pipeline::BlendOperator::Add),
+        sourceColor(Pipeline::BlendFunction::SourceAlpha),
+        sourceAlpha(Pipeline::BlendFunction::SourceAlpha),
+        destinationColor(Pipeline::BlendFunction::OneMinusSourceAlpha),
+        destinationAlpha(Pipeline::BlendFunction::OneMinusSourceAlpha)
+    {}
+
+    PipelineBlendingDescriptor::PipelineBlendingDescriptor(
+        const Pipeline::BlendOperator blendOperator,
+        const Pipeline::BlendFunction sourceColor,
+        const Pipeline::BlendFunction sourceAlpha,
+        const Pipeline::BlendFunction destinationColor,
+        const Pipeline::BlendFunction destinationAlpha
+    ) :
+        blendOperator(blendOperator),
+        sourceColor(sourceColor),
+        sourceAlpha(sourceAlpha),
+        destinationColor(destinationColor),
+        destinationAlpha(destinationAlpha)
+    {}
+
+
+    // Pipeline descriptor.
     PipelineDescriptor::PipelineDescriptor() :
         topology(Pipeline::Topology::TriangleList),
         polygonMode(Pipeline::PolygonMode::Fill),
@@ -43,6 +68,7 @@ namespace Molten
         const Pipeline::PolygonMode polygonMode,
         const Pipeline::FrontFace frontFace,
         const Pipeline::CullMode cullMode,
+        const PipelineBlendingDescriptor blending,
         Shader::Visual::VertexScript* vertexScript,
         Shader::Visual::FragmentScript* fragmentScript
     ) :
@@ -50,6 +76,7 @@ namespace Molten
         polygonMode(polygonMode),
         frontFace(frontFace),
         cullMode(cullMode),
+        blending(blending),
         vertexScript(vertexScript),
         fragmentScript(fragmentScript)
     { }

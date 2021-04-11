@@ -43,7 +43,32 @@ namespace Molten
 
     public:
 
-        /** Enumerator of different vertex structes. */
+        /** Enumerator of blend functions. */
+        enum class BlendFunction : uint8_t
+        {
+            Zero,
+            One,
+            SourceColor,
+            SourceAlpha,
+            DestinationColor,
+            DestinationAlpha,
+            OneMinusSourceColor,
+            OneMinusSourceAlpha,
+            OneMinusDestinationColor,
+            OneMinusDestinationAlpha
+        };
+
+        /** Enumerator of blend operators. */
+        enum class BlendOperator : uint8_t
+        {
+            Add,
+            Subtract,
+            ReverseSubtract,
+            Min,
+            Max
+        };
+
+        /** Enumerator of vertex structes. */
         enum class Topology : uint8_t
         {
             PointList,
@@ -53,7 +78,7 @@ namespace Molten
             TriangleStrip
         };
 
-        /** Enumerator of different polygon rendering modes. */
+        /** Enumerator of polygon rendering modes. */
         enum class PolygonMode : uint8_t
         {
             Point,
@@ -90,7 +115,33 @@ namespace Molten
 
     };
 
-    /** Descriptor class of pipeline class. */
+    /** Descriptor of pipeline blending. */
+    struct MOLTEN_API PipelineBlendingDescriptor
+    {
+        PipelineBlendingDescriptor();
+        PipelineBlendingDescriptor(
+            const Pipeline::BlendOperator blendOperator,
+            const Pipeline::BlendFunction sourceColor,
+            const Pipeline::BlendFunction sourceAlpha,
+            const Pipeline::BlendFunction destinationColor,
+            const Pipeline::BlendFunction destinationAlpha);
+
+        ~PipelineBlendingDescriptor() = default;
+
+        PipelineBlendingDescriptor(const PipelineBlendingDescriptor&) = default;
+        PipelineBlendingDescriptor(PipelineBlendingDescriptor&&) = default;
+        PipelineBlendingDescriptor& operator =(const PipelineBlendingDescriptor&) = default;
+        PipelineBlendingDescriptor& operator =(PipelineBlendingDescriptor&&) = default;
+
+        Pipeline::BlendOperator blendOperator;
+        Pipeline::BlendFunction sourceColor;
+        Pipeline::BlendFunction sourceAlpha;
+        Pipeline::BlendFunction destinationColor;
+        Pipeline::BlendFunction destinationAlpha;
+        
+    };
+
+    /** Descriptor of pipeline. */
     struct MOLTEN_API PipelineDescriptor
     {
 
@@ -100,6 +151,7 @@ namespace Molten
             const Pipeline::PolygonMode polygonMode,
             const Pipeline::FrontFace frontFace,
             const Pipeline::CullMode cullMode,
+            const PipelineBlendingDescriptor blending,
             Shader::Visual::VertexScript* vertexScript,
             Shader::Visual::FragmentScript* fragmentScript);
         ~PipelineDescriptor() = default;
@@ -113,6 +165,7 @@ namespace Molten
         Pipeline::PolygonMode polygonMode;
         Pipeline::FrontFace frontFace;
         Pipeline::CullMode cullMode;
+        PipelineBlendingDescriptor blending;
         Shader::Visual::VertexScript* vertexScript;
         Shader::Visual::FragmentScript* fragmentScript;
 
