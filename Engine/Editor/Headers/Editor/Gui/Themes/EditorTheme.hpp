@@ -162,7 +162,14 @@ namespace Molten::Gui
             Vector2size dimensions;
             theme.m_font.CreateBitmap(buffer, dimensions, widget.text, 96, 16);
 
-            m_texture = theme.m_canvasRenderer.CreateTexture(dimensions, buffer.get());         
+
+            const TextureDescriptor2D textureDesc = {
+                dimensions,
+                buffer.get(),
+                ImageFormat::URed8Green8Blue8Alpha8
+            };
+
+            m_texture = theme.m_canvasRenderer.CreateTexture(textureDesc);
         }
 
         void Draw() override

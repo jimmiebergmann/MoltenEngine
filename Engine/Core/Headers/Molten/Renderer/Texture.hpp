@@ -26,15 +26,18 @@
 #ifndef MOLTEN_CORE_RENDERER_TEXTURE_HPP
 #define MOLTEN_CORE_RENDERER_TEXTURE_HPP
 
-#include "Molten/Types.hpp"
+#include "Molten/Renderer/ImageFormat.hpp"
 #include "Molten/Math/Vector.hpp"
 
 namespace Molten
-{
+{   
 
     /** Texture resource object. */
-    class MOLTEN_API Texture
+    template<size_t VDimensions>
+    class Texture
     {
+
+        static_assert(VDimensions >= 1 && VDimensions <= 3, "Texture must be of dimension 1-3.");
 
     public:
 
@@ -51,14 +54,28 @@ namespace Molten
 
     };
 
+    using Texture1D = Texture<1>;
+    using Texture2D = Texture<2>;
+    using Texture3D = Texture<3>;
+
+
     /** Descriptor class of texture class. */
-    struct MOLTEN_API TextureDescriptor
+    template<size_t VDimensions>
+    struct TextureDescriptor
     {
+
+        static_assert(VDimensions >= 1 && VDimensions <= 3, "Texture descriptor must be of dimension 1-3.");
 
         TextureDescriptor();
         TextureDescriptor(
-            const Vector2ui32& dimensions,
-            const void* data);
+            const Vector<VDimensions, uint32_t>& dimensions,
+            const void* data,
+            const ImageFormat format);
+        TextureDescriptor(
+            const Vector<VDimensions, uint32_t>& dimensions,
+            const void* data,
+            const ImageFormat format,
+            const ImageFormat internalFormat);
         ~TextureDescriptor() = default;
 
         TextureDescriptor(const TextureDescriptor&) = default;
@@ -66,11 +83,19 @@ namespace Molten
         TextureDescriptor& operator =(const TextureDescriptor&) = default;
         TextureDescriptor& operator =(TextureDescriptor&&) = default;
 
-        Vector2ui32 dimensions;
+        Vector<VDimensions, uint32_t> dimensions; 
         const void* data;
+        ImageFormat format;
+        ImageFormat internalFormat;
 
     };
 
+    using TextureDescriptor1D = TextureDescriptor<1>;
+    using TextureDescriptor2D = TextureDescriptor<2>;
+    using TextureDescriptor3D = TextureDescriptor<3>;
+
 }
+
+#include "Molten/Renderer/Texture.inl"
 
 #endif

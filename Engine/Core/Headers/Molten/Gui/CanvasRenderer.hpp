@@ -32,6 +32,7 @@
 #include "Molten/Math/Bounds.hpp"
 #include "Molten/Renderer/RenderResource.hpp"
 #include "Molten/Renderer/Sampler.hpp"
+#include "Molten/Renderer/Texture.hpp"
 
 namespace Molten
 {
@@ -39,7 +40,6 @@ namespace Molten
     class Pipeline;  
     class VertexBuffer;
     class IndexBuffer;
-    class Texture;
     class DescriptorSet;
     class Logger;
 }
@@ -68,7 +68,7 @@ namespace Molten::Gui
         CanvasRendererTexture& operator =(const CanvasRendererTexture&) = delete;
         CanvasRendererTexture& operator =(CanvasRendererTexture&& canvasRendererTexture) noexcept;
 
-        RenderResource<Texture> texture;
+        RenderResource<Texture2D> texture;
         RenderResource<DescriptorSet> descriptorSet;
 
     };
@@ -93,7 +93,7 @@ namespace Molten::Gui
 
         void Resize(const Vector2f32& size);
 
-        CanvasRendererTexture CreateTexture(Vector2ui32 dimensions, const void* data);
+        CanvasRendererTexture CreateTexture(const TextureDescriptor2D& textureDescriptor);
 
         void BeginDraw();
 

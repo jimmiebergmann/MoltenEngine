@@ -81,7 +81,8 @@ namespace Molten::Vulkan
 
     Result<> Image::Create(
         LogicalDevice& logicalDevice,
-        const Vector2ui32& imageDimensions,
+        const Vector3ui32& imageDimensions,
+        const VkImageType imageType,
         const VkFormat imageFormat,
         const Vulkan::FilteredMemoryTypes& filteredMemoryTypes)
     {
@@ -97,6 +98,7 @@ namespace Molten::Vulkan
         Result<> result;
         if (!(result = LoadImage(
             imageDimensions,
+            imageType,
             imageFormat,
             filteredMemoryTypes)))
         {
@@ -111,7 +113,8 @@ namespace Molten::Vulkan
         LogicalDevice& logicalDevice,
         DeviceBuffer& stagingBuffer,
         const VkCommandPool commandPool,
-        const Vector2ui32& imageDimensions,
+        const Vector3ui32& imageDimensions,
+        const VkImageType imageType,
         const VkFormat imageFormat,
         const Vulkan::FilteredMemoryTypes& filteredMemoryTypes)
     {
@@ -127,6 +130,7 @@ namespace Molten::Vulkan
         Result<> result;
         if (!(result = LoadImage(
             imageDimensions,
+            imageType,
             imageFormat,
             filteredMemoryTypes)))
         {
@@ -174,7 +178,7 @@ namespace Molten::Vulkan
     Result<> Image::CopyFromBuffer(
         const VkCommandPool commandPool,
         const DeviceBuffer& source,
-        const Vector2ui32 dimensions,
+        const Vector3ui32 dimensions,
         bool restoreLayout)
     {
         Result<> result;
@@ -207,7 +211,7 @@ namespace Molten::Vulkan
         region.imageOffset = { 0, 0, 0 };
         region.imageExtent.width = dimensions.x;
         region.imageExtent.height = dimensions.y;
-        region.imageExtent.depth = 1;
+        region.imageExtent.depth = dimensions.z;
 
         vkCmdCopyBufferToImage(commandBuffer, source.GetHandle(), m_handle, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 
@@ -290,17 +294,18 @@ namespace Molten::Vulkan
     }
 
     Result<> Image::LoadImage(
-        const Vector2ui32& imageDimensions,
+        const Vector3ui32& imageDimensions,
+        const VkImageType imageType,
         const VkFormat imageFormat,
         const Vulkan::FilteredMemoryTypes& filteredMemoryTypes)
     {
         VkImageCreateInfo imageInfo = {};
         imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
         imageInfo.flags = 0;
-        imageInfo.imageType = VK_IMAGE_TYPE_2D;
+        imageInfo.imageType = imageType;
         imageInfo.extent.width = static_cast<uint32_t>(imageDimensions.x);
         imageInfo.extent.height = static_cast<uint32_t>(imageDimensions.y);
-        imageInfo.extent.depth = 1;
+        imageInfo.extent.depth = static_cast<uint32_t>(imageDimensions.z);
         imageInfo.mipLevels = 1;
         imageInfo.arrayLayers = 1;
         imageInfo.format = imageFormat;

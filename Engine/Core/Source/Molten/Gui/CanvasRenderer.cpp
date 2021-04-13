@@ -83,15 +83,9 @@ namespace Molten::Gui
         m_projection = Matrix4x4f32::Orthographic(0.0f, size.x, size.y, 0.0f, 1.0f, -1.0f);
     }
 
-    CanvasRendererTexture CanvasRenderer::CreateTexture(Vector2ui32 dimensions, const void* data)
+    CanvasRendererTexture CanvasRenderer::CreateTexture(const TextureDescriptor2D& textureDescriptor2D)
     {
-        // NO ERROR HANDLING HERE
-        // ...
-
-        TextureDescriptor textureDesc;
-        textureDesc.dimensions = dimensions;
-        textureDesc.data = data;
-        auto texture = m_backendRenderer.CreateTexture(textureDesc);
+        auto texture = m_backendRenderer.CreateTexture(textureDescriptor2D);
         if(texture == nullptr)
         {
             return {};

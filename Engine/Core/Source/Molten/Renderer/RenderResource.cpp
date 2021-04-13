@@ -73,9 +73,19 @@ namespace Molten
         renderer->Destroy(sampler3D);
     }
 
-    inline void RenderResourceDeleterHelper::Destroy(Texture& texture)
+    inline void RenderResourceDeleterHelper::Destroy(Texture<1>& texture1D)
     {
-        renderer->Destroy(texture);
+        renderer->Destroy(texture1D);
+    }
+
+    inline void RenderResourceDeleterHelper::Destroy(Texture<2>& texture2D)
+    {
+        renderer->Destroy(texture2D);
+    }
+
+    inline void RenderResourceDeleterHelper::Destroy(Texture<3>& texture3D)
+    {
+        renderer->Destroy(texture3D);
     }
 
     inline void RenderResourceDeleterHelper::Destroy(UniformBuffer& uniformBuffer)

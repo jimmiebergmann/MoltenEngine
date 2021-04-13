@@ -227,7 +227,17 @@ namespace Molten
         return { };
     }
 
-    RenderResource<Texture> OpenGLWin32Renderer::CreateTexture(const TextureDescriptor& /*descriptor*/)
+    RenderResource<Texture1D> OpenGLWin32Renderer::CreateTexture(const TextureDescriptor1D& /*descriptor*/)
+    {
+        return { };
+    }
+
+    RenderResource<Texture2D> OpenGLWin32Renderer::CreateTexture(const TextureDescriptor2D& /*descriptor*/)
+    {
+        return { };
+    }
+
+    RenderResource<Texture3D> OpenGLWin32Renderer::CreateTexture(const TextureDescriptor3D& /*descriptor*/)
     {
         return { };
     }
@@ -279,7 +289,15 @@ namespace Molten
     {
     }
 
-    void OpenGLWin32Renderer::Destroy(Texture& /*texture*/)
+    void OpenGLWin32Renderer::Destroy(Texture1D& /*texture1D*/)
+    {
+    }
+
+    void OpenGLWin32Renderer::Destroy(Texture2D& /*texture2D*/)
+    {
+    }
+
+    void OpenGLWin32Renderer::Destroy(Texture3D& /*texture3D*/)
     {
     }
 

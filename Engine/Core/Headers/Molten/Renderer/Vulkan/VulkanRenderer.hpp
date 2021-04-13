@@ -113,7 +113,11 @@ namespace Molten
         /**@}*/
 
         /** Create texture object. */
-        RenderResource<Texture> CreateTexture(const TextureDescriptor& descriptor) override;
+        /**@{*/
+        RenderResource<Texture1D> CreateTexture(const TextureDescriptor1D& descriptor) override;
+        RenderResource<Texture2D> CreateTexture(const TextureDescriptor2D& descriptor) override;
+        RenderResource<Texture3D> CreateTexture(const TextureDescriptor3D& descriptor) override;
+        /**@}*/
 
         /** Create uniform buffer object. */
         RenderResource<UniformBuffer> CreateUniformBuffer(const UniformBufferDescriptor& descriptor) override;
@@ -137,7 +141,9 @@ namespace Molten
         void Destroy(Sampler1D& sampler1D) override;
         void Destroy(Sampler2D& sampler2D) override;
         void Destroy(Sampler3D& sampler3D) override;
-        void Destroy(Texture& texture) override;
+        void Destroy(Texture1D& texture1D) override;
+        void Destroy(Texture2D& texture2D) override;
+        void Destroy(Texture3D& texture3D) override;
         void Destroy(UniformBuffer& uniformBuffer) override;
         void Destroy(FramedUniformBuffer& framedUniformBuffer) override;
         void Destroy(VertexBuffer& vertexBuffer) override;
@@ -207,6 +213,14 @@ namespace Molten
         bool LoadCommandPool();
         /**@}*/
 
+        template<size_t VDimensions>
+        RenderResource<Texture<VDimensions>> CreateTexture(
+            const Vector3ui32& dimensions,
+            const size_t dataSize,
+            const void* data,
+            const VkFormat imageFormat,
+            const VkFormat internalImageFormat);
+
         /** Shader creation and manipulation functions. */
         /**@{*/
         bool CreateVertexInputAttributes(
@@ -225,7 +239,6 @@ namespace Molten
             VkPushConstantRange& pushConstantRange,
             MappedDescriptorSets& mappedDescriptorSets,
             const std::vector<Shader::Visual::Script*>& visualScripts);
-
 
         template<typename T>
         void InternalPushConstant(const uint32_t location, const T& value);

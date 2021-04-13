@@ -72,6 +72,7 @@ namespace Molten
     using Sampler2D = Sampler<2>;
     using Sampler3D = Sampler<3>;
 
+
     /**
     * @brief Descriptor of sampler.
     */

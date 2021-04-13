@@ -62,7 +62,8 @@ namespace Molten::Vulkan
         /** Create image. Device memory is allocated but not populated with anything. */
         Result<> Create(
             LogicalDevice& logicalDevice,
-            const Vector2ui32& imageDimensions,
+            const Vector3ui32& imageDimensions,
+            const VkImageType imageType,
             const VkFormat imageFormat,
             const Vulkan::FilteredMemoryTypes& filteredMemoryTypes);
 
@@ -71,7 +72,8 @@ namespace Molten::Vulkan
             LogicalDevice& logicalDevice,
             DeviceBuffer& stagingBuffer,
             const VkCommandPool commandPool,
-            const Vector2ui32& imageDimensions,
+            const Vector3ui32& imageDimensions,
+            const VkImageType imageType,
             const VkFormat imageFormat,
             const Vulkan::FilteredMemoryTypes& filteredMemoryTypes);
 
@@ -82,7 +84,7 @@ namespace Molten::Vulkan
         Result<> CopyFromBuffer(
             const VkCommandPool commandPool,
             const DeviceBuffer& source,
-            const Vector2ui32 dimensions,
+            const Vector3ui32 dimensions,
             bool restoreLayout = false);
 
         Result<> TransitionToLayout(
@@ -105,7 +107,8 @@ namespace Molten::Vulkan
     private:
 
         Result<> LoadImage(
-            const Vector2ui32& imageDimensions,
+            const Vector3ui32& imageDimensions,
+            const VkImageType imageType,
             const VkFormat imageFormat,
             const Vulkan::FilteredMemoryTypes& filteredMemoryTypes);
 

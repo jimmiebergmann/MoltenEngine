@@ -225,7 +225,17 @@ namespace Molten
         return { };
     }
 
-    RenderResource<Texture> OpenGLX11Renderer::CreateTexture(const TextureDescriptor&)
+    RenderResource<Texture1D> OpenGLX11Renderer::CreateTexture(const TextureDescriptor1D& /*descriptor*/)
+    {
+        return { };
+    }
+
+    RenderResource<Texture2D> OpenGLX11Renderer::CreateTexture(const TextureDescriptor2D& /*descriptor*/)
+    {
+        return { };
+    }
+
+    RenderResource<Texture3D> OpenGLX11Renderer::CreateTexture(const TextureDescriptor3D& /*descriptor*/)
     {
         return { };
     }
@@ -277,7 +287,15 @@ namespace Molten
     {
     }
 
-    void OpenGLX11Renderer::Destroy(Texture& /*texture*/)
+    void OpenGLX11Renderer::Destroy(Texture1D& /*texture1D*/)
+    {
+    }
+
+    void OpenGLX11Renderer::Destroy(Texture2D& /*texture2D*/)
+    {
+    }
+
+    void OpenGLX11Renderer::Destroy(Texture3D& /*texture3D*/)
     {
     }
 

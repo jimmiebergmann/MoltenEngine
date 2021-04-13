@@ -39,7 +39,7 @@ namespace Molten
     class IndexBuffer;
     class Pipeline;
     template<size_t VDimensions> class Sampler;
-    class Texture;
+    template<size_t VDimensions> class Texture;
     class UniformBuffer;
     class FramedUniformBuffer;
     class VertexBuffer; 
@@ -57,7 +57,9 @@ namespace Molten
         void Destroy(Sampler<1>& sampler1D);
         void Destroy(Sampler<2>& sampler2D);
         void Destroy(Sampler<3>& sampler3D);
-        void Destroy(Texture& texture);
+        void Destroy(Texture<1>& texture1D);
+        void Destroy(Texture<2>& texture2D);
+        void Destroy(Texture<3>& texture3D);
         void Destroy(UniformBuffer& uniformBuffer);
         void Destroy(FramedUniformBuffer& framedUniformBuffer);
         void Destroy(VertexBuffer& vertexBuffer);

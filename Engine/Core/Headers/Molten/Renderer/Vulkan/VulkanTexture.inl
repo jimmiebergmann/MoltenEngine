@@ -23,45 +23,20 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_VULKANTEXTURE_HPP
-#define MOLTEN_CORE_RENDERER_VULKANTEXTURE_HPP
-
-#include "Molten/Renderer/Texture.hpp"
-
 #if defined(MOLTEN_ENABLE_VULKAN)
-#include "Molten/Renderer/Vulkan/VulkanHeaders.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanImage.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanImageSampler.hpp"
 
 namespace Molten
 {
 
     template<size_t VDimensions>
-    class VulkanTexture : public Texture<VDimensions>
-    {
-
-    public:
-
-        using Base = Texture<VDimensions>;
-
-        VulkanTexture() = delete;
-        VulkanTexture(
-            Vulkan::Image&& image,
-            VkImageView imageView);
-
-        Vulkan::Image image;
-        VkImageView imageView;
-
-    };
-
-    using VulkanTexture1D = VulkanTexture<1>;
-    using VulkanTexture2D = VulkanTexture<2>;
-    using VulkanTexture3D = VulkanTexture<3>;
+    VulkanTexture<VDimensions>::VulkanTexture(
+        Vulkan::Image&& image,
+        VkImageView imageView
+    ) :
+        image(std::move(image)),
+        imageView(imageView)
+    {}
 
 }
-
-#include "Molten/Renderer/Vulkan/VulkanTexture.inl"
-
-#endif
 
 #endif

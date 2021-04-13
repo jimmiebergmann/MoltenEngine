@@ -34,7 +34,7 @@ namespace Molten
 
     template<size_t VDimensions>
     CombinedTextureSampler<VDimensions>::CombinedTextureSampler(
-        RenderResource<Texture>& texture,
+        RenderResource<Texture<VDimensions>>& texture,
         Sampler<VDimensions>& sampler
     ):
         texture(&texture),

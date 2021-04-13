@@ -53,7 +53,7 @@
 namespace Molten
 {
 
-    // Static helper functions.
+    // Static helper functions and traits.
     static VkShaderStageFlagBits GetShaderProgramStageFlag(const Shader::Type type)
     {
         MOLTEN_UNSCOPED_ENUM_BEGIN
@@ -114,7 +114,27 @@ namespace Molten
         }
         throw Exception("Provided cull mode is not supported by the Vulkan renderer.");
     }
-    
+
+    static VkFormat GetImageFormatAndPixelSize(const ImageFormat imageFormat, uint32_t& pixelSize)
+    {
+        switch (imageFormat)
+        {
+            case ImageFormat::URed8: pixelSize = 1; return VkFormat::VK_FORMAT_R8_UNORM;
+            case ImageFormat::URed8Green8: pixelSize = 2; return VkFormat::VK_FORMAT_R8G8_UNORM;
+            case ImageFormat::URed8Green8Blue8: pixelSize = 3; return VkFormat::VK_FORMAT_R8G8B8_UNORM;
+            case ImageFormat::URed8Green8Blue8Alpha8: pixelSize = 4; return VkFormat::VK_FORMAT_R8G8B8A8_UNORM;
+
+            case ImageFormat::SrgbRed8Green8Blue8: pixelSize = 3; return VkFormat::VK_FORMAT_R8G8B8_SRGB;
+            case ImageFormat::SrgbRed8Green8Blue8Alpha8: pixelSize = 4; return VkFormat::VK_FORMAT_R8G8B8A8_SRGB;
+
+            case ImageFormat::SRed8: pixelSize = 1; return VkFormat::VK_FORMAT_R8_SNORM;
+            case ImageFormat::SRed8Green8: pixelSize = 2; return VkFormat::VK_FORMAT_R8G8_SNORM;
+            case ImageFormat::SRed8Green8Blue8: pixelSize = 3; return VkFormat::VK_FORMAT_R8G8B8_SNORM;
+            case ImageFormat::SRed8Green8Blue8Alpha8: pixelSize = 4; return VkFormat::VK_FORMAT_R8G8B8A8_SNORM;
+        }
+        throw Exception("Provided image format is not supported by the Vulkan renderer.");
+    }
+
     static bool GetVertexAttributeFormatAndSize(const Shader::VariableDataType format, VkFormat & vulkanFormat, uint32_t & formatSize)
     {       
         switch (format)
@@ -242,6 +262,42 @@ namespace Molten
 
         throw Exception("Provided provided blend operator is not handled.");
     }
+
+    template<size_t VDimensions>
+    struct VulkanImageTypeTraits { };
+    template<>
+    struct VulkanImageTypeTraits<1>
+    {
+        inline static constexpr VkImageType type = VkImageType::VK_IMAGE_TYPE_1D;
+    };
+    template<>
+    struct VulkanImageTypeTraits<2>
+    {
+        inline static constexpr VkImageType type = VkImageType::VK_IMAGE_TYPE_2D;
+    };
+    template<>
+    struct VulkanImageTypeTraits<3>
+    {
+        inline static constexpr VkImageType type = VkImageType::VK_IMAGE_TYPE_3D;
+    };
+
+    template<size_t VDimensions>
+    struct VulkanImageViewTypeTraits { };
+    template<>
+    struct VulkanImageViewTypeTraits<1>
+    {
+        inline static constexpr VkImageViewType type = VkImageViewType::VK_IMAGE_VIEW_TYPE_1D;
+    };
+    template<>
+    struct VulkanImageViewTypeTraits<2>
+    {
+        inline static constexpr VkImageViewType type = VkImageViewType::VK_IMAGE_VIEW_TYPE_2D;
+    };
+    template<>
+    struct VulkanImageViewTypeTraits<3>
+    {
+        inline static constexpr VkImageViewType type = VkImageViewType::VK_IMAGE_VIEW_TYPE_3D;
+    };
 
     MOLTEN_UNSCOPED_ENUM_END
 
@@ -512,19 +568,19 @@ namespace Molten
                 }
                 else if constexpr (std::is_same_v<T, CombinedTextureSampler1D>)
                 {
-                    const auto imageView = static_cast<VulkanTexture*>(bindingData.texture->get())->imageView;
+                    const auto imageView = static_cast<VulkanTexture1D*>(bindingData.texture->get())->imageView;
                     const auto sampler = static_cast<VulkanSampler1D*>(bindingData.sampler)->imageSampler.GetHandle();
                     writeImageInfo(write, sampler, imageView);
                 }
                 else if constexpr (std::is_same_v<T, CombinedTextureSampler2D>)
                 {
-                    const auto imageView = static_cast<VulkanTexture*>(bindingData.texture->get())->imageView;
+                    const auto imageView = static_cast<VulkanTexture2D*>(bindingData.texture->get())->imageView;
                     const auto sampler = static_cast<VulkanSampler2D*>(bindingData.sampler)->imageSampler.GetHandle();
                     writeImageInfo(write, sampler, imageView);
                 }
                 else if constexpr (std::is_same_v<T, CombinedTextureSampler3D>)
                 {
-                    const auto imageView = static_cast<VulkanTexture*>(bindingData.texture->get())->imageView;
+                    const auto imageView = static_cast<VulkanTexture3D*>(bindingData.texture->get())->imageView;
                     const auto sampler = static_cast<VulkanSampler3D*>(bindingData.sampler)->imageSampler.GetHandle();
                     writeImageInfo(write, sampler, imageView);
                 }
@@ -729,19 +785,19 @@ namespace Molten
                 }
                 else if constexpr (std::is_same_v<T, CombinedTextureSampler1D>)
                 {
-                    const auto imageView = static_cast<VulkanTexture*>(bindingData.texture->get())->imageView;
+                    const auto imageView = static_cast<VulkanTexture1D*>(bindingData.texture->get())->imageView;
                     const auto sampler = static_cast<VulkanSampler1D*>(bindingData.sampler)->imageSampler.GetHandle();
                     writeImageInfos(setWrites, writeIndex, bindingIndex, sampler, imageView);
                 }
                 else if constexpr (std::is_same_v<T, CombinedTextureSampler2D>)
                 {
-                    const auto imageView = static_cast<VulkanTexture*>(bindingData.texture->get())->imageView;
+                    const auto imageView = static_cast<VulkanTexture2D*>(bindingData.texture->get())->imageView;
                     const auto sampler = static_cast<VulkanSampler2D*>(bindingData.sampler)->imageSampler.GetHandle();
                     writeImageInfos(setWrites, writeIndex, bindingIndex, sampler, imageView);
                 }
                 else if constexpr (std::is_same_v<T, CombinedTextureSampler3D>)
                 {
-                    const auto imageView = static_cast<VulkanTexture*>(bindingData.texture->get())->imageView;
+                    const auto imageView = static_cast<VulkanTexture3D*>(bindingData.texture->get())->imageView;
                     const auto sampler = static_cast<VulkanSampler3D*>(bindingData.sampler)->imageSampler.GetHandle();
                     writeImageInfos(setWrites, writeIndex, bindingIndex, sampler, imageView);
                 }
@@ -1160,69 +1216,66 @@ namespace Molten
         }, RenderResourceDeleter<Sampler3D>{ this });
     }
 
-    RenderResource<Texture> VulkanRenderer::CreateTexture(const TextureDescriptor& descriptor)
+    RenderResource<Texture1D> VulkanRenderer::CreateTexture(const TextureDescriptor1D& descriptor)
     {
-        const auto bufferSize = 
-            static_cast<VkDeviceSize>(descriptor.dimensions.x) * 
-            static_cast<VkDeviceSize>(descriptor.dimensions.y) * 4;
-
-        Vulkan::DeviceBuffer stagingBuffer;
-
-        Vulkan::Result<> result;
-        if (!(result = stagingBuffer.Create(m_logicalDevice, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, m_memoryTypesHostVisibleOrCoherent)))
+        uint32_t formatPixelSize = 0;
+        uint32_t internalFormatPixelSize = 0;
+        const auto imageFormat = GetImageFormatAndPixelSize(descriptor.format, formatPixelSize);
+        const auto internalImageFormat = GetImageFormatAndPixelSize(descriptor.internalFormat, internalFormatPixelSize);
+        if(formatPixelSize != internalFormatPixelSize)
         {
-            Vulkan::Logger::WriteError(m_logger, result, "Failed to create staging buffer for index buffer");
+            Logger::WriteError(m_logger, "Format and internal format of texture mismatches number of bytes per pixel: " + 
+                std::to_string(formatPixelSize) + " : " + std::to_string(internalFormatPixelSize));
             return { };
         }
 
-        if (!(result = stagingBuffer.MapMemory(0, bufferSize, descriptor.data)))
+        const auto dataSize = static_cast<VkDeviceSize>(descriptor.dimensions.c[0]) * static_cast<VkDeviceSize>(formatPixelSize);
+        const auto dimensions = Vector3ui32{ descriptor.dimensions.c[0], 1, 1 };
+
+        return CreateTexture<1>(dimensions, dataSize, descriptor.data, imageFormat, internalImageFormat);
+    }
+
+    RenderResource<Texture2D> VulkanRenderer::CreateTexture(const TextureDescriptor2D& descriptor)
+    {
+        uint32_t formatPixelSize = 0;
+        uint32_t internalFormatPixelSize = 0;
+        const auto imageFormat = GetImageFormatAndPixelSize(descriptor.format, formatPixelSize);
+        const auto internalImageFormat = GetImageFormatAndPixelSize(descriptor.internalFormat, internalFormatPixelSize);
+        if (formatPixelSize != internalFormatPixelSize)
         {
-            Vulkan::Logger::WriteError(m_logger, result, "Failed to map staging buffer for index buffer");
+            Logger::WriteError(m_logger, "Format and internal format of texture mismatches number of bytes per pixel: " +
+                std::to_string(formatPixelSize) + " : " + std::to_string(internalFormatPixelSize));
             return { };
         }
 
-        Vulkan::Image image;
-        if (!(result = image.Create(
-            m_logicalDevice,
-            stagingBuffer,
-            m_commandPool,
-            descriptor.dimensions,
-            VkFormat::VK_FORMAT_R8G8B8A8_SRGB,
-            m_memoryTypesDeviceLocal)))
+        const auto dataSize =
+            static_cast<VkDeviceSize>(descriptor.dimensions.x) *
+            static_cast<VkDeviceSize>(descriptor.dimensions.y) * static_cast<VkDeviceSize>(formatPixelSize);
+        const auto dimensions = Vector3ui32{ descriptor.dimensions.x, descriptor.dimensions.y, 1 };
+
+        return CreateTexture<2>(dimensions, dataSize, descriptor.data, imageFormat, internalImageFormat);
+    }
+
+    RenderResource<Texture3D> VulkanRenderer::CreateTexture(const TextureDescriptor3D& descriptor)
+    {
+        uint32_t formatPixelSize = 0;
+        uint32_t internalFormatPixelSize = 0;
+        const auto imageFormat = GetImageFormatAndPixelSize(descriptor.format, formatPixelSize);
+        const auto internalImageFormat = GetImageFormatAndPixelSize(descriptor.internalFormat, internalFormatPixelSize);
+        if (formatPixelSize != internalFormatPixelSize)
         {
-            Vulkan::Logger::WriteError(m_logger, result, "Failed to create image");
+            Logger::WriteError(m_logger, "Format and internal format of texture mismatches number of bytes per pixel: " +
+                std::to_string(formatPixelSize) + " : " + std::to_string(internalFormatPixelSize));
             return { };
         }
 
-        if (!(result = image.TransitionToLayout(
-            m_commandPool,
-            VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)))
-        {
-            Vulkan::Logger::WriteError(m_logger, result, "Failed transition image to read only optional layout");
-            return { };
-        }
+        const auto dataSize =
+            static_cast<VkDeviceSize>(descriptor.dimensions.x) *
+            static_cast<VkDeviceSize>(descriptor.dimensions.y) *
+            static_cast<VkDeviceSize>(descriptor.dimensions.z) * static_cast<VkDeviceSize>(formatPixelSize);
+        const auto dimensions = Vector3ui32{ descriptor.dimensions.x, descriptor.dimensions.y, descriptor.dimensions.z };
 
-        VkImageViewCreateInfo viewInfo{};
-        viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        viewInfo.image = image.GetHandle();
-        viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-        viewInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
-        viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        viewInfo.subresourceRange.baseMipLevel = 0;
-        viewInfo.subresourceRange.levelCount = 1;
-        viewInfo.subresourceRange.baseArrayLayer = 0;
-        viewInfo.subresourceRange.layerCount = 1;
-
-        VkImageView imageView;
-        if (vkCreateImageView(m_logicalDevice.GetHandle(), &viewInfo, nullptr, &imageView) != VK_SUCCESS) {
-            Vulkan::Logger::WriteError(m_logger, result, "Failed to create image view for texture");
-            return { };
-        }
-
-        return RenderResource<Texture>(new VulkanTexture{
-            std::move(image),
-            imageView
-        }, RenderResourceDeleter<Texture>{ this });
+        return CreateTexture<3>(dimensions, dataSize, descriptor.data, imageFormat, internalImageFormat);
     }
 
     RenderResource<UniformBuffer> VulkanRenderer::CreateUniformBuffer(const UniformBufferDescriptor& descriptor)
@@ -1354,9 +1407,21 @@ namespace Molten
     {   
     }
 
-    void VulkanRenderer::Destroy(Texture& texture)
+    void VulkanRenderer::Destroy(Texture1D& texture1D)
     {
-        auto& vulkanTexture = static_cast<VulkanTexture&>(texture);
+        auto& vulkanTexture = static_cast<VulkanTexture1D&>(texture1D);
+        vkDestroyImageView(m_logicalDevice.GetHandle(), vulkanTexture.imageView, nullptr);
+    }
+
+    void VulkanRenderer::Destroy(Texture2D& texture2D)
+    {
+        auto& vulkanTexture = static_cast<VulkanTexture2D&>(texture2D);
+        vkDestroyImageView(m_logicalDevice.GetHandle(), vulkanTexture.imageView, nullptr);
+    }
+
+    void VulkanRenderer::Destroy(Texture3D& texture3D)
+    {
+        auto& vulkanTexture = static_cast<VulkanTexture3D&>(texture3D);
         vkDestroyImageView(m_logicalDevice.GetHandle(), vulkanTexture.imageView, nullptr);
     }
 
@@ -1921,6 +1986,74 @@ namespace Molten
         }
 
         return true;
+    }
+
+    template<size_t VDimensions>
+    RenderResource<Texture<VDimensions>> VulkanRenderer::CreateTexture(
+        const Vector3ui32& dimensions,
+        const size_t dataSize,
+        const void* data,
+        const VkFormat imageFormat,
+        const VkFormat internalImageFormat)
+    {
+        Vulkan::DeviceBuffer stagingBuffer;
+
+        Vulkan::Result<> result;
+        if (!(result = stagingBuffer.Create(m_logicalDevice, dataSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, m_memoryTypesHostVisibleOrCoherent)))
+        {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to create staging buffer for index buffer");
+            return { };
+        }
+
+        if (!(result = stagingBuffer.MapMemory(0, dataSize, data)))
+        {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to map staging buffer for index buffer");
+            return { };
+        }
+
+        Vulkan::Image image;
+        if (!(result = image.Create(
+            m_logicalDevice,
+            stagingBuffer,
+            m_commandPool,
+            dimensions,
+            VulkanImageTypeTraits<VDimensions>::type,
+            imageFormat,
+            m_memoryTypesDeviceLocal)))
+        {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to create image");
+            return { };
+        }
+
+        if (!(result = image.TransitionToLayout(
+            m_commandPool,
+            VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)))
+        {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed transition image to read only optional layout");
+            return { };
+        }
+
+        VkImageViewCreateInfo viewInfo{};
+        viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        viewInfo.image = image.GetHandle();
+        viewInfo.viewType = VulkanImageViewTypeTraits<VDimensions>::type;
+        viewInfo.format = internalImageFormat;
+        viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        viewInfo.subresourceRange.baseMipLevel = 0;
+        viewInfo.subresourceRange.levelCount = 1;
+        viewInfo.subresourceRange.baseArrayLayer = 0;
+        viewInfo.subresourceRange.layerCount = 1;
+
+        VkImageView imageView;
+        if (vkCreateImageView(m_logicalDevice.GetHandle(), &viewInfo, nullptr, &imageView) != VK_SUCCESS) {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to create image view for texture");
+            return { };
+        }
+
+        return RenderResource<Texture<VDimensions>>(new VulkanTexture<VDimensions>{
+            std::move(image),
+            imageView
+        }, RenderResourceDeleter<Texture<VDimensions>>{ this });
     }
 
     bool VulkanRenderer::CreateVertexInputAttributes(

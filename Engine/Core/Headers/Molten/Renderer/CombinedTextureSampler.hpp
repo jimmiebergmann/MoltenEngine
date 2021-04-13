@@ -31,8 +31,8 @@
 namespace Molten
 {
 
-    class Texture;
     template<size_t VDimensions> class Sampler;
+    template<size_t VDimensions> class Texture;
 
     template<size_t VDimensions>
     struct CombinedTextureSampler
@@ -40,7 +40,7 @@ namespace Molten
 
         CombinedTextureSampler();
         CombinedTextureSampler(
-            RenderResource<Texture>& texture,
+            RenderResource<Texture<VDimensions>>& texture,
             Sampler<VDimensions>& sampler);
         ~CombinedTextureSampler() = default;
 
@@ -49,7 +49,7 @@ namespace Molten
         CombinedTextureSampler& operator =(const CombinedTextureSampler&) = default;
         CombinedTextureSampler& operator =(CombinedTextureSampler&&) = default;
 
-        RenderResource<Texture>* texture;
+        RenderResource<Texture<VDimensions>>* texture;
         Sampler<VDimensions>* sampler;
 
     };

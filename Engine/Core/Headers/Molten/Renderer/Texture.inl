@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,23 +23,41 @@
 *
 */
 
-#include "Molten/Renderer/Texture.hpp"
-
 namespace Molten
 {
 
-    /** Texture descriptor implementations. */
-    TextureDescriptor::TextureDescriptor() :
-        dimensions(0, 0),
-        data(nullptr)
+    // Texture descriptor implementations.
+    template<size_t VDimensions>
+    TextureDescriptor<VDimensions>::TextureDescriptor() :
+        dimensions(0),
+        data(nullptr),
+        format(ImageFormat::URed8Green8Blue8),
+        internalFormat(ImageFormat::URed8Green8Blue8)
     {}
 
-    TextureDescriptor::TextureDescriptor(
-        const Vector2ui32& dimensions,
-        const void* data
+    template<size_t VDimensions>
+    TextureDescriptor<VDimensions>::TextureDescriptor(
+        const Vector<VDimensions, uint32_t>& dimensions,
+        const void* data,
+        const ImageFormat format
     ) :
         dimensions(dimensions),
-        data(data)
+        data(data),
+        format(format),
+        internalFormat(format)
+    {}
+
+    template<size_t VDimensions>
+    TextureDescriptor<VDimensions>::TextureDescriptor(
+        const Vector<VDimensions, uint32_t>& dimensions,
+        const void* data,
+        const ImageFormat format,
+        const ImageFormat internalFormat
+    ) :
+        dimensions(dimensions),
+        data(data),
+        format(format),
+        internalFormat(internalFormat)
     {}
 
 }

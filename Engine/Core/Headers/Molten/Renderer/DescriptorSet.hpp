@@ -38,7 +38,6 @@ namespace Molten
     class Pipeline;
     class UniformBuffer;
     class FramedUniformBuffer;
-    class Texture;
 
 
     /** Descriptor set resource object. */

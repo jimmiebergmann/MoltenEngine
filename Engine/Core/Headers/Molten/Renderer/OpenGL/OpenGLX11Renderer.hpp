@@ -110,7 +110,11 @@ namespace Molten
         /**@}*/
 
         /** Create texture object. */
-        RenderResource<Texture> CreateTexture(const TextureDescriptor& descriptor) override;
+        /**@{*/
+        RenderResource<Texture1D> CreateTexture(const TextureDescriptor1D& descriptor) override;
+        RenderResource<Texture2D> CreateTexture(const TextureDescriptor2D& descriptor) override;
+        RenderResource<Texture3D> CreateTexture(const TextureDescriptor3D& descriptor) override;
+        /**@}*/
 
         /** Create uniform buffer object. */
         RenderResource<UniformBuffer> CreateUniformBuffer(const UniformBufferDescriptor& descriptor) override;
@@ -131,7 +135,9 @@ namespace Molten
         void Destroy(Sampler1D& sampler1D) override;
         void Destroy(Sampler2D& sampler2D) override;
         void Destroy(Sampler3D& sampler3D) override;
-        void Destroy(Texture& texture) override;
+        void Destroy(Texture1D& texture1D) override;
+        void Destroy(Texture2D& texture2D) override;
+        void Destroy(Texture3D& texture3D) override;
         void Destroy(UniformBuffer& uniformBuffer) override;
         void Destroy(FramedUniformBuffer& framedUniformBuffer) override;
         void Destroy(VertexBuffer& vertexBuffer) override;

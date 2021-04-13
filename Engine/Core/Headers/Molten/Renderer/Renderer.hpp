@@ -121,7 +121,11 @@ namespace Molten
         /**@}*/
 
         /** Create texture object. */
-        virtual RenderResource<Texture> CreateTexture(const TextureDescriptor& descriptor) = 0;
+        /**@{*/
+        virtual RenderResource<Texture1D> CreateTexture(const TextureDescriptor1D& descriptor) = 0;
+        virtual RenderResource<Texture2D> CreateTexture(const TextureDescriptor2D& descriptor) = 0;
+        virtual RenderResource<Texture3D> CreateTexture(const TextureDescriptor3D& descriptor) = 0;
+        /**@}*/
 
         /** Create uniform buffer object. */
         virtual RenderResource<UniformBuffer> CreateUniformBuffer(const UniformBufferDescriptor& descriptor) = 0;
@@ -145,7 +149,9 @@ namespace Molten
         virtual void Destroy(Sampler1D& sampler1D) = 0;
         virtual void Destroy(Sampler2D& sampler2D) = 0;
         virtual void Destroy(Sampler3D& sampler3D) = 0;
-        virtual void Destroy(Texture& texture) = 0;
+        virtual void Destroy(Texture1D& texture1D) = 0;
+        virtual void Destroy(Texture2D& texture2D) = 0;
+        virtual void Destroy(Texture3D& texture3D) = 0;
         virtual void Destroy(UniformBuffer& uniformBuffer) = 0;
         virtual void Destroy(FramedUniformBuffer& framedUniformBuffer) = 0;
         virtual void Destroy(VertexBuffer& vertexBuffer) = 0;
