@@ -44,7 +44,10 @@ namespace Molten
         SRed8Green8Blue8Alpha8,
 
         SrgbRed8Green8Blue8,
-        SrgbRed8Green8Blue8Alpha8
+        SrgbRed8Green8Blue8Alpha8,
+
+        UBlue8Green8Red8,
+        UBlue8Green8Red8Alpha8,
     };
 
 }

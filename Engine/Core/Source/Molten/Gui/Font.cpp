@@ -28,29 +28,48 @@
 #include "ThirdParty/FreeType2/include/freetype/ftcache.h"
 #include <vector>
 #include <fstream>
+#include <algorithm>
 
 namespace Molten::Gui
 {
 
-    // Global PIMPL.
-
-    // Member PIMPL.
-    struct Font::Impl
+    // Global implementaitons.
+    static ImageFormat GetPixelModeImageFormat(const FT_Pixel_Mode pixelMode, uint32_t& pixelSize)
     {
-        Impl() :
+        switch(pixelMode)
+        {          
+            case FT_Pixel_Mode::FT_PIXEL_MODE_MONO: 
+            case FT_Pixel_Mode::FT_PIXEL_MODE_GRAY: 
+            case FT_Pixel_Mode::FT_PIXEL_MODE_GRAY2:
+            case FT_Pixel_Mode::FT_PIXEL_MODE_GRAY4:
+            case FT_Pixel_Mode::FT_PIXEL_MODE_LCD:
+            case FT_Pixel_Mode::FT_PIXEL_MODE_LCD_V: pixelSize = 1; return ImageFormat::URed8;
+            case FT_Pixel_Mode::FT_PIXEL_MODE_BGRA: pixelSize = 4; return ImageFormat::UBlue8Green8Red8Alpha8;
+            case FT_Pixel_Mode::FT_PIXEL_MODE_NONE:
+            default: break;
+        }
+
+        pixelSize = 0;
+        return ImageFormat::SRed8;
+    }
+
+    //  PIMPL implementations.
+    struct FontImplementation
+    {
+        FontImplementation() :
             ftLibrary(nullptr),
             ftCacheManager(nullptr),
             ftCMapCache(nullptr),
             ftImageCache(nullptr)
         {}
 
-        ~Impl()
+        ~FontImplementation()
         {
             Destroy();
         }
 
-        Impl(const Impl&) = delete;
-        Impl(Impl&& impl) noexcept :
+        FontImplementation(const FontImplementation&) = delete;
+        FontImplementation(FontImplementation&& impl) noexcept :
             fontData(std::move(impl.fontData)),
             ftLibrary(impl.ftLibrary),
             ftCacheManager(impl.ftCacheManager),
@@ -62,8 +81,8 @@ namespace Molten::Gui
             impl.ftImageCache = nullptr;
         }
 
-        Impl& operator =(const Impl&) = delete;
-        Impl& operator =(Impl&& impl) noexcept
+        FontImplementation& operator =(const FontImplementation&) = delete;
+        FontImplementation& operator =(FontImplementation&& impl) noexcept
         {
             Destroy();
 
@@ -81,7 +100,7 @@ namespace Molten::Gui
             return *this;
         }
 
-        void Impl::Destroy()
+        void FontImplementation::Destroy()
         {
             if (ftCacheManager)
             {
@@ -104,14 +123,14 @@ namespace Molten::Gui
             FT_Pointer reqData,
             FT_Face* face)
         {
-            auto* impl = reinterpret_cast<Impl*>(reqData);
+            auto* impl = reinterpret_cast<FontImplementation*>(reqData);
 
             FT_Error error = 0;
 
             // Load face from memory.
             if ((error = FT_New_Memory_Face(
                 library,
-                reinterpret_cast<FT_Byte*>(impl->fontData.data()),
+                static_cast<FT_Byte*>(impl->fontData.data()),
                 static_cast<FT_Long>(impl->fontData.size()),
                 0,
                 face)) != 0)
@@ -140,9 +159,346 @@ namespace Molten::Gui
     };
 
 
+    // Font sequence implementations.
+    FontSequence::FontSequence() :
+        m_fontImpl(nullptr),
+        m_cachedDpi(0),
+        m_cachedFactor(1.0f),
+        m_buffer(nullptr),
+        m_bufferDimensions(0, 0),
+        m_bufferTextBounds(0, 0, 0, 0),
+        m_baseline(0),
+        m_imageFormat(ImageFormat::URed8Green8Blue8),
+        m_pixelSize(3)
+    {}
+
+    FontSequence::FontSequence(
+        FontImplementation& fontImpl,
+        const uint32_t cachedDpi,
+        const Vector2f32& cachedFactor
+    ) :
+        m_fontImpl(&fontImpl),
+        m_cachedDpi(cachedDpi),
+        m_cachedFactor(std::max(cachedFactor.x, 1.0f), std::max(cachedFactor.y, 1.0f)),
+        m_buffer(nullptr),
+        m_bufferDimensions(0, 0),
+        m_bufferTextBounds(0, 0, 0, 0),
+        m_baseline(0),
+        m_imageFormat(ImageFormat::URed8Green8Blue8),
+        m_pixelSize(3)
+    {}
+
+    FontSequence::FontSequence(FontSequence&& fontSequence) noexcept :
+        m_fontImpl(fontSequence.m_fontImpl),
+        m_cachedDpi(fontSequence.m_cachedDpi),
+        m_cachedFactor(fontSequence.m_cachedFactor),
+        m_buffer(std::move(fontSequence.m_buffer)),
+        m_bufferDimensions(fontSequence.m_bufferDimensions),
+        m_bufferTextBounds(fontSequence.m_bufferTextBounds),
+        m_baseline(fontSequence.m_baseline),
+        m_imageFormat(ImageFormat::URed8Green8Blue8)
+    {
+        fontSequence.m_fontImpl = nullptr;
+        fontSequence.m_bufferDimensions = { 0, 0 };
+        fontSequence.m_bufferTextBounds = { 0, 0, 0, 0 };
+        fontSequence.m_baseline = 0;
+    }
+
+    FontSequence& FontSequence::operator =(FontSequence&& fontSequence) noexcept
+    {
+        m_fontImpl = fontSequence.m_fontImpl;
+        m_cachedDpi = fontSequence.m_cachedDpi;
+        m_cachedFactor = fontSequence.m_cachedFactor;
+        m_buffer = std::move(fontSequence.m_buffer);
+        m_bufferDimensions = fontSequence.m_bufferDimensions;
+        m_bufferTextBounds = fontSequence.m_bufferTextBounds;
+        m_baseline = fontSequence.m_baseline;
+
+        fontSequence.m_fontImpl = nullptr;
+        fontSequence.m_bufferDimensions = { 0, 0 };
+        fontSequence.m_bufferTextBounds = { 0, 0, 0, 0 };
+        fontSequence.m_baseline = 0;
+
+        return *this;
+    }
+
+    bool FontSequence::CreateBitmap(
+        const std::string& text,
+        const uint32_t dpi,
+        const uint32_t height)
+    {
+        const auto calculationDpi = std::max(dpi, m_cachedDpi);
+        const auto baseDpi = static_cast<uint32_t>(MOLTEN_PLATFORM_BASE_DPI);
+        const auto calculationScale = static_cast<float>(calculationDpi) / static_cast<float>(baseDpi);
+        const auto calculationHeight = static_cast<uint32_t>(static_cast<float>(height) * calculationScale);
+
+        FT_Error error = 0;
+
+        FT_Face face = nullptr;
+        if ((error = FTC_Manager_LookupFace(
+            m_fontImpl->ftCacheManager,
+            0,
+            &face)) != 0)
+        {
+            return false;
+        }
+
+        //const FT_Int32 loadlags = FT_HAS_COLOR(face) ?
+        //    (FT_LOAD_COLOR | FT_LOAD_RENDER | FT_LOAD_DEFAULT) :
+        //    (FT_LOAD_RENDER | FT_LOAD_DEFAULT);
+        const FT_Int32 loadlags = FT_LOAD_RENDER | FT_LOAD_DEFAULT;
+
+        //const auto hasColor = FT_HAS_COLOR(face);
+
+        // TODO: Skipping dpi for now.
+        FTC_ImageTypeRec ftcImageType;
+        ftcImageType.face_id = 0;
+        ftcImageType.width = static_cast<FT_UInt>(calculationHeight);
+        ftcImageType.height = static_cast<FT_UInt>(calculationHeight);
+        ftcImageType.flags = loadlags;
+
+        auto applyKering = [](const FT_Face face, FT_UInt& prevGlyphIndex, FT_UInt glyphIndex, int32_t& prevPenPos, int32_t& penPos)
+        {
+            if (FT_HAS_KERNING(face) && prevGlyphIndex)
+            {
+                FT_Vector delta;
+                FT_Get_Kerning(face, prevGlyphIndex, glyphIndex, FT_KERNING_DEFAULT, &delta);
+
+                prevPenPos += static_cast<int32_t>(delta.x >> 6);
+                penPos = prevPenPos;
+            }
+            prevGlyphIndex = glyphIndex;
+        };
+
+        auto appendBounds = [](Bounds2i32& bounds, const Vector2<int32_t>& bearing, const int32_t penPos, FT_BitmapGlyph bitmap)
+        {
+            // Calc X dimension.
+            const FT_Pos lowX = penPos + bearing.x;
+            if (lowX < bounds.low.x)
+            {
+                bounds.low.x = lowX;
+            }
+
+            const FT_Pos highX = penPos + bearing.x + bitmap->bitmap.width;
+            if (highX > bounds.high.x)
+            {
+                bounds.high.x = highX;
+            }
+
+            // Calc Y dimension.
+            const FT_Pos lowY = bearing.y - bitmap->bitmap.rows;
+            if (lowY < bounds.low.y)
+            {
+                bounds.low.y = lowY;
+            }
+
+            const FT_Pos highY = bearing.y;
+            if (highY > bounds.high.y)
+            {
+                bounds.high.y = highY;
+            }
+        };
+
+        auto movePen = [](int32_t& penPos, int32_t& prevPenPos, int32_t advance)
+        {
+            penPos += advance;
+            prevPenPos = penPos;
+        };
+
+        auto updatePixelModel = [](FT_Pixel_Mode& mode, FT_Pixel_Mode newMode)
+        {
+            if(newMode >= mode)
+            {
+                mode = newMode;
+            }
+        };
+
+        // Calculate bounds
+        auto bounds = Bounds2<int32_t>{
+            std::numeric_limits<int32_t>::max(),
+            std::numeric_limits<int32_t>::max(),
+            std::numeric_limits<int32_t>::min(),
+            std::numeric_limits<int32_t>::min() };
+
+        int32_t penPos = 0;
+        int32_t prevPenPos = 0;
+        FT_UInt prevGlyphIndex = 0;
+        FT_Pixel_Mode currentPixelMode = FT_Pixel_Mode::FT_PIXEL_MODE_NONE;
+
+        for (size_t i = 0; i < text.size(); i++)
+        {
+            const FT_UInt32 charCode = static_cast<FT_UInt32>(text[i]);
+            const auto glyphIndex = FTC_CMapCache_Lookup(m_fontImpl->ftCMapCache, 0, 0, charCode);
+            if (glyphIndex == 0)
+            {
+                return false;
+            }
+
+            FT_Glyph glyph = nullptr;          
+            if ((error = FTC_ImageCache_Lookup(m_fontImpl->ftImageCache, &ftcImageType, glyphIndex, &glyph, nullptr)) != 0)
+            {
+                return false;
+            }
+
+            applyKering(face, prevGlyphIndex, glyphIndex, prevPenPos, penPos);
+
+            const auto bitmap = reinterpret_cast<FT_BitmapGlyph>(glyph);
+            const auto& metrics = face->glyph->metrics;
+            const auto bearing = Vector2<int32_t>{ static_cast<int32_t>(metrics.horiBearingX >> 6), static_cast<int32_t>(metrics.horiBearingY >> 6) };
+            appendBounds(bounds, bearing, penPos, bitmap);
+
+            const auto pixelMode = static_cast<FT_Pixel_Mode>(bitmap->bitmap.pixel_mode);
+            updatePixelModel(currentPixelMode, pixelMode);
+
+            const auto horiAdvance = static_cast<int32_t>(metrics.horiAdvance >> 6);
+            movePen(penPos, prevPenPos, horiAdvance);
+        }
+
+        if (currentPixelMode == FT_Pixel_Mode::FT_PIXEL_MODE_NONE ||
+            bounds.IsEmpty())
+        {
+            return false;
+        }
+
+        // Calalculate buffer size
+        const auto bufferTextSize = Vector2ui32(bounds.GetSize());
+        uint32_t pixelSize = 0;
+        const auto imageFormat = GetPixelModeImageFormat(currentPixelMode, pixelSize);
+        if(pixelSize == 0)
+        {
+            return false;
+        }
+
+        if(bufferTextSize.x > m_bufferDimensions.x || bufferTextSize.y > m_bufferDimensions.y || m_imageFormat != imageFormat)
+        {
+            AllocateNewBuffer(imageFormat, pixelSize, bufferTextSize, bufferTextSize);
+        }
+        else
+        {
+            CleanOldBuffer(bufferTextSize);
+        }
+
+
+        for (size_t i = 0; i < 1; i++)
+        {
+            const FT_UInt32 charCode = static_cast<FT_UInt32>(text[i]);
+            const auto glyphIndex = FTC_CMapCache_Lookup(m_fontImpl->ftCMapCache, 0, 0, charCode);
+            if (glyphIndex == 0)
+            {
+                return false;
+            }
+
+            FT_Glyph glyph = nullptr;
+            if ((error = FTC_ImageCache_Lookup(m_fontImpl->ftImageCache, &ftcImageType, glyphIndex, &glyph, nullptr)) != 0)
+            {
+                return false;
+            }
+
+            const auto bitmap = reinterpret_cast<FT_BitmapGlyph>(glyph)->bitmap;
+            const auto bitmapBuffer = bitmap.buffer;
+
+            for (size_t y = 0; y < static_cast<size_t>(bitmap.rows); y++)
+            {
+                for (size_t x = 0; x < static_cast<size_t>(bitmap.width); x++)
+                {
+                    const size_t bufferIndex =
+                        (x * static_cast<size_t>(m_pixelSize)) + 
+                        (y * static_cast<size_t>(m_pixelSize) * static_cast<size_t>(m_bufferDimensions.x));
+
+                    const size_t bitmapIndex = (y * static_cast<size_t>(bitmap.width)) + x;
+
+                    auto val = bitmapBuffer[bitmapIndex];
+                    m_buffer[bufferIndex] = val;
+                }
+            }
+
+        }
+
+
+        return true;
+    }
+
+    void FontSequence::AllocateNewBuffer(
+        const ImageFormat imageFormat,
+        const uint32_t pixelSize,
+        const Vector2ui32& bufferDimensions,
+        const Vector2ui32& bufferTextDimensions)
+    {
+        m_imageFormat = imageFormat;
+        m_pixelSize = pixelSize;
+        m_bufferDimensions = bufferDimensions;
+        m_bufferTextBounds = { { 0, 0 }, bufferTextDimensions };
+
+        const size_t bufferSize = 
+            static_cast<size_t>(bufferDimensions.x) * 
+            static_cast<size_t>(bufferDimensions.y) * 
+            static_cast<size_t>(pixelSize);
+
+        m_buffer = std::make_unique<uint8_t[]>(bufferSize);
+
+        for(size_t y = 0; y < bufferTextDimensions.y; y++)
+        {
+            const auto bufferWidth = y * static_cast<size_t>(bufferDimensions.x) * static_cast<size_t>(pixelSize);
+            auto* bufferPos = m_buffer.get() + bufferWidth;
+            const auto textWidth = static_cast<size_t>(bufferTextDimensions.x) * static_cast<size_t>(pixelSize);
+            std::memset(bufferPos, 0, textWidth);
+        }
+    }
+
+    void FontSequence::CleanOldBuffer(const Vector2ui32& bitmapSize)
+    {
+        
+    }
+
+    void FontSequence::SetCachedDpi(uint32_t dpi)
+    {
+        m_cachedDpi = dpi;
+    }
+
+    void FontSequence::SetCachedFactor(const Vector2f32& factor)
+    {
+        m_cachedFactor = Vector2f32{ std::max(factor.x, 1.0f), std::max(factor.y, 1.0f) };
+    }
+
+    uint32_t FontSequence::GetCachedDpi() const
+    {
+        return m_cachedDpi;
+    }
+
+    const Vector2f32& FontSequence::GetCachedFactor() const
+    {
+        return m_cachedFactor;
+    }
+
+    const Vector2ui32& FontSequence::GetBufferDimensions() const
+    {
+        return m_bufferDimensions;
+    }
+
+    const Bounds2ui32& FontSequence::GetBufferTextBounds() const
+    {
+        return m_bufferTextBounds;
+    }
+
+    const uint8_t* FontSequence::GetBuffer() const
+    {
+        return m_buffer.get();
+    }
+
+    uint32_t FontSequence::GetBaseline() const
+    {
+        return m_baseline;
+    }
+
+    ImageFormat FontSequence::GetImageFormat() const
+    {
+        return m_imageFormat;
+    }
+
+
     // Font implementations.
     Font::Font() :
-        m_impl(new Impl)
+        m_impl(new FontImplementation)
     {}
 
     Font::~Font()
@@ -151,7 +507,7 @@ namespace Molten::Gui
     }
 
     Font::Font(Font&& font) noexcept :
-        m_impl(new Impl)
+        m_impl(new FontImplementation)
     {
         *m_impl = std::move(*font.m_impl);
     }
@@ -186,150 +542,9 @@ namespace Molten::Gui
         return Initialize();
     }
 
-    bool Font::CreateBitmap(std::unique_ptr<uint8_t[]>& buffer, Vector2size& dimensions, const std::string& text, const uint32_t dpi, const uint32_t height)
+    FontSequence Font::CreateSequence(const uint32_t cachedDpi, const Vector2f32& cachedFactor)
     {
-        FT_Error error = 0;
-
-        FT_Face face = nullptr;
-        if ((error = FTC_Manager_LookupFace(
-            m_impl->ftCacheManager,
-            0,
-            &face)) != 0)
-        {
-            return false;
-        }
-
-        /*const FT_Int32 loadlags = FT_HAS_COLOR(face) ?
-            (FT_LOAD_COLOR | FT_LOAD_RENDER | FT_LOAD_DEFAULT) :
-            (FT_LOAD_RENDER | FT_LOAD_DEFAULT);*/
-        const FT_Int32 loadlags = FT_LOAD_RENDER | FT_LOAD_DEFAULT;
-
-
-        // TODO: Skipping dpi for now.
-        FTC_ImageTypeRec ftcImageType;
-        ftcImageType.face_id = 0;
-        ftcImageType.width = static_cast<FT_UInt>(height);
-        ftcImageType.height = static_cast<FT_UInt>(height);
-        ftcImageType.flags = loadlags;
-
-        // Calculate size.
-        auto lowDim = Vector2<FT_Pos>{ std::numeric_limits<FT_Pos>::max(), std::numeric_limits<FT_Pos>::max() };
-        auto highDim = Vector2<FT_Pos>{ std::numeric_limits<FT_Pos>::min(), std::numeric_limits<FT_Pos>::min() };
-        FT_Pos penPos = 0;
-        FT_Pos prevPenPos = 0;
-        const bool hasKerning = FT_HAS_KERNING(face);
-        FT_UInt prevGlyphIndex = 0;
-        FT_BitmapGlyph bitmap = nullptr;
-
-        for(size_t i = 0; i < text.size(); i++)
-        {
-            const FT_UInt32 charCode = static_cast<FT_UInt32>(text[i]);
-            const auto glyphIndex = FTC_CMapCache_Lookup(m_impl->ftCMapCache, 0, 0, charCode);
-            if (glyphIndex == 0)
-            {
-                return false;
-            }
-
-            //FTC_Node ftcNode = nullptr;
-            FT_Glyph glyph = nullptr;
-            if ((error = FTC_ImageCache_Lookup(m_impl->ftImageCache, &ftcImageType, glyphIndex, &glyph, nullptr/*&ftcNode*/)) != 0)
-            {
-                return false;
-            }
-
-            bitmap = reinterpret_cast<FT_BitmapGlyph>(glyph);
-
-            // Move pen if this and previous face has kerning.
-            if (hasKerning && prevGlyphIndex)
-            {
-                FT_Vector delta;
-                FT_Get_Kerning(face, prevGlyphIndex, glyphIndex, FT_KERNING_DEFAULT, &delta);
-
-                prevPenPos += delta.x >> 6;
-                penPos = prevPenPos;
-            }
-            prevGlyphIndex = glyphIndex;
-
-            auto& metrics = face->glyph->metrics;
-            const FT_Pos horiBearingX = metrics.horiBearingX >> 6;
-            const FT_Pos horiBearingY = metrics.horiBearingY >> 6;
-            const FT_Pos horiAdvance = metrics.horiAdvance >> 6;
-
-            // Calc X dimension.
-            const FT_Pos lowX = penPos + horiBearingX;
-            if (lowX < lowDim.x)
-            {
-                lowDim.x = lowX;
-            }
-
-            const FT_Pos highX = penPos + horiBearingX + bitmap->bitmap.width;
-            if (highX > highDim.x)
-            {
-                highDim.x = highX;
-            }
-
-            // Calc Y dimension.
-            const FT_Pos lowY = horiBearingY - bitmap->bitmap.rows;
-            if (lowY < lowDim.y)
-            {
-                lowDim.y = lowY;
-            }
-
-            const FT_Pos highY = horiBearingY;
-            if (highY > highDim.y)
-            {
-                highDim.y = highY;
-            }
-
-            // Move pen.
-            penPos += horiAdvance;
-            prevPenPos = penPos;
-        }
-
-        // Rasterize glyphs.
-        const auto bitmapSize = Vector2<FT_Pos>{
-            static_cast<size_t>(highDim.x - lowDim.x),
-            static_cast<size_t>(highDim.y - lowDim.y) };
-
-        const size_t bufferSize = static_cast<size_t>(bitmapSize.x) * static_cast<size_t>(bitmapSize.y) * 4;
-        buffer = std::make_unique<uint8_t[]>(bufferSize);
-
-        auto getColor = [](FT_Pos x, FT_Pos y) -> Vector4<uint8_t>
-        {           
-            const Vector4<uint8_t> colorA = { 255, 0, 0, 255 };
-            const Vector4<uint8_t> colorB = { 0, 0, 0, 255 };
-
-            const FT_Pos gridSizeX = 12;
-            const FT_Pos gridSizeY = 3;
-
-            const bool xFlag = (x / gridSizeX) % 2;
-            const bool yFlag = (y / gridSizeY) % 2;
-
-            return (xFlag ^ yFlag) ? colorA : colorB;
-        };
-
-        for (FT_Pos y = 0; y < bitmapSize.y; y++)
-        {
-            for (FT_Pos x = 0; x < bitmapSize.x; x++)
-            {
-                auto pos = (y * bitmapSize.x * 4) + (x * 4);
-                const auto color = getColor(x, y);
-              
-                buffer[pos] = color.x;
-                buffer[pos + 1] = color.y;
-                buffer[pos + 2] = color.z;
-                buffer[pos + 3] = color.w;
-
-            }
-        }
-
-        dimensions = bitmapSize;
-
-        /*for (size_t i = 0; i < text.size(); i++)
-        {
-        }*/
-
-        return true;
+        return FontSequence{ *m_impl, cachedDpi, cachedFactor };
     }
 
     bool Font::Initialize()
@@ -347,8 +562,8 @@ namespace Molten::Gui
             1,
             1,
             1024 * 1024,
-            Impl::FtFaceRequester,
-            reinterpret_cast<FT_Pointer>(m_impl),
+            FontImplementation::FtFaceRequester,
+            m_impl,
             &m_impl->ftCacheManager)) != 0)
         {
             //  "Failed to create FreeType cache manager, error code: %i\n", error);

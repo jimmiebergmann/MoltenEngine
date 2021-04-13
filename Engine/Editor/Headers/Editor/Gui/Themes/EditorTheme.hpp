@@ -56,6 +56,8 @@ namespace Molten::Gui
         explicit EditorTheme(CanvasRenderer& canvasRenderer) :
             m_canvasRenderer(canvasRenderer)
         {
+            // arial.ttf
+            // seguiemj.ttf
             m_font.ReadFromFile("C:/Windows/Fonts/arial.ttf");
         }
 
@@ -158,15 +160,13 @@ namespace Molten::Gui
             WidgetSkinMixin<EditorTheme, Label>(descriptor)
         {
             // DUMMY TEST!
-            std::unique_ptr<uint8_t[]> buffer;
-            Vector2size dimensions;
-            theme.m_font.CreateBitmap(buffer, dimensions, widget.text, 96, 16);
-
+            m_fontSequence = theme.m_font.CreateSequence(120, { 1.25f, 1.25f });
+            m_fontSequence.CreateBitmap(widget.text, 96, 16);
 
             const TextureDescriptor2D textureDesc = {
-                dimensions,
-                buffer.get(),
-                ImageFormat::URed8Green8Blue8Alpha8
+                m_fontSequence.GetBufferDimensions(),
+                m_fontSequence.GetBuffer(),
+                m_fontSequence.GetImageFormat()
             };
 
             m_texture = theme.m_canvasRenderer.CreateTexture(textureDesc);
@@ -181,6 +181,7 @@ namespace Molten::Gui
     private:
 
         CanvasRendererTexture m_texture;
+        FontSequence m_fontSequence;
 
     };
 

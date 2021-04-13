@@ -218,10 +218,14 @@ namespace Molten
     template<typename T>
     using Bounds2 = Bounds<2, T>;
     using Bounds2f32 = Bounds2<float>;
+    using Bounds2i32 = Bounds2<int32_t>;
+    using Bounds2ui32 = Bounds2<uint32_t>;
 
     template<typename T>
     using Bounds3 = Bounds<3, T>;
     using Bounds3f32 = Bounds3<float>;
+    using Bounds3i32 = Bounds3<int32_t>;
+    using Bounds3ui32 = Bounds3<uint32_t>;
 
 
 }

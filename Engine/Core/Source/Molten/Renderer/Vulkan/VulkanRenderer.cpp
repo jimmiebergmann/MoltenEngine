@@ -131,6 +131,9 @@ namespace Molten
             case ImageFormat::SRed8Green8: pixelSize = 2; return VkFormat::VK_FORMAT_R8G8_SNORM;
             case ImageFormat::SRed8Green8Blue8: pixelSize = 3; return VkFormat::VK_FORMAT_R8G8B8_SNORM;
             case ImageFormat::SRed8Green8Blue8Alpha8: pixelSize = 4; return VkFormat::VK_FORMAT_R8G8B8A8_SNORM;
+
+            case ImageFormat::UBlue8Green8Red8: pixelSize = 3; return VkFormat::VK_FORMAT_B8G8R8_UNORM;
+            case ImageFormat::UBlue8Green8Red8Alpha8: pixelSize = 4; return VkFormat::VK_FORMAT_B8G8R8A8_UNORM;
         }
         throw Exception("Provided image format is not supported by the Vulkan renderer.");
     }

@@ -72,6 +72,12 @@
 #define MOLTEN_BUILD_RELEASE_NAME "Release"
 
 /*
+ *
+ */
+#define MOLTEN_PLATFORM_BASE_DPI_LINUX 96
+#define MOLTEN_PLATFORM_BASE_DPI_WINDOWS 96
+
+/*
 * DLL import or export, required for Windows, example:
 *   class MOLTEN_API MyClass {};
 */
@@ -117,6 +123,8 @@
         #error Unkown architecture.
     #endif
 
+    #define MOLTEN_PLATFORM_BASE_DPI MOLTEN_PLATFORM_BASE_DPI_WINDOWS
+
 // Linux
 #elif defined( linux ) || defined( __linux )
     #define MOLTEN_PLATFORM MOLTEN_PLATFORM_LINUX
@@ -143,6 +151,9 @@
     #define MOLTEN_ANONYMOUS_STRUCTURE_BEGIN _Pragma("GCC diagnostic push") \
                                             _Pragma("GCC diagnostic ignored \"-Wpedantic\"")
     #define MOLTEN_ANONYMOUS_STRUCTURE_END _Pragma("GCC diagnostic pop")
+
+    #define MOLTEN_PLATFORM_BASE_DPI MOLTEN_PLATFORM_BASE_DPI_LINUX
+
 #else
     #error Unkown platform.
 #endif
