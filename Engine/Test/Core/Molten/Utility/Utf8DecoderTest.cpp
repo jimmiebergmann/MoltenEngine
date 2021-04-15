@@ -59,7 +59,7 @@ namespace Molten
         }
     }
 
-    TEST(Utility, Utf8Decoder_1ByteCodePage)
+    TEST(Utility, Utf8Decoder_CodePage1Byte)
     {
         const std::string string = "The quick brown fox jumps over the lazy dog!";
         auto decoder = Utf8Decoder{ string.c_str() };
@@ -89,7 +89,7 @@ namespace Molten
         }
     }
 
-    TEST(Utility, Utf8Decoder_2ByteCodePage)
+    TEST(Utility, Utf8Decoder_CodePage2Bytes)
     {
         const std::string string = u8"διαφυλάξτε γενικά τη ζωή σας από βαθειά ψυχικά";
         const std::array<uint32_t, 46> stringCodePoints =
@@ -126,7 +126,7 @@ namespace Molten
         }
     }
 
-    TEST(Utility, Utf8Decoder_3ByteCodePage)
+    TEST(Utility, Utf8Decoder_CodePage3Bytes)
     {
         const std::string string = u8"色は匂へど散りぬるを我が世誰ぞ常ならん有為の奥山今日越えて浅き夢見じ酔ひもせず";
         const std::array<uint32_t, 39> stringCodePoints =
@@ -163,12 +163,46 @@ namespace Molten
         }
     }
 
-    TEST(Utility, Utf8Decoder_4ByteCodePage)
+    TEST(Utility, Utf8Decoder_CodePage4Bytes)
     {
         const std::string string = u8"𝄀𝄁𝄂𝄃𝄄𝄅𝄆𝄇";
         const std::array<uint32_t, 8> stringCodePoints =
         {
             119040, 119041, 119042, 119043, 119044, 119045, 119046, 119047
+        };
+
+        auto decoder = Utf8Decoder{ string.c_str() };
+
+        EXPECT_FALSE(decoder.IsEmpty());
+
+        {
+            size_t index = 0;
+            for (auto it = decoder.begin(); it != decoder.end(); ++it)
+            {
+                ASSERT_LT(index, stringCodePoints.size());
+                auto codePoint = *it;
+                EXPECT_EQ(stringCodePoints.at(index), codePoint);
+                ++index;
+            }
+            EXPECT_EQ(index, stringCodePoints.size());
+        }
+        {
+            size_t index = 0;
+            for (auto codePoint : decoder)
+            {
+                ASSERT_LT(index, stringCodePoints.size());
+                EXPECT_EQ(stringCodePoints.at(index), codePoint);
+                ++index;
+            }
+            EXPECT_EQ(index, stringCodePoints.size());
+        }
+    }
+    TEST(Utility, Utf8Decoder_CodePageMixBytes)
+    {
+        const std::string string = u8"Tδ色𝄀Tδ色𝄀𝄁はιe";
+        const std::array<uint32_t, 12> stringCodePoints =
+        {
+            84, 948, 33394, 119040, 84, 948, 33394, 119040, 119041, 12399, 953, 101
         };
 
         auto decoder = Utf8Decoder{ string.c_str() };
