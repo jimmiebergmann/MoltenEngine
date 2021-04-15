@@ -58,7 +58,7 @@ namespace Molten::Gui
         {
             // arial.ttf
             // seguiemj.ttf
-            m_font.ReadFromFile("C:/Windows/Fonts/arial.ttf");
+            m_font.ReadFromFile("C:/Windows/Fonts/seguiemj.ttf");
         }
 
         template<template<typename> typename TWidget>
@@ -166,7 +166,13 @@ namespace Molten::Gui
             const TextureDescriptor2D textureDesc = {
                 m_fontSequence.GetBufferDimensions(),
                 m_fontSequence.GetBuffer(),
-                m_fontSequence.GetImageFormat()
+                m_fontSequence.GetImageFormat(),
+                {
+                    ImageComponentSwizzle::Red,
+                    ImageComponentSwizzle::Green,
+                    ImageComponentSwizzle::Blue,
+                    ImageComponentSwizzle::Alpha
+                }
             };
 
             m_texture = theme.m_canvasRenderer.CreateTexture(textureDesc);

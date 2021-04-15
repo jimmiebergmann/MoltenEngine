@@ -27,6 +27,7 @@
 #define MOLTEN_CORE_RENDERER_TEXTURE_HPP
 
 #include "Molten/Renderer/ImageFormat.hpp"
+#include "Molten/Renderer/ImageSwizzle.hpp"
 #include "Molten/Math/Vector.hpp"
 
 namespace Molten
@@ -70,12 +71,14 @@ namespace Molten
         TextureDescriptor(
             const Vector<VDimensions, uint32_t>& dimensions,
             const void* data,
-            const ImageFormat format);
+            const ImageFormat format,
+            const ImageSwizzleMapping& swizzleMapping = {});
         TextureDescriptor(
             const Vector<VDimensions, uint32_t>& dimensions,
             const void* data,
             const ImageFormat format,
-            const ImageFormat internalFormat);
+            const ImageFormat internalFormat,
+            const ImageSwizzleMapping& swizzleMapping = {});
         ~TextureDescriptor() = default;
 
         TextureDescriptor(const TextureDescriptor&) = default;
@@ -87,6 +90,7 @@ namespace Molten
         const void* data;
         ImageFormat format;
         ImageFormat internalFormat;
+        ImageSwizzleMapping swizzleMapping;
 
     };
 

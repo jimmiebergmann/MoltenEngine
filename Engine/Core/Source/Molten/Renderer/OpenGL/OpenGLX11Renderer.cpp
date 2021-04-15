@@ -180,6 +180,12 @@ namespace Molten
         return m_version;
     }
 
+    const RendererCapabilities& OpenGLX11Renderer::GetCapabilities() const
+    {
+        static RendererCapabilities tmpCapabilities = {};
+        return tmpCapabilities;
+    }
+
     uint32_t OpenGLX11Renderer::GetPushConstantLocation(Pipeline& /*pipeline*/, const uint32_t /*id*/)
     {
         return PushConstantLocation::UnknownLocation;

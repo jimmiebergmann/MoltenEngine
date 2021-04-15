@@ -49,6 +49,14 @@ namespace Molten
 
     class Logger;
 
+    /** Structure for storing and presenting capabilities and features supported by renderer.
+     *  Each renderer implementation must present its capabilities via Renderer::GetFeatures().
+     */
+    struct RendererCapabilities
+    {
+        bool textureSwizzle;
+    };
+
 
     /** Base class of renderer. */
     class MOLTEN_API Renderer
@@ -93,6 +101,9 @@ namespace Molten
 
         /** Get renderer API version. */
         virtual Version GetVersion() const = 0;
+
+        /** Get supported capabilities and features of renderer. */
+        virtual const RendererCapabilities& GetCapabilities() const = 0;
 
         /** Get location of pipeline push constant by id. Id is set in shader script. */
         virtual uint32_t GetPushConstantLocation(Pipeline& pipeline, const uint32_t id) = 0;

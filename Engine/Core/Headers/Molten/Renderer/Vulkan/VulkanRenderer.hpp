@@ -86,6 +86,9 @@ namespace Molten
         /** Get renderer API version. */
         Version GetVersion() const override;
 
+        /** Get supported capabilities and features of renderer. */
+        const RendererCapabilities& GetCapabilities() const override;
+
         /** Get location of pipeline push constant by id. Id is set in shader script. */
         uint32_t GetPushConstantLocation(Pipeline& pipeline, const uint32_t id) override;
 
@@ -219,7 +222,8 @@ namespace Molten
             const size_t dataSize,
             const void* data,
             const VkFormat imageFormat,
-            const VkFormat internalImageFormat);
+            const VkFormat internalImageFormat,
+            const VkComponentMapping& componentMapping);
 
         /** Shader creation and manipulation functions. */
         /**@{*/
@@ -248,6 +252,7 @@ namespace Molten
         /**@{*/
         RenderTarget* m_renderTarget;
         Version m_version;
+        RendererCapabilities m_capabilities;
         Logger* m_logger;     
         /**@}*/
 

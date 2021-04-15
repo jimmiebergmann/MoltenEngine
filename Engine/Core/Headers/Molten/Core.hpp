@@ -71,9 +71,7 @@
 #define MOLTEN_BUILD_DEBUG_NAME "Debug"
 #define MOLTEN_BUILD_RELEASE_NAME "Release"
 
-/*
- *
- */
+/* For getting base DPI of platform. */
 #define MOLTEN_PLATFORM_BASE_DPI_LINUX 96
 #define MOLTEN_PLATFORM_BASE_DPI_WINDOWS 96
 

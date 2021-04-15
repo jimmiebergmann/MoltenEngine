@@ -32,19 +32,8 @@ namespace Molten
         dimensions(0),
         data(nullptr),
         format(ImageFormat::URed8Green8Blue8),
-        internalFormat(ImageFormat::URed8Green8Blue8)
-    {}
-
-    template<size_t VDimensions>
-    TextureDescriptor<VDimensions>::TextureDescriptor(
-        const Vector<VDimensions, uint32_t>& dimensions,
-        const void* data,
-        const ImageFormat format
-    ) :
-        dimensions(dimensions),
-        data(data),
-        format(format),
-        internalFormat(format)
+        internalFormat(ImageFormat::URed8Green8Blue8),
+        swizzleMapping{}
     {}
 
     template<size_t VDimensions>
@@ -52,12 +41,28 @@ namespace Molten
         const Vector<VDimensions, uint32_t>& dimensions,
         const void* data,
         const ImageFormat format,
-        const ImageFormat internalFormat
+        const ImageSwizzleMapping& swizzleMapping
     ) :
         dimensions(dimensions),
         data(data),
         format(format),
-        internalFormat(internalFormat)
+        internalFormat(format),
+        swizzleMapping(swizzleMapping)
+    {}
+
+    template<size_t VDimensions>
+    TextureDescriptor<VDimensions>::TextureDescriptor(
+        const Vector<VDimensions, uint32_t>& dimensions,
+        const void* data,
+        const ImageFormat format,
+        const ImageFormat internalFormat,
+        const ImageSwizzleMapping& swizzleMapping
+    ) :
+        dimensions(dimensions),
+        data(data),
+        format(format),
+        internalFormat(internalFormat),
+        swizzleMapping(swizzleMapping)
     {}
 
 }

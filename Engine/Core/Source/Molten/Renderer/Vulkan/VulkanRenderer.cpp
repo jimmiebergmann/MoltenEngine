@@ -209,7 +209,7 @@ namespace Molten
             case Shader::BindingType::Sampler3D: return VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
             case Shader::BindingType::UniformBuffer: return VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         }
-        throw Exception("Provided provided binding type is not handled.");
+        throw Exception("Provided binding type is not handled.");
     }
 
     static VkFilter GetSamplerFilter(const SamplerFilter samplerFilter)
@@ -219,7 +219,7 @@ namespace Molten
             case SamplerFilter::Nearest: return VkFilter::VK_FILTER_NEAREST;
             case SamplerFilter::Linear: return VkFilter::VK_FILTER_NEAREST;
         }
-        throw Exception("Provided provided sampler filter is not handled.");
+        throw Exception("Provided sampler filter is not handled.");
     }
 
     static VkSamplerAddressMode GetSamplerAddressMode(const SamplerWrapMode samplerWrapMode)
@@ -230,7 +230,7 @@ namespace Molten
             case SamplerWrapMode::RepeatMirror: return VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
             case SamplerWrapMode::Clamp: return VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE; // Or to border??
         }
-        throw Exception("Provided provided sampler wrap mode is not handled.");
+        throw Exception("Provided sampler wrap mode is not handled.");
     }
 
     static VkBlendFactor GetBlendFactor(const Pipeline::BlendFunction blendFunction)
@@ -249,7 +249,7 @@ namespace Molten
             case Pipeline::BlendFunction::OneMinusDestinationAlpha: return VkBlendFactor::VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA;
         }
 
-        throw Exception("Provided provided blend function is not handled.");
+        throw Exception("Provided blend function is not handled.");
     }
 
     static VkBlendOp GetBlendOperator(const Pipeline::BlendOperator blendOperator)
@@ -263,7 +263,33 @@ namespace Molten
             case Pipeline::BlendOperator::Max: return VkBlendOp::VK_BLEND_OP_MAX;
         }
 
-        throw Exception("Provided provided blend operator is not handled.");
+        throw Exception("Provided blend operator is not handled.");
+    }
+
+    static VkComponentSwizzle GetComponentSwizzle(const ImageComponentSwizzle componentswizzle)
+    {
+        switch (componentswizzle)
+        {
+            case ImageComponentSwizzle::Identity: return VkComponentSwizzle::VK_COMPONENT_SWIZZLE_IDENTITY;
+            case ImageComponentSwizzle::Red: return VkComponentSwizzle::VK_COMPONENT_SWIZZLE_R;
+            case ImageComponentSwizzle::Green: return VkComponentSwizzle::VK_COMPONENT_SWIZZLE_G;
+            case ImageComponentSwizzle::Blue: return VkComponentSwizzle::VK_COMPONENT_SWIZZLE_B;
+            case ImageComponentSwizzle::Alpha: return VkComponentSwizzle::VK_COMPONENT_SWIZZLE_A;
+            case ImageComponentSwizzle::Zero: return VkComponentSwizzle::VK_COMPONENT_SWIZZLE_ZERO;
+            case ImageComponentSwizzle::One: return VkComponentSwizzle::VK_COMPONENT_SWIZZLE_ONE;
+        }
+
+        throw Exception("Provided texture component swizzle is not handled.");
+    }
+
+    static VkComponentMapping GetComponentMappings(const ImageSwizzleMapping swizzleMapping)
+    {
+        return {
+            GetComponentSwizzle(swizzleMapping.red),
+            GetComponentSwizzle(swizzleMapping.green),
+            GetComponentSwizzle(swizzleMapping.blue),
+            GetComponentSwizzle(swizzleMapping.alpha)
+        };
     }
 
     template<size_t VDimensions>
@@ -320,6 +346,7 @@ namespace Molten
     VulkanRenderer::VulkanRenderer() :
         m_renderTarget(nullptr),
         m_version(0, 0, 0),
+        m_capabilities{},
         m_logger(nullptr),
         m_requiredInstanceExtensions{},
         m_requiredInstanceLayers{},
@@ -457,6 +484,12 @@ namespace Molten
     Version VulkanRenderer::GetVersion() const
     {
         return m_version;
+    }
+
+    const RendererCapabilities& VulkanRenderer::GetCapabilities() const
+    {
+        static RendererCapabilities tmpCapabilities = {};
+        return tmpCapabilities;
     }
 
     uint32_t VulkanRenderer::GetPushConstantLocation(Pipeline& pipeline, const uint32_t id)
@@ -1235,7 +1268,7 @@ namespace Molten
         const auto dataSize = static_cast<VkDeviceSize>(descriptor.dimensions.c[0]) * static_cast<VkDeviceSize>(formatPixelSize);
         const auto dimensions = Vector3ui32{ descriptor.dimensions.c[0], 1, 1 };
 
-        return CreateTexture<1>(dimensions, dataSize, descriptor.data, imageFormat, internalImageFormat);
+        return CreateTexture<1>(dimensions, dataSize, descriptor.data, imageFormat, internalImageFormat, GetComponentMappings(descriptor.swizzleMapping));
     }
 
     RenderResource<Texture2D> VulkanRenderer::CreateTexture(const TextureDescriptor2D& descriptor)
@@ -1256,7 +1289,7 @@ namespace Molten
             static_cast<VkDeviceSize>(descriptor.dimensions.y) * static_cast<VkDeviceSize>(formatPixelSize);
         const auto dimensions = Vector3ui32{ descriptor.dimensions.x, descriptor.dimensions.y, 1 };
 
-        return CreateTexture<2>(dimensions, dataSize, descriptor.data, imageFormat, internalImageFormat);
+        return CreateTexture<2>(dimensions, dataSize, descriptor.data, imageFormat, internalImageFormat, GetComponentMappings(descriptor.swizzleMapping));
     }
 
     RenderResource<Texture3D> VulkanRenderer::CreateTexture(const TextureDescriptor3D& descriptor)
@@ -1278,7 +1311,7 @@ namespace Molten
             static_cast<VkDeviceSize>(descriptor.dimensions.z) * static_cast<VkDeviceSize>(formatPixelSize);
         const auto dimensions = Vector3ui32{ descriptor.dimensions.x, descriptor.dimensions.y, descriptor.dimensions.z };
 
-        return CreateTexture<3>(dimensions, dataSize, descriptor.data, imageFormat, internalImageFormat);
+        return CreateTexture<3>(dimensions, dataSize, descriptor.data, imageFormat, internalImageFormat, GetComponentMappings(descriptor.swizzleMapping));
     }
 
     RenderResource<UniformBuffer> VulkanRenderer::CreateUniformBuffer(const UniformBufferDescriptor& descriptor)
@@ -1826,6 +1859,9 @@ namespace Molten
             }
         }
 
+        // Set renderer capabilities.
+        m_capabilities.textureSwizzle = true;
+
         return true;
     }
 
@@ -1997,7 +2033,8 @@ namespace Molten
         const size_t dataSize,
         const void* data,
         const VkFormat imageFormat,
-        const VkFormat internalImageFormat)
+        const VkFormat internalImageFormat,
+        const VkComponentMapping& componentMapping)
     {
         Vulkan::DeviceBuffer stagingBuffer;
 
@@ -2046,6 +2083,7 @@ namespace Molten
         viewInfo.subresourceRange.levelCount = 1;
         viewInfo.subresourceRange.baseArrayLayer = 0;
         viewInfo.subresourceRange.layerCount = 1;
+        viewInfo.components = componentMapping;
 
         VkImageView imageView;
         if (vkCreateImageView(m_logicalDevice.GetHandle(), &viewInfo, nullptr, &imageView) != VK_SUCCESS) {

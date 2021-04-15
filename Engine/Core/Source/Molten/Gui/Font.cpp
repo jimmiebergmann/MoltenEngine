@@ -246,7 +246,7 @@ namespace Molten::Gui
         //const FT_Int32 loadlags = FT_HAS_COLOR(face) ?
         //    (FT_LOAD_COLOR | FT_LOAD_RENDER | FT_LOAD_DEFAULT) :
         //    (FT_LOAD_RENDER | FT_LOAD_DEFAULT);
-        const FT_Int32 loadlags = FT_LOAD_RENDER | FT_LOAD_DEFAULT;
+        const FT_Int32 loadlags = FT_LOAD_RENDER | FT_LOAD_DEFAULT | FT_LOAD_COLOR;
 
         //const auto hasColor = FT_HAS_COLOR(face);
 
@@ -334,28 +334,34 @@ namespace Molten::Gui
                 return false;
             }
 
-            FT_Glyph glyph = nullptr;          
+            FT_Glyph glyph = nullptr;
             if ((error = FTC_ImageCache_Lookup(m_fontImpl->ftImageCache, &ftcImageType, glyphIndex, &glyph, nullptr)) != 0)
             {
-                return false;
+                // Skip missing/invalid glyph.
+                continue;
             }
 
             applyKering(face, prevGlyphIndex, glyphIndex, prevPenPos, penPos);
 
-            const auto bitmap = reinterpret_cast<FT_BitmapGlyph>(glyph);
+            const auto bitmapGlyph = reinterpret_cast<FT_BitmapGlyph>(glyph);
             const auto& metrics = face->glyph->metrics;
             const auto bearing = Vector2<int32_t>{ static_cast<int32_t>(metrics.horiBearingX >> 6), static_cast<int32_t>(metrics.horiBearingY >> 6) };
-            appendBounds(bounds, bearing, penPos, bitmap);
+            appendBounds(bounds, bearing, penPos, bitmapGlyph);
 
-            const auto pixelMode = static_cast<FT_Pixel_Mode>(bitmap->bitmap.pixel_mode);
+            const auto pixelMode = static_cast<FT_Pixel_Mode>(bitmapGlyph->bitmap.pixel_mode);
+            if (pixelMode != FT_Pixel_Mode::FT_PIXEL_MODE_GRAY && pixelMode != FT_Pixel_Mode::FT_PIXEL_MODE_BGRA)
+            {
+                // Skip unsupported pixel mode of glyph.
+                continue;
+            }
+
             updatePixelModel(currentPixelMode, pixelMode);
 
             const auto horiAdvance = static_cast<int32_t>(metrics.horiAdvance >> 6);
             movePen(penPos, prevPenPos, horiAdvance);
         }
 
-        if (currentPixelMode == FT_Pixel_Mode::FT_PIXEL_MODE_NONE ||
-            bounds.IsEmpty())
+        if (currentPixelMode == FT_Pixel_Mode::FT_PIXEL_MODE_NONE || bounds.IsEmpty())
         {
             return false;
         }
@@ -378,6 +384,48 @@ namespace Molten::Gui
             CleanOldBuffer(bufferTextSize);
         }
 
+        auto writeGrayToBgra = [&](const FT_Bitmap& bitmap)
+        {
+        };
+
+        auto writeGrayToGray = [&](const FT_Bitmap& bitmap)
+        {
+            const auto bitmapWidth = static_cast<size_t>(bitmap.width);
+            const auto bitmapRows = static_cast<size_t>(bitmap.rows);
+
+            for (size_t y = 0; y < bitmapRows; y++)
+            {
+                const size_t bufferIndex = (y * static_cast<size_t>(m_pixelSize) * static_cast<size_t>(m_bufferDimensions.x));
+                const size_t bitmapIndex = (y * bitmapWidth);
+                auto destination = m_buffer.get() + bufferIndex;
+                auto source = bitmap.buffer + bitmapIndex;
+
+                std::memcpy(destination, source, bitmapWidth);
+            }
+        };
+
+        auto writeBgra = [&](const FT_Bitmap& bitmap)
+        {
+            const auto bitmapWidth = static_cast<size_t>(bitmap.width);
+            const auto bitmapRows = static_cast<size_t>(bitmap.rows);
+
+            for (size_t y = 0; y < bitmapRows; y++)
+            {
+                const size_t bufferIndex = y * static_cast<size_t>(m_pixelSize) * static_cast<size_t>(m_bufferDimensions.x);
+                const size_t bitmapIndex = y * static_cast<size_t>(m_pixelSize) * bitmapWidth;
+                auto destination = m_buffer.get() + bufferIndex;
+                auto source = bitmap.buffer + bitmapIndex;
+
+                std::memcpy(destination, source, bitmapWidth * static_cast<size_t>(m_pixelSize));
+            }
+        };
+
+        std::function<void(const FT_Bitmap&)> writeGray = writeGrayToGray;
+        if (currentPixelMode == FT_Pixel_Mode::FT_PIXEL_MODE_BGRA)
+        {
+            writeGray = writeGrayToBgra;
+        }
+
 
         for (size_t i = 0; i < 1; i++)
         {
@@ -391,11 +439,23 @@ namespace Molten::Gui
             FT_Glyph glyph = nullptr;
             if ((error = FTC_ImageCache_Lookup(m_fontImpl->ftImageCache, &ftcImageType, glyphIndex, &glyph, nullptr)) != 0)
             {
-                return false;
+                // Skip missing/invalid glyph.
+                continue;
             }
 
             const auto bitmap = reinterpret_cast<FT_BitmapGlyph>(glyph)->bitmap;
-            const auto bitmapBuffer = bitmap.buffer;
+            const auto pixelMode = static_cast<FT_Pixel_Mode>(bitmap.pixel_mode);
+
+            if (pixelMode == FT_Pixel_Mode::FT_PIXEL_MODE_GRAY)
+            {
+                writeGray(bitmap);
+            }
+            else if(pixelMode == FT_Pixel_Mode::FT_PIXEL_MODE_BGRA)
+            {
+                writeBgra(bitmap);
+            }
+
+            /*const auto bitmapBuffer = bitmap.buffer;
 
             for (size_t y = 0; y < static_cast<size_t>(bitmap.rows); y++)
             {
@@ -410,7 +470,7 @@ namespace Molten::Gui
                     auto val = bitmapBuffer[bitmapIndex];
                     m_buffer[bufferIndex] = val;
                 }
-            }
+            }*/
 
         }
 

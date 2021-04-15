@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,13 +23,33 @@
 *
 */
 
-#include "Test.hpp"
+#ifndef MOLTEN_CORE_RENDERER_IMAGESWIZZLE_HPP
+#define MOLTEN_CORE_RENDERER_IMAGESWIZZLE_HPP
 
-int main(int argc, char** argv)
+#include "Molten/Types.hpp"
+
+namespace Molten
 {
-    // Command line arguments for running a single test:
-    // --gtest_filter=Test.Case*
 
-    testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+    enum class ImageComponentSwizzle : uint8_t
+    {
+        Identity,   ///< No swizzle of component.
+        Red,        ///< Sets component to red channel's value.
+        Green,      ///< Sets component to green channel's value.
+        Blue,       ///< Sets component to blue channel's value.
+        Alpha,      ///< Sets component to alpha channel's value.
+        Zero,       ///< Sets component to 0.
+        One         ///< Sets component to 1.   
+    };
+
+    struct ImageSwizzleMapping
+    {
+        ImageComponentSwizzle red;
+        ImageComponentSwizzle green;
+        ImageComponentSwizzle blue;
+        ImageComponentSwizzle alpha;
+    };
+
 }
+
+#endif
