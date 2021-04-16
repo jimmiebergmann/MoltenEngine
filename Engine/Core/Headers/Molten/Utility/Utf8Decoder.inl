@@ -29,7 +29,6 @@ namespace Molten
     // UTF-8 decoder implementations.
     inline Utf8DecoderIterator::Utf8DecoderIterator() :
         m_data(nullptr),
-        m_begin(nullptr),
         m_end(nullptr),
         m_codePoint(0) 
     {}
@@ -40,22 +39,12 @@ namespace Molten
         return *this;
     }
 
-    //inline Utf8DecoderIterator& Utf8DecoderIterator::operator --()
-    //{
-    //    return *this;
-    //}
-
     inline Utf8DecoderIterator Utf8DecoderIterator::operator ++(int)
     {
         Utf8DecoderIterator copy = *this;
         ReadNextCodePoint();
         return copy;
     }
-
-    //inline Utf8DecoderIterator Utf8DecoderIterator::operator --(int)
-    //{
-    //    return {};
-    //}
 
     inline Utf8DecoderIterator::CodePointType Utf8DecoderIterator::operator *() const
     {
@@ -74,16 +63,14 @@ namespace Molten
 
     inline Utf8DecoderIterator::Utf8DecoderIterator(const uint8_t* begin, const uint8_t* end) :
         m_data(begin),
-        m_begin(begin),
         m_end(end),
         m_codePoint(0)
     {
         ReadNextCodePoint();
     }
 
-    inline Utf8DecoderIterator::Utf8DecoderIterator(const uint8_t* data, const uint8_t* begin, const uint8_t* end) :
-        m_data(data),
-        m_begin(begin),
+    inline Utf8DecoderIterator::Utf8DecoderIterator(const uint8_t* end) :
+        m_data(end),
         m_end(end),
         m_codePoint(0)
     {}
@@ -182,8 +169,7 @@ namespace Molten
     
     inline Utf8Decoder::Iterator Utf8Decoder::end() const
     {
-        auto* endPointer = m_data + m_dataSize + 1;
-        return Iterator{ endPointer, m_data, endPointer };
+        return Iterator{ m_data + m_dataSize + 1 };
     }
 
     inline bool Utf8Decoder::IsEmpty() const

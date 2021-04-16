@@ -54,9 +54,7 @@ namespace Molten
         ~Utf8DecoderIterator() = default;
 
         Utf8DecoderIterator& operator ++();
-        //Utf8DecoderIterator<TValueType>& operator --();
-        Utf8DecoderIterator operator ++(int);
-        //Utf8DecoderIterator<TValueType> operator --(int);
+        [[nodiscard]] Utf8DecoderIterator operator ++(int);
 
         [[nodiscard]] CodePointType operator *() const;
 
@@ -66,15 +64,14 @@ namespace Molten
     private:
 
         Utf8DecoderIterator(const uint8_t* begin, const uint8_t* end); ///< Used for begin.
-        Utf8DecoderIterator(const uint8_t* data, const uint8_t* begin, const uint8_t* end); ///< Used for end.
+        Utf8DecoderIterator(const uint8_t* end); ///< Used for end.
 
         friend class Utf8Decoder;
 
-        static size_t GetCharSize(uint8_t byte);
+        [[nodiscard]] static size_t GetCharSize(uint8_t byte);
         void ReadNextCodePoint();  
 
         const uint8_t* m_data;
-        const uint8_t* m_begin;
         const uint8_t* m_end;
         CodePointType m_codePoint;
 
