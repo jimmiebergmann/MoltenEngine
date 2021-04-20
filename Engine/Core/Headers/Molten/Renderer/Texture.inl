@@ -29,8 +29,8 @@ namespace Molten
     // Texture descriptor implementations.
     template<size_t VDimensions>
     TextureDescriptor<VDimensions>::TextureDescriptor() :
-        dimensions(0),
         data(nullptr),
+        dimensions(0),
         format(ImageFormat::URed8Green8Blue8),
         internalFormat(ImageFormat::URed8Green8Blue8),
         swizzleMapping{}
@@ -38,13 +38,13 @@ namespace Molten
 
     template<size_t VDimensions>
     TextureDescriptor<VDimensions>::TextureDescriptor(
-        const Vector<VDimensions, uint32_t>& dimensions,
         const void* data,
+        const Vector<VDimensions, uint32_t>& dimensions,
         const ImageFormat format,
         const ImageSwizzleMapping& swizzleMapping
     ) :
-        dimensions(dimensions),
         data(data),
+        dimensions(dimensions),
         format(format),
         internalFormat(format),
         swizzleMapping(swizzleMapping)
@@ -52,17 +52,37 @@ namespace Molten
 
     template<size_t VDimensions>
     TextureDescriptor<VDimensions>::TextureDescriptor(
-        const Vector<VDimensions, uint32_t>& dimensions,
         const void* data,
+        const Vector<VDimensions, uint32_t>& dimensions,
         const ImageFormat format,
         const ImageFormat internalFormat,
         const ImageSwizzleMapping& swizzleMapping
     ) :
-        dimensions(dimensions),
         data(data),
+        dimensions(dimensions),
         format(format),
         internalFormat(internalFormat),
         swizzleMapping(swizzleMapping)
+    {}
+
+
+    // Texture update descriptor.
+    template<size_t VDimensions>
+    TextureUpdateDescriptor<VDimensions>::TextureUpdateDescriptor() :
+        data(nullptr),
+        destinationDimensions(),
+        destinationOffset()
+    {}
+
+    template<size_t VDimensions>
+    TextureUpdateDescriptor<VDimensions>::TextureUpdateDescriptor(
+        const void* data,
+        Vector<VDimensions, uint32_t> destinationDimensions,
+        Vector<VDimensions, uint32_t> destinationOffset
+    ) :
+        data(data),
+        destinationDimensions(destinationDimensions),
+        destinationOffset(destinationOffset)
     {}
 
 }

@@ -1388,6 +1388,36 @@ namespace Molten
         }, RenderResourceDeleter<VertexBuffer>{ this });
     }
 
+    bool VulkanRenderer::UpdateTexture(Texture1D& texture1D, const TextureUpdateDescriptor1D& descriptor)
+    {
+        auto& vulkanTexture = static_cast<VulkanTexture1D&>(texture1D);
+        return UpdateTexture<1>(
+            vulkanTexture.image,
+            descriptor.data,
+            descriptor.destinationDimensions,
+            descriptor.destinationOffset);
+    }
+
+    bool VulkanRenderer::UpdateTexture(Texture2D& texture2D, const TextureUpdateDescriptor2D& descriptor)
+    {
+        auto& vulkanTexture = static_cast<VulkanTexture2D&>(texture2D);
+        return UpdateTexture<2>(
+            vulkanTexture.image,
+            descriptor.data,
+            descriptor.destinationDimensions,
+            descriptor.destinationOffset);
+    }
+
+    bool VulkanRenderer::UpdateTexture(Texture3D& texture3D, const TextureUpdateDescriptor3D& descriptor)
+    {
+        auto& vulkanTexture = static_cast<VulkanTexture3D&>(texture3D);
+        return UpdateTexture<3>(
+            vulkanTexture.image,
+            descriptor.data,
+            descriptor.destinationDimensions,
+            descriptor.destinationOffset);
+    }
+
     void VulkanRenderer::Destroy(DescriptorSet& descriptorSet)
     {
         auto& vulkanDescriptorSet = static_cast<VulkanDescriptorSet&>(descriptorSet);
@@ -2025,76 +2055,6 @@ namespace Molten
         }
 
         return true;
-    }
-
-    template<size_t VDimensions>
-    RenderResource<Texture<VDimensions>> VulkanRenderer::CreateTexture(
-        const Vector3ui32& dimensions,
-        const size_t dataSize,
-        const void* data,
-        const VkFormat imageFormat,
-        const VkFormat internalImageFormat,
-        const VkComponentMapping& componentMapping)
-    {
-        Vulkan::DeviceBuffer stagingBuffer;
-
-        Vulkan::Result<> result;
-        if (!(result = stagingBuffer.Create(m_logicalDevice, dataSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, m_memoryTypesHostVisibleOrCoherent)))
-        {
-            Vulkan::Logger::WriteError(m_logger, result, "Failed to create staging buffer for index buffer");
-            return { };
-        }
-
-        if (!(result = stagingBuffer.MapMemory(0, dataSize, data)))
-        {
-            Vulkan::Logger::WriteError(m_logger, result, "Failed to map staging buffer for index buffer");
-            return { };
-        }
-
-        Vulkan::Image image;
-        if (!(result = image.Create(
-            m_logicalDevice,
-            stagingBuffer,
-            m_commandPool,
-            dimensions,
-            VulkanImageTypeTraits<VDimensions>::type,
-            imageFormat,
-            m_memoryTypesDeviceLocal)))
-        {
-            Vulkan::Logger::WriteError(m_logger, result, "Failed to create image");
-            return { };
-        }
-
-        if (!(result = image.TransitionToLayout(
-            m_commandPool,
-            VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)))
-        {
-            Vulkan::Logger::WriteError(m_logger, result, "Failed transition image to read only optional layout");
-            return { };
-        }
-
-        VkImageViewCreateInfo viewInfo{};
-        viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        viewInfo.image = image.GetHandle();
-        viewInfo.viewType = VulkanImageViewTypeTraits<VDimensions>::type;
-        viewInfo.format = internalImageFormat;
-        viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        viewInfo.subresourceRange.baseMipLevel = 0;
-        viewInfo.subresourceRange.levelCount = 1;
-        viewInfo.subresourceRange.baseArrayLayer = 0;
-        viewInfo.subresourceRange.layerCount = 1;
-        viewInfo.components = componentMapping;
-
-        VkImageView imageView;
-        if (vkCreateImageView(m_logicalDevice.GetHandle(), &viewInfo, nullptr, &imageView) != VK_SUCCESS) {
-            Vulkan::Logger::WriteError(m_logger, result, "Failed to create image view for texture");
-            return { };
-        }
-
-        return RenderResource<Texture<VDimensions>>(new VulkanTexture<VDimensions>{
-            std::move(image),
-            imageView
-        }, RenderResourceDeleter<Texture<VDimensions>>{ this });
     }
 
     bool VulkanRenderer::CreateVertexInputAttributes(

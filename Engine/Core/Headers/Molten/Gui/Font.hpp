@@ -37,6 +37,13 @@ namespace Molten::Gui
 
     struct FontImplementation; ///< PIMPL
 
+    enum class FontSequenceBitmapResult
+    {
+        Failure,
+        Empty,
+        NewBuffer,
+        UpdatedBuffer
+    };
 
     /** Font sequence object with caching capabilities, returned by Font class.*/
     class MOLTEN_API FontSequence
@@ -56,7 +63,7 @@ namespace Molten::Gui
         FontSequence(const FontSequence&) = delete;
         FontSequence& operator =(const FontSequence&) = delete;
 
-        bool CreateBitmap(
+        FontSequenceBitmapResult CreateBitmap(
             const std::string& text,
             const uint32_t dpi,
             const uint32_t height);
@@ -66,31 +73,25 @@ namespace Molten::Gui
 
         [[nodiscard]] uint32_t GetCachedDpi() const;
         [[nodiscard]] const Vector2f32& GetCachedFactor() const;
-        [[nodiscard]] const Vector2ui32& GetBufferDimensions() const;
-        [[nodiscard]] const Bounds2ui32& GetBufferTextBounds() const;
         [[nodiscard]] const uint8_t* GetBuffer() const;
-        [[nodiscard]] uint32_t GetBaseline() const;
+        [[nodiscard]] int32_t GetBaseline() const;
         [[nodiscard]] ImageFormat GetImageFormat() const;
+        [[nodiscard]] const Vector2ui32& GetImageDimensions() const;
 
     private:
 
-        void AllocateNewBuffer(const ImageFormat imageFormat,
-            const uint32_t pixelSize,
-            const Vector2ui32& bufferDimensions,
-            const Vector2ui32& bufferTextDimensions);
-
-        void CleanOldBuffer(const Vector2ui32& bitmapSize);
+        bool AllocateNewBufferIfRequired(const Vector2ui32& imageSize, const Vector2f32& cacheScale);
 
         FontImplementation* m_fontImpl;
         uint32_t m_cachedDpi;
         Vector2f32 m_cachedFactor;
 
         std::unique_ptr<uint8_t[]> m_buffer;
-        Vector2ui32 m_bufferDimensions;
-        Bounds2ui32 m_bufferTextBounds;
-        uint32_t m_baseline;
+        size_t m_bufferSize;       
+        Vector2ui32 m_imageDimensions;
         ImageFormat m_imageFormat;
-        uint32_t m_pixelSize;
+        uint32_t m_imagePixelSize;
+        int32_t m_baseline;
         
     };
 

@@ -108,6 +108,11 @@ namespace Molten::Gui
         return result;
     }
 
+    bool CanvasRenderer::UpdateTexture(CanvasRendererTexture& texture, const TextureUpdateDescriptor2D& textureUpdateDescriptor)
+    {
+        return m_backendRenderer.UpdateTexture(*texture.texture, textureUpdateDescriptor);
+    }
+
     void CanvasRenderer::BeginDraw()
     {}
 

@@ -148,6 +148,14 @@ namespace Molten
         virtual RenderResource<VertexBuffer> CreateVertexBuffer(const VertexBufferDescriptor& descriptor) = 0;
 
 
+        /** Update texture data. */
+        /**@{*/
+        virtual bool UpdateTexture(Texture1D& texture1D, const TextureUpdateDescriptor1D& descriptor) { return false; }
+        virtual bool UpdateTexture(Texture2D& texture2D, const TextureUpdateDescriptor2D& descriptor) { return false; }
+        virtual bool UpdateTexture(Texture3D& texture3D, const TextureUpdateDescriptor3D& descriptor) { return false; }
+        /**@}*/
+
+
         /** Destroys render resource.
          *  Some renderer implementations are not destroying the resource right away, but puts them in a cleanup queue.
          */

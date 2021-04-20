@@ -24,17 +24,19 @@
 */
 
 #include "Molten/Gui/Font.hpp"
+#include "Molten/Utility/Utf8Decoder.hpp"
 #include "ThirdParty/FreeType2/include/freetype/freetype.h"
 #include "ThirdParty/FreeType2/include/freetype/ftcache.h"
 #include <vector>
 #include <fstream>
 #include <algorithm>
+#include <cmath>
 
 namespace Molten::Gui
 {
 
     // Global implementaitons.
-    static ImageFormat GetPixelModeImageFormat(const FT_Pixel_Mode pixelMode, uint32_t& pixelSize)
+    static bool GetPixelModeImageFormat(const FT_Pixel_Mode pixelMode, ImageFormat& imageFormat, uint32_t& imagePixelSize)
     {
         switch(pixelMode)
         {          
@@ -43,15 +45,64 @@ namespace Molten::Gui
             case FT_Pixel_Mode::FT_PIXEL_MODE_GRAY2:
             case FT_Pixel_Mode::FT_PIXEL_MODE_GRAY4:
             case FT_Pixel_Mode::FT_PIXEL_MODE_LCD:
-            case FT_Pixel_Mode::FT_PIXEL_MODE_LCD_V: pixelSize = 1; return ImageFormat::URed8;
-            case FT_Pixel_Mode::FT_PIXEL_MODE_BGRA: pixelSize = 4; return ImageFormat::UBlue8Green8Red8Alpha8;
+            case FT_Pixel_Mode::FT_PIXEL_MODE_LCD_V:  imageFormat = ImageFormat::URed8; imagePixelSize = 1; return true;
+            case FT_Pixel_Mode::FT_PIXEL_MODE_BGRA:  imageFormat = ImageFormat::UBlue8Green8Red8Alpha8; imagePixelSize = 4; return true;
             case FT_Pixel_Mode::FT_PIXEL_MODE_NONE:
             default: break;
         }
 
-        pixelSize = 0;
-        return ImageFormat::SRed8;
+        return false;
     }
+
+    static void AppendBounds(Bounds2i32& bounds, const Vector2<int32_t>& bearing, const int32_t penPos, FT_BitmapGlyph bitmap)
+    {
+        // Calc X dimension.
+        const FT_Pos lowX = penPos + bearing.x;
+        if (lowX < bounds.low.x)
+        {
+            bounds.low.x = lowX;
+        }
+
+        const FT_Pos highX = penPos + bearing.x + bitmap->bitmap.width;
+        if (highX > bounds.high.x)
+        {
+            bounds.high.x = highX;
+        }
+
+        // Calc Y dimension.
+        const FT_Pos lowY = bearing.y - bitmap->bitmap.rows;
+        if (lowY < bounds.low.y)
+        {
+            bounds.low.y = lowY;
+        }
+
+        const FT_Pos highY = bearing.y;
+        if (highY > bounds.high.y)
+        {
+            bounds.high.y = highY;
+        }
+    }
+
+    static void ApplyKeringToPenPos(const FT_Face face, FT_UInt& prevGlyphIndex, FT_UInt glyphIndex, int32_t& penPos)
+    {
+        if (FT_HAS_KERNING(face) && prevGlyphIndex)
+        {
+            FT_Vector delta;
+            FT_Get_Kerning(face, prevGlyphIndex, glyphIndex, FT_KERNING_DEFAULT, &delta);
+
+            penPos += static_cast<int32_t>(delta.x >> 6);
+        }
+        prevGlyphIndex = glyphIndex;
+    }
+
+    static void UpdatePixelModel(FT_Pixel_Mode& mode, FT_Pixel_Mode newMode)
+    {
+        if (newMode >= mode)
+        {
+            mode = newMode;
+        }
+    }
+
 
     //  PIMPL implementations.
     struct FontImplementation
@@ -165,11 +216,11 @@ namespace Molten::Gui
         m_cachedDpi(0),
         m_cachedFactor(1.0f),
         m_buffer(nullptr),
-        m_bufferDimensions(0, 0),
-        m_bufferTextBounds(0, 0, 0, 0),
-        m_baseline(0),
-        m_imageFormat(ImageFormat::URed8Green8Blue8),
-        m_pixelSize(3)
+        m_bufferSize(0),
+        m_imageDimensions(0, 0),
+        m_imageFormat(ImageFormat::URed8),
+        m_imagePixelSize(0),
+        m_baseline(0)
     {}
 
     FontSequence::FontSequence(
@@ -181,11 +232,11 @@ namespace Molten::Gui
         m_cachedDpi(cachedDpi),
         m_cachedFactor(std::max(cachedFactor.x, 1.0f), std::max(cachedFactor.y, 1.0f)),
         m_buffer(nullptr),
-        m_bufferDimensions(0, 0),
-        m_bufferTextBounds(0, 0, 0, 0),
-        m_baseline(0),
-        m_imageFormat(ImageFormat::URed8Green8Blue8),
-        m_pixelSize(3)
+        m_bufferSize(0),
+        m_imageDimensions(0, 0),
+        m_imageFormat(ImageFormat::URed8),
+        m_imagePixelSize(0),
+        m_baseline(0)
     {}
 
     FontSequence::FontSequence(FontSequence&& fontSequence) noexcept :
@@ -193,14 +244,16 @@ namespace Molten::Gui
         m_cachedDpi(fontSequence.m_cachedDpi),
         m_cachedFactor(fontSequence.m_cachedFactor),
         m_buffer(std::move(fontSequence.m_buffer)),
-        m_bufferDimensions(fontSequence.m_bufferDimensions),
-        m_bufferTextBounds(fontSequence.m_bufferTextBounds),
-        m_baseline(fontSequence.m_baseline),
-        m_imageFormat(ImageFormat::URed8Green8Blue8)
+        m_bufferSize(fontSequence.m_bufferSize),
+        m_imageDimensions(fontSequence.m_imageDimensions),
+        m_imageFormat(fontSequence.m_imageFormat),
+        m_imagePixelSize(fontSequence.m_imagePixelSize),
+        m_baseline(fontSequence.m_baseline)
     {
         fontSequence.m_fontImpl = nullptr;
-        fontSequence.m_bufferDimensions = { 0, 0 };
-        fontSequence.m_bufferTextBounds = { 0, 0, 0, 0 };
+        fontSequence.m_bufferSize = 0;
+        fontSequence.m_imageDimensions = { 0, 0 };
+        fontSequence.m_imagePixelSize = 0;
         fontSequence.m_baseline = 0;
     }
 
@@ -210,27 +263,36 @@ namespace Molten::Gui
         m_cachedDpi = fontSequence.m_cachedDpi;
         m_cachedFactor = fontSequence.m_cachedFactor;
         m_buffer = std::move(fontSequence.m_buffer);
-        m_bufferDimensions = fontSequence.m_bufferDimensions;
-        m_bufferTextBounds = fontSequence.m_bufferTextBounds;
+        m_bufferSize = fontSequence.m_bufferSize;
+        m_imageDimensions = fontSequence.m_imageDimensions;
+        m_imageFormat = fontSequence.m_imageFormat;
+        m_imagePixelSize = fontSequence.m_imagePixelSize;
         m_baseline = fontSequence.m_baseline;
 
         fontSequence.m_fontImpl = nullptr;
-        fontSequence.m_bufferDimensions = { 0, 0 };
-        fontSequence.m_bufferTextBounds = { 0, 0, 0, 0 };
+        fontSequence.m_bufferSize = 0;
+        fontSequence.m_imageDimensions = { 0, 0 };
+        fontSequence.m_imagePixelSize = 0;
         fontSequence.m_baseline = 0;
 
         return *this;
     }
 
-    bool FontSequence::CreateBitmap(
+    FontSequenceBitmapResult FontSequence::CreateBitmap(
         const std::string& text,
         const uint32_t dpi,
         const uint32_t height)
     {
-        const auto calculationDpi = std::max(dpi, m_cachedDpi);
+        const auto cachedDpi = std::max(dpi, m_cachedDpi);
+        const auto cachedScale = static_cast<float>(cachedDpi) / static_cast<float>(MOLTEN_PLATFORM_BASE_DPI);
+        const auto cachedScaleVec = m_cachedFactor * cachedScale;
+        const auto fontScale = static_cast<float>(dpi) / static_cast<float>(MOLTEN_PLATFORM_BASE_DPI);
+        const auto fontHeight = static_cast<uint32_t>(static_cast<float>(height) * fontScale);
+
+        /*const auto calculationDpi = std::max(dpi, m_cachedDpi);
         const auto baseDpi = static_cast<uint32_t>(MOLTEN_PLATFORM_BASE_DPI);
         const auto calculationScale = static_cast<float>(calculationDpi) / static_cast<float>(baseDpi);
-        const auto calculationHeight = static_cast<uint32_t>(static_cast<float>(height) * calculationScale);
+        const auto calculationHeight = static_cast<uint32_t>(static_cast<float>(height) * calculationScale);*/
 
         FT_Error error = 0;
 
@@ -240,7 +302,7 @@ namespace Molten::Gui
             0,
             &face)) != 0)
         {
-            return false;
+            return FontSequenceBitmapResult::Failure;
         }
 
         //const FT_Int32 loadlags = FT_HAS_COLOR(face) ?
@@ -253,85 +315,30 @@ namespace Molten::Gui
         // TODO: Skipping dpi for now.
         FTC_ImageTypeRec ftcImageType;
         ftcImageType.face_id = 0;
-        ftcImageType.width = static_cast<FT_UInt>(calculationHeight);
-        ftcImageType.height = static_cast<FT_UInt>(calculationHeight);
+        ftcImageType.width = static_cast<FT_UInt>(fontHeight);
+        ftcImageType.height = static_cast<FT_UInt>(fontHeight);
         ftcImageType.flags = loadlags;
 
-        auto applyKering = [](const FT_Face face, FT_UInt& prevGlyphIndex, FT_UInt glyphIndex, int32_t& prevPenPos, int32_t& penPos)
-        {
-            if (FT_HAS_KERNING(face) && prevGlyphIndex)
-            {
-                FT_Vector delta;
-                FT_Get_Kerning(face, prevGlyphIndex, glyphIndex, FT_KERNING_DEFAULT, &delta);
-
-                prevPenPos += static_cast<int32_t>(delta.x >> 6);
-                penPos = prevPenPos;
-            }
-            prevGlyphIndex = glyphIndex;
-        };
-
-        auto appendBounds = [](Bounds2i32& bounds, const Vector2<int32_t>& bearing, const int32_t penPos, FT_BitmapGlyph bitmap)
-        {
-            // Calc X dimension.
-            const FT_Pos lowX = penPos + bearing.x;
-            if (lowX < bounds.low.x)
-            {
-                bounds.low.x = lowX;
-            }
-
-            const FT_Pos highX = penPos + bearing.x + bitmap->bitmap.width;
-            if (highX > bounds.high.x)
-            {
-                bounds.high.x = highX;
-            }
-
-            // Calc Y dimension.
-            const FT_Pos lowY = bearing.y - bitmap->bitmap.rows;
-            if (lowY < bounds.low.y)
-            {
-                bounds.low.y = lowY;
-            }
-
-            const FT_Pos highY = bearing.y;
-            if (highY > bounds.high.y)
-            {
-                bounds.high.y = highY;
-            }
-        };
-
-        auto movePen = [](int32_t& penPos, int32_t& prevPenPos, int32_t advance)
-        {
-            penPos += advance;
-            prevPenPos = penPos;
-        };
-
-        auto updatePixelModel = [](FT_Pixel_Mode& mode, FT_Pixel_Mode newMode)
-        {
-            if(newMode >= mode)
-            {
-                mode = newMode;
-            }
-        };
-
-        // Calculate bounds
         auto bounds = Bounds2<int32_t>{
             std::numeric_limits<int32_t>::max(),
             std::numeric_limits<int32_t>::max(),
             std::numeric_limits<int32_t>::min(),
             std::numeric_limits<int32_t>::min() };
 
+        
         int32_t penPos = 0;
-        int32_t prevPenPos = 0;
         FT_UInt prevGlyphIndex = 0;
         FT_Pixel_Mode currentPixelMode = FT_Pixel_Mode::FT_PIXEL_MODE_NONE;
 
-        for (size_t i = 0; i < text.size(); i++)
+        // Run a pre-pass, getting bounds of text and validation of glyphs.
+        const auto utf8Encoder = Utf8Decoder{ text };
+        for(auto it = utf8Encoder.begin(); it != utf8Encoder.end(); ++it)
         {
-            const FT_UInt32 charCode = static_cast<FT_UInt32>(text[i]);
+            const FT_UInt32 charCode = static_cast<FT_UInt32>(*it);
             const auto glyphIndex = FTC_CMapCache_Lookup(m_fontImpl->ftCMapCache, 0, 0, charCode);
             if (glyphIndex == 0)
             {
-                return false;
+                return FontSequenceBitmapResult::Failure;
             }
 
             FT_Glyph glyph = nullptr;
@@ -339,14 +346,13 @@ namespace Molten::Gui
             {
                 // Skip missing/invalid glyph.
                 continue;
-            }
+            }  
 
-            applyKering(face, prevGlyphIndex, glyphIndex, prevPenPos, penPos);
+            ApplyKeringToPenPos(face, prevGlyphIndex, glyphIndex, penPos);
 
             const auto bitmapGlyph = reinterpret_cast<FT_BitmapGlyph>(glyph);
-            const auto& metrics = face->glyph->metrics;
-            const auto bearing = Vector2<int32_t>{ static_cast<int32_t>(metrics.horiBearingX >> 6), static_cast<int32_t>(metrics.horiBearingY >> 6) };
-            appendBounds(bounds, bearing, penPos, bitmapGlyph);
+            const auto bearing = Vector2i32{ bitmapGlyph->left, bitmapGlyph->top };
+            AppendBounds(bounds, bearing, penPos, bitmapGlyph);
 
             const auto pixelMode = static_cast<FT_Pixel_Mode>(bitmapGlyph->bitmap.pixel_mode);
             if (pixelMode != FT_Pixel_Mode::FT_PIXEL_MODE_GRAY && pixelMode != FT_Pixel_Mode::FT_PIXEL_MODE_BGRA)
@@ -355,85 +361,95 @@ namespace Molten::Gui
                 continue;
             }
 
-            updatePixelModel(currentPixelMode, pixelMode);
-
-            const auto horiAdvance = static_cast<int32_t>(metrics.horiAdvance >> 6);
-            movePen(penPos, prevPenPos, horiAdvance);
+            UpdatePixelModel(currentPixelMode, pixelMode);
+         
+            const auto horiAdvance = static_cast<int32_t>(glyph->advance.x >> 16);
+            penPos += horiAdvance;
         }
 
+        // Process pre-pass, create new buffer if needed.
         if (currentPixelMode == FT_Pixel_Mode::FT_PIXEL_MODE_NONE || bounds.IsEmpty())
         {
-            return false;
+            return FontSequenceBitmapResult::Failure;
+        }
+        
+        m_imageDimensions = Vector2ui32(bounds.GetSize());
+        m_baseline = -bounds.top;
+        if(!GetPixelModeImageFormat(currentPixelMode, m_imageFormat, m_imagePixelSize))
+        {
+            return FontSequenceBitmapResult::Failure;
         }
 
-        // Calalculate buffer size
-        const auto bufferTextSize = Vector2ui32(bounds.GetSize());
-        uint32_t pixelSize = 0;
-        const auto imageFormat = GetPixelModeImageFormat(currentPixelMode, pixelSize);
-        if(pixelSize == 0)
+        const auto requiredBufferSize = (m_imageDimensions.x * m_imageDimensions.y) * m_imagePixelSize;
+        if(requiredBufferSize == 0)
         {
-            return false;
+            return FontSequenceBitmapResult::Empty;
         }
 
-        if(bufferTextSize.x > m_bufferDimensions.x || bufferTextSize.y > m_bufferDimensions.y || m_imageFormat != imageFormat)
-        {
-            AllocateNewBuffer(imageFormat, pixelSize, bufferTextSize, bufferTextSize);
-        }
-        else
-        {
-            CleanOldBuffer(bufferTextSize);
-        }
+        const FontSequenceBitmapResult bitmapResult = AllocateNewBufferIfRequired(m_imageDimensions, cachedScaleVec) ?
+            FontSequenceBitmapResult::NewBuffer :
+            FontSequenceBitmapResult::UpdatedBuffer;
 
-        auto writeGrayToBgra = [&](const FT_Bitmap& bitmap)
+        // Write lambdas.
+        auto writeGrayToBgra = [&](Vector2size position, const FT_Bitmap& bitmap)
         {
         };
 
-        auto writeGrayToGray = [&](const FT_Bitmap& bitmap)
+        auto writeGrayToGray = [&](Vector2size position, const FT_Bitmap& bitmap)
         {
             const auto bitmapWidth = static_cast<size_t>(bitmap.width);
             const auto bitmapRows = static_cast<size_t>(bitmap.rows);
 
+            const size_t yStart = position.y * static_cast<size_t>(m_imageDimensions.x);
+
             for (size_t y = 0; y < bitmapRows; y++)
             {
-                const size_t bufferIndex = (y * static_cast<size_t>(m_pixelSize) * static_cast<size_t>(m_bufferDimensions.x));
+                const size_t bufferIndex = yStart + (y * static_cast<size_t>(m_imageDimensions.x)) + position.x;
                 const size_t bitmapIndex = (y * bitmapWidth);
-                auto destination = m_buffer.get() + bufferIndex;
-                auto source = bitmap.buffer + bitmapIndex;
+                auto* destination = m_buffer.get() + bufferIndex;
+                const auto* source = bitmap.buffer + bitmapIndex;
 
                 std::memcpy(destination, source, bitmapWidth);
             }
         };
 
-        auto writeBgra = [&](const FT_Bitmap& bitmap)
+        auto writeBgra = [&](Vector2size position, const FT_Bitmap& bitmap)
         {
             const auto bitmapWidth = static_cast<size_t>(bitmap.width);
             const auto bitmapRows = static_cast<size_t>(bitmap.rows);
 
+            const size_t xPosPixelSize = position.x * static_cast<size_t>(m_imagePixelSize);
+            const size_t imageWidthPixelSize = static_cast<size_t>(m_imageDimensions.x) * static_cast<size_t>(m_imagePixelSize);
+            const size_t bitmapWidthPixelSize = bitmapWidth * static_cast<size_t>(m_imagePixelSize);
+
             for (size_t y = 0; y < bitmapRows; y++)
             {
-                const size_t bufferIndex = y * static_cast<size_t>(m_pixelSize) * static_cast<size_t>(m_bufferDimensions.x);
-                const size_t bitmapIndex = y * static_cast<size_t>(m_pixelSize) * bitmapWidth;
-                auto destination = m_buffer.get() + bufferIndex;
-                auto source = bitmap.buffer + bitmapIndex;
+                const size_t bufferIndex = (y * imageWidthPixelSize) + xPosPixelSize;
+                const size_t bitmapIndex = (y * bitmapWidthPixelSize);
+                auto* destination = m_buffer.get() + bufferIndex;
+                const auto* source = bitmap.buffer + bitmapIndex;
 
-                std::memcpy(destination, source, bitmapWidth * static_cast<size_t>(m_pixelSize));
+                std::memcpy(destination, source, bitmapWidth * static_cast<size_t>(m_imagePixelSize));
             }
         };
 
-        std::function<void(const FT_Bitmap&)> writeGray = writeGrayToGray;
+        std::function writeGray = writeGrayToGray;
         if (currentPixelMode == FT_Pixel_Mode::FT_PIXEL_MODE_BGRA)
         {
             writeGray = writeGrayToBgra;
         }
 
+        // Write bitmaps to buffer.
+        penPos = 0;
+        prevGlyphIndex = 0;
 
-        for (size_t i = 0; i < 1; i++)
+        for(auto it = utf8Encoder.begin(); it != utf8Encoder.end(); ++it)
         {
-            const FT_UInt32 charCode = static_cast<FT_UInt32>(text[i]);
+            const FT_UInt32 charCode = static_cast<FT_UInt32>(*it);
             const auto glyphIndex = FTC_CMapCache_Lookup(m_fontImpl->ftCMapCache, 0, 0, charCode);
             if (glyphIndex == 0)
             {
-                return false;
+                return FontSequenceBitmapResult::Failure;
             }
 
             FT_Glyph glyph = nullptr;
@@ -443,71 +459,38 @@ namespace Molten::Gui
                 continue;
             }
 
-            const auto bitmap = reinterpret_cast<FT_BitmapGlyph>(glyph)->bitmap;
+            ApplyKeringToPenPos(face, prevGlyphIndex, glyphIndex, penPos);
+
+            const auto bitmapGlyph = reinterpret_cast<FT_BitmapGlyph>(glyph);
+            const auto bitmap = bitmapGlyph->bitmap;
             const auto pixelMode = static_cast<FT_Pixel_Mode>(bitmap.pixel_mode);
+
+            const int32_t writePosY = 
+                (static_cast<int32_t>(m_imageDimensions.y) - m_baseline) -
+                (bitmapGlyph->top - static_cast<int32_t>(bitmap.rows)) -
+                static_cast<int32_t>(bitmap.rows);
+
+            auto writePosX = penPos + bitmapGlyph->left;
+            if(writePosX < 0)
+            {
+                penPos -= writePosX;
+                writePosX = 0;
+            }
 
             if (pixelMode == FT_Pixel_Mode::FT_PIXEL_MODE_GRAY)
             {
-                writeGray(bitmap);
+                writeGray({ writePosX, writePosY }, bitmap);
             }
             else if(pixelMode == FT_Pixel_Mode::FT_PIXEL_MODE_BGRA)
             {
-                writeBgra(bitmap);
+                writeBgra({ writePosX, writePosY }, bitmap);
             }
 
-            /*const auto bitmapBuffer = bitmap.buffer;
-
-            for (size_t y = 0; y < static_cast<size_t>(bitmap.rows); y++)
-            {
-                for (size_t x = 0; x < static_cast<size_t>(bitmap.width); x++)
-                {
-                    const size_t bufferIndex =
-                        (x * static_cast<size_t>(m_pixelSize)) + 
-                        (y * static_cast<size_t>(m_pixelSize) * static_cast<size_t>(m_bufferDimensions.x));
-
-                    const size_t bitmapIndex = (y * static_cast<size_t>(bitmap.width)) + x;
-
-                    auto val = bitmapBuffer[bitmapIndex];
-                    m_buffer[bufferIndex] = val;
-                }
-            }*/
-
+            const auto horiAdvance = static_cast<int32_t>(glyph->advance.x >> 16);
+            penPos += horiAdvance;
         }
 
-
-        return true;
-    }
-
-    void FontSequence::AllocateNewBuffer(
-        const ImageFormat imageFormat,
-        const uint32_t pixelSize,
-        const Vector2ui32& bufferDimensions,
-        const Vector2ui32& bufferTextDimensions)
-    {
-        m_imageFormat = imageFormat;
-        m_pixelSize = pixelSize;
-        m_bufferDimensions = bufferDimensions;
-        m_bufferTextBounds = { { 0, 0 }, bufferTextDimensions };
-
-        const size_t bufferSize = 
-            static_cast<size_t>(bufferDimensions.x) * 
-            static_cast<size_t>(bufferDimensions.y) * 
-            static_cast<size_t>(pixelSize);
-
-        m_buffer = std::make_unique<uint8_t[]>(bufferSize);
-
-        for(size_t y = 0; y < bufferTextDimensions.y; y++)
-        {
-            const auto bufferWidth = y * static_cast<size_t>(bufferDimensions.x) * static_cast<size_t>(pixelSize);
-            auto* bufferPos = m_buffer.get() + bufferWidth;
-            const auto textWidth = static_cast<size_t>(bufferTextDimensions.x) * static_cast<size_t>(pixelSize);
-            std::memset(bufferPos, 0, textWidth);
-        }
-    }
-
-    void FontSequence::CleanOldBuffer(const Vector2ui32& bitmapSize)
-    {
-        
+        return bitmapResult;
     }
 
     void FontSequence::SetCachedDpi(uint32_t dpi)
@@ -530,22 +513,12 @@ namespace Molten::Gui
         return m_cachedFactor;
     }
 
-    const Vector2ui32& FontSequence::GetBufferDimensions() const
-    {
-        return m_bufferDimensions;
-    }
-
-    const Bounds2ui32& FontSequence::GetBufferTextBounds() const
-    {
-        return m_bufferTextBounds;
-    }
-
     const uint8_t* FontSequence::GetBuffer() const
     {
         return m_buffer.get();
     }
 
-    uint32_t FontSequence::GetBaseline() const
+    int32_t FontSequence::GetBaseline() const
     {
         return m_baseline;
     }
@@ -553,6 +526,31 @@ namespace Molten::Gui
     ImageFormat FontSequence::GetImageFormat() const
     {
         return m_imageFormat;
+    }
+
+    const Vector2ui32& FontSequence::GetImageDimensions() const
+    {
+        return m_imageDimensions;
+    }
+
+    bool FontSequence::AllocateNewBufferIfRequired(const Vector2ui32& imageSize, const Vector2f32& cacheScale)
+    {
+        const uint32_t requiredSize = imageSize.x * imageSize.y * m_imagePixelSize;
+
+        if(requiredSize <= m_bufferSize)
+        {
+            return false;
+        }
+
+        auto const allocationImageSize = Vector2ui32{
+            std::ceil(static_cast<float>(imageSize.x) * cacheScale.x),
+            std::ceil(static_cast<float>(imageSize.y) * cacheScale.y)
+        };
+
+        m_bufferSize = allocationImageSize.x * allocationImageSize.y * m_imagePixelSize;
+        m_buffer = std::make_unique<uint8_t[]>(m_bufferSize);
+
+        return true;
     }
 
 

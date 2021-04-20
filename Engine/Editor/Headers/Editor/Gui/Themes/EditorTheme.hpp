@@ -159,34 +159,46 @@ namespace Molten::Gui
         WidgetSkin(const WidgetSkinDescriptor<EditorTheme, Label>& descriptor) :
             WidgetSkinMixin<EditorTheme, Label>(descriptor)
         {
-            // DUMMY TEST!
             m_fontSequence = theme.m_font.CreateSequence(120, { 1.25f, 1.25f });
-            m_fontSequence.CreateBitmap(widget.text, 96, 16);
-
-            const TextureDescriptor2D textureDesc = {
-                m_fontSequence.GetBufferDimensions(),
-                m_fontSequence.GetBuffer(),
-                m_fontSequence.GetImageFormat(),
-                {
-                    ImageComponentSwizzle::Red,
-                    ImageComponentSwizzle::Green,
-                    ImageComponentSwizzle::Blue,
-                    ImageComponentSwizzle::Alpha
-                }
-            };
-
-            m_texture = theme.m_canvasRenderer.CreateTexture(textureDesc);
         }
 
         void Draw() override
         {
-            const Bounds2f32 bounds = { 0.0f, 0.0f, 100.0f, 100.0f };
+            UpdateTexture();
+
+            const auto pos = Vector2f32{ 10.0f, 10.0f };
+            const auto bounds = Bounds2f32{ pos, pos + m_textureSize };
             theme.m_canvasRenderer.DrawRect(bounds, m_texture);
         }
 
     private:
 
+        void UpdateTexture()
+        {
+            auto bitmapResult = m_fontSequence.CreateBitmap(widget.text, 96, 18);
+            if(bitmapResult == FontSequenceBitmapResult::Failure)
+            {
+                return;
+            }
+
+            const auto swizzleMapping = m_fontSequence.GetImageFormat() == ImageFormat::URed8 ?
+                ImageSwizzleMapping{ ImageComponentSwizzle::One, ImageComponentSwizzle::One, ImageComponentSwizzle::One, ImageComponentSwizzle::Red } :
+                ImageSwizzleMapping{ };
+
+            m_textureSize = m_fontSequence.GetImageDimensions();
+
+            const TextureDescriptor2D textureDesc = {
+                m_fontSequence.GetBuffer(),
+                m_textureSize,
+                m_fontSequence.GetImageFormat(),
+                swizzleMapping
+            };
+
+            m_texture = theme.m_canvasRenderer.CreateTexture(textureDesc);
+        }
+
         CanvasRendererTexture m_texture;
+        Vector2ui32 m_textureSize;
         FontSequence m_fontSequence;
 
     };

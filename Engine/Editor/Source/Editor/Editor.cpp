@@ -261,7 +261,7 @@ namespace Molten::Editor
 
         button->size.CalculateValue({}, {});
 
-        button->CreateChild<Gui::Label>("W", 16);
+        button->CreateChild<Gui::Label>("Inspector", 16);
 
 
         /*auto pane1 = docker->CreateChild<Gui::Pane>(Gui::DockingPosition::Left, true, Vector2f32{ 100.0f, 100.0f });

@@ -94,6 +94,7 @@ namespace Molten::Gui
         void Resize(const Vector2f32& size);
 
         CanvasRendererTexture CreateTexture(const TextureDescriptor2D& textureDescriptor);
+        bool UpdateTexture(CanvasRendererTexture& texture, const TextureUpdateDescriptor2D& textureUpdateDescriptor);
 
         void BeginDraw();
 

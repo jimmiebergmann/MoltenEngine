@@ -26,6 +26,7 @@
 #ifndef MOLTEN_CORE_RENDERER_VULKAN_VULKANRENDERER_HPP
 #define MOLTEN_CORE_RENDERER_VULKAN_VULKANRENDERER_HPP
 
+#include "VulkanTexture.hpp"
 #include "Molten/Renderer/Renderer.hpp"
 #include "Molten/Renderer/Shader/Visual/VisualShaderStructure.hpp"
 
@@ -132,6 +133,14 @@ namespace Molten
         RenderResource<VertexBuffer> CreateVertexBuffer(const VertexBufferDescriptor& descriptor) override;
 
 
+        /** Update texture data. */
+        /**@{*/
+        bool UpdateTexture(Texture1D& texture1D, const TextureUpdateDescriptor1D& descriptor) override;
+        bool UpdateTexture(Texture2D& texture3D, const TextureUpdateDescriptor2D& descriptor) override;
+        bool UpdateTexture(Texture3D& texture2D, const TextureUpdateDescriptor3D& descriptor) override;
+        /**@}*/
+
+
         /** Destroys render resource.
          *  Resources are not destroyed right away, but instead put in a cleanup queue in order to make sure that resources in use not are destroyed.
          */
@@ -224,6 +233,14 @@ namespace Molten
             const VkFormat imageFormat,
             const VkFormat internalImageFormat,
             const VkComponentMapping& componentMapping);
+
+        template<size_t VDimensions>
+        bool UpdateTexture(
+            Vulkan::Image& image,
+            const void* data,
+            Vector<VDimensions, uint32_t> destinationDimensions,
+            Vector<VDimensions, uint32_t> destinationOffset);
+    
 
         /** Shader creation and manipulation functions. */
         /**@{*/

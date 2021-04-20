@@ -69,13 +69,13 @@ namespace Molten
 
         TextureDescriptor();
         TextureDescriptor(
-            const Vector<VDimensions, uint32_t>& dimensions,
             const void* data,
+            const Vector<VDimensions, uint32_t>& dimensions,
             const ImageFormat format,
             const ImageSwizzleMapping& swizzleMapping = {});
         TextureDescriptor(
-            const Vector<VDimensions, uint32_t>& dimensions,
             const void* data,
+            const Vector<VDimensions, uint32_t>& dimensions,
             const ImageFormat format,
             const ImageFormat internalFormat,
             const ImageSwizzleMapping& swizzleMapping = {});
@@ -86,8 +86,8 @@ namespace Molten
         TextureDescriptor& operator =(const TextureDescriptor&) = default;
         TextureDescriptor& operator =(TextureDescriptor&&) = default;
 
-        Vector<VDimensions, uint32_t> dimensions; 
         const void* data;
+        Vector<VDimensions, uint32_t> dimensions;
         ImageFormat format;
         ImageFormat internalFormat;
         ImageSwizzleMapping swizzleMapping;
@@ -97,6 +97,34 @@ namespace Molten
     using TextureDescriptor1D = TextureDescriptor<1>;
     using TextureDescriptor2D = TextureDescriptor<2>;
     using TextureDescriptor3D = TextureDescriptor<3>;
+
+
+    /** Descriptor class of texture update. */
+    template<size_t VDimensions>
+    struct TextureUpdateDescriptor
+    {
+        static_assert(VDimensions >= 1 && VDimensions <= 3, "Texture descriptor must be of dimension 1-3.");
+
+        TextureUpdateDescriptor();
+        TextureUpdateDescriptor(
+            const void* data,
+            Vector<VDimensions, uint32_t> destinationDimensions = {},
+            Vector<VDimensions, uint32_t> destinationOffset = {});
+        ~TextureUpdateDescriptor() = default;
+
+        TextureUpdateDescriptor(const TextureUpdateDescriptor&) = default;
+        TextureUpdateDescriptor(TextureUpdateDescriptor&&) = default;
+        TextureUpdateDescriptor& operator =(const TextureUpdateDescriptor&) = default;
+        TextureUpdateDescriptor& operator =(TextureUpdateDescriptor&&) = default;
+
+        const void* data;          
+        Vector<VDimensions, uint32_t> destinationDimensions;
+        Vector<VDimensions, uint32_t> destinationOffset;
+    };
+
+    using TextureUpdateDescriptor1D = TextureUpdateDescriptor<1>;
+    using TextureUpdateDescriptor2D = TextureUpdateDescriptor<2>;
+    using TextureUpdateDescriptor3D = TextureUpdateDescriptor<3>;   
 
 }
 
