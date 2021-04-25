@@ -238,8 +238,9 @@ namespace Molten
         bool UpdateTexture(
             Vulkan::Image& image,
             const void* data,
-            Vector<VDimensions, uint32_t> destinationDimensions,
-            Vector<VDimensions, uint32_t> destinationOffset);
+            const size_t dataSize,
+            const Vector3ui32& destinationDimensions,
+            const Vector3ui32& destinationOffset);
     
 
         /** Shader creation and manipulation functions. */

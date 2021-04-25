@@ -38,10 +38,10 @@ namespace Molten::Vulkan
 
     // Image implementations.
     Image::Image() :
-        m_handle(VK_NULL_HANDLE),
-        m_memory(VK_NULL_HANDLE),
-        m_layout(VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED),
-        m_format(VkFormat::VK_FORMAT_UNDEFINED),
+        handle(VK_NULL_HANDLE),
+        memory(VK_NULL_HANDLE),
+        layout(VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED),
+        format(VkFormat::VK_FORMAT_UNDEFINED),
         m_logicalDevice(nullptr)
     {}
 
@@ -51,31 +51,32 @@ namespace Molten::Vulkan
     }
 
     Image::Image(Image&& image) noexcept :
-        m_handle(image.m_handle),
-        m_memory(image.m_memory),
-        m_layout(image.m_layout),
-        m_format(image.m_format),
+        handle(image.handle),
+        memory(image.memory),
+        layout(image.layout),
+        format(image.format),
         m_logicalDevice(image.m_logicalDevice)
     {
-        image.m_handle = VK_NULL_HANDLE;
-        image.m_memory = VK_NULL_HANDLE;
-        image.m_layout = VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
-        image.m_format = VkFormat::VK_FORMAT_UNDEFINED;
+        image.handle = VK_NULL_HANDLE;
+        image.memory = VK_NULL_HANDLE;
+        image.layout = VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
+        image.format = VkFormat::VK_FORMAT_UNDEFINED;
         image.m_logicalDevice = nullptr;
     }
 
     Image& Image::operator =(Image&& image) noexcept
     {
-        m_handle = image.m_handle;
-        m_memory = image.m_memory;
-        m_layout = image.m_layout;
-        m_format = image.m_format;
+        handle = image.handle;
+        memory = image.memory;
+        layout = image.layout;
+        format = image.format;
         m_logicalDevice = image.m_logicalDevice;
-        image.m_handle = VK_NULL_HANDLE;
-        image.m_memory = VK_NULL_HANDLE;
-        image.m_layout = VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
-        image.m_format = VkFormat::VK_FORMAT_UNDEFINED;
+        image.handle = VK_NULL_HANDLE;
+        image.memory = VK_NULL_HANDLE;
+        image.layout = VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
+        image.format = VkFormat::VK_FORMAT_UNDEFINED;
         image.m_logicalDevice = nullptr;
+
         return *this;
     }
 
@@ -86,8 +87,8 @@ namespace Molten::Vulkan
         const VkFormat imageFormat,
         const Vulkan::FilteredMemoryTypes& filteredMemoryTypes)
     {
+        // Clean up previously created image if any and prepare destroyer.
         Destroy();
-
         m_logicalDevice = &logicalDevice;
 
         SmartFunction destroyer = [&]()
@@ -96,51 +97,15 @@ namespace Molten::Vulkan
         };
 
         Result<> result;
+        auto logicalDeviceHandle = logicalDevice.GetHandle();
+
+        // Create image.
         if (!(result = LoadImage(
+            logicalDeviceHandle,
             imageDimensions,
             imageType,
             imageFormat,
             filteredMemoryTypes)))
-        {
-            return result;
-        }
-
-        destroyer.Release();
-        return result;    
-    }
-
-    Result<> Image::Create(
-        LogicalDevice& logicalDevice,
-        DeviceBuffer& stagingBuffer,
-        const VkCommandPool commandPool,
-        const Vector3ui32& imageDimensions,
-        const VkImageType imageType,
-        const VkFormat imageFormat,
-        const Vulkan::FilteredMemoryTypes& filteredMemoryTypes)
-    {
-        Destroy();
-
-        m_logicalDevice = &logicalDevice;
-
-        SmartFunction destroyer = [&]()
-        {
-            Destroy();
-        };
-
-        Result<> result;
-        if (!(result = LoadImage(
-            imageDimensions,
-            imageType,
-            imageFormat,
-            filteredMemoryTypes)))
-        {
-            return result;
-        }
-
-        if (!(result = CopyFromBuffer(
-            commandPool, 
-            stagingBuffer, 
-            imageDimensions)))
         {
             return result;
         }
@@ -149,58 +114,48 @@ namespace Molten::Vulkan
         return result;
     }
 
-    void Image::Destroy()
+    Result<> Image::Create(
+        LogicalDevice& logicalDevice,
+        VkCommandBuffer& commandBuffer,
+        DeviceBuffer& stagingBuffer,
+        const Vector3ui32& imageDimensions,
+        const VkImageType imageType,
+        const VkFormat imageFormat,
+        const VkImageLayout imageLayout,
+        const Vulkan::FilteredMemoryTypes& filteredMemoryTypes)
     {
-        if (m_logicalDevice)
+        // Clean up previously created image if any and prepare destroyer.
+        Destroy();
+        m_logicalDevice = &logicalDevice;
+
+        SmartFunction destroyer = [&]()
         {
-            auto logicalDeviceHandle = m_logicalDevice->GetHandle();
+            Destroy();
+        };
 
-            if (m_handle != VK_NULL_HANDLE)
-            {
-                vkDestroyImage(logicalDeviceHandle, m_handle, nullptr);
-                m_handle = VK_NULL_HANDLE;
-            }
-            if (m_memory != VK_NULL_HANDLE)
-            {
-                vkFreeMemory(logicalDeviceHandle, m_memory, nullptr);
-                m_memory = VK_NULL_HANDLE;
-            }
-
-            m_logicalDevice = nullptr;
-        }
-    }
-
-    bool Image::IsCreated() const
-    {
-        return m_handle != VK_NULL_HANDLE;
-    }
-
-    Result<> Image::CopyFromBuffer(
-        const VkCommandPool commandPool,
-        const DeviceBuffer& source,
-        const Vector3ui32 dimensions,
-        bool restoreLayout)
-    {
         Result<> result;
+        auto logicalDeviceHandle = logicalDevice.GetHandle();
 
-        // Transition layout to destination optional.
-        auto oldLayout = m_layout;
-        if (oldLayout != VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
-        {
-            if (!(result = TransitionToLayout(commandPool, VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)))
-            {
-                return result;
-            }
-        }
-
-        // Copy buffer.
-        VkCommandBuffer commandBuffer = VK_NULL_HANDLE;
-        if (!(result = BeginSingleTimeCommands(commandBuffer, *m_logicalDevice, commandPool)))
+        // Create image.
+        if (!(result = LoadImage(
+            logicalDeviceHandle,
+            imageDimensions,
+            imageType,
+            imageFormat,
+            filteredMemoryTypes)))
         {
             return result;
         }
 
-        VkBufferImageCopy region{};
+        // Copy data from staging buffer and set image layout.
+        constexpr VkImageLayout transferLayout = VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        if (!Vulkan::TransitionImageLayout(commandBuffer, handle, layout, transferLayout))
+        {
+            return VkResult::VK_ERROR_UNKNOWN;
+        }
+        layout = transferLayout;
+
+        VkBufferImageCopy region = {};
         region.bufferOffset = 0;
         region.bufferRowLength = 0;
         region.bufferImageHeight = 0;
@@ -209,91 +164,85 @@ namespace Molten::Vulkan
         region.imageSubresource.baseArrayLayer = 0;
         region.imageSubresource.layerCount = 1;
         region.imageOffset = { 0, 0, 0 };
-        region.imageExtent.width = dimensions.x;
-        region.imageExtent.height = dimensions.y;
-        region.imageExtent.depth = dimensions.z;
+        region.imageExtent.width = imageDimensions.x;
+        region.imageExtent.height = imageDimensions.y;
+        region.imageExtent.depth = imageDimensions.z;
 
-        vkCmdCopyBufferToImage(commandBuffer, source.GetHandle(), m_handle, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+        vkCmdCopyBufferToImage(commandBuffer, stagingBuffer.GetHandle(), handle, layout, 1, &region);
 
-        if (!(result = Vulkan::EndSingleTimeCommands(commandBuffer, *m_logicalDevice, commandPool)))
-        {
-            return result;
-        }
-
-        // Restore layout of asked to.
-        if (restoreLayout && m_layout != oldLayout)
-        {
-            if (!(result = TransitionToLayout(commandPool, oldLayout)))
-            {
-                return result;
-            }
-        }
-
-        return result;
-    }
-
-    Result<> Image::TransitionToLayout(
-        const VkCommandPool commandPool,
-        VkImageLayout layout)
-    {
-        Result<> result;
-
-        VkCommandBuffer commandBuffer = VK_NULL_HANDLE;
-        if (!(result = Vulkan::BeginSingleTimeCommands(commandBuffer, *m_logicalDevice, commandPool)))
-        {
-            return result;
-        }
-
-        if (!Vulkan::TransitionImageLayout(commandBuffer, *m_logicalDevice, m_handle, m_format, m_layout, layout))
+        if (!Vulkan::TransitionImageLayout(commandBuffer, handle, layout, imageLayout))
         {
             return VkResult::VK_ERROR_UNKNOWN;
         }
+        layout = imageLayout;
 
-        if (!(result = Vulkan::EndSingleTimeCommands(commandBuffer, *m_logicalDevice, commandPool)))
+        // Finish.
+        destroyer.Release();
+        return result;
+    }
+
+    Result<> Image::Update(
+        VkCommandBuffer& commandBuffer,
+        DeviceBuffer& stagingBuffer,
+        const Vector3ui32& destinationDimensions,
+        const Vector3ui32& destinationOffset)
+    {
+        Result<> result;
+
+        auto oldLayout = layout;
+
+        constexpr VkImageLayout transferLayout = VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        if (!Vulkan::TransitionImageLayout(commandBuffer, handle, layout, transferLayout))
         {
-            return result;
+            return VkResult::VK_ERROR_UNKNOWN;
         }
+        layout = transferLayout;
 
-        m_layout = layout;
+        VkBufferImageCopy region = {};
+        region.bufferOffset = 0;
+        region.bufferRowLength = 0;
+        region.bufferImageHeight = 0;
+        region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        region.imageSubresource.mipLevel = 0;
+        region.imageSubresource.baseArrayLayer = 0;
+        region.imageSubresource.layerCount = 1;
+        region.imageOffset = { static_cast<int32_t>(destinationOffset.x), static_cast<int32_t>(destinationOffset.y), static_cast<int32_t>(destinationOffset.z) };
+        region.imageExtent.width = destinationDimensions.x;
+        region.imageExtent.height = destinationDimensions.y;
+        region.imageExtent.depth = destinationDimensions.z;
+
+        vkCmdCopyBufferToImage(commandBuffer, stagingBuffer.GetHandle(), handle, layout, 1, &region);
+
+        if (!Vulkan::TransitionImageLayout(commandBuffer, handle, layout, oldLayout))
+        {
+            return VkResult::VK_ERROR_UNKNOWN;
+        }
+        layout = oldLayout;
 
         return result;
     }
 
-    VkBuffer Image::GetHandle() const
+    void Image::Destroy()
     {
-        return m_handle;
-    }
+        if(m_logicalDevice)
+        {
+            auto logicalDeviceHandle = m_logicalDevice->GetHandle();
 
-    VkDeviceMemory Image::GetMemory() const
-    {
-        return m_memory;
-    }
-
-    VkImageLayout Image::GetLayout() const
-    {
-        return m_layout;
-    }
-
-    VkFormat Image::GetFormat() const
-    {
-        return m_format;
-    }
-
-    LogicalDevice& Image::GetLogicalDevice()
-    {
-        return *m_logicalDevice;
-    }
-    const LogicalDevice& Image::GetLogicalDevice() const
-    {
-        return *m_logicalDevice;
-    }
-
-    bool Image::HasLogicalDevice() const
-    {
-        return m_logicalDevice != nullptr;
+            if (handle != VK_NULL_HANDLE)
+            {
+                vkDestroyImage(logicalDeviceHandle, handle, nullptr);
+                handle = VK_NULL_HANDLE;
+            }
+            if (memory != VK_NULL_HANDLE)
+            {
+                vkFreeMemory(logicalDeviceHandle, memory, nullptr);
+                memory = VK_NULL_HANDLE;
+            }
+        }     
     }
 
     Result<> Image::LoadImage(
+        VkDevice& logicalDeviceHandle,
         const Vector3ui32& imageDimensions,
         const VkImageType imageType,
         const VkFormat imageFormat,
@@ -315,16 +264,14 @@ namespace Molten::Vulkan
         imageInfo.sharingMode = VkSharingMode::VK_SHARING_MODE_EXCLUSIVE;
         imageInfo.samples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
 
-        auto logicalDeviceHandle = m_logicalDevice->GetHandle();
-
         Result<> result;
-        if (!(result = vkCreateImage(logicalDeviceHandle, &imageInfo, nullptr, &m_handle)))
+        if (!(result = vkCreateImage(logicalDeviceHandle, &imageInfo, nullptr, &handle)))
         {
             return result;
         }
 
         VkMemoryRequirements memoryRequirements = {};
-        vkGetImageMemoryRequirements(logicalDeviceHandle, m_handle, &memoryRequirements);
+        vkGetImageMemoryRequirements(logicalDeviceHandle, handle, &memoryRequirements);
 
         uint32_t memoryTypeIndex = 0;
         if (!Vulkan::FindFilteredMemoryTypeIndex(
@@ -339,17 +286,17 @@ namespace Molten::Vulkan
         allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         allocInfo.allocationSize = memoryRequirements.size;
         allocInfo.memoryTypeIndex = memoryTypeIndex;
-        if (!(result = vkAllocateMemory(logicalDeviceHandle, &allocInfo, nullptr, &m_memory)))
+        if (!(result = vkAllocateMemory(logicalDeviceHandle, &allocInfo, nullptr, &memory)))
         {
             return result;
         }
 
-        if (!(result = vkBindImageMemory(logicalDeviceHandle, m_handle, m_memory, 0)))
+        if (!(result = vkBindImageMemory(logicalDeviceHandle, handle, memory, 0)))
         {
             return result;
         }
 
-        m_format = imageFormat;
+        format = imageFormat;
 
         return result;
     }

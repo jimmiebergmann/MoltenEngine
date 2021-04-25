@@ -1391,29 +1391,53 @@ namespace Molten
     bool VulkanRenderer::UpdateTexture(Texture1D& texture1D, const TextureUpdateDescriptor1D& descriptor)
     {
         auto& vulkanTexture = static_cast<VulkanTexture1D&>(texture1D);
+
+        const size_t dataSize = descriptor.destinationDimensions.c[0];
+        const Vector3ui32 destinationDimensions = {
+            descriptor.destinationDimensions.c[0], 1, 1
+        };
+        const Vector3ui32 destinationOffset = {
+            descriptor.destinationOffset.c[0], 0, 0
+        };
+
         return UpdateTexture<1>(
             vulkanTexture.image,
             descriptor.data,
-            descriptor.destinationDimensions,
-            descriptor.destinationOffset);
+            dataSize,
+            destinationDimensions,
+            destinationOffset);
     }
 
     bool VulkanRenderer::UpdateTexture(Texture2D& texture2D, const TextureUpdateDescriptor2D& descriptor)
     {
         auto& vulkanTexture = static_cast<VulkanTexture2D&>(texture2D);
+
+        const size_t dataSize = descriptor.destinationDimensions.x * descriptor.destinationDimensions.y;
+        const Vector3ui32 destinationDimensions = {
+            descriptor.destinationDimensions.x, descriptor.destinationDimensions.y, 1
+        };
+        const Vector3ui32 destinationOffset = {
+            descriptor.destinationOffset.x, descriptor.destinationOffset.y, 0
+        };
+
         return UpdateTexture<2>(
             vulkanTexture.image,
             descriptor.data,
-            descriptor.destinationDimensions,
-            descriptor.destinationOffset);
+            dataSize,
+            destinationDimensions,
+            destinationOffset);
     }
 
     bool VulkanRenderer::UpdateTexture(Texture3D& texture3D, const TextureUpdateDescriptor3D& descriptor)
     {
         auto& vulkanTexture = static_cast<VulkanTexture3D&>(texture3D);
+
+        const size_t dataSize = descriptor.destinationDimensions.x * descriptor.destinationDimensions.y * descriptor.destinationDimensions.z;
+
         return UpdateTexture<3>(
             vulkanTexture.image,
             descriptor.data,
+            dataSize,
             descriptor.destinationDimensions,
             descriptor.destinationOffset);
     }

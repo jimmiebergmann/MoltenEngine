@@ -50,31 +50,37 @@ namespace Molten
             return { };
         }
 
+        VkCommandBuffer commandBuffer = nullptr;
+        if (!(result = Vulkan::BeginSingleTimeCommands(commandBuffer, m_logicalDevice, m_commandPool)))
+        {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to begin single time command.");
+            return { };
+        }
+
         Vulkan::Image image;
         if (!(result = image.Create(
             m_logicalDevice,
+            commandBuffer,
             stagingBuffer,
-            m_commandPool,
             dimensions,
             VulkanImageTypeTraits<VDimensions>::type,
             imageFormat,
+            VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
             m_memoryTypesDeviceLocal)))
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to create image");
             return { };
         }
 
-        if (!(result = image.TransitionToLayout(
-            m_commandPool,
-            VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)))
+        if (!(result = Vulkan::EndSingleTimeCommands(commandBuffer, m_logicalDevice, m_commandPool)))
         {
-            Vulkan::Logger::WriteError(m_logger, result, "Failed transition image to read only optional layout");
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to end single time command.");
             return { };
         }
 
         VkImageViewCreateInfo viewInfo{};
         viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        viewInfo.image = image.GetHandle();
+        viewInfo.image = image.handle;
         viewInfo.viewType = VulkanImageViewTypeTraits<VDimensions>::type;
         viewInfo.format = internalImageFormat;
         viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -100,60 +106,49 @@ namespace Molten
     bool VulkanRenderer::UpdateTexture(
         Vulkan::Image& image,
         const void* data,
-        Vector<VDimensions, uint32_t> destinationDimensions,
-        Vector<VDimensions, uint32_t> destinationOffset)
+        const size_t dataSize,
+        const Vector3ui32& destinationDimensions,
+        const Vector3ui32& destinationOffset)
     {
-        auto getImageSize = [&]() -> std::pair<Vector3ui32, size_t>
-        {
-            if constexpr (VDimensions == 3)
-            {
-                return { destinationDimensions, destinationDimensions.x * destinationDimensions.y * destinationDimensions.z };
-            }
-            else if constexpr (VDimensions == 2)
-            {
-                return { { destinationDimensions.x, destinationDimensions.y, 1 } , destinationDimensions.x * destinationDimensions.y };
-            }
-            else if constexpr (VDimensions == 1)
-            {
-                return { { destinationDimensions.c[0], 1, 1 } , destinationDimensions.c[0] };
-            }
-        };
-        
-        auto [copyDimensions, dataSize] = getImageSize();
+        Vulkan::DeviceBuffer stagingBuffer;
 
         Vulkan::Result<> result;
-
-        Vulkan::DeviceBuffer stagingBuffer;
         if (!(result = stagingBuffer.Create(m_logicalDevice, dataSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, m_memoryTypesHostVisibleOrCoherent)))
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to create staging buffer for image buffer");
-            return false;
+            return { };
         }
 
         if (!(result = stagingBuffer.MapMemory(0, dataSize, data)))
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to map staging buffer for image buffer");
-            return false;
+            return { };
         }
 
-        if (!(result = image.CopyFromBuffer(
-            m_commandPool,
+        VkCommandBuffer commandBuffer = nullptr;
+        if (!(result = Vulkan::BeginSingleTimeCommands(commandBuffer, m_logicalDevice, m_commandPool)))
+        {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to begin single time command.");
+            return { };
+        }
+
+        if (!(result = image.Update(
+            commandBuffer,
             stagingBuffer,
-            copyDimensions)))
+            destinationDimensions,
+            destinationOffset)))
         {
-            Vulkan::Logger::WriteError(m_logger, result, "Failed to copy from buffer to image.");
-            return false;
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to create image");
+            return { };
         }
 
-        if (!(result = image.TransitionToLayout(
-            m_commandPool,
-            VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)))
+        if (!(result = Vulkan::EndSingleTimeCommands(commandBuffer, m_logicalDevice, m_commandPool)))
         {
-            Vulkan::Logger::WriteError(m_logger, result, "Failed transition image to read only optional layout");
-            return false;
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to end single time command.");
+            return { };
         }
 
-        return true;
+        return false;
     }
 
     template<typename T>

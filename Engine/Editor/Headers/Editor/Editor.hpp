@@ -39,6 +39,7 @@
 #include "Molten/Renderer/Renderer.hpp"
 #include "Molten/Gui/Canvas.hpp"
 #include "Editor/Gui/Themes/EditorTheme.hpp"
+#include "Molten/Gui/Font.hpp"
 #include "Molten/System/Semaphore.hpp"
 #include "Molten/System/Clock.hpp"
 #include <optional>
@@ -112,6 +113,7 @@ namespace Molten::Editor
         std::unique_ptr<Renderer> m_renderer;
         std::thread m_thread;
         Gui::CanvasRendererPointer m_canvasRenderer;
+        Gui::FontNameRepository m_fontNameRepository;
         Gui::CanvasPointer<Gui::EditorTheme> m_canvas;
         SleepClock m_fpsLimiter;
         SleepClock m_unfocusedWindowFpsLimiter;

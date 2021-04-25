@@ -35,8 +35,10 @@
 
 #define MOLTEN_PLATFORM_WINDOWS_SUPPORT_MULTI_MONITOR_DPI NTDDI_VERSION >= NTDDI_WINBLUE
 #if(MOLTEN_PLATFORM_WINDOWS_SUPPORT_MULTI_MONITOR_DPI)
-#include <shellscalingapi.h>
+#include <ShellScalingApi.h>
 #endif
+
+#include <ShlObj_core.h>
 
 // Getting rid of conflicting Windows macros.
 #ifdef max

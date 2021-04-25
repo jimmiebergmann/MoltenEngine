@@ -52,7 +52,8 @@ namespace Molten::Gui
 
     public:
 
-        explicit Canvas(CanvasRenderer& canvasRenderer);
+        template<typename ... TThemeArgs>
+        explicit Canvas(CanvasRenderer& canvasRenderer, TThemeArgs&& ... themeArgs);
         ~Canvas() = default;
 
         Canvas(Canvas&&) = delete;

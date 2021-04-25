@@ -59,7 +59,7 @@ namespace Molten::Vulkan
         Image(Image&& image) noexcept;
         Image& operator =(Image&& image) noexcept;
 
-        /** Create image. Device memory is allocated but not populated with anything. */
+        /** Create image. Device memory is allocated but not copied from anything and no layout is set. */
         Result<> Create(
             LogicalDevice& logicalDevice,
             const Vector3ui32& imageDimensions,
@@ -70,52 +70,37 @@ namespace Molten::Vulkan
         /** Create image. Device memory is allocated and copied from staging buffer. */
         Result<> Create(
             LogicalDevice& logicalDevice,
+            VkCommandBuffer& commandBuffer,
             DeviceBuffer& stagingBuffer,
-            const VkCommandPool commandPool,
             const Vector3ui32& imageDimensions,
             const VkImageType imageType,
             const VkFormat imageFormat,
+            const VkImageLayout imageLayout,
             const Vulkan::FilteredMemoryTypes& filteredMemoryTypes);
+
+        /** Copy data from staging buffer to image. */
+        Result<> Update(
+            VkCommandBuffer& commandBuffer,
+            DeviceBuffer& stagingBuffer,
+            const Vector3ui32& destinationDimensions,
+            const Vector3ui32& destinationOffset);
 
         void Destroy();
 
-        bool IsCreated() const;
-
-        Result<> CopyFromBuffer(
-            const VkCommandPool commandPool,
-            const DeviceBuffer& source,
-            const Vector3ui32 dimensions,
-            bool restoreLayout = false);
-
-        Result<> TransitionToLayout(
-            const VkCommandPool commandPool,
-            VkImageLayout layout);
-
-        VkBuffer GetHandle() const;
-
-        VkDeviceMemory GetMemory() const;
-
-        VkImageLayout GetLayout() const;
-
-        VkFormat GetFormat() const;
-
-        LogicalDevice& GetLogicalDevice();
-        const LogicalDevice& GetLogicalDevice() const;
-
-        bool HasLogicalDevice() const;
+        VkImage handle;
+        VkDeviceMemory memory;
+        VkImageLayout layout;
+        VkFormat format;
 
     private:
 
         Result<> LoadImage(
+            VkDevice& logicalDeviceHandle,
             const Vector3ui32& imageDimensions,
             const VkImageType imageType,
             const VkFormat imageFormat,
             const Vulkan::FilteredMemoryTypes& filteredMemoryTypes);
 
-        VkImage m_handle;
-        VkDeviceMemory m_memory;
-        VkImageLayout m_layout;
-        VkFormat m_format;
         LogicalDevice* m_logicalDevice;
 
     };

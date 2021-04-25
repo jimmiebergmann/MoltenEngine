@@ -406,9 +406,7 @@ namespace Molten::Vulkan
 
     bool TransitionImageLayout(
         VkCommandBuffer commandBuffer,
-        LogicalDevice& logicalDevice,
         VkImage image,
-        VkFormat format,
         VkImageLayout oldLayout,
         VkImageLayout newLayout)
     {
@@ -446,6 +444,16 @@ namespace Molten::Vulkan
 
             sourceStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT;
             destStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        }
+        else if(
+            oldLayout == VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL &&
+            newLayout == VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
+        {
+            barrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+            barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+
+            sourceStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+            destStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT;
         }
         else
         {

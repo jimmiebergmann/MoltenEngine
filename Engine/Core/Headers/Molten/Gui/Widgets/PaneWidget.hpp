@@ -29,6 +29,8 @@
 #include "Molten/Gui/Widget.hpp"
 #include "Molten/Gui/DraggableWidget.hpp"
 #include "Molten/Gui/WidgetEvent.hpp"
+#include "Molten/Gui/Widgets/LabelWidget.hpp"
+#include <string>
 
 namespace Molten::Gui
 {
@@ -44,6 +46,7 @@ namespace Molten::Gui
 
         explicit Pane(
             WidgetDataMixin<TTheme, Pane>& data,
+            const std::string& label,
             const WidgetSize& size);
 
         void Update() override;
@@ -54,6 +57,10 @@ namespace Molten::Gui
 
     private:
 
+        void OnCreate() override;
+
+        std::string m_label;
+        Widget<TTheme>* labelWidget;
         Bounds2f32 m_dragBounds;
 
     };

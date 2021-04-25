@@ -46,6 +46,8 @@ namespace Molten::Gui
             const std::string& text,
             const uint32_t height);
 
+    private:
+
         void Update() override;
 
     };

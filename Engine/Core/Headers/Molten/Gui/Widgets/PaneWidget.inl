@@ -29,10 +29,13 @@ namespace Molten::Gui
     template<typename TTheme>
     Pane<TTheme>::Pane(
         WidgetDataMixin<TTheme, Pane>& data,
+        const std::string& label,
         const WidgetSize& size
     ) :
-        WidgetMixin<TTheme, Pane>(data, size)
-    {}
+        WidgetMixin<TTheme, Pane>(data, size),
+        m_label(label),
+        labelWidget(nullptr)
+    { }
 
     template<typename TTheme>
     void Pane<TTheme>::Update()
@@ -46,14 +49,25 @@ namespace Molten::Gui
 
         auto childLane = this->GetChildrenPartialLane();
 
-        if (childLane.GetSize() > 0)
+        if (auto it = childLane.begin(); it != childLane.end())
         {
-            auto& childData = (*childLane.begin()).GetValue();
-            auto contentBounds = grantedBounds
-                .WithoutMargins({0.0f, 20.0f, 0.0f, 0.0f})
-                .WithoutMargins(this->padding)
-                .ClampHighToLow();
-            childData->SetGrantedBounds(contentBounds);
+            if(auto& childData = (*it).GetValue(); childData->GetWidget() == labelWidget)
+            {
+                auto labelPos = Bounds2f32{ { m_dragBounds.left + 4.0f, m_dragBounds.top + 6.0f }, m_dragBounds.high };
+                childData->SetGrantedBounds(labelPos);
+                ++it;
+            }
+
+            if(it != childLane.end())
+            {
+                auto& childData = (*it).GetValue();
+
+                auto contentBounds = grantedBounds
+                    .WithoutMargins({ 0.0f, WidgetSkinType::headerBarHeight, 0.0f, 0.0f })
+                    .WithoutMargins(this->padding)
+                    .ClampHighToLow();
+                childData->SetGrantedBounds(contentBounds);
+            }
         }
 
     }
@@ -68,6 +82,15 @@ namespace Molten::Gui
     const Bounds2f32& Pane<TTheme>::GetDragBounds() const
     {
         return m_dragBounds;
+    }
+
+    template<typename TTheme>
+    void Pane<TTheme>::OnCreate()
+    {
+        if(m_label.size())
+        {
+            labelWidget = this->template CreateChild<Label>(m_label, 16);
+        }
     }
 
 }

@@ -124,9 +124,7 @@ namespace Molten::Vulkan
     /** Function for changing layout of image. */
     MOLTEN_API bool TransitionImageLayout(
         VkCommandBuffer commandBuffer,
-        LogicalDevice& logicalDevice,
         VkImage image,
-        VkFormat format,
         VkImageLayout oldLayout,
         VkImageLayout newLayout);
 

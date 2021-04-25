@@ -29,11 +29,12 @@ namespace Molten::Gui
 {
 
     template<typename TTheme>
-    Canvas<TTheme>::Canvas(CanvasRenderer& canvasRenderer) :
+    template<typename ... TThemeArgs>
+    Canvas<TTheme>::Canvas(CanvasRenderer& canvasRenderer, TThemeArgs&& ... themeArgs) :
         m_canvasRenderer(canvasRenderer),
         m_size(0.0f, 0.0f),
         m_scale(1.0f, 1.0f),
-        m_theme(m_canvasRenderer),
+        m_theme(m_canvasRenderer, std::forward<TThemeArgs>(themeArgs)...),
         m_overlayLayer(nullptr),
         m_widgetOverrideMouseEvents(nullptr),
         m_buttonOverrideMouseEvents(Mouse::Button::Left),
@@ -61,6 +62,8 @@ namespace Molten::Gui
             layer->SetSize(m_size);
             layer->Update({});
         }
+
+        m_theme.Update();
     }
 
     template<typename TTheme>

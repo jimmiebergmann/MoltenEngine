@@ -86,6 +86,8 @@ namespace Molten::Gui
         template<typename TLayerSkin>
         friend class Layer;
 
+        virtual void OnCreate();
+
         virtual void OnAddChild(WidgetData<TTheme>& childData);
 
         virtual void OnRemoveChild(WidgetData<TTheme>& childData); // NOT IN USE YET.

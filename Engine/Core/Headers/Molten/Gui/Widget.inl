@@ -81,6 +81,11 @@ namespace Molten::Gui
     }
 
     template<typename TTheme>
+    void Widget<TTheme>::OnCreate()
+    { 
+    }
+
+    template<typename TTheme>
     void Widget<TTheme>::OnAddChild(WidgetData<TTheme>& childData)
     {
     }

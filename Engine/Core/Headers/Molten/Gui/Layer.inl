@@ -348,6 +348,8 @@ namespace Molten::Gui
             std::move(widgetSkin),
             CreateChildMouseEventFunction(widgetPointer, parent));
 
+        static_cast<Widget<TTheme>*>(widgetPointer)->OnCreate();
+
         if(parent)
         {
             auto& parentWidgetData = parent->GetData();
