@@ -78,7 +78,11 @@ namespace Molten
             const T left,
             const T top,
             const T right,
-            const T bottom);    
+            const T bottom);
+
+        /** Convert constructor. */
+        template<typename U>
+        explicit constexpr Bounds(const Bounds<2, U>& bounds);
 
         /** Get size of bounds */
         constexpr Vector<2, T> GetSize() const;
@@ -165,6 +169,10 @@ namespace Molten
             const T right,
             const T bottom,
             const T far);
+
+        /** Convert constructor. */
+        template<typename U>
+        explicit constexpr Bounds(const Bounds<3, U>& bounds);
 
         /** Get size of bounds */
         constexpr Vector<3, T> GetSize() const;

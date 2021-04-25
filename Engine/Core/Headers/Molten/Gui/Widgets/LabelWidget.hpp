@@ -39,6 +39,7 @@ namespace Molten::Gui
     public:
 
         std::string text;
+        std::string fontFamily;
         uint32_t height;
 
         explicit Label(

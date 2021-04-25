@@ -28,11 +28,11 @@ namespace Molten
 
     // Bounds D.
     template<size_t VDimensions, typename T>
-    inline constexpr Bounds<VDimensions, T>::Bounds()
+    constexpr Bounds<VDimensions, T>::Bounds()
     {}
 
     template<size_t VDimensions, typename T>
-    inline constexpr Bounds<VDimensions, T>::Bounds(
+    constexpr Bounds<VDimensions, T>::Bounds(
         const Vector<VDimensions, T>& low,
         const Vector<VDimensions, T>& high
     ) :
@@ -43,13 +43,13 @@ namespace Molten
 
     // Bounds 2 
     template<typename T>
-    inline constexpr Bounds<2, T>::Bounds() :
+    constexpr Bounds<2, T>::Bounds() :
         low(static_cast<T>(0), static_cast<T>(0)),
         high(static_cast<T>(0), static_cast<T>(0))
     {}
 
     template<typename T>
-    inline constexpr Bounds<2, T>::Bounds(
+    constexpr Bounds<2, T>::Bounds(
         const Vector<2, T>& low,
         const Vector<2, T>& high
     ) :
@@ -58,7 +58,7 @@ namespace Molten
     {}
 
     template<typename T>
-    inline constexpr Bounds<2, T>::Bounds(
+    constexpr Bounds<2, T>::Bounds(
         const T left,
         const T top,
         const T right,
@@ -69,13 +69,20 @@ namespace Molten
     {}
 
     template<typename T>
-    inline constexpr Vector<2, T> Bounds<2, T>::GetSize() const
+    template<typename U>
+    constexpr Bounds<2, T>::Bounds(const Bounds<2, U>& bounds) :
+        low(bounds.low),
+        high(bounds.high)
+    {}
+
+    template<typename T>
+    constexpr Vector<2, T> Bounds<2, T>::GetSize() const
     {
         return high - low;
     }
 
     template<typename T>
-    inline constexpr bool Bounds<2, T>::Intersects(const Vector2<T>& point) const
+    constexpr bool Bounds<2, T>::Intersects(const Vector2<T>& point) const
     {
         return 
             point.x >= low.x && point.x <= high.x &&
@@ -158,13 +165,13 @@ namespace Molten
 
     // Bounds 3
     template<typename T>
-    inline constexpr Bounds<3, T>::Bounds() :
+    constexpr Bounds<3, T>::Bounds() :
         low(static_cast<T>(0), static_cast<T>(0), static_cast<T>(0)),
         high(static_cast<T>(0), static_cast<T>(0), static_cast<T>(0))
     {}
 
     template<typename T>
-    inline constexpr Bounds<3, T>::Bounds(
+    constexpr Bounds<3, T>::Bounds(
         const Vector<3, T>& low,
         const Vector<3, T>& high
     ) :
@@ -173,7 +180,7 @@ namespace Molten
     {}
 
     template<typename T>
-    inline constexpr Bounds<3, T>::Bounds(
+    constexpr Bounds<3, T>::Bounds(
         const T left,
         const T top,
         const T near,
@@ -186,13 +193,20 @@ namespace Molten
     {}
 
     template<typename T>
-    inline constexpr Vector<3, T> Bounds<3, T>::GetSize() const
+    template<typename U>
+    constexpr Bounds<3, T>::Bounds(const Bounds<3, U>& bounds) :
+        low(bounds.low),
+        high(bounds.high)
+    {}
+
+    template<typename T>
+    constexpr Vector<3, T> Bounds<3, T>::GetSize() const
     {
         return high - low;
     }
 
     template<typename T>
-    inline constexpr bool Bounds<3, T>::Intersects(const Vector3<T>& point) const
+    constexpr bool Bounds<3, T>::Intersects(const Vector3<T>& point) const
     {
         return 
             point.x >= low.x && point.x <= high.x &&

@@ -59,16 +59,26 @@ namespace Molten::Gui
 
         void Update()
         {
+            UpdateFontRepository();
+        }
+
+        void UpdateFontRepository()
+        {
             m_fontRepository.ForEachAtlasEvent([&](FontAtlasEventType eventType, FontAtlas* fontAtlas)
             {
-                if(eventType == FontAtlasEventType::New)
+                if (eventType == FontAtlasEventType::New)
                 {
                     auto newTexture = std::make_unique<CanvasRendererTexture>();
+
+                    const auto swizzleMapping = fontAtlas->GetImageFormat() == FontAtlasImageFormat::Gray ?
+                        ImageSwizzleMapping{ ImageComponentSwizzle::One, ImageComponentSwizzle::One, ImageComponentSwizzle::One, ImageComponentSwizzle::Red } :
+                        ImageSwizzleMapping{ };
 
                     const TextureDescriptor2D textureDesc = {
                         fontAtlas->GetBuffer(),
                         fontAtlas->GetImageDimensions(),
-                        fontAtlas->GetImageFormat() == FontAtlasImageFormat::Gray ? ImageFormat::URed8 : ImageFormat::UBlue8Green8Red8Alpha8
+                        fontAtlas->GetImageFormat() == FontAtlasImageFormat::Gray ? ImageFormat::URed8 : ImageFormat::UBlue8Green8Red8Alpha8,
+                        swizzleMapping
                     };
 
                     *newTexture = m_canvasRenderer.CreateTexture(textureDesc);
@@ -190,81 +200,30 @@ namespace Molten::Gui
         {
             // arial.ttf
             // seguiemj.ttf
-            //m_font.ReadFromFile("C:/Windows/Fonts/seguiemj.ttf");
 
-            m_font = theme.m_fontRepository.GetOrCreateFont("arial");
-            m_fontSequence = m_font->CreateGroupedSequence(widget.text, 96, 16);
+            const auto fontFamily = widget.fontFamily.empty() ? "arial" : widget.fontFamily;
+            const auto height = widget.height == 0 ? 16 : widget.height;
+            m_font = theme.m_fontRepository.GetOrCreateFont(fontFamily);
+            m_fontSequence = m_font->CreateGroupedSequence(widget.text, 96, height);
+
+            theme.UpdateFontRepository();
+            m_canvasFontSequence = theme.m_canvasRenderer.CreateFontSequence(m_fontSequence);
         }
 
         void Draw() override
         {
-            auto& grantedBounds = widgetData.GetGrantedBounds();
-            const auto bounds = Bounds2f32{ grantedBounds.low, grantedBounds.low + m_fontSequence.size };
-            theme.m_canvasRenderer.DrawRect(bounds, Vector4f32{ 1.0f, 1.0f, 0.0f, 1.0f });
-
-            /*for(auto& fontGroup : m_fontSequence.groups)
-            {
-                //theme.m_canvasRenderer.DrawRect(bounds, m_texture);
-
-                auto* texture = static_cast<CanvasRendererTexture*>(fontGroup->atlas->metaData);
-            }*/
-
-            /*UpdateTexture();
-
-            auto& grantedBounds = widgetData.GetGrantedBounds();
-            const auto bounds = Bounds2f32{ grantedBounds.low, grantedBounds.low + m_textureSize };
-            theme.m_canvasRenderer.DrawRect(bounds, m_texture);*/
+            auto grantedBounds = widgetData.GetGrantedBounds();
+            grantedBounds.low.x -= m_fontSequence.bounds.low.x;
+            grantedBounds.low.y += m_fontSequence.bounds.GetSize().y;
+            
+            theme.m_canvasRenderer.DrawFontSequence(grantedBounds.low, m_canvasFontSequence);
         }
 
     private:
 
-        void UpdateTexture()
-        {
-           /* std::string text{ static_cast<char>('A' + (rand() % 3)) };
-            //std::string text{ 'A' };
-
-            auto bitmapResult = m_fontSequence.CreateBitmap(text, 96, 18);
-            if(bitmapResult == FontSequenceBitmapResult::Failure)
-            {
-                return;
-            }
-            else if(bitmapResult == FontSequenceBitmapResult::NewBuffer)
-            {
-                const auto swizzleMapping = m_fontSequence.GetImageFormat() == ImageFormat::URed8 ?
-                    ImageSwizzleMapping{ ImageComponentSwizzle::One, ImageComponentSwizzle::One, ImageComponentSwizzle::One, ImageComponentSwizzle::Red } :
-                    ImageSwizzleMapping{ };
-
-                m_textureSize = m_fontSequence.GetCachedImageDimensions();
-
-                const TextureDescriptor2D textureDesc = {
-                    m_fontSequence.GetBuffer(),
-                    m_textureSize,
-                    m_fontSequence.GetImageFormat(),
-                    swizzleMapping
-                };
-
-                m_texture = theme.m_canvasRenderer.CreateTexture(textureDesc);
-            }
-            else if (bitmapResult == FontSequenceBitmapResult::UpdatedBuffer)
-            {
-                m_textureSize = m_fontSequence.GetCachedImageDimensions();
-
-                const TextureUpdateDescriptor2D textureUpdateDesc = {
-                   m_fontSequence.GetBuffer(),
-                   m_textureSize,
-                   {0, 0}
-                };
-
-                theme.m_canvasRenderer.UpdateTexture(m_texture, textureUpdateDesc);
-            }*/
-        }
-
         Font* m_font;
         FontGroupedSequence m_fontSequence;
-
-        //CanvasRendererTexture m_texture;
-        //Vector2ui32 m_textureSize;
-        //FontSequence m_fontSequence;
+        CanvasRendererFontSequence m_canvasFontSequence;
 
     };
 
