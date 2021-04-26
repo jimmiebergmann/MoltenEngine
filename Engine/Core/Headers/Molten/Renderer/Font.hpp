@@ -144,7 +144,9 @@ namespace Molten::Gui
 
     public:
 
-        explicit FontAtlasBin(FontRepository& fontRepository);
+        FontAtlasBin(
+            FontRepository& fontRepository,
+            const Vector2ui32& atlasDimensions);
         ~FontAtlasBin() = default;
 
         FontAtlasBin(const FontAtlasBin&) = delete;
@@ -152,7 +154,6 @@ namespace Molten::Gui
 
         FontAtlasBin& operator = (const FontAtlasBin&) = delete;
         FontAtlasBin& operator = (FontAtlasBin&&) noexcept = default;
-
 
         [[nodiscard]] FontAtlasGlyph* FindGlyph(const uint32_t codePoint);
         [[nodiscard]] FontAtlasGlyph* CreateGlyph(
@@ -176,7 +177,8 @@ namespace Molten::Gui
             const Vector2ui32& dimensions,
             FontAtlas*& lastAffectedAtlas);
 
-        FontRepository* fontRepository;
+        FontRepository* m_fontRepository;
+        Vector2ui32 m_atlasDimensions;
         std::map<uint32_t, std::shared_ptr<FontAtlasGlyph>> m_glyphs;
         std::vector<std::unique_ptr<FontAtlas>> m_grayAtlases;
         std::vector<std::unique_ptr<FontAtlas>> m_bgraAtlases;
@@ -215,7 +217,9 @@ namespace Molten::Gui
 
     public:
 
-        explicit FontRepository(FontNameRepository& nameRepository);
+        FontRepository(
+            FontNameRepository& nameRepository,
+            const Vector2ui32& atlasDimensions);
 
         ~FontRepository();
 
@@ -275,10 +279,15 @@ namespace Molten::Gui
         Font& operator = (const Font&) = delete;
         Font& operator = (Font&&) noexcept = default;
 
+        [[nodiscard]] int32_t GetAscender() const;
+        [[nodiscard]] int32_t GetDescender() const;
+
         [[nodiscard]] FontGroupedSequence CreateGroupedSequence(
             const std::string& text,
             const uint32_t dpi,
             const uint32_t height);
+
+        [[nodiscard]] float CalculateHeightOffset(const Bounds2f32& bounds);
 
     private:
 
@@ -309,9 +318,7 @@ namespace Molten::Gui
     /** Group of font glyphs, composes a sequence of glyphs. All glyphs originates from the same atlas. */
     struct MOLTEN_API FontSequenceGroup
     {
-        FontSequenceGroup(
-            FontAtlas* atlas,
-            const Vector4f32& color);
+        explicit FontSequenceGroup(FontAtlas* atlas);
         ~FontSequenceGroup() = default;
 
         FontSequenceGroup(const FontSequenceGroup&) = delete;
@@ -321,6 +328,7 @@ namespace Molten::Gui
         FontSequenceGroup& operator = (const FontSequenceGroup&) = delete;   
 
         FontAtlas* atlas;
+        Bounds2i32 bounds;
         Vector4f32 color;
         std::vector<std::shared_ptr<FontGlyph>> glyphs;
     };

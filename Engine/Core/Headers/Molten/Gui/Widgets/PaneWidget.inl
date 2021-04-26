@@ -53,8 +53,10 @@ namespace Molten::Gui
         {
             if(auto& childData = (*it).GetValue(); childData->GetWidget() == labelWidget)
             {
-                auto labelPos = Bounds2f32{ { m_dragBounds.left + 4.0f, m_dragBounds.top + 6.0f }, m_dragBounds.high };
-                childData->SetGrantedBounds(labelPos);
+                const auto labelBounds = m_dragBounds
+                    .WithoutMargins({2, 2, 2, 2})
+                    .ClampHighToLow();
+                childData->SetGrantedBounds(labelBounds);
                 ++it;
             }
 
@@ -62,7 +64,7 @@ namespace Molten::Gui
             {
                 auto& childData = (*it).GetValue();
 
-                auto contentBounds = grantedBounds
+                const auto contentBounds = grantedBounds
                     .WithoutMargins({ 0.0f, WidgetSkinType::headerBarHeight, 0.0f, 0.0f })
                     .WithoutMargins(this->padding)
                     .ClampHighToLow();

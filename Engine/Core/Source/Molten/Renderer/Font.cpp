@@ -60,7 +60,8 @@ namespace Molten::Gui
     {
         FontRepositoryImpl(
             FontRepository& repository,
-            FontNameRepository& nameRepository);
+            FontNameRepository& nameRepository,
+            const Vector2ui32& atlasDimensions);
 
         Font* GetFont(const std::string& fontFamily);
 
@@ -75,6 +76,7 @@ namespace Molten::Gui
 
         FontRepository& repository;
         FontNameRepository& nameRepository;
+        const Vector2ui32 atlasDimensions;
         FT_Library ftLibrary;        
         std::map<std::string, std::unique_ptr<Font>> fonts;
 
@@ -107,6 +109,8 @@ namespace Molten::Gui
 
         FontRepositoryImpl& fontRepositoryImpl;
         const std::vector<uint8_t> data;
+        int32_t ascender;
+        int32_t descender;
         FTC_Manager ftCacheManager;
         FTC_CMapCache ftCMapCache;
         FTC_ImageCache ftImageCache;    
@@ -118,10 +122,12 @@ namespace Molten::Gui
     // PIMPL implementations.
     FontRepositoryImpl::FontRepositoryImpl(
         FontRepository& repository,
-        FontNameRepository& nameRepository
+        FontNameRepository& nameRepository,
+        const Vector2ui32& atlasDimensions
     ) :
         repository(repository),
         nameRepository(nameRepository),
+        atlasDimensions(atlasDimensions),
         ftLibrary(nullptr),
         lastAffectedAtlas(nullptr)
     {
@@ -250,6 +256,8 @@ namespace Molten::Gui
     ) :
         fontRepositoryImpl(fontRepositoryImpl),
         data(fontData),
+        ascender(0),
+        descender(0),
         ftCacheManager(nullptr),
         ftCMapCache(nullptr),
         ftImageCache(nullptr)
@@ -287,6 +295,9 @@ namespace Molten::Gui
         {
             return error;
         }
+
+        ascender = face->ascender >> 6;
+        descender = face->descender >> 6;
        
         return 0;
     }
@@ -383,7 +394,13 @@ namespace Molten::Gui
             }
 
             // Create new.
-            const auto newSequenceGroup = std::make_shared<FontSequenceGroup>(fontAtlas, Vector4f32{ 1.0f, 1.0f, 1.0f, 1.0f });
+            const auto newSequenceGroup = std::make_shared<FontSequenceGroup>(fontAtlas);
+
+            newSequenceGroup->bounds = Bounds2<int32_t>{
+               std::numeric_limits<int32_t>::max(),
+               std::numeric_limits<int32_t>::max(),
+               std::numeric_limits<int32_t>::min(),
+               std::numeric_limits<int32_t>::min() };
 
             groups.push_back(newSequenceGroup);
             currentAtlas = fontAtlas;
@@ -409,32 +426,31 @@ namespace Molten::Gui
             return 0;
         };
 
-        auto textBounds = Bounds2<int32_t>{
+        groupedSequence.bounds = Bounds2<int32_t>{
             std::numeric_limits<int32_t>::max(),
             std::numeric_limits<int32_t>::max(),
             std::numeric_limits<int32_t>::min(),
-            std::numeric_limits<int32_t>::min()
-        };
-        auto addGlyphToTextBounds = [&](FontGlyph& fontGlyph)
-        {
-            if (fontGlyph.bounds.low.x < textBounds.low.x)
-            {
-                textBounds.low.x = fontGlyph.bounds.low.x;
-            }
-            if (fontGlyph.bounds.low.y < textBounds.low.y)
-            {
-                textBounds.low.y = fontGlyph.bounds.low.y;
-            }
-            if (fontGlyph.bounds.high.x > textBounds.high.x)
-            {
-                textBounds.high.x = fontGlyph.bounds.high.x;
-            }
-            if (fontGlyph.bounds.high.y > textBounds.high.y)
-            {
-                textBounds.high.y = fontGlyph.bounds.high.y;
-            }
-        };
+            std::numeric_limits<int32_t>::min() };
 
+        auto appendBounds = [](Bounds2<int32_t>& output, const Bounds2<int32_t>& input)
+        {
+            if (input.low.x < output.low.x)
+            {
+                output.low.x = input.low.x;
+            }
+            if (input.low.y < output.low.y)
+            {
+                output.low.y = input.low.y;
+            }
+            if (input.high.x > output.high.x)
+            {
+                output.high.x = input.high.x;
+            }
+            if (input.high.y > output.high.y)
+            {
+                output.high.y = input.high.y;
+            }
+        };
 
         int32_t penPos = 0;
         for(const auto codePoint : Utf8Decoder{ text })
@@ -457,7 +473,9 @@ namespace Molten::Gui
                 fontAtlasGlyph, 
                 Bounds2i32{ glyphPosition, glyphPosition + glyphTextureSize } );
 
-            addGlyphToTextBounds(*newGlyph);
+            appendBounds(sequenceGroup->bounds, newGlyph->bounds);
+            appendBounds(groupedSequence.bounds, newGlyph->bounds);      
+
             sequenceGroup->glyphs.push_back(newGlyph);
             groupedSequence.glyphs.push_back(newGlyph);
 
@@ -471,7 +489,6 @@ namespace Molten::Gui
         }
 
         // Finished.
-        groupedSequence.bounds = textBounds;
         return groupedSequence;
     }
 
@@ -482,7 +499,7 @@ namespace Molten::Gui
             return it->second.get();
         }
 
-        auto it = m_atlasBins.insert({ fontHeight, std::make_unique<FontAtlasBin>(fontRepositoryImpl.repository) });       
+        auto it = m_atlasBins.insert({ fontHeight, std::make_unique<FontAtlasBin>(fontRepositoryImpl.repository, fontRepositoryImpl.atlasDimensions) });
         return it.first->second.get();
     }
 
@@ -696,8 +713,12 @@ namespace Molten::Gui
 
 
     // Font atlas bin implementations.
-    FontAtlasBin::FontAtlasBin(FontRepository& fontRepository) :
-        fontRepository(&fontRepository)
+    FontAtlasBin::FontAtlasBin(
+        FontRepository& fontRepository,
+        const Vector2ui32& atlasDimensions
+    ) :
+        m_fontRepository(&fontRepository),
+        m_atlasDimensions(atlasDimensions)
     {}
 
     FontAtlasGlyph* FontAtlasBin::FindGlyph(const uint32_t codePoint)
@@ -731,19 +752,18 @@ namespace Molten::Gui
     {
         auto createAtlas = [&]()
         {
-            const auto imageDimensions = Vector2ui32{ 512, 512 };
-            const size_t bufferSize = imageDimensions.x * imageDimensions.y;
+            const size_t bufferSize = m_atlasDimensions.x * m_atlasDimensions.y;
             auto newBuffer = std::make_unique<uint8_t[]>(bufferSize);
 
             auto newAtlas = std::make_unique<FontAtlas>(
                 std::move(newBuffer),
                 bufferSize,
                 FontAtlasImageFormat::Gray,
-                imageDimensions);
+                m_atlasDimensions);
 
             auto* newAtlasPtr = newAtlas.get();
 
-            fontRepository->AddAtlasNewEvent(newAtlasPtr);
+            m_fontRepository->AddAtlasNewEvent(newAtlasPtr);
             lastAffectedAtlas = newAtlasPtr;
 
             m_grayAtlases.push_back(std::move(newAtlas));
@@ -790,7 +810,7 @@ namespace Molten::Gui
 
         if(lastAffectedAtlas != fontAtlas)
         {
-            fontRepository->AddAtlasUpdateEvent(fontAtlas);
+            m_fontRepository->AddAtlasUpdateEvent(fontAtlas);
             lastAffectedAtlas = fontAtlas;
         }
 
@@ -807,25 +827,23 @@ namespace Molten::Gui
     {
         auto createAtlas = [&]()
         {
-            const auto imageDimensions = Vector2ui32{ 512, 512 };
-            const size_t bufferSize = imageDimensions.x * imageDimensions.y * 4;
+            const size_t bufferSize = m_atlasDimensions.x * m_atlasDimensions.y * 4;
             auto newBuffer = std::make_unique<uint8_t[]>(bufferSize);
 
             auto newAtlas = std::make_unique<FontAtlas>(
                 std::move(newBuffer),
                 bufferSize,
                 FontAtlasImageFormat::BlueGreenRedAlpha,
-                imageDimensions);
+                m_atlasDimensions);
 
             auto* newAtlasPtr = newAtlas.get();
 
-            fontRepository->AddAtlasNewEvent(newAtlasPtr);
+            m_fontRepository->AddAtlasNewEvent(newAtlasPtr);
             lastAffectedAtlas = newAtlasPtr;
 
             m_bgraAtlases.push_back(std::move(newAtlas));
             return newAtlasPtr;
         };
-
 
         FontAtlas* fontAtlas = nullptr;
         Bounds2ui32 glyphBounds;
@@ -869,7 +887,7 @@ namespace Molten::Gui
 
         if (lastAffectedAtlas != fontAtlas)
         {
-            fontRepository->AddAtlasUpdateEvent(fontAtlas);
+            m_fontRepository->AddAtlasUpdateEvent(fontAtlas);
             lastAffectedAtlas = fontAtlas;
         }
 
@@ -897,9 +915,13 @@ namespace Molten::Gui
 
     // Font repository implementations.
     FontRepository::FontRepository(
-        FontNameRepository& nameRepository
+        FontNameRepository& nameRepository,
+        const Vector2ui32& atlasDimensions
     ) :
-        m_impl(new FontRepositoryImpl(*this, nameRepository))
+        m_impl(new FontRepositoryImpl(
+            *this,
+            nameRepository,
+            Vector2ui32{ std::max(atlasDimensions.x, 128u), std::max(atlasDimensions.y, 128u) }))
     {}
 
     FontRepository::~FontRepository()
@@ -956,12 +978,32 @@ namespace Molten::Gui
         delete m_impl;
     }
 
+    int32_t Font::GetAscender() const
+    {
+        return m_impl->ascender;
+    }
+
+    int32_t Font::GetDescender() const
+    {
+        return m_impl->descender;
+    }
+
     FontGroupedSequence Font::CreateGroupedSequence(
         const std::string& text,
         const uint32_t dpi,
         const uint32_t height)
     {
         return m_impl->CreateGroupedSequence(text, dpi, height);
+    }
+
+    float Font::CalculateHeightOffset(const Bounds2f32& bounds)
+    {
+        const float ascender = static_cast<float>(m_impl->ascender);
+        const float descender = static_cast<float>(m_impl->descender);
+        const float factor = ascender / (ascender - descender);
+
+        const float boundsHeight = bounds.high.y - bounds.low.y;
+        return boundsHeight * factor;
     }
 
 
@@ -976,12 +1018,9 @@ namespace Molten::Gui
 
 
     // Font sequence grouped implementations.
-    FontSequenceGroup::FontSequenceGroup(
-        FontAtlas* atlas,
-        const Vector4f32& color
-    ) :
+    FontSequenceGroup::FontSequenceGroup(FontAtlas* atlas) :
         atlas(atlas),
-        color(color)
+        color(1.0f, 1.0f, 1.0f, 1.0f)
     {}
 
 }

@@ -52,7 +52,7 @@ namespace Molten::Gui
 
         EditorTheme(CanvasRenderer& canvasRenderer, FontNameRepository& fontNameRepository) :
             m_canvasRenderer(canvasRenderer),
-            m_fontRepository(fontNameRepository)
+            m_fontRepository(fontNameRepository, {512, 512})
         {}
 
         void Update()
@@ -212,7 +212,7 @@ namespace Molten::Gui
         {
             auto grantedBounds = widgetData.GetGrantedBounds();
             grantedBounds.low.x -= m_fontSequence.bounds.low.x;
-            grantedBounds.low.y += m_fontSequence.bounds.GetSize().y;
+            grantedBounds.low.y += m_font->CalculateHeightOffset(grantedBounds);
             
             theme.m_canvasRenderer.DrawFontSequence(grantedBounds.low, m_canvasFontSequence);
         }
