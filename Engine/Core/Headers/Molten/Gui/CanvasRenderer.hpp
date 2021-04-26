@@ -34,7 +34,7 @@
 #include "Molten/Renderer/Sampler.hpp"
 #include "Molten/Renderer/Texture.hpp"
 #include "Molten/Renderer/VertexBuffer.hpp"
-#include "Molten/Gui/Font.hpp"
+#include "Molten/Renderer/Font.hpp"
 
 namespace Molten
 {

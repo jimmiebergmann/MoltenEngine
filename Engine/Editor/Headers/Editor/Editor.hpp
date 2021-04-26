@@ -37,9 +37,9 @@
 
 #include "Molten/Window/Window.hpp"
 #include "Molten/Renderer/Renderer.hpp"
+#include "Molten/Renderer/Font.hpp"
 #include "Molten/Gui/Canvas.hpp"
 #include "Editor/Gui/Themes/EditorTheme.hpp"
-#include "Molten/Gui/Font.hpp"
 #include "Molten/System/Semaphore.hpp"
 #include "Molten/System/Clock.hpp"
 #include <optional>

@@ -38,8 +38,6 @@
 #include "Molten/Gui/Widgets/VerticalGridWidget.hpp"
 #include "Molten/Gui/Widgets/LabelWidget.hpp"
 
-#include "Molten/Gui/Font.hpp"
-
 #include <memory>
 
 namespace Molten::Gui

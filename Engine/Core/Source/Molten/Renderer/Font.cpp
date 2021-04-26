@@ -23,7 +23,7 @@
 *
 */
 
-#include "Molten/Gui/Font.hpp"
+#include "Molten/Renderer/Font.hpp"
 #include "Molten/Utility/Utf8Decoder.hpp"
 #include "Molten/Utility/SmartFunction.hpp"
 #include "ThirdParty/FreeType2/include/freetype/freetype.h"

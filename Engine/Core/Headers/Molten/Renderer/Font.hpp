@@ -23,8 +23,8 @@
 *
 */
 
-#ifndef MOLTEN_CORE_GUI_FONT_HPP
-#define MOLTEN_CORE_GUI_FONT_HPP
+#ifndef MOLTEN_CORE_RENDERER_FONT_HPP
+#define MOLTEN_CORE_RENDERER_FONT_HPP
 
 #include "Molten/Math/Vector.hpp"
 #include "Molten/Math/Bounds.hpp"
