@@ -150,9 +150,9 @@ namespace Molten
 
         /** Update texture data. */
         /**@{*/
-        virtual bool UpdateTexture(Texture1D& texture1D, const TextureUpdateDescriptor1D& descriptor) { return false; }
-        virtual bool UpdateTexture(Texture2D& texture2D, const TextureUpdateDescriptor2D& descriptor) { return false; }
-        virtual bool UpdateTexture(Texture3D& texture3D, const TextureUpdateDescriptor3D& descriptor) { return false; }
+        virtual bool UpdateTexture(Texture1D& texture1D, const TextureUpdateDescriptor1D& descriptor) = 0;
+        virtual bool UpdateTexture(Texture2D& texture2D, const TextureUpdateDescriptor2D& descriptor) = 0;
+        virtual bool UpdateTexture(Texture3D& texture3D, const TextureUpdateDescriptor3D& descriptor) = 0;
         /**@}*/
 
 

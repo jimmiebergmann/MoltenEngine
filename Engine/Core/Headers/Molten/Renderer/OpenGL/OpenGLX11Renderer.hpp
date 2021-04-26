@@ -128,6 +128,15 @@ namespace Molten
         /** Create vertex buffer object. */
         RenderResource<VertexBuffer> CreateVertexBuffer(const VertexBufferDescriptor& descriptor) override;
 
+
+        /** Update texture data. */
+        /**@{*/
+        bool UpdateTexture(Texture1D& texture1D, const TextureUpdateDescriptor1D& descriptor) override;
+        bool UpdateTexture(Texture2D& texture3D, const TextureUpdateDescriptor2D& descriptor) override;
+        bool UpdateTexture(Texture3D& texture2D, const TextureUpdateDescriptor3D& descriptor) override;
+        /**@}*/
+
+
         /** Destroys render resource. */
         /**@{*/
         void Destroy(DescriptorSet& descriptorSet) override;

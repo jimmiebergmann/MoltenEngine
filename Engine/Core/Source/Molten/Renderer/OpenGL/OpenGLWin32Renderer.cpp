@@ -263,6 +263,21 @@ namespace Molten
         return { };
     }
 
+    bool OpenGLWin32Renderer::UpdateTexture(Texture1D& /*texture1D*/, const TextureUpdateDescriptor1D& /*descriptor*/)
+    {
+        return false;
+    }
+
+    bool OpenGLWin32Renderer::UpdateTexture(Texture2D& /*texture3D*/, const TextureUpdateDescriptor2D& /*descriptor*/)
+    {
+        return false;
+    }
+
+    bool OpenGLWin32Renderer::UpdateTexture(Texture3D& /*texture2D*/, const TextureUpdateDescriptor3D& /*descriptor*/)
+    {
+        return false;
+    }
+
     void OpenGLWin32Renderer::Destroy(DescriptorSet& /*descriptorSet*/)
     {
     }
