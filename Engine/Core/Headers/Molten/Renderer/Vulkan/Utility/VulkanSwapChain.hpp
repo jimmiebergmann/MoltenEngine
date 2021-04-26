@@ -72,6 +72,7 @@ namespace Molten::Vulkan
         VkSurfaceFormatKHR GetSurfaceFormat() const;
 
         uint32_t GetImageCount() const;
+        uint32_t GetMaxFramesInFlight() const;
 
         uint32_t GetCurrentImageIndex() const;
         uint32_t GetCurrentFrameIndex()  const;

@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -360,6 +360,7 @@ namespace Molten
         m_surface{},
         m_physicalDevice{},
         m_logicalDevice{},
+        m_resourceDestroyer(m_logicalDevice),
         m_renderPass(VK_NULL_HANDLE),
         m_swapChain{},
         m_surfaceFormat{},
@@ -368,7 +369,8 @@ namespace Molten
         m_commandBuffers{},
         m_currentCommandBuffer(nullptr),
         m_beginDraw(false),
-        m_currentPipeline(nullptr)
+        m_currentPipeline(nullptr),
+        m_endedDraws(0)
     {}
 
     VulkanRenderer::VulkanRenderer(RenderTarget& renderTarget, const Version& version, Logger* logger) :
@@ -410,6 +412,8 @@ namespace Molten
 
     void VulkanRenderer::Close()
     {
+        m_resourceDestroyer.ProcessAll();
+
         if (m_logicalDevice.IsCreated())
         {
             m_logicalDevice.WaitIdle();
@@ -450,6 +454,7 @@ namespace Molten
         m_currentCommandBuffer = nullptr;
         m_beginDraw = false;      
         m_currentPipeline = nullptr;
+        m_endedDraws = 0;
     }
 
     bool VulkanRenderer::IsOpen() const
@@ -1445,86 +1450,87 @@ namespace Molten
     void VulkanRenderer::Destroy(DescriptorSet& descriptorSet)
     {
         auto& vulkanDescriptorSet = static_cast<VulkanDescriptorSet&>(descriptorSet);
-        vkDestroyDescriptorPool(m_logicalDevice.GetHandle(), vulkanDescriptorSet.descriptorPool, nullptr);
+        m_resourceDestroyer.Add(GetNextDestroyerFrameIndex(), vulkanDescriptorSet);
     }
 
     void VulkanRenderer::Destroy(FramedDescriptorSet& framedDescriptorSet)
     {
         auto& vulkanFramedDescriptorSet = static_cast<VulkanFramedDescriptorSet&>(framedDescriptorSet);
-        vkDestroyDescriptorPool(m_logicalDevice.GetHandle(), vulkanFramedDescriptorSet.descriptorPool, nullptr);
+        m_resourceDestroyer.Add(GetNextDestroyerFrameIndex(), vulkanFramedDescriptorSet);
     }
 
-    void VulkanRenderer::Destroy(Framebuffer& /*framebuffer*/)
+    void VulkanRenderer::Destroy(Framebuffer& framebuffer)
     {
+        // Not implemented yet, due to missing creation implementations.
+        //
+        //auto& vulkanFramebuffer = static_cast<VulkanFramebuffer&>(framebuffer);
+        //m_resourceDestroyer.Add(GetNextDestroyerFrameIndex(), vulkanFramebuffer);
     }
 
-    void VulkanRenderer::Destroy(IndexBuffer& /*indexBuffer*/)
+    void VulkanRenderer::Destroy(IndexBuffer& indexBuffer)
     {
+        auto& vulkanIndexBuffer = static_cast<VulkanIndexBuffer&>(indexBuffer);
+        m_resourceDestroyer.Add(GetNextDestroyerFrameIndex(), vulkanIndexBuffer);
     }
 
     void VulkanRenderer::Destroy(Pipeline& pipeline)
     {
         auto& vulkanPipeline = static_cast<VulkanPipeline&>(pipeline);
-
-        if (vulkanPipeline.graphicsPipeline)
-        {
-            vkDeviceWaitIdle(m_logicalDevice.GetHandle());
-            vkDestroyPipeline(m_logicalDevice.GetHandle(), vulkanPipeline.graphicsPipeline, nullptr);
-        }
-        if (vulkanPipeline.pipelineLayout)
-        {
-            vkDestroyPipelineLayout(m_logicalDevice.GetHandle(), vulkanPipeline.pipelineLayout, nullptr);
-        }
-        for (auto& setLayout : vulkanPipeline.descriptionSetLayouts)
-        {
-            vkDestroyDescriptorSetLayout(m_logicalDevice.GetHandle(), setLayout, nullptr);
-        }
-        for (auto& shaderModule : vulkanPipeline.shaderModules)
-        {
-            shaderModule.Destroy();
-        }
+        m_resourceDestroyer.Add(GetNextDestroyerFrameIndex(), vulkanPipeline);
     }
 
-    void VulkanRenderer::Destroy(Sampler1D& /*sampler1D*/)
+    void VulkanRenderer::Destroy(Sampler1D& sampler1D)
     {
+        auto& vulkanSampler = static_cast<VulkanSampler1D&>(sampler1D);
+        m_resourceDestroyer.Add(GetNextDestroyerFrameIndex(), vulkanSampler);
     }
 
-    void VulkanRenderer::Destroy(Sampler2D& /*sampler2D*/)
+    void VulkanRenderer::Destroy(Sampler2D& sampler2D)
     {
+        auto& vulkanSampler = static_cast<VulkanSampler2D&>(sampler2D);
+        m_resourceDestroyer.Add(GetNextDestroyerFrameIndex(), vulkanSampler);
     }
 
-    void VulkanRenderer::Destroy(Sampler3D& /*sampler3D*/)
-    {   
+    void VulkanRenderer::Destroy(Sampler3D& sampler3D)
+    {
+        auto& vulkanSampler = static_cast<VulkanSampler3D&>(sampler3D);
+        m_resourceDestroyer.Add(GetNextDestroyerFrameIndex(), vulkanSampler);
     }
 
     void VulkanRenderer::Destroy(Texture1D& texture1D)
     {
         auto& vulkanTexture = static_cast<VulkanTexture1D&>(texture1D);
-        vkDestroyImageView(m_logicalDevice.GetHandle(), vulkanTexture.imageView, nullptr);
+        m_resourceDestroyer.Add(GetNextDestroyerFrameIndex(), vulkanTexture);
     }
 
     void VulkanRenderer::Destroy(Texture2D& texture2D)
     {
         auto& vulkanTexture = static_cast<VulkanTexture2D&>(texture2D);
-        vkDestroyImageView(m_logicalDevice.GetHandle(), vulkanTexture.imageView, nullptr);
+        m_resourceDestroyer.Add(GetNextDestroyerFrameIndex(), vulkanTexture);
     }
 
     void VulkanRenderer::Destroy(Texture3D& texture3D)
     {
         auto& vulkanTexture = static_cast<VulkanTexture3D&>(texture3D);
-        vkDestroyImageView(m_logicalDevice.GetHandle(), vulkanTexture.imageView, nullptr);
+        m_resourceDestroyer.Add(GetNextDestroyerFrameIndex(), vulkanTexture);
     }
 
-    void VulkanRenderer::Destroy(UniformBuffer& /*uniformBuffer*/)
+    void VulkanRenderer::Destroy(UniformBuffer& uniformBuffer)
     {
+        auto& vulkanUniformBuffer = static_cast<VulkanUniformBuffer&>(uniformBuffer);
+        m_resourceDestroyer.Add(GetNextDestroyerFrameIndex(), vulkanUniformBuffer);
     }
 
-    void VulkanRenderer::Destroy(FramedUniformBuffer& /*framedUniformBuffer*/)
+    void VulkanRenderer::Destroy(FramedUniformBuffer& framedUniformBuffer)
     {
+        auto& vulkanFramedUniformBuffer = static_cast<VulkanFramedUniformBuffer&>(framedUniformBuffer);
+        m_resourceDestroyer.Add(GetNextDestroyerFrameIndex(), vulkanFramedUniformBuffer);
     }
 
-    void VulkanRenderer::Destroy(VertexBuffer& /*vertexBuffer*/)
-    {        
+    void VulkanRenderer::Destroy(VertexBuffer& vertexBuffer)
+    {
+        auto& vulkanVertexBuffer = static_cast<VulkanVertexBuffer&>(vertexBuffer);
+        m_resourceDestroyer.Add(GetNextDestroyerFrameIndex(), vulkanVertexBuffer);
     }
 
     void VulkanRenderer::BindDescriptorSet(DescriptorSet& descriptorSet)
@@ -1705,6 +1711,10 @@ namespace Molten
         }
 
         m_beginDraw = false;
+
+        m_resourceDestroyer.Process(m_endedDraws);
+
+        ++m_endedDraws;
     }
 
     void VulkanRenderer::WaitForDevice()
@@ -2079,6 +2089,11 @@ namespace Molten
         }
 
         return true;
+    }
+
+    uint32_t VulkanRenderer::GetNextDestroyerFrameIndex() const
+    {
+        return m_endedDraws + m_swapChain.GetMaxFramesInFlight() + 2;
     }
 
     bool VulkanRenderer::CreateVertexInputAttributes(

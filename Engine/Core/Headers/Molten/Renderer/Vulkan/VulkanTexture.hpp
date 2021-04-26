@@ -31,7 +31,6 @@
 #if defined(MOLTEN_ENABLE_VULKAN)
 #include "Molten/Renderer/Vulkan/VulkanHeaders.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanImage.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanImageSampler.hpp"
 
 namespace Molten
 {

@@ -234,9 +234,14 @@ namespace Molten::Vulkan
         return m_imageCount;
     }
 
+    uint32_t SwapChain::GetMaxFramesInFlight() const
+    {
+        return m_maxFramesInFlight;
+    }
+
     uint32_t SwapChain::GetCurrentImageIndex() const
     {
-        return m_currentFrameIndex;
+        return m_currentImageIndex;
     }
     uint32_t SwapChain::GetCurrentFrameIndex() const
     {

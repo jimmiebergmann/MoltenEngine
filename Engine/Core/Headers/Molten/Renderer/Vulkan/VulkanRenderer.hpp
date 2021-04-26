@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -31,6 +31,7 @@
 #include "Molten/Renderer/Shader/Visual/VisualShaderStructure.hpp"
 
 #if defined(MOLTEN_ENABLE_VULKAN)
+#include "Molten/Renderer/Vulkan/VulkanResourceDestroyer.hpp"
 #include "Molten/Renderer/Vulkan/VulkanPipeline.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanInstance.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanSurface.hpp"
@@ -225,6 +226,11 @@ namespace Molten
         bool LoadCommandPool();
         /**@}*/
 
+        /** Get next cleanup frame index. */
+        uint32_t GetNextDestroyerFrameIndex() const;
+
+        /** Texture creation/update helper functions.*/
+        /**@{*/
         template<size_t VDimensions>
         RenderResource<Texture<VDimensions>> CreateTexture(
             const Vector3ui32& dimensions,
@@ -241,7 +247,7 @@ namespace Molten
             const size_t dataSize,
             const Vector3ui32& destinationDimensions,
             const Vector3ui32& destinationOffset);
-    
+        /**@}*/
 
         /** Shader creation and manipulation functions. */
         /**@{*/
@@ -288,10 +294,11 @@ namespace Molten
         bool m_isOpen;
         bool m_enableDebugMessenger;
         Vulkan::Layers m_debugInstanceLayers;
-        Vulkan::Instance m_instance;
+        Vulkan::Instance m_instance;       
         Vulkan::Surface m_surface;
         Vulkan::PhysicalDevice m_physicalDevice;
         Vulkan::LogicalDevice m_logicalDevice;
+        Vulkan::ResourceDestroyer m_resourceDestroyer;
         VkRenderPass m_renderPass;
         Vulkan::SwapChain m_swapChain;
         VkSurfaceFormatKHR m_surfaceFormat;
@@ -300,6 +307,7 @@ namespace Molten
         std::vector<VkCommandBuffer> m_commandBuffers;
         VkCommandBuffer* m_currentCommandBuffer;
         bool m_beginDraw;
+        uint32_t m_endedDraws;
         VulkanPipeline* m_currentPipeline;
         Shader::GlslGenerator m_glslGenerator;
         /**@}*/
