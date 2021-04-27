@@ -31,11 +31,11 @@ namespace Molten
 {
 
     VulkanIndexBuffer::VulkanIndexBuffer(
-        Vulkan::DeviceBuffer&& buffer,
+        Vulkan::DeviceBuffer&& deviceBuffer,
         const size_t indexCount,
         const DataType dataType
     ) :
-        buffer(std::move(buffer)),
+        deviceBuffer(std::move(deviceBuffer)),
         indexCount(indexCount),
         dataType(dataType)
     {}

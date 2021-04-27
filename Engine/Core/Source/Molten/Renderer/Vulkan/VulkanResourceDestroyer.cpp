@@ -41,6 +41,7 @@
 namespace Molten::Vulkan
 {
 
+    // Global implementations.
     static const uint32_t g_lowerQuarterOfMaxUnit32 = (std::numeric_limits<uint32_t>::max() / 4);
     static const uint32_t g_upperQuarterOfMaxUnit32 = (std::numeric_limits<uint32_t>::max() / 4) * 3;
 
@@ -58,6 +59,8 @@ namespace Molten::Vulkan
         return currentFrameIndex >= cleanupFrameIndex;
     }
 
+
+    // Vulkan resource destroyer implementations.
     ResourceDestroyer::ResourceDestroyer(LogicalDevice& logicalDevice) :
         m_logicalDevice(logicalDevice)
     {}
@@ -130,7 +133,7 @@ namespace Molten::Vulkan
         descriptorSet.descriptorPool = VK_NULL_HANDLE;
     }
 
-    void ResourceDestroyer::Add(const uint32_t cleanupFrameIndex, VulkanFramebuffer& framebuffer)
+    void ResourceDestroyer::Add(const uint32_t /*cleanupFrameIndex*/, VulkanFramebuffer& /*ramebuffer*/)
     {
         // Not implemented yet, due to missing creation implementations.
     }
@@ -138,7 +141,7 @@ namespace Molten::Vulkan
     void ResourceDestroyer::Add(const uint32_t cleanupFrameIndex, VulkanIndexBuffer& indexBuffer)
     {
         m_cleanupQueue.emplace<CleanupData>({ cleanupFrameIndex, IndexBufferCleanup{
-           std::move(indexBuffer.buffer)
+           std::move(indexBuffer.deviceBuffer)
         } });
     }
 
@@ -223,7 +226,7 @@ namespace Molten::Vulkan
     void ResourceDestroyer::Add(const uint32_t cleanupFrameIndex, VulkanVertexBuffer& vertexBuffer)
     {
         m_cleanupQueue.emplace<CleanupData>({ cleanupFrameIndex, VertexBufferCleanup{
-            std::move(vertexBuffer.buffer)
+            std::move(vertexBuffer.deviceBuffer)
         } });
 
         vertexBuffer.vertexCount = 0;
@@ -248,14 +251,14 @@ namespace Molten::Vulkan
         vkDestroyDescriptorPool(m_logicalDevice.GetHandle(), data.descriptorPool, nullptr);
     }
 
-    void ResourceDestroyer::Process(FramebufferCleanup& data)
+    void ResourceDestroyer::Process(FramebufferCleanup& /*data*/)
     {
         // Not implemented yet, due to missing creation implementations.
     }
 
     void ResourceDestroyer::Process(IndexBufferCleanup& data)
     {
-        data.buffer.Destroy();
+        data.deviceBuffer.Destroy();
     }
 
     void ResourceDestroyer::Process(PipelineCleanup& data)
@@ -305,7 +308,7 @@ namespace Molten::Vulkan
 
     void ResourceDestroyer::Process(VertexBufferCleanup& data)
     {
-        data.buffer.Destroy();
+        data.deviceBuffer.Destroy();
     }
 
 }

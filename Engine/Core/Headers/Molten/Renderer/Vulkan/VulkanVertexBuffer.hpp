@@ -43,11 +43,11 @@ namespace Molten
         using Base = VertexBuffer;
 
         VulkanVertexBuffer(
-            Vulkan::DeviceBuffer&& buffer,
+            Vulkan::DeviceBuffer&& deviceBuffer,
             const uint32_t vertexCount,
             const uint32_t vertexSize);
 
-        Vulkan::DeviceBuffer buffer;
+        Vulkan::DeviceBuffer deviceBuffer;
         uint32_t vertexCount;
         uint32_t vertexSize;
 

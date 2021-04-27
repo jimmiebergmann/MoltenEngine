@@ -110,7 +110,7 @@ namespace Molten::Vulkan
 
         struct IndexBufferCleanup
         {
-            DeviceBuffer buffer;
+            DeviceBuffer deviceBuffer;
         };
 
         struct PipelineCleanup
@@ -144,7 +144,7 @@ namespace Molten::Vulkan
 
         struct VertexBufferCleanup
         {
-            DeviceBuffer buffer;
+            DeviceBuffer deviceBuffer;
         };
 
         using CleanupVariant = std::variant<

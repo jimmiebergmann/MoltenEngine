@@ -1459,7 +1459,7 @@ namespace Molten
         m_resourceDestroyer.Add(GetNextDestroyerFrameIndex(), vulkanFramedDescriptorSet);
     }
 
-    void VulkanRenderer::Destroy(Framebuffer& framebuffer)
+    void VulkanRenderer::Destroy(Framebuffer& /*framebuffer*/)
     {
         // Not implemented yet, due to missing creation implementations.
         //
@@ -1638,7 +1638,7 @@ namespace Molten
     {
         auto& vulkanVertexBuffer = static_cast<VulkanVertexBuffer&>(vertexBuffer);
 
-        VkBuffer vertexBuffers[] = { vulkanVertexBuffer.buffer.GetHandle() };
+        VkBuffer vertexBuffers[] = { vulkanVertexBuffer.deviceBuffer.GetHandle() };
         const VkDeviceSize offsets[] = { 0 };
 
         vkCmdBindVertexBuffers(*m_currentCommandBuffer, 0, 1, vertexBuffers, offsets);
@@ -1650,11 +1650,11 @@ namespace Molten
         auto& vulkanIndexBuffer = static_cast<VulkanIndexBuffer&>(indexBuffer);
         auto& vulkanVertexBuffer = static_cast<VulkanVertexBuffer&>(vertexBuffer);
 
-        VkBuffer vertexBuffers[] = { vulkanVertexBuffer.buffer.GetHandle() };
+        VkBuffer vertexBuffers[] = { vulkanVertexBuffer.deviceBuffer.GetHandle() };
         const VkDeviceSize offsets[] = { 0 };
 
         vkCmdBindVertexBuffers(*m_currentCommandBuffer, 0, 1, vertexBuffers, offsets);
-        vkCmdBindIndexBuffer(*m_currentCommandBuffer, vulkanIndexBuffer.buffer.GetHandle(), 0, GetIndexBufferDataType(vulkanIndexBuffer.dataType));
+        vkCmdBindIndexBuffer(*m_currentCommandBuffer, vulkanIndexBuffer.deviceBuffer.GetHandle(), 0, GetIndexBufferDataType(vulkanIndexBuffer.dataType));
         vkCmdDrawIndexed(*m_currentCommandBuffer, static_cast<uint32_t>(vulkanIndexBuffer.indexCount), 1, 0, 0, 0);
     }
 

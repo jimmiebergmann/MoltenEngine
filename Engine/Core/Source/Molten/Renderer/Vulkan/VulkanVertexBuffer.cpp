@@ -31,11 +31,11 @@ namespace Molten
 {
 
     VulkanVertexBuffer::VulkanVertexBuffer(
-        Vulkan::DeviceBuffer&& buffer,
+        Vulkan::DeviceBuffer&& deviceBuffer,
         const uint32_t vertexCount,
         const uint32_t vertexSize
     ) :
-        buffer(std::move(buffer)),
+        deviceBuffer(std::move(deviceBuffer)),
         vertexCount(vertexCount),
         vertexSize(vertexSize)
     {}

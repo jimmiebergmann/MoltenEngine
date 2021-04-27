@@ -43,11 +43,11 @@ namespace Molten
 
         VulkanIndexBuffer() = delete;
         VulkanIndexBuffer(
-            Vulkan::DeviceBuffer&& buffer,
+            Vulkan::DeviceBuffer&& deviceBuffer,
             const size_t indexCount,
             const DataType dataType);
 
-        Vulkan::DeviceBuffer buffer;
+        Vulkan::DeviceBuffer deviceBuffer;
         size_t indexCount;
         DataType dataType;
 
