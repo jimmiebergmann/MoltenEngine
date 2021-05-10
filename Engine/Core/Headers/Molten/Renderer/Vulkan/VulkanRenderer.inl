@@ -26,7 +26,7 @@
 namespace Molten
 {
 
-    template<size_t VDimensions>
+    /*template<size_t VDimensions>
     RenderResource<Texture<VDimensions>> VulkanRenderer::CreateTexture(
         const Vector3ui32& dimensions,
         const size_t dataSize,
@@ -35,18 +35,22 @@ namespace Molten
         const VkFormat internalImageFormat,
         const VkComponentMapping& componentMapping)
     {
-        Vulkan::DeviceBuffer stagingBuffer;
+        Vulkan::GuardedDeviceBuffer stagingBuffer(m_memoryAllocator);
 
         Vulkan::Result<> result;
-        if (!(result = stagingBuffer.Create(m_logicalDevice, dataSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, m_memoryTypesHostVisibleOrCoherent)))
+        if (!(result = m_memoryAllocator.CreateDeviceBuffer(
+            stagingBuffer.deviceBuffer,
+            dataSize,
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)))
         {
-            Vulkan::Logger::WriteError(m_logger, result, "Failed to create staging buffer for image buffer");
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to create staging buffer for texture");
             return { };
         }
 
-        if (!(result = stagingBuffer.MapMemory(0, dataSize, data)))
+        if (!(result = Vulkan::MapMemory(m_logicalDevice, stagingBuffer.deviceBuffer, data, dataSize, 0)))
         {
-            Vulkan::Logger::WriteError(m_logger, result, "Failed to map staging buffer for image buffer");
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to map staging buffer for texture");
             return { };
         }
 
@@ -58,19 +62,21 @@ namespace Molten
         }
 
         Vulkan::Image image;
-        if (!(result = image.Create(
-            m_logicalDevice,
-            commandBuffer,
-            stagingBuffer,
-            dimensions,
-            VulkanImageTypeTraits<VDimensions>::type,
-            imageFormat,
-            VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-            m_memoryTypesDeviceLocal)))
-        {
-            Vulkan::Logger::WriteError(m_logger, result, "Failed to create image");
-            return { };
-        }
+
+        // TODO: Use memory allocator for this!
+        //if (!(result = image.Create(
+        //    m_logicalDevice,
+        //    commandBuffer,
+        //    stagingBuffer.deviceBuffer,
+        //    dimensions,
+        //    VulkanImageTypeTraits<VDimensions>::type,
+        //    imageFormat,
+        //    VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+        //    m_memoryTypesDeviceLocal)))
+        //{
+        //    Vulkan::Logger::WriteError(m_logger, result, "Failed to create image");
+        //    return { };
+        //}
 
         if (!(result = Vulkan::EndSingleTimeCommands(commandBuffer, m_logicalDevice, m_commandPool)))
         {
@@ -99,10 +105,12 @@ namespace Molten
         return RenderResource<Texture<VDimensions>>(new VulkanTexture<VDimensions>{
             std::move(image),
             imageView
-            }, RenderResourceDeleter<Texture<VDimensions>>{ this });
-    }
+        }, RenderResourceDeleter<Texture<VDimensions>>{ this });
 
-    template<size_t VDimensions>
+        return {};
+    }*/
+
+    /*template<size_t VDimensions>
     bool VulkanRenderer::UpdateTexture(
         Vulkan::Image& image,
         const void* data,
@@ -110,18 +118,23 @@ namespace Molten
         const Vector3ui32& destinationDimensions,
         const Vector3ui32& destinationOffset)
     {
-        Vulkan::DeviceBuffer stagingBuffer;
+        
+        Vulkan::GuardedDeviceBuffer stagingBuffer(m_memoryAllocator);
 
         Vulkan::Result<> result;
-        if (!(result = stagingBuffer.Create(m_logicalDevice, dataSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, m_memoryTypesHostVisibleOrCoherent)))
+        if (!(result = m_memoryAllocator.CreateDeviceBuffer(
+            stagingBuffer.deviceBuffer,
+            dataSize,
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)))
         {
-            Vulkan::Logger::WriteError(m_logger, result, "Failed to create staging buffer for image buffer");
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to create staging buffer for texture update");
             return { };
         }
 
-        if (!(result = stagingBuffer.MapMemory(0, dataSize, data)))
+        if (!(result = Vulkan::MapMemory(m_logicalDevice, stagingBuffer.deviceBuffer, data, dataSize, 0)))
         {
-            Vulkan::Logger::WriteError(m_logger, result, "Failed to map staging buffer for image buffer");
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to map staging buffer for texture update");
             return { };
         }
 
@@ -134,7 +147,7 @@ namespace Molten
 
         if (!(result = image.Update(
             commandBuffer,
-            stagingBuffer,
+            stagingBuffer.deviceBuffer,
             destinationDimensions,
             destinationOffset)))
         {
@@ -147,17 +160,18 @@ namespace Molten
             Vulkan::Logger::WriteError(m_logger, result, "Failed to end single time command.");
             return { };
         }
+       
 
         return false;
-    }
+    } */
 
-    template<typename T>
+    /*template<typename T>
     void VulkanRenderer::InternalPushConstant(const uint32_t location, const T& value)
     {
         vkCmdPushConstants(
             *m_currentCommandBuffer, m_currentPipeline->pipelineLayout,
             VK_SHADER_STAGE_ALL, location, sizeof(value), &value);
 
-    }
+    }*/
 
 }

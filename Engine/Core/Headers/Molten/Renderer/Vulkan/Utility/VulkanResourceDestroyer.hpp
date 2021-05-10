@@ -23,17 +23,18 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_VULKAN_VULKANRESOURCEDESTROYER_HPP
-#define MOLTEN_CORE_RENDERER_VULKAN_VULKANRESOURCEDESTROYER_HPP
+#ifndef MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANRESOURCEDESTROYER_HPP
+#define MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANRESOURCEDESTROYER_HPP
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 
 #include "Molten/Renderer/Vulkan/Utility/VulkanLogicalDevice.hpp"
+#include "Molten/Renderer/Vulkan/Utility/VulkanMemoryAllocator.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanTypes.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanShaderModule.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanImage.hpp"
+#include "Molten/Renderer/Vulkan/Utility/VulkanDeviceBuffer.hpp"
+#include "Molten/Renderer/Vulkan/Utility/VulkanDeviceImage.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanImageSampler.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanBuffer.hpp"
 #include <variant>
 #include <queue>
 
@@ -63,7 +64,9 @@ namespace Molten::Vulkan
 
     public:
 
-        explicit ResourceDestroyer(LogicalDevice& logicalDevice);
+        explicit ResourceDestroyer(
+            LogicalDevice& logicalDevice,
+            MemoryAllocator& memoryAllocator);
         ~ResourceDestroyer();
 
         ResourceDestroyer(const ResourceDestroyer&) = delete;
@@ -128,7 +131,7 @@ namespace Molten::Vulkan
 
         struct TextureCleanup
         {
-            Image image;
+            DeviceImage deviceImage;
             VkImageView imageView;
         };
 
@@ -182,6 +185,7 @@ namespace Molten::Vulkan
         void Process(VertexBufferCleanup& data);
 
         LogicalDevice& m_logicalDevice;
+        MemoryAllocator& m_memoryAllocator;
         CleanupQueue m_cleanupQueue;
 
     };

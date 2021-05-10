@@ -32,49 +32,40 @@ MOLTEN_UNSCOPED_ENUM_BEGIN
 namespace Molten::Vulkan
 {
 
-    // Filtered memory type implementations.
-    FilteredMemoryType::FilteredMemoryType() :
-        index(0),
-        propertyFlags(0)
-    {}
-
-    FilteredMemoryType::FilteredMemoryType(
-        const uint32_t index,
-        const VkMemoryPropertyFlags propertyFlags
-    ) :
-        index(index),
-        propertyFlags(propertyFlags)
-    {}
-
-
-    // Static implementations.
-    void FilterMemoryTypesByPropertyFlags(
-        FilteredMemoryTypes& filteredMemorytypes,
-        const VkPhysicalDeviceMemoryProperties& physicalDeviceMemoryProperies,
-        const uint32_t propertyFlags)
+    void GetPhysicalDeviceMemoryTypes(
+        MemoryTypes& memoryTypes,
+        VkPhysicalDevice physicalDeviceHandle,
+        const bool ignoreEmptyProperties)
     {
-        filteredMemorytypes.clear();
+        memoryTypes.clear();
 
-        for (uint32_t i = 0; i < physicalDeviceMemoryProperies.memoryTypeCount; i++)
+        VkPhysicalDeviceMemoryProperties memoryProperies;
+        vkGetPhysicalDeviceMemoryProperties(physicalDeviceHandle, &memoryProperies);
+
+        uint32_t index = 0;
+        for (uint32_t i = 0; i < memoryProperies.memoryTypeCount; i++)
         {
-            auto& memoryType = physicalDeviceMemoryProperies.memoryTypes[i];
-            if ((memoryType.propertyFlags & propertyFlags) == propertyFlags)
+            if (ignoreEmptyProperties && memoryProperies.memoryTypes[i].propertyFlags == 0)
             {
-                filteredMemorytypes.push_back(FilteredMemoryType{ i, memoryType.propertyFlags });
+                continue;
             }
+
+            memoryTypes.push_back({ index++, i, memoryProperies.memoryTypes[i].propertyFlags });
         }
     }
 
-    bool FindFilteredMemoryTypeIndex(
-        uint32_t& index,
-        const FilteredMemoryTypes& filteredMemoryTypes,
-        const uint32_t requiredMemoryTypeFlags)
+    bool FindSupportedMemoryType(
+        MemoryType*& foundMemoryType,
+        MemoryTypes& availableMemoryTypes,
+        const uint32_t memoryTypeBits,
+        const VkMemoryPropertyFlags memoryProperties)
     {
-        for (auto& filteredMemoryType : filteredMemoryTypes)
+        for (auto& availableMemoryType : availableMemoryTypes)
         {
-            if (requiredMemoryTypeFlags & (1 << filteredMemoryType.index))
+            if ((memoryTypeBits & (1 << availableMemoryType.physicalDeviceMemoryTypeIndex)) && 
+                (availableMemoryType.propertyFlags & memoryProperties) == memoryProperties)
             {
-                index = filteredMemoryType.index;
+                foundMemoryType = &availableMemoryType;
                 return true;
             }
         }

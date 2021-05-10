@@ -266,12 +266,12 @@ namespace Molten
         return false;
     }
 
-    bool OpenGLX11Renderer::UpdateTexture(Texture2D& /*texture3D*/, const TextureUpdateDescriptor2D& /*descriptor*/)
+    bool OpenGLX11Renderer::UpdateTexture(Texture2D& /*texture2D*/, const TextureUpdateDescriptor2D& /*descriptor*/)
     {
         return false;
     }
 
-    bool OpenGLX11Renderer::UpdateTexture(Texture3D& /*texture2D*/, const TextureUpdateDescriptor3D& /*descriptor*/)
+    bool OpenGLX11Renderer::UpdateTexture(Texture3D& /*texture3D*/, const TextureUpdateDescriptor3D& /*descriptor*/)
     {
         return false;
     }
@@ -386,11 +386,11 @@ namespace Molten
     {
     }
 
-    void OpenGLX11Renderer::UpdateUniformBuffer(RenderResource<UniformBuffer>& /*uniformBuffer*/, const size_t /*offset*/, const size_t /*size*/, const void* /*data*/)
+    void OpenGLX11Renderer::UpdateUniformBuffer(RenderResource<UniformBuffer>& /*uniformBuffer*/, const void* /*data*/, const size_t /*size*/, const size_t /*offset*/)
     {
     }
 
-    void OpenGLX11Renderer::UpdateFramedUniformBuffer(RenderResource<FramedUniformBuffer>& /*framedUniformBuffer*/, const size_t /*offset*/, const size_t /*size*/, const void* /*data*/)
+    void OpenGLX11Renderer::UpdateFramedUniformBuffer(RenderResource<FramedUniformBuffer>& /*framedUniformBuffer*/, const void* /*data*/, const size_t /*size*/, const size_t /*offset*/)
     {
     }
 

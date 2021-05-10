@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,44 +23,42 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANMEMORYTYPE_HPP
-#define MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANMEMORYTYPE_HPP
+#ifndef MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANMEMORYIMPL_HPP
+#define MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANMEMORYIMPL_HPP
 
-#include "Molten/Core.hpp"
+#include "Molten/Renderer/Vulkan/Utility/VulkanMemory.hpp"
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 
-#include "Molten/Renderer/Vulkan/Utility/VulkanTypes.hpp"
-
-MOLTEN_UNSCOPED_ENUM_BEGIN
+#include "Molten/Renderer/Vulkan/Utility/VulkanMemoryBlock.hpp"
 
 namespace Molten::Vulkan
 {
 
-    struct MemoryType
+    // Memory implementations. Declared in VulkanMemory.hpp.
+    struct Memory
     {
-        uint32_t index; ///< Index of parent MemoryTypes.
-        uint32_t physicalDeviceMemoryTypeIndex; ///< This is the index of this memory propery from the original VkPhysicalDeviceMemoryProperties object.    
-        VkMemoryPropertyFlags propertyFlags; ///< Bitmask of supported memory properties for this memory type.
+        Memory(
+            MemoryBlock* memoryBlock, 
+            const VkDeviceSize size,
+            const VkDeviceSize offset = 0);
+
+        ~Memory() = default;
+
+        Memory(const Memory&) = default;
+        Memory(Memory&&) = default;
+        Memory& operator = (const Memory&) = default;
+        Memory& operator = (Memory&&) = default;
+
+        bool isFree;
+        MemoryBlock* memoryBlock;      
+        VkDeviceSize size;
+        VkDeviceSize offset;
+        Memory* prevMemoryRange;
+        Memory* nextMemoryRange;
     };
 
-    using MemoryTypes = std::vector<MemoryType>;
-
-
-    MOLTEN_API void GetPhysicalDeviceMemoryTypes(
-        MemoryTypes& memoryTypes,
-        VkPhysicalDevice physicalDeviceHandle,
-        const bool ignoreEmptyProperties = false);
-
-    MOLTEN_API bool FindSupportedMemoryType(
-        MemoryType*& foundMemoryType,
-        MemoryTypes& availableMemoryTypes,
-        const uint32_t memoryTypeBits,
-        const VkMemoryPropertyFlags memoryProperties);
-
 }
-
-MOLTEN_UNSCOPED_ENUM_END
 
 #endif
 

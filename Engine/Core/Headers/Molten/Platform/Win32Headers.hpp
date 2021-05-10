@@ -67,6 +67,9 @@
     #undef LoadImage
 #endif
 
+#ifdef CopyMemory
+    #undef CopyMemory
+#endif
 
 // Getting rid of conflicting Windows X macros.
 #ifdef IsMinimized

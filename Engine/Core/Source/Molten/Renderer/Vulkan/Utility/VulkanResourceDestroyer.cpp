@@ -24,7 +24,7 @@
 */
 
 
-#include "Molten/Renderer/Vulkan/VulkanResourceDestroyer.hpp"
+#include "Molten/Renderer/Vulkan/Utility/VulkanResourceDestroyer.hpp"
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 
@@ -61,8 +61,12 @@ namespace Molten::Vulkan
 
 
     // Vulkan resource destroyer implementations.
-    ResourceDestroyer::ResourceDestroyer(LogicalDevice& logicalDevice) :
-        m_logicalDevice(logicalDevice)
+    ResourceDestroyer::ResourceDestroyer(
+        LogicalDevice& logicalDevice,
+        MemoryAllocator& memoryAllocator
+    ) :
+        m_logicalDevice(logicalDevice),
+        m_memoryAllocator(memoryAllocator)
     {}
 
     ResourceDestroyer::~ResourceDestroyer()
@@ -182,7 +186,7 @@ namespace Molten::Vulkan
     void ResourceDestroyer::Add(const uint32_t cleanupFrameIndex, VulkanTexture<1>& texture1D)
     {
         m_cleanupQueue.emplace<CleanupData>({ cleanupFrameIndex, TextureCleanup{
-            std::move(texture1D.image),
+            std::move(texture1D.deviceImage),
             texture1D.imageView
         } });
 
@@ -192,7 +196,7 @@ namespace Molten::Vulkan
     void ResourceDestroyer::Add(const uint32_t cleanupFrameIndex, VulkanTexture<2>& texture2D)
     {
         m_cleanupQueue.emplace<CleanupData>({ cleanupFrameIndex, TextureCleanup{
-            std::move(texture2D.image),
+            std::move(texture2D.deviceImage),
             texture2D.imageView
         } });
 
@@ -202,7 +206,7 @@ namespace Molten::Vulkan
     void ResourceDestroyer::Add(const uint32_t cleanupFrameIndex, VulkanTexture<3>& texture3D)
     {
         m_cleanupQueue.emplace<CleanupData>({ cleanupFrameIndex, TextureCleanup{
-            std::move(texture3D.image),
+            std::move(texture3D.deviceImage),
             texture3D.imageView
         } });
 
@@ -258,7 +262,7 @@ namespace Molten::Vulkan
 
     void ResourceDestroyer::Process(IndexBufferCleanup& data)
     {
-        data.deviceBuffer.Destroy();
+        m_memoryAllocator.FreeDeviceBuffer(data.deviceBuffer);
     }
 
     void ResourceDestroyer::Process(PipelineCleanup& data)
@@ -290,25 +294,25 @@ namespace Molten::Vulkan
     void ResourceDestroyer::Process(TextureCleanup& data)
     {
         vkDestroyImageView(m_logicalDevice.GetHandle(), data.imageView, nullptr);
-        data.image.Destroy();
+        m_memoryAllocator.FreeDeviceImage(data.deviceImage);
     }
 
     void ResourceDestroyer::Process(UniformBufferCleanup& data)
     {
-        data.deviceBuffer.Destroy();
+        m_memoryAllocator.FreeDeviceBuffer(data.deviceBuffer);
     }
 
     void ResourceDestroyer::Process(FramedUniformBufferCleanup& data)
     {
         for(auto& deviceBuffer : data.deviceBuffers)
         {
-            deviceBuffer.Destroy();
+            m_memoryAllocator.FreeDeviceBuffer(deviceBuffer);
         }
     }
 
     void ResourceDestroyer::Process(VertexBufferCleanup& data)
     {
-        data.deviceBuffer.Destroy();
+        m_memoryAllocator.FreeDeviceBuffer(data.deviceBuffer);
     }
 
 }

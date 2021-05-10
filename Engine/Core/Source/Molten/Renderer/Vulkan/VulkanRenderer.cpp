@@ -40,8 +40,8 @@
 #include "Molten/Renderer/Vulkan/VulkanVertexBuffer.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanFunctions.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanResultLogger.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanBuffer.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanImage.hpp"
+#include "Molten/Renderer/Vulkan/Utility/VulkanDeviceBuffer.hpp"
+#include "Molten/Renderer/Vulkan/Utility/VulkanDeviceImage.hpp"
 #include "Molten/Window/Window.hpp"
 #include "Molten/Logger.hpp"
 #include "Molten/System/Exception.hpp"
@@ -360,7 +360,8 @@ namespace Molten
         m_surface{},
         m_physicalDevice{},
         m_logicalDevice{},
-        m_resourceDestroyer(m_logicalDevice),
+        m_memoryAllocator{},
+        m_resourceDestroyer(m_logicalDevice, m_memoryAllocator),
         m_renderPass(VK_NULL_HANDLE),
         m_swapChain{},
         m_surfaceFormat{},
@@ -401,7 +402,7 @@ namespace Molten
             LoadSurface() &&
             LoadPhysicalDevice() &&
             LoadLogicalDevice() &&
-            LoadMemoryTypes() &&
+            LoadMemoryAllocator() &&
             LoadRenderPass() &&
             LoadSwapChain() &&
             LoadCommandPool();
@@ -413,6 +414,7 @@ namespace Molten
     void VulkanRenderer::Close()
     {
         m_resourceDestroyer.ProcessAll();
+        m_memoryAllocator.Destroy();
 
         if (m_logicalDevice.IsCreated())
         {
@@ -604,7 +606,7 @@ namespace Molten
                 using T = std::decay_t<decltype(bindingData)>;
                 if constexpr (std::is_same_v<T, RenderResource<UniformBuffer>*>)
                 {
-                    const auto bufferHandle = static_cast<VulkanUniformBuffer*>(bindingData->get())->deviceBuffer.GetHandle();
+                    const auto bufferHandle = static_cast<VulkanUniformBuffer*>(bindingData->get())->deviceBuffer.buffer;
                     writeBufferInfo(write, bufferHandle);
                 }
                 else if constexpr (std::is_same_v<T, CombinedTextureSampler1D>)
@@ -643,13 +645,13 @@ namespace Molten
         poolInfo.flags = 0;
 
         VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
-        SmartFunction destroyer = [&]()
+        SmartFunction destroyer([&]()
         {
             if(descriptorPool != VK_NULL_HANDLE)
             {
                 vkDestroyDescriptorPool(m_logicalDevice.GetHandle(), descriptorPool, nullptr);
             }
-        };
+        });
  
         if (vkCreateDescriptorPool(m_logicalDevice.GetHandle(), &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)
         {
@@ -746,7 +748,7 @@ namespace Molten
 
             for(size_t i = 0; i < swapChainImageCount; i++)
             {
-                bufferInfo[i].buffer = buffers[i].GetHandle();
+                bufferInfo[i].buffer = buffers[i].buffer;
                 bufferInfo[i].offset = 0;
                 bufferInfo[i].range = VK_WHOLE_SIZE;
 
@@ -865,13 +867,13 @@ namespace Molten
         poolInfo.flags = 0;
 
         VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
-        SmartFunction destroyer = [&]()
+        SmartFunction destroyer([&]()
         {
             if (descriptorPool != VK_NULL_HANDLE)
             {
                 vkDestroyDescriptorPool(m_logicalDevice.GetHandle(), descriptorPool, nullptr);
             }
-        };
+        });
 
         if (vkCreateDescriptorPool(m_logicalDevice.GetHandle(), &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)
         {
@@ -921,36 +923,45 @@ namespace Molten
     {
         const auto bufferSize = static_cast<VkDeviceSize>(descriptor.indexCount) * GetIndexBufferDataTypeSize(descriptor.dataType);
 
-        Vulkan::DeviceBuffer stagingBuffer;
+        Vulkan::GuardedDeviceBuffer stagingBuffer(m_memoryAllocator);
 
         Vulkan::Result<> result;
-        if (!(result = stagingBuffer.Create(m_logicalDevice, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, m_memoryTypesHostVisibleOrCoherent)))
+        if (!(result = m_memoryAllocator.CreateDeviceBuffer(
+            stagingBuffer.deviceBuffer,
+            bufferSize,
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)))
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to create staging buffer for index buffer");
             return { };
         }
 
-        if (!(result = stagingBuffer.MapMemory(0, bufferSize, descriptor.data)))
+        if (!(result = Vulkan::MapMemory(m_logicalDevice, stagingBuffer.deviceBuffer, descriptor.data, bufferSize, 0)))
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to map staging buffer for index buffer");
             return { };
         }
 
-        Vulkan::DeviceBuffer indexBuffer;
-        if (!(result = indexBuffer.Create(m_logicalDevice, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, m_memoryTypesDeviceLocal)))
+        Vulkan::GuardedDeviceBuffer indexBuffer(m_memoryAllocator);
+
+        if (!(result = m_memoryAllocator.CreateDeviceBuffer(
+            indexBuffer.deviceBuffer,
+            bufferSize,
+            VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)))
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to create index buffer");
             return { };
         }
 
-        if (!(result = indexBuffer.CopyFromBuffer(m_commandPool, stagingBuffer, bufferSize)))
+        if (!(result = Vulkan::CopyMemory(m_logicalDevice, m_commandPool, stagingBuffer.deviceBuffer, indexBuffer.deviceBuffer, bufferSize)))
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to copy from staging buffer to index buffer");
             return { };
         }
 
         return RenderResource<IndexBuffer>(new VulkanIndexBuffer{
-            std::move(indexBuffer),
+            std::move(indexBuffer.deviceBuffer),
             descriptor.indexCount,
             descriptor.dataType
         }, RenderResourceDeleter<IndexBuffer>{ this });
@@ -1014,13 +1025,13 @@ namespace Molten
 
         Vulkan::DescriptorSetLayouts setLayouts;
 
-        SmartFunction destroyer = [&]()
+        SmartFunction destroyer([&]()
         {
             for(auto& setLayout : setLayouts)
             {
                 vkDestroyDescriptorSetLayout(m_logicalDevice.GetHandle(), setLayout, nullptr);
             }
-        };
+        });
 
         if (!CreateDescriptorSetLayouts(setLayouts, mappedDescriptorSets))
         {
@@ -1259,7 +1270,7 @@ namespace Molten
 
     RenderResource<Texture1D> VulkanRenderer::CreateTexture(const TextureDescriptor1D& descriptor)
     {
-        uint32_t formatPixelSize = 0;
+        /*uint32_t formatPixelSize = 0;
         uint32_t internalFormatPixelSize = 0;
         const auto imageFormat = GetImageFormatAndPixelSize(descriptor.format, formatPixelSize);
         const auto internalImageFormat = GetImageFormatAndPixelSize(descriptor.internalFormat, internalFormatPixelSize);
@@ -1271,16 +1282,17 @@ namespace Molten
         }
 
         const auto dataSize = static_cast<VkDeviceSize>(descriptor.dimensions.c[0]) * static_cast<VkDeviceSize>(formatPixelSize);
-        const auto dimensions = Vector3ui32{ descriptor.dimensions.c[0], 1, 1 };
+        const auto dimensions = Vector3ui32{ descriptor.dimensions.c[0], 1, 1 };*/
 
-        return CreateTexture<1>(dimensions, dataSize, descriptor.data, imageFormat, internalImageFormat, GetComponentMappings(descriptor.swizzleMapping));
+        //return CreateTexture<1>(dimensions, dataSize, descriptor.data, imageFormat, internalImageFormat, GetComponentMappings(descriptor.swizzleMapping));
+        return {};
     }
 
     RenderResource<Texture2D> VulkanRenderer::CreateTexture(const TextureDescriptor2D& descriptor)
     {
         uint32_t formatPixelSize = 0;
         uint32_t internalFormatPixelSize = 0;
-        const auto imageFormat = GetImageFormatAndPixelSize(descriptor.format, formatPixelSize);
+        const auto imageFormat = GetImageFormatAndPixelSize(descriptor.format, formatPixelSize); // Rename to BPP (Bytes per pixel).
         const auto internalImageFormat = GetImageFormatAndPixelSize(descriptor.internalFormat, internalFormatPixelSize);
         if (formatPixelSize != internalFormatPixelSize)
         {
@@ -1289,17 +1301,41 @@ namespace Molten
             return { };
         }
 
+        const auto dimensions = Vector3ui32{ descriptor.dimensions.x, descriptor.dimensions.y, 1 };
         const auto dataSize =
             static_cast<VkDeviceSize>(descriptor.dimensions.x) *
             static_cast<VkDeviceSize>(descriptor.dimensions.y) * static_cast<VkDeviceSize>(formatPixelSize);
-        const auto dimensions = Vector3ui32{ descriptor.dimensions.x, descriptor.dimensions.y, 1 };
 
-        return CreateTexture<2>(dimensions, dataSize, descriptor.data, imageFormat, internalImageFormat, GetComponentMappings(descriptor.swizzleMapping));
+        Vulkan::DeviceImage deviceImage;
+        Vulkan::DeviceImageGuard deviceImageGuard(m_memoryAllocator, deviceImage);
+        VkImageView imageView = VK_NULL_HANDLE;
+
+        if(!CreateTexture(
+            deviceImage,
+            imageView,
+            dimensions,
+            descriptor.data,
+            dataSize,
+            imageFormat,
+            internalImageFormat,
+            VulkanImageTypeTraits<2>::type,
+            VulkanImageViewTypeTraits<2>::type,
+            GetComponentMappings(descriptor.swizzleMapping)))
+        {
+            return {};
+        }
+
+        deviceImageGuard.Release();
+
+        return RenderResource<Texture2D>(new VulkanTexture2D{
+           std::move(deviceImage),
+           imageView
+        }, RenderResourceDeleter<Texture2D>{ this });
     }
 
     RenderResource<Texture3D> VulkanRenderer::CreateTexture(const TextureDescriptor3D& descriptor)
     {
-        uint32_t formatPixelSize = 0;
+        /*uint32_t formatPixelSize = 0;
         uint32_t internalFormatPixelSize = 0;
         const auto imageFormat = GetImageFormatAndPixelSize(descriptor.format, formatPixelSize);
         const auto internalImageFormat = GetImageFormatAndPixelSize(descriptor.internalFormat, internalFormatPixelSize);
@@ -1314,16 +1350,22 @@ namespace Molten
             static_cast<VkDeviceSize>(descriptor.dimensions.x) *
             static_cast<VkDeviceSize>(descriptor.dimensions.y) *
             static_cast<VkDeviceSize>(descriptor.dimensions.z) * static_cast<VkDeviceSize>(formatPixelSize);
-        const auto dimensions = Vector3ui32{ descriptor.dimensions.x, descriptor.dimensions.y, descriptor.dimensions.z };
+        const auto dimensions = Vector3ui32{ descriptor.dimensions.x, descriptor.dimensions.y, descriptor.dimensions.z };*/
 
-        return CreateTexture<3>(dimensions, dataSize, descriptor.data, imageFormat, internalImageFormat, GetComponentMappings(descriptor.swizzleMapping));
+        //return CreateTexture<3>(dimensions, dataSize, descriptor.data, imageFormat, internalImageFormat, GetComponentMappings(descriptor.swizzleMapping));
+        return {};
     }
 
     RenderResource<UniformBuffer> VulkanRenderer::CreateUniformBuffer(const UniformBufferDescriptor& descriptor)
-    {
-        Vulkan::Result<> result;
+    { 
         Vulkan::DeviceBuffer deviceBuffer;
-        if (!(result = deviceBuffer.Create(m_logicalDevice, descriptor.size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, m_memoryTypesHostVisibleOrCoherent)))
+
+        Vulkan::Result<> result;
+        if (!(result = m_memoryAllocator.CreateDeviceBuffer(
+            deviceBuffer,
+            descriptor.size,
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)))
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to create device buffer for uniform buffer");
             return { };
@@ -1337,15 +1379,24 @@ namespace Molten
     RenderResource<FramedUniformBuffer> VulkanRenderer::CreateFramedUniformBuffer(const FramedUniformBufferDescriptor& descriptor)
     {
         std::vector<Vulkan::DeviceBuffer> deviceBuffers(m_swapChain.GetImageCount());
+        Vulkan::DeviceBufferGuards deviceBufferGuards(m_memoryAllocator, deviceBuffers);
+
         Vulkan::Result<> result;
+
         for(auto& deviceBuffer : deviceBuffers)
         {
-            if (!(result = deviceBuffer.Create(m_logicalDevice, descriptor.size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, m_memoryTypesHostVisibleOrCoherent)))
+            if (!(result = m_memoryAllocator.CreateDeviceBuffer(
+                deviceBuffer,
+                descriptor.size,
+                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)))
             {
                 Vulkan::Logger::WriteError(m_logger, result, "Failed to create device buffer for framed uniform buffer");
                 return { };
             }
         }
+
+        deviceBufferGuards.Release();
 
         return RenderResource<FramedUniformBuffer>(new VulkanFramedUniformBuffer{
             std::move(deviceBuffers)
@@ -1354,40 +1405,50 @@ namespace Molten
 
     RenderResource<VertexBuffer> VulkanRenderer::CreateVertexBuffer(const VertexBufferDescriptor& descriptor)
     {
-        const size_t bufferSize = 
-            static_cast<VkDeviceSize>(static_cast<VkDeviceSize>(descriptor.vertexCount) *
-            static_cast<VkDeviceSize>(descriptor.vertexSize));
-
-        Vulkan::DeviceBuffer stagingBuffer;
-
         Vulkan::Result<> result;
-        if (!(result = stagingBuffer.Create(m_logicalDevice, bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, m_memoryTypesHostVisibleOrCoherent)))
+
+        const auto bufferSize = 
+            static_cast<VkDeviceSize>(descriptor.vertexCount) *
+            static_cast<VkDeviceSize>(descriptor.vertexSize);
+
+        Vulkan::GuardedDeviceBuffer stagingBuffer(m_memoryAllocator);
+
+        if(!(result = m_memoryAllocator.CreateDeviceBuffer(
+            stagingBuffer.deviceBuffer,
+            bufferSize,
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)))
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to create staging buffer for vertex buffer");
             return { };
         }
 
-        if (!(result = stagingBuffer.MapMemory(0, bufferSize, descriptor.data)))
+        if (!(result = Vulkan::MapMemory(m_logicalDevice, stagingBuffer.deviceBuffer, descriptor.data, bufferSize, 0)))
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to map staging buffer for vertex buffer");
             return { };
         }
 
-        Vulkan::DeviceBuffer vertexBuffer;
-        if (!(result = vertexBuffer.Create(m_logicalDevice, bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, m_memoryTypesDeviceLocal)))
+        Vulkan::GuardedDeviceBuffer vertexBuffer(m_memoryAllocator);
+
+        if (!(result = m_memoryAllocator.CreateDeviceBuffer(
+            vertexBuffer.deviceBuffer,
+            bufferSize,
+            VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)))
         {
-            Vulkan::Logger::WriteError(m_logger, result, "Failed to create vertex buffer");
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to create staging buffer for vertex buffer");
             return { };
         }
 
-        if (!(result = vertexBuffer.CopyFromBuffer(m_commandPool, stagingBuffer, bufferSize)))
+        if (!(result = Vulkan::CopyMemory(m_logicalDevice, m_commandPool, stagingBuffer.deviceBuffer, vertexBuffer.deviceBuffer, bufferSize)))
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to copy from staging buffer to vertex buffer");
             return { };
         }
 
         return RenderResource<VertexBuffer>(new VulkanVertexBuffer{
-            std::move(vertexBuffer),
+            std::move(vertexBuffer.deviceBuffer),
             descriptor.vertexCount,
             descriptor.vertexSize
         }, RenderResourceDeleter<VertexBuffer>{ this });
@@ -1395,6 +1456,7 @@ namespace Molten
 
     bool VulkanRenderer::UpdateTexture(Texture1D& texture1D, const TextureUpdateDescriptor1D& descriptor)
     {
+        /*
         auto& vulkanTexture = static_cast<VulkanTexture1D&>(texture1D);
 
         const size_t dataSize = descriptor.destinationDimensions.c[0];
@@ -1411,10 +1473,13 @@ namespace Molten
             dataSize,
             destinationDimensions,
             destinationOffset);
+            */
+        return false;
     }
 
     bool VulkanRenderer::UpdateTexture(Texture2D& texture2D, const TextureUpdateDescriptor2D& descriptor)
     {
+        /*
         auto& vulkanTexture = static_cast<VulkanTexture2D&>(texture2D);
 
         const size_t dataSize = descriptor.destinationDimensions.x * descriptor.destinationDimensions.y;
@@ -1431,10 +1496,13 @@ namespace Molten
             dataSize,
             destinationDimensions,
             destinationOffset);
+        */
+        return false;
     }
 
     bool VulkanRenderer::UpdateTexture(Texture3D& texture3D, const TextureUpdateDescriptor3D& descriptor)
     {
+        /*
         auto& vulkanTexture = static_cast<VulkanTexture3D&>(texture3D);
 
         const size_t dataSize = descriptor.destinationDimensions.x * descriptor.destinationDimensions.y * descriptor.destinationDimensions.z;
@@ -1445,6 +1513,8 @@ namespace Molten
             dataSize,
             descriptor.destinationDimensions,
             descriptor.destinationOffset);
+        */
+        return false;
     }
 
     void VulkanRenderer::Destroy(DescriptorSet& descriptorSet)
@@ -1638,7 +1708,7 @@ namespace Molten
     {
         auto& vulkanVertexBuffer = static_cast<VulkanVertexBuffer&>(vertexBuffer);
 
-        VkBuffer vertexBuffers[] = { vulkanVertexBuffer.deviceBuffer.GetHandle() };
+        VkBuffer vertexBuffers[] = { vulkanVertexBuffer.deviceBuffer.buffer };
         const VkDeviceSize offsets[] = { 0 };
 
         vkCmdBindVertexBuffers(*m_currentCommandBuffer, 0, 1, vertexBuffers, offsets);
@@ -1650,41 +1720,55 @@ namespace Molten
         auto& vulkanIndexBuffer = static_cast<VulkanIndexBuffer&>(indexBuffer);
         auto& vulkanVertexBuffer = static_cast<VulkanVertexBuffer&>(vertexBuffer);
 
-        VkBuffer vertexBuffers[] = { vulkanVertexBuffer.deviceBuffer.GetHandle() };
+        VkBuffer vertexBuffers[] = { vulkanVertexBuffer.deviceBuffer.buffer };
         const VkDeviceSize offsets[] = { 0 };
 
         vkCmdBindVertexBuffers(*m_currentCommandBuffer, 0, 1, vertexBuffers, offsets);
-        vkCmdBindIndexBuffer(*m_currentCommandBuffer, vulkanIndexBuffer.deviceBuffer.GetHandle(), 0, GetIndexBufferDataType(vulkanIndexBuffer.dataType));
+        vkCmdBindIndexBuffer(*m_currentCommandBuffer, vulkanIndexBuffer.deviceBuffer.buffer, 0, GetIndexBufferDataType(vulkanIndexBuffer.dataType));
         vkCmdDrawIndexed(*m_currentCommandBuffer, static_cast<uint32_t>(vulkanIndexBuffer.indexCount), 1, 0, 0, 0);
     }
 
     void VulkanRenderer::PushConstant(const uint32_t location, const bool& value)
     {
-        InternalPushConstant(location, value);
+        vkCmdPushConstants(
+            *m_currentCommandBuffer, m_currentPipeline->pipelineLayout,
+            VK_SHADER_STAGE_ALL, location, sizeof(value), &value);
     }
     void VulkanRenderer::PushConstant(const uint32_t location, const int32_t& value)
     {
-        InternalPushConstant(location, value);
+        vkCmdPushConstants(
+            *m_currentCommandBuffer, m_currentPipeline->pipelineLayout,
+            VK_SHADER_STAGE_ALL, location, sizeof(value), &value);
     }
     void VulkanRenderer::PushConstant(const uint32_t location, const float& value)
     {
-        InternalPushConstant(location, value);
+        vkCmdPushConstants(
+            *m_currentCommandBuffer, m_currentPipeline->pipelineLayout,
+            VK_SHADER_STAGE_ALL, location, sizeof(value), &value);
     }
     void VulkanRenderer::PushConstant(const uint32_t location, const Vector2f32& value)
     {
-        InternalPushConstant(location, value);
+        vkCmdPushConstants(
+            *m_currentCommandBuffer, m_currentPipeline->pipelineLayout,
+            VK_SHADER_STAGE_ALL, location, sizeof(value), &value);
     }
     void VulkanRenderer::PushConstant(const uint32_t location, const Vector3f32& value)
     {
-        InternalPushConstant(location, value);
+        vkCmdPushConstants(
+            *m_currentCommandBuffer, m_currentPipeline->pipelineLayout,
+            VK_SHADER_STAGE_ALL, location, sizeof(value), &value);
     }
     void VulkanRenderer::PushConstant(const uint32_t location, const Vector4f32& value)
     {
-        InternalPushConstant(location, value);
+        vkCmdPushConstants(
+            *m_currentCommandBuffer, m_currentPipeline->pipelineLayout,
+            VK_SHADER_STAGE_ALL, location, sizeof(value), &value);
     }
     void VulkanRenderer::PushConstant(const uint32_t location, const Matrix4x4f32& value)
     {
-        InternalPushConstant(location, value);
+        vkCmdPushConstants(
+            *m_currentCommandBuffer, m_currentPipeline->pipelineLayout,
+            VK_SHADER_STAGE_ALL, location, sizeof(value), &value);
     }
 
     void VulkanRenderer::EndDraw()
@@ -1722,27 +1806,27 @@ namespace Molten
         m_logicalDevice.WaitIdle();
     }
 
-    void VulkanRenderer::UpdateUniformBuffer(RenderResource<UniformBuffer>& uniformBuffer, const size_t offset, const size_t size, const void* data)
+    void VulkanRenderer::UpdateUniformBuffer(RenderResource<UniformBuffer>& uniformBuffer, const void* data, const size_t size, const size_t offset)
     {
         auto* vulkanUniformBuffer = static_cast<VulkanUniformBuffer*>(uniformBuffer.get());      
+        auto& deviceBuffer = vulkanUniformBuffer->deviceBuffer;
 
         Vulkan::Result<> result;
-        if (!(result = vulkanUniformBuffer->deviceBuffer.MapMemory(offset, size, data, 0)))
+        if (!(result = Vulkan::MapMemory(m_logicalDevice, deviceBuffer, data, size, offset)))
         {
-            Vulkan::Logger::WriteError(m_logger, result, "Failed to map memory of uniform buffer");
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to map memory of framed uniform buffer");
         }
     }
 
-    void VulkanRenderer::UpdateFramedUniformBuffer(RenderResource<FramedUniformBuffer>& framedUniformBuffer, const size_t offset, const size_t size, const void* data)
+    void VulkanRenderer::UpdateFramedUniformBuffer(RenderResource<FramedUniformBuffer>& framedUniformBuffer, const void* data, const size_t size, const size_t offset)
     {
         auto* vulkanFramedUniformBuffer = static_cast<VulkanFramedUniformBuffer*>(framedUniformBuffer.get());
-
         auto& deviceBuffer = vulkanFramedUniformBuffer->deviceBuffers[m_swapChain.GetCurrentImageIndex()];
 
         Vulkan::Result<> result;
-        if (!(result = deviceBuffer.MapMemory(offset, size, data, 0)))
+        if (!(result = Vulkan::MapMemory(m_logicalDevice, deviceBuffer, data, size, offset)))
         {
-            Vulkan::Logger::WriteError(m_logger, result, "Failed to map memory of framed uniform buffer");
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to map memory of uniform buffer");
         }
     }
 
@@ -1952,36 +2036,17 @@ namespace Molten
         return true;
     }
 
-    bool VulkanRenderer::LoadMemoryTypes()
+    bool VulkanRenderer::LoadMemoryAllocator()
     {
-        m_memoryTypesHostVisibleOrCoherent.clear();
-        m_memoryTypesDeviceLocal.clear();
-
-        VkPhysicalDeviceMemoryProperties physicalDeviceMemoryProperies;
-        vkGetPhysicalDeviceMemoryProperties(m_physicalDevice.GetHandle(), &physicalDeviceMemoryProperies);
-
-        Vulkan::FilterMemoryTypesByPropertyFlags(
-            m_memoryTypesHostVisibleOrCoherent,
-            physicalDeviceMemoryProperies,
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-
-        if (!m_memoryTypesHostVisibleOrCoherent.size())
+        Vulkan::Result<> result;
+        if (!(result = m_memoryAllocator.Load(
+            m_logicalDevice,
+            1024 * 1024 * 256)))
         {
-            Logger::WriteError(m_logger, "Failed to find filtered memory types of host visible or coherent.");
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to load memory allocator");
             return false;
         }
 
-        Vulkan::FilterMemoryTypesByPropertyFlags(
-            m_memoryTypesDeviceLocal,
-            physicalDeviceMemoryProperies,
-            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-
-        if (!m_memoryTypesDeviceLocal.size())
-        {
-            Logger::WriteError(m_logger, "Failed to find filtered memory types of device local.");
-            return false;
-        }
-        
         return true;
     }
 
@@ -2094,6 +2159,130 @@ namespace Molten
     uint32_t VulkanRenderer::GetNextDestroyerFrameIndex() const
     {
         return m_endedDraws + m_swapChain.GetMaxFramesInFlight() + 2;
+    }
+
+    bool VulkanRenderer::VulkanRenderer::CreateTexture(
+        Vulkan::DeviceImage& deviceImage,
+        VkImageView& imageView,
+        const Vector3ui32& dimensions,
+        const void* data,
+        const VkDeviceSize dataSize,
+        const VkFormat imageFormat,
+        const VkFormat internalImageFormat,
+        const VkImageType imageType,
+        const VkImageViewType imageViewType,
+        const VkComponentMapping& componentMapping)
+    {
+        Vulkan::GuardedDeviceBuffer stagingBuffer(m_memoryAllocator);
+
+        // Create staging buffer.
+        Vulkan::Result<> result;
+        if (!(result = m_memoryAllocator.CreateDeviceBuffer(
+            stagingBuffer.deviceBuffer,
+            dataSize,
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)))
+        {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to create staging buffer for texture");
+            return false;
+        }
+
+        if (!(result = Vulkan::MapMemory(m_logicalDevice, stagingBuffer.deviceBuffer, data, dataSize, 0)))
+        {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to map staging buffer for vertex buffer");
+            return false;
+        }
+
+        // Create image.
+        VkImageCreateInfo imageInfo = {};
+        imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+        imageInfo.flags = 0;
+        imageInfo.imageType = imageType;
+        imageInfo.extent.width = dimensions.x;
+        imageInfo.extent.height = dimensions.y;
+        imageInfo.extent.depth = dimensions.z;
+        imageInfo.mipLevels = 1;
+        imageInfo.arrayLayers = 1;
+        imageInfo.format = imageFormat;
+        imageInfo.tiling = VkImageTiling::VK_IMAGE_TILING_OPTIMAL;
+        imageInfo.initialLayout = VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
+        imageInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+        imageInfo.sharingMode = VkSharingMode::VK_SHARING_MODE_EXCLUSIVE;
+        imageInfo.samples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
+
+        if (!(result = m_memoryAllocator.CreateDeviceImage(
+            deviceImage,
+            imageInfo,
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)))
+        {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to create device image from");
+            return false;
+        }
+
+        // Transfer staging buffer to image memory.
+        VkCommandBuffer commandBuffer = nullptr;
+        if (!(result = Vulkan::BeginSingleTimeCommands(commandBuffer, m_logicalDevice, m_commandPool)))
+        {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to begin single time command.");
+            return false;
+        }
+
+        constexpr VkImageLayout transferLayout = VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        if (!Vulkan::TransitionImageLayout(commandBuffer, deviceImage.image, deviceImage.layout, transferLayout))
+        {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to transition image layout from " + std::to_string(deviceImage.layout) + " to " + std::to_string(transferLayout) + ".");
+            return false;
+        }
+        deviceImage.layout = transferLayout;
+
+        VkBufferImageCopy region = {};
+        region.bufferOffset = 0;
+        region.bufferRowLength = 0;
+        region.bufferImageHeight = 0;
+        region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        region.imageSubresource.mipLevel = 0;
+        region.imageSubresource.baseArrayLayer = 0;
+        region.imageSubresource.layerCount = 1;
+        region.imageOffset = { 0, 0, 0 };
+        region.imageExtent.width = dimensions.x;
+        region.imageExtent.height = dimensions.y;
+        region.imageExtent.depth = dimensions.z;
+        vkCmdCopyBufferToImage(commandBuffer, stagingBuffer.deviceBuffer.buffer, deviceImage.image, deviceImage.layout, 1, &region);
+
+        constexpr VkImageLayout optimalLayout = VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        if (!Vulkan::TransitionImageLayout(commandBuffer, deviceImage.image, deviceImage.layout, optimalLayout))
+        {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to transition image layout from " + 
+                std::to_string(deviceImage.layout) + " to " + std::to_string(optimalLayout) + ".");
+            return false;
+        }
+        deviceImage.layout = optimalLayout;
+
+        if (!(result = Vulkan::EndSingleTimeCommands(commandBuffer, m_logicalDevice, m_commandPool)))
+        {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to end single time command.");
+            return { };
+        }
+
+        // Create image view.
+        VkImageViewCreateInfo viewInfo{};
+        viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        viewInfo.image = deviceImage.image;
+        viewInfo.viewType = imageViewType;
+        viewInfo.format = internalImageFormat;
+        viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        viewInfo.subresourceRange.baseMipLevel = 0;
+        viewInfo.subresourceRange.levelCount = 1;
+        viewInfo.subresourceRange.baseArrayLayer = 0;
+        viewInfo.subresourceRange.layerCount = 1;
+        viewInfo.components = componentMapping;
+
+        if (!(result = vkCreateImageView(m_logicalDevice.GetHandle(), &viewInfo, nullptr, &imageView)) != VK_SUCCESS) {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to create image view for texture");
+            return { };
+        }
+
+        return true;
     }
 
     bool VulkanRenderer::CreateVertexInputAttributes(

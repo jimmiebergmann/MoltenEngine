@@ -220,10 +220,10 @@ namespace Molten
         virtual void WaitForDevice() = 0;
 
         /** Update uniform buffer data. */
-        virtual void UpdateUniformBuffer(RenderResource<UniformBuffer>& uniformBuffer, const size_t offset, const size_t size, const void* data) = 0;
+        virtual void UpdateUniformBuffer(RenderResource<UniformBuffer>& uniformBuffer, const void* data, const size_t size, const size_t offset) = 0;
 
         /** Update framed uniform buffer data. */
-        virtual void UpdateFramedUniformBuffer(RenderResource<FramedUniformBuffer>& framedUniformBuffer, const size_t offset, const size_t size, const void* data) = 0;
+        virtual void UpdateFramedUniformBuffer(RenderResource<FramedUniformBuffer>& framedUniformBuffer, const void* data, const size_t size, const size_t offset) = 0;
 
     };
 

@@ -26,25 +26,29 @@
 #ifndef MOLTEN_CORE_RENDERER_VULKAN_VULKANRENDERER_HPP
 #define MOLTEN_CORE_RENDERER_VULKAN_VULKANRENDERER_HPP
 
-#include "VulkanTexture.hpp"
 #include "Molten/Renderer/Renderer.hpp"
 #include "Molten/Renderer/Shader/Visual/VisualShaderStructure.hpp"
 
 #if defined(MOLTEN_ENABLE_VULKAN)
-#include "Molten/Renderer/Vulkan/VulkanResourceDestroyer.hpp"
 #include "Molten/Renderer/Vulkan/VulkanPipeline.hpp"
+#include "Molten/Renderer/Vulkan/Utility/VulkanMemoryAllocator.hpp"
+#include "Molten/Renderer/Vulkan/Utility/VulkanResourceDestroyer.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanInstance.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanSurface.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanPhysicalDevice.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanPhysicalDeviceFeatures.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanLogicalDevice.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanSwapChain.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanMemoryType.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanShaderModule.hpp"
 #include "Molten/Renderer/Shader/Generator/GlslShaderGenerator.hpp"
 #include "Molten/Renderer/Shader/Visual/VisualShaderScript.hpp"
 
 MOLTEN_UNSCOPED_ENUM_BEGIN
+
+namespace Molten::Vulkan
+{
+    struct DeviceImage;
+}
 
 namespace Molten
 {
@@ -66,7 +70,7 @@ namespace Molten
         VulkanRenderer(RenderTarget& renderTarget, const Version& version, Logger* logger = nullptr);
 
         /** Virtual destructor. */
-        ~VulkanRenderer() override;
+        ~VulkanRenderer() override; // Replace by noexcept version.
 
         /** Opens renderer by loading and attaching renderer to provided window. */
         bool Open(RenderTarget& renderTarget, const Version& version = Version::None, Logger* logger = nullptr) override;
@@ -137,8 +141,8 @@ namespace Molten
         /** Update texture data. */
         /**@{*/
         bool UpdateTexture(Texture1D& texture1D, const TextureUpdateDescriptor1D& descriptor) override;
-        bool UpdateTexture(Texture2D& texture3D, const TextureUpdateDescriptor2D& descriptor) override;
-        bool UpdateTexture(Texture3D& texture2D, const TextureUpdateDescriptor3D& descriptor) override;
+        bool UpdateTexture(Texture2D& texture2D, const TextureUpdateDescriptor2D& descriptor) override;
+        bool UpdateTexture(Texture3D& texture3D, const TextureUpdateDescriptor3D& descriptor) override;
         /**@}*/
 
 
@@ -206,10 +210,10 @@ namespace Molten
         void WaitForDevice() override;
 
         /** Update uniform buffer data. */
-        void UpdateUniformBuffer(RenderResource<UniformBuffer>& uniformBuffer, const size_t offset, const size_t size, const void* data) override;
+        void UpdateUniformBuffer(RenderResource<UniformBuffer>& uniformBuffer, const void* data, const size_t size, const size_t offset) override;
 
         /** Update uniform buffer data. */
-        void UpdateFramedUniformBuffer(RenderResource<FramedUniformBuffer>& framedUniformBuffer, const size_t offset, const size_t size, const void* data) override;
+        void UpdateFramedUniformBuffer(RenderResource<FramedUniformBuffer>& framedUniformBuffer, const void* data, const size_t size, const size_t offset) override;
 
     private:
 
@@ -220,7 +224,7 @@ namespace Molten
         bool LoadSurface();
         bool LoadPhysicalDevice();
         bool LoadLogicalDevice();
-        bool LoadMemoryTypes();
+        bool LoadMemoryAllocator();
         bool LoadRenderPass();
         bool LoadSwapChain();
         bool LoadCommandPool();
@@ -230,8 +234,20 @@ namespace Molten
         uint32_t GetNextDestroyerFrameIndex() const;
 
         /** Texture creation/update helper functions.*/
+        bool CreateTexture(
+            Vulkan::DeviceImage& deviceImage,
+            VkImageView& imageView,
+            const Vector3ui32& dimensions,
+            const void* data,
+            const VkDeviceSize dataSize,
+            const VkFormat imageFormat,
+            const VkFormat internalImageFormat,
+            const VkImageType imageType,
+            const VkImageViewType imageViewType,
+            const VkComponentMapping& componentMapping);
+
         /**@{*/
-        template<size_t VDimensions>
+       /* template<size_t VDimensions>
         RenderResource<Texture<VDimensions>> CreateTexture(
             const Vector3ui32& dimensions,
             const size_t dataSize,
@@ -246,7 +262,7 @@ namespace Molten
             const void* data,
             const size_t dataSize,
             const Vector3ui32& destinationDimensions,
-            const Vector3ui32& destinationOffset);
+            const Vector3ui32& destinationOffset);*/
         /**@}*/
 
         /** Shader creation and manipulation functions. */
@@ -267,10 +283,6 @@ namespace Molten
             VkPushConstantRange& pushConstantRange,
             MappedDescriptorSets& mappedDescriptorSets,
             const std::vector<Shader::Visual::Script*>& visualScripts);
-
-        template<typename T>
-        void InternalPushConstant(const uint32_t location, const T& value);
-        /**@}*/
 
         /** Renderer creation variables. */
         /**@{*/
@@ -298,6 +310,7 @@ namespace Molten
         Vulkan::Surface m_surface;
         Vulkan::PhysicalDevice m_physicalDevice;
         Vulkan::LogicalDevice m_logicalDevice;
+        Vulkan::MemoryAllocator m_memoryAllocator;
         Vulkan::ResourceDestroyer m_resourceDestroyer;
         VkRenderPass m_renderPass;
         Vulkan::SwapChain m_swapChain;
@@ -311,18 +324,10 @@ namespace Molten
         VulkanPipeline* m_currentPipeline;
         Shader::GlslGenerator m_glslGenerator;
         /**@}*/
-
-        /** Pre-filtered memory types. */
-        /**@{*/
-        Vulkan::FilteredMemoryTypes m_memoryTypesHostVisibleOrCoherent;
-        Vulkan::FilteredMemoryTypes m_memoryTypesDeviceLocal;
-        /**@}*/
            
     };
 
 }
-
-#include "Molten/Renderer/Vulkan/VulkanRenderer.inl"
 
 MOLTEN_UNSCOPED_ENUM_END
 

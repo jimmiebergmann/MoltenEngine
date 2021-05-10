@@ -27,7 +27,7 @@
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 #include "Molten/Renderer/Vulkan/Utility/VulkanLogicalDevice.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanBuffer.hpp"
+#include "Molten/Renderer/Vulkan/Utility/VulkanDeviceBuffer.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanFunctions.hpp"
 #include "Molten/Utility/SmartFunction.hpp"
 
@@ -84,8 +84,8 @@ namespace Molten::Vulkan
         LogicalDevice& logicalDevice,
         const Vector3ui32& imageDimensions,
         const VkImageType imageType,
-        const VkFormat imageFormat,
-        const Vulkan::FilteredMemoryTypes& filteredMemoryTypes)
+        const VkFormat imageFormat/*,
+        const Vulkan::FilteredMemoryTypes& filteredMemoryTypes*/)
     {
         // Clean up previously created image if any and prepare destroyer.
         Destroy();
@@ -104,8 +104,8 @@ namespace Molten::Vulkan
             logicalDeviceHandle,
             imageDimensions,
             imageType,
-            imageFormat,
-            filteredMemoryTypes)))
+            imageFormat/*,
+            filteredMemoryTypes*/)))
         {
             return result;
         }
@@ -121,8 +121,8 @@ namespace Molten::Vulkan
         const Vector3ui32& imageDimensions,
         const VkImageType imageType,
         const VkFormat imageFormat,
-        const VkImageLayout imageLayout,
-        const Vulkan::FilteredMemoryTypes& filteredMemoryTypes)
+        const VkImageLayout imageLayout/*,
+        const Vulkan::FilteredMemoryTypes& filteredMemoryTypes*/)
     {
         // Clean up previously created image if any and prepare destroyer.
         Destroy();
@@ -141,8 +141,8 @@ namespace Molten::Vulkan
             logicalDeviceHandle,
             imageDimensions,
             imageType,
-            imageFormat,
-            filteredMemoryTypes)))
+            imageFormat/*,
+            filteredMemoryTypes*/)))
         {
             return result;
         }
@@ -168,7 +168,7 @@ namespace Molten::Vulkan
         region.imageExtent.height = imageDimensions.y;
         region.imageExtent.depth = imageDimensions.z;
 
-        vkCmdCopyBufferToImage(commandBuffer, stagingBuffer.GetHandle(), handle, layout, 1, &region);
+        vkCmdCopyBufferToImage(commandBuffer, stagingBuffer.buffer, handle, layout, 1, &region);
 
         if (!Vulkan::TransitionImageLayout(commandBuffer, handle, layout, imageLayout))
         {
@@ -211,7 +211,7 @@ namespace Molten::Vulkan
         region.imageExtent.height = destinationDimensions.y;
         region.imageExtent.depth = destinationDimensions.z;
 
-        vkCmdCopyBufferToImage(commandBuffer, stagingBuffer.GetHandle(), handle, layout, 1, &region);
+        vkCmdCopyBufferToImage(commandBuffer, stagingBuffer.buffer, handle, layout, 1, &region);
 
         if (!Vulkan::TransitionImageLayout(commandBuffer, handle, layout, oldLayout))
         {
@@ -245,8 +245,8 @@ namespace Molten::Vulkan
         VkDevice& logicalDeviceHandle,
         const Vector3ui32& imageDimensions,
         const VkImageType imageType,
-        const VkFormat imageFormat,
-        const Vulkan::FilteredMemoryTypes& filteredMemoryTypes)
+        const VkFormat imageFormat/*,
+        const Vulkan::FilteredMemoryTypes& filteredMemoryTypes*/)
     {
         VkImageCreateInfo imageInfo = {};
         imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -274,13 +274,13 @@ namespace Molten::Vulkan
         vkGetImageMemoryRequirements(logicalDeviceHandle, handle, &memoryRequirements);
 
         uint32_t memoryTypeIndex = 0;
-        if (!Vulkan::FindFilteredMemoryTypeIndex(
+        /*if (!Vulkan::FindFilteredMemoryTypeIndex(
             memoryTypeIndex,
             filteredMemoryTypes,
             memoryRequirements.memoryTypeBits))
         {
             return VkResult::VK_ERROR_UNKNOWN;
-        }
+        }*/
 
         VkMemoryAllocateInfo allocInfo = {};
         allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;

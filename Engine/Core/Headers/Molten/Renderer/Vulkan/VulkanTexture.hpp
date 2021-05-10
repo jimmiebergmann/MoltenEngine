@@ -29,8 +29,9 @@
 #include "Molten/Renderer/Texture.hpp"
 
 #if defined(MOLTEN_ENABLE_VULKAN)
+
 #include "Molten/Renderer/Vulkan/VulkanHeaders.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanImage.hpp"
+#include "Molten/Renderer/Vulkan/Utility/VulkanDeviceImage.hpp"
 
 namespace Molten
 {
@@ -45,10 +46,10 @@ namespace Molten
 
         VulkanTexture() = delete;
         VulkanTexture(
-            Vulkan::Image&& image,
+            Vulkan::DeviceImage&& deviceImage,
             VkImageView imageView);
 
-        Vulkan::Image image;
+        Vulkan::DeviceImage deviceImage;
         VkImageView imageView;
 
     };

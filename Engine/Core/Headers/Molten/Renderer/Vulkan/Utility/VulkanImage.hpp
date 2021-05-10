@@ -41,7 +41,7 @@ namespace Molten::Vulkan
 {
 
     class LogicalDevice;
-    class DeviceBuffer;
+    struct DeviceBuffer;
 
 
     /** Vulkan image, backed by device memory. */
@@ -64,8 +64,8 @@ namespace Molten::Vulkan
             LogicalDevice& logicalDevice,
             const Vector3ui32& imageDimensions,
             const VkImageType imageType,
-            const VkFormat imageFormat,
-            const Vulkan::FilteredMemoryTypes& filteredMemoryTypes);
+            const VkFormat imageFormat/*,
+            const Vulkan::FilteredMemoryTypes& filteredMemoryTypes*/);
 
         /** Create image. Device memory is allocated and copied from staging buffer. */
         Result<> Create(
@@ -75,8 +75,8 @@ namespace Molten::Vulkan
             const Vector3ui32& imageDimensions,
             const VkImageType imageType,
             const VkFormat imageFormat,
-            const VkImageLayout imageLayout,
-            const Vulkan::FilteredMemoryTypes& filteredMemoryTypes);
+            const VkImageLayout imageLayout/*,
+            const Vulkan::FilteredMemoryTypes& filteredMemoryTypes*/);
 
         /** Copy data from staging buffer to image. */
         Result<> Update(
@@ -98,8 +98,8 @@ namespace Molten::Vulkan
             VkDevice& logicalDeviceHandle,
             const Vector3ui32& imageDimensions,
             const VkImageType imageType,
-            const VkFormat imageFormat,
-            const Vulkan::FilteredMemoryTypes& filteredMemoryTypes);
+            const VkFormat imageFormat/*,
+            const Vulkan::FilteredMemoryTypes& filteredMemoryTypes*/);
 
         LogicalDevice* m_logicalDevice;
 

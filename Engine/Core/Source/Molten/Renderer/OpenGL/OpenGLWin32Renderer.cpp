@@ -268,12 +268,12 @@ namespace Molten
         return false;
     }
 
-    bool OpenGLWin32Renderer::UpdateTexture(Texture2D& /*texture3D*/, const TextureUpdateDescriptor2D& /*descriptor*/)
+    bool OpenGLWin32Renderer::UpdateTexture(Texture2D& /*texture2D*/, const TextureUpdateDescriptor2D& /*descriptor*/)
     {
         return false;
     }
 
-    bool OpenGLWin32Renderer::UpdateTexture(Texture3D& /*texture2D*/, const TextureUpdateDescriptor3D& /*descriptor*/)
+    bool OpenGLWin32Renderer::UpdateTexture(Texture3D& /*texture3D*/, const TextureUpdateDescriptor3D& /*descriptor*/)
     {
         return false;
     }
@@ -388,11 +388,11 @@ namespace Molten
     {
     }
 
-    void OpenGLWin32Renderer::UpdateUniformBuffer(RenderResource<UniformBuffer>& /*uniformBuffer*/, const size_t /*offset*/, const size_t /*size*/, const void* /*data*/)
+    void OpenGLWin32Renderer::UpdateUniformBuffer(RenderResource<UniformBuffer>& /*uniformBuffer*/, const void* /*data*/, const size_t /*size*/, const size_t /*offset*/)
     {
     }
 
-    void OpenGLWin32Renderer::UpdateFramedUniformBuffer(RenderResource<FramedUniformBuffer>& /*framedUniformBuffer*/, const size_t /*offset*/, const size_t /*size*/, const void* /*data*/)
+    void OpenGLWin32Renderer::UpdateFramedUniformBuffer(RenderResource<FramedUniformBuffer>& /*framedUniformBuffer*/, const void* /*data*/, const size_t /*size*/, const size_t /*offset*/)
     {
     }
 

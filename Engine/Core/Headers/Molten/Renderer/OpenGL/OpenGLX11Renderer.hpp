@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -132,8 +132,8 @@ namespace Molten
         /** Update texture data. */
         /**@{*/
         bool UpdateTexture(Texture1D& texture1D, const TextureUpdateDescriptor1D& descriptor) override;
-        bool UpdateTexture(Texture2D& texture3D, const TextureUpdateDescriptor2D& descriptor) override;
-        bool UpdateTexture(Texture3D& texture2D, const TextureUpdateDescriptor3D& descriptor) override;
+        bool UpdateTexture(Texture2D& texture2D, const TextureUpdateDescriptor2D& descriptor) override;
+        bool UpdateTexture(Texture3D& texture3D, const TextureUpdateDescriptor3D& descriptor) override;
         /**@}*/
 
 
@@ -199,10 +199,10 @@ namespace Molten
         void WaitForDevice() override;
 
         /** Update uniform buffer data. */
-        void UpdateUniformBuffer(RenderResource<UniformBuffer>& uniformBuffer, const size_t offset, const size_t size, const void* data) override;
+        void UpdateUniformBuffer(RenderResource<UniformBuffer>& uniformBuffer, const size_t offset, const void* data, const size_t size, const size_t offset) override;
 
         /** Update uniform buffer data. */
-        void UpdateFramedUniformBuffer(RenderResource<FramedUniformBuffer>& framedUniformBuffer, const size_t offset, const size_t size, const void* data) override;
+        void UpdateFramedUniformBuffer(RenderResource<FramedUniformBuffer>& framedUniformBuffer, const void* data, const size_t size, const size_t offset) override;
 
     private:
 

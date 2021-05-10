@@ -30,10 +30,10 @@ namespace Molten
 
     template<size_t VDimensions>
     VulkanTexture<VDimensions>::VulkanTexture(
-        Vulkan::Image&& image,
+        Vulkan::DeviceImage&& deviceImage,
         VkImageView imageView
     ) :
-        image(std::move(image)),
+        deviceImage(std::move(deviceImage)),
         imageView(imageView)
     {}
 
