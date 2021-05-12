@@ -105,9 +105,8 @@ namespace Molten
     {
         static_assert(VDimensions >= 1 && VDimensions <= 3, "Texture descriptor must be of dimension 1-3.");
 
-        TextureUpdateDescriptor();
-        TextureUpdateDescriptor(
-            const void* data,
+        explicit TextureUpdateDescriptor(
+            const void* data = nullptr,
             Vector<VDimensions, uint32_t> destinationDimensions = {},
             Vector<VDimensions, uint32_t> destinationOffset = {});
         ~TextureUpdateDescriptor() = default;

@@ -25,6 +25,8 @@
 
 #include "Molten/Renderer/Vulkan/Utility/VulkanFunctions.hpp"
 
+#include "Molten/Renderer/Vulkan/Utility/VulkanDeviceImage.hpp"
+
 #if defined(MOLTEN_ENABLE_VULKAN)
 #include "Molten/Renderer/Vulkan/Utility/VulkanLogicalDevice.hpp"
 #include <algorithm>
@@ -473,6 +475,20 @@ namespace Molten::Vulkan
             &barrier
         );
 
+        return true;
+    }
+
+    bool TransitionImageLayout(
+        VkCommandBuffer commandBuffer,
+        DeviceImage& deviceImage,
+        VkImageLayout newLayout)
+    {
+        if(!TransitionImageLayout(commandBuffer, deviceImage.image, deviceImage.layout, newLayout))
+        {
+            return false;
+        }
+
+        deviceImage.layout = newLayout;
         return true;
     }
 

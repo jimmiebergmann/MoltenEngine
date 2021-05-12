@@ -68,13 +68,6 @@ namespace Molten
 
     // Texture update descriptor.
     template<size_t VDimensions>
-    TextureUpdateDescriptor<VDimensions>::TextureUpdateDescriptor() :
-        data(nullptr),
-        destinationDimensions(),
-        destinationOffset()
-    {}
-
-    template<size_t VDimensions>
     TextureUpdateDescriptor<VDimensions>::TextureUpdateDescriptor(
         const void* data,
         Vector<VDimensions, uint32_t> destinationDimensions,

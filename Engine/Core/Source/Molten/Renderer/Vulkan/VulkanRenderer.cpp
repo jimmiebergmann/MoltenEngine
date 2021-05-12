@@ -115,25 +115,25 @@ namespace Molten
         throw Exception("Provided cull mode is not supported by the Vulkan renderer.");
     }
 
-    static VkFormat GetImageFormatAndPixelSize(const ImageFormat imageFormat, uint32_t& pixelSize)
+    static VkFormat GetImageFormat(const ImageFormat imageFormat, uint8_t& bytesPerPixel)
     {
         switch (imageFormat)
         {
-            case ImageFormat::URed8: pixelSize = 1; return VkFormat::VK_FORMAT_R8_UNORM;
-            case ImageFormat::URed8Green8: pixelSize = 2; return VkFormat::VK_FORMAT_R8G8_UNORM;
-            case ImageFormat::URed8Green8Blue8: pixelSize = 3; return VkFormat::VK_FORMAT_R8G8B8_UNORM;
-            case ImageFormat::URed8Green8Blue8Alpha8: pixelSize = 4; return VkFormat::VK_FORMAT_R8G8B8A8_UNORM;
+            case ImageFormat::URed8: bytesPerPixel = 1; return VkFormat::VK_FORMAT_R8_UNORM;
+            case ImageFormat::URed8Green8: bytesPerPixel = 2; return VkFormat::VK_FORMAT_R8G8_UNORM;
+            case ImageFormat::URed8Green8Blue8: bytesPerPixel = 3; return VkFormat::VK_FORMAT_R8G8B8_UNORM;
+            case ImageFormat::URed8Green8Blue8Alpha8: bytesPerPixel = 4; return VkFormat::VK_FORMAT_R8G8B8A8_UNORM;
 
-            case ImageFormat::SrgbRed8Green8Blue8: pixelSize = 3; return VkFormat::VK_FORMAT_R8G8B8_SRGB;
-            case ImageFormat::SrgbRed8Green8Blue8Alpha8: pixelSize = 4; return VkFormat::VK_FORMAT_R8G8B8A8_SRGB;
+            case ImageFormat::SrgbRed8Green8Blue8: bytesPerPixel = 3; return VkFormat::VK_FORMAT_R8G8B8_SRGB;
+            case ImageFormat::SrgbRed8Green8Blue8Alpha8: bytesPerPixel = 4; return VkFormat::VK_FORMAT_R8G8B8A8_SRGB;
 
-            case ImageFormat::SRed8: pixelSize = 1; return VkFormat::VK_FORMAT_R8_SNORM;
-            case ImageFormat::SRed8Green8: pixelSize = 2; return VkFormat::VK_FORMAT_R8G8_SNORM;
-            case ImageFormat::SRed8Green8Blue8: pixelSize = 3; return VkFormat::VK_FORMAT_R8G8B8_SNORM;
-            case ImageFormat::SRed8Green8Blue8Alpha8: pixelSize = 4; return VkFormat::VK_FORMAT_R8G8B8A8_SNORM;
+            case ImageFormat::SRed8: bytesPerPixel = 1; return VkFormat::VK_FORMAT_R8_SNORM;
+            case ImageFormat::SRed8Green8: bytesPerPixel = 2; return VkFormat::VK_FORMAT_R8G8_SNORM;
+            case ImageFormat::SRed8Green8Blue8: bytesPerPixel = 3; return VkFormat::VK_FORMAT_R8G8B8_SNORM;
+            case ImageFormat::SRed8Green8Blue8Alpha8: bytesPerPixel = 4; return VkFormat::VK_FORMAT_R8G8B8A8_SNORM;
 
-            case ImageFormat::UBlue8Green8Red8: pixelSize = 3; return VkFormat::VK_FORMAT_B8G8R8_UNORM;
-            case ImageFormat::UBlue8Green8Red8Alpha8: pixelSize = 4; return VkFormat::VK_FORMAT_B8G8R8A8_UNORM;
+            case ImageFormat::UBlue8Green8Red8: bytesPerPixel = 3; return VkFormat::VK_FORMAT_B8G8R8_UNORM;
+            case ImageFormat::UBlue8Green8Red8Alpha8: bytesPerPixel = 4; return VkFormat::VK_FORMAT_B8G8R8A8_UNORM;
         }
         throw Exception("Provided image format is not supported by the Vulkan renderer.");
     }
@@ -1270,41 +1270,66 @@ namespace Molten
 
     RenderResource<Texture1D> VulkanRenderer::CreateTexture(const TextureDescriptor1D& descriptor)
     {
-        /*uint32_t formatPixelSize = 0;
-        uint32_t internalFormatPixelSize = 0;
-        const auto imageFormat = GetImageFormatAndPixelSize(descriptor.format, formatPixelSize);
-        const auto internalImageFormat = GetImageFormatAndPixelSize(descriptor.internalFormat, internalFormatPixelSize);
-        if(formatPixelSize != internalFormatPixelSize)
+        uint8_t bytesPerPixel = 0;
+        uint8_t internalBytesPerPixel = 0;
+        const auto imageFormat = GetImageFormat(descriptor.format, bytesPerPixel);
+        const auto internalImageFormat = GetImageFormat(descriptor.internalFormat, internalBytesPerPixel);
+        if (bytesPerPixel != internalBytesPerPixel)
         {
-            Logger::WriteError(m_logger, "Format and internal format of texture mismatches number of bytes per pixel: " + 
-                std::to_string(formatPixelSize) + " : " + std::to_string(internalFormatPixelSize));
+            Logger::WriteError(m_logger, "Format and internal format of texture mismatches number of bytes per pixel: " +
+                std::to_string(bytesPerPixel) + " : " + std::to_string(internalBytesPerPixel));
             return { };
         }
 
-        const auto dataSize = static_cast<VkDeviceSize>(descriptor.dimensions.c[0]) * static_cast<VkDeviceSize>(formatPixelSize);
-        const auto dimensions = Vector3ui32{ descriptor.dimensions.c[0], 1, 1 };*/
+        const auto dimensions = Vector3ui32{ descriptor.dimensions.c[0], 1, 1 };
+        const auto dataSize =
+            static_cast<VkDeviceSize>(descriptor.dimensions.c[0]) * static_cast<VkDeviceSize>(bytesPerPixel);
 
-        //return CreateTexture<1>(dimensions, dataSize, descriptor.data, imageFormat, internalImageFormat, GetComponentMappings(descriptor.swizzleMapping));
-        return {};
+        Vulkan::DeviceImage deviceImage;
+        Vulkan::DeviceImageGuard deviceImageGuard(m_memoryAllocator, deviceImage);
+        VkImageView imageView = VK_NULL_HANDLE;
+
+        if (!CreateTexture(
+            deviceImage,
+            imageView,
+            dimensions,
+            descriptor.data,
+            dataSize,
+            imageFormat,
+            internalImageFormat,
+            VulkanImageTypeTraits<1>::type,
+            VulkanImageViewTypeTraits<1>::type,
+            GetComponentMappings(descriptor.swizzleMapping)))
+        {
+            return {};
+        }
+
+        deviceImageGuard.Release();
+
+        return RenderResource<Texture1D>(new VulkanTexture1D{
+            std::move(deviceImage),
+            imageView,
+            bytesPerPixel
+        }, RenderResourceDeleter<Texture1D>{ this });
     }
 
     RenderResource<Texture2D> VulkanRenderer::CreateTexture(const TextureDescriptor2D& descriptor)
     {
-        uint32_t formatPixelSize = 0;
-        uint32_t internalFormatPixelSize = 0;
-        const auto imageFormat = GetImageFormatAndPixelSize(descriptor.format, formatPixelSize); // Rename to BPP (Bytes per pixel).
-        const auto internalImageFormat = GetImageFormatAndPixelSize(descriptor.internalFormat, internalFormatPixelSize);
-        if (formatPixelSize != internalFormatPixelSize)
+        uint8_t bytesPerPixel = 0;
+        uint8_t internalBytesPerPixel = 0;
+        const auto imageFormat = GetImageFormat(descriptor.format, bytesPerPixel);
+        const auto internalImageFormat = GetImageFormat(descriptor.internalFormat, internalBytesPerPixel);
+        if (bytesPerPixel != internalBytesPerPixel)
         {
             Logger::WriteError(m_logger, "Format and internal format of texture mismatches number of bytes per pixel: " +
-                std::to_string(formatPixelSize) + " : " + std::to_string(internalFormatPixelSize));
+                std::to_string(bytesPerPixel) + " : " + std::to_string(internalBytesPerPixel));
             return { };
         }
 
         const auto dimensions = Vector3ui32{ descriptor.dimensions.x, descriptor.dimensions.y, 1 };
         const auto dataSize =
             static_cast<VkDeviceSize>(descriptor.dimensions.x) *
-            static_cast<VkDeviceSize>(descriptor.dimensions.y) * static_cast<VkDeviceSize>(formatPixelSize);
+            static_cast<VkDeviceSize>(descriptor.dimensions.y) * static_cast<VkDeviceSize>(bytesPerPixel);
 
         Vulkan::DeviceImage deviceImage;
         Vulkan::DeviceImageGuard deviceImageGuard(m_memoryAllocator, deviceImage);
@@ -1328,32 +1353,57 @@ namespace Molten
         deviceImageGuard.Release();
 
         return RenderResource<Texture2D>(new VulkanTexture2D{
-           std::move(deviceImage),
-           imageView
+            std::move(deviceImage),
+            imageView,
+            bytesPerPixel
         }, RenderResourceDeleter<Texture2D>{ this });
     }
 
     RenderResource<Texture3D> VulkanRenderer::CreateTexture(const TextureDescriptor3D& descriptor)
     {
-        /*uint32_t formatPixelSize = 0;
-        uint32_t internalFormatPixelSize = 0;
-        const auto imageFormat = GetImageFormatAndPixelSize(descriptor.format, formatPixelSize);
-        const auto internalImageFormat = GetImageFormatAndPixelSize(descriptor.internalFormat, internalFormatPixelSize);
-        if (formatPixelSize != internalFormatPixelSize)
+        uint8_t bytesPerPixel = 0;
+        uint8_t internalBytesPerPixel = 0;
+        const auto imageFormat = GetImageFormat(descriptor.format, bytesPerPixel);
+        const auto internalImageFormat = GetImageFormat(descriptor.internalFormat, internalBytesPerPixel);
+        if (bytesPerPixel != internalBytesPerPixel)
         {
             Logger::WriteError(m_logger, "Format and internal format of texture mismatches number of bytes per pixel: " +
-                std::to_string(formatPixelSize) + " : " + std::to_string(internalFormatPixelSize));
+                std::to_string(bytesPerPixel) + " : " + std::to_string(internalBytesPerPixel));
             return { };
         }
 
+        const auto dimensions = descriptor.dimensions;
         const auto dataSize =
             static_cast<VkDeviceSize>(descriptor.dimensions.x) *
             static_cast<VkDeviceSize>(descriptor.dimensions.y) *
-            static_cast<VkDeviceSize>(descriptor.dimensions.z) * static_cast<VkDeviceSize>(formatPixelSize);
-        const auto dimensions = Vector3ui32{ descriptor.dimensions.x, descriptor.dimensions.y, descriptor.dimensions.z };*/
+            static_cast<VkDeviceSize>(descriptor.dimensions.z) * static_cast<VkDeviceSize>(bytesPerPixel);
 
-        //return CreateTexture<3>(dimensions, dataSize, descriptor.data, imageFormat, internalImageFormat, GetComponentMappings(descriptor.swizzleMapping));
-        return {};
+        Vulkan::DeviceImage deviceImage;
+        Vulkan::DeviceImageGuard deviceImageGuard(m_memoryAllocator, deviceImage);
+        VkImageView imageView = VK_NULL_HANDLE;
+
+        if (!CreateTexture(
+            deviceImage,
+            imageView,
+            dimensions,
+            descriptor.data,
+            dataSize,
+            imageFormat,
+            internalImageFormat,
+            VulkanImageTypeTraits<3>::type,
+            VulkanImageViewTypeTraits<3>::type,
+            GetComponentMappings(descriptor.swizzleMapping)))
+        {
+            return {};
+        }
+
+        deviceImageGuard.Release();
+
+        return RenderResource<Texture3D>(new VulkanTexture3D{
+            std::move(deviceImage),
+            imageView,
+            bytesPerPixel
+        }, RenderResourceDeleter<Texture3D>{ this });
     }
 
     RenderResource<UniformBuffer> VulkanRenderer::CreateUniformBuffer(const UniformBufferDescriptor& descriptor)
@@ -1456,65 +1506,52 @@ namespace Molten
 
     bool VulkanRenderer::UpdateTexture(Texture1D& texture1D, const TextureUpdateDescriptor1D& descriptor)
     {
-        /*
         auto& vulkanTexture = static_cast<VulkanTexture1D&>(texture1D);
 
-        const size_t dataSize = descriptor.destinationDimensions.c[0];
-        const Vector3ui32 destinationDimensions = {
+        const auto destinationDimensions = Vector3ui32{
             descriptor.destinationDimensions.c[0], 1, 1
         };
-        const Vector3ui32 destinationOffset = {
+        const auto destinationOffset = Vector3ui32{
             descriptor.destinationOffset.c[0], 0, 0
         };
 
-        return UpdateTexture<1>(
-            vulkanTexture.image,
+        return UpdateTexture(
+            vulkanTexture.deviceImage,
+            vulkanTexture.bytesPerPixel,
             descriptor.data,
-            dataSize,
             destinationDimensions,
             destinationOffset);
-            */
-        return false;
     }
 
     bool VulkanRenderer::UpdateTexture(Texture2D& texture2D, const TextureUpdateDescriptor2D& descriptor)
     {
-        /*
         auto& vulkanTexture = static_cast<VulkanTexture2D&>(texture2D);
 
-        const size_t dataSize = descriptor.destinationDimensions.x * descriptor.destinationDimensions.y;
-        const Vector3ui32 destinationDimensions = {
+        const auto destinationDimensions = Vector3ui32{
             descriptor.destinationDimensions.x, descriptor.destinationDimensions.y, 1
         };
-        const Vector3ui32 destinationOffset = {
+        const auto destinationOffset = Vector3ui32{
             descriptor.destinationOffset.x, descriptor.destinationOffset.y, 0
         };
 
-        return UpdateTexture<2>(
-            vulkanTexture.image,
+        return UpdateTexture(
+            vulkanTexture.deviceImage,
+            vulkanTexture.bytesPerPixel,
             descriptor.data,
-            dataSize,
             destinationDimensions,
             destinationOffset);
-        */
-        return false;
     }
 
     bool VulkanRenderer::UpdateTexture(Texture3D& texture3D, const TextureUpdateDescriptor3D& descriptor)
     {
-        /*
         auto& vulkanTexture = static_cast<VulkanTexture3D&>(texture3D);
 
-        const size_t dataSize = descriptor.destinationDimensions.x * descriptor.destinationDimensions.y * descriptor.destinationDimensions.z;
-
-        return UpdateTexture<3>(
-            vulkanTexture.image,
+        return UpdateTexture(
+            vulkanTexture.deviceImage,
+            vulkanTexture.bytesPerPixel,
             descriptor.data,
-            dataSize,
             descriptor.destinationDimensions,
             descriptor.destinationOffset);
-        */
-        return false;
     }
 
     void VulkanRenderer::Destroy(DescriptorSet& descriptorSet)
@@ -2161,7 +2198,7 @@ namespace Molten
         return m_endedDraws + m_swapChain.GetMaxFramesInFlight() + 2;
     }
 
-    bool VulkanRenderer::VulkanRenderer::CreateTexture(
+    bool VulkanRenderer::CreateTexture(
         Vulkan::DeviceImage& deviceImage,
         VkImageView& imageView,
         const Vector3ui32& dimensions,
@@ -2220,52 +2257,25 @@ namespace Molten
         }
 
         // Transfer staging buffer to image memory.
-        VkCommandBuffer commandBuffer = nullptr;
-        if (!(result = Vulkan::BeginSingleTimeCommands(commandBuffer, m_logicalDevice, m_commandPool)))
-        {
-            Vulkan::Logger::WriteError(m_logger, result, "Failed to begin single time command.");
-            return false;
-        }
+        VkBufferImageCopy copyRegion = {};
+        copyRegion.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        copyRegion.imageSubresource.layerCount = 1;
+        copyRegion.imageExtent = { dimensions.x, dimensions.y, dimensions.z };
 
-        constexpr VkImageLayout transferLayout = VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-        if (!Vulkan::TransitionImageLayout(commandBuffer, deviceImage.image, deviceImage.layout, transferLayout))
+        if(!(result = Vulkan::CopyDeviceBufferToDeviceImage(
+            stagingBuffer.deviceBuffer,
+            deviceImage,
+            m_logicalDevice,
+            m_commandPool,
+            copyRegion,
+            VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)))
         {
-            Vulkan::Logger::WriteError(m_logger, result, "Failed to transition image layout from " + std::to_string(deviceImage.layout) + " to " + std::to_string(transferLayout) + ".");
-            return false;
-        }
-        deviceImage.layout = transferLayout;
-
-        VkBufferImageCopy region = {};
-        region.bufferOffset = 0;
-        region.bufferRowLength = 0;
-        region.bufferImageHeight = 0;
-        region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        region.imageSubresource.mipLevel = 0;
-        region.imageSubresource.baseArrayLayer = 0;
-        region.imageSubresource.layerCount = 1;
-        region.imageOffset = { 0, 0, 0 };
-        region.imageExtent.width = dimensions.x;
-        region.imageExtent.height = dimensions.y;
-        region.imageExtent.depth = dimensions.z;
-        vkCmdCopyBufferToImage(commandBuffer, stagingBuffer.deviceBuffer.buffer, deviceImage.image, deviceImage.layout, 1, &region);
-
-        constexpr VkImageLayout optimalLayout = VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        if (!Vulkan::TransitionImageLayout(commandBuffer, deviceImage.image, deviceImage.layout, optimalLayout))
-        {
-            Vulkan::Logger::WriteError(m_logger, result, "Failed to transition image layout from " + 
-                std::to_string(deviceImage.layout) + " to " + std::to_string(optimalLayout) + ".");
-            return false;
-        }
-        deviceImage.layout = optimalLayout;
-
-        if (!(result = Vulkan::EndSingleTimeCommands(commandBuffer, m_logicalDevice, m_commandPool)))
-        {
-            Vulkan::Logger::WriteError(m_logger, result, "Failed to end single time command.");
-            return { };
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to copy staging buffer to image");
+            return result;
         }
 
         // Create image view.
-        VkImageViewCreateInfo viewInfo{};
+        VkImageViewCreateInfo viewInfo = {};
         viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
         viewInfo.image = deviceImage.image;
         viewInfo.viewType = imageViewType;
@@ -2285,10 +2295,63 @@ namespace Molten
         return true;
     }
 
+    bool VulkanRenderer::UpdateTexture(
+        Vulkan::DeviceImage& deviceImage,
+        const uint8_t bytesPerPixel,
+        const void* data,
+        const Vector3ui32& destinationDimensions,
+        const Vector3ui32& destinationOffset)
+    {
+        const auto dataSize = 
+            static_cast<VkDeviceSize>(destinationDimensions.x) *
+            static_cast<VkDeviceSize>(destinationDimensions.y) *
+            static_cast<VkDeviceSize>(destinationDimensions.z) *
+            static_cast<VkDeviceSize>(bytesPerPixel);
+
+        Vulkan::GuardedDeviceBuffer stagingBuffer(m_memoryAllocator);
+
+        Vulkan::Result<> result;
+        if (!(result = m_memoryAllocator.CreateDeviceBuffer(
+            stagingBuffer.deviceBuffer,
+            dataSize,
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)))
+        {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to create staging buffer for texture update");
+            return false;
+        }
+
+        if (!(result = Vulkan::MapMemory(m_logicalDevice, stagingBuffer.deviceBuffer, data, dataSize, 0)))
+        {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to map staging buffer for texture update");
+            return false;
+        }
+
+        VkBufferImageCopy copyRegion = {};
+        copyRegion.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        copyRegion.imageSubresource.layerCount = 1;
+        copyRegion.imageOffset = { static_cast<int32_t>(destinationOffset.x), static_cast<int32_t>(destinationOffset.y), static_cast<int32_t>(destinationOffset.z) };
+        copyRegion.imageExtent = { destinationDimensions.x, destinationDimensions.y, destinationDimensions.z };
+
+        if (!(result = Vulkan::CopyDeviceBufferToDeviceImage(
+            stagingBuffer.deviceBuffer,
+            deviceImage,
+            m_logicalDevice,
+            m_commandPool,
+            copyRegion,
+            VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)))
+        {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to copy staging buffer to image for textute update");
+            return false;
+        }
+
+        return true;
+    }
+
     bool VulkanRenderer::CreateVertexInputAttributes(
         const Shader::Visual::InputInterface& inputs,
         std::vector<VkVertexInputAttributeDescription>& attributes, 
-        uint32_t& stride)
+        uint32_t& stride) const
     {
         attributes.resize(inputs.GetMemberCount());
         size_t index = 0;

@@ -47,10 +47,12 @@ namespace Molten
         VulkanTexture() = delete;
         VulkanTexture(
             Vulkan::DeviceImage&& deviceImage,
-            VkImageView imageView);
+            VkImageView imageView,
+            const uint8_t bytesPerPixel);
 
         Vulkan::DeviceImage deviceImage;
         VkImageView imageView;
+        uint8_t bytesPerPixel;
 
     };
 

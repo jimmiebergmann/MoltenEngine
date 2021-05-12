@@ -234,6 +234,7 @@ namespace Molten
         uint32_t GetNextDestroyerFrameIndex() const;
 
         /** Texture creation/update helper functions.*/
+        /**@{*/
         bool CreateTexture(
             Vulkan::DeviceImage& deviceImage,
             VkImageView& imageView,
@@ -246,23 +247,12 @@ namespace Molten
             const VkImageViewType imageViewType,
             const VkComponentMapping& componentMapping);
 
-        /**@{*/
-       /* template<size_t VDimensions>
-        RenderResource<Texture<VDimensions>> CreateTexture(
-            const Vector3ui32& dimensions,
-            const size_t dataSize,
-            const void* data,
-            const VkFormat imageFormat,
-            const VkFormat internalImageFormat,
-            const VkComponentMapping& componentMapping);
-
-        template<size_t VDimensions>
         bool UpdateTexture(
-            Vulkan::Image& image,
+            Vulkan::DeviceImage& deviceImage,
+            const uint8_t bytesPerPixel,
             const void* data,
-            const size_t dataSize,
             const Vector3ui32& destinationDimensions,
-            const Vector3ui32& destinationOffset);*/
+            const Vector3ui32& destinationOffset);
         /**@}*/
 
         /** Shader creation and manipulation functions. */
@@ -270,7 +260,7 @@ namespace Molten
         bool CreateVertexInputAttributes(
             const Shader::Visual::InputInterface& inputs,
             std::vector<VkVertexInputAttributeDescription>& attributes, 
-            uint32_t& stride);
+            uint32_t& stride) const;
         
         bool CreateDescriptorSetLayouts(
             Vulkan::DescriptorSetLayouts& setLayouts,

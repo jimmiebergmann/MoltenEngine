@@ -30,12 +30,14 @@
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 #include "Molten/Renderer/Vulkan/Utility/VulkanMemory.hpp"
+#include "Molten/Math/Vector.hpp"
 
 namespace Molten::Vulkan
 {
 
     /** Forward declarations. */
     class MemoryAllocator;
+    struct DeviceBuffer;
 
 
     /** Vulkan device image, backed by device memory. */
@@ -89,6 +91,19 @@ namespace Molten::Vulkan
         DeviceImage* m_deviceImage;
 
     };
+
+
+    /** Copy device buffer to device image.
+     *  Image layout is transitioned to finalImageLayout at completion.
+     *  Provide deviceImage.layout to restore it at completion.
+     */
+    MOLTEN_API Result<> CopyDeviceBufferToDeviceImage(
+        DeviceBuffer& deviceBuffer,
+        DeviceImage& deviceImage,
+        LogicalDevice& logicalDevice,
+        VkCommandPool commandPool,
+        const VkBufferImageCopy& bufferImageCopy,
+        const VkImageLayout finalImageLayout);
 
 }
 

@@ -27,6 +27,9 @@
 
 #include "Molten/Renderer/Vulkan/Utility/VulkanDeviceImage.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanMemoryAllocator.hpp"
+#include "Molten/Renderer/Vulkan/Utility/VulkanLogicalDevice.hpp"
+#include "Molten/Renderer/Vulkan/Utility/VulkanFunctions.hpp"
+#include "Molten/Renderer/Vulkan/Utility/VulkanDeviceBuffer.hpp"
 
 namespace Molten::Vulkan
 {
@@ -85,6 +88,52 @@ namespace Molten::Vulkan
     void DeviceImageGuard::Release()
     {
         m_deviceImage = nullptr;
+    }
+
+
+    // Global functions implementations.
+    Result<> CopyDeviceBufferToDeviceImage(
+        DeviceBuffer& deviceBuffer,
+        DeviceImage& deviceImage,
+        LogicalDevice& logicalDevice,
+        VkCommandPool commandPool,
+        const VkBufferImageCopy& bufferImageCopy,
+        const VkImageLayout finalImageLayout)
+    {
+        Result<> result;
+        VkCommandBuffer commandBuffer = nullptr;
+        if (!(result = BeginSingleTimeCommands(commandBuffer, logicalDevice, commandPool)))
+        {
+            return result;
+        }
+
+        if(!TransitionImageLayout(commandBuffer, deviceImage, VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL))
+        {
+            return VkResult::VK_ERROR_UNKNOWN;
+        }
+
+        vkCmdCopyBufferToImage(
+            commandBuffer,
+            deviceBuffer.buffer,
+            deviceImage.image,
+            deviceImage.layout,
+            1,
+            &bufferImageCopy);
+
+        if(deviceImage.layout != finalImageLayout)
+        {
+            if (!TransitionImageLayout(commandBuffer, deviceImage, finalImageLayout))
+            {
+                return VkResult::VK_ERROR_UNKNOWN;
+            }
+        }
+
+        if (!(result = Vulkan::EndSingleTimeCommands(commandBuffer, logicalDevice, commandPool)))
+        {
+            return result;
+        }
+
+        return result;
     }
 
 }

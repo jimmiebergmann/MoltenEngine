@@ -43,6 +43,7 @@ namespace Molten::Vulkan
 {
 
     class LogicalDevice;
+    struct DeviceImage;
 
 
     /** Create N number of fences. */
@@ -122,11 +123,18 @@ namespace Molten::Vulkan
 
 
     /** Function for changing layout of image. */
+    /**@{*/
     MOLTEN_API bool TransitionImageLayout(
         VkCommandBuffer commandBuffer,
         VkImage image,
         VkImageLayout oldLayout,
         VkImageLayout newLayout);
+
+    MOLTEN_API bool TransitionImageLayout(
+        VkCommandBuffer commandBuffer,
+        DeviceImage& deviceImage,
+        VkImageLayout newLayout);
+    /**@}*/
 
 }
 

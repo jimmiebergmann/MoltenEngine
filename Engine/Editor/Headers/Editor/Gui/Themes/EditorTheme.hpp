@@ -87,7 +87,7 @@ namespace Molten::Gui
                 {
                     auto* texture = static_cast<CanvasRendererTexture*>(fontAtlas->metaData);
 
-                    const TextureUpdateDescriptor2D textureUpdateDesc = {
+                    const auto textureUpdateDesc = TextureUpdateDescriptor2D{
                        fontAtlas->GetBuffer(),
                        fontAtlas->GetImageDimensions()
                     };

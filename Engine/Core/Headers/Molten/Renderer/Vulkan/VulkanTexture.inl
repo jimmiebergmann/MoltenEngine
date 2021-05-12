@@ -31,10 +31,12 @@ namespace Molten
     template<size_t VDimensions>
     VulkanTexture<VDimensions>::VulkanTexture(
         Vulkan::DeviceImage&& deviceImage,
-        VkImageView imageView
+        VkImageView imageView,
+        const uint8_t bytesPerPixel
     ) :
         deviceImage(std::move(deviceImage)),
-        imageView(imageView)
+        imageView(imageView),
+        bytesPerPixel(bytesPerPixel)
     {}
 
 }
