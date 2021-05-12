@@ -61,34 +61,9 @@ namespace Molten::Vulkan
     };
 
 
-    /** Device buffer guard. Returning DeviceBuffer member to allocator at destruction.
-     *  DeviceBuffer object is not returned if DeviceBuffer::IsEmpty is true.
-     *  Another approach to not return DeviceBuffer to allocator is to move it before destruction.
-     */
-    class MOLTEN_API GuardedDeviceBuffer
-    {
-
-    public:
-
-        [[nodiscard]] explicit GuardedDeviceBuffer(MemoryAllocator& memoryAllocator);
-
-        ~GuardedDeviceBuffer();
-
-        GuardedDeviceBuffer(const GuardedDeviceBuffer&) = delete;
-        GuardedDeviceBuffer(GuardedDeviceBuffer&&) = delete;
-        GuardedDeviceBuffer& operator =(const GuardedDeviceBuffer&) = delete;
-        GuardedDeviceBuffer& operator =(GuardedDeviceBuffer&&) = delete;
-
-        DeviceBuffer deviceBuffer;
-
-    private:
- 
-        MemoryAllocator& m_memoryAllocator;
-
-    };
-
     /** External device buffer guard.
-     *  Works the same way as GuardedDeviceBuffer, but for an external DeviceBuffer object, passed by the user.
+     *  DeviceBuffer object is not returned if DeviceBuffer::IsEmpty is true
+     *  or Release is called before destruction.
      */
     class MOLTEN_API DeviceBufferGuard
     {
@@ -113,36 +88,6 @@ namespace Molten::Vulkan
 
         MemoryAllocator& m_memoryAllocator;
         DeviceBuffer* m_deviceBuffer;
-
-    };
-
-
-    /** External device buffer guards.
-     *  Works the same way as DeviceBufferGuard, but guards multiple DeviceBuffers.
-     */
-    class MOLTEN_API DeviceBufferGuards
-    {
-
-    public:
-
-        [[nodiscard]] DeviceBufferGuards(
-            MemoryAllocator& memoryAllocator,
-            std::vector<DeviceBuffer>& deviceBuffers);
-
-        ~DeviceBufferGuards();
-
-        DeviceBufferGuards(const DeviceBufferGuards&) = delete;
-        DeviceBufferGuards(DeviceBufferGuards&&) = delete;
-        DeviceBufferGuards& operator =(const DeviceBufferGuards&) = delete;
-        DeviceBufferGuards& operator =(DeviceBufferGuards&&) = delete;
-
-        /** Provided DeviceBuffer vector object is released from guard.*/
-        void Release();
-
-    private:
-
-        MemoryAllocator& m_memoryAllocator;
-        std::vector<DeviceBuffer>* m_deviceBuffers;
 
     };
     

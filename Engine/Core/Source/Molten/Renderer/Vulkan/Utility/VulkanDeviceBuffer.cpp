@@ -60,20 +60,6 @@ namespace Molten::Vulkan
     }
 
 
-    // Guarded device buffer implementations.
-    GuardedDeviceBuffer::GuardedDeviceBuffer(MemoryAllocator& memoryAllocator) :
-        m_memoryAllocator(memoryAllocator)
-    {}
-
-    GuardedDeviceBuffer::~GuardedDeviceBuffer()
-    {
-        if (!deviceBuffer.IsEmpty())
-        {
-            m_memoryAllocator.FreeDeviceBuffer(deviceBuffer);
-        }
-    }
-
-
     // Device buffer guard implementations.
     DeviceBufferGuard::DeviceBufferGuard(
         MemoryAllocator& memoryAllocator,
@@ -94,32 +80,6 @@ namespace Molten::Vulkan
     void DeviceBufferGuard::Release()
     {
         m_deviceBuffer = nullptr;
-    }
-
-
-    // Device buffer guards implementations.
-    DeviceBufferGuards::DeviceBufferGuards(
-        MemoryAllocator& memoryAllocator,
-        std::vector<DeviceBuffer>& deviceBuffers
-    ) :
-        m_memoryAllocator(memoryAllocator),
-        m_deviceBuffers(&deviceBuffers)
-    {}
-
-    DeviceBufferGuards::~DeviceBufferGuards()
-    {
-        if (m_deviceBuffers)
-        {
-            for (auto& deviceBuffer : *m_deviceBuffers)
-            {
-                m_memoryAllocator.FreeDeviceBuffer(deviceBuffer);
-            }
-        }
-    }
-
-    void DeviceBufferGuards::Release()
-    {
-        m_deviceBuffers = nullptr;
     }
 
 }

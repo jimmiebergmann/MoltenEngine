@@ -923,11 +923,12 @@ namespace Molten
     {
         const auto bufferSize = static_cast<VkDeviceSize>(descriptor.indexCount) * GetIndexBufferDataTypeSize(descriptor.dataType);
 
-        Vulkan::GuardedDeviceBuffer stagingBuffer(m_memoryAllocator);
+        Vulkan::DeviceBuffer stagingBuffer;
+        Vulkan::DeviceBufferGuard stagingBufferGuard(m_memoryAllocator, stagingBuffer);
 
         Vulkan::Result<> result;
         if (!(result = m_memoryAllocator.CreateDeviceBuffer(
-            stagingBuffer.deviceBuffer,
+            stagingBuffer,
             bufferSize,
             VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)))
@@ -936,16 +937,17 @@ namespace Molten
             return { };
         }
 
-        if (!(result = Vulkan::MapMemory(m_logicalDevice, stagingBuffer.deviceBuffer, descriptor.data, bufferSize, 0)))
+        if (!(result = Vulkan::MapMemory(m_logicalDevice, stagingBuffer, descriptor.data, bufferSize, 0)))
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to map staging buffer for index buffer");
             return { };
         }
 
-        Vulkan::GuardedDeviceBuffer indexBuffer(m_memoryAllocator);
+        Vulkan::DeviceBuffer indexBuffer;
+        Vulkan::DeviceBufferGuard indexBufferGuard(m_memoryAllocator, indexBuffer);
 
         if (!(result = m_memoryAllocator.CreateDeviceBuffer(
-            indexBuffer.deviceBuffer,
+            indexBuffer,
             bufferSize,
             VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)))
@@ -954,14 +956,16 @@ namespace Molten
             return { };
         }
 
-        if (!(result = Vulkan::CopyMemory(m_logicalDevice, m_commandPool, stagingBuffer.deviceBuffer, indexBuffer.deviceBuffer, bufferSize)))
+        if (!(result = Vulkan::CopyMemory(m_logicalDevice, m_commandPool, stagingBuffer, indexBuffer, bufferSize)))
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to copy from staging buffer to index buffer");
             return { };
         }
 
+        indexBufferGuard.Release();
+
         return RenderResource<IndexBuffer>(new VulkanIndexBuffer{
-            std::move(indexBuffer.deviceBuffer),
+            std::move(indexBuffer),
             descriptor.indexCount,
             descriptor.dataType
         }, RenderResourceDeleter<IndexBuffer>{ this });
@@ -1429,7 +1433,19 @@ namespace Molten
     RenderResource<FramedUniformBuffer> VulkanRenderer::CreateFramedUniformBuffer(const FramedUniformBufferDescriptor& descriptor)
     {
         std::vector<Vulkan::DeviceBuffer> deviceBuffers(m_swapChain.GetImageCount());
-        Vulkan::DeviceBufferGuards deviceBufferGuards(m_memoryAllocator, deviceBuffers);
+
+        SmartFunction destroyer([&]()
+        {
+            for(auto& deviceBuffer : deviceBuffers)
+            {
+                if(deviceBuffer.IsEmpty())
+                {
+                    return;
+                }
+
+                m_memoryAllocator.FreeDeviceBuffer(deviceBuffer);
+            }
+        });
 
         Vulkan::Result<> result;
 
@@ -1446,7 +1462,7 @@ namespace Molten
             }
         }
 
-        deviceBufferGuards.Release();
+        destroyer.Release();
 
         return RenderResource<FramedUniformBuffer>(new VulkanFramedUniformBuffer{
             std::move(deviceBuffers)
@@ -1461,10 +1477,11 @@ namespace Molten
             static_cast<VkDeviceSize>(descriptor.vertexCount) *
             static_cast<VkDeviceSize>(descriptor.vertexSize);
 
-        Vulkan::GuardedDeviceBuffer stagingBuffer(m_memoryAllocator);
+        Vulkan::DeviceBuffer stagingBuffer;
+        Vulkan::DeviceBufferGuard stagingBufferGuard(m_memoryAllocator, stagingBuffer);
 
         if(!(result = m_memoryAllocator.CreateDeviceBuffer(
-            stagingBuffer.deviceBuffer,
+            stagingBuffer,
             bufferSize,
             VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)))
@@ -1473,16 +1490,17 @@ namespace Molten
             return { };
         }
 
-        if (!(result = Vulkan::MapMemory(m_logicalDevice, stagingBuffer.deviceBuffer, descriptor.data, bufferSize, 0)))
+        if (!(result = Vulkan::MapMemory(m_logicalDevice, stagingBuffer, descriptor.data, bufferSize, 0)))
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to map staging buffer for vertex buffer");
             return { };
         }
 
-        Vulkan::GuardedDeviceBuffer vertexBuffer(m_memoryAllocator);
+        Vulkan::DeviceBuffer vertexBuffer;
+        Vulkan::DeviceBufferGuard vertexBufferGuard(m_memoryAllocator, stagingBuffer);
 
         if (!(result = m_memoryAllocator.CreateDeviceBuffer(
-            vertexBuffer.deviceBuffer,
+            vertexBuffer,
             bufferSize,
             VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)))
@@ -1491,14 +1509,16 @@ namespace Molten
             return { };
         }
 
-        if (!(result = Vulkan::CopyMemory(m_logicalDevice, m_commandPool, stagingBuffer.deviceBuffer, vertexBuffer.deviceBuffer, bufferSize)))
+        if (!(result = Vulkan::CopyMemory(m_logicalDevice, m_commandPool, stagingBuffer, vertexBuffer, bufferSize)))
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to copy from staging buffer to vertex buffer");
             return { };
         }
 
+        vertexBufferGuard.Release();
+
         return RenderResource<VertexBuffer>(new VulkanVertexBuffer{
-            std::move(vertexBuffer.deviceBuffer),
+            std::move(vertexBuffer),
             descriptor.vertexCount,
             descriptor.vertexSize
         }, RenderResourceDeleter<VertexBuffer>{ this });
@@ -2210,12 +2230,13 @@ namespace Molten
         const VkImageViewType imageViewType,
         const VkComponentMapping& componentMapping)
     {
-        Vulkan::GuardedDeviceBuffer stagingBuffer(m_memoryAllocator);
+        Vulkan::DeviceBuffer stagingBuffer;
+        Vulkan::DeviceBufferGuard stagingBufferGuard(m_memoryAllocator, stagingBuffer);
 
         // Create staging buffer.
         Vulkan::Result<> result;
         if (!(result = m_memoryAllocator.CreateDeviceBuffer(
-            stagingBuffer.deviceBuffer,
+            stagingBuffer,
             dataSize,
             VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)))
@@ -2224,7 +2245,7 @@ namespace Molten
             return false;
         }
 
-        if (!(result = Vulkan::MapMemory(m_logicalDevice, stagingBuffer.deviceBuffer, data, dataSize, 0)))
+        if (!(result = Vulkan::MapMemory(m_logicalDevice, stagingBuffer, data, dataSize, 0)))
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to map staging buffer for vertex buffer");
             return false;
@@ -2263,7 +2284,7 @@ namespace Molten
         copyRegion.imageExtent = { dimensions.x, dimensions.y, dimensions.z };
 
         if(!(result = Vulkan::CopyDeviceBufferToDeviceImage(
-            stagingBuffer.deviceBuffer,
+            stagingBuffer,
             deviceImage,
             m_logicalDevice,
             m_commandPool,
@@ -2308,11 +2329,12 @@ namespace Molten
             static_cast<VkDeviceSize>(destinationDimensions.z) *
             static_cast<VkDeviceSize>(bytesPerPixel);
 
-        Vulkan::GuardedDeviceBuffer stagingBuffer(m_memoryAllocator);
+        Vulkan::DeviceBuffer stagingBuffer;
+        Vulkan::DeviceBufferGuard stagingBufferGuard(m_memoryAllocator, stagingBuffer);
 
         Vulkan::Result<> result;
         if (!(result = m_memoryAllocator.CreateDeviceBuffer(
-            stagingBuffer.deviceBuffer,
+            stagingBuffer,
             dataSize,
             VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)))
@@ -2321,7 +2343,7 @@ namespace Molten
             return false;
         }
 
-        if (!(result = Vulkan::MapMemory(m_logicalDevice, stagingBuffer.deviceBuffer, data, dataSize, 0)))
+        if (!(result = Vulkan::MapMemory(m_logicalDevice, stagingBuffer, data, dataSize, 0)))
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to map staging buffer for texture update");
             return false;
@@ -2334,7 +2356,7 @@ namespace Molten
         copyRegion.imageExtent = { destinationDimensions.x, destinationDimensions.y, destinationDimensions.z };
 
         if (!(result = Vulkan::CopyDeviceBufferToDeviceImage(
-            stagingBuffer.deviceBuffer,
+            stagingBuffer,
             deviceImage,
             m_logicalDevice,
             m_commandPool,
