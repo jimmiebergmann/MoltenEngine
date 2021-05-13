@@ -35,10 +35,10 @@ namespace Molten::Gui
     // Widget skin mixin implementations.
     template<typename TTheme, template<typename> typename TWidget>
     WidgetSkinMixin<TTheme, TWidget>::WidgetSkinMixin(const WidgetSkinDescriptor<TTheme, TWidget>& descriptor) :
-        m_state{},
         theme(descriptor.theme),
         widget(descriptor.widget),
-        widgetData(descriptor.widgetData)
+        widgetData(descriptor.widgetData),
+        m_state{}
     {}
      
     template<typename TTheme, template<typename> typename TWidget>

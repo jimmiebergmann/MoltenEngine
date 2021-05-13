@@ -121,7 +121,7 @@ endif()
 if(FreeType2_FOUND)
   target_include_directories(Molten PUBLIC "${FreeType2_INCLUDE}")
   target_link_libraries(Molten "${FreeType2_LIBRARY}")
-  #target_compile_definitions(Molten PUBLIC "MOLTEN_ENABLE_VULKAN")
+  set_target_properties("${FreeType2_LIBRARY}" PROPERTIES POSITION_INDEPENDENT_CODE ON)
 endif()
 
 target_include_directories(Molten PUBLIC "${VendorDir}")
