@@ -31,7 +31,7 @@
 #if defined(MOLTEN_ENABLE_VULKAN)
 
 #include "Molten/Renderer/Vulkan/Utility/VulkanMemory.hpp"
-#include<list>
+#include <memory>
 
 MOLTEN_UNSCOPED_ENUM_BEGIN
 
@@ -42,7 +42,8 @@ namespace Molten::Vulkan
     struct MOLTEN_API MemoryBlock
     {
         explicit MemoryBlock(const VkDeviceSize size);
-        ~MemoryBlock() = default;
+
+        ~MemoryBlock(); 
 
         MemoryBlock(MemoryBlock&& memoryBlock) noexcept;
         MemoryBlock& operator = (MemoryBlock&& memoryBlock) noexcept;
@@ -50,11 +51,11 @@ namespace Molten::Vulkan
         MemoryBlock(const MemoryBlock&) = delete;
         MemoryBlock& operator = (const MemoryBlock&) = delete;
         
-
         VkDeviceMemory deviceMemory;
         VkDeviceSize size;
-        MemoryHandle firstMemoryHandle;
-        std::list<MemoryHandle> freeMemoryHandles;
+        std::unique_ptr<Memory> firstMemory;
+        Memory* firstFreeMemory;
+        Memory* lastFreeMemory;
     };
 
 }

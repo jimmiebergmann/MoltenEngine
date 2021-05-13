@@ -39,7 +39,7 @@ namespace Molten::Vulkan
     // Vulkan memory allocator implementations.
     MemoryAllocator::MemoryAllocator() :
         m_logger(nullptr),
-        m_logicalDevice(nullptr),
+        m_logicalDeviceHandle(VK_NULL_HANDLE),
         m_physicalDevice(nullptr),
         m_pageSize(0),
         m_blockAllocationSize(0)
@@ -53,19 +53,19 @@ namespace Molten::Vulkan
     Result<> MemoryAllocator::Load(
         LogicalDevice& logicalDevice,
         VkDeviceSize blockAllocationSize,
-        Logger* logger)
+        Molten::Logger* logger)
     {
         Destroy();
 
         m_logger = logger;
 
-        m_logicalDevice = &logicalDevice;
-        if(!m_logicalDevice->GetHandle())
+        m_logicalDeviceHandle = logicalDevice.GetHandle();
+        if(!m_logicalDeviceHandle)
         {
             return VkResult::VK_INCOMPLETE;
         }
 
-        m_physicalDevice = &m_logicalDevice->GetPhysicalDevice();
+        m_physicalDevice = &logicalDevice.GetPhysicalDevice();
         auto& physicalDeviceHandle = m_physicalDevice->GetHandle();
         if (!physicalDeviceHandle)
         {
@@ -91,29 +91,27 @@ namespace Molten::Vulkan
         FreeMemoryBlocksInAllPools();
         m_memoryPools.clear();
         m_memoryTypes.clear();
-        m_logicalDevice = nullptr;
+        m_logicalDeviceHandle = VK_NULL_HANDLE;
     }
 
     Result<> MemoryAllocator::CreateDeviceBuffer(
         DeviceBuffer& deviceBuffer,
         const VkBufferCreateInfo& bufferCreateInfo,
-        const uint32_t memoryProperties)
+        const VkMemoryPropertyFlags memoryProperties)
     {
-        auto logicalDeviceHandle = m_logicalDevice->GetHandle();
-
         deviceBuffer.buffer = VK_NULL_HANDLE;
         deviceBuffer.memory = nullptr;
 
         DeviceBufferGuard deviceBufferGuard(*this, deviceBuffer);
         
         Result<> result;
-        if (!(result = vkCreateBuffer(logicalDeviceHandle, &bufferCreateInfo, nullptr, &deviceBuffer.buffer)))
+        if (!(result = vkCreateBuffer(m_logicalDeviceHandle, &bufferCreateInfo, nullptr, &deviceBuffer.buffer)))
         {
             return result;
         }
 
         VkMemoryRequirements memoryRequirements;
-        vkGetBufferMemoryRequirements(logicalDeviceHandle, deviceBuffer.buffer, &memoryRequirements);
+        vkGetBufferMemoryRequirements(m_logicalDeviceHandle, deviceBuffer.buffer, &memoryRequirements);
 
         MemoryType* memoryType = nullptr;
         if (!FindSupportedMemoryType(
@@ -125,7 +123,7 @@ namespace Molten::Vulkan
             return VkResult::VK_ERROR_UNKNOWN;
         }
 
-        if(!(result = GetOrCreateFreeMemoryHandle(
+        if(!(result = GetOrCreateMemory(
             deviceBuffer.memory,
             memoryType->index,
             memoryRequirements.size)))
@@ -134,7 +132,7 @@ namespace Molten::Vulkan
         }
 
         if (!(result = vkBindBufferMemory(
-            logicalDeviceHandle,
+            m_logicalDeviceHandle,
             deviceBuffer.buffer,
             deviceBuffer.memory->memoryBlock->deviceMemory,
             deviceBuffer.memory->offset)))
@@ -166,21 +164,19 @@ namespace Molten::Vulkan
         const VkImageCreateInfo& imageCreateInfo,
         const VkMemoryPropertyFlags memoryProperties)
     {
-        auto logicalDeviceHandle = m_logicalDevice->GetHandle();
-
         deviceImage.image = VK_NULL_HANDLE;
         deviceImage.memory = nullptr;
 
         DeviceImageGuard deviceImageGuard(*this, deviceImage);
 
         Result<> result;
-        if (!(result = vkCreateImage(logicalDeviceHandle, &imageCreateInfo, nullptr, &deviceImage.image)))
+        if (!(result = vkCreateImage(m_logicalDeviceHandle, &imageCreateInfo, nullptr, &deviceImage.image)))
         {
             return result;
         }
 
         VkMemoryRequirements memoryRequirements;
-        vkGetImageMemoryRequirements(logicalDeviceHandle, deviceImage.image, &memoryRequirements);
+        vkGetImageMemoryRequirements(m_logicalDeviceHandle, deviceImage.image, &memoryRequirements);
 
         MemoryType* memoryType = nullptr;
         if (!FindSupportedMemoryType(
@@ -192,7 +188,7 @@ namespace Molten::Vulkan
             return VkResult::VK_ERROR_UNKNOWN;
         }
 
-        if (!(result = GetOrCreateFreeMemoryHandle(
+        if (!(result = GetOrCreateMemory(
             deviceImage.memory,
             memoryType->index,
             memoryRequirements.size)))
@@ -201,7 +197,7 @@ namespace Molten::Vulkan
         }
 
         if (!(result = vkBindImageMemory(
-            logicalDeviceHandle,
+            m_logicalDeviceHandle,
             deviceImage.image,
             deviceImage.memory->memoryBlock->deviceMemory,
             deviceImage.memory->offset)))
@@ -214,14 +210,11 @@ namespace Molten::Vulkan
         return result;
     }
 
-
     void MemoryAllocator::FreeDeviceBuffer(DeviceBuffer& deviceBuffer)
     {
-        auto logicalDeviceHandle = m_logicalDevice->GetHandle();
-
         if (deviceBuffer.buffer != VK_NULL_HANDLE)
         {
-            vkDestroyBuffer(logicalDeviceHandle, deviceBuffer.buffer, nullptr);
+            vkDestroyBuffer(m_logicalDeviceHandle, deviceBuffer.buffer, nullptr);
             deviceBuffer.buffer = VK_NULL_HANDLE;
         }
         if(deviceBuffer.memory)
@@ -233,11 +226,9 @@ namespace Molten::Vulkan
 
     void MemoryAllocator::FreeDeviceImage(DeviceImage& deviceImage)
     {
-        auto logicalDeviceHandle = m_logicalDevice->GetHandle();
-
         if (deviceImage.image != VK_NULL_HANDLE)
         {
-            vkDestroyImage(logicalDeviceHandle, deviceImage.image, nullptr);
+            vkDestroyImage(m_logicalDeviceHandle, deviceImage.image, nullptr);
             deviceImage.image = VK_NULL_HANDLE;
         }
         if (deviceImage.memory)
@@ -267,7 +258,7 @@ namespace Molten::Vulkan
 
 
     // Private memory allocator implementations.
-    Result<> MemoryAllocator::GetOrCreateFreeMemoryHandle(
+    Result<> MemoryAllocator::GetOrCreateMemory(
         MemoryHandle& memoryHandle,
         const uint32_t memoryTypeIndex,
         const VkDeviceSize memorySize)
@@ -285,7 +276,7 @@ namespace Molten::Vulkan
         }
 
         MemoryBlock* newMemoryBlock = nullptr;
-        if (auto result = CreateMemoryBlock(newMemoryBlock, memoryPool, pagedMemorySize); !result)
+        if (const auto result = CreateMemoryBlock(newMemoryBlock, memoryPool, pagedMemorySize); !result)
         {
             return result;
         }
@@ -303,63 +294,123 @@ namespace Molten::Vulkan
         MemoryBlock& memoryBlock,
         const VkDeviceSize pagedMemorySize)
     {
-        if(memoryBlock.freeMemoryHandles.empty())
+        if(!memoryBlock.firstFreeMemory)
         {
             return false;
         }
 
-        for(auto it = memoryBlock.freeMemoryHandles.begin(); it != memoryBlock.freeMemoryHandles.end(); ++it)
+        auto* freeMemory = memoryBlock.firstFreeMemory;
+        while(freeMemory)
         {
-            if(auto* freeMemoryHandle = *it; freeMemoryHandle->size >= pagedMemorySize)
+            if(freeMemory->size >= pagedMemorySize)
             {
-                memoryHandle = SplitMemoryHandle(freeMemoryHandle, pagedMemorySize);
-
-                if(!memoryHandle)
+                if(SplitAndFetchMemory(freeMemory, pagedMemorySize))
                 {
-                    return false;
-                }
-           
-                it = memoryBlock.freeMemoryHandles.erase(it);
-
-                // No new handle, let's use that one.
-                if(memoryHandle == freeMemoryHandle)
-                {
-                    memoryHandle->isFree = false;
+                    memoryHandle = freeMemory;
                     return true;
                 }
-
-                // New handle, use old handle as fetched one and add the new one to free handles list.              
-                memoryBlock.freeMemoryHandles.insert(it, memoryHandle);
-                memoryHandle = freeMemoryHandle;
-                memoryHandle->isFree = false;
-                return true;
+                return false;
             }
         }
 
         return false;
     }
 
-    MemoryHandle MemoryAllocator::SplitMemoryHandle(MemoryHandle memoryHandle, const VkDeviceSize offset)
+    bool MemoryAllocator::SplitAndFetchMemory(MemoryHandle memoryHandle, const VkDeviceSize size)
     {
-        if(offset == memoryHandle->size)
+        if(size == memoryHandle->size)
         {
-            return memoryHandle;
+            MarkMemoryAsUsed(memoryHandle);
+            return true;
         }
-        if(offset > memoryHandle->size)
+        if(size > memoryHandle->size)
         {
-            return nullptr;
+            return false;
         }
 
-        const auto newSize = memoryHandle->size - offset;
-        const auto newOffset = memoryHandle->offset + offset;
-        auto* newMemoryHandle = new Memory(memoryHandle->memoryBlock, newSize, newOffset);
-        newMemoryHandle->prevMemoryRange = memoryHandle;
-        newMemoryHandle->nextMemoryRange = memoryHandle->nextMemoryRange;
+        auto oldNextMemory = std::move(memoryHandle->nextMemory);
+        
+        const auto newSize = memoryHandle->size - size;
+        const auto newOffset = memoryHandle->offset + size;
+        auto newMemory = std::make_unique<Memory>(memoryHandle->memoryBlock, newSize, newOffset);
+        auto* newMemoryPtr = newMemory.get();
 
-        memoryHandle->size = offset;
-        memoryHandle->nextMemoryRange = newMemoryHandle;
+        newMemory->prevMemory = memoryHandle;
+        memoryHandle->size = size;
+        memoryHandle->nextMemory = std::move(newMemory);
 
-        return newMemoryHandle;
+        if(oldNextMemory)
+        {
+            oldNextMemory->prevMemory = newMemoryPtr;
+            newMemoryPtr->nextMemory = std::move(oldNextMemory);
+        }
+
+        ReplaceFreeMemory(memoryHandle, newMemoryPtr);
+
+        return true;
+    }
+
+    void MemoryAllocator::MarkMemoryAsUsed(MemoryHandle memoryHandle)
+    {
+        auto* memoryBlock = memoryHandle->memoryBlock;
+
+        auto* prevFreeMemory = memoryHandle->prevFreeMemory;
+        auto* nextFreeMemory = memoryHandle->nextFreeMemory;
+        
+
+        if (prevFreeMemory)
+        {
+            prevFreeMemory->nextFreeMemory = nextFreeMemory;
+        }
+        else
+        {
+            memoryBlock->firstFreeMemory = nextFreeMemory;
+        }
+
+        if (nextFreeMemory)
+        {
+            nextFreeMemory->prevFreeMemory = prevFreeMemory;     
+        }
+        else
+        {
+            memoryBlock->lastFreeMemory = prevFreeMemory;
+        }
+
+        memoryHandle->isFree = false;
+        memoryHandle->prevFreeMemory = nullptr;
+        memoryHandle->nextFreeMemory = nullptr;
+    }
+
+    void MemoryAllocator::ReplaceFreeMemory(MemoryHandle oldMemoryHandle, MemoryHandle newMemoryHandle)
+    {
+        auto* memoryBlock = oldMemoryHandle->memoryBlock;
+        if (memoryBlock->firstFreeMemory == oldMemoryHandle)
+        {
+            memoryBlock->firstFreeMemory = newMemoryHandle;
+        }
+        if (memoryBlock->lastFreeMemory == oldMemoryHandle)
+        {
+            memoryBlock->lastFreeMemory = newMemoryHandle;
+        }
+
+        auto* prevFreeMemory = oldMemoryHandle->prevFreeMemory;
+        auto* nextFreeMemory = oldMemoryHandle->nextFreeMemory;
+
+        if (prevFreeMemory)
+        {
+            prevFreeMemory->nextFreeMemory = newMemoryHandle;
+        }
+        if (nextFreeMemory)
+        {
+            nextFreeMemory->prevFreeMemory = newMemoryHandle;
+        }
+
+        newMemoryHandle->prevFreeMemory = oldMemoryHandle->prevFreeMemory;
+        newMemoryHandle->nextFreeMemory = oldMemoryHandle->nextFreeMemory;
+
+        oldMemoryHandle->prevFreeMemory = nullptr;
+        oldMemoryHandle->nextFreeMemory = nullptr;
+        oldMemoryHandle->isFree = false;
     }
 
     Result<> MemoryAllocator::CreateMemoryBlock(
@@ -374,21 +425,20 @@ namespace Molten::Vulkan
         VkMemoryAllocateInfo memoryAllocateInfo = {};
         memoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         memoryAllocateInfo.allocationSize = newMemoryBlock->size;
-        memoryAllocateInfo.memoryTypeIndex = memoryPool.physicalDeviceMemoryTypeIndex;  
+        memoryAllocateInfo.memoryTypeIndex = memoryPool.physicalDeviceMemoryTypeIndex;         
 
-        auto newMemory = std::make_unique<Memory>(newMemoryBlock.get(), newMemoryBlock->size);
-
-        auto logicalDeviceHandle = m_logicalDevice->GetHandle();
         Result<> result;
-        if (!(result = vkAllocateMemory(logicalDeviceHandle, &memoryAllocateInfo, nullptr, &newMemoryBlock->deviceMemory)))
+        if (!(result = vkAllocateMemory(m_logicalDeviceHandle, &memoryAllocateInfo, nullptr, &newMemoryBlock->deviceMemory)))
         {
             return result;
         }
 
-        newMemoryBlock->firstMemoryHandle = newMemory.get();
-        newMemoryBlock->freeMemoryHandles.push_back(newMemory.release());
         memoryBlock = newMemoryBlock.get();
-  
+
+        newMemoryBlock->firstMemory = std::make_unique<Memory>(newMemoryBlock.get(), newMemoryBlock->size);
+        newMemoryBlock->firstFreeMemory = newMemoryBlock->firstMemory.get();
+        newMemoryBlock->lastFreeMemory = newMemoryBlock->firstMemory.get();
+ 
         memoryPool.memoryBlocks.push_back(std::move(newMemoryBlock));
           
         return result;
@@ -406,28 +456,49 @@ namespace Molten::Vulkan
 
     void MemoryAllocator::FreeMemoryBlock(MemoryBlock& memoryBlock)
     {
-        // TODO: ...
+        vkFreeMemory(m_logicalDeviceHandle, memoryBlock.deviceMemory, nullptr);
     }
 
     void MemoryAllocator::FreeMemoryBlocksInAllPools()
     {
-        // TODO: ...
-
-        /*for (size_t i = 0; i < m_memoryPools.size(); i++)
+        if(!m_logicalDeviceHandle)
         {
-            auto& [memoryBlocks, freeMemoryHandles] = m_memoryPools[i];
+            return;
+        }
 
-            if(memoryBlocks.size() != freeMemoryHandles.size())
-            {
-                Logger::WriteError(m_logger, "Number of memory blocks in pool " + std::to_string(i) + 
-                    " is not equal to number of free memory handles. Make sure that all memory handles before destroying memory allocator.");
-            }
+        auto logMemoryBlockWarning = [&](const size_t poolIndex, const size_t blockIndex, const std::string& message)
+        {
+            Logger::WriteWarning(m_logger, "Memory allocator free - Pool(" + std::to_string(poolIndex) + ") block(" +
+                std::to_string(blockIndex) + "): " + message);
+        };
 
-            for(auto& memoryBlock : memoryBlocks)
+        for (size_t poolIndex = 0; poolIndex < m_memoryPools.size(); poolIndex++)
+        {
+            auto& memoryPool = m_memoryPools[poolIndex];
+
+            size_t blockIndex = 0;
+            for(auto& memoryBlock : memoryPool.memoryBlocks)
             {
-                FreeMemoryBlock(memoryBlock);
+                if (memoryBlock->firstMemory == nullptr)
+                {
+                    logMemoryBlockWarning(poolIndex, blockIndex, "First memory handle is missing, it's nullptr..");
+                }
+                else if(memoryBlock->firstMemory.get() != memoryBlock->firstFreeMemory)
+                {
+                    logMemoryBlockWarning(poolIndex, blockIndex, "First memory handle is not equal to first free memory block.");
+                }
+                else if(memoryBlock->firstMemory->nextMemory != nullptr)
+                {
+                    logMemoryBlockWarning(poolIndex, blockIndex, "Found more than one memory handle in block.");
+                }
+
+                FreeMemoryBlock(*memoryBlock);
+
+                ++blockIndex;
             }
-        }*/
+        }
+
+        m_memoryPools.clear();
     }
 
 }

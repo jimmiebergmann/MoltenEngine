@@ -41,9 +41,52 @@ namespace Molten::Vulkan
         memoryBlock(memoryBlock),
         size(size),
         offset(offset),
-        prevMemoryRange(nullptr),
-        nextMemoryRange(nullptr)
+        prevMemory(nullptr),
+        nextMemory{},
+        prevFreeMemory(nullptr),
+        nextFreeMemory(nullptr)
     {}
+
+    Memory::Memory(Memory&& memory) noexcept :
+        isFree(memory.isFree),
+        memoryBlock(memory.memoryBlock),
+        size(memory.size),
+        offset(memory.offset),
+        prevMemory(memory.prevMemory),
+        nextMemory(std::move(memory.nextMemory)),
+        prevFreeMemory(memory.prevFreeMemory),
+        nextFreeMemory(memory.nextFreeMemory)
+    {
+        memory.isFree = true;
+        memory.memoryBlock = nullptr;
+        memory.size = 0;
+        memory.offset = 0;
+        memory.prevMemory = nullptr;
+        memory.prevFreeMemory = nullptr;
+        memory.nextFreeMemory = nullptr;
+    }
+
+    Memory& Memory::operator = (Memory&& memory) noexcept
+    {
+        isFree = memory.isFree;
+        memoryBlock = memory.memoryBlock;
+        size = memory.size;
+        offset = memory.offset;
+        prevMemory = memory.prevMemory;
+        nextMemory = std::move(memory.nextMemory);
+        prevFreeMemory = memory.prevFreeMemory;
+        nextFreeMemory = memory.nextFreeMemory;
+
+        memory.isFree = true;
+        memory.memoryBlock = nullptr;
+        memory.size = 0;
+        memory.offset = 0;
+        memory.prevMemory = nullptr;
+        memory.prevFreeMemory = nullptr;
+        memory.nextFreeMemory = nullptr;
+
+        return *this;
+    }
 
 }
 

@@ -74,12 +74,13 @@ namespace Molten::Vulkan
         Result<> Load(
             LogicalDevice& logicalDevice,
             VkDeviceSize blockAllocationSize,
-            Logger* logger = nullptr);
+            Molten::Logger* logger = nullptr);
 
         /** Destroys memory allocator and frees all allocations.
          * Allocator must be loaded again after a call to Destroy() before re-use.
          */
         void Destroy();
+
 
         /** Creates buffer by create info, allocates memory and binds it to the created buffer. */
         Result<> CreateDeviceBuffer(
@@ -100,12 +101,6 @@ namespace Molten::Vulkan
             DeviceImage& deviceImage,
             const VkImageCreateInfo& imageCreateInfo,
             const VkMemoryPropertyFlags memoryProperties);
-
-        /** Creates image by size, allocates memory and binds it to the created image. */
-        /*Result<> CreateDeviceImage(
-            DeviceImage& deviceImage,
-            const VkImageCreateInfo& imageCreateInfo,
-            const VkMemoryPropertyFlags memoryProperties);*/
 
         /** Free device buffer. */
         void FreeDeviceBuffer(DeviceBuffer& deviceBuffer);
@@ -130,7 +125,7 @@ namespace Molten::Vulkan
             std::list<std::unique_ptr<MemoryBlock>> memoryBlocks;
         };
 
-        Result<> GetOrCreateFreeMemoryHandle(
+        Result<> GetOrCreateMemory(
             MemoryHandle& memoryHandle,
             const uint32_t memoryTypeIndex,
             const VkDeviceSize memorySize);
@@ -141,12 +136,17 @@ namespace Molten::Vulkan
             MemoryBlock& memoryBlock,
             const VkDeviceSize pagedMemorySize);
 
-        /** Slips provided memory handle by an offset.
-         *  Returns new memory handle if offset is less than provided memory handle size.
-         *  Returns provided memory handle if its size is equal to offset.
-         *  Return nullptr if offset is larger than provided memory handle size.
+        /** Slips provided memory handle by an offset and fetch it.
+         *  Provided memoryHandle is updated and removed from free list at success, and the other half of the memory is placed in a free list.
+         *  Return true if split was successful, else false.
          */
-        static [[nodiscard]] MemoryHandle SplitMemoryHandle(MemoryHandle memoryHandle, const VkDeviceSize offset);
+        static [[nodiscard]] bool SplitAndFetchMemory(MemoryHandle memoryHandle, const VkDeviceSize size);
+
+        /** Removes memory handle from memory block's free list and corrects next free memory handle of memory handle. */
+        static void MarkMemoryAsUsed(MemoryHandle memoryHandle);
+
+        /** Replace old memory handle as free memory with a new memory handle. */
+        static void ReplaceFreeMemory(MemoryHandle oldMemoryHandle, MemoryHandle newMemoryHandle);
 
         /** Created a new memory block for memory pool.
          *  Block size is determined by using max of provided pagedMemorySize or block allocation size provided at allocator loading.
@@ -162,8 +162,8 @@ namespace Molten::Vulkan
         void FreeMemoryBlock(MemoryBlock& memoryBlock);
         void FreeMemoryBlocksInAllPools();
 
-        Logger* m_logger;
-        LogicalDevice* m_logicalDevice;
+        Molten::Logger* m_logger;
+        VkDevice m_logicalDeviceHandle;
         PhysicalDevice* m_physicalDevice;
         VkDeviceSize m_pageSize;
         VkDeviceSize m_blockAllocationSize;

@@ -27,39 +27,51 @@
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 
+#include "Molten/Renderer/Vulkan/Utility/VulkanMemoryImpl.hpp"
+
 MOLTEN_UNSCOPED_ENUM_BEGIN
 
 namespace Molten::Vulkan
 {
 
-    MemoryBlock::MemoryBlock(VkDeviceSize size) :
+    MemoryBlock::MemoryBlock(const VkDeviceSize size) :
         deviceMemory(VK_NULL_HANDLE),
         size(size),
-        firstMemoryHandle(nullptr),
-        freeMemoryHandles{}
+        firstMemory{},
+        firstFreeMemory(nullptr),
+        lastFreeMemory(nullptr)
     {}
+
+    MemoryBlock::~MemoryBlock()
+    {
+        // Need this in order to use forward declared Memory for std::unique_ptr<>.
+    }
 
     MemoryBlock::MemoryBlock(MemoryBlock&& memoryBlock) noexcept :
         deviceMemory(memoryBlock.deviceMemory),
         size(memoryBlock.size),
-        firstMemoryHandle(memoryBlock.firstMemoryHandle),
-        freeMemoryHandles(std::move(memoryBlock.freeMemoryHandles))
+        firstMemory(std::move(memoryBlock.firstMemory)),
+        firstFreeMemory(memoryBlock.firstFreeMemory),
+        lastFreeMemory(memoryBlock.lastFreeMemory)
     {
         memoryBlock.deviceMemory = VK_NULL_HANDLE;
         memoryBlock.size = 0;
-        memoryBlock.firstMemoryHandle = nullptr;
+        memoryBlock.firstFreeMemory = nullptr;
+        memoryBlock.lastFreeMemory = nullptr;
     }
 
     MemoryBlock& MemoryBlock::operator = (MemoryBlock&& memoryBlock) noexcept
     {
         deviceMemory = memoryBlock.deviceMemory;
         size = memoryBlock.size;
-        firstMemoryHandle = memoryBlock.firstMemoryHandle;
-        freeMemoryHandles = std::move(memoryBlock.freeMemoryHandles);
+        firstMemory = std::move(memoryBlock.firstMemory);
+        firstFreeMemory = memoryBlock.firstFreeMemory;
+        lastFreeMemory = memoryBlock.lastFreeMemory;
 
         memoryBlock.deviceMemory = VK_NULL_HANDLE;
         memoryBlock.size = 0;
-        memoryBlock.firstMemoryHandle = nullptr;
+        memoryBlock.firstFreeMemory = nullptr;
+        memoryBlock.lastFreeMemory = nullptr;
 
         return *this;
     }

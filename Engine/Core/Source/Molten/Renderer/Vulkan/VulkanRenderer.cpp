@@ -1713,7 +1713,7 @@ namespace Molten
             return;
         }
 
-        auto currentImageIndex = m_swapChain.GetCurrentImageIndex();
+        const auto currentImageIndex = m_swapChain.GetCurrentImageIndex();
 
         m_currentCommandBuffer = &m_commandBuffers[currentImageIndex];
 
@@ -1728,8 +1728,8 @@ namespace Molten
             return;
         }
 
-        auto currentFramebuffer = m_swapChain.GetCurrentFramebuffer();
-        auto swapChainExtent = m_swapChain.GetExtent();
+        const auto currentFramebuffer = m_swapChain.GetCurrentFramebuffer();
+        const auto swapChainExtent = m_swapChain.GetExtent();
 
         VkRenderPassBeginInfo renderPassBeginInfo = {};
         renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -2098,7 +2098,8 @@ namespace Molten
         Vulkan::Result<> result;
         if (!(result = m_memoryAllocator.Load(
             m_logicalDevice,
-            1024 * 1024 * 256)))
+            1024 * 1024 * 256,
+            m_logger)))
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to load memory allocator");
             return false;
@@ -2349,6 +2350,7 @@ namespace Molten
             return false;
         }
 
+        // Transfer staging buffer to image memory.
         VkBufferImageCopy copyRegion = {};
         copyRegion.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         copyRegion.imageSubresource.layerCount = 1;

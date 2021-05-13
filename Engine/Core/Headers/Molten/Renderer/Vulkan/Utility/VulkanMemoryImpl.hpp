@@ -44,18 +44,21 @@ namespace Molten::Vulkan
             const VkDeviceSize offset = 0);
 
         ~Memory() = default;
+    
+        Memory(Memory&& memory) noexcept;
+        Memory& operator = (Memory&& memory) noexcept;
 
-        Memory(const Memory&) = default;
-        Memory(Memory&&) = default;
-        Memory& operator = (const Memory&) = default;
-        Memory& operator = (Memory&&) = default;
+        Memory(const Memory& memory) = delete;
+        Memory& operator = (const Memory& memory) = delete;        
 
         bool isFree;
         MemoryBlock* memoryBlock;      
         VkDeviceSize size;
         VkDeviceSize offset;
-        Memory* prevMemoryRange;
-        Memory* nextMemoryRange;
+        Memory* prevMemory;
+        std::unique_ptr<Memory> nextMemory;
+        Memory* prevFreeMemory;
+        Memory* nextFreeMemory;
     };
 
 }
