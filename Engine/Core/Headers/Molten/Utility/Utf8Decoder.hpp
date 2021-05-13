@@ -27,6 +27,7 @@
 #define MOLTEN_CORE_UTILITY_UTF8DECODER_HPP
 
 #include "Molten/Types.hpp"
+#include <cstring>
 #include <string>
 #include <string_view>
 #include <type_traits>

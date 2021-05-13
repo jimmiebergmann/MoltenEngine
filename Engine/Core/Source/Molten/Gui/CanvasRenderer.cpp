@@ -330,11 +330,6 @@ namespace Molten::Gui
             throw Exception("Failed to create index buffer.");
         }
 
-        static const uint8_t textureData[4][4] = {
-            { 255, 0, 0, 255 }, { 0, 255, 0, 255 },
-            { 0, 0, 255, 255 }, { 255, 255, 255, 255 }
-        };
-
         m_coloredRect.vertexScript = new Shader::Visual::VertexScript();
         m_coloredRect.fragmentScript = new Shader::Visual::FragmentScript();
 

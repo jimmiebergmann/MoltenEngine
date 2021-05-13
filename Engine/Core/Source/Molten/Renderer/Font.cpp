@@ -34,6 +34,7 @@
 #include <cmath>
 #include <filesystem>
 #include <exception>
+#include <cstring>
 
 #if MOLTEN_PLATFORM == MOLTEN_PLATFORM_WINDOWS
 #include "Molten/Platform/Win32Headers.hpp"
