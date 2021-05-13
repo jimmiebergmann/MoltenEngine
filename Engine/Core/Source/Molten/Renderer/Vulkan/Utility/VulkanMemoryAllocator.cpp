@@ -23,6 +23,8 @@
 *
 */
 
+#if defined(MOLTEN_ENABLE_VULKAN)
+
 #include "Molten/Renderer/Vulkan/Utility/VulkanMemoryAllocator.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanMemoryImpl.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanPhysicalDevice.hpp"
@@ -30,8 +32,6 @@
 #include "Molten/Renderer/Vulkan/Utility/VulkanDeviceImage.hpp"
 #include "Molten/Utility/SmartFunction.hpp"
 #include "Molten/Logger.hpp"
-
-#if defined(MOLTEN_ENABLE_VULKAN)
 
 namespace Molten::Vulkan
 {

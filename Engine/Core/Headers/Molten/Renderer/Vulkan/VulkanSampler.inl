@@ -23,10 +23,6 @@
 *
 */
 
-#include "Molten/Renderer/Vulkan/VulkanSampler.hpp"
-
-#if defined(MOLTEN_ENABLE_VULKAN)
-
 namespace Molten
 {
 
@@ -36,5 +32,3 @@ namespace Molten
     {}
 
 }
-
-#endif

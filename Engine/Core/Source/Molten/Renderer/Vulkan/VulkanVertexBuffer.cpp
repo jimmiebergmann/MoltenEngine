@@ -23,9 +23,9 @@
 *
 */
 
-#include "Molten/Renderer/Vulkan/VulkanVertexBuffer.hpp"
-
 #if defined(MOLTEN_ENABLE_VULKAN)
+
+#include "Molten/Renderer/Vulkan/VulkanVertexBuffer.hpp"
 
 namespace Molten
 {

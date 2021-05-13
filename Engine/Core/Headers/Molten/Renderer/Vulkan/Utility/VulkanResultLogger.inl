@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -27,7 +27,7 @@ namespace Molten::Vulkan
 {
 
     template<typename TResultType, template<typename> typename TResult>
-    inline void Logger::Write(
+    void Logger::Write(
         Molten::Logger* logger,
         Molten::Logger::Severity severity,
         const TResult<TResultType>& result,
@@ -44,7 +44,7 @@ namespace Molten::Vulkan
     }
 
     template<typename TResultType, template<typename, typename> typename TResult>
-    inline void Logger::Write(
+    void Logger::Write(
         Molten::Logger* logger,
         Molten::Logger::Severity severity,
         TResult<VkResult, TResultType>& result,
@@ -71,45 +71,45 @@ namespace Molten::Vulkan
     }
 
     template<typename TResultType, template<typename> typename TResult>
-    inline void Logger::WriteInfo(Molten::Logger* logger, const TResult<TResultType>& result, const std::string& message)
+    void Logger::WriteInfo(Molten::Logger* logger, const TResult<TResultType>& result, const std::string& message)
     {
         Write(logger, Molten::Logger::Severity::Info, result, message);
     }
     template<typename TResultType, template<typename, typename> typename TResult>
-    inline void Logger::WriteInfo(Molten::Logger* logger, TResult<VkResult, TResultType>& result, const std::string& message)
+    void Logger::WriteInfo(Molten::Logger* logger, TResult<VkResult, TResultType>& result, const std::string& message)
     {
         Write(logger, Molten::Logger::Severity::Info, result, message);
     }
 
     template<typename TResultType, template<typename> typename TResult>
-    inline void Logger::WriteDebug(Molten::Logger* logger, const TResult<TResultType>& result, const std::string& message)
+    void Logger::WriteDebug(Molten::Logger* logger, const TResult<TResultType>& result, const std::string& message)
     {
         Write(logger, Molten::Logger::Severity::Debug, result, message);
     }
     template<typename TResultType, template<typename, typename> typename TResult>
-    inline void Logger::WriteDebug(Molten::Logger* logger, TResult<VkResult, TResultType>& result, const std::string& message)
+    void Logger::WriteDebug(Molten::Logger* logger, TResult<VkResult, TResultType>& result, const std::string& message)
     {
         Write(logger, Molten::Logger::Severity::Debug, result, message);
     }
 
     template<typename TResultType, template<typename> typename TResult>
-    inline void Logger::WriteWarning(Molten::Logger* logger, const TResult<TResultType>& result, const std::string& message)
+    void Logger::WriteWarning(Molten::Logger* logger, const TResult<TResultType>& result, const std::string& message)
     {
         Write(logger, Molten::Logger::Severity::Warning, result, message);
     }
     template<typename TResultType, template<typename, typename> typename TResult>
-    inline void Logger::WriteWarning(Molten::Logger* logger, TResult<VkResult, TResultType>& result, const std::string& message)
+    void Logger::WriteWarning(Molten::Logger* logger, TResult<VkResult, TResultType>& result, const std::string& message)
     {
         Write(logger, Molten::Logger::Severity::Warning, result, message);
     }
 
     template<typename TResultType, template<typename> typename TResult>
-    inline void Logger::WriteError(Molten::Logger* logger, const TResult<TResultType>& result, const std::string& message)
+    void Logger::WriteError(Molten::Logger* logger, const TResult<TResultType>& result, const std::string& message)
     {
         Write(logger, Molten::Logger::Severity::Error, result, message);
     }
     template<typename TResultType, template<typename, typename> typename TResult>
-    inline void Logger::WriteError(Molten::Logger* logger, TResult<VkResult, TResultType>& result, const std::string& message)
+    void Logger::WriteError(Molten::Logger* logger, TResult<VkResult, TResultType>& result, const std::string& message)
     {
         Write(logger, Molten::Logger::Severity::Error, result, message);
     }

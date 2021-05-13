@@ -23,11 +23,11 @@
 *
 */
 
+#if defined(MOLTEN_ENABLE_VULKAN)
+
 #include "Molten/Renderer/Vulkan/Utility/VulkanMemory.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanMemoryImpl.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanLogicalDevice.hpp"
-
-#if defined(MOLTEN_ENABLE_VULKAN)
 
 namespace Molten::Vulkan
 {

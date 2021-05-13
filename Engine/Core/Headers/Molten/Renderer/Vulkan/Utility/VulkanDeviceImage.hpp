@@ -26,11 +26,9 @@
 #ifndef MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANDEVICEIMAGE_HPP
 #define MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANDEVICEIMAGE_HPP
 
-#include "Molten/Core.hpp"
-
 #if defined(MOLTEN_ENABLE_VULKAN)
+
 #include "Molten/Renderer/Vulkan/Utility/VulkanMemory.hpp"
-#include "Molten/Math/Vector.hpp"
 
 namespace Molten::Vulkan
 {

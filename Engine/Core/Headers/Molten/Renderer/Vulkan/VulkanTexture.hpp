@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -26,10 +26,9 @@
 #ifndef MOLTEN_CORE_RENDERER_VULKANTEXTURE_HPP
 #define MOLTEN_CORE_RENDERER_VULKANTEXTURE_HPP
 
-#include "Molten/Renderer/Texture.hpp"
-
 #if defined(MOLTEN_ENABLE_VULKAN)
 
+#include "Molten/Renderer/Texture.hpp"
 #include "Molten/Renderer/Vulkan/VulkanHeaders.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanDeviceImage.hpp"
 

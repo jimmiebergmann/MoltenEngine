@@ -23,9 +23,9 @@
 *
 */
 
-#include "Molten/Renderer/Vulkan/VulkanIndexBuffer.hpp"
-
 #if defined(MOLTEN_ENABLE_VULKAN)
+
+#include "Molten/Renderer/Vulkan/VulkanIndexBuffer.hpp"
 
 namespace Molten
 {

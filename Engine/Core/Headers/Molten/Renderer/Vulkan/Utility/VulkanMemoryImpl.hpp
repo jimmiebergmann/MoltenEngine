@@ -26,10 +26,9 @@
 #ifndef MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANMEMORYIMPL_HPP
 #define MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANMEMORYIMPL_HPP
 
-#include "Molten/Renderer/Vulkan/Utility/VulkanMemory.hpp"
-
 #if defined(MOLTEN_ENABLE_VULKAN)
 
+#include "Molten/Renderer/Vulkan/Utility/VulkanMemory.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanMemoryBlock.hpp"
 
 namespace Molten::Vulkan

@@ -26,8 +26,6 @@
 #ifndef MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANMEMORYBLOCK_HPP
 #define MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANMEMORYBLOCK_HPP
 
-#include "Molten/Core.hpp"
-
 #if defined(MOLTEN_ENABLE_VULKAN)
 
 #include "Molten/Renderer/Vulkan/Utility/VulkanMemory.hpp"

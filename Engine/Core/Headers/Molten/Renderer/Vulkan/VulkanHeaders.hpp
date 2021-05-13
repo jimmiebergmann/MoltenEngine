@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -26,9 +26,9 @@
 #ifndef MOLTEN_CORE_RENDERER_VULKAN_VULKANHEADERS_HPP
 #define MOLTEN_CORE_RENDERER_VULKAN_VULKANHEADERS_HPP
 
-#include "Molten/Core.hpp"
-
 #if defined(MOLTEN_ENABLE_VULKAN)
+
+#include "Molten/Core.hpp"
 
 MOLTEN_UNSCOPED_ENUM_BEGIN
 

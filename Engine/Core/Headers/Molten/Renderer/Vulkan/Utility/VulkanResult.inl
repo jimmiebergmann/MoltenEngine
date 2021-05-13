@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -28,41 +28,41 @@ namespace Molten::Vulkan
 
     // Result<TCustomResult> implementations.
     template<typename TCustomResult>
-    inline Result<TCustomResult>::Result() :
+    Result<TCustomResult>::Result() :
         std::variant<VkResult, TCustomResult>{}
     {}
 
     template<typename TCustomResult>
-    inline Result<TCustomResult>::Result(const VkResult result) :
+    Result<TCustomResult>::Result(const VkResult result) :
         std::variant<VkResult, TCustomResult>{ result  }
     {}
 
     template<typename TCustomResult>
-    inline Result<TCustomResult>::Result(const TCustomResult& result) :
+    Result<TCustomResult>::Result(const TCustomResult& result) :
         std::variant<VkResult, TCustomResult>{ result }
     {}
 
     template<typename TCustomResult>
-    inline Result<TCustomResult>::Result(TCustomResult&& result) :
+    Result<TCustomResult>::Result(TCustomResult&& result) :
         std::variant<VkResult, TCustomResult>{ std::move(result) }
     {}
 
     template<typename TCustomResult>
-    inline Result<TCustomResult>& Result<TCustomResult>::operator =(const VkResult result)
+    Result<TCustomResult>& Result<TCustomResult>::operator =(const VkResult result)
     {
         *(static_cast<std::variant<VkResult, TCustomResult>*>(this)) = result;
         return *this;
     }
 
     template<typename TCustomResult>
-    inline Result<TCustomResult>& Result<TCustomResult>::operator =(const TCustomResult& result)
+    Result<TCustomResult>& Result<TCustomResult>::operator =(const TCustomResult& result)
     {
         *(static_cast<std::variant<VkResult, TCustomResult>*>(this)) = result;
         return *this;
     }
 
     template<typename TCustomResult>
-    inline Result<TCustomResult>& Result<TCustomResult>::operator =(TCustomResult&& result)
+    Result<TCustomResult>& Result<TCustomResult>::operator =(TCustomResult&& result)
     {
         *(static_cast<std::variant<VkResult, TCustomResult>*>(this)) = std::move(result);
         return *this;
@@ -70,25 +70,25 @@ namespace Molten::Vulkan
 
     template<typename TCustomResult>
     template<size_t Index>
-    inline typename Result<TCustomResult>::template ResultValue<Index>::Type& Result<TCustomResult>::Get()
+    typename Result<TCustomResult>::template ResultValue<Index>::Type& Result<TCustomResult>::Get()
     {
         return std::get<Index>(*static_cast<std::variant<VkResult, TCustomResult>*>(this));
     }
     template<typename TCustomResult>
     template<size_t Index>
-    inline const typename Result<TCustomResult>::template ResultValue<Index>::Type& Result<TCustomResult>::Get() const
+    const typename Result<TCustomResult>::template ResultValue<Index>::Type& Result<TCustomResult>::Get() const
     {
         return std::get<Index>(*static_cast<const std::variant<VkResult, TCustomResult>*>(this));
     }
 
     template<typename TCustomResult>
-    inline size_t Result<TCustomResult>::GetTypeIndex() const
+    size_t Result<TCustomResult>::GetTypeIndex() const
     {
         return static_cast<const std::variant<VkResult, TCustomResult>*>(this)->index();
     }
 
     template<typename TCustomResult>
-    inline bool Result<TCustomResult>::ExpectAny(VkResult vulkanResult, const TCustomResult& customResult)
+    bool Result<TCustomResult>::ExpectAny(VkResult vulkanResult, const TCustomResult& customResult)
     {
         auto& variant = *static_cast<std::variant<VkResult, TCustomResult>*>(this);
         if (variant.index() == 0)
@@ -99,7 +99,7 @@ namespace Molten::Vulkan
     }
 
     template<typename TCustomResult>
-    inline bool Result<TCustomResult>::ExpectSuccessOr(const TCustomResult& customResult)
+    bool Result<TCustomResult>::ExpectSuccessOr(const TCustomResult& customResult)
     {
         auto& variant = *static_cast<std::variant<VkResult, TCustomResult>*>(this);
         if (variant.index() == 0)
@@ -120,14 +120,14 @@ namespace Molten::Vulkan
     {}
 
     template<size_t Index>
-    inline VkResult& Result<VkResult>::Get()
+    VkResult& Result<VkResult>::Get()
     {
         static_assert(Index == 0, "Cannot get value by index 0 from Result<VkResult>.");
         return m_value;
     }
 
     template<size_t Index>
-    inline const VkResult& Result<VkResult>::Get() const
+    const VkResult& Result<VkResult>::Get() const
     {
         static_assert(Index == 0, "Cannot get value by index 0 from Result<VkResult>.");
         return m_value;

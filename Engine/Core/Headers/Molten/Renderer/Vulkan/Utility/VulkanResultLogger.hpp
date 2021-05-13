@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -25,8 +25,6 @@
 
 #ifndef MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANRESULTLOGGER_HPP
 #define MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANRESULTLOGGER_HPP
-
-#include "Molten/Core.hpp"
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 
@@ -127,49 +125,6 @@ namespace Molten::Vulkan
             const std::string& message);
 
     };
-
- 
-
-    /** Helper functions for logging mapped result types.*/
-    /**@{*/
-   /* template<typename TResultType, template<typename, typename> typename TResult>
-    void LogError(Logger* logger, TResult<VkResult, TResultType>& result, const std::string& message = "")
-    //template<typename TResultType>
-    //void LogError(Logger* logger, const Result<TResultType>& result, const std::string& message = "")
-    {
-        if (!logger)
-        {
-            return;
-        }
-
-        using VariantType = TResult<TResultType>;
-        constexpr size_t variantTypeSize = std::variant_size_v<VariantType>;
-
-        if constexpr (variantTypeSize == 1)
-        {
-            auto typeInfo = ResultMapper<TResultType>::GetInfo(std::get<0>(result));
-
-            auto msg = message;
-            if (typeInfo.name.size())
-            {
-                msg += " (" + typeInfo.name + ")";
-            }
-            if (typeInfo.description.size())
-            {
-                msg += ": " + typeInfo.description + "";
-            }
-            logger->Write(Logger::Severity::Error, msg);
-        }
-        else
-        {
-
-        }
-
-       // 
-
-    }*/
-
-    /**@}*/
 
 }
 

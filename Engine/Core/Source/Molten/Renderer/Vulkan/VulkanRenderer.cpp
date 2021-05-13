@@ -24,10 +24,9 @@
 */
 
 
-#include "Molten/Renderer/Vulkan/VulkanRenderer.hpp"
-
 #if defined(MOLTEN_ENABLE_VULKAN)
 
+#include "Molten/Renderer/Vulkan/VulkanRenderer.hpp"
 #include "Molten/Renderer/Shader/Visual/VisualShaderScript.hpp"
 #include "Molten/Renderer/Shader/Visual/VisualShaderStructure.hpp"
 #include "Molten/Renderer/Shader/Generator/GlslShaderGenerator.hpp"

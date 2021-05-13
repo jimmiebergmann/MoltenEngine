@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,129 +23,17 @@
 *
 */
 
-#include "Molten/Renderer/Vulkan/Utility/VulkanFunctions.hpp"
-
-#include "Molten/Renderer/Vulkan/Utility/VulkanDeviceImage.hpp"
-
 #if defined(MOLTEN_ENABLE_VULKAN)
+
+#include "Molten/Renderer/Vulkan/Utility/VulkanFunctions.hpp"
+#include "Molten/Renderer/Vulkan/Utility/VulkanDeviceImage.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanLogicalDevice.hpp"
 #include <algorithm>
 
 MOLTEN_UNSCOPED_ENUM_BEGIN
-/*
-#define CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME_QUOTE(x) #x
-#define CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(feature) {  &VkPhysicalDeviceFeatures::##feature, CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME_QUOTE(##feature) }
-*/
+
 namespace Molten::Vulkan
 {  
-
-    /*struct InternalPhysicalDeviceFeatureWithName
-    {
-        VkBool32 VkPhysicalDeviceFeatures::* memberPointer;
-        const std::string name;
-    };
-
-    // Static data
-    static const std::vector<InternalPhysicalDeviceFeatureWithName> g_allPhysicalDeviceFeatures = {
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(robustBufferAccess),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(fullDrawIndexUint32),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(imageCubeArray),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(independentBlend),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(geometryShader),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(tessellationShader),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(sampleRateShading),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(dualSrcBlend),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(logicOp),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(multiDrawIndirect),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(drawIndirectFirstInstance),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(depthClamp),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(depthBiasClamp),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(fillModeNonSolid),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(depthBounds),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(wideLines),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(largePoints),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(alphaToOne),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(multiViewport),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(samplerAnisotropy),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(textureCompressionETC2),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(textureCompressionASTC_LDR),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(textureCompressionBC),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(occlusionQueryPrecise),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(pipelineStatisticsQuery),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(vertexPipelineStoresAndAtomics),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(fragmentStoresAndAtomics),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(shaderTessellationAndGeometryPointSize),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(shaderImageGatherExtended),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(shaderStorageImageExtendedFormats),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(shaderStorageImageMultisample),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(shaderStorageImageReadWithoutFormat),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(shaderStorageImageWriteWithoutFormat),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(shaderUniformBufferArrayDynamicIndexing),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(shaderSampledImageArrayDynamicIndexing),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(shaderStorageBufferArrayDynamicIndexing),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(shaderStorageImageArrayDynamicIndexing),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(shaderClipDistance),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(shaderCullDistance),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(shaderFloat64),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(shaderInt64),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(shaderInt16),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(shaderResourceResidency),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(shaderResourceMinLod),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(sparseBinding),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(sparseResidencyBuffer),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(sparseResidencyImage2D),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(sparseResidencyImage3D),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(sparseResidency2Samples),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(sparseResidency4Samples),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(sparseResidency8Samples),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(sparseResidency16Samples),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(sparseResidencyAliased),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(variableMultisampleRate),
-        CREATE_PHYSICAL_DEVICE_FEATURE_WITH_NAME(inheritedQueries)
-    };
-
-
-
-    // Vulkan functions implementations.
-    bool CheckRequiredExtensions(
-        Extensions& missingExtensions,
-        const Extensions& requiredExtensions,
-        const Extensions& availableExtensions)
-    {
-        missingExtensions = requiredExtensions;
-
-        for (const auto& availableExtension : availableExtensions)
-        {
-            auto it = std::find_if(missingExtensions.begin(), missingExtensions.end(),
-                [&](auto& extension) {return availableExtension.name == extension.name && availableExtension.version >= extension.version; });
-            if (it != missingExtensions.end())
-            {
-                missingExtensions.erase(it);
-            }
-        }
-
-        return missingExtensions.size() == 0;
-    }
-
-    bool CheckRequiredDeviceFeatures(
-        PhysicalDeviceFeaturesWithName& missingFeatures,
-        const VkPhysicalDeviceFeatures& requiredFeatures,
-        const VkPhysicalDeviceFeatures& availableFeatures)
-    {
-        bool failed = false;
-
-        for (auto& feature : g_allPhysicalDeviceFeatures)
-        {
-            if (requiredFeatures.*(feature.memberPointer) &&
-                requiredFeatures.*(feature.memberPointer) != availableFeatures.*(feature.memberPointer))
-            {
-                failed = true;
-                missingFeatures.push_back({ feature.memberPointer, feature.name }); 
-            }
-        }
-
-        return !failed;
-    }*/
 
     VkResult CreateFences(
         Fences& fences,

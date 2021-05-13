@@ -23,11 +23,9 @@
 *
 */
 
-
-#include "Molten/Renderer/Vulkan/Utility/VulkanResourceDestroyer.hpp"
-
 #if defined(MOLTEN_ENABLE_VULKAN)
 
+#include "Molten/Renderer/Vulkan/Utility/VulkanResourceDestroyer.hpp"
 #include "Molten/Renderer/Vulkan/VulkanDescriptorSet.hpp"
 #include "Molten/Renderer/Vulkan/VulkanFramebuffer.hpp"
 #include "Molten/Renderer/Vulkan/VulkanIndexBuffer.hpp"

@@ -23,11 +23,9 @@
 *
 */
 
-#include "Molten/Renderer/Vulkan/Utility/VulkanMemoryImpl.hpp"
-
 #if defined(MOLTEN_ENABLE_VULKAN)
 
-MOLTEN_UNSCOPED_ENUM_BEGIN
+#include "Molten/Renderer/Vulkan/Utility/VulkanMemoryImpl.hpp"
 
 namespace Molten::Vulkan
 {

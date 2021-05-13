@@ -26,9 +26,9 @@
 #ifndef MOLTEN_CORE_RENDERER_VULKANVERTEXBUFFER_HPP
 #define MOLTEN_CORE_RENDERER_VULKANVERTEXBUFFER_HPP
 
-#include "Molten/Renderer/VertexBuffer.hpp"
-
 #if defined(MOLTEN_ENABLE_VULKAN)
+
+#include "Molten/Renderer/VertexBuffer.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanDeviceBuffer.hpp"
 
 namespace Molten

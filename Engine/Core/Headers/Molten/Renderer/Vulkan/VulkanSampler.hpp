@@ -26,9 +26,9 @@
 #ifndef MOLTEN_CORE_RENDERER_VULKANSAMPLER_HPP
 #define MOLTEN_CORE_RENDERER_VULKANSAMPLER_HPP
 
-#include "Molten/Renderer/Sampler.hpp"
-
 #if defined(MOLTEN_ENABLE_VULKAN)
+
+#include "Molten/Renderer/Sampler.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanImageSampler.hpp"
 
 namespace Molten

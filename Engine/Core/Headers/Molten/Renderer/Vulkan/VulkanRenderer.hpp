@@ -26,10 +26,9 @@
 #ifndef MOLTEN_CORE_RENDERER_VULKAN_VULKANRENDERER_HPP
 #define MOLTEN_CORE_RENDERER_VULKAN_VULKANRENDERER_HPP
 
-#include "Molten/Renderer/Renderer.hpp"
-#include "Molten/Renderer/Shader/Visual/VisualShaderStructure.hpp"
-
 #if defined(MOLTEN_ENABLE_VULKAN)
+
+#include "Molten/Renderer/Renderer.hpp"
 #include "Molten/Renderer/Vulkan/VulkanPipeline.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanMemoryAllocator.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanResourceDestroyer.hpp"
