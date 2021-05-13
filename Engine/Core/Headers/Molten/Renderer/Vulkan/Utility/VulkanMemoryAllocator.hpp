@@ -136,17 +136,20 @@ namespace Molten::Vulkan
             MemoryBlock& memoryBlock,
             const VkDeviceSize pagedMemorySize);
 
+        /** Try to merge memory with neighboring memory handles. */
+        void TryMergeMemory(MemoryHandle& memoryHandle);
+
         /** Slips provided memory handle by an offset and fetch it.
          *  Provided memoryHandle is updated and removed from free list at success, and the other half of the memory is placed in a free list.
          *  Return true if split was successful, else false.
          */
-        static [[nodiscard]] bool SplitAndFetchMemory(MemoryHandle memoryHandle, const VkDeviceSize size);
+        [[nodiscard]] MemoryHandle SplitFreeMemory(MemoryBlock::FeeMemoryList::iterator it, const VkDeviceSize size);
 
-        /** Removes memory handle from memory block's free list and corrects next free memory handle of memory handle. */
-        static void MarkMemoryAsUsed(MemoryHandle memoryHandle);
+        /**Add memory handle from memory block's free list and mark the memory a free. */
+        static void MarkMemoryAsFree(MemoryHandle memoryHandle);
 
-        /** Replace old memory handle as free memory with a new memory handle. */
-        static void ReplaceFreeMemory(MemoryHandle oldMemoryHandle, MemoryHandle newMemoryHandle);
+        /**Removes memory handle from memory block's free list and mark the memory a used. */
+        static void MarkMemoryAsUsed(MemoryBlock::FeeMemoryList::iterator& it);
 
         /** Created a new memory block for memory pool.
          *  Block size is determined by using max of provided pagedMemorySize or block allocation size provided at allocator loading.

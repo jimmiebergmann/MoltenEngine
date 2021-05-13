@@ -294,123 +294,122 @@ namespace Molten::Vulkan
         MemoryBlock& memoryBlock,
         const VkDeviceSize pagedMemorySize)
     {
-        if(!memoryBlock.firstFreeMemory)
+        if(memoryBlock.freeMemories.empty())
         {
             return false;
         }
 
-        auto* freeMemory = memoryBlock.firstFreeMemory;
-        while(freeMemory)
+        for(auto it = memoryBlock.freeMemories.begin(); it != memoryBlock.freeMemories.end(); ++it)
         {
-            if(freeMemory->size >= pagedMemorySize)
+            if(auto* freeMemory = *it; freeMemory->size >= pagedMemorySize)
             {
-                if(SplitAndFetchMemory(freeMemory, pagedMemorySize))
-                {
-                    memoryHandle = freeMemory;
-                    return true;
-                }
-                return false;
+                memoryHandle = SplitFreeMemory(it, pagedMemorySize);
+                return memoryHandle != nullptr;
             }
         }
 
         return false;
     }
 
-    bool MemoryAllocator::SplitAndFetchMemory(MemoryHandle memoryHandle, const VkDeviceSize size)
-    {
-        if(size == memoryHandle->size)
-        {
-            MarkMemoryAsUsed(memoryHandle);
-            return true;
-        }
-        if(size > memoryHandle->size)
-        {
-            return false;
-        }
-
-        auto oldNextMemory = std::move(memoryHandle->nextMemory);
-        
-        const auto newSize = memoryHandle->size - size;
-        const auto newOffset = memoryHandle->offset + size;
-        auto newMemory = std::make_unique<Memory>(memoryHandle->memoryBlock, newSize, newOffset);
-        auto* newMemoryPtr = newMemory.get();
-
-        newMemory->prevMemory = memoryHandle;
-        memoryHandle->size = size;
-        memoryHandle->nextMemory = std::move(newMemory);
-
-        if(oldNextMemory)
-        {
-            oldNextMemory->prevMemory = newMemoryPtr;
-            newMemoryPtr->nextMemory = std::move(oldNextMemory);
-        }
-
-        ReplaceFreeMemory(memoryHandle, newMemoryPtr);
-
-        return true;
-    }
-
-    void MemoryAllocator::MarkMemoryAsUsed(MemoryHandle memoryHandle)
+    void MemoryAllocator::TryMergeMemory(MemoryHandle& memoryHandle)
     {
         auto* memoryBlock = memoryHandle->memoryBlock;
+        //std::array<Memory, 2> 
+        MemoryHandle mergeFrom = memoryHandle;
+        MemoryHandle mergeTo = memoryHandle;
 
-        auto* prevFreeMemory = memoryHandle->prevFreeMemory;
-        auto* nextFreeMemory = memoryHandle->nextFreeMemory;
-        
 
-        if (prevFreeMemory)
+        if (auto* prevMemory = memoryHandle->prevMemory)
         {
-            prevFreeMemory->nextFreeMemory = nextFreeMemory;
+            if (prevMemory->isFree && prevMemory->offset + prevMemory->size == memoryHandle->offset)
+            {
+                mergeFrom = prevMemory;
+            }
         }
-        else
+        if (auto* nextMemory = memoryHandle->nextMemory.get())
         {
-            memoryBlock->firstFreeMemory = nextFreeMemory;
+            if (nextMemory->isFree && memoryHandle->offset + memoryHandle->size == nextMemory->offset)
+            {
+                mergeTo = nextMemory;
+            }
         }
 
-        if (nextFreeMemory)
+        if(mergeFrom == mergeTo)
         {
-            nextFreeMemory->prevFreeMemory = prevFreeMemory;     
+            return;
         }
-        else
+
+        const auto newSize = (mergeTo->offset + mergeTo->size) - mergeFrom->offset;
+        auto newNextMemory = std::move(mergeTo->nextMemory);
+
+        auto* currentMemory = mergeTo;
+        while(currentMemory != mergeFrom)
         {
-            memoryBlock->lastFreeMemory = prevFreeMemory;
+            memoryBlock->freeMemories.erase(currentMemory->freeIterator);
+            currentMemory->nextMemory.reset();
+            currentMemory = currentMemory->prevMemory;
+        }
+
+        mergeFrom->size = newSize;
+        mergeFrom->nextMemory = std::move(newNextMemory);
+        if(mergeFrom->nextMemory)
+        {
+            mergeFrom->nextMemory->prevMemory = mergeFrom;
+        }
+    }
+
+    MemoryHandle MemoryAllocator::SplitFreeMemory(MemoryBlock::FeeMemoryList::iterator it, const VkDeviceSize size)
+    {
+        auto* memoryHandle = *it;
+        auto* memoryBlock = memoryHandle->memoryBlock;
+
+        if (size == memoryHandle->size)
+        {
+            MarkMemoryAsUsed(it);
+            return memoryHandle;
+        }
+        if (size > memoryHandle->size)
+        {
+            return nullptr;
+        }
+
+        const auto newSize = memoryHandle->size - size;
+        const auto newOffset = memoryHandle->offset + size;
+        auto newMemory = std::make_unique<Memory>(memoryBlock, newSize, newOffset);
+        MarkMemoryAsFree(newMemory.get());
+        newMemory->prevMemory = memoryHandle;
+        memoryBlock->freeMemories.erase(it);
+
+        if (auto oldNextMemory = std::move(memoryHandle->nextMemory))
+        {
+            oldNextMemory->prevMemory = newMemory.get();
+            newMemory->nextMemory = std::move(oldNextMemory);
         }
 
         memoryHandle->isFree = false;
-        memoryHandle->prevFreeMemory = nullptr;
-        memoryHandle->nextFreeMemory = nullptr;
+        memoryHandle->freeIterator = {};
+        memoryHandle->size = size;
+        memoryHandle->nextMemory = std::move(newMemory);
+
+        return memoryHandle;
     }
 
-    void MemoryAllocator::ReplaceFreeMemory(MemoryHandle oldMemoryHandle, MemoryHandle newMemoryHandle)
+    void MemoryAllocator::MarkMemoryAsFree(MemoryHandle memoryHandle)
     {
-        auto* memoryBlock = oldMemoryHandle->memoryBlock;
-        if (memoryBlock->firstFreeMemory == oldMemoryHandle)
-        {
-            memoryBlock->firstFreeMemory = newMemoryHandle;
-        }
-        if (memoryBlock->lastFreeMemory == oldMemoryHandle)
-        {
-            memoryBlock->lastFreeMemory = newMemoryHandle;
-        }
+        memoryHandle->isFree = true;
 
-        auto* prevFreeMemory = oldMemoryHandle->prevFreeMemory;
-        auto* nextFreeMemory = oldMemoryHandle->nextFreeMemory;
+        auto* memoryBlock = memoryHandle->memoryBlock;
+        memoryHandle->freeIterator = memoryBlock->freeMemories.insert(memoryBlock->freeMemories.end(), memoryHandle);
+    }
 
-        if (prevFreeMemory)
-        {
-            prevFreeMemory->nextFreeMemory = newMemoryHandle;
-        }
-        if (nextFreeMemory)
-        {
-            nextFreeMemory->prevFreeMemory = newMemoryHandle;
-        }
+    void MemoryAllocator::MarkMemoryAsUsed(MemoryBlock::FeeMemoryList::iterator& it)
+    {
+        auto* memoryHandle = *it;
+        auto* memoryBlock = memoryHandle->memoryBlock;
 
-        newMemoryHandle->prevFreeMemory = oldMemoryHandle->prevFreeMemory;
-        newMemoryHandle->nextFreeMemory = oldMemoryHandle->nextFreeMemory;
-
-        oldMemoryHandle->prevFreeMemory = nullptr;
-        oldMemoryHandle->nextFreeMemory = nullptr;
-        oldMemoryHandle->isFree = false;
+        memoryHandle->isFree = false;
+        memoryHandle->freeIterator = {};
+        it = memoryBlock->freeMemories.erase(it);
     }
 
     Result<> MemoryAllocator::CreateMemoryBlock(
@@ -436,9 +435,8 @@ namespace Molten::Vulkan
         memoryBlock = newMemoryBlock.get();
 
         newMemoryBlock->firstMemory = std::make_unique<Memory>(newMemoryBlock.get(), newMemoryBlock->size);
-        newMemoryBlock->firstFreeMemory = newMemoryBlock->firstMemory.get();
-        newMemoryBlock->lastFreeMemory = newMemoryBlock->firstMemory.get();
- 
+        MarkMemoryAsFree(newMemoryBlock->firstMemory.get());
+
         memoryPool.memoryBlocks.push_back(std::move(newMemoryBlock));
           
         return result;
@@ -451,7 +449,8 @@ namespace Molten::Vulkan
 
     void MemoryAllocator::FreeMemoryHandle(MemoryHandle memoryHandle)
     {
-        // TODO: ...
+        MarkMemoryAsFree(memoryHandle);
+        TryMergeMemory(memoryHandle);
     }
 
     void MemoryAllocator::FreeMemoryBlock(MemoryBlock& memoryBlock)
@@ -481,9 +480,24 @@ namespace Molten::Vulkan
             {
                 if (memoryBlock->firstMemory == nullptr)
                 {
-                    logMemoryBlockWarning(poolIndex, blockIndex, "First memory handle is missing, it's nullptr..");
+                    logMemoryBlockWarning(poolIndex, blockIndex, "First memory handle is missing, it's nullptr.");
                 }
-                else if(memoryBlock->firstMemory.get() != memoryBlock->firstFreeMemory)
+                else if (memoryBlock->freeMemories.size() != 1)
+                {
+                    logMemoryBlockWarning(poolIndex, blockIndex, "Number of free memory handles are not equal to 1, it's " +
+                        std::to_string(memoryBlock->freeMemories.size()));
+                }
+                else if (const auto firstMemory = memoryBlock->freeMemories.front(); firstMemory->offset != 0)
+                {
+                    logMemoryBlockWarning(poolIndex, blockIndex, "Offset of free memory handle is not 0, it's " +
+                        std::to_string(firstMemory->offset));
+                }
+                else if (firstMemory->size != memoryBlock->size)
+                {
+                    logMemoryBlockWarning(poolIndex, blockIndex, "Size of free memory is " + std::to_string(firstMemory->size) +
+                        ", block's size is " + std::to_string(memoryBlock->size));
+                }
+                else if(memoryBlock->firstMemory.get() != memoryBlock->freeMemories.front())
                 {
                     logMemoryBlockWarning(poolIndex, blockIndex, "First memory handle is not equal to first free memory block.");
                 }

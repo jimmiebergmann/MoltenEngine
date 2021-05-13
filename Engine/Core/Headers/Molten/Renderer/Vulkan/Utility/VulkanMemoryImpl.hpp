@@ -38,8 +38,10 @@ namespace Molten::Vulkan
     // Memory implementations. Declared in VulkanMemory.hpp.
     struct Memory
     {
+        using FeeMemoryList = MemoryBlock::FeeMemoryList;
+
         Memory(
-            MemoryBlock* memoryBlock, 
+            MemoryBlock* memoryBlock,
             const VkDeviceSize size,
             const VkDeviceSize offset = 0);
 
@@ -57,8 +59,7 @@ namespace Molten::Vulkan
         VkDeviceSize offset;
         Memory* prevMemory;
         std::unique_ptr<Memory> nextMemory;
-        Memory* prevFreeMemory;
-        Memory* nextFreeMemory;
+        FeeMemoryList::iterator freeIterator;
     };
 
 }

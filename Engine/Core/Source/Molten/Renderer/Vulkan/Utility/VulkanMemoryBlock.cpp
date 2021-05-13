@@ -38,8 +38,7 @@ namespace Molten::Vulkan
         deviceMemory(VK_NULL_HANDLE),
         size(size),
         firstMemory{},
-        firstFreeMemory(nullptr),
-        lastFreeMemory(nullptr)
+        freeMemories{}
     {}
 
     MemoryBlock::~MemoryBlock()
@@ -51,13 +50,10 @@ namespace Molten::Vulkan
         deviceMemory(memoryBlock.deviceMemory),
         size(memoryBlock.size),
         firstMemory(std::move(memoryBlock.firstMemory)),
-        firstFreeMemory(memoryBlock.firstFreeMemory),
-        lastFreeMemory(memoryBlock.lastFreeMemory)
+        freeMemories(std::move(memoryBlock.freeMemories))
     {
         memoryBlock.deviceMemory = VK_NULL_HANDLE;
         memoryBlock.size = 0;
-        memoryBlock.firstFreeMemory = nullptr;
-        memoryBlock.lastFreeMemory = nullptr;
     }
 
     MemoryBlock& MemoryBlock::operator = (MemoryBlock&& memoryBlock) noexcept
@@ -65,13 +61,9 @@ namespace Molten::Vulkan
         deviceMemory = memoryBlock.deviceMemory;
         size = memoryBlock.size;
         firstMemory = std::move(memoryBlock.firstMemory);
-        firstFreeMemory = memoryBlock.firstFreeMemory;
-        lastFreeMemory = memoryBlock.lastFreeMemory;
 
         memoryBlock.deviceMemory = VK_NULL_HANDLE;
         memoryBlock.size = 0;
-        memoryBlock.firstFreeMemory = nullptr;
-        memoryBlock.lastFreeMemory = nullptr;
 
         return *this;
     }

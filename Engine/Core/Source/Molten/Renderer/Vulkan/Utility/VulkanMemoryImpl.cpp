@@ -37,14 +37,13 @@ namespace Molten::Vulkan
         const VkDeviceSize size,
         const VkDeviceSize offset
     ) :
-        isFree(true),
+        isFree(false),
         memoryBlock(memoryBlock),
         size(size),
         offset(offset),
         prevMemory(nullptr),
         nextMemory{},
-        prevFreeMemory(nullptr),
-        nextFreeMemory(nullptr)
+        freeIterator{}
     {}
 
     Memory::Memory(Memory&& memory) noexcept :
@@ -54,16 +53,14 @@ namespace Molten::Vulkan
         offset(memory.offset),
         prevMemory(memory.prevMemory),
         nextMemory(std::move(memory.nextMemory)),
-        prevFreeMemory(memory.prevFreeMemory),
-        nextFreeMemory(memory.nextFreeMemory)
+        freeIterator(memory.freeIterator)
     {
-        memory.isFree = true;
+        memory.isFree = false;
         memory.memoryBlock = nullptr;
         memory.size = 0;
         memory.offset = 0;
         memory.prevMemory = nullptr;
-        memory.prevFreeMemory = nullptr;
-        memory.nextFreeMemory = nullptr;
+        memory.freeIterator = {};
     }
 
     Memory& Memory::operator = (Memory&& memory) noexcept
@@ -74,16 +71,14 @@ namespace Molten::Vulkan
         offset = memory.offset;
         prevMemory = memory.prevMemory;
         nextMemory = std::move(memory.nextMemory);
-        prevFreeMemory = memory.prevFreeMemory;
-        nextFreeMemory = memory.nextFreeMemory;
+        freeIterator = memory.freeIterator;
 
-        memory.isFree = true;
+        memory.isFree = false;
         memory.memoryBlock = nullptr;
         memory.size = 0;
         memory.offset = 0;
         memory.prevMemory = nullptr;
-        memory.prevFreeMemory = nullptr;
-        memory.nextFreeMemory = nullptr;
+        memory.freeIterator = {};
 
         return *this;
     }

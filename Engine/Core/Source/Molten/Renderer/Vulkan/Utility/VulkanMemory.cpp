@@ -24,10 +24,7 @@
 */
 
 #include "Molten/Renderer/Vulkan/Utility/VulkanMemory.hpp"
-
-#include "Molten/Renderer/Vulkan/Utility/VulkanDeviceBuffer.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanMemoryImpl.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanFunctions.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanLogicalDevice.hpp"
 
 #if defined(MOLTEN_ENABLE_VULKAN)
@@ -64,53 +61,6 @@ namespace Molten::Vulkan
         vkUnmapMemory(logicalDeviceHandle, deviceMemory);
 
         return result;
-    }
-
-    Result<> MapMemory(
-        LogicalDevice& logicalDevice,
-        DeviceBuffer& deviceBuffer,
-        const void* data,
-        const VkDeviceSize size,
-        const VkDeviceSize offset)
-    {
-        return MapMemory(logicalDevice, deviceBuffer.memory, data, size, offset);
-    }
-
-    Result<> CopyMemory(
-        LogicalDevice& logicalDevice,
-        VkCommandPool commandPool,
-        VkBuffer sourceBuffer,
-        VkBuffer destinationBuffer,
-        const VkDeviceSize& size)
-    {
-        Result<> result;
-
-        VkCommandBuffer commandBuffer = VK_NULL_HANDLE;
-        if (!(result = BeginSingleTimeCommands(commandBuffer, logicalDevice, commandPool)))
-        {
-            return result;
-        }
-
-        VkBufferCopy copy = {};
-        copy.size = size;
-        vkCmdCopyBuffer(commandBuffer, sourceBuffer, destinationBuffer, 1, &copy);
-
-        if (!(result = EndSingleTimeCommands(commandBuffer, logicalDevice, commandPool)))
-        {
-            return result;
-        }
-
-        return result;
-    }
-
-    Result<> CopyMemory(
-        LogicalDevice& logicalDevice,
-        VkCommandPool commandPool,
-        DeviceBuffer& sourceBuffer,
-        DeviceBuffer& destinationBuffer,
-        const VkDeviceSize& size)
-    {
-        return CopyMemory(logicalDevice, commandPool, sourceBuffer.buffer, destinationBuffer.buffer, size);
     }
 
 }

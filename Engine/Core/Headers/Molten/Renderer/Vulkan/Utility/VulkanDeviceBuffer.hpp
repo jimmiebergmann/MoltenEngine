@@ -90,6 +90,32 @@ namespace Molten::Vulkan
         DeviceBuffer* m_deviceBuffer;
 
     };
+
+
+    /** Map and copy data to device buffer's memory. */
+    MOLTEN_API Result<> MapMemory(
+        LogicalDevice& logicalDevice,
+        DeviceBuffer& deviceBuffer,
+        const void* data,
+        const VkDeviceSize size,
+        const VkDeviceSize offset);
+
+    /** Copy data between two device buffers. */
+    /**@{*/
+    MOLTEN_API Result<> CopyMemory(
+        LogicalDevice& logicalDevice,
+        VkCommandPool commandPool,
+        VkBuffer sourceBuffer,
+        VkBuffer destinationBuffer,
+        const VkDeviceSize& size);
+
+    MOLTEN_API Result<> CopyMemory(
+        LogicalDevice& logicalDevice,
+        VkCommandPool commandPool,
+        DeviceBuffer& sourceBuffer,
+        DeviceBuffer& destinationBuffer,
+        const VkDeviceSize& size);
+    /**@}*/
     
 }
 

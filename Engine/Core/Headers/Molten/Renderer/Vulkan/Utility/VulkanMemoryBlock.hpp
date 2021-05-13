@@ -32,6 +32,7 @@
 
 #include "Molten/Renderer/Vulkan/Utility/VulkanMemory.hpp"
 #include <memory>
+#include <list>
 
 MOLTEN_UNSCOPED_ENUM_BEGIN
 
@@ -41,6 +42,8 @@ namespace Molten::Vulkan
     /** Memory block struct, used by memory allocator. */
     struct MOLTEN_API MemoryBlock
     {
+        using FeeMemoryList = std::list<Memory*>;
+
         explicit MemoryBlock(const VkDeviceSize size);
 
         ~MemoryBlock(); 
@@ -54,8 +57,7 @@ namespace Molten::Vulkan
         VkDeviceMemory deviceMemory;
         VkDeviceSize size;
         std::unique_ptr<Memory> firstMemory;
-        Memory* firstFreeMemory;
-        Memory* lastFreeMemory;
+        FeeMemoryList freeMemories;
     };
 
 }
