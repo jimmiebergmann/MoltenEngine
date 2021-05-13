@@ -199,7 +199,7 @@ namespace Molten
         void WaitForDevice() override;
 
         /** Update uniform buffer data. */
-        void UpdateUniformBuffer(RenderResource<UniformBuffer>& uniformBuffer, const size_t offset, const void* data, const size_t size, const size_t offset) override;
+        void UpdateUniformBuffer(RenderResource<UniformBuffer>& uniformBuffer, const void* data, const size_t size, const size_t offset) override;
 
         /** Update uniform buffer data. */
         void UpdateFramedUniformBuffer(RenderResource<FramedUniformBuffer>& framedUniformBuffer, const void* data, const size_t size, const size_t offset) override;
