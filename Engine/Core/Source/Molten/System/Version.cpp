@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -33,7 +33,7 @@ namespace Molten
     static size_t FindNextNumberEnd(const std::string_view& string)
     {
         size_t i = 0;
-        for(i; i < string.size(); i++)
+        for(; i < string.size(); i++)
         {
             if(string[i] == '.')
             {

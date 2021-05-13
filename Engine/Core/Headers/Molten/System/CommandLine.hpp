@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -28,10 +28,12 @@
 
 #include "Molten/Core.hpp"
 #include <string>
+#include <string_view>
 #include <vector>
 #include <map>
 #include <set>
 #include <functional>
+#include <memory>
 #include <optional>
 #include <initializer_list>
 

@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -25,6 +25,8 @@
 
 #include "Molten/System/CommandLine.hpp"
 #include "Molten/System/Exception.hpp"
+#include <cstring>
+
 namespace Molten
 {
 
