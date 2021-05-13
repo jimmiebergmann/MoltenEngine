@@ -60,7 +60,7 @@ endif()
 
 # FreeType2 configurations
 include(${CMAKE_CURRENT_SOURCE_DIR}/../CMake/FindFreeType2.cmake)
-if(Vulkan_FOUND)
+if(FreeType2_FOUND)
 	add_subdirectory("${FreeType2_DIR}" "${FreeType2_DIR}")
 else()
 	message(SEND_ERROR "Cannot find FreeType2.")
