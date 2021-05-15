@@ -62,7 +62,7 @@ namespace Molten
 
         { // Values    
             {
-                std::vector<char*> arguments = {
+                std::vector<const char*> arguments = {
                     "--int_1", "1234", "--int_2", "5544"
                 };
 
@@ -72,7 +72,7 @@ namespace Molten
                 EXPECT_EQ(*intValueOpt, int{ 5544 });
             }
             {
-                std::vector<char*> arguments = {
+                std::vector<const char*> arguments = {
                     "--int_12", "12345", "--int_22", "55445"
                 };
                 EXPECT_TRUE(parser.Parse(static_cast<int>(arguments.size()), arguments.data(), false));
@@ -80,33 +80,11 @@ namespace Molten
                 ASSERT_TRUE(intValueOpt.has_value());
                 EXPECT_EQ(*intValueOpt, int{ 55445 });
             }
-            /*{
-                // NOT SUPPORTED YET!
-                std::vector<const char*> arguments = {
-                    "--string_1", "\"Hello, world.\"", "--string_2", "\"This is a test string.\""
-                };
-
-                EXPECT_TRUE(parser.Parse(static_cast<int>(arguments.size()), arguments.data(), false));
-                EXPECT_STREQ(stringValue.c_str(), "Hello, world.");
-                ASSERT_TRUE(stringValueOpt.has_value());
-                EXPECT_EQ(stringValueOpt->c_str(), "This is a test string.");
-            }
-            {
-                // NOT SUPPORTED YET!
-                std::vector<const char*> arguments = {
-                    "--string_12", "\"Hello, other world.\"", "--string_22", "\"This is a test string 2.\""
-                };
-
-                EXPECT_TRUE(parser.Parse(static_cast<int>(arguments.size()), arguments.data(), false));
-                EXPECT_STREQ(stringValue.c_str(), "Hello, other world.");
-                ASSERT_TRUE(stringValueOpt.has_value());
-                EXPECT_EQ(stringValueOpt->c_str(), "This is a test string 2.");
-            }*/
 
         }
         { // Flags
             {
-                std::vector<char*> arguments = {
+                std::vector<const char*> arguments = {
                     "-abcdef"
                 };
 
@@ -119,7 +97,7 @@ namespace Molten
                 EXPECT_TRUE(flag6);
             }
             {
-                std::vector<char*> arguments = {
+                std::vector<const char*> arguments = {
                     "-a" ,"-cd", "-f"
                 };
 
@@ -134,7 +112,7 @@ namespace Molten
         }
         { // List
             {
-                std::vector<char*> arguments = {
+                std::vector<const char*> arguments = {
                     "--list1", "1", "2", "3", "10000", "--list2", "hello", "world"
                 };
 

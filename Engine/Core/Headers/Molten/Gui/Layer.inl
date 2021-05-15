@@ -205,7 +205,7 @@ namespace Molten::Gui
     }
 
     template<typename TTheme>
-    void Layer<TTheme>::Update(const Time& deltaTime)
+    void Layer<TTheme>::Update(const Time&)
     {
         auto rootLane = m_widgetTree.template GetLane<typename WidgetData<TTheme>::TreePartialLaneType>();
         for (auto& rootWidget : rootLane)
@@ -327,8 +327,6 @@ namespace Molten::Gui
     {
         static_assert(std::is_base_of_v<WidgetMixin<TTheme, TWidget>, TWidget<TTheme>>,
             "WidgetMixin<TTheme, TWidget> is not a base of TWidget<TTheme>.");
-        static_assert(std::is_base_of_v<WidgetSkinMixin<TTheme, TWidget>, WidgetSkin<TTheme, TWidget>>,
-            "WidgetSkinMixin<TTheme, TWidget> is not base of WidgetSkin<TTTheme, TWidget>.");
 
         auto widgetDataMixin = std::make_unique<WidgetDataMixin<TTheme, TWidget>>(m_data.GetCanvas(), this);
         auto* widgetDataMixinPointer = widgetDataMixin.get();
@@ -362,8 +360,8 @@ namespace Molten::Gui
     template<typename TTheme>
     template<template<typename> typename TWidget>
     typename WidgetData<TTheme>::MouseEventFunction Layer<TTheme>::CreateChildMouseEventFunction(
-        TWidget<TTheme>* child,
-        Widget<TTheme>* parent)
+        [[maybe_unused]] TWidget<TTheme>* child,
+        Widget<TTheme>*)
     {
         //if (parentEventHandler && parentWidget->GetOverrideChildrenMouseEvents())
         //{

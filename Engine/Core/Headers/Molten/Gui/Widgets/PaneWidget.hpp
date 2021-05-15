@@ -40,6 +40,8 @@ namespace Molten::Gui
     {
 
     public:
+    
+        using Mixin = WidgetMixin<TTheme, Pane>;
 
         static constexpr bool handleKeyboardEvents = false;
         static constexpr bool handleMouseEvents = true;

@@ -86,12 +86,12 @@ namespace Molten::Gui
     }
 
     template<typename TTheme>
-    void Widget<TTheme>::OnAddChild(WidgetData<TTheme>& childData)
+    void Widget<TTheme>::OnAddChild(WidgetData<TTheme>&)
     {
     }
 
     template<typename TTheme>
-    void Widget<TTheme>::OnRemoveChild(WidgetData<TTheme>& childData)
+    void Widget<TTheme>::OnRemoveChild(WidgetData<TTheme>&)
     {
     }
 

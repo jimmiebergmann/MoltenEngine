@@ -60,14 +60,16 @@ namespace Molten::Gui
     {
 
     public:
+    
+        using Mixin = WidgetMixin<TTheme, Docker>;
 
         static constexpr bool overrideChildrenMouseEvents = true;
         static constexpr bool handleKeyboardEvents = false;
         static constexpr bool handleMouseEvents = true;
 
-        float edgeWidth = WidgetSkinType::edgeWidth;
-        float spacing = WidgetSkinType::spacing;
-        float widgetDragActivationDistance = WidgetSkinType::widgetDragActivationDistance;
+        float edgeWidth = Mixin::WidgetSkinType::edgeWidth;
+        float spacing = Mixin::WidgetSkinType::spacing;
+        float widgetDragActivationDistance = Mixin::WidgetSkinType::widgetDragActivationDistance;
         Vector2f32 minElementSize = { 30.0f, 30.0f };
 
         Signal<Mouse::Cursor> onCursorChange;

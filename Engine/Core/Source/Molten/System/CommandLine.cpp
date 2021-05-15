@@ -136,64 +136,40 @@ namespace Molten
         }
     }
 
-    bool CliParser::Parse(int argc, char** argv, const bool skip_first_argv) const
+    bool CliParser::Parse(const int argc, char** argv, const bool skip_first_argv) const
     {
         for(auto& clearFunc : m_clearFuncs)
         {
             (*clearFunc)();
         }
 
-        std::string_view emptyView;
+        ArgumentPointer currentArgument = nullptr;
+        for(int i = (skip_first_argv ? 1 : 0); i < argc; i++)
+        {
+            auto argument = std::string_view{ argv[i], strlen(argv[i]) };
+
+            if(!ParseSingleArgument(argument, currentArgument))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    bool CliParser::Parse(const int argc, const char** argv, const bool skip_first_argv) const
+    {
+        for(auto& clearFunc : m_clearFuncs)
+        {
+            (*clearFunc)();
+        }
 
         ArgumentPointer currentArgument = nullptr;
         for(int i = (skip_first_argv ? 1 : 0); i < argc; i++)
         {
             auto argument = std::string_view{ argv[i], strlen(argv[i]) };
 
-            if (argument.size() >= 2 && argument[0] == '-')
-            {
-                if(argument[1] == '-')
-                {
-                    // New value/list key
-                    argument = std::string_view{ argument.data() + 2, argument.size() - 2 };
-                    auto it = m_mappedArgs.find(std::string{ argument });
-                    if (it == m_mappedArgs.end())
-                    {
-                        return false;
-                    }
-
-                    currentArgument = it->second;
-                    continue;
-                }
-                else
-                {
-                    // Flags
-                    argument = std::string_view{ argument.data() + 1, argument.size() - 1 };
-                    for(const auto& flag : argument)
-                    {
-                        auto it = m_mappedArgs.find(std::string{ flag });
-                        if(it == m_mappedArgs.end())
-                        {
-                            return false;
-                        }
-                        if(!it->second->SetValue(emptyView))
-                        {
-                            return false;
-                        }
-                    }
-
-                    currentArgument = nullptr;
-                    continue;
-                }
-            }
-
-            if(!currentArgument)
-            {
-                return false;
-            }
-
-            // Value/list
-            if(!currentArgument->SetValue(argument))
+            if(!ParseSingleArgument(argument, currentArgument))
             {
                 return false;
             }
@@ -207,7 +183,58 @@ namespace Molten
         return "";
     }
 
+    [[nodiscard]] bool CliParser::ParseSingleArgument(std::string_view argument, ArgumentPointer& currentArgument) const
+    {
+        if (argument.size() >= 2 && argument[0] == '-')
+        {
+            if(argument[1] == '-')
+            {
+                // New value/list key
+                argument = std::string_view{ argument.data() + 2, argument.size() - 2 };
+                auto it = m_mappedArgs.find(std::string{ argument });
+                if (it == m_mappedArgs.end())
+                {
+                    return false;
+                }
 
+                currentArgument = it->second;
+                return true;
+            }
+            else
+            {
+                // Flags
+                argument = std::string_view{ argument.data() + 1, argument.size() - 1 };
+                for(const auto& flag : argument)
+                {
+                    auto it = m_mappedArgs.find(std::string{ flag });
+                    if(it == m_mappedArgs.end())
+                    {
+                        return false;
+                    }
+                    if(!it->second->SetValue(std::string_view{}))
+                    {
+                        return false;
+                    }
+                }
+
+                currentArgument = nullptr;
+                return true;
+            }
+        }
+
+        if(!currentArgument)
+        {
+            return false;
+        }
+
+        // Value/list
+        if(!currentArgument->SetValue(argument))
+        {
+            return false;
+        }
+
+        return true;
+    }
 
 
 }

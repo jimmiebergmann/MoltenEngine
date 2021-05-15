@@ -213,13 +213,13 @@ namespace Molten::Gui
         const Vector2f32& requestedSize,
         const Vector2f32& minSize
     ) :
+        minSize(minSize),
+        requestedSize(std::max(minSize.x, requestedSize.x), std::max(minSize.y, requestedSize.y)),
         m_type(ElementType::Leaf),
         m_data(std::move(leaf)),
         m_parent(nullptr),
         m_prevEdge(nullptr),
-        m_nextEdge(nullptr),
-        minSize(minSize),
-        requestedSize(std::max(minSize.x, requestedSize.x), std::max(minSize.y, requestedSize.y))
+        m_nextEdge(nullptr)
     {
         std::get<LeafPointer>(m_data)->m_owner = this;
     }
@@ -1105,11 +1105,11 @@ namespace Molten::Gui
     }
 
     template<typename TTheme>
-    bool Docker<TTheme>::HandleEdgeDragMouseReleaseEvent(const WidgetMouseEvent& widgetMouseEvent)
+    bool Docker<TTheme>::HandleEdgeDragMouseReleaseEvent(const WidgetMouseEvent&)
     {
         SetCursor(Mouse::Cursor::Normal);
         ActivateNormalUpdate();
-        SetSkinState(State{});
+        Mixin::SetSkinState(State{});
 
         return true;
     }
@@ -1133,7 +1133,7 @@ namespace Molten::Gui
         auto* leaf = FindIntersectingLeaf(widgetMouseEvent.position);
         if (!leaf || leaf == m_leafDragData.pressedLeaf)
         {
-            SetSkinState(State{ });
+            Mixin::SetSkinState(State{ });
             return false;
         }
 
@@ -1141,9 +1141,9 @@ namespace Molten::Gui
         if (GetDockingPositionInElement(widgetMouseEvent.position, *leaf, dockingBounds, m_leafDragData.dockingPosition))
         {
             m_leafDragData.dockingLeaf = leaf;
-            SetSkinState(State{ State::LeafDragState{ dockingBounds } });
+            Mixin::SetSkinState(State{ typename State::LeafDragState{ dockingBounds } });
 
-            m_leafDragData.overlayWidget = this->GetData().GetCanvas()->CreateOverlayChild<DockerOverlay>();
+            m_leafDragData.overlayWidget = this->GetData().GetCanvas()->template CreateOverlayChild<DockerOverlay>();
             m_leafDragData.overlayWidget->position = dockingBounds.low;
             m_leafDragData.overlayWidget->size.value = dockingBounds.GetSize();
         }
@@ -1151,14 +1151,14 @@ namespace Molten::Gui
         {
             m_leafDragData.overlayWidget = {};
             m_leafDragData.dockingLeaf = nullptr;
-            SetSkinState(State{ });
+            Mixin::SetSkinState(State{ });
         }
 
         return true;
     }
 
     template<typename TTheme>
-    bool Docker<TTheme>::HandleLeafDragMouseReleaseEvent(const WidgetMouseEvent& widgetMouseEvent)
+    bool Docker<TTheme>::HandleLeafDragMouseReleaseEvent(const WidgetMouseEvent&)
     {
         if (m_leafDragData.dockingLeaf && m_leafDragData.pressedLeaf && m_leafDragData.dockingLeaf != m_leafDragData.pressedLeaf)
         {
@@ -1186,7 +1186,7 @@ namespace Molten::Gui
 
         SetCursor(Mouse::Cursor::Normal);
         ActivateNormalUpdate();
-        SetSkinState(State{});
+        Mixin::SetSkinState(State{});
 
         return true;
     }
@@ -1282,12 +1282,12 @@ namespace Molten::Gui
     {
         element.VisitData([&](auto& data)
         {
-            CalculateElementBounds(element , *data.get(), grantedBounds);
+            CalculateElementBounds(element, *data.get(), grantedBounds);
         });
     }
 
     template<typename TTheme>
-    void Docker<TTheme>::CalculateElementBounds(Element& element, Leaf& leaf, const Bounds2f32& grantedBounds)
+    void Docker<TTheme>::CalculateElementBounds(Element&, Leaf& leaf, const Bounds2f32& grantedBounds)
     {
         if(grantedBounds.IsEmpty())
         {

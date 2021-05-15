@@ -177,7 +177,6 @@ namespace Molten::Gui
         auto layerData = std::make_unique<LayerData<TTheme>>(this);
         auto* layerDataPointer = layerData.get();
 
-        auto normalLane = m_layers.template GetLane<typename LayerData<TTheme>::ListNormalLaneType>();
         auto partialLane = m_layers.template GetLane<typename LayerData<TTheme>::ListPartialLaneType>();
         auto layerDataIt = partialLane.Insert(position, std::move(layerData));
 

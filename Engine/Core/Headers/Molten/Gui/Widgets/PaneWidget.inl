@@ -45,7 +45,7 @@ namespace Molten::Gui
         auto& grantedBounds = this->GetGrantedBounds();
 
         m_dragBounds = grantedBounds;
-        m_dragBounds.bottom = m_dragBounds.top + WidgetSkinType::headerBarHeight;
+        m_dragBounds.bottom = m_dragBounds.top + Mixin::WidgetSkinType::headerBarHeight;
 
         auto childLane = this->GetChildrenPartialLane();
 
@@ -65,7 +65,7 @@ namespace Molten::Gui
                 auto& childData = (*it).GetValue();
 
                 const auto contentBounds = grantedBounds
-                    .WithoutMargins({ 0.0f, WidgetSkinType::headerBarHeight, 0.0f, 0.0f })
+                    .WithoutMargins({ 0.0f, Mixin::WidgetSkinType::headerBarHeight, 0.0f, 0.0f })
                     .WithoutMargins(this->padding)
                     .ClampHighToLow();
                 childData->SetGrantedBounds(contentBounds);
@@ -75,7 +75,7 @@ namespace Molten::Gui
     }
 
     template<typename TTheme>
-    bool Pane<TTheme>::OnMouseEvent(const WidgetMouseEvent& widgetMouseEvent)
+    bool Pane<TTheme>::OnMouseEvent(const WidgetMouseEvent&)
     {
         return false;
     }

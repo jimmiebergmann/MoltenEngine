@@ -284,10 +284,9 @@ namespace Molten
         using pointer = typename std::conditional_t<IsConst, const T*, T*>;
         using reference = typename std::conditional_t<IsConst, const T&, T&>;
 
-        using Type = T;
-        using List = typename std::conditional_t<IsConst, const BypassList<Type>, BypassList<Type>>;
-        using LaneType = TLaneType;
         using Type = value_type;
+        using List = typename std::conditional_t<IsConst, const BypassList<Type>, BypassList<Type>>;
+        using LaneType = TLaneType;       
         using Pointer = pointer;
         using Reference = reference;
         using Iterator = BypassListIteratorInterface<IsConst, IsReverse, LaneType, Type>;

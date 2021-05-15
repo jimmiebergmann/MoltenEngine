@@ -181,13 +181,17 @@ namespace Molten
 
         CliParser(std::initializer_list<CliArgument>&& args);
 
-        bool Parse(int argc, char** argv, const bool skip_first_argv = true) const;
+        bool Parse(const int argc, char** argv, const bool skip_first_argv = true) const;
+        bool Parse(const int argc, const char** argv, const bool skip_first_argv = true) const;
 
         [[nodiscard]] std::string GetHelp() const;
 
     private:
 
         using ArgumentPointer = std::shared_ptr<CliArgument>;
+
+        [[nodiscard]] bool ParseSingleArgument(std::string_view argument, ArgumentPointer& currentArgument) const;
+
 
         std::vector<CliArgument::ClearFunction*> m_clearFuncs;
         std::map<std::string, ArgumentPointer> m_mappedArgs;

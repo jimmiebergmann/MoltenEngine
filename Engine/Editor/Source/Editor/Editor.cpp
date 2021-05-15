@@ -142,7 +142,7 @@ namespace Molten::Editor
         return true;
     }
 
-    bool Editor::LoadWindow(const EditorDescriptor& descriptor)
+    bool Editor::LoadWindow(const EditorDescriptor&)
     {
         m_window = std::unique_ptr<Window>(Window::Create());
         const Vector2ui32 windowSize = { 800, 600 };
@@ -351,8 +351,6 @@ namespace Molten::Editor
 
     bool Editor::HandleWindowFocus()
     {
-        static Time prevSleepTime = {};
-
         const auto windowSize = m_window->GetSize();
         bool isMinimized = !windowSize.x || !windowSize.y;
         if(isMinimized || !m_window->IsFocused())
