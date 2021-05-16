@@ -211,7 +211,7 @@ namespace Molten::Gui
         void Draw() override
         {
             auto grantedBounds = widgetData.GetGrantedBounds();
-            grantedBounds.low.x -= m_fontSequence.bounds.low.x;
+            grantedBounds.low.x -= static_cast<float>(m_fontSequence.bounds.low.x);
             grantedBounds.low.y += m_font->CalculateHeightOffset(grantedBounds);
             
             theme.m_canvasRenderer.DrawFontSequence(grantedBounds.low, m_canvasFontSequence);

@@ -43,13 +43,13 @@ namespace Molten
         WindowX11();
 
         /** Constructs and opens window. */
-        WindowX11(const std::string& title, const Vector2ui32 size, Logger* logger = nullptr);
+        WindowX11(const WindowDescriptor& descriptor);
 
         /** Destructor. */
         ~WindowX11();
 
         /** Open window. */
-        bool Open(const std::string& title, const Vector2ui32 size, Logger* logger = nullptr) override;
+        bool Open(const WindowDescriptor& descriptor) override;
 
         /** Close window. */
         void Close() override;

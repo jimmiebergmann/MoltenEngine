@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -34,20 +34,25 @@
 namespace Molten
 {
 
+    // Window descriptor implementations.
+    WindowDescriptor::WindowDescriptor() :
+        title{},
+        size(0, 0),
+        enableDragAndDrop(false),
+        logger(nullptr)
+    {}
+
+
     // Window implementations.
-    Window* Window::Create()
+    std::unique_ptr<Window> Window::Create([[maybe_unused]] const WindowDescriptor& descriptor)
     {
     #if MOLTEN_PLATFORM == MOLTEN_PLATFORM_WINDOWS
-        return new WindowWin32;
+        return std::make_unique<WindowWin32>(descriptor);
     #elif MOLTEN_PLATFORM == MOLTEN_PLATFORM_LINUX
-        return new WindowX11;
+        return std::make_unique<WindowX11>(descriptor);
     #else
         return nullptr
     #endif    
-    }
-
-    Window::~Window()
-    {
     }
 
 

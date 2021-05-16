@@ -31,6 +31,9 @@
 #include "Molten/System/UserInput.hpp"
 #include "Molten/Math/Vector.hpp"
 #include <string>
+#include <memory>
+#include <functional>
+#include <filesystem>
 
 namespace Molten
 {
@@ -38,18 +41,37 @@ namespace Molten
     class Logger;
     class UserInput;
 
+
+    /** Window creation descriptor. */
+    struct MOLTEN_API WindowDescriptor
+    {
+        WindowDescriptor();
+
+        std::string title;
+        Vector2ui32 size;
+        bool enableDragAndDrop;
+        Logger* logger;
+    };
+
+
     /** Base class of application windows. */
     class MOLTEN_API Window : public RenderTarget
     {
 
     public:
 
+        /** Callback functions for file drops.*/
+        using FilesDropEnterCallback = std::function<bool(std::vector<std::filesystem::path>&)>;
+        using FilesDropMoveCallback = std::function<void(const Vector2i32&)>;
+        using FilesDropLeaveCallback = std::function<void()>;
+        using FilesDropCallback = std::function<void(std::vector<std::filesystem::path>&)>;
+
         /** Static function for creating a window object for the current platform.
          *  Window is being opened if parameters are passed.
          *
-         * @return Pointer to window, nullptr if no window is available on the current platform.
+         * @return Pointer to window, nullptr if no window is available for the current platform.
          */
-        static Window* Create();      
+        static std::unique_ptr<Window> Create(const WindowDescriptor& descriptor);
 
         /** On DPI change signal. */
         Signal<Vector2ui32> OnDpiChange;
@@ -74,11 +96,43 @@ namespace Molten
         /** On show/hide signal. */
         Signal<bool> OnShow;
 
+        /** Function called when one or multiple files are dragged into window.
+         *  Function should return true if any of the files are accepted, else false.
+         *  This callback is only called if window is created with enableDragAndDrop set to true.
+         */
+        FilesDropEnterCallback OnFilesDropEnter;
+
+        /** Function called when one or multiple files are moved into window.
+          *  This callback is only called if window is created with enableDragAndDrop set to true.
+          */
+        FilesDropMoveCallback OnFilesDropMove;
+
+        /** Function called when one or multiple files are moved out of window.
+          *  This callback is only called if window is created with enableDragAndDrop set to true.
+          */
+        FilesDropLeaveCallback OnFilesDropLeave;
+
+        /** Function called when one or multiple files are dropped into window.
+         *  This callback is only called if window is created with enableDragAndDrop set to true.
+         */
+        FilesDropCallback OnFilesDrop;
+
+        /** Default constructor. */
+        Window() = default;
+
         /** Virtual destructor. */
-        virtual ~Window();
+        ~Window() override = default;
+
+        /** Deleted copy and move constructors and operators. */
+        /**@{*/
+        Window(const Window&) = delete;
+        Window(Window&&) = delete;
+        Window& operator = (const Window&) = delete;
+        Window& operator = (Window&&) = delete;
+        /**@}*/
 
         /** Open window. */
-        virtual bool Open(const std::string& title, const Vector2ui32 size, Logger* logger = nullptr) = 0;
+        virtual bool Open(const WindowDescriptor& descriptor) = 0;
 
         /** Close window. */
         virtual void Close() = 0;
@@ -185,7 +239,7 @@ namespace Molten
 
     };
 
-    /**  Platform independed window class. */
+    /**  Platform independent window class. */
     class MOLTEN_API PlatformWindow
     {
 

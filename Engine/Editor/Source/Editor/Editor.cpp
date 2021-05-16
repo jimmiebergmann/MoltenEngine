@@ -28,12 +28,7 @@
 #include "Molten/Logger.hpp"
 
 #include "Molten/Gui/CanvasRenderer.hpp"
-
-//#include "Molten/Gui/Layers/DockingLayer.hpp"
-//#include "Molten/Gui/Layers/RootLayer.hpp"
-
 #include "Molten/Gui/Layers/SingleRootLayer.hpp"
-
 #include "Molten/Gui/Widgets/ButtonWidget.hpp"
 #include "Molten/Gui/Widgets/PaddingWidget.hpp"
 #include "Molten/Gui/Widgets/VerticalGridWidget.hpp"
@@ -41,21 +36,6 @@
 #include "Molten/Gui/Widgets/PaneWidget.hpp"
 #include "Molten/Gui/Widgets/DockerWidget.hpp"
 #include "Molten/Gui/Widgets/LabelWidget.hpp"
-
-
-/*#include "Molten/Window/Window.hpp"
-#include "Molten/Renderer/Renderer.hpp"
-#include "Molten/Renderer/Shader/Generator/GlslShaderGenerator.hpp"
-#include "Molten/Gui/CanvasRenderer.hpp"
-#include "Molten/Gui/Layers/RootLayer.hpp"
-#include "Molten/Gui/Widget.hpp"
-#include "Molten/Gui/Widgets/ButtonWidget.hpp"
-#include "Molten/Gui/Widgets/PaddingWidget.hpp"
-#include "Molten/Gui/Widgets/VerticalGridWidget.hpp"
-#include "Molten/Gui/Widgets/SpacerWidget.hpp"
-#include <chrono>
-#include <thread>*/
-
 
 namespace Molten::Editor
 {
@@ -144,16 +124,16 @@ namespace Molten::Editor
 
     bool Editor::LoadWindow(const EditorDescriptor&)
     {
-        m_window = std::unique_ptr<Window>(Window::Create());
-        const Vector2ui32 windowSize = { 800, 600 };
-        if (!m_window)
+        WindowDescriptor windowDescriptor;
+        windowDescriptor.size = { 800, 600 };
+        windowDescriptor.title = m_windowTitle;
+        windowDescriptor.enableDragAndDrop = true;
+        windowDescriptor.logger = m_logger.get();
+
+        m_window = Window::Create(windowDescriptor);
+        if (!m_window || !m_window->IsOpen())
         {
             Logger::WriteError(m_logger.get(), "Failed to create editor window.");
-            return false;
-        }
-        if (!m_window->Open(m_windowTitle, windowSize, m_logger.get()))
-        {
-            Logger::WriteError(m_logger.get(), "Failed to open editor window.");
             return false;
         }
 
@@ -161,14 +141,45 @@ namespace Molten::Editor
         {
             Tick();
         });
+
         m_window->OnDpiChange.Connect([&](Vector2ui32 dpi)
         {
             m_logger->Write(Logger::Severity::Info, "Changed DPI: " + std::to_string(dpi.x) + ", " + std::to_string(dpi.y));
         });
+
         m_window->OnScaleChange.Connect([&](Vector2f32 scale)
         {
             m_logger->Write(Logger::Severity::Info, "Changed scale: " + std::to_string(scale.x) + ", " + std::to_string(scale.y));
         });
+
+
+        m_window->OnFilesDropEnter = [&](std::vector<std::filesystem::path>& files) -> bool
+        {
+            Logger::WriteInfo(m_logger.get(), "Drag and drop: Entering files:");
+            for (const auto& file : files)
+            {
+                Logger::WriteInfo(m_logger.get(), "   " + file.string());
+            }
+
+            return true;
+        };
+        m_window->OnFilesDropMove = [&](const Vector2i32& position)
+        {
+            Logger::WriteInfo(m_logger.get(), "Drag and drop: Move: " + std::to_string(position.x) + ", " + std::to_string(position.y));
+        };
+        m_window->OnFilesDropLeave = [&]()
+        {
+            Logger::WriteInfo(m_logger.get(), "Drag and drop: Leave.");
+        };
+        m_window->OnFilesDrop = [&](std::vector<std::filesystem::path>& files)
+        {
+            Logger::WriteInfo(m_logger.get(), "Drag and drop: Dropping files:");
+            for(const auto& file : files)
+            {
+                Logger::WriteInfo(m_logger.get(), "   " + file.string());
+            }
+        };
+
 
         return true;
     }
@@ -204,39 +215,8 @@ namespace Molten::Editor
         m_canvasRenderer = Gui::CanvasRenderer::Create(*m_renderer, m_logger.get());
         m_canvas = std::make_shared<Gui::Canvas<Gui::EditorTheme>>(*m_canvasRenderer, m_fontNameRepository);
 
-        //auto* bgLayer = m_canvas->CreateLayer<Gui::MultiRootLayer>(Gui::LayerPosition::Top);
-        //bgLayer->CreateChild<Gui::Button>();
-
         auto* layer = m_canvas->CreateLayer<Gui::SingleRootLayer>(Gui::LayerPosition::Top);
 
-        // PANE BUTTON TEST
-        /*auto grid = m_canvas->CreateChild<Gui::VerticalGrid>();
-        grid->margin = Gui::PaddingType{ 10.0f, 20.0f, 30.0f, 40.0f };
-        grid->padding = Gui::PaddingType{ 10.0f, 20.0f, 30.0f, 40.0f };
-
-        auto button1 = grid->CreateChild<Gui::Button>();
-        button1->onPress.Connect([&](int)
-        {
-            Logger::WriteInfo(m_logger.get(), "Pressed button 1.");
-        });
-
-        grid->CreateChild<Gui::Spacer>();
-
-        auto grid2 = grid->CreateChild<Gui::VerticalGrid>();
-        grid2->margin = Gui::PaddingType{ 5.0f, 5.0f, 5.0f, 5.0f };
-        grid2->padding = Gui::PaddingType{ 15.0f, 25.0f, 5.0f, 5.0f };
-        grid2->cellSpacing = 10.0f;
-
-        grid2->CreateChild<Gui::Button>();
-        grid2->CreateChild<Gui::Button>();
-
-        grid->CreateChild<Gui::Spacer>();
-        grid->CreateChild<Gui::Button>();
-        grid->CreateChild<Gui::Spacer>();
-        grid->CreateChild<Gui::Pane>(Vector2f32{ 200.0f, 200.0f });*/
-
-
-        // DOCKER TEST
         auto* docker = layer->CreateChild<Gui::Docker>();
 
         docker->margin = { 4.0f, 4.0f, 4.0f, 4.0f };
@@ -246,57 +226,22 @@ namespace Molten::Editor
             m_window->SetCursor(cursor);
         });
 
-        auto pane1 = docker->CreateChild<Gui::Pane>(Gui::DockingPosition::Left, false, "Tools", Gui::WidgetSize{ 200.0f, 200.0f });
+        docker->CreateChild<Gui::Pane>(Gui::DockingPosition::Left, false, "Tools", Gui::WidgetSize{ 200.0f, 200.0f });
         docker->CreateChild<Gui::VerticalGrid>(Gui::DockingPosition::Right, true);
         docker->CreateChild<Gui::Pane>(Gui::DockingPosition::Bottom, false, "Assets", Gui::WidgetSize{ 250.0f, 250.0f });
-        auto button = docker->CreateChild<Gui::Pane>(Gui::DockingPosition::Right, false, "Inspector", Gui::WidgetSize{ 300.0f, 200.0f })->CreateChild<Gui::Button>();
+        auto inspector = docker->CreateChild<Gui::Pane>(Gui::DockingPosition::Right, false, "Inspector", Gui::WidgetSize{ 300.0f, 200.0f });
 
-        button->onPress.Connect([&, pane1](int)
         {
-            static bool pressed = false;
-            if(!pressed)
+            auto vertGrid = inspector->CreateChild<Gui::VerticalGrid>();
+            vertGrid->CreateChild<Gui::Label>("Location:", 18);
+            auto button = vertGrid->CreateChild<Gui::Button>();
+            button->onPress.Connect([&](int)
             {
-                m_canvas->DestroyWidget(pane1);
-                pressed = true;
-            }
-        });
+                Logger::WriteInfo(m_logger.get(), "You pressed me!");
+            });
+            button->CreateChild<Gui::Label>("Click me!", 18);
+        }
 
-        button->size.CalculateValue({}, {});
-
-        //button->CreateChild<Gui::Label>("Inspector", 16);
-
-
-        /*auto pane1 = docker->CreateChild<Gui::Pane>(Gui::DockingPosition::Left, true, Vector2f32{ 100.0f, 100.0f });
-        pane1->padding = { 4.0f, 4.0f, 4.0f, 4.0f };
-        docker->CreateChild<Gui::Pane>(Gui::DockingPosition::Right, false, Vector2f32{ 100.0f, 100.0f });
-        docker->CreateChild<Gui::Pane>(Gui::DockingPosition::Bottom, false, Vector2f32{ 100.0f, 100.0f });
-        auto pane4 = docker->CreateChild<Gui::Pane>(Gui::DockingPosition::Right, false, Vector2f32{ 100.0f, 100.0f });
-        pane4->padding = { 4.0f, 4.0f, 4.0f, 4.0f };
-        docker->CreateChild<Gui::Pane>(Gui::DockingPosition::Right, false, Vector2f32{ 100.0f, 100.0f });
-        docker->CreateChild<Gui::Pane>(Gui::DockingPosition::Right, false, Vector2f32{ 100.0f, 100.0f });
-        
-        docker->CreateChild<Gui::Pane>(Gui::DockingPosition::Top, false, Vector2f32{ 100.0f, 100.0f });
-        docker->CreateChild<Gui::Pane>(Gui::DockingPosition::Left, false, Vector2f32{ 100.0f, 100.0f });
-
-        auto vertGrid1 = pane1->CreateChild<Gui::VerticalGrid>();
-        vertGrid1->CreateChild<Gui::Button>();
-        vertGrid1->CreateChild<Gui::Button>();
-
-        pane4->CreateChild<Gui::Button>();*/
-        
-        
-
-
-
-        /*
-        Gui::Widget<Gui::DefaultSkin>::CreateChild<Gui::Spacer>(grid);
-        Gui::Widget<Gui::DefaultSkin>::CreateChild<Gui::Spacer>(grid);
-        Gui::Widget<Gui::DefaultSkin>::CreateChild<Gui::Spacer>(grid);
-        auto button1 = Gui::Widget<Gui::DefaultSkin>::CreateChild<Gui::Button>(grid);*/
-        //auto padding2 = Gui::Widget::CreateChild<Gui::Padding>(grid, 10.0f, 20.0f, 30.0f, 40.0f);
-        //auto button2 = Gui::Widget::CreateChild<Gui::Button>(grid);
-        //button2->margin = Gui::MarginData{ 10.0f, 20.0f, 30.0f, 40.0f };
-        //auto button3 = Gui::Widget::CreateChild<Gui::Button>(grid);
         return true;
     }
 

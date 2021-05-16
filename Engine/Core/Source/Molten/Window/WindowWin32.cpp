@@ -55,7 +55,7 @@ namespace Molten
         ss << std::hex;
         ss << ptr[0] << ptr[1] << "-" << ptr[3] << "-" << ptr[4] << "-" << ptr[5] << ptr[6] << ptr[7];
 
-        return std::move(ss.str());
+        return ss.str();
     }
 
     static bool IsExtendedKey(const LPARAM lParam)
@@ -78,22 +78,202 @@ namespace Molten
         }
     }
 
+
+    // Win32 drop target implementations.
+    DropTargetWin32::DropTargetWin32(WindowWin32& window) :
+        m_ref(1),
+        m_window(window),
+        m_lastDataObject(nullptr)
+    {}
+
+    HRESULT DropTargetWin32::Register()
+    {
+        if(const auto result = ::OleInitialize(0); result != S_OK)
+        {
+            return result;
+        }
+        return ::RegisterDragDrop(m_window.GetWin32Window(), this);
+    }
+
+    HRESULT STDMETHODCALLTYPE DropTargetWin32::QueryInterface(
+        REFIID riid,
+        _COM_Outptr_ void __RPC_FAR* __RPC_FAR* ppvObject)
+    {
+        if(riid == IID_IUnknown || riid == IID_IDropTarget)
+        {
+            *ppvObject = static_cast<IUnknown*>(this);
+            AddRef();
+            return S_OK;
+        }
+
+        *ppvObject = nullptr;
+        return E_NOINTERFACE;
+    }
+
+    ULONG STDMETHODCALLTYPE DropTargetWin32::AddRef()
+    {
+        return InterlockedIncrement(&m_ref);
+    }
+
+    ULONG STDMETHODCALLTYPE DropTargetWin32::Release()
+    {
+        return InterlockedDecrement(&m_ref);
+    }
+
+    HRESULT STDMETHODCALLTYPE DropTargetWin32::DragEnter(
+        IDataObject* dataObject,
+        DWORD keyboardState,
+        POINTL cursorPosition,
+        DWORD* effect)
+    {
+        *effect &= DROPEFFECT_NONE;
+
+        m_lastDataObject = nullptr;
+
+        std::vector<std::filesystem::path> files;
+        if (ReadFiles(dataObject, files) != S_OK)
+        {
+            return S_OK;
+        }
+
+        if (files.empty())
+        {
+            return S_OK;
+        }
+
+        if (!m_window.OnFilesDropEnter(files))
+        {
+            return S_OK;
+        }
+
+        *effect &= DROPEFFECT_COPY;
+        m_lastDataObject = dataObject;
+        return S_OK;
+    }
+
+    HRESULT STDMETHODCALLTYPE DropTargetWin32::DragOver(
+        DWORD keyboardState,
+        POINTL cursorPosition,
+        DWORD* effect)
+    {
+        *effect &= DROPEFFECT_NONE;
+
+        if(!m_lastDataObject)
+        {
+            return S_OK;
+        }
+
+        const auto newPosition = Vector2i32{ cursorPosition.x, cursorPosition.y };
+        if(newPosition != m_lastPosition)
+        {
+            m_window.OnFilesDropMove(newPosition);
+            m_lastPosition = newPosition;
+        }
+
+        *effect &= DROPEFFECT_COPY;
+        return S_OK;
+    }
+
+    HRESULT STDMETHODCALLTYPE DropTargetWin32::DragLeave()
+    {
+        if (!m_lastDataObject)
+        {
+            return S_OK;
+        }
+
+        m_window.OnFilesDropLeave();
+        m_lastDataObject = nullptr;
+        return S_OK;
+    }
+
+    HRESULT STDMETHODCALLTYPE DropTargetWin32::Drop(
+        IDataObject* dataObject,
+        DWORD keyboardState,
+        POINTL cursorPosition,
+        DWORD* effect)
+    {
+        *effect &= DROPEFFECT_NONE;
+
+        if(m_lastDataObject == nullptr)
+        {
+            return S_OK;
+        }
+
+        std::vector<std::filesystem::path> files;
+        if(ReadFiles(dataObject, files) != S_OK)
+        {       
+            return S_OK;
+        }
+
+        if(files.empty())
+        {
+            return S_OK;          
+        }
+
+        m_window.OnFilesDrop(files);
+
+        *effect &= DROPEFFECT_COPY;
+        m_lastDataObject = nullptr;
+        return S_OK;
+    }
+
+    HRESULT DropTargetWin32::ReadFiles(
+        IDataObject* dataObject,
+        std::vector<std::filesystem::path>& files) const
+    {
+        FORMATETC format = {
+            CF_HDROP,
+            nullptr,
+            DVASPECT_CONTENT,
+            -1,
+            TYMED_HGLOBAL
+        };
+
+        STGMEDIUM medium;
+        if(const auto result = dataObject->GetData(&format, &medium); result != S_OK)
+        {
+            return result;
+        }
+
+        const auto drop = static_cast<HDROP>(medium.hGlobal);
+
+        const auto fileCount = DragQueryFile(drop, 0xFFFFFFFF, nullptr, 0);
+        files.reserve(fileCount);
+
+        for(UINT i = 0; i < fileCount; i++)
+        {
+            char filename[MAX_PATH + 1];
+            const auto filenameSize = DragQueryFile(drop, i, filename, MAX_PATH);
+            if(filenameSize > MAX_PATH)
+            {
+                // Ignore too long filename.
+                continue;
+            }
+
+            filename[filenameSize] = 0;
+            files.emplace_back(filename);
+        }
+
+        return S_OK;
+    }
+ 
+
     // Dynamic win32 implementations.
     WindowWin32::DynamicFunctions::DynamicFunctions() :
-        m_module(NULL),
+        m_module(nullptr),
     #if (MOLTEN_PLATFORM_WINDOWS_SUPPORT_MULTI_MONITOR_DPI)
-        m_setProcessDpiMultiDisplayAwareness(NULL),
+        m_setProcessDpiMultiDisplayAwareness(nullptr),
     #endif 
-        m_setProcessDpiSingleDisplayAwareness(NULL)
+        m_setProcessDpiSingleDisplayAwareness(nullptr)
     {
         // Multi monitor DPI.
     #if (MOLTEN_PLATFORM_WINDOWS_SUPPORT_MULTI_MONITOR_DPI)
 
         m_module = ::LoadLibrary("Shcore.dll");
-        if (m_module != NULL)
+        if (m_module != nullptr)
         {
             m_setProcessDpiMultiDisplayAwareness = reinterpret_cast<SetProcessDpiMultiDisplayAwarenessFunc>(::GetProcAddress(m_module, "SetProcessDpiAwareness"));
-            if (m_setProcessDpiMultiDisplayAwareness != NULL)
+            if (m_setProcessDpiMultiDisplayAwareness != nullptr)
             {
                 return;
             }
@@ -103,7 +283,7 @@ namespace Molten
 
         // Single monitor DPI.
         m_module = ::LoadLibrary("user32.dll");
-        if (m_module != NULL)
+        if (m_module != nullptr)
         {
             m_setProcessDpiSingleDisplayAwareness = reinterpret_cast<SetProcessDpiSingleDisplayAwarenessFunc>(::GetProcAddress(m_module, "SetProcessDPIAware"));
         }
@@ -111,7 +291,7 @@ namespace Molten
 
     WindowWin32::DynamicFunctions::~DynamicFunctions()
     {
-        if (m_module != NULL)
+        if (m_module != nullptr)
         {
             ::FreeLibrary(m_module);
         }
@@ -138,44 +318,43 @@ namespace Molten
 
     WindowWin32::DynamicFunctions WindowWin32::s_DynamicFunctions;
 
-
     // Win32 window implementations.
     WindowWin32::WindowWin32() :
         m_logger(nullptr),
-        m_window(NULL),
-        m_instance(NULL),
-        m_deviceContext(NULL),
+        m_window(nullptr),
+        m_instance(nullptr),
+        m_deviceContext(nullptr),
         m_style(0),
         m_extendedStyle(0),
-        m_windowClassName(""),
+        m_windowClassName{},
         m_showing(false),
         m_maximized(false),
         m_minimized(false),
         m_focused(false),
         m_size(0, 0),
         m_position(0, 0),
-        m_title(""),
+        m_title{},
         m_dpi(96, 96),
-        m_cursor(Mouse::Cursor::Normal)
-    {
-    }
+        m_cursor(Mouse::Cursor::Normal),
+        m_dropTarget(*this)
+    {}
 
-    WindowWin32::WindowWin32(const std::string& title, const Vector2ui32 size, Logger* logger) :
+    WindowWin32::WindowWin32(const WindowDescriptor& descriptor) :
         WindowWin32()
     {
-        Open(title, size, logger);
+        WindowWin32::Open(descriptor);
     }
 
     WindowWin32::~WindowWin32()
     {
-        Close();
+        WindowWin32::Close();
     }
 
-    bool WindowWin32::Open(const std::string& title, const Vector2ui32 size, Logger* logger)
+    bool WindowWin32::Open(const WindowDescriptor& descriptor)
     {
         Close();
 
-        m_logger = logger;
+        m_logger = descriptor.logger;
 
         m_extendedStyle = WS_EX_APPWINDOW;
         m_style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_SIZEBOX | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_BORDER;
@@ -184,17 +363,17 @@ namespace Molten
         std::string className = "MoltenEngine_" + guid;
 
         WNDCLASS winClass;
-        HINSTANCE winInstance = ::GetModuleHandle(NULL);
+        HINSTANCE winInstance = ::GetModuleHandle(nullptr);
         winClass.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
         winClass.lpfnWndProc = (WNDPROC)WindowWin32::WindowProcStatic;
         winClass.cbClsExtra = 0;
         winClass.cbWndExtra = 0;
         winClass.hInstance = winInstance;
-        winClass.hIcon = LoadIcon(NULL, IDI_WINLOGO);
-        winClass.hCursor = LoadCursor(NULL, IDC_ARROW);
+        winClass.hIcon = LoadIcon(nullptr, IDI_WINLOGO);
+        winClass.hCursor = LoadCursor(nullptr, IDC_ARROW);
         winClass.hbrBackground = CreateSolidBrush(RGB(255, 255, 255));
         winClass.lpszClassName = className.c_str();
-        winClass.lpszMenuName = NULL;
+        winClass.lpszMenuName = nullptr;
 
         if (!::RegisterClass(&winClass))
         {
@@ -206,9 +385,9 @@ namespace Molten
 
         RECT windowRect;
         windowRect.left = static_cast<LONG>(0);
-        windowRect.right = static_cast<LONG>(size.x);
+        windowRect.right = static_cast<LONG>(descriptor.size.x);
         windowRect.top = static_cast<LONG>(0);
-        windowRect.bottom = static_cast<LONG>(size.y);
+        windowRect.bottom = static_cast<LONG>(descriptor.size.y);
         if (!::AdjustWindowRectEx(&windowRect, m_style, FALSE, m_extendedStyle))
         {
             MOLTEN_WINDOW_LOG(Logger::Severity::Error, "Failed to adjust window rect.");
@@ -218,18 +397,18 @@ namespace Molten
         m_window = ::CreateWindowEx(
             m_extendedStyle,
             className.c_str(),
-            title.c_str(), //stringToWideString(m_title).c_str(),
+            descriptor.title.c_str(), //stringToWideString(m_title).c_str(),
             WS_CLIPSIBLINGS | WS_CLIPCHILDREN | m_style,
             CW_USEDEFAULT,
             CW_USEDEFAULT,
             windowRect.right - windowRect.left,
             windowRect.bottom - windowRect.top,
-            NULL,
-            NULL,
+            nullptr,
+            nullptr,
             winInstance,
             this);
 
-        if (m_window == NULL)
+        if (m_window == nullptr)
         {
             MOLTEN_WINDOW_LOG(Logger::Severity::Error, "Failed to create window.");
             return false;
@@ -243,8 +422,8 @@ namespace Molten
         }
 
         m_dpi = { 1, 1 };
-        auto dpiX = GetDeviceCaps(m_deviceContext, LOGPIXELSX);
-        auto dpiY = GetDeviceCaps(m_deviceContext, LOGPIXELSY);
+        const auto dpiX = GetDeviceCaps(m_deviceContext, LOGPIXELSX);
+        const auto dpiY = GetDeviceCaps(m_deviceContext, LOGPIXELSY);
         if (dpiX > 0)
         {
             m_dpi.x = static_cast<uint32_t>(dpiX);
@@ -254,11 +433,20 @@ namespace Molten
             m_dpi.y = static_cast<uint32_t>(dpiY);
         }
 
+        if(descriptor.enableDragAndDrop)
+        {
+            if(auto result = m_dropTarget.Register(); result != S_OK)
+            {
+                MOLTEN_WINDOW_LOG(Logger::Severity::Error, "Failed to register dragdrop: " + std::to_string(result));
+                return false;
+            }
+        }
+
         m_size.x = static_cast<int32_t>(windowRect.right - windowRect.left);
         m_size.y = static_cast<int32_t>(windowRect.bottom - windowRect.top);
         m_position.x = static_cast<int32_t>(windowRect.left);
         m_position.y = static_cast<int32_t>(windowRect.top);      
-        m_title = title;
+        m_title = descriptor.title;
 
         return true;
     }
@@ -269,19 +457,19 @@ namespace Molten
         {
             MOLTEN_WINDOW_LOG(Logger::Severity::Error, "Failed to release window's device context.");
         }
-        m_deviceContext = NULL;
+        m_deviceContext = nullptr;
 
         if (m_window && !::DestroyWindow(m_window))
         {
             MOLTEN_WINDOW_LOG(Logger::Severity::Error, "Failed to destroy window class.");
         }
-        m_window = NULL;
+        m_window = nullptr;
         
         if (m_windowClassName.size() && !::UnregisterClass(m_windowClassName.c_str(), m_instance))
         {
             MOLTEN_WINDOW_LOG(Logger::Severity::Error, "Failed to unregister window class.");
         }
-        m_instance = NULL;
+        m_instance = nullptr;
         
         m_logger = nullptr;
         m_windowClassName.clear();
@@ -298,8 +486,8 @@ namespace Molten
         m_userInput.Begin();
 
         MSG message;
-        while (::PeekMessage(&message, NULL, 0, 0, PM_REMOVE))
-        {
+        while (::PeekMessage(&message, nullptr, 0, 0, PM_REMOVE))
+        {    
             if (message.message == WM_SYSCOMMAND &&
                 message.wParam == SC_KEYMENU)
             {
@@ -349,7 +537,7 @@ namespace Molten
 
     bool WindowWin32::IsOpen() const
     {
-        return m_window != NULL;
+        return m_window != nullptr;
     }
 
     bool WindowWin32::IsShowing() const
@@ -502,7 +690,7 @@ namespace Molten
         {
             WindowWin32* windowPtr = (WindowWin32*)::GetWindowLongPtr(window, GWLP_USERDATA);
 
-            if (windowPtr != NULL)
+            if (windowPtr != nullptr)
             {
                 return windowPtr->WindowProc(window, message, wParam, lParam);
             }
@@ -670,7 +858,7 @@ namespace Molten
                     default: break;
                 }
 
-                auto hCursor = ::LoadCursorA(NULL, cursorName);
+                auto hCursor = ::LoadCursorA(nullptr, cursorName);
                 ::SetCursor(hCursor);
                 return 0;
             }

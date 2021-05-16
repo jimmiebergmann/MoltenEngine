@@ -33,6 +33,61 @@
 namespace Molten
 {
 
+    /** Forward declarations. */
+    class WindowWin32;
+
+
+    /** Win32 drag and drop interface. */
+    class MOLTEN_API DropTargetWin32 : public IDropTarget
+    {
+
+    public:
+
+        explicit DropTargetWin32(WindowWin32& window);
+
+        HRESULT Register();
+
+        HRESULT STDMETHODCALLTYPE QueryInterface(
+            REFIID riid,
+            _COM_Outptr_ void __RPC_FAR* __RPC_FAR* ppvObject) override;
+
+        ULONG STDMETHODCALLTYPE AddRef() override;
+
+        ULONG STDMETHODCALLTYPE Release() override;
+
+        HRESULT STDMETHODCALLTYPE DragEnter(
+            IDataObject* dataObject,
+            DWORD keyboardState,
+            POINTL cursorPosition,
+            DWORD* effect) override;
+
+        HRESULT STDMETHODCALLTYPE DragOver(
+            DWORD keyboardState,
+            POINTL cursorPosition,
+            DWORD* effect) override;
+
+        HRESULT STDMETHODCALLTYPE DragLeave() override;
+
+        HRESULT STDMETHODCALLTYPE Drop(
+            IDataObject* dataObject,
+            DWORD keyboardState,
+            POINTL cursorPosition,
+            DWORD* effect) override;
+
+    private:
+
+        HRESULT ReadFiles(
+            IDataObject* dataObject,
+            std::vector<std::filesystem::path>& files) const;
+
+        LONG m_ref;
+        WindowWin32& m_window;
+        IDataObject* m_lastDataObject;
+        Vector2i32 m_lastPosition;
+
+    };
+
+
     /** Window class of win32 application windows. */
     class MOLTEN_API WindowWin32 : public Window
     {
@@ -43,13 +98,13 @@ namespace Molten
         WindowWin32();
 
         /** Constructs and opens window. */
-        WindowWin32(const std::string& title, const Vector2ui32 size, Logger * logger = nullptr);
+        WindowWin32(const WindowDescriptor& descriptor);
 
         /** Destructor. */
         ~WindowWin32() override;
 
         /** Open window. */
-        bool Open(const std::string& title, const Vector2ui32 size, Logger* logger = nullptr) override;
+        bool Open(const WindowDescriptor& descriptor) override;
 
         /** Close window. */
         void Close() override;
@@ -213,6 +268,7 @@ namespace Molten
         std::string m_title;
         Vector2ui32 m_dpi;
         Mouse::Cursor m_cursor;
+        DropTargetWin32 m_dropTarget;
 
         UserInput m_userInput;
 

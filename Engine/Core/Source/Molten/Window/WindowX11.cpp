@@ -51,22 +51,22 @@ namespace Molten
     {
     }
 
-    WindowX11::WindowX11(const std::string& title, const Vector2ui32 size, Logger* logger) :
+    WindowX11::WindowX11(const WindowDescriptor& descriptor) :
         WindowX11()
     {
-        Open(title, size, logger);
+        WindowX11::Open(descriptor);
     }
 
     WindowX11::~WindowX11()
     {
-        Close();
+        WindowX11::Close();
     }
 
-    bool WindowX11::Open(const std::string& title, const Vector2ui32 size, Logger* logger)
+    bool WindowX11::Open(const WindowDescriptor& descriptor)
     {
         Close();
 
-        m_logger = logger;
+        m_logger = descriptor.logger;
 
         if((m_display = XOpenDisplay(NULL)) == NULL)
         {
@@ -89,7 +89,7 @@ namespace Molten
         // Create the window
         m_window = ::XCreateWindow(m_display,
                                  DefaultRootWindow(m_display),
-                                 0, 0, size.x, size.y,
+                                 0, 0, descriptor.size.x, descriptor.size.y,
                                  0,
                                  DefaultDepth(m_display, m_screen),
                                  InputOutput,
@@ -105,15 +105,15 @@ namespace Molten
 
         Atom wmDeleteMessage = XInternAtom(m_display, "WM_DELETE_WINDOW", false);
         XSetWMProtocols(m_display, m_window, &wmDeleteMessage, 1);
-        XStoreName(m_display, m_window, title.c_str());
+        XStoreName(m_display, m_window, descriptor.title.c_str());
 
 
 
         XMapWindow(m_display, m_window);
         XFlush(m_display);
 
-        m_title = title;
-        m_size = size;
+        m_title = descriptor.title;
+        m_size = descriptor.size;
         // m_position = ?
         m_open = true;
 
