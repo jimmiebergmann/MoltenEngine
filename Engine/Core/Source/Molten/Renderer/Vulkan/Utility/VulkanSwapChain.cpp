@@ -283,10 +283,10 @@ namespace Molten::Vulkan
 
         auto oldHandle = m_handle;
 
-        SmartFunction destroyer = [&]()
+        SmartFunction destroyer([&]()
         {
             Destroy();
-        };
+        });
 
         auto& physicalDevice = m_logicalDevice->GetPhysicalDevice();
         auto& surface = physicalDevice.GetSurface();

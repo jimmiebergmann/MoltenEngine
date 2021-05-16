@@ -568,13 +568,13 @@ namespace Molten::Gui
 
         PWSTR windowsFontDirectoryPtr = nullptr;
 
-        SmartFunction destroyer = [&]()
+        SmartFunction destroyer([&]()
         {
             if (windowsFontDirectoryPtr)
             {
                 CoTaskMemFree(windowsFontDirectoryPtr);
             }
-        };
+        });
 
         std::string windowsFontDirectory;
 
