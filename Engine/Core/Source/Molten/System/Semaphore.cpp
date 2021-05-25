@@ -24,6 +24,14 @@
 */
 
 #include "Molten/System/Semaphore.hpp"
+#include <limits>
+
+static int32_t ClampBlockCount(const uint32_t blockCount)
+{
+    return blockCount > static_cast<uint32_t>(std::numeric_limits<int32_t>::max()) ?
+        -std::numeric_limits<int32_t>::max() :
+        -static_cast<int32_t>(blockCount);
+}
 
 namespace Molten
 {
@@ -31,8 +39,12 @@ namespace Molten
     Semaphore::Semaphore() :
         m_value(0),
         m_waitCount(0)
-    {
-    }
+    {}
+
+    Semaphore::Semaphore(uint32_t blockCount) :
+        m_value(ClampBlockCount(blockCount)),
+        m_waitCount(0)
+    {}
 
     size_t Semaphore::GetWaitCount() const
     {
@@ -58,7 +70,7 @@ namespace Molten
     {
         std::unique_lock<std::mutex> lock(m_mutex);
         ++m_waitCount;
-        while (!m_value)
+        while (m_value <= 0)
         {
             m_condition.wait(lock);
         }
@@ -70,7 +82,7 @@ namespace Molten
     {
         std::unique_lock<std::mutex> lock(m_mutex);
         ++m_waitCount;
-        while (!m_value)
+        while (m_value <= 0)
         {
             auto waitTime = std::chrono::nanoseconds(time.AsNanoseconds<std::chrono::nanoseconds::rep>());
             if (m_condition.wait_for(lock, waitTime) == std::cv_status::timeout)

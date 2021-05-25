@@ -38,7 +38,7 @@ namespace Molten
 
     public:
 
-        /** Contant representation of zero time. */
+        /** Constant representation of zero time. */
         static const Time Zero;
 
 

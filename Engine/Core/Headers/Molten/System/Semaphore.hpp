@@ -33,51 +33,39 @@
 namespace Molten
 {
 
-    /**
-    * @brief Thread safe sempahore class.
-    *        Providing a lockable object,
-    *        making it possible to block the current thread, until being notified and unblocked.
+    /** Thread safe sempahore class.
+    *   Providing a lockable object,
+    *   making it possible to block the current thread, until being notified and unblocked.
     */
     class MOLTEN_API Semaphore
     {
 
     public:
 
-        /**
-        * @brief Constructor.
-        *        Initialized as unblocked.
-        */
+        /** Initializes unblocked semaphore. */
         Semaphore();
 
-        /**
-        * @brief Deleted copy constructor.
-        */
+        /** Initializes blocked sempahore. */
+        explicit Semaphore(uint32_t blockCount);
+
+        /** Deleted copy constructor. */
         Semaphore(const Semaphore&) = delete;
 
-        /**
-        * @brief Get number of blocked threads by Wait() or WaitFor().
-        */
+        /** Get number of blocked threads by Wait() or WaitFor(). */
         size_t GetWaitCount() const;
 
-        /**
-        * @brief Unblocks all threads being blocked by a call to Wait() or TryWait().
-        */
+        /** Unblocks all threads being blocked by a call to Wait() or TryWait(). */
         void NotifyAll();
 
-        /**
-        * @brief Unblocks any waiting thread.
-        *        Increments value of semaphore.
-        */
+        /** Unblocks any waiting thread.
+         *   Increments value of semaphore.
+         */
         void NotifyOne();
 
-        /**
-        * @brief Block current thread.
-        */
+        /** lock current thread. */
         void Wait();
 
-        /**
-        * @brief Block current thread by some maximum amount of time.
-        */
+        /** Block current thread by some maximum amount of time. */
         void WaitFor(const Time & time);
 
     private:
