@@ -169,7 +169,52 @@ namespace Molten
                 EXPECT_EQ(value.string, std::string(testString + std::to_string(i)));
             }
         }
+    }
 
+    
+    TEST(System, ThreadPool_TryExecute)
+    {
+        ThreadPool pool(1);
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+        std::array<size_t, 3> values = { 0 };
+
+        for (size_t i = 0; i < 2; i++)
+        {
+            values = { 0 };
+
+            Semaphore sem;
+            auto tryResult1 = pool.TryExecute([&]()
+            {
+                values[0] = 1;
+                sem.NotifyOne();
+            });
+            EXPECT_TRUE(tryResult1.has_value());
+
+            auto tryResult2 = pool.TryExecute([&]()
+            {
+                values[1] = 2;
+            });
+
+            EXPECT_FALSE(tryResult2.has_value());
+
+            sem.Wait();
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+            auto tryResult3 = pool.TryExecute([&]()
+            {
+                values[2] = 3;
+            });
+
+            EXPECT_TRUE(tryResult3.has_value());
+
+            auto& waitResult = tryResult3.value();
+            waitResult.get();
+
+            EXPECT_EQ(values[0], 1);
+            EXPECT_EQ(values[1], 0);
+            EXPECT_EQ(values[2], 3);
+        }
     }
 
 }

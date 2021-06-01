@@ -130,9 +130,14 @@ namespace Molten
 
     private:
 
+        using Futures = std::vector<std::unique_ptr<std::future<void>>>;
+
+        Futures& CreateFutures(const size_t count);
+
         ThreadPool& m_threadPool;
         std::mutex m_executeMutex;
         Tasks m_tasks;
+        Futures m_futures;
 
     };
 

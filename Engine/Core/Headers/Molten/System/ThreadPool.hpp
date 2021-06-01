@@ -29,6 +29,7 @@
 #include "Molten/System/Semaphore.hpp"
 #include <memory>
 #include <vector>
+#include <optional>
 #include <functional>
 #include <thread>
 #include <future>
@@ -74,19 +75,21 @@ namespace Molten
 
         /** Blocks current thread until a worker is free and ready for work, and then executes provided invocable type on that worker's thread.
          *  @return A future value of provided invocable types return type.
-         *  @example std::future<int> value = pool.Execute([](){ return 10; });
+         *  @example auto result = pool.Execute([](){ return 10; });
          */
         template<typename TInvocable, typename TReturn = std::decay_t<std::invoke_result_t<TInvocable>>, typename = std::enable_if_t<std::is_invocable_v<TInvocable>>>
         [[nodiscard]] std::future<TReturn> Execute(TInvocable&& invocable);
 
-        /** Blocks current thread until a worker is free and ready for work, and then executes provided invocable type on that worker's thread.
-         *  This function is faster than Execute, but lacks the possibility to get a return value from invocable object and check for execution completion.
+        /** Checks if a worker is available and then executes provided invocable type on that worker's thread.
+         *  This function returns immediate if no worker is free.
+         *  @return Optional future value of provided invocable types return type. has_value of optional return value is false if no worker is free and avilable.
+         *  @example auto result = pool.Execute([](){ return 10; });
          */
-        template<typename TInvocable, typename = std::enable_if_t<std::is_invocable_v<TInvocable>>>
-        void ExecuteDiscard(TInvocable&& invocable);
+        template<typename TInvocable, typename TReturn = std::decay_t<std::invoke_result_t<TInvocable>>, typename = std::enable_if_t<std::is_invocable_v<TInvocable>>>
+        [[nodiscard]] std::optional<std::future<TReturn>> TryExecute(TInvocable&& invocable);
 
     private:
-
+        
         class Worker
         {
 
@@ -106,8 +109,6 @@ namespace Molten
             template<typename TReturn>
             [[nodiscard]] std::future<TReturn> Execute(std::function<TReturn()>&& function);
 
-            void ExecuteDiscard(std::function<void()>&& function);
-
         private:
 
             std::atomic_bool m_running;
@@ -121,6 +122,7 @@ namespace Molten
         using WorkerPointer = std::unique_ptr<Worker>;
 
         Worker* GetFreeWorker();
+        Worker* TryGetFreeWorker();
 
         std::vector<WorkerPointer> m_workers;
         std::vector<Worker*> m_freeWorkers;

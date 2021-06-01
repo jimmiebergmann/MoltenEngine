@@ -42,17 +42,25 @@ namespace Molten
 
     public:
 
-        /** Initializes unblocked semaphore. */
-        Semaphore();
+        /** Initializes semaphore by value. Default value is 0.
+         * Negative number will cause the Wait() to block current thread until NotifyOne() is called (std::abs(value) - 1) times, or if NotifyAll is called.
+         * Positive number will cause Wait() to not block the current thread for (value - 1) times called.
+         */
+        explicit Semaphore(int32_t value = 0);
 
-        /** Initializes blocked sempahore. */
-        explicit Semaphore(uint32_t blockCount);
+        /** Default destructor. */
+        ~Semaphore() = default;
 
-        /** Deleted copy constructor. */
+        /** Deleted copy and move constructors/operators. */
+        /**@{*/
         Semaphore(const Semaphore&) = delete;
+        Semaphore(Semaphore&&) = delete;
+        Semaphore& operator = (const Semaphore&) = delete;
+        Semaphore& operator = (Semaphore&&) = delete;
+        /**@}*/
 
         /** Get number of blocked threads by Wait() or WaitFor(). */
-        size_t GetWaitCount() const;
+        [[nodiscard]] size_t GetWaitCount() const;
 
         /** Unblocks all threads being blocked by a call to Wait() or TryWait(). */
         void NotifyAll();

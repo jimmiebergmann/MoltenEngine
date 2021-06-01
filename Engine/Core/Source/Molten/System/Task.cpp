@@ -81,21 +81,24 @@ namespace Molten
         {
             return lhs->GetLastExecutionTime() > rhs->GetLastExecutionTime();
         });
+   
+        auto& futures = CreateFutures(m_tasks.size());
 
         // Execute threads in parallel.
-        auto counterSemaphore = std::make_shared<Semaphore>(static_cast<uint32_t>(m_tasks.size() - 1));
-
-        for (auto& task : m_tasks)
+        for (size_t i = 0; i < m_tasks.size(); i++)
         {
-            m_threadPool.ExecuteDiscard([task, counterSemaphore]()
+            auto& task = m_tasks[i];
+            *futures[i] = m_threadPool.Execute([&task]()
             {
                 (*task)();
-                counterSemaphore->NotifyOne();
             });
         }
 
-        // Wait for all tasks to finish.
-        counterSemaphore->Wait();
+        // Wait for all task to finish. Call get() in order to check for exceptions.
+        for(size_t i = 0; i < m_tasks.size(); i++)
+        {
+            futures[i]->get();
+        }
     }
 
     ParallelTaskGroup::Tasks::iterator ParallelTaskGroup::begin()
@@ -114,6 +117,35 @@ namespace Molten
     ParallelTaskGroup::Tasks::const_iterator ParallelTaskGroup::end() const
     {
         return m_tasks.end();
+    }
+
+    ParallelTaskGroup::Futures& ParallelTaskGroup::CreateFutures(const size_t count)
+    {
+        const auto currentCount = static_cast<int64_t>(m_futures.size());
+
+        // Current future count is bigger or equal to requested count. Just clear available futures.
+        if(const auto countDiff = static_cast<int64_t>(count) - currentCount; countDiff <= 0)
+        {
+            for (auto it = m_futures.begin(); it != m_futures.begin() + count; ++it)
+            {
+                **it = {};
+            }
+            return m_futures;
+        }
+
+        // Requested futures is more than current future count. Clear already existed futures and initialize new ones.
+        m_futures.resize(count);
+        for (auto it = m_futures.begin(); it != m_futures.begin() + currentCount; ++it)
+        {
+            **it = {};
+        }
+
+        for(auto it = m_futures.begin() + currentCount; it != m_futures.end(); ++it)
+        {
+            *it = std::make_unique<std::future<void>>();
+        }
+
+        return m_futures;
     }
 
 

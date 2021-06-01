@@ -97,6 +97,22 @@ namespace Molten
         m_freeWorkersSemaphore.Wait();
 
         std::lock_guard workerLock(m_workerMutex);
+
+        auto* worker = m_freeWorkers.back();
+        m_freeWorkers.pop_back();
+
+        return worker;
+    }
+
+    ThreadPool::Worker* ThreadPool::TryGetFreeWorker()
+    {
+        std::lock_guard workerLock(m_workerMutex);
+
+        if(m_freeWorkers.empty())
+        {
+            return nullptr;
+        }
+
         auto* worker = m_freeWorkers.back();
         m_freeWorkers.pop_back();
 

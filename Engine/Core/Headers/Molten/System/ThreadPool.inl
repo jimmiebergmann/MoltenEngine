@@ -30,15 +30,20 @@ namespace Molten
     template<typename TInvocable, typename TReturn, typename>
     std::future<TReturn> ThreadPool::Execute(TInvocable&& invocable)
     {
-        auto worker = GetFreeWorker();
+        auto* worker = GetFreeWorker();
         return worker->Execute<TReturn>(std::move(invocable));
     }
 
-    template<typename TInvocable, typename>
-    void ThreadPool::ExecuteDiscard(TInvocable&& invocable)
+    template<typename TInvocable, typename TReturn, typename>
+    std::optional<std::future<TReturn>> ThreadPool::TryExecute(TInvocable&& invocable)
     {
-        auto worker = GetFreeWorker();
-        return worker->ExecuteDiscard(std::move(invocable));
+        auto* worker = TryGetFreeWorker();
+        if(!worker)
+        {
+            return {};
+        }
+
+        return worker->Execute<TReturn>(std::move(invocable));
     }
 
 
@@ -72,23 +77,6 @@ namespace Molten
         m_workSemaphore.NotifyOne();
 
         return future;
-    }
-
-    inline void ThreadPool::Worker::ExecuteDiscard(std::function<void()>&& function)
-    {
-        m_function = [function = std::move(function)]()
-        {
-            try
-            {
-                function();
-            }
-            catch (...)
-            {
-                
-            }
-        };
-
-        m_workSemaphore.NotifyOne();
     }
 
 }

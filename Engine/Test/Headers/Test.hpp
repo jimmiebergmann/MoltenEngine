@@ -27,6 +27,17 @@
 #define MOLTEN_TEST_HPP
 
 #include "ThirdParty/googletest/googletest/include/gtest/gtest.h"
+
+#define NESTED_TEST_FUNCTION_WITH_MESSAGE(function, message) \
+{ \
+    SCOPED_TRACE(message); \
+    ASSERT_NO_FATAL_FAILURE((function)); \
+}
+#define NESTED_TEST_FUNCTION(function) NESTED_TEST_FUNCTION_WITH_MESSAGE(function, " <-- Failure occured here.\n")
+
+
+
+
 #include "Molten/System/Clock.hpp"
 #include <string>
 

@@ -24,25 +24,12 @@
 */
 
 #include "Molten/System/Semaphore.hpp"
-#include <limits>
-
-static int32_t ClampBlockCount(const uint32_t blockCount)
-{
-    return blockCount > static_cast<uint32_t>(std::numeric_limits<int32_t>::max()) ?
-        -std::numeric_limits<int32_t>::max() :
-        -static_cast<int32_t>(blockCount);
-}
 
 namespace Molten
 {
 
-    Semaphore::Semaphore() :
-        m_value(0),
-        m_waitCount(0)
-    {}
-
-    Semaphore::Semaphore(uint32_t blockCount) :
-        m_value(ClampBlockCount(blockCount)),
+    Semaphore::Semaphore(const int32_t value) :
+        m_value(value),
         m_waitCount(0)
     {}
 

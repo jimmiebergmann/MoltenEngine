@@ -1,15 +1,10 @@
 # Directories
 .vs
-/out
-/Out
-/build
-/Build
-/bin
-/Bin
-/lib
-/Lib
-/docs
-/Docs
+/[O|o]ut
+/[B|b]uild
+/[B|b]in
+/[L|l]ib
+/[D|d]ocs
 
 # Prerequisites
 *.d
@@ -18,7 +13,6 @@
 *.slo
 *.lo
 *.o
-*.obj
 
 # Precompiled Headers
 *.gch

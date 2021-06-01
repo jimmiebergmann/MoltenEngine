@@ -23,7 +23,7 @@
 *
 */
 
-#include "Molten/Formats/Image/BmpFormat.hpp"
+#include "Molten/FileFormat/Image/BmpFormat.hpp"
 
 namespace Molten::Formats::Bmp
 {
