@@ -43,14 +43,14 @@ namespace Molten
 
     TEST(FileFormat, ObjMeshFile)
     {
-        ThreadPool threadPool(10);
+        ThreadPool threadPool;
 
         ObjMeshFile objFile;
 
         {
             Molten::Test::Benchmarker bm("Model");
-            const auto result = objFile.ReadFromFile("C:/temp/Sponza/Sponza.obj", threadPool);
-            //const auto result = objFile.ReadFromFile("../Engine/Test/Data/ObjMesh/TestCube.obj", threadPool);
+            //const auto result = objFile.ReadFromFile("C:/temp/Sponza/Sponza.obj", threadPool);
+            const auto result = objFile.ReadFromFile("../Engine/Test/Data/ObjMesh/TestCubes.obj", threadPool);
 
             EXPECT_TRUE(result.IsSuccessful());
         }

@@ -26,6 +26,7 @@
 #include "Molten/FileFormat/Mesh/ObjMeshFile.hpp"
 #include "Molten/System/ThreadPool.hpp"
 #include "Molten/Utility/StringUtility.hpp"
+#include "Molten/Utility/BufferedFileLineReader.hpp"
 #include <fstream>
 #include <charconv>
 
@@ -33,9 +34,9 @@ namespace Molten
 {
 
     // Global implementations.
-    static bool IsWhitespace(const size_t index, const std::string& string)
+    static bool IsWhitespace(const size_t index, const std::string_view& stringView)
     {
-        return index < string.size() && (string[index] == ' ' || string[index] == '\t');
+        return index < stringView.size() && (stringView[index] == ' ' || stringView[index] == '\t');
     }
 
     template<typename T>
@@ -128,7 +129,7 @@ namespace Molten
 
     ObjMeshFileReader::MaterialCommand::MaterialCommand(
         const size_t lineNumber,
-        std::string&& line
+        std::string line
     ) :
         lineNumber(lineNumber),
         line(std::move(line))
@@ -137,7 +138,7 @@ namespace Molten
     ObjMeshFileReader::ObjectCommand::ObjectCommand(
         const size_t lineNumber,
         ObjectCommandType type,
-        std::string&& line
+        std::string_view line
     ) :
         lineNumber(lineNumber),
         type(type),
@@ -150,7 +151,8 @@ namespace Molten
     {
         objMeshFile.Clear();
 
-        std::ifstream file(filename);
+        // Open file and prepare obj mesh file reader.
+        std::ifstream file(filename, std::ifstream::binary);
         if (!file.is_open())
         {
             return { TextFileFormatResult::OpenFileError, "Failed to open file " + filename.string() };
@@ -171,11 +173,30 @@ namespace Molten
             return { TextFileFormatResult::ParseError, lineNumber, "Unknown command" };
         };
 
-        // Read lines from file and process them.
-        while (!file.eof())
+        // Storage for current object buffer.
+        ObjectBufferSharedPointer currentObjectBuffer = std::make_shared<ObjectBuffer>();
+        auto addNewBuffer = [&currentObjectBuffer](auto& buffer)
         {
-            std::string line;
-            std::getline(file, line);
+            currentObjectBuffer->buffers.push_back(buffer);
+        };
+
+        // Read lines from file and process them.
+        BufferedFileLineReader lineReader(file, 2048, 1048576);
+        BufferedFileLineReader::LineReadResult readResult = BufferedFileLineReader::LineReadResult::Successful;
+
+        while(readResult == BufferedFileLineReader::LineReadResult::Successful)
+        {
+            std::string_view line;
+            readResult = lineReader.ReadLine(line, addNewBuffer);
+
+            switch(readResult)
+            {                
+                case BufferedFileLineReader::LineReadResult::BufferOverflow: return { TextFileFormatResult::ParseError, lineNumber, "Row is too long for an obj file" };
+                case BufferedFileLineReader::LineReadResult::AllocationError: return { TextFileFormatResult::ParseError, lineNumber, "Failed to allocate required memory" };
+                case BufferedFileLineReader::LineReadResult::Successful:
+                case BufferedFileLineReader::LineReadResult::EndOfFile: break;
+            }
+
             StringUtility::Trim(line);
 
             // Ignore empty line
@@ -196,7 +217,7 @@ namespace Molten
                         return createUnknownCommandError();
                     }
 
-                    if (auto result = ExecuteProcessMaterial({ lineNumber, std::move(line) }); !result)
+                    if (auto result = ExecuteProcessMaterial({ lineNumber, std::string{ line } }); !result)
                     {
                         return result;
                     }
@@ -209,18 +230,24 @@ namespace Molten
                         return createMissingCommandDataError();
                     }
 
-                    if (!m_objectCommands->empty())
+                    if (!currentObjectBuffer->commands.empty())
                     {
                         // Send current line buffer to new thread and process object lines.
-                        if (auto result = ExecuteProcessObject(std::move(m_objectCommands)); !result)
+                        if (auto result = ExecuteProcessObject(currentObjectBuffer); !result)
                         {
                             return result;
                         }
 
                         // Create new line buffer and object
-                        m_objectCommands = std::make_shared<ObjectCommands>();
+                        auto newObjectBuffer = std::make_shared<ObjectBuffer>();
+                        if(!currentObjectBuffer->buffers.empty())
+                        {
+                            newObjectBuffer->buffers.push_back(currentObjectBuffer->buffers.back());
+                        }
+                        currentObjectBuffer = newObjectBuffer;
                     }
-                    m_objectCommands->emplace_back(lineNumber, ObjectCommandType::Object, std::move(line));
+
+                    currentObjectBuffer->commands.emplace_back(lineNumber, ObjectCommandType::Object, line);
                 } break;
                 case 'g': // Group
                 {
@@ -228,7 +255,7 @@ namespace Molten
                     {
                         return createMissingCommandDataError();
                     }
-                    m_objectCommands->emplace_back(lineNumber, ObjectCommandType::Group, std::move(line));
+                    currentObjectBuffer->commands.emplace_back(lineNumber, ObjectCommandType::Group, line);
                 } break;
                 case 's': // Shading group
                 {
@@ -236,7 +263,7 @@ namespace Molten
                     {
                         return createMissingCommandDataError();
                     }
-                    m_objectCommands->emplace_back(lineNumber, ObjectCommandType::ShadingGroup, std::move(line));
+                    currentObjectBuffer->commands.emplace_back(lineNumber, ObjectCommandType::ShadingGroup, line);
                 } break;
                 case 'v': // Vertex / Normal / UV
                 {
@@ -250,7 +277,7 @@ namespace Molten
                         case ' ': // Vertex
                         case '\t':
                         {
-                            m_objectCommands->emplace_back(lineNumber, ObjectCommandType::Vertex, std::move(line));
+                            currentObjectBuffer->commands.emplace_back(lineNumber, ObjectCommandType::Vertex, line);
                         } break;
                         case 'n': // Normal
                         {
@@ -258,7 +285,7 @@ namespace Molten
                             {
                                 return createUnknownCommandError();;
                             }
-                            m_objectCommands->emplace_back(lineNumber, ObjectCommandType::Normal, std::move(line));
+                            currentObjectBuffer->commands.emplace_back(lineNumber, ObjectCommandType::Normal, line);
                         } break;
                         case 't': // UV
                         {
@@ -266,11 +293,10 @@ namespace Molten
                             {
                                 return createUnknownCommandError();
                             }
-                            m_objectCommands->emplace_back(lineNumber, ObjectCommandType::Uv, std::move(line));
+                            currentObjectBuffer->commands.emplace_back(lineNumber, ObjectCommandType::Uv, line);
                         } break;
                         default: break;
                     }
-
                 } break;
                 case 'u':
                 {
@@ -278,7 +304,7 @@ namespace Molten
                     {
                         return createUnknownCommandError();
                     }
-                    m_objectCommands->emplace_back(lineNumber, ObjectCommandType::UseMaterial, std::move(line));
+                    currentObjectBuffer->commands.emplace_back(lineNumber, ObjectCommandType::UseMaterial, line);
                 } break;
                 case 'f':
                 {
@@ -286,7 +312,7 @@ namespace Molten
                     {
                         return createUnknownCommandError();
                     }
-                    m_objectCommands->emplace_back(lineNumber, ObjectCommandType::Face, std::move(line));
+                    currentObjectBuffer->commands.emplace_back(lineNumber, ObjectCommandType::Face, line);
                 } break;
                 default: // Unknown command.
                 {
@@ -298,9 +324,9 @@ namespace Molten
         }
 
         // Process remaining object lines if any.
-        if (!m_objectCommands->empty())
+        if (!currentObjectBuffer->commands.empty())
         {
-            if (auto result = ExecuteProcessObject(std::move(m_objectCommands)); !result)
+            if (auto result = ExecuteProcessObject(std::move(currentObjectBuffer)); !result)
             {
                 return result;
             }
@@ -323,14 +349,14 @@ namespace Molten
         m_objMeshDirectory = filename.parent_path();
 
         // Clear line commands.
-        if (m_objectCommands)
+        /*if (m_objectCommands)
         {
             m_objectCommands->clear();
         }
         else
         {
             m_objectCommands = std::make_shared<ObjectCommands>();
-        }
+        }*/
 
         m_materialFilenames.clear();
         m_materialFutures.clear();
@@ -413,7 +439,7 @@ namespace Molten
         });
     }
 
-    TextFileFormatResult ObjMeshFileReader::ExecuteProcessObject(ObjectCommandsSharedPointer&& objectCommands)
+    TextFileFormatResult ObjMeshFileReader::ExecuteProcessObject(ObjectBufferSharedPointer objectBuffer)
     {
         // Handle all futures and check for errors.
         if(auto result = TryHandleFutures(); !result)
@@ -424,13 +450,13 @@ namespace Molten
         // Use thread pool.
         if(m_threadPool)
         {
-            auto future = ProcessObjectAsync(std::move(objectCommands));
+            auto future = ProcessObjectAsync(std::move(objectBuffer));
             m_objectFutures.push_back(std::move(future));
             return {};
         }
 
         // Execute object processing on this thread.
-        auto result = ProcessObject(std::move(objectCommands));
+        auto result = ProcessObject(std::move(objectBuffer));
         if(result.index() == 0)
         {
             auto& object = std::get<ObjectSharedPointer>(result);
@@ -442,8 +468,8 @@ namespace Molten
         auto& error = std::get<TextFileFormatResult::Error>(result);
         return { std::move(error) };
     }
-
-    ObjMeshFileReader::ProcessObjectResult ObjMeshFileReader::ProcessObject(ObjectCommandsSharedPointer&& objectCommands)
+    
+    ObjMeshFileReader::ProcessObjectResult ObjMeshFileReader::ProcessObject(ObjectBufferSharedPointer objectBuffer)
     {
         auto object = std::make_shared<Object>();
 
@@ -452,7 +478,7 @@ namespace Molten
             return std::string_view{ command.line.data() + offset, command.line.size() - offset };
         };
 
-        for(auto& command : *objectCommands)
+        for(auto& command : objectBuffer->commands)
         {
             switch(command.type)
             {
@@ -540,12 +566,12 @@ namespace Molten
         return { object };
     }
 
-    ObjMeshFileReader::ProcessObjectFuture ObjMeshFileReader::ProcessObjectAsync(ObjectCommandsSharedPointer&& objectCommands)
+    ObjMeshFileReader::ProcessObjectFuture ObjMeshFileReader::ProcessObjectAsync(ObjectBufferSharedPointer objectBuffer)
     {
         return m_threadPool->Execute(
-            [this, objectCommands = std::move(objectCommands)]() mutable
+            [this, objectBuffer = std::move(objectBuffer)]() mutable
         {
-            return ProcessObject(std::move(objectCommands));
+            return ProcessObject(std::move(objectBuffer));
         });
     }
 

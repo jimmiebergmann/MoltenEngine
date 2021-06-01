@@ -230,7 +230,7 @@ namespace Molten
         {
             MaterialCommand(
                 const size_t lineNumber,
-                std::string&& line);
+                std::string line);
 
             size_t lineNumber; ///< Line number, used for error messages.
             std::string line; ///< Full line data.
@@ -241,7 +241,7 @@ namespace Molten
             ObjectCommand(
                 const size_t lineNumber,
                 ObjectCommandType type,
-                std::string&& line);
+                std::string_view line);
 
             ObjectCommand(ObjectCommand&&) = default;
             ObjectCommand& operator = (ObjectCommand&&) = default;
@@ -251,27 +251,32 @@ namespace Molten
 
             size_t lineNumber; ///< Line number, used for error messages.
             ObjectCommandType type; ///< Type of line.
-            std::string line; ///< Full line data.
+            std::string_view line; ///< Line of command, trimmed, but includes command tokens.
         };
         
         using ObjectCommands = std::vector<ObjectCommand>;
-        using ObjectCommandsSharedPointer = std::shared_ptr<ObjectCommands>;
+        using Buffer = std::shared_ptr<char[]>;
+        using Buffers = std::vector<Buffer>;
 
-        using Object = ObjMeshFile::Object;
-        using ObjectSharedPointer = std::shared_ptr<Object>;
+        struct ObjectBuffer
+        {
+            Buffers buffers;
+            ObjectCommands commands;
+        };
+
+        using ObjectBufferSharedPointer = std::shared_ptr<ObjectBuffer>;
 
         using Material = ObjMeshFile::Material;
         using MaterialSharedPointer = std::shared_ptr<Material>;
-
-        using StringViews = std::vector<std::string_view>;
-
-        using ProcessObjectResult = std::variant<ObjectSharedPointer, TextFileFormatResult::Error>;
-        using ProcessObjectFuture = std::future<ProcessObjectResult>;
-        using ProcessObjectFutures = std::vector<ProcessObjectFuture>;
-
         using ProcessMaterialResult = std::variant<MaterialSharedPointer, TextFileFormatResult::Error>;
         using ProcessMaterialFuture = std::future<ProcessMaterialResult>;
         using ProcessMaterialFutures = std::vector<ProcessMaterialFuture>;
+
+        using Object = ObjMeshFile::Object;
+        using ObjectSharedPointer = std::shared_ptr<Object>;
+        using ProcessObjectResult = std::variant<ObjectSharedPointer, TextFileFormatResult::Error>;
+        using ProcessObjectFuture = std::future<ProcessObjectResult>;
+        using ProcessObjectFutures = std::vector<ProcessObjectFuture>;
 
         /** This function is called by ReadFromFile and performs all reading and parsing tasks.
          *  Called of this function must wait for all tasks before proceeding execution.
@@ -288,9 +293,9 @@ namespace Molten
         [[nodiscard]] ProcessMaterialResult ProcessMaterial(std::string&& filename);
         [[nodiscard]] ProcessMaterialFuture ProcessMaterialAsync(std::string&& filename);
 
-        [[nodiscard]] TextFileFormatResult ExecuteProcessObject(ObjectCommandsSharedPointer&& objectCommands);
-        [[nodiscard]] ProcessObjectResult ProcessObject(ObjectCommandsSharedPointer&& objectCommands);
-        [[nodiscard]] ProcessObjectFuture ProcessObjectAsync(ObjectCommandsSharedPointer&& objectCommands);
+        [[nodiscard]] TextFileFormatResult ExecuteProcessObject(ObjectBufferSharedPointer objectBuffer);
+        [[nodiscard]] ProcessObjectResult ProcessObject(ObjectBufferSharedPointer objectBuffer);
+        [[nodiscard]] ProcessObjectFuture ProcessObjectAsync(ObjectBufferSharedPointer objectBuffer);
 
         [[nodiscard]] TextFileFormatResult HandleFutures();
         [[nodiscard]] TextFileFormatResult HandleMaterialFutures();
@@ -303,8 +308,7 @@ namespace Molten
         ThreadPool* m_threadPool;
         ObjMeshFile* m_objMeshFile;
         std::filesystem::path m_objMeshDirectory;
-        ObjectCommandsSharedPointer m_objectCommands;
-        StringViews m_materialFilenames;
+        std::vector<std::string> m_materialFilenames;
         ProcessMaterialFutures m_materialFutures;
         ProcessObjectFutures m_objectFutures;
 
