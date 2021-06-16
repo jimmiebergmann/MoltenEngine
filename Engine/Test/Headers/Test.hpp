@@ -28,6 +28,7 @@
 
 #include "ThirdParty/googletest/googletest/include/gtest/gtest.h"
 
+/** Nested tests. */
 #define NESTED_TEST_FUNCTION_WITH_MESSAGE(function, message) \
 { \
     SCOPED_TRACE(message); \
@@ -35,7 +36,15 @@
 }
 #define NESTED_TEST_FUNCTION(function) NESTED_TEST_FUNCTION_WITH_MESSAGE(function, " <-- Failure occured here.\n")
 
+/** Vector2/3 compares. */
+#define EXPECT_VECTOR2_NEAR(lhs, rhs, abs_error) \
+    EXPECT_NEAR((lhs).x, (rhs).x, abs_error); \
+    EXPECT_NEAR((lhs).y, (rhs).y, abs_error)
 
+#define EXPECT_VECTOR3_NEAR(lhs, rhs, abs_error) \
+    EXPECT_NEAR((lhs).x, (rhs).x, abs_error); \
+    EXPECT_NEAR((lhs).y, (rhs).y, abs_error); \
+    EXPECT_NEAR((lhs).z, (rhs).z, abs_error)
 
 
 #include "Molten/System/Clock.hpp"

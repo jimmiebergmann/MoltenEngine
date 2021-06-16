@@ -69,10 +69,10 @@ namespace Molten
             std::string message;
         };
 
-        /** Default constructor. */
+        /** Default constructing a successful result. */
         TextFileFormatResult() = default;
 
-        /** Constructors. */
+        /** Constructors for errors. */
         /**@{*/
         TextFileFormatResult(
             const ErrorCode code,

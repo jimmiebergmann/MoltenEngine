@@ -30,6 +30,7 @@
 #include "Molten/FileFormat/TextFileFormatResult.hpp"
 #include <string>
 #include <filesystem>
+#include <array>
 #include <vector>
 #include <variant>
 #include <optional>
@@ -42,7 +43,31 @@ namespace Molten
     class ThreadPool;
     class ObjMeshFileReader;
 
+
     /** Obj mesh file format.
+     * The obj file format specification supports many different types of ordered and in-place commands,
+     * but this implementation only supports the most basic ones for loading a scene or objects with multiple sub-meshes and material attachments.
+     * Worth noting is that this implementation does not supports all different kind of grouping combinations or in-place commands.
+     * For example, quads are not supported, but automatically converted into two triangles, simply because Molten does not care about quads.
+     *
+     * ObjMeshFile structure:
+     * - Triangles per SmoothingGroup
+     * - SmoothingGroups per Group
+     * - Groups(material usage or grouped by name) per Object
+     * - Vertex data per Object
+     *
+     * Supported commands:
+     * - # - Comments.
+     * - o - Object.
+     * - g - Group.
+     * - s - Smoothing group
+     * - usemtl - Using material.
+     * - mtllib - Loading material file.
+     * - v - Vertex coordinate.
+     * - vn - Vertex normal.
+     * - vt - Vertex texture coordinate.
+     * - f - Face (Quads are split into two triangles)
+     *
      * Documentation:
      * - http://paulbourke.net/dataformats/mtl/
      * - http://www.martinreddy.net/gfx/3d/OBJ.spec
@@ -105,48 +130,66 @@ namespace Molten
         using MaterialSharedPointer = std::shared_ptr<Material>;
         using MaterialSharedPointers = std::vector<MaterialSharedPointer>;
 
+        /** Triangle indices, pointing to Object vertices/normals/textureCoordinates. Index is set to std::numeric_limits<uint32_t>::max() if unused. */
+        struct Triangle
+        {
+            Triangle();
+
+            std::array<uint32_t, 3> vertexIndices;
+            std::array<uint32_t, 3> textureCoordinateIndices;
+            std::array<uint32_t, 3> normalIndices;           
+        };
+
+        using Triangles = std::vector<Triangle>;
+
+        struct SmoothingGroup
+        {
+            SmoothingGroup();
+
+            uint32_t id; ///< (> 0) == on, (== 0) == off.
+            Triangles triangles;
+
+            [[nodiscard]] bool IsEmpty() const;
+        };
+
+        using SmoothingGroupSharedPointer = std::shared_ptr<SmoothingGroup>;
+        using SmoothingGroupSharedPointers = std::vector<SmoothingGroupSharedPointer>;
+
 
         struct Group
         {
-            
+            std::string name; ///< Group name. Empty if material changed without a group change.
+            std::string material; ///< White material if empty, else a material from an imported material file.
+            SmoothingGroupSharedPointers smoothingGroups;
+
+            [[nodiscard]] bool IsEmpty() const;
         };
 
         using GroupSharedPointer = std::shared_ptr<Group>;
         using GroupSharedPointers = std::vector<GroupSharedPointer>;
 
+
         using Vertices = std::vector<Vector3f32>;
         using Normals = std::vector<Vector3f32>;
-        using TextureCoords = std::vector<Vector2f32>;
+        using Uv = std::vector<Vector2f32>;
 
+
+        /** Obj object. */
         struct Object
         {
             std::string name;
             Vertices vertices;
             Normals normals;
-            TextureCoords textureCoords;
+            Uv textureCoordinates;
+            GroupSharedPointers groups;
         };
 
         using ObjectSharedPointer = std::shared_ptr<Object>;
         using ObjectSharedPointers = std::vector<ObjectSharedPointer>;
 
 
-        /** Sub mesh, grouped by material and shading. */
-     /*   struct SubMesh
-        {
-            //bool shading;
-            MaterialSharedPointer material;
-        };
-
-        using SubMeshSharedPointer = std::shared_ptr<SubMesh>;
-        using SubMeshSharedPointers = std::vector<SubMeshSharedPointer>;
-        */
-
-
         MaterialSharedPointers materials; ///< List of materials.
         ObjectSharedPointers objects; ///< List of objects.
-        //
-        //
-        //SubMeshSharedPointers subMeshes; ///< List of sub-meshes.
 
 
         //ObjMeshFile();
@@ -221,7 +264,7 @@ namespace Molten
             Normal, ///< vn
             Uv, ///< vt
             Group, ///< g
-            ShadingGroup, ///< s
+            SmoothingGroup, ///< s
             Face, ///< f
             UseMaterial ///< usemtl
         };
@@ -240,8 +283,8 @@ namespace Molten
         {
             ObjectCommand(
                 const size_t lineNumber,
-                ObjectCommandType type,
-                std::string_view line);
+                const ObjectCommandType type,
+                const std::string_view line);
 
             ObjectCommand(ObjectCommand&&) = default;
             ObjectCommand& operator = (ObjectCommand&&) = default;
@@ -272,6 +315,8 @@ namespace Molten
         using ProcessMaterialFuture = std::future<ProcessMaterialResult>;
         using ProcessMaterialFutures = std::vector<ProcessMaterialFuture>;
 
+        using SmoothingGroup = ObjMeshFile::SmoothingGroup;
+        using Group = ObjMeshFile::Group;
         using Object = ObjMeshFile::Object;
         using ObjectSharedPointer = std::shared_ptr<Object>;
         using ProcessObjectResult = std::variant<ObjectSharedPointer, TextFileFormatResult::Error>;

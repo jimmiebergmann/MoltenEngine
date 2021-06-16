@@ -67,6 +67,46 @@ namespace Molten
         return true;
     }
 
+
+    // Trianble implementations.
+    ObjMeshFile::Triangle::Triangle() :
+        vertexIndices{ std::numeric_limits<uint32_t>::max(), std::numeric_limits<uint32_t>::max(), std::numeric_limits<uint32_t>::max() },
+        normalIndices{ std::numeric_limits<uint32_t>::max(), std::numeric_limits<uint32_t>::max(), std::numeric_limits<uint32_t>::max() },
+        textureCoordinateIndices{ std::numeric_limits<uint32_t>::max(), std::numeric_limits<uint32_t>::max(), std::numeric_limits<uint32_t>::max() }
+    {}
+
+
+    // Smoothing group implementations.
+    ObjMeshFile::SmoothingGroup::SmoothingGroup() :
+        id(0)
+    {}
+
+    bool ObjMeshFile::SmoothingGroup::IsEmpty() const
+    {
+        return triangles.empty();
+    }
+
+
+    // Group implementations.
+    bool ObjMeshFile::Group::IsEmpty() const
+    {
+        if(smoothingGroups.empty())
+        {
+            return true;
+        }
+
+        for(auto& smoothingGroup : smoothingGroups)
+        {
+            if(!smoothingGroup->IsEmpty())
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+
     // Object mesh file implementations.
     TextFileFormatResult ObjMeshFile::ReadFromFile(
         const std::filesystem::path& filename,
@@ -137,12 +177,12 @@ namespace Molten
 
     ObjMeshFileReader::ObjectCommand::ObjectCommand(
         const size_t lineNumber,
-        ObjectCommandType type,
-        std::string_view line
+        const ObjectCommandType type,
+        const std::string_view line
     ) :
         lineNumber(lineNumber),
         type(type),
-        line(std::move(line))
+        line(line)
     {}
 
     TextFileFormatResult ObjMeshFileReader::InternalReadFromFile(
@@ -257,13 +297,13 @@ namespace Molten
                     }
                     currentObjectBuffer->commands.emplace_back(lineNumber, ObjectCommandType::Group, line);
                 } break;
-                case 's': // Shading group
+                case 's': // Smoothing group
                 {
                     if (!IsWhitespace(1, line))
                     {
                         return createMissingCommandDataError();
                     }
-                    currentObjectBuffer->commands.emplace_back(lineNumber, ObjectCommandType::ShadingGroup, line);
+                    currentObjectBuffer->commands.emplace_back(lineNumber, ObjectCommandType::SmoothingGroup, line);
                 } break;
                 case 'v': // Vertex / Normal / UV
                 {
@@ -347,17 +387,6 @@ namespace Molten
     {
         m_objMeshFile = &objMeshFile;
         m_objMeshDirectory = filename.parent_path();
-
-        // Clear line commands.
-        /*if (m_objectCommands)
-        {
-            m_objectCommands->clear();
-        }
-        else
-        {
-            m_objectCommands = std::make_shared<ObjectCommands>();
-        }*/
-
         m_materialFilenames.clear();
         m_materialFutures.clear();
         m_objectFutures.clear();
@@ -473,19 +502,158 @@ namespace Molten
     {
         auto object = std::make_shared<Object>();
 
-        auto createLineView = [](const ObjectCommand& command, const size_t offset)
+        auto currentGroup = std::make_shared<Group>();
+        object->groups.push_back(currentGroup);
+
+        auto currentSmoothingGroup = std::make_shared<SmoothingGroup>();
+        currentGroup->smoothingGroups.push_back(currentSmoothingGroup);
+        
+        // Create new smooth group lambda.
+        auto createNewSmoothingGroup = [&]()
         {
-            return std::string_view{ command.line.data() + offset, command.line.size() - offset };
+            currentSmoothingGroup = std::make_shared<SmoothingGroup>();
+            currentGroup->smoothingGroups.push_back(currentSmoothingGroup);
         };
 
+        // Create new group lambda.
+        auto createNewGroup = [&]()
+        {
+            const auto prevGroup = object->groups.back();
+            currentGroup = std::make_shared<Group>();
+            object->groups.push_back(currentGroup);
+
+            createNewSmoothingGroup();
+
+            if (!prevGroup->material.empty())
+            {
+                currentGroup->material = prevGroup->material;
+            }
+        };
+
+        // Helper lambda for extracting data from string view.
+        auto createDataView = [](const ObjectCommand& command, const size_t offset)
+        {
+            auto dataView = std::string_view{ command.line.data() + offset, command.line.size() - offset };
+            StringUtility::TrimFront(dataView);
+            return dataView;
+        };
+
+        // Lambda for reading face data.
+        auto readFace = [&](std::string_view lineView) -> TextFileFormatResult
+        {
+            enum class FaceFlags : uint8_t
+            {
+                Vertex = 1,
+                Uv = 2,
+                Normal = 4
+            };
+
+            static const uint8_t indexedFlags[3] = {
+                static_cast<uint8_t>(FaceFlags::Vertex),
+                static_cast<uint8_t>(FaceFlags::Uv),
+                static_cast<uint8_t>(FaceFlags::Normal) };
+
+            static std::array<uint32_t, 3> ObjMeshFile::Triangle::* const triangleMembers[3] = {
+                &ObjMeshFile::Triangle::vertexIndices,
+                &ObjMeshFile::Triangle::textureCoordinateIndices,
+                &ObjMeshFile::Triangle::normalIndices
+            };
+
+            auto readElement = [&](ObjMeshFile::Triangle& triangle, const size_t index) -> uint8_t
+            {
+                uint8_t faceFlags = 0;
+
+                for (size_t i = 0; i < 3; i++)
+                {
+                    StringUtility::TrimFront(lineView);
+
+                    auto it = std::find_if(lineView.begin(), lineView.end(), [](auto& c)
+                    {
+                        return !std::isdigit(c);
+                    });
+
+                    const size_t endPos = it == lineView.end() ? std::string_view::npos : it - lineView.begin();
+
+                    auto element = lineView.substr(0, endPos);
+                    lineView = std::string_view{ lineView.data() + element.size(), lineView.size() - element.size() };
+
+                    if (!element.empty())
+                    {
+                        uint32_t value = 0;
+                        if (std::from_chars(element.data(), element.data() + element.size(), value).ec == std::errc())
+                        {
+                            faceFlags |= indexedFlags[i];
+                            (triangle.*triangleMembers[i])[index] = value;
+                        }
+                    }
+
+                    StringUtility::TrimFront(lineView);
+                    if (lineView.empty() || lineView.front() != '/')
+                    {
+                        break;
+                    }
+                    lineView = lineView.substr(1);
+                }
+
+                return faceFlags;
+            };
+
+            auto& triangle = currentSmoothingGroup->triangles.emplace_back();
+
+            const auto elementLayout = readElement(triangle, 0);
+            if (elementLayout == 0)
+            {
+                return { TextFileFormatResult::ParseError, "Invalid face layout" };
+            }
+
+            for (size_t i = 1; i < 3; i++)
+            {
+                if (auto flags = readElement(triangle, i); flags != elementLayout)
+                {
+                    if (flags == 0)
+                    {
+                        return { TextFileFormatResult::ParseError, "Invalid face layout" };
+                    }
+
+                    return { TextFileFormatResult::ParseError, "Mismatching face layout" };
+                }
+            }
+
+            if (!lineView.empty())
+            {
+                auto& nextTriangle = currentSmoothingGroup->triangles.emplace_back();
+                auto& prevTriangle = currentSmoothingGroup->triangles[currentSmoothingGroup->triangles.size() - 2];
+                if (auto flags = readElement(nextTriangle, 0); flags != elementLayout)
+                {
+                    if (flags == 0)
+                    {
+                        return { TextFileFormatResult::ParseError, "Invalid face layout" };
+                    }
+
+                    return { TextFileFormatResult::ParseError, "Mismatching face layout" };
+                }
+
+                nextTriangle.vertexIndices[1] = prevTriangle.vertexIndices[0];
+                nextTriangle.textureCoordinateIndices[1] = prevTriangle.textureCoordinateIndices[0];
+                nextTriangle.normalIndices[1] = prevTriangle.normalIndices[0];
+
+                nextTriangle.vertexIndices[2] = prevTriangle.vertexIndices[2];
+                nextTriangle.textureCoordinateIndices[2] = prevTriangle.textureCoordinateIndices[2];
+                nextTriangle.normalIndices[2] = prevTriangle.normalIndices[2];
+            }
+
+            return {};
+        };
+
+
+        // Run all object commands.
         for(auto& command : objectBuffer->commands)
         {
             switch(command.type)
             {
                 case ObjectCommandType::Object: ///< o
                 {
-                    auto lineView = createLineView(command, 2);
-                    StringUtility::TrimFront(lineView);
+                    auto lineView = createDataView(command, 2);
                     if(lineView.empty())
                     {
                         return TextFileFormatResult::Error{ TextFileFormatResult::ParseError, command.lineNumber, "Expecting an object name" };
@@ -494,9 +662,7 @@ namespace Molten
                 } break;
                 case ObjectCommandType::Vertex: ///< v
                 {
-                    auto lineView = createLineView(command, 2);
-                    StringUtility::TrimFront(lineView);
-
+                    auto lineView = createDataView(command, 2);
                     if (lineView.empty())
                     {
                         return TextFileFormatResult::Error{ TextFileFormatResult::ParseError, command.lineNumber, "Expecting vertex data" };
@@ -512,9 +678,7 @@ namespace Molten
                 } break;
                 case ObjectCommandType::Normal: ///< vn
                 {
-                    auto lineView = createLineView(command, 3);
-                    StringUtility::TrimFront(lineView);
-
+                    auto lineView = createDataView(command, 3);
                     if (lineView.empty())
                     {
                         return TextFileFormatResult::Error{ TextFileFormatResult::ParseError, command.lineNumber, "Expecting vertex normal data" };
@@ -529,36 +693,88 @@ namespace Molten
                 } break;
                 case ObjectCommandType::Uv: ///< vt
                 {
-                    auto lineView = createLineView(command, 3);
-                    StringUtility::TrimFront(lineView);
-
+                    auto lineView = createDataView(command, 3);
                     if (lineView.empty())
                     {
                         return TextFileFormatResult::Error{ TextFileFormatResult::ParseError, command.lineNumber, "Expecting texture coordinate data" };
                     }
 
-                    Vector2f32 textureCoord;
-                    if (!ParseVector(lineView, textureCoord))
+                    Vector2f32 textureCoordinate;
+                    if (!ParseVector(lineView, textureCoordinate))
                     {
                         return TextFileFormatResult::Error{ TextFileFormatResult::ParseError, command.lineNumber, "Invalid texture coordinate data" };
                     }
-                    object->textureCoords.push_back(textureCoord);
+                    object->textureCoordinates.push_back(textureCoordinate);
                 } break;
                 case ObjectCommandType::Group: ///< g
                 {
+                    auto lineView = createDataView(command, 2);
+                    if (lineView.empty())
+                    {
+                        return TextFileFormatResult::Error{ TextFileFormatResult::ParseError, command.lineNumber, "Expecting group name" };
+                    }
 
+                    if (!currentGroup->IsEmpty())
+                    {
+                        createNewGroup();
+                    }
+
+                    currentGroup->name = lineView;
                 } break;
-                case ObjectCommandType::ShadingGroup: ///< s
+                case ObjectCommandType::SmoothingGroup: ///< s
                 {
+                    auto lineView = createDataView(command, 2);
+                    if (lineView.empty())
+                    {
+                        return TextFileFormatResult::Error{ TextFileFormatResult::ParseError, command.lineNumber, "Expecting smoothing group id" };
+                    }
 
+                    if (!currentSmoothingGroup->IsEmpty())
+                    {
+                        createNewSmoothingGroup();
+                    }
+
+                    if (lineView == "off")
+                    {
+                        currentSmoothingGroup->id = 0;
+                    }
+                    else
+                    {
+                        if (std::from_chars(lineView.data(), lineView.data() + lineView.size(), currentSmoothingGroup->id).ec != std::errc())
+                        {
+                            return TextFileFormatResult::Error{ TextFileFormatResult::ParseError, command.lineNumber, "Invalid smoothing group id" };
+                        }
+                    }
                 } break;
                 case ObjectCommandType::Face: ///< f
                 {
+                    auto lineView = createDataView(command, 2);
+                    if (lineView.empty())
+                    {
+                        return TextFileFormatResult::Error{ TextFileFormatResult::ParseError, command.lineNumber, "Expecting face data" };
+                    }
+
+                    if (auto result = readFace(lineView); !result)
+                    {
+                        TextFileFormatResult::Error error = result.GetError();
+                        error.lineNumber = command.lineNumber;
+                        return { error };
+                    }
 
                 } break;
                 case ObjectCommandType::UseMaterial: ///< usemtl
                 {
+                    auto lineView = createDataView(command, 7);
+                    if (lineView.empty())
+                    {
+                        return TextFileFormatResult::Error{ TextFileFormatResult::ParseError, command.lineNumber, "Expecting material name" };
+                    }
 
+                    if (!currentGroup->IsEmpty())
+                    {
+                        createNewGroup();
+                    }
+                    currentGroup->material = lineView;
                 } break;
             }
         }
@@ -592,44 +808,52 @@ namespace Molten
     TextFileFormatResult ObjMeshFileReader::HandleMaterialFutures()
     {
         // Check material futures.
-        for (auto& future : m_materialFutures)
+        for (auto it = m_materialFutures.begin(); it != m_materialFutures.end();)
         {
+            auto& future = *it;
+
             if (auto result = future.get(); result.index() == 0)
             {
                 auto& material = std::get<MaterialSharedPointer>(result);
                 m_objMeshFile->materials.push_back(material);
+                it = m_materialFutures.erase(it);
             }
             else
             {
+                m_materialFutures.erase(it);
+
                 // An error occurred while processing via thread pool.
                 auto& error = std::get<TextFileFormatResult::Error>(result);
                 return { std::move(error) };
             }
         }
 
-        m_materialFutures.clear();
         return {};
     }
 
     TextFileFormatResult ObjMeshFileReader::HandleObjectFutures()
     {
         // Check object futures.
-        for (auto& future : m_objectFutures)
+        for (auto it = m_objectFutures.begin(); it != m_objectFutures.end();)
         {
+            auto& future = *it;
+
             if (auto result = future.get(); result.index() == 0)
             {
                 auto& object = std::get<ObjectSharedPointer>(result);
                 m_objMeshFile->objects.push_back(object);
+                it = m_objectFutures.erase(it);
             }
             else
             {
+                m_objectFutures.erase(it);
+
                 // An error occurred while processing via thread pool.
                 auto& error = std::get<TextFileFormatResult::Error>(result);
                 return { std::move(error) };
             }
         }
 
-        m_objectFutures.clear();
         return {};
     }
 
@@ -662,6 +886,8 @@ namespace Molten
                 }
                 else
                 {
+                    m_materialFutures.erase(it);
+
                     // An error occurred while processing via thread pool.
                     auto& error = std::get<TextFileFormatResult::Error>(result);
                     return { std::move(error) };
@@ -691,6 +917,8 @@ namespace Molten
                 }
                 else
                 {
+                    m_objectFutures.erase(it);
+
                     // An error occurred while processing via thread pool.
                     auto& error = std::get<TextFileFormatResult::Error>(result);
                     return { std::move(error) };
