@@ -45,7 +45,7 @@ namespace Molten
     // Vulkan framed descriptor set implementations.
     VulkanFramedDescriptorSet::VulkanFramedDescriptorSet(
         const uint32_t index,
-        std::vector<VkDescriptorSet>&& descriptorSets,
+        Vulkan::DescriptorSets&& descriptorSets,
         VkDescriptorPool descriptorPool
     ) :
         index(index),

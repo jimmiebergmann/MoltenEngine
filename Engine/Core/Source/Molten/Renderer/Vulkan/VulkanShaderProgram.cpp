@@ -23,43 +23,32 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_VULKANPIPELINE_HPP
-#define MOLTEN_CORE_RENDERER_VULKANPIPELINE_HPP
-
 #if defined(MOLTEN_ENABLE_VULKAN)
 
-#include "Molten/Renderer/Pipeline.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanTypes.hpp"
+#include "Molten/Renderer/Vulkan/VulkanShaderProgram.hpp"
 
 namespace Molten
 {
 
-    class VulkanShaderProgram;
-
-
-    class MOLTEN_API VulkanPipeline : public Pipeline
-    {
-
-    public:
-
-        using Base = Pipeline;
-
-        VulkanPipeline() = delete;
-        VulkanPipeline(
-            VkPipeline graphicsPipeline,
-            VkPipelineLayout pipelineLayout,
-            Vulkan::DescriptorSetLayouts&& descriptionSetLayouts,
-            VulkanShaderProgram* shaderProgram);
-        
-        VkPipeline graphicsPipeline;
-        VkPipelineLayout pipelineLayout;
-        Vulkan::DescriptorSetLayouts descriptionSetLayouts;
-        VulkanShaderProgram* shaderProgram; // TODO :Should be a shared resource.
-
-    };
+    // Vulkan shader program implementations.
+    VulkanShaderProgram::VulkanShaderProgram(
+        Vulkan::ShaderModules&& shaderModules,
+        Vulkan::PipelineShaderStageCreateInfos&& pipelineShaderStageCreateInfos,
+        MappedDescriptorSets&& mappedDescriptorSets,
+        std::vector<VkVertexInputAttributeDescription>&& vertexInputAttributeDescriptions,
+        std::unique_ptr<VkVertexInputBindingDescription>&& vertexBindingDescription,
+        PushConstantLocations&& pushConstantLocations,
+        const VkPushConstantRange& pushConstantRange
+    ) :
+        shaderModules(std::move(shaderModules)),
+        pipelineShaderStageCreateInfos(std::move(pipelineShaderStageCreateInfos)),
+        mappedDescriptorSets(std::move(mappedDescriptorSets)),
+        vertexInputAttributeDescriptions(std::move(vertexInputAttributeDescriptions)),
+        vertexBindingDescription(std::move(vertexBindingDescription)),
+        pushConstantLocations(std::move(pushConstantLocations)),
+        pushConstantRange(pushConstantRange)
+    {}
 
 }
-
-#endif
 
 #endif

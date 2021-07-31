@@ -50,12 +50,9 @@ namespace Molten::Vulkan
         m_handle = VK_NULL_HANDLE;
         m_surface = nullptr;
 
-        Result<> result;
-
         auto surfaceHandle = surface.GetHandle();
 
-        result = FetchPhysicalDeviceCapabilities(m_capabilities, physicalDeviceHandle, surfaceHandle);
-        if (!result)
+        if(const auto result =  FetchPhysicalDeviceCapabilities(m_capabilities, physicalDeviceHandle, surfaceHandle); !result.IsSuccessful())
         {
             return result;
         }
@@ -69,7 +66,7 @@ namespace Molten::Vulkan
 
         m_surface = &surface;
         m_handle = physicalDeviceHandle;
-        return result;
+        return {};
     }
 
     bool PhysicalDevice::IsCreated() const
@@ -167,7 +164,7 @@ namespace Molten::Vulkan
         {
             auto& physicalDevice = *it;
 
-            bool createSucceeded = physicalDevice.Create(handle, surface);
+            const bool createSucceeded = physicalDevice.Create(handle, surface).IsSuccessful();
 
             if (!createSucceeded || !checkFilters(physicalDevice))
             {

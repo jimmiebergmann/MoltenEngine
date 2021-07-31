@@ -44,7 +44,7 @@ namespace Molten::Shader::Visual
     }
 
     template<typename TOutputType>
-    inline BindingType DescriptorBindingSamplerBase<TOutputType>::GetBindingType() const
+    inline DescriptorBindingType DescriptorBindingSamplerBase<TOutputType>::GetBindingType() const
     {
         return DescriptorBindingSamplerTraits<TOutputType>::bindingType;
     }
@@ -118,9 +118,9 @@ namespace Molten::Shader::Visual
     }
 
     template<typename ... TAllowedDataTypes>
-    inline BindingType DescriptorBinding<UniformBuffer<TAllowedDataTypes...>>::GetBindingType() const
+    inline DescriptorBindingType DescriptorBinding<UniformBuffer<TAllowedDataTypes...>>::GetBindingType() const
     {
-        return BindingType::UniformBuffer;
+        return DescriptorBindingType::UniformBuffer;
     }
 
     template<typename ... TAllowedDataTypes>
@@ -235,19 +235,19 @@ namespace Molten::Shader::Visual
     template<>
     struct DescriptorBindingSamplerTraits<Sampler1D>
     {
-        static constexpr BindingType bindingType = BindingType::Sampler1D;
+        static constexpr DescriptorBindingType bindingType = DescriptorBindingType::Sampler1D;
     };
 
     template<>
     struct DescriptorBindingSamplerTraits<Sampler2D>
     {
-        static constexpr BindingType bindingType = BindingType::Sampler2D;
+        static constexpr DescriptorBindingType bindingType = DescriptorBindingType::Sampler2D;
     };
 
     template<>
     struct DescriptorBindingSamplerTraits<Sampler3D>
     {
-        static constexpr BindingType bindingType = BindingType::Sampler3D;
+        static constexpr DescriptorBindingType bindingType = DescriptorBindingType::Sampler3D;
     };
 
 }

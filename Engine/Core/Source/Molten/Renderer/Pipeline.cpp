@@ -59,8 +59,7 @@ namespace Molten
         polygonMode(Pipeline::PolygonMode::Fill),
         frontFace(Pipeline::FrontFace::Clockwise),
         cullMode(Pipeline::CullMode::None),
-        vertexScript(nullptr),
-        fragmentScript(nullptr)
+        shaderProgram(nullptr)
     { }
 
     PipelineDescriptor::PipelineDescriptor(
@@ -69,16 +68,14 @@ namespace Molten
         const Pipeline::FrontFace frontFace,
         const Pipeline::CullMode cullMode,
         const PipelineBlendingDescriptor blending,
-        Shader::Visual::VertexScript* vertexScript,
-        Shader::Visual::FragmentScript* fragmentScript
+        ShaderProgram* shaderProgram
     ) :
         topology(topology),
         polygonMode(polygonMode),
         frontFace(frontFace),
         cullMode(cullMode),
         blending(blending),
-        vertexScript(vertexScript),
-        fragmentScript(fragmentScript)
+        shaderProgram(shaderProgram)
     { }
 
 }

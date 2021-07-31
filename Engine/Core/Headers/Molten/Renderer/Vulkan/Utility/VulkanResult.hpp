@@ -141,11 +141,8 @@ namespace Molten::Vulkan
         /** Get type index. Always returns 0. */
         [[nodiscard]] size_t GetTypeIndex() const;
 
-        /** Check if underlying vulkan result is equal or not to VkResult::VK_SUCCESS. */
-        /**@{*/
-        [[nodiscard]] operator bool() const;
-        [[nodiscard]] bool operator!() const;
-        /**@}*/
+        /** Check if underlying vulkan result is equal to VkResult::VK_SUCCESS. */
+        [[nodiscard]] bool IsSuccessful() const;
 
         /* Compare operators. */
         /**@{*/

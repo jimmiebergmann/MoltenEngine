@@ -23,6 +23,8 @@
 *
 */
 
+
+#include "Molten/Renderer/Vulkan/VulkanRenderPass.hpp"
 #if defined(MOLTEN_ENABLE_VULKAN)
 
 #include "Molten/Renderer/Vulkan/Utility/VulkanResourceDestroyer.hpp"
@@ -31,6 +33,7 @@
 #include "Molten/Renderer/Vulkan/VulkanIndexBuffer.hpp"
 #include "Molten/Renderer/Vulkan/VulkanPipeline.hpp"
 #include "Molten/Renderer/Vulkan/VulkanSampler.hpp"
+#include "Molten/Renderer/Vulkan/VulkanShaderProgram.hpp"
 #include "Molten/Renderer/Vulkan/VulkanTexture.hpp"
 #include "Molten/Renderer/Vulkan/VulkanUniformBuffer.hpp"
 #include "Molten/Renderer/Vulkan/VulkanVertexBuffer.hpp"
@@ -135,15 +138,18 @@ namespace Molten::Vulkan
         descriptorSet.descriptorPool = VK_NULL_HANDLE;
     }
 
-    void ResourceDestroyer::Add(const uint32_t /*cleanupFrameIndex*/, VulkanFramebuffer& /*ramebuffer*/)
+    void ResourceDestroyer::Add(const uint32_t cleanupFrameIndex, VulkanFramebuffer& framebuffer)
     {
-        // Not implemented yet, due to missing creation implementations.
+        m_cleanupQueue.emplace<CleanupData>({ cleanupFrameIndex, FramebufferCleanup{
+            std::move(framebuffer.frames),
+            framebuffer.commandPool
+        } });
     }
 
     void ResourceDestroyer::Add(const uint32_t cleanupFrameIndex, VulkanIndexBuffer& indexBuffer)
     {
         m_cleanupQueue.emplace<CleanupData>({ cleanupFrameIndex, IndexBufferCleanup{
-           std::move(indexBuffer.deviceBuffer)
+            std::move(indexBuffer.deviceBuffer)
         } });
     }
 
@@ -152,32 +158,49 @@ namespace Molten::Vulkan
         m_cleanupQueue.emplace<CleanupData>({ cleanupFrameIndex, PipelineCleanup{
             pipeline.graphicsPipeline,
             pipeline.pipelineLayout,
-            std::move(pipeline.descriptionSetLayouts),
-            std::move(pipeline.shaderModules)
+            std::move(pipeline.descriptionSetLayouts)
         } });
 
         pipeline.graphicsPipeline = VK_NULL_HANDLE;
         pipeline.pipelineLayout = VK_NULL_HANDLE;
     }
 
+    void ResourceDestroyer::Add(const uint32_t cleanupFrameIndex, VulkanRenderPass& renderPass)
+    {
+        m_cleanupQueue.emplace<CleanupData>({ cleanupFrameIndex, RenderPassCleanup{
+            renderPass.m_commandPool,
+            renderPass.m_renderPass
+        } });
+
+        renderPass.m_commandPool = VK_NULL_HANDLE;
+        renderPass.m_renderPass = VK_NULL_HANDLE;
+    }
+
     void ResourceDestroyer::Add(const uint32_t cleanupFrameIndex, VulkanSampler<1>& sampler1D)
     {
         m_cleanupQueue.emplace<CleanupData>({ cleanupFrameIndex, SamplerCleanup{
-           std::move(sampler1D.imageSampler)
+            std::move(sampler1D.imageSampler)
         } });
     }
 
     void ResourceDestroyer::Add(const uint32_t cleanupFrameIndex, VulkanSampler<2>& sampler2D)
     {
         m_cleanupQueue.emplace<CleanupData>({ cleanupFrameIndex, SamplerCleanup{
-           std::move(sampler2D.imageSampler)
+            std::move(sampler2D.imageSampler)
         } });
     }
 
     void ResourceDestroyer::Add(const uint32_t cleanupFrameIndex, VulkanSampler<3>& sampler3D)
     {
         m_cleanupQueue.emplace<CleanupData>({ cleanupFrameIndex, SamplerCleanup{
-           std::move(sampler3D.imageSampler)
+            std::move(sampler3D.imageSampler)
+        } });
+    }
+
+    void ResourceDestroyer::Add(const uint32_t cleanupFrameIndex, VulkanShaderProgram& shaderProgram)
+    {
+        m_cleanupQueue.emplace<CleanupData>({ cleanupFrameIndex, ShaderProgramCleanup{
+            std::move(shaderProgram.shaderModules)
         } });
     }
 
@@ -253,9 +276,15 @@ namespace Molten::Vulkan
         vkDestroyDescriptorPool(m_logicalDevice.GetHandle(), data.descriptorPool, nullptr);
     }
 
-    void ResourceDestroyer::Process(FramebufferCleanup& /*data*/)
+    void ResourceDestroyer::Process(FramebufferCleanup& data)
     {
-        // Not implemented yet, due to missing creation implementations.
+        for(auto& frame : data.frames)
+        {
+            vkDestroyImageView(m_logicalDevice.GetHandle(), frame.texture.imageView, nullptr);
+            m_memoryAllocator.FreeDeviceImage(frame.texture.deviceImage);
+        }
+
+        vkDestroyCommandPool(m_logicalDevice.GetHandle(), data.commandPool, nullptr);
     }
 
     void ResourceDestroyer::Process(IndexBufferCleanup& data)
@@ -278,15 +307,25 @@ namespace Molten::Vulkan
         {
             vkDestroyDescriptorSetLayout(m_logicalDevice.GetHandle(), setLayout, nullptr);
         }
-        for (auto& shaderModule : data.shaderModules)
-        {
-            shaderModule.Destroy();
-        }
+    }
+
+    void ResourceDestroyer::Process(RenderPassCleanup& data)
+    {
+        vkDestroyCommandPool(m_logicalDevice.GetHandle(), data.commandPool, nullptr);
+        vkDestroyRenderPass(m_logicalDevice.GetHandle(), data.renderPass, nullptr);
     }
 
     void ResourceDestroyer::Process(SamplerCleanup& data)
     {
         data.imageSampler.Destroy();
+    }
+
+    void ResourceDestroyer::Process(ShaderProgramCleanup& data)
+    {
+        for(auto& shaderModule : data.shaderModules)
+        {
+            vkDestroyShaderModule(m_logicalDevice.GetHandle(), shaderModule, nullptr);
+        }
     }
 
     void ResourceDestroyer::Process(TextureCleanup& data)

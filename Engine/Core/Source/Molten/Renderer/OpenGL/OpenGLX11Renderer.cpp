@@ -231,6 +231,11 @@ namespace Molten
         return { };
     }
 
+    RenderResource<ShaderProgram> OpenGLX11Renderer::CreateShaderProgram(const VisualShaderProgramDescriptor& /*descriptor*/ )
+    {
+        return { };
+    }
+
     RenderResource<Texture1D> OpenGLX11Renderer::CreateTexture(const TextureDescriptor1D& /*descriptor*/)
     {
         return { };
@@ -305,6 +310,10 @@ namespace Molten
     }
 
     void OpenGLX11Renderer::Destroy(Sampler3D& /*sampler3D*/)
+    {
+    }
+
+    void OpenGLX11Renderer::Destroy(ShaderProgram& /*shaderProgram*/)
     {
     }
 

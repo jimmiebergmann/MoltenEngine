@@ -30,10 +30,13 @@
 #include "Molten/Renderer/Shader/Visual/VisualShaderScript.hpp"
 #include "Molten/Renderer/Shader/Visual/VisualShaderStructure.hpp"
 #include "Molten/Renderer/Shader/Generator/GlslShaderGenerator.hpp"
+#include "Molten/Renderer/Vulkan/VulkanDescriptorSet.hpp"
 #include "Molten/Renderer/Vulkan/VulkanFramebuffer.hpp"
 #include "Molten/Renderer/Vulkan/VulkanIndexBuffer.hpp"
 #include "Molten/Renderer/Vulkan/VulkanPipeline.hpp"
+#include "Molten/Renderer/Vulkan/VulkanRenderPass.hpp"
 #include "Molten/Renderer/Vulkan/VulkanSampler.hpp"
+#include "Molten/Renderer/Vulkan/VulkanShaderProgram.hpp"
 #include "Molten/Renderer/Vulkan/VulkanTexture.hpp"
 #include "Molten/Renderer/Vulkan/VulkanUniformBuffer.hpp"
 #include "Molten/Renderer/Vulkan/VulkanVertexBuffer.hpp"
@@ -199,14 +202,14 @@ namespace Molten
         throw Exception("Provided data type is not supported as index buffer data type by the Vulkan renderer.");
     }
   
-    static VkDescriptorType GetDescriptorType(const Shader::BindingType bindingType)
+    static VkDescriptorType GetDescriptorType(const DescriptorBindingType bindingType)
     {
         switch(bindingType)
         {
-            case Shader::BindingType::Sampler1D:
-            case Shader::BindingType::Sampler2D:
-            case Shader::BindingType::Sampler3D: return VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            case Shader::BindingType::UniformBuffer: return VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            case DescriptorBindingType::Sampler1D:
+            case DescriptorBindingType::Sampler2D:
+            case DescriptorBindingType::Sampler3D: return VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            case DescriptorBindingType::UniformBuffer: return VkDescriptorType::VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         }
         throw Exception("Provided binding type is not handled.");
     }
@@ -500,7 +503,8 @@ namespace Molten
 
     uint32_t VulkanRenderer::GetPushConstantLocation(Pipeline& pipeline, const uint32_t id)
     {
-        auto& locations = static_cast<VulkanPipeline&>(pipeline).pushConstantLocations;
+        auto& vulkanPipeline = static_cast<VulkanPipeline&>(pipeline);
+        auto& locations = vulkanPipeline.shaderProgram->pushConstantLocations;
         const auto it = locations.find(id);
         if (it == locations.end())
         {
@@ -514,12 +518,12 @@ namespace Molten
     {
         auto* vulkanPipeline = static_cast<VulkanPipeline*>(descriptor.pipeline->get());
 
-        const auto& mappedSets = vulkanPipeline->mappedDescriptorSets;
+        const auto& mappedSets = vulkanPipeline->shaderProgram->mappedDescriptorSets;
         auto mappedSetIt = mappedSets.find(descriptor.id);
         if(mappedSetIt == mappedSets.end())
         {
             Logger::WriteError(m_logger, "Failed to find mapped descriptor set of id " + std::to_string(descriptor.id) + ".");
-            return { };
+            return {};
         }
 
         const auto& mappedSet = mappedSetIt->second;
@@ -589,7 +593,7 @@ namespace Molten
             if (mappedBindingIt == mappedBindings.end())
             {
                 Logger::WriteError(m_logger, "Failed to find mapped descriptor binding of id " + std::to_string(binding.id) + ".");
-                return { };
+                return {};
             }
             const auto& mappedBinding = mappedBindingIt->second;
 
@@ -655,7 +659,7 @@ namespace Molten
         if (vkCreateDescriptorPool(m_logicalDevice.GetHandle(), &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)
         {
             Logger::WriteError(m_logger, "Failed to create descriptor pool.");
-            return { };
+            return {};
         }
 
         auto& setLayouts = vulkanPipeline->descriptionSetLayouts;
@@ -669,7 +673,7 @@ namespace Molten
         if (vkAllocateDescriptorSets(m_logicalDevice.GetHandle(), &allocInfo, &descriptorSet) != VK_SUCCESS)
         {
             Logger::WriteError(m_logger, "Failed to create descriptor sets.");
-            return { };
+            return {};
         }
 
         for(auto& write : writes)
@@ -691,12 +695,12 @@ namespace Molten
     {
         auto* vulkanPipeline = static_cast<VulkanPipeline*>(descriptor.pipeline->get());
 
-        const auto& mappedSets = vulkanPipeline->mappedDescriptorSets;
+        const auto& mappedSets = vulkanPipeline->shaderProgram->mappedDescriptorSets;
         auto mappedSetIt = mappedSets.find(descriptor.id);
         if (mappedSetIt == mappedSets.end())
         {
             Logger::WriteError(m_logger, "Failed to find mapped descriptor set of id " + std::to_string(descriptor.id) + ".");
-            return { };
+            return {};
         }
 
         const auto& mappedSet = mappedSetIt->second;
@@ -803,7 +807,7 @@ namespace Molten
             if (mappedBindingIt == mappedBindings.end())
             {
                 Logger::WriteError(m_logger, "Failed to find mapped descriptor binding of id " + std::to_string(binding.id) + ".");
-                return { };
+                return {};
             }
             const auto& mappedBinding = mappedBindingIt->second;
             const uint32_t bindingIndex = mappedBinding.index;
@@ -852,7 +856,7 @@ namespace Molten
 
             if(!successfulVisit)
             {
-                return { };
+                return {};
             }
 
             writeIndex++;
@@ -877,21 +881,21 @@ namespace Molten
         if (vkCreateDescriptorPool(m_logicalDevice.GetHandle(), &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)
         {
             Logger::WriteError(m_logger, "Failed to create descriptor pool.");
-            return { };
+            return {};
         }
 
-        std::vector<VkDescriptorSetLayout> setLayouts(swapChainImageCount, vulkanPipeline->descriptionSetLayouts[setIndex]);
+        Vulkan::DescriptorSetLayouts setLayouts(swapChainImageCount, vulkanPipeline->descriptionSetLayouts[setIndex]);
         VkDescriptorSetAllocateInfo allocInfo = {};
         allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         allocInfo.descriptorPool = descriptorPool;
         allocInfo.descriptorSetCount = swapChainImageCount;
         allocInfo.pSetLayouts = setLayouts.data();
 
-        std::vector<VkDescriptorSet> descriptorSets(swapChainImageCount, VK_NULL_HANDLE);
+        Vulkan::DescriptorSets descriptorSets(swapChainImageCount, VK_NULL_HANDLE);
         if (vkAllocateDescriptorSets(m_logicalDevice.GetHandle(), &allocInfo, descriptorSets.data()) != VK_SUCCESS)
         {
             Logger::WriteError(m_logger, "Failed to create descriptor sets.");
-            return { };
+            return {};
         }
 
         for(uint32_t i = 0; i < swapChainImageCount; i++)
@@ -915,7 +919,112 @@ namespace Molten
 
     RenderResource<Framebuffer> VulkanRenderer::CreateFramebuffer(const FramebufferDescriptor& descriptor)
     {
-        return { };
+        VulkanFramebuffer::Frames frames(m_swapChain.GetImageCount());
+        //Vulkan::DeviceImageAndViews deviceImageAndViews(m_swapChain.GetImageCount());
+
+        const auto imageFormat = m_surfaceFormat.format;
+
+        // TODO: Insufficient device image guarding.
+
+        for(auto& frame : frames)
+        {
+            // Create image.
+            VkImageCreateInfo imageInfo = {};
+            imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+            imageInfo.flags = 0;
+            imageInfo.imageType = VkImageType::VK_IMAGE_TYPE_2D;
+            imageInfo.extent.width = descriptor.dimensions.x;
+            imageInfo.extent.height = descriptor.dimensions.y;
+            imageInfo.extent.depth = 1;
+            imageInfo.mipLevels = 1;
+            imageInfo.arrayLayers = 1;
+            imageInfo.format = imageFormat;
+            imageInfo.tiling = VkImageTiling::VK_IMAGE_TILING_OPTIMAL;
+            imageInfo.initialLayout = VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
+            imageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+            imageInfo.sharingMode = VkSharingMode::VK_SHARING_MODE_EXCLUSIVE;
+            imageInfo.samples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
+
+            if (const auto result = m_memoryAllocator.CreateDeviceImage(
+                frame.texture.deviceImage,
+                imageInfo,
+                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT); !result.IsSuccessful())
+            {
+                Vulkan::Logger::WriteError(m_logger, result, "Failed to create device image for framebuffer");
+                return {};
+            }
+
+            // Create image view.
+            VkImageViewCreateInfo viewInfo = {};
+            viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+            viewInfo.image = frame.texture.deviceImage.image;
+            viewInfo.viewType = VkImageViewType::VK_IMAGE_VIEW_TYPE_2D;
+            viewInfo.format = imageFormat;
+            viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            viewInfo.subresourceRange.baseMipLevel = 0;
+            viewInfo.subresourceRange.levelCount = 1;
+            viewInfo.subresourceRange.baseArrayLayer = 0;
+            viewInfo.subresourceRange.layerCount = 1;
+            viewInfo.components = {};
+
+            if (const auto result = vkCreateImageView(m_logicalDevice.GetHandle(), &viewInfo, nullptr, &frame.texture.imageView); result != VK_SUCCESS)
+            {
+                Vulkan::Logger::WriteError(m_logger, result, "Failed to create image view for framebuffer");
+                return {};
+            }
+
+            // Create framebuffer.
+            VkImageView framebufferAttachments[] = { frame.texture.imageView };
+
+            VkFramebufferCreateInfo framebufferInfo = {};
+            framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+            framebufferInfo.renderPass = m_renderPass;
+            framebufferInfo.attachmentCount = 1;
+            framebufferInfo.pAttachments = framebufferAttachments;
+            framebufferInfo.width = descriptor.dimensions.x;
+            framebufferInfo.height = descriptor.dimensions.y;
+            framebufferInfo.layers = 1;
+
+            if (const auto result = vkCreateFramebuffer(m_logicalDevice.GetHandle(), &framebufferInfo, nullptr, &frame.framebuffer); result != VK_SUCCESS)
+            {
+                Vulkan::Logger::WriteError(m_logger, result, "Failed to create framebuffer object for framebuffer");
+                return {};
+            }
+        }
+
+        VkCommandPoolCreateInfo commandPoolInfo = {};
+        commandPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+        commandPoolInfo.queueFamilyIndex = m_physicalDevice.GetDeviceQueueIndices().graphicsQueue.value();
+        commandPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+
+        VkCommandPool commandPool = VK_NULL_HANDLE;
+        if (const auto result = vkCreateCommandPool(m_logicalDevice.GetHandle(), &commandPoolInfo, nullptr, &commandPool); result != VK_SUCCESS)
+        {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to create command pool for framebuffer.");
+            return {};
+        }
+
+        std::vector<VkCommandBuffer> commandBuffers(frames.size());
+
+        VkCommandBufferAllocateInfo commandBufferInfo = {};
+        commandBufferInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        commandBufferInfo.commandPool = commandPool;
+        commandBufferInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        commandBufferInfo.commandBufferCount = static_cast<uint32_t>(commandBuffers.size());
+
+        if (const auto result = vkAllocateCommandBuffers(m_logicalDevice.GetHandle(), &commandBufferInfo, commandBuffers.data()); result != VK_SUCCESS)
+        {
+            vkDestroyCommandPool(m_logicalDevice.GetHandle(), commandPool, nullptr);
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to allocate command buffers for framebuffer.");
+            return {};
+        }
+
+        return RenderResource<Framebuffer>(new VulkanFramebuffer{
+            std::move(frames),
+            descriptor.dimensions,
+            commandPool,
+            std::move(commandBuffers)
+        }, RenderResourceDeleter<Framebuffer>{ this });
     }
 
     RenderResource<IndexBuffer> VulkanRenderer::CreateIndexBuffer(const IndexBufferDescriptor& descriptor)
@@ -925,40 +1034,39 @@ namespace Molten
         Vulkan::DeviceBuffer stagingBuffer;
         Vulkan::DeviceBufferGuard stagingBufferGuard(m_memoryAllocator, stagingBuffer);
 
-        Vulkan::Result<> result;
-        if (!(result = m_memoryAllocator.CreateDeviceBuffer(
+        if (const auto result = m_memoryAllocator.CreateDeviceBuffer(
             stagingBuffer,
             bufferSize,
             VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)))
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT); !result.IsSuccessful())
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to create staging buffer for index buffer");
-            return { };
+            return {};
         }
 
-        if (!(result = Vulkan::MapMemory(m_logicalDevice, stagingBuffer, descriptor.data, bufferSize, 0)))
+        if (const auto result = Vulkan::MapMemory(m_logicalDevice, stagingBuffer, descriptor.data, bufferSize, 0); !result.IsSuccessful())
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to map staging buffer for index buffer");
-            return { };
+            return {};
         }
 
         Vulkan::DeviceBuffer indexBuffer;
         Vulkan::DeviceBufferGuard indexBufferGuard(m_memoryAllocator, indexBuffer);
 
-        if (!(result = m_memoryAllocator.CreateDeviceBuffer(
+        if (const auto result = m_memoryAllocator.CreateDeviceBuffer(
             indexBuffer,
             bufferSize,
             VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)))
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT); !result.IsSuccessful())
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to create index buffer");
-            return { };
+            return {};
         }
 
-        if (!(result = Vulkan::CopyMemory(m_logicalDevice, m_commandPool, stagingBuffer, indexBuffer, bufferSize)))
+        if (const auto result = Vulkan::CopyMemory(m_logicalDevice, m_commandPool, stagingBuffer, indexBuffer, bufferSize); !result.IsSuccessful())
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to copy from staging buffer to index buffer");
-            return { };
+            return {};
         }
 
         indexBufferGuard.Release();
@@ -972,58 +1080,11 @@ namespace Molten
 
     RenderResource<Pipeline> VulkanRenderer::CreatePipeline(const PipelineDescriptor& descriptor)
     {
-        if (descriptor.vertexScript == nullptr)
+        auto* vulkanShaderProgram = static_cast<VulkanShaderProgram*>(descriptor.shaderProgram);
+        if(!vulkanShaderProgram)
         {
-            Logger::WriteError(m_logger, "Vertex script is missing for pipeline. (vertexScript == nullptr).");
-            return { };
-        }
-        if (descriptor.fragmentScript == nullptr)
-        {
-            Logger::WriteError(m_logger, "Fragment script is missing for pipeline. (fragmentScript == nullptr).");
-            return { };
-        }
-
-        auto& vertexScript = *descriptor.vertexScript;
-        auto& fragmentScript = *descriptor.fragmentScript;
-        auto& vertexOutputs = vertexScript.GetOutputInterface();
-        auto& fragmentInputs = fragmentScript.GetInputInterface();
-
-        if (!vertexOutputs.CompareStructure(fragmentInputs))
-        {
-            Logger::WriteError(m_logger, "Vertex output structure is not compatible with fragment input structure.");
-            return { };
-        }
-        
-        const std::vector<Shader::Visual::Script*> shaderScripts =
-        {
-            descriptor.vertexScript, descriptor.fragmentScript
-        };
-       
-        Vulkan::ShaderModules shaderModules;
-        std::vector<VkPipelineShaderStageCreateInfo> shaderStageCreateInfos;
-        PushConstantLocations pushConstantLocations;
-        VkPushConstantRange pushConstantRange = {};
-        MappedDescriptorSets mappedDescriptorSets;
-        if (!LoadShaderModules(
-            shaderModules,
-            shaderStageCreateInfos,
-            pushConstantLocations,
-            pushConstantRange,
-            mappedDescriptorSets,
-            shaderScripts))
-        {
-            return { };
-        }
-
-        std::vector<VkVertexInputAttributeDescription> vertexInputAttributes;
-        uint32_t vertexBindingStride = 0;
-        if (descriptor.vertexScript)
-        {
-            auto& vertexInputs = descriptor.vertexScript->GetInputInterface();
-            if (!CreateVertexInputAttributes(vertexInputs, vertexInputAttributes, vertexBindingStride))
-            {
-                return { };
-            }
+            Logger::WriteError(m_logger, "Cannot create a pipeline without a shader program.");
+            return {};
         }
 
         Vulkan::DescriptorSetLayouts setLayouts;
@@ -1036,22 +1097,17 @@ namespace Molten
             }
         });
 
-        if (!CreateDescriptorSetLayouts(setLayouts, mappedDescriptorSets))
+        if (!CreateDescriptorSetLayouts(setLayouts, vulkanShaderProgram->mappedDescriptorSets))
         {
-            return { };
+            return {};
         }
- 
-        VkVertexInputBindingDescription vertexBinding;
-        vertexBinding.binding = 0;
-        vertexBinding.stride = vertexBindingStride;
-        vertexBinding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
         VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
         vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
         vertexInputInfo.vertexBindingDescriptionCount = 1;
-        vertexInputInfo.pVertexBindingDescriptions = &vertexBinding;
-        vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(vertexInputAttributes.size());
-        vertexInputInfo.pVertexAttributeDescriptions = vertexInputAttributes.data();        
+        vertexInputInfo.pVertexBindingDescriptions = vulkanShaderProgram->vertexBindingDescription.get();
+        vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(vulkanShaderProgram->vertexInputAttributeDescriptions.size());
+        vertexInputInfo.pVertexAttributeDescriptions = vulkanShaderProgram->vertexInputAttributeDescriptions.data();
 
         VkPipelineInputAssemblyStateCreateInfo inputAssemblyStateInfo = {};
         inputAssemblyStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -1129,20 +1185,20 @@ namespace Molten
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(setLayouts.size());
         pipelineLayoutInfo.pSetLayouts = setLayouts.data();
-        pipelineLayoutInfo.pushConstantRangeCount = (pushConstantRange.size > 0) ? 1 : 0;
-        pipelineLayoutInfo.pPushConstantRanges = (pushConstantRange.size > 0) ? &pushConstantRange : nullptr;
+        pipelineLayoutInfo.pushConstantRangeCount = (vulkanShaderProgram->pushConstantRange.size > 0) ? 1 : 0;
+        pipelineLayoutInfo.pPushConstantRanges = (vulkanShaderProgram->pushConstantRange.size > 0) ? &vulkanShaderProgram->pushConstantRange : nullptr;
 
         VkPipelineLayout pipelineLayout;
-        if (vkCreatePipelineLayout(m_logicalDevice.GetHandle(), &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
+        if (const auto result = vkCreatePipelineLayout(m_logicalDevice.GetHandle(), &pipelineLayoutInfo, nullptr, &pipelineLayout); result != VK_SUCCESS)
         {
-            Logger::WriteError(m_logger, "Failed to create pipeline layout.");
-            return { };
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to create pipeline layout.");
+            return {};
         }
 
         VkGraphicsPipelineCreateInfo pipelineInfo = {};
         pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-        pipelineInfo.stageCount = static_cast<uint32_t>(shaderStageCreateInfos.size());
-        pipelineInfo.pStages = shaderStageCreateInfos.data();
+        pipelineInfo.stageCount = static_cast<uint32_t>(vulkanShaderProgram->pipelineShaderStageCreateInfos.size());
+        pipelineInfo.pStages = vulkanShaderProgram->pipelineShaderStageCreateInfos.data();
         pipelineInfo.pVertexInputState = &vertexInputInfo;
         pipelineInfo.pInputAssemblyState = &inputAssemblyStateInfo;
         pipelineInfo.pViewportState = &viewportStateInfo;
@@ -1159,11 +1215,17 @@ namespace Molten
         pipelineInfo.basePipelineIndex = -1;
 
         VkPipeline graphicsPipeline;
-        if (vkCreateGraphicsPipelines(m_logicalDevice.GetHandle(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS)
+        if (const auto result = vkCreateGraphicsPipelines(
+            m_logicalDevice.GetHandle(),
+            VK_NULL_HANDLE,
+            1,
+            &pipelineInfo,
+            nullptr,
+            &graphicsPipeline); result != VK_SUCCESS)
         {
             vkDestroyPipelineLayout(m_logicalDevice.GetHandle(), pipelineLayout, nullptr);
-            Logger::WriteError(m_logger, "Failed to create pipeline.");
-            return { };
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to create pipeline.");
+            return {};
         }
 
         destroyer.Release();
@@ -1172,10 +1234,116 @@ namespace Molten
             graphicsPipeline,
             pipelineLayout,
             std::move(setLayouts),
-            std::move(pushConstantLocations),
-            std::move(shaderModules),
-            std::move(mappedDescriptorSets)
+            vulkanShaderProgram
         }, RenderResourceDeleter<Pipeline>{ this });
+    }
+
+    SharedRenderResource<RenderPass> VulkanRenderer::CreateRenderPass(const RenderPassDescriptor& descriptor)
+    {
+        VkCommandPool commandPool = VK_NULL_HANDLE;
+        VkRenderPass renderPass = VK_NULL_HANDLE;
+
+        //auto& vulkanFramebuffer = static_cast<VulkanFramebuffer&>(descriptor.framebuffer);
+
+        // Failure cleanup function.
+        SmartFunction destroyer([&]()
+        {
+            if (commandPool != VK_NULL_HANDLE)
+            {
+                vkDestroyCommandPool(m_logicalDevice.GetHandle(), commandPool, nullptr);
+            }
+            if (renderPass != VK_NULL_HANDLE)
+            {
+                vkDestroyRenderPass(m_logicalDevice.GetHandle(), renderPass, nullptr);
+            }
+        });
+
+
+        // Create command pool.
+        VkCommandPoolCreateInfo commandPoolInfo = {};
+        commandPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+        commandPoolInfo.queueFamilyIndex = m_physicalDevice.GetDeviceQueueIndices().graphicsQueue.value();
+        commandPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+
+        if (const auto result = vkCreateCommandPool(m_logicalDevice.GetHandle(), &commandPoolInfo, nullptr, &commandPool); result != VK_SUCCESS)
+        {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to create command pool");
+            return {};
+        }
+
+        // Create command buffers.
+        Vulkan::CommandBuffers commandBuffers(m_swapChain.GetImageCount(), VK_NULL_HANDLE);
+
+        VkCommandBufferAllocateInfo commandBufferInfo = {};
+        commandBufferInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        commandBufferInfo.commandPool = commandPool;
+        commandBufferInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        commandBufferInfo.commandBufferCount = static_cast<uint32_t>(commandBuffers.size());
+
+        if (const auto result = vkAllocateCommandBuffers(m_logicalDevice.GetHandle(), &commandBufferInfo, commandBuffers.data()); result != VK_SUCCESS)
+        {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to allocate command buffers");
+            return {};
+        }
+
+        // Create render pass.
+        VkAttachmentDescription colorAttachment = {};
+        colorAttachment.format = m_surfaceFormat.format;
+        colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+        VkAttachmentReference colorAttachmentReference = {};
+        colorAttachmentReference.attachment = 0;
+        colorAttachmentReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        VkSubpassDescription subpass = {};
+        subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpass.colorAttachmentCount = 1;
+        subpass.pColorAttachments = &colorAttachmentReference;
+
+        VkSubpassDependency dependency = {};
+        dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+        dependency.dstSubpass = 0;
+        dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependency.srcAccessMask = 0;
+        dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+        VkRenderPassCreateInfo renderPassInfo = {};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        renderPassInfo.attachmentCount = 1;
+        renderPassInfo.pAttachments = &colorAttachment;
+        renderPassInfo.subpassCount = 1;
+        renderPassInfo.pSubpasses = &subpass;
+        renderPassInfo.dependencyCount = 1;
+        renderPassInfo.pDependencies = &dependency;
+
+        if (const auto result = vkCreateRenderPass(m_logicalDevice.GetHandle(), &renderPassInfo, nullptr, &renderPass); result != VK_SUCCESS)
+        {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to create internal render pass object");
+            return {};
+        }
+
+
+        // Finalize
+        destroyer.Release();
+
+        Vulkan::Semaphores finishSemaphores;
+
+        return SharedRenderResource<RenderPass>(new VulkanRenderPass{
+            m_logger,
+            //vulkanFramebuffer,
+            commandPool,
+            std::move(commandBuffers),
+            std::move(finishSemaphores),
+            renderPass,
+            descriptor.recordFunction
+        }, RenderResourceDeleter<RenderPass>{ this });
     }
 
     RenderResource<Sampler1D> VulkanRenderer::CreateSampler(const SamplerDescriptor1D& descriptor)
@@ -1188,9 +1356,8 @@ namespace Molten
         const bool anisotropyEnable = descriptor.maxAnisotropy > 1;
         const auto maxAnisotropy = static_cast<float>(descriptor.maxAnisotropy);
 
-        Vulkan::Result<> result;
         Vulkan::ImageSampler imageSampler;
-        if (!(result = imageSampler.Create(
+        if (const auto result = imageSampler.Create(
             m_logicalDevice,
             magFilter,
             minFilter,
@@ -1198,10 +1365,10 @@ namespace Molten
             addressModeV,
             addressModeW,
             anisotropyEnable,
-            maxAnisotropy)))
+            maxAnisotropy); !result.IsSuccessful())
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to create 1D image sampler");
-            return { };
+            return {};
         }
 
         return RenderResource<Sampler1D>(new VulkanSampler1D{
@@ -1219,9 +1386,8 @@ namespace Molten
         const bool anisotropyEnable = descriptor.maxAnisotropy > 1;
         const auto maxAnisotropy = static_cast<float>(descriptor.maxAnisotropy);
 
-        Vulkan::Result<> result;
         Vulkan::ImageSampler imageSampler;
-        if (!(result = imageSampler.Create(
+        if (const auto result = imageSampler.Create(
             m_logicalDevice,
             magFilter,
             minFilter,
@@ -1229,10 +1395,10 @@ namespace Molten
             addressModeV,
             addressModeW,
             anisotropyEnable,
-            maxAnisotropy)))
+            maxAnisotropy); !result.IsSuccessful())
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to create 2D image sampler");
-            return { };
+            return {};
         }
 
         return RenderResource<Sampler2D>(new VulkanSampler2D{
@@ -1250,9 +1416,8 @@ namespace Molten
         const bool anisotropyEnable = descriptor.maxAnisotropy > 1;
         const auto maxAnisotropy = static_cast<float>(descriptor.maxAnisotropy);
 
-        Vulkan::Result<> result;
         Vulkan::ImageSampler imageSampler;
-        if (!(result = imageSampler.Create(
+        if (const auto result = imageSampler.Create(
             m_logicalDevice,
             magFilter,
             minFilter,
@@ -1260,15 +1425,134 @@ namespace Molten
             addressModeV,
             addressModeW,
             anisotropyEnable,
-            maxAnisotropy)))
+            maxAnisotropy); !result.IsSuccessful())
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to create 3D image sampler");
-            return { };
+            return {};
         }
 
         return RenderResource<Sampler3D>(new VulkanSampler3D{
             std::move(imageSampler)
         }, RenderResourceDeleter<Sampler3D>{ this });
+    }
+
+    RenderResource<ShaderProgram> VulkanRenderer::CreateShaderProgram(const VisualShaderProgramDescriptor& descriptor)
+    {
+        if (descriptor.vertexScript == nullptr)
+        {
+            Logger::WriteError(m_logger, "Cannot create shader program without vertex script.");
+            return {};
+        }
+        if (descriptor.fragmentScript == nullptr)
+        {
+            Logger::WriteError(m_logger, "Cannot create shader program without fragment script.");
+            return {};
+        }
+
+        auto& vertexOutputs = descriptor.vertexScript->GetOutputInterface();
+        auto& fragmentInputs = descriptor.fragmentScript->GetInputInterface();
+        if (!vertexOutputs.CompareStructure(fragmentInputs))
+        {
+            Logger::WriteError(m_logger, "Vertex output structure is not compatible with fragment input structure.");
+            return {};
+        }
+
+        Vulkan::ShaderModules shaderModules(2, VK_NULL_HANDLE);
+        Vulkan::PipelineShaderStageCreateInfos pipelineShaderStageCreateInfos(2);
+
+        SmartFunction destroyer([&]()
+        {
+            for (auto& shaderModule : shaderModules)
+            {
+                if(shaderModule)
+                {
+                    vkDestroyShaderModule(m_logicalDevice.GetHandle(), shaderModule, nullptr);
+                }     
+            }
+        });
+
+        std::vector<Shader::Visual::Script*> visualScripts = { descriptor.vertexScript, descriptor.fragmentScript };
+
+        Shader::GlslGenerator::GlslTemplate glslTemplate;
+        if (!Shader::GlslGenerator::GenerateGlslTemplate(glslTemplate, visualScripts, m_logger))
+        {
+            Logger::WriteError(m_logger, "Failed to generate glsl template.");
+            return {};
+        }
+
+        for (size_t i = 0; i < visualScripts.size(); i++)
+        {
+            const auto& script = visualScripts[i];
+
+            auto glslCode = m_glslGenerator.Generate(*script, Shader::GlslGenerator::Compability::SpirV, &glslTemplate, m_logger);
+            if (glslCode.empty())
+            {
+                Logger::WriteError(m_logger, "Failed to generate GLSL code.");
+                return {};
+            }
+
+            const auto scriptType = script->GetType();
+            auto spirvCode = Shader::GlslGenerator::ConvertGlslToSpriV(glslCode, scriptType, m_logger);
+            if (spirvCode.empty())
+            {
+                Logger::WriteError(m_logger, "Failed to convert GLSL to SPIR-V.");
+                return {};
+            }
+
+            VkShaderModuleCreateInfo shaderModuleInfo = {};
+            shaderModuleInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+            shaderModuleInfo.codeSize = spirvCode.size();
+            shaderModuleInfo.pCode = reinterpret_cast<const uint32_t*>(spirvCode.data());
+
+            auto& shaderModule = shaderModules[i];
+            if (const auto result = vkCreateShaderModule(m_logicalDevice.GetHandle(), &shaderModuleInfo, nullptr, &shaderModule); result != VK_SUCCESS)
+            {
+                Vulkan::Logger::WriteError(m_logger, result, "Failed create shader module");
+                return {};
+            }
+ 
+            auto& stageCreateInfo = pipelineShaderStageCreateInfos[i];
+            stageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+            stageCreateInfo.pName = "main";
+            stageCreateInfo.module = shaderModule;
+            stageCreateInfo.stage = GetShaderProgramStageFlag(scriptType);
+        }
+
+        // Push constant information.
+        VkPushConstantRange pushConstantRange = {};
+        pushConstantRange.stageFlags = VK_SHADER_STAGE_ALL;
+        pushConstantRange.offset = 0;
+        pushConstantRange.size = glslTemplate.pushConstantBlockByteSize;
+
+        // Vertex input information.
+        std::vector<VkVertexInputAttributeDescription> vertexInputAttributeDescriptions;
+        auto vertexBindingDescription = std::make_unique<VkVertexInputBindingDescription>();
+        if (descriptor.vertexScript)
+        {
+            auto& vertexInputs = descriptor.vertexScript->GetInputInterface();
+            uint32_t vertexBindingStride = 0;
+            if (!CreateVertexInputAttributes(vertexInputs, vertexInputAttributeDescriptions, vertexBindingStride))
+            {
+                return {};
+            }
+
+            vertexBindingDescription->binding = 0;
+            vertexBindingDescription->stride = vertexBindingStride;
+            vertexBindingDescription->inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+        }
+
+        // Finalize.
+        destroyer.Release();
+
+        return RenderResource<ShaderProgram>(new VulkanShaderProgram{
+            std::move(shaderModules),
+            std::move(pipelineShaderStageCreateInfos),
+            std::move(glslTemplate.mappedDescriptorSets),
+            std::move(vertexInputAttributeDescriptions),
+            std::move(vertexBindingDescription),
+            std::move(glslTemplate.pushConstantLocations),
+            pushConstantRange
+        }, RenderResourceDeleter<ShaderProgram>{ this });
     }
 
     RenderResource<Texture1D> VulkanRenderer::CreateTexture(const TextureDescriptor1D& descriptor)
@@ -1281,7 +1565,7 @@ namespace Molten
         {
             Logger::WriteError(m_logger, "Format and internal format of texture mismatches number of bytes per pixel: " +
                 std::to_string(bytesPerPixel) + " : " + std::to_string(internalBytesPerPixel));
-            return { };
+            return {};
         }
 
         const auto dimensions = Vector3ui32{ descriptor.dimensions.c[0], 1, 1 };
@@ -1326,7 +1610,7 @@ namespace Molten
         {
             Logger::WriteError(m_logger, "Format and internal format of texture mismatches number of bytes per pixel: " +
                 std::to_string(bytesPerPixel) + " : " + std::to_string(internalBytesPerPixel));
-            return { };
+            return {};
         }
 
         const auto dimensions = Vector3ui32{ descriptor.dimensions.x, descriptor.dimensions.y, 1 };
@@ -1372,7 +1656,7 @@ namespace Molten
         {
             Logger::WriteError(m_logger, "Format and internal format of texture mismatches number of bytes per pixel: " +
                 std::to_string(bytesPerPixel) + " : " + std::to_string(internalBytesPerPixel));
-            return { };
+            return {};
         }
 
         const auto dimensions = descriptor.dimensions;
@@ -1413,15 +1697,14 @@ namespace Molten
     { 
         Vulkan::DeviceBuffer deviceBuffer;
 
-        Vulkan::Result<> result;
-        if (!(result = m_memoryAllocator.CreateDeviceBuffer(
+        if (const auto result = m_memoryAllocator.CreateDeviceBuffer(
             deviceBuffer,
             descriptor.size,
             VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)))
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT); !result.IsSuccessful())
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to create device buffer for uniform buffer");
-            return { };
+            return {};
         }
 
         return RenderResource<UniformBuffer>(new VulkanUniformBuffer{
@@ -1446,18 +1729,16 @@ namespace Molten
             }
         });
 
-        Vulkan::Result<> result;
-
         for(auto& deviceBuffer : deviceBuffers)
         {
-            if (!(result = m_memoryAllocator.CreateDeviceBuffer(
+            if (const auto result = m_memoryAllocator.CreateDeviceBuffer(
                 deviceBuffer,
                 descriptor.size,
                 VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)))
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT); !result.IsSuccessful())
             {
                 Vulkan::Logger::WriteError(m_logger, result, "Failed to create device buffer for framed uniform buffer");
-                return { };
+                return {};
             }
         }
 
@@ -1470,8 +1751,6 @@ namespace Molten
 
     RenderResource<VertexBuffer> VulkanRenderer::CreateVertexBuffer(const VertexBufferDescriptor& descriptor)
     {
-        Vulkan::Result<> result;
-
         const auto bufferSize = 
             static_cast<VkDeviceSize>(descriptor.vertexCount) *
             static_cast<VkDeviceSize>(descriptor.vertexSize);
@@ -1479,39 +1758,39 @@ namespace Molten
         Vulkan::DeviceBuffer stagingBuffer;
         Vulkan::DeviceBufferGuard stagingBufferGuard(m_memoryAllocator, stagingBuffer);
 
-        if(!(result = m_memoryAllocator.CreateDeviceBuffer(
+        if(const auto result = m_memoryAllocator.CreateDeviceBuffer(
             stagingBuffer,
             bufferSize,
             VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)))
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT); !result.IsSuccessful())
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to create staging buffer for vertex buffer");
-            return { };
+            return {};
         }
 
-        if (!(result = Vulkan::MapMemory(m_logicalDevice, stagingBuffer, descriptor.data, bufferSize, 0)))
+        if (const auto result = Vulkan::MapMemory(m_logicalDevice, stagingBuffer, descriptor.data, bufferSize, 0); !result.IsSuccessful())
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to map staging buffer for vertex buffer");
-            return { };
+            return {};
         }
 
         Vulkan::DeviceBuffer vertexBuffer;
         Vulkan::DeviceBufferGuard vertexBufferGuard(m_memoryAllocator, stagingBuffer);
 
-        if (!(result = m_memoryAllocator.CreateDeviceBuffer(
+        if (const auto result = m_memoryAllocator.CreateDeviceBuffer(
             vertexBuffer,
             bufferSize,
             VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)))
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT); !result.IsSuccessful())
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to create staging buffer for vertex buffer");
-            return { };
+            return {};
         }
 
-        if (!(result = Vulkan::CopyMemory(m_logicalDevice, m_commandPool, stagingBuffer, vertexBuffer, bufferSize)))
+        if (const auto result = Vulkan::CopyMemory(m_logicalDevice, m_commandPool, stagingBuffer, vertexBuffer, bufferSize); !result.IsSuccessful())
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to copy from staging buffer to vertex buffer");
-            return { };
+            return {};
         }
 
         vertexBufferGuard.Release();
@@ -1585,12 +1864,10 @@ namespace Molten
         m_resourceDestroyer.Add(GetNextDestroyerFrameIndex(), vulkanFramedDescriptorSet);
     }
 
-    void VulkanRenderer::Destroy(Framebuffer& /*framebuffer*/)
+    void VulkanRenderer::Destroy(Framebuffer& framebuffer)
     {
-        // Not implemented yet, due to missing creation implementations.
-        //
-        //auto& vulkanFramebuffer = static_cast<VulkanFramebuffer&>(framebuffer);
-        //m_resourceDestroyer.Add(GetNextDestroyerFrameIndex(), vulkanFramebuffer);
+        auto& vulkanFramebuffer = static_cast<VulkanFramebuffer&>(framebuffer);
+        m_resourceDestroyer.Add(GetNextDestroyerFrameIndex(), vulkanFramebuffer);
     }
 
     void VulkanRenderer::Destroy(IndexBuffer& indexBuffer)
@@ -1603,6 +1880,12 @@ namespace Molten
     {
         auto& vulkanPipeline = static_cast<VulkanPipeline&>(pipeline);
         m_resourceDestroyer.Add(GetNextDestroyerFrameIndex(), vulkanPipeline);
+    }
+
+    void VulkanRenderer::Destroy(RenderPass& renderPass)
+    {
+        auto& vulkanRenderPass = static_cast<VulkanRenderPass&>(renderPass);
+        m_resourceDestroyer.Add(GetNextDestroyerFrameIndex(), vulkanRenderPass);
     }
 
     void VulkanRenderer::Destroy(Sampler1D& sampler1D)
@@ -1621,6 +1904,12 @@ namespace Molten
     {
         auto& vulkanSampler = static_cast<VulkanSampler3D&>(sampler3D);
         m_resourceDestroyer.Add(GetNextDestroyerFrameIndex(), vulkanSampler);
+    }
+
+    void VulkanRenderer::Destroy(ShaderProgram& shaderProgram)
+    {
+        auto& vulkanShaderProgram = static_cast<VulkanShaderProgram&>(shaderProgram);
+        m_resourceDestroyer.Add(GetNextDestroyerFrameIndex(), vulkanShaderProgram);
     }
 
     void VulkanRenderer::Destroy(Texture1D& texture1D)
@@ -1696,6 +1985,44 @@ namespace Molten
         m_currentPipeline = &vulkanPipeline;
     }
 
+    void VulkanRenderer::DrawFrame(const RenderPassGroup& renderPassGroup)
+    {
+        // Begin frame.
+        if (const auto result = m_swapChain.BeginDraw(); !result.IsSuccessful())
+        {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to begin drawing of swap chain.");
+            return;
+        }
+
+        const auto currentImageIndex = m_swapChain.GetCurrentImageIndex();
+
+        const auto swapChainExtent = m_swapChain.GetExtent(); /// TODO: Store default values for viewport and scissor.
+        const auto viewportScissorBounds = Bounds2i32{ 0, 0, static_cast<int32_t>(swapChainExtent.width), static_cast<int32_t>(swapChainExtent.height) };
+
+        // Draw render passes. Recording could be multi-threaded in the future, so recording and submits are separate.
+        for(auto& renderPass : renderPassGroup)
+        {
+            auto& vulkanRenderPass = static_cast<VulkanRenderPass&>(*renderPass);
+            if(auto result = vulkanRenderPass.Record(currentImageIndex, viewportScissorBounds, viewportScissorBounds); !result.IsSuccessful())
+            {
+                Vulkan::Logger::WriteError(m_logger, result, "Failed to record command buffer");
+                return;
+            }
+            vulkanRenderPass.Submit();
+        }
+
+        // End frame.
+        if (const auto result = m_swapChain.EndDraw(*m_currentCommandBuffer); !result.IsSuccessful())
+        {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to end swap chain");
+            return;
+        }
+
+        // Process destroyed resources.
+        m_resourceDestroyer.Process(m_endedDraws);
+        ++m_endedDraws;
+    }
+
     void VulkanRenderer::BeginDraw()
     {
         if (m_beginDraw)
@@ -1704,9 +2031,7 @@ namespace Molten
             return;
         }
 
-        Vulkan::Result<> result;
-
-        if (!(result = m_swapChain.BeginDraw()))
+        if (const auto result = m_swapChain.BeginDraw(); !result.IsSuccessful())
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to begin drawing of swap chain.");
             return;
@@ -1721,7 +2046,7 @@ namespace Molten
         commandBufferBeginInfo.flags = 0;
         commandBufferBeginInfo.pInheritanceInfo = nullptr;
 
-        if (!(result = vkBeginCommandBuffer(*m_currentCommandBuffer, &commandBufferBeginInfo)))
+        if (const auto result = vkBeginCommandBuffer(*m_currentCommandBuffer, &commandBufferBeginInfo); result != VK_SUCCESS)
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to begin recording command buffer.");
             return;
@@ -1737,7 +2062,7 @@ namespace Molten
         renderPassBeginInfo.renderArea.offset = { 0, 0 };
         renderPassBeginInfo.renderArea.extent = swapChainExtent;
 
-        const VkClearValue clearColor = { 0.3f, 0.0f, 0.0f, 0.0f };
+        const VkClearValue clearColor = { 0.3f, 0.0f, 0.0f, 0.0f }; // TODO: Invalid initialization.
         renderPassBeginInfo.clearValueCount = 1;
         renderPassBeginInfo.pClearValues = &clearColor;
 
@@ -1835,16 +2160,14 @@ namespace Molten
             return;
         }
 
-        Vulkan::Result<> result;
-
         vkCmdEndRenderPass(*m_currentCommandBuffer);
-        if (!(result = vkEndCommandBuffer(*m_currentCommandBuffer)))
+        if (const auto result = vkEndCommandBuffer(*m_currentCommandBuffer); result != VK_SUCCESS)
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to end command buffer");
             return;
         }
 
-        if (!(result = m_swapChain.EndDraw(*m_currentCommandBuffer)))
+        if (const auto result = m_swapChain.EndDraw(*m_currentCommandBuffer); !result.IsSuccessful())
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to end swap chain");
             return;
@@ -1867,10 +2190,9 @@ namespace Molten
         auto* vulkanUniformBuffer = static_cast<VulkanUniformBuffer*>(uniformBuffer.get());      
         auto& deviceBuffer = vulkanUniformBuffer->deviceBuffer;
 
-        Vulkan::Result<> result;
-        if (!(result = Vulkan::MapMemory(m_logicalDevice, deviceBuffer, data, size, offset)))
+        if (const auto result = Vulkan::MapMemory(m_logicalDevice, deviceBuffer, data, size, offset); !result.IsSuccessful())
         {
-            Vulkan::Logger::WriteError(m_logger, result, "Failed to map memory of framed uniform buffer");
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to map memory of uniform buffer");
         }
     }
 
@@ -1879,10 +2201,97 @@ namespace Molten
         auto* vulkanFramedUniformBuffer = static_cast<VulkanFramedUniformBuffer*>(framedUniformBuffer.get());
         auto& deviceBuffer = vulkanFramedUniformBuffer->deviceBuffers[m_swapChain.GetCurrentImageIndex()];
 
-        Vulkan::Result<> result;
-        if (!(result = Vulkan::MapMemory(m_logicalDevice, deviceBuffer, data, size, offset)))
+        if (const auto result = Vulkan::MapMemory(m_logicalDevice, deviceBuffer, data, size, offset); !result.IsSuccessful())
         {
-            Vulkan::Logger::WriteError(m_logger, result, "Failed to map memory of uniform buffer");
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to map memory of framed uniform buffer");
+        }
+    }
+
+    void VulkanRenderer::BeginFramebufferDraw(Framebuffer& framebuffer)
+    {
+        auto& vulkanFramebuffer = static_cast<VulkanFramebuffer&>(framebuffer);
+        auto& frames = vulkanFramebuffer.frames;
+        auto& frame = frames[0];
+        const auto extent = VkExtent2D{ vulkanFramebuffer.dimensions.x, vulkanFramebuffer.dimensions.y };
+
+        const auto currentImageIndex = m_swapChain.GetCurrentImageIndex();
+        m_currentCommandBuffer = &vulkanFramebuffer.commandBuffers[currentImageIndex];
+
+        VkCommandBufferBeginInfo commandBufferBeginInfo = {};
+        commandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        commandBufferBeginInfo.flags = 0;
+        commandBufferBeginInfo.pInheritanceInfo = nullptr;
+   
+        if (const auto result = vkBeginCommandBuffer(*m_currentCommandBuffer, &commandBufferBeginInfo); result != VK_SUCCESS)
+        {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to begin recording command buffer for framebuffer.");
+            return;
+        }
+
+        VkRenderPassBeginInfo renderPassBeginInfo = {};
+        renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        renderPassBeginInfo.renderPass = m_renderPass;
+        renderPassBeginInfo.framebuffer = frame.framebuffer; // TODO: TEST
+        renderPassBeginInfo.renderArea.offset = { 0, 0 };
+        renderPassBeginInfo.renderArea.extent = extent; // TODO: TEST
+
+        const VkClearValue clearColor = { 1.0f, 1.0f, 0.0f, 1.0f };
+        renderPassBeginInfo.clearValueCount = 1;
+        renderPassBeginInfo.pClearValues = &clearColor;
+
+        VkViewport viewport = {};
+        viewport.x = 0.0f;
+        viewport.y = 0.0f;
+        viewport.width = static_cast<float>(extent.width);
+        viewport.height = static_cast<float>(extent.height);
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 0.0f;
+
+        VkRect2D scissor = {};
+        scissor.offset = { 0, 0 };
+        scissor.extent = extent;
+
+        vkCmdBeginRenderPass(*m_currentCommandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+        vkCmdSetViewport(*m_currentCommandBuffer, 0, 1, &viewport);
+        vkCmdSetScissor(*m_currentCommandBuffer, 0, 1, &scissor);
+    }
+
+    void VulkanRenderer::EndFramebufferDraw(Framebuffer& framebuffer)
+    {
+        // auto& vulkanFramebuffer = static_cast<VulkanFramebuffer&>(framebuffer);
+
+        vkCmdEndRenderPass(*m_currentCommandBuffer);
+        if (const auto result = vkEndCommandBuffer(*m_currentCommandBuffer); result != VK_SUCCESS)
+        {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to end command buffer for framebuffer");
+            return;
+        }
+
+        VkSubmitInfo submitInfo = {};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+        //VkSemaphore imageSemaphores[] = { m_imageAvailableSemaphores[m_currentFrameIndex] };
+        VkPipelineStageFlags pipelineWaitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+        submitInfo.waitSemaphoreCount = 0;
+        submitInfo.pWaitSemaphores = nullptr; //imageSemaphores;
+        submitInfo.pWaitDstStageMask = pipelineWaitStages;
+        submitInfo.commandBufferCount = 1;
+        submitInfo.pCommandBuffers = m_currentCommandBuffer;
+
+        //VkSemaphore renderSemaphores[] = { m_renderFinishedSemaphores[m_currentFrameIndex] };
+        submitInfo.signalSemaphoreCount = 0;
+        submitInfo.pSignalSemaphores = nullptr;//renderSemaphores;
+
+        /*if (!(result = vkResetFences(m_logicalDevice.GetHandle(), 1, &m_inFlightFences[m_currentFrameIndex])))
+        {
+            return result;
+        }*/
+
+        auto& deviceQueues = m_logicalDevice.GetDeviceQueues();
+        if (const auto result = vkQueueSubmit(deviceQueues.graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE); result != VK_SUCCESS)
+        {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed submit queue for framebuffer");
+            return;
         }
     }
 
@@ -1937,8 +2346,7 @@ namespace Molten
      
         const Version vulkanVersion = version != Version::None ? version : Version(1, 1);
 
-        Vulkan::Result<> result;
-        if (!(result = m_instance.Create(
+        if (const auto result = m_instance.Create(
             vulkanVersion,
             "Molten Engine",
             MOLTEN_VERSION,
@@ -1946,7 +2354,7 @@ namespace Molten
             Version(1, 0, 0),
             m_requiredInstanceExtensions,
             m_requiredInstanceLayers,
-            debugCallbackDesc)))
+            debugCallbackDesc); !result.IsSuccessful())
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to create instance(vulkan version " + vulkanVersion.AsString() + ")");
             return false;
@@ -1957,10 +2365,9 @@ namespace Molten
 
     bool VulkanRenderer::LoadSurface()
     {
-        Vulkan::Result<> result;
-        if (!(result = m_surface.Create(m_instance, *m_renderTarget)))
+        if (const auto result = m_surface.Create(m_instance, *m_renderTarget); !result.IsSuccessful())
         {
-            Vulkan::Logger::WriteError(m_logger, result, "Failed to create surace");
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to create surface");
             return false;
         }
 
@@ -1973,10 +2380,8 @@ namespace Molten
 
     bool VulkanRenderer::LoadPhysicalDevice()
     {
-        Vulkan::Result<> result;
-
         Vulkan::PhysicalDevices physicalDevices;
-        result = Vulkan::FetchAndCreatePhysicalDevices(physicalDevices, m_instance, m_surface, {
+        const auto result = Vulkan::FetchAndCreatePhysicalDevices(physicalDevices, m_instance, m_surface, {
             [&](const Vulkan::PhysicalDevice& physicalDevice)
             {
                 auto& capabilities = physicalDevice.GetCapabilities();
@@ -2014,7 +2419,7 @@ namespace Molten
             }
         });
 
-        if (!result)
+        if (!result.IsSuccessful())
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to fetch or create physical device");
             return false;
@@ -2071,19 +2476,17 @@ namespace Molten
 
     bool VulkanRenderer::LoadLogicalDevice()
     {
-        Vulkan::Result<> result;
-
         VkPhysicalDeviceFeatures enabledDeviceFeatures = {};
         Vulkan::EnablePhysicalDeviceFeatures(enabledDeviceFeatures, m_requiredDeviceFeatures);
 
         auto& availableDeviceFeatures = m_physicalDevice.GetCapabilities().features;
         Vulkan::EnableOptionalPhysicalDeviceFeatures(enabledDeviceFeatures, availableDeviceFeatures, m_optionalDeviceFeatures);
 
-        if (!(result = m_logicalDevice.Create(
+        if (const auto result = m_logicalDevice.Create(
             m_physicalDevice,
             m_requiredInstanceLayers,
             m_requiredDeviceExtensions,
-            enabledDeviceFeatures)))
+            enabledDeviceFeatures); !result.IsSuccessful())
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to create logical device");
             return false;
@@ -2094,11 +2497,10 @@ namespace Molten
 
     bool VulkanRenderer::LoadMemoryAllocator()
     {
-        Vulkan::Result<> result;
-        if (!(result = m_memoryAllocator.Load(
+        if (const auto result = m_memoryAllocator.Load(
             m_logicalDevice,
             1024 * 1024 * 256,
-            m_logger)))
+            m_logger); !result.IsSuccessful())
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to load memory allocator");
             return false;
@@ -2145,9 +2547,9 @@ namespace Molten
         renderPassInfo.dependencyCount = 1;
         renderPassInfo.pDependencies = &dependency;
 
-        if (vkCreateRenderPass(m_logicalDevice.GetHandle(), &renderPassInfo, nullptr, &m_renderPass) != VK_SUCCESS)
+        if (const auto result = vkCreateRenderPass(m_logicalDevice.GetHandle(), &renderPassInfo, nullptr, &m_renderPass); result != VK_SUCCESS)
         {
-            Logger::WriteError(m_logger, "Failed to create render pass.");
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to create render pass.");
             return false;
         }
 
@@ -2156,8 +2558,6 @@ namespace Molten
 
     bool VulkanRenderer::LoadSwapChain()
     {
-        Vulkan::Result<> result;
-
         auto& surfaceCapabilities = m_physicalDevice.GetCapabilities().surfaceCapabilities;
 
         // Get image count.
@@ -2168,12 +2568,12 @@ namespace Molten
         }
 
         // Create swap chain.
-        if (!(result = m_swapChain.Create(
+        if (const auto result = m_swapChain.Create(
             m_logicalDevice,
             m_renderPass,
             m_surfaceFormat,
             m_presentMode,
-            imageCount)))
+            imageCount); !result.IsSuccessful())
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to create swap chain");
             return false;
@@ -2189,9 +2589,9 @@ namespace Molten
         commandPoolInfo.queueFamilyIndex = m_physicalDevice.GetDeviceQueueIndices().graphicsQueue.value();
         commandPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
-        if (vkCreateCommandPool(m_logicalDevice.GetHandle(), &commandPoolInfo, nullptr, &m_commandPool) != VK_SUCCESS)
+        if (const auto result = vkCreateCommandPool(m_logicalDevice.GetHandle(), &commandPoolInfo, nullptr, &m_commandPool); result != VK_SUCCESS)
         {
-            Logger::WriteError(m_logger, "Failed to create command pool.");
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to create command pool.");
             return false;
         }
 
@@ -2203,10 +2603,10 @@ namespace Molten
         commandBufferInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
         commandBufferInfo.commandBufferCount = static_cast<uint32_t>(m_commandBuffers.size());
 
-        if (vkAllocateCommandBuffers(m_logicalDevice.GetHandle(), &commandBufferInfo, m_commandBuffers.data()) != VK_SUCCESS)
+        if (const auto result = vkAllocateCommandBuffers(m_logicalDevice.GetHandle(), &commandBufferInfo, m_commandBuffers.data()); result != VK_SUCCESS)
         {
             vkDestroyCommandPool(m_logicalDevice.GetHandle(), m_commandPool, nullptr);
-            Logger::WriteError(m_logger, "Failed to allocate command buffers.");
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to allocate command buffers.");
             return false;
         }
 
@@ -2234,18 +2634,17 @@ namespace Molten
         Vulkan::DeviceBufferGuard stagingBufferGuard(m_memoryAllocator, stagingBuffer);
 
         // Create staging buffer.
-        Vulkan::Result<> result;
-        if (!(result = m_memoryAllocator.CreateDeviceBuffer(
+        if (const auto result = m_memoryAllocator.CreateDeviceBuffer(
             stagingBuffer,
             dataSize,
             VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)))
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT); !result.IsSuccessful())
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to create staging buffer for texture");
             return false;
         }
 
-        if (!(result = Vulkan::MapMemory(m_logicalDevice, stagingBuffer, data, dataSize, 0)))
+        if (const auto result = Vulkan::MapMemory(m_logicalDevice, stagingBuffer, data, dataSize, 0); !result.IsSuccessful())
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to map staging buffer for vertex buffer");
             return false;
@@ -2268,12 +2667,12 @@ namespace Molten
         imageInfo.sharingMode = VkSharingMode::VK_SHARING_MODE_EXCLUSIVE;
         imageInfo.samples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
 
-        if (!(result = m_memoryAllocator.CreateDeviceImage(
+        if (const auto result = m_memoryAllocator.CreateDeviceImage(
             deviceImage,
             imageInfo,
-            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)))
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT); !result.IsSuccessful())
         {
-            Vulkan::Logger::WriteError(m_logger, result, "Failed to create device image from");
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to create device image from memory allocator");
             return false;
         }
 
@@ -2283,16 +2682,16 @@ namespace Molten
         copyRegion.imageSubresource.layerCount = 1;
         copyRegion.imageExtent = { dimensions.x, dimensions.y, dimensions.z };
 
-        if(!(result = Vulkan::CopyDeviceBufferToDeviceImage(
+        if(const auto result = Vulkan::CopyDeviceBufferToDeviceImage(
             stagingBuffer,
             deviceImage,
             m_logicalDevice,
             m_commandPool,
             copyRegion,
-            VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)))
+            VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL); !result.IsSuccessful())
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to copy staging buffer to image");
-            return result;
+            return false;
         }
 
         // Create image view.
@@ -2308,9 +2707,10 @@ namespace Molten
         viewInfo.subresourceRange.layerCount = 1;
         viewInfo.components = componentMapping;
 
-        if (!(result = vkCreateImageView(m_logicalDevice.GetHandle(), &viewInfo, nullptr, &imageView)) != VK_SUCCESS) {
+        if (const auto result = vkCreateImageView(m_logicalDevice.GetHandle(), &viewInfo, nullptr, &imageView); result != VK_SUCCESS)
+        {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to create image view for texture");
-            return { };
+            return false;
         }
 
         return true;
@@ -2332,18 +2732,17 @@ namespace Molten
         Vulkan::DeviceBuffer stagingBuffer;
         Vulkan::DeviceBufferGuard stagingBufferGuard(m_memoryAllocator, stagingBuffer);
 
-        Vulkan::Result<> result;
-        if (!(result = m_memoryAllocator.CreateDeviceBuffer(
+        if (const auto result = m_memoryAllocator.CreateDeviceBuffer(
             stagingBuffer,
             dataSize,
             VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)))
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT); !result.IsSuccessful())
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to create staging buffer for texture update");
             return false;
         }
 
-        if (!(result = Vulkan::MapMemory(m_logicalDevice, stagingBuffer, data, dataSize, 0)))
+        if (const auto result = Vulkan::MapMemory(m_logicalDevice, stagingBuffer, data, dataSize, 0); !result.IsSuccessful())
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to map staging buffer for texture update");
             return false;
@@ -2356,13 +2755,13 @@ namespace Molten
         copyRegion.imageOffset = { static_cast<int32_t>(destinationOffset.x), static_cast<int32_t>(destinationOffset.y), static_cast<int32_t>(destinationOffset.z) };
         copyRegion.imageExtent = { destinationDimensions.x, destinationDimensions.y, destinationDimensions.z };
 
-        if (!(result = Vulkan::CopyDeviceBufferToDeviceImage(
+        if (const auto result = Vulkan::CopyDeviceBufferToDeviceImage(
             stagingBuffer,
             deviceImage,
             m_logicalDevice,
             m_commandPool,
             copyRegion,
-            VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)))
+            VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL); !result.IsSuccessful())
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to copy staging buffer to image for textute update");
             return false;
@@ -2432,9 +2831,9 @@ namespace Molten
             descriptorSetLayoutInfo.pBindings = bindings.data();
 
             VkDescriptorSetLayout descriptorSetLayout;
-            if (vkCreateDescriptorSetLayout(m_logicalDevice.GetHandle(), &descriptorSetLayoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS)
+            if (const auto result = vkCreateDescriptorSetLayout(m_logicalDevice.GetHandle(), &descriptorSetLayoutInfo, nullptr, &descriptorSetLayout); result != VK_SUCCESS)
             {
-                Logger::WriteError(m_logger, "Failed to create descriptor set layout.");
+                Vulkan::Logger::WriteError(m_logger, result, "Failed to create descriptor set layout.");
                 return false;
             }
 
@@ -2443,76 +2842,6 @@ namespace Molten
 
        return true;
     }
-
-    bool VulkanRenderer::LoadShaderModules(
-        Vulkan::ShaderModules& shaderModules,
-        std::vector<VkPipelineShaderStageCreateInfo>& shaderStageCreateInfos,
-        PushConstantLocations& pushConstantLocations,
-        VkPushConstantRange& pushConstantRange,
-        MappedDescriptorSets& mappedDescriptorSets,
-        const std::vector<Shader::Visual::Script*>& visualScripts
-    )
-    {
-        shaderModules.resize(visualScripts.size());
-
-        if(visualScripts.empty())
-        {
-            Logger::WriteError(m_logger, "Cannot load shader module with 0 scripts.");
-            return false;
-        }
-
-        Shader::GlslGenerator::GlslTemplate glslTemplate;
-        if(!Shader::GlslGenerator::GenerateGlslTemplate(glslTemplate, visualScripts, m_logger))
-        {
-            return false;
-        }
-
-        for(size_t i = 0; i < visualScripts.size(); i++)
-        {
-            const auto& script = visualScripts[i];
-
-            auto glslCode = m_glslGenerator.Generate(*script, Shader::GlslGenerator::Compability::SpirV, &glslTemplate, m_logger);
-            if (glslCode.empty())
-            {
-                Logger::WriteError(m_logger, "Failed to generate GLSL code.");
-                return false;
-            }
-
-            const auto scriptType = script->GetType();
-            auto sprivCode = Shader::GlslGenerator::ConvertGlslToSpriV(glslCode, scriptType, m_logger);
-            if (sprivCode.empty())
-            {
-                Logger::WriteError(m_logger, "Failed to convert GLSL to SPIR-V.");
-                return false;
-            }
-
-            Vulkan::Result<> result;
-            auto& shaderModule = shaderModules[i];
-            if (!(result = shaderModule.Create(m_logicalDevice, sprivCode)))
-            {
-                Vulkan::Logger::WriteError(m_logger, result, "Failed to create shader module");
-                return false;
-            }
-
-            VkPipelineShaderStageCreateInfo stageCreateInfo = {};
-            stageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-            stageCreateInfo.pName = "main";
-            stageCreateInfo.module = shaderModule.GetHandle();
-            stageCreateInfo.stage = GetShaderProgramStageFlag(scriptType);
-            shaderStageCreateInfos.push_back(stageCreateInfo);
-        }
-
-        pushConstantLocations = std::move(glslTemplate.pushConstantLocations);
-
-        pushConstantRange.stageFlags = VK_SHADER_STAGE_ALL;
-        pushConstantRange.offset = 0;
-        pushConstantRange.size = glslTemplate.pushConstantBlockByteSize;
-
-        mappedDescriptorSets = std::move(glslTemplate.mappedDescriptorSets);
-
-        return true;
-    }
-
 
 }
 

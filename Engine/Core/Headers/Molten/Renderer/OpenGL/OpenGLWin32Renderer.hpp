@@ -103,6 +103,9 @@ namespace Molten
         RenderResource<Sampler3D> CreateSampler(const SamplerDescriptor3D& descriptor) override;
         /**@}*/
 
+        /** Create shader module object. */
+        RenderResource<ShaderProgram> CreateShaderProgram(const VisualShaderProgramDescriptor& descriptor) override;
+
         /** Create texture object. */
         /**@{*/
         RenderResource<Texture1D> CreateTexture(const TextureDescriptor1D& descriptor) override;
@@ -138,6 +141,7 @@ namespace Molten
         void Destroy(Sampler1D& sampler1D) override;
         void Destroy(Sampler2D& sampler2D) override;
         void Destroy(Sampler3D& sampler3D) override;
+        void Destroy(ShaderProgram& shaderProgram) override;
         void Destroy(Texture1D& texture1D) override;
         void Destroy(Texture2D& texture2D) override;
         void Destroy(Texture3D& texture3D) override;

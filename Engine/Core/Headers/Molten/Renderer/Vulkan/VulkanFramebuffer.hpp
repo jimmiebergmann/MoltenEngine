@@ -29,7 +29,8 @@
 #if defined(MOLTEN_ENABLE_VULKAN)
 
 #include "Molten/Renderer/Framebuffer.hpp"
-#include "Molten/Renderer/Vulkan/VulkanHeaders.hpp"
+#include "Molten/Renderer/Vulkan/VulkanTexture.hpp"
+#include <vector>
 
 namespace Molten
 {
@@ -41,10 +42,48 @@ namespace Molten
 
         using Base = Framebuffer;
 
+        struct Frame
+        {
+            Frame();
+            ~Frame() = default;
+
+            Frame(Frame&& frame) noexcept;
+            Frame& operator = (Frame&& frame) noexcept;
+
+            Frame(const Frame&) = delete;
+            Frame& operator = (const Frame&) = delete;
+
+            VulkanTexture2D texture;
+            VkFramebuffer framebuffer;
+        };
+
+        using Frames = std::vector<Frame>;
+
         VulkanFramebuffer() = delete;
-        VulkanFramebuffer(VkFramebuffer framebuffer);
- 
-        VkFramebuffer framebuffer;
+        explicit VulkanFramebuffer(
+            Frames&& frames,
+            const Vector2ui32& dimensions,
+            VkCommandPool commandPool,
+            std::vector<VkCommandBuffer>&& commandBuffers);
+
+        ~VulkanFramebuffer() override = default;
+
+        /** Move constructor and assignment operator. */
+        /**@{*/
+        VulkanFramebuffer(VulkanFramebuffer&&) = default;
+        VulkanFramebuffer& operator = (VulkanFramebuffer&&) = default;
+        /**@}*/
+
+        /** Deleted copy constructor and assignment operator. */
+        /**@{*/
+        VulkanFramebuffer(const VulkanFramebuffer&) = delete;
+        VulkanFramebuffer& operator = (const VulkanFramebuffer&) = delete;
+        /**@}*/
+
+        Frames frames;
+        Vector2ui32 dimensions;
+        VkCommandPool commandPool;
+        std::vector<VkCommandBuffer> commandBuffers;
 
     };
 

@@ -31,7 +31,7 @@
 namespace Molten
 {
 
-    /** Index buffer resource object.¨*/
+    /** Index buffer resource object. */
     class MOLTEN_API IndexBuffer
     {
 

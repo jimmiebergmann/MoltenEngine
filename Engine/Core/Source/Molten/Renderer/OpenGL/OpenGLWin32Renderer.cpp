@@ -233,6 +233,11 @@ namespace Molten
         return { };
     }
 
+    RenderResource<ShaderProgram> OpenGLWin32Renderer::CreateShaderProgram(const VisualShaderProgramDescriptor& /*descriptor*/)
+    {
+        return { };
+    }
+
     RenderResource<Texture1D> OpenGLWin32Renderer::CreateTexture(const TextureDescriptor1D& /*descriptor*/)
     {
         return { };
@@ -307,6 +312,10 @@ namespace Molten
     }
 
     void OpenGLWin32Renderer::Destroy(Sampler3D& /*sampler3D*/)
+    {
+    }
+
+    void OpenGLWin32Renderer::Destroy(ShaderProgram& /*shaderProgram*/ )
     {
     }
 

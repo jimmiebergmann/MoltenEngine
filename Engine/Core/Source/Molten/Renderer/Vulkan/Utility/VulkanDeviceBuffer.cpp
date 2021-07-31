@@ -102,10 +102,8 @@ namespace Molten::Vulkan
         VkBuffer destinationBuffer,
         const VkDeviceSize& size)
     {
-        Result<> result;
-
         VkCommandBuffer commandBuffer = VK_NULL_HANDLE;
-        if (!(result = BeginSingleTimeCommands(commandBuffer, logicalDevice, commandPool)))
+        if (const auto result = BeginSingleTimeCommands(commandBuffer, logicalDevice, commandPool); !result.IsSuccessful())
         {
             return result;
         }
@@ -114,12 +112,12 @@ namespace Molten::Vulkan
         copy.size = size;
         vkCmdCopyBuffer(commandBuffer, sourceBuffer, destinationBuffer, 1, &copy);
 
-        if (!(result = EndSingleTimeCommands(commandBuffer, logicalDevice, commandPool)))
+        if (const auto result = EndSingleTimeCommands(commandBuffer, logicalDevice, commandPool); !result.IsSuccessful())
         {
             return result;
         }
 
-        return result;
+        return {};
     }
 
     Result<> CopyMemory(

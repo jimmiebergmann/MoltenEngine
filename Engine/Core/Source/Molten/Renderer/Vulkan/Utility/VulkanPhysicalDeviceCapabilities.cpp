@@ -59,15 +59,13 @@ namespace Molten::Vulkan
         const VkPhysicalDevice physicalDeviceHandle,
         const VkSurfaceKHR surfaceHandle)
     {
-        Result<> result;
-
-        if (!(result = FetchPhysicalDeviceSurfaceCapabilities(capabilities.surfaceCapabilities, physicalDeviceHandle, surfaceHandle)))
+        if (const auto result = FetchPhysicalDeviceSurfaceCapabilities(capabilities.surfaceCapabilities, physicalDeviceHandle, surfaceHandle); !result.IsSuccessful())
         {
             return result;
         }
 
         Extensions& extensions = capabilities.extensions;
-        if (!(result = FetchDeviceExtensions(extensions, physicalDeviceHandle)))
+        if (const auto result = FetchDeviceExtensions(extensions, physicalDeviceHandle); !result.IsSuccessful())
         {
             return result;
         }
@@ -81,19 +79,7 @@ namespace Molten::Vulkan
         VkPhysicalDeviceProperties& properties = capabilities.properties;
         vkGetPhysicalDeviceProperties(physicalDeviceHandle, &properties);
 
-        /*
-        Extensions missingExtensions;
-        if (!CheckRequiredExtensions(missingExtensions, requiredExtensions, availableExtensions))
-        {
-            return false;
-        }*/
-
-        /*if(!Vulkan::CheckRequiredDeviceFeatures(missingFeatures, requiredDeviceFeatures, features))
-        {
-            return false;
-        }*/
-
-        return result;
+        return {};
     }
 
     Result<> FetchPhysicalDeviceSurfaceCapabilities(
@@ -104,42 +90,59 @@ namespace Molten::Vulkan
         surfaceCababilities.formats.clear();
         surfaceCababilities.presentModes.clear();
 
-        VkResult result = VkResult::VK_SUCCESS;
-
-        if ((result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDeviceHandle, surfaceHandle, &surfaceCababilities.capabilities)) != VkResult::VK_SUCCESS)
+        if (const auto result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
+            physicalDeviceHandle,
+            surfaceHandle, 
+            &surfaceCababilities.capabilities); result != VkResult::VK_SUCCESS)
         {
             return result;
         }
 
         uint32_t formatCount = 0;
-        if ((result = vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDeviceHandle, surfaceHandle, &formatCount, nullptr)) != VkResult::VK_SUCCESS)
+        if (const auto result = vkGetPhysicalDeviceSurfaceFormatsKHR(
+            physicalDeviceHandle,
+            surfaceHandle,
+            &formatCount, 
+            nullptr); result != VkResult::VK_SUCCESS)
         {
             return result;
         }
         if (formatCount)
         {
             surfaceCababilities.formats.resize(formatCount);
-            if ((result = vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDeviceHandle, surfaceHandle, &formatCount, surfaceCababilities.formats.data())) != VkResult::VK_SUCCESS)
+            if (const auto result = vkGetPhysicalDeviceSurfaceFormatsKHR(
+                physicalDeviceHandle,
+                surfaceHandle,
+                &formatCount,
+                surfaceCababilities.formats.data()); result != VkResult::VK_SUCCESS)
             {
                 return result;
             }
         }
 
         uint32_t presentModeCount = 0;
-        if ((result = vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDeviceHandle, surfaceHandle, &presentModeCount, nullptr)) != VkResult::VK_SUCCESS)
+        if (const auto result = vkGetPhysicalDeviceSurfacePresentModesKHR(
+            physicalDeviceHandle,
+            surfaceHandle,
+            &presentModeCount,
+            nullptr); result != VkResult::VK_SUCCESS)
         {
             return result;
         }
         if (presentModeCount)
         {
             surfaceCababilities.presentModes.resize(presentModeCount);
-            if ((result = vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDeviceHandle, surfaceHandle, &presentModeCount, surfaceCababilities.presentModes.data())) != VkResult::VK_SUCCESS)
+            if (const auto result = vkGetPhysicalDeviceSurfacePresentModesKHR(
+                physicalDeviceHandle,
+                surfaceHandle,
+                &presentModeCount,
+                surfaceCababilities.presentModes.data()); result != VkResult::VK_SUCCESS)
             {
                 return result;
             }
         }
 
-        return result;
+        return {};
     }
 
 }

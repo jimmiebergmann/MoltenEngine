@@ -99,8 +99,8 @@ namespace Molten::Vulkan
         VkExtent2D m_extent;
         VkPresentModeKHR m_presentMode;
         VkSurfaceFormatKHR m_surfaceFormat;
-        uint32_t m_imageCount;
-        Images m_images;
+        uint32_t m_imageCount; // WHY?
+        Images m_images; /// Group together with image view?
         ImageViews m_imageViews;
         FrameBuffers m_framebuffers;
         uint32_t m_maxFramesInFlight;

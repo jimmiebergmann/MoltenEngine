@@ -120,7 +120,7 @@ namespace Molten::Vulkan
 
         vkWaitForFences(logicalDeviceHandle, 1, &m_inFlightFences[m_currentFrameIndex], VK_TRUE, std::numeric_limits<uint64_t>::max());
 
-        Result<> result = vkAcquireNextImageKHR(
+        const auto acquireImageResult = vkAcquireNextImageKHR(
             logicalDeviceHandle,
             m_handle,
             std::numeric_limits<uint64_t>::max(),
@@ -128,23 +128,23 @@ namespace Molten::Vulkan
             VK_NULL_HANDLE,
             &m_currentImageIndex);
 
-        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || m_resize)
+        if (acquireImageResult == VK_ERROR_OUT_OF_DATE_KHR || acquireImageResult == VK_SUBOPTIMAL_KHR || m_resize)
         {
-            if (!(result = Recreate()))
+            if (const auto result = Recreate(); !result.IsSuccessful())
             {
                 return result;
             }
 
-            if (!(result = BeginDraw()))
+            if (const auto result = BeginDraw(); !result.IsSuccessful())
             {
                 return result;
             }
 
             return VkResult::VK_SUCCESS;
         }
-        else if (result != VK_SUCCESS)
+        else if (acquireImageResult != VK_SUCCESS)
         {
-            return result;
+            return acquireImageResult;
         }
 
         if (m_imagesInFlight[m_currentImageIndex] != VK_NULL_HANDLE)
@@ -180,15 +180,13 @@ namespace Molten::Vulkan
         submitInfo.signalSemaphoreCount = 1;
         submitInfo.pSignalSemaphores = renderSemaphores;
 
-        Result<> result;
-
-        if (!(result = vkResetFences(logicalDeviceHandle, 1, &m_inFlightFences[m_currentFrameIndex])))
+        if (const auto result = vkResetFences(logicalDeviceHandle, 1, &m_inFlightFences[m_currentFrameIndex]); result != VK_SUCCESS)
         {
             return result;
         }
 
         auto& deviceQueues = m_logicalDevice->GetDeviceQueues();
-        if (!(result = vkQueueSubmit(deviceQueues.graphicsQueue, 1, &submitInfo, m_inFlightFences[m_currentFrameIndex])))
+        if (const auto result = vkQueueSubmit(deviceQueues.graphicsQueue, 1, &submitInfo, m_inFlightFences[m_currentFrameIndex]); result != VK_SUCCESS)
         {
             return result;
         }
@@ -278,9 +276,6 @@ namespace Molten::Vulkan
 
     Result<> SwapChain::Load()
     {
-        Result<> result;
-        VkResult vkResult = VkResult::VK_SUCCESS;
-
         auto oldHandle = m_handle;
 
         SmartFunction destroyer([&]()
@@ -328,9 +323,9 @@ namespace Molten::Vulkan
 
         auto logicalDeviceHandle = m_logicalDevice->GetHandle();
 
-        if ((vkResult = vkCreateSwapchainKHR(logicalDeviceHandle, &swapchainInfo, nullptr, &m_handle)) != VkResult::VK_SUCCESS)
+        if (const auto result = vkCreateSwapchainKHR(logicalDeviceHandle, &swapchainInfo, nullptr, &m_handle); result != VkResult::VK_SUCCESS)
         {
-            return vkResult;
+            return result;
         }
         if (m_handle == VK_NULL_HANDLE)
         {
@@ -342,7 +337,7 @@ namespace Molten::Vulkan
             vkDestroySwapchainKHR(logicalDeviceHandle, oldHandle, nullptr);
         }
 
-        if (!(result = LoadAssociatedObjects()))
+        if (const auto result = LoadAssociatedObjects(); !result.IsSuccessful())
         {
             return result;
         }
@@ -350,18 +345,17 @@ namespace Molten::Vulkan
         // Finalize.
         m_resize = false;
         destroyer.Release();
-        return result;
+
+        return {};
     }
 
 
     Result<> SwapChain::LoadAssociatedObjects()
     {
-        Result<> result;
-
         auto logicalDeviceHandle = m_logicalDevice->GetHandle();
 
         // Get images from the swap chain.
-        if (!(result = GetSwapchainImages(m_images)))
+        if (const auto result = GetSwapchainImages(m_images); !result.IsSuccessful())
         {
             return result;
         }
@@ -389,7 +383,7 @@ namespace Molten::Vulkan
             imageViewInfo.subresourceRange.baseArrayLayer = 0;
             imageViewInfo.subresourceRange.layerCount = 1;
 
-            if (!(result = vkCreateImageView(logicalDeviceHandle, &imageViewInfo, nullptr, &m_imageViews[i])))
+            if (const auto result = vkCreateImageView(logicalDeviceHandle, &imageViewInfo, nullptr, &m_imageViews[i]); result != VK_SUCCESS)
             {
                 return result;
             }
@@ -411,14 +405,20 @@ namespace Molten::Vulkan
         // Load sync objects.
         m_imagesInFlight.resize(m_images.size(), VK_NULL_HANDLE);
 
-        if (!(result = Vulkan::CreateSemaphores(m_imageAvailableSemaphores, logicalDeviceHandle, m_maxFramesInFlight)) ||
-            !(result = Vulkan::CreateSemaphores(m_renderFinishedSemaphores, logicalDeviceHandle, m_maxFramesInFlight)) ||
-            !(result = Vulkan::CreateFences(m_inFlightFences, logicalDeviceHandle, VK_FENCE_CREATE_SIGNALED_BIT, m_maxFramesInFlight)))
+        if (const auto result = Vulkan::CreateSemaphores(m_imageAvailableSemaphores, logicalDeviceHandle, m_maxFramesInFlight); result != VK_SUCCESS)
+        {
+            return result;
+        }
+        if (const auto result = Vulkan::CreateSemaphores(m_renderFinishedSemaphores, logicalDeviceHandle, m_maxFramesInFlight); result != VK_SUCCESS)
+        {
+            return result;
+        }
+        if (const auto result = Vulkan::CreateFences(m_inFlightFences, logicalDeviceHandle, VK_FENCE_CREATE_SIGNALED_BIT, m_maxFramesInFlight); result != VK_SUCCESS)
         {
             return result;
         }
 
-        return result;
+        return {};
     }
 
     void SwapChain::UnloadAssociatedObjects()

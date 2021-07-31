@@ -883,9 +883,9 @@ namespace Molten::Shader
                 const uint32_t bindingId = binding->GetId();
                 switch (binding->GetBindingType())
                 {
-                    case BindingType::Sampler1D:
-                    case BindingType::Sampler2D:
-                    case BindingType::Sampler3D:
+                    case DescriptorBindingType::Sampler1D:
+                    case DescriptorBindingType::Sampler2D:
+                    case DescriptorBindingType::Sampler3D:
                     {
                         const auto* pin = binding->GetOutputPin();
                         std::string name = "sampler_" + std::to_string(samplerIndex);
@@ -899,7 +899,7 @@ namespace Molten::Shader
 
                         ++samplerIndex;
                     } break;
-                    case BindingType::UniformBuffer:
+                    case DescriptorBindingType::UniformBuffer:
                     {
                         const std::string blockName = "ubo_" + std::to_string(uboIndex);
 
@@ -991,9 +991,9 @@ namespace Molten::Shader
 
                 switch (binding->GetBindingType())
                 {
-                    case BindingType::Sampler1D:
-                    case BindingType::Sampler2D:
-                    case BindingType::Sampler3D:
+                    case DescriptorBindingType::Sampler1D:
+                    case DescriptorBindingType::Sampler2D:
+                    case DescriptorBindingType::Sampler3D:
                     {
                         const auto* pin = binding->GetOutputPin();
                         std::string name = "sampler_" + std::to_string(samplerIndex);
@@ -1007,7 +1007,7 @@ namespace Molten::Shader
 
                         ++samplerIndex;
                     } break;
-                    case BindingType::UniformBuffer:
+                    case DescriptorBindingType::UniformBuffer:
                     {
                         const std::string blockName = "ubo_" + std::to_string(uboIndex);
 

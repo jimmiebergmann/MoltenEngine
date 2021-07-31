@@ -66,11 +66,11 @@ namespace Molten
         VulkanFramedDescriptorSet() = delete;
         VulkanFramedDescriptorSet(
             const uint32_t index,
-            std::vector<VkDescriptorSet>&& descriptorSets,
+            Vulkan::DescriptorSets&& descriptorSets,
             VkDescriptorPool descriptorPool);
 
         uint32_t index;
-        std::vector<VkDescriptorSet> descriptorSets;
+        Vulkan::DescriptorSets descriptorSets;
         VkDescriptorPool descriptorPool;
 
     };

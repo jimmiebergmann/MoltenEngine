@@ -43,6 +43,7 @@ namespace Molten
     class VertexBuffer;
     class IndexBuffer;
     class DescriptorSet;
+    class RenderPass;
     class Logger;
 }
 
@@ -121,6 +122,8 @@ namespace Molten::Gui
 
         CanvasRendererFontSequence CreateFontSequence(FontGroupedSequence& fontGroupedSequence);
 
+        SharedRenderResource<RenderPass> GetRenderPass();
+
         void BeginDraw();
 
         void DrawRect(const Bounds2f32& bounds, const Vector4f32& color);
@@ -140,11 +143,11 @@ namespace Molten::Gui
         {
             ColoredRectData();
 
+            RenderResource<ShaderProgram> shaderProgram;
             RenderResource<Pipeline> pipeline;
             RenderResource<VertexBuffer> vertexBuffer;
             RenderResource<IndexBuffer> indexBuffer;
-            Shader::Visual::VertexScript* vertexScript;
-            Shader::Visual::FragmentScript* fragmentScript;
+
             uint32_t projectionLocation;
             uint32_t positionLocation;
             uint32_t sizeLocation;
@@ -155,11 +158,11 @@ namespace Molten::Gui
         {
             TexturedRectData();
 
+            RenderResource<ShaderProgram> shaderProgram;
             RenderResource<Pipeline> pipeline;
             RenderResource<VertexBuffer> vertexBuffer;
             RenderResource<IndexBuffer> indexBuffer;
-            Shader::Visual::VertexScript* vertexScript;
-            Shader::Visual::FragmentScript* fragmentScript;
+
             uint32_t projectionLocation;
             uint32_t positionLocation;
             uint32_t sizeLocation;
@@ -171,9 +174,9 @@ namespace Molten::Gui
         {
             FontRenderData();
 
+            RenderResource<ShaderProgram> shaderProgram;
             RenderResource<Pipeline> pipeline;
-            Shader::Visual::VertexScript* vertexScript;
-            Shader::Visual::FragmentScript* fragmentScript;
+
             uint32_t projectionLocation;
             uint32_t positionLocation;
         };
@@ -189,6 +192,7 @@ namespace Molten::Gui
         Renderer& m_backendRenderer;
         Matrix4x4f32 m_projection;
         RenderResource<Sampler2D> m_sampler2D;
+        SharedRenderResource<RenderPass> m_renderPass;
         ColoredRectData m_coloredRect;
         TexturedRectData m_texturedRect;
         FontRenderData m_fontRenderData;

@@ -23,43 +23,23 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_VULKANPIPELINE_HPP
-#define MOLTEN_CORE_RENDERER_VULKANPIPELINE_HPP
-
-#if defined(MOLTEN_ENABLE_VULKAN)
-
-#include "Molten/Renderer/Pipeline.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanTypes.hpp"
+#include "Molten/Renderer/ShaderProgram.hpp"
 
 namespace Molten
 {
 
-    class VulkanShaderProgram;
+    // Visual shader program descriptor implementations.
+    VisualShaderProgramDescriptor::VisualShaderProgramDescriptor() :
+        vertexScript(nullptr),
+        fragmentScript(nullptr)
+    {}
 
-
-    class MOLTEN_API VulkanPipeline : public Pipeline
-    {
-
-    public:
-
-        using Base = Pipeline;
-
-        VulkanPipeline() = delete;
-        VulkanPipeline(
-            VkPipeline graphicsPipeline,
-            VkPipelineLayout pipelineLayout,
-            Vulkan::DescriptorSetLayouts&& descriptionSetLayouts,
-            VulkanShaderProgram* shaderProgram);
-        
-        VkPipeline graphicsPipeline;
-        VkPipelineLayout pipelineLayout;
-        Vulkan::DescriptorSetLayouts descriptionSetLayouts;
-        VulkanShaderProgram* shaderProgram; // TODO :Should be a shared resource.
-
-    };
+    VisualShaderProgramDescriptor::VisualShaderProgramDescriptor(
+        Shader::Visual::VertexScript* vertexScript,
+        Shader::Visual::FragmentScript* fragmentScript
+    ) :
+        vertexScript(vertexScript),
+        fragmentScript(fragmentScript)
+    {}
 
 }
-
-#endif
-
-#endif

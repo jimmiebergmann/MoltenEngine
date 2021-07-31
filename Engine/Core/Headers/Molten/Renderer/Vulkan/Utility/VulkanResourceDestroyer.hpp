@@ -25,13 +25,13 @@
 
 #ifndef MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANRESOURCEDESTROYER_HPP
 #define MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANRESOURCEDESTROYER_HPP
+#include "Molten/Renderer/Vulkan/VulkanFramebuffer.hpp"
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 
 #include "Molten/Renderer/Vulkan/Utility/VulkanLogicalDevice.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanMemoryAllocator.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanTypes.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanShaderModule.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanDeviceBuffer.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanDeviceImage.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanImageSampler.hpp"
@@ -46,7 +46,9 @@ namespace Molten
     class VulkanFramebuffer;
     class VulkanIndexBuffer;
     class VulkanPipeline;
+    class VulkanRenderPass;
     template<size_t VDimensions> class VulkanSampler;
+    class VulkanShaderProgram;
     template<size_t VDimensions> class VulkanTexture;
     class VulkanUniformBuffer;
     class VulkanFramedUniformBuffer;
@@ -82,9 +84,11 @@ namespace Molten::Vulkan
         void Add(const uint32_t cleanupFrameIndex, VulkanFramebuffer& framebuffer);
         void Add(const uint32_t cleanupFrameIndex, VulkanIndexBuffer& indexBuffer);
         void Add(const uint32_t cleanupFrameIndex, VulkanPipeline& pipeline);
+        void Add(const uint32_t cleanupFrameIndex, VulkanRenderPass& renderPass);
         void Add(const uint32_t cleanupFrameIndex, VulkanSampler<1>& sampler1D);
         void Add(const uint32_t cleanupFrameIndex, VulkanSampler<2>& sampler2D);
         void Add(const uint32_t cleanupFrameIndex, VulkanSampler<3>& sampler3D);
+        void Add(const uint32_t cleanupFrameIndex, VulkanShaderProgram& shaderProgram);
         void Add(const uint32_t cleanupFrameIndex, VulkanTexture<1>& texture1D);
         void Add(const uint32_t cleanupFrameIndex, VulkanTexture<2>& texture2D);
         void Add(const uint32_t cleanupFrameIndex, VulkanTexture<3>& texture3D);
@@ -102,13 +106,14 @@ namespace Molten::Vulkan
 
         struct FramedDescriptorSetCleanup
         {
-            std::vector<VkDescriptorSet> descriptorSets;
+            Vulkan::DescriptorSets descriptorSets;
             VkDescriptorPool descriptorPool;
         };
 
         struct FramebufferCleanup
         {
-            VkFramebuffer framebuffer;
+            VulkanFramebuffer::Frames frames;
+            VkCommandPool commandPool;
         };
 
         struct IndexBufferCleanup
@@ -121,12 +126,22 @@ namespace Molten::Vulkan
             VkPipeline graphicsPipeline;
             VkPipelineLayout pipelineLayout;
             DescriptorSetLayouts descriptionSetLayouts;
-            ShaderModules shaderModules;
+        };
+
+        struct RenderPassCleanup
+        {
+            VkCommandPool commandPool;
+            VkRenderPass renderPass;
         };
 
         struct SamplerCleanup
         {
             ImageSampler imageSampler;
+        };
+
+        struct ShaderProgramCleanup
+        {
+            ShaderModules shaderModules;
         };
 
         struct TextureCleanup
@@ -150,13 +165,15 @@ namespace Molten::Vulkan
             DeviceBuffer deviceBuffer;
         };
 
-        using CleanupVariant = std::variant<
+        using CleanupVariant = std::variant <
             DescriptorSetCleanup,
             FramedDescriptorSetCleanup,
             FramebufferCleanup,
             IndexBufferCleanup,
             PipelineCleanup,
+            RenderPassCleanup,
             SamplerCleanup,
+            ShaderProgramCleanup,
             TextureCleanup,
             UniformBufferCleanup,
             FramedUniformBufferCleanup,
@@ -177,8 +194,10 @@ namespace Molten::Vulkan
         void Process(FramedDescriptorSetCleanup& data);
         void Process(FramebufferCleanup& data);
         void Process(IndexBufferCleanup& data);
-        void Process(PipelineCleanup& data);      
+        void Process(PipelineCleanup& data);
+        void Process(RenderPassCleanup& data);
         void Process(SamplerCleanup& data);
+        void Process(ShaderProgramCleanup& data);
         void Process(TextureCleanup& data);
         void Process(UniformBufferCleanup& data);
         void Process(FramedUniformBufferCleanup& data);

@@ -30,9 +30,42 @@
 namespace Molten
 {
 
-    VulkanFramebuffer::VulkanFramebuffer(VkFramebuffer framebuffer) :
-        framebuffer(framebuffer)
+    // Vulkan framebuffer frame implementations.
+    VulkanFramebuffer::Frame::Frame() :
+        texture{},
+        framebuffer(VK_NULL_HANDLE)
     {}
+
+    VulkanFramebuffer::Frame::Frame(Frame&& frame) noexcept :
+        texture(std::move(frame.texture)),
+        framebuffer(frame.framebuffer)
+    {
+        frame.framebuffer = VK_NULL_HANDLE;
+    }
+
+    VulkanFramebuffer::Frame& VulkanFramebuffer::Frame::operator = (Frame&& frame) noexcept
+    {
+        texture = std::move(frame.texture);
+        framebuffer = frame.framebuffer;
+        frame.framebuffer = VK_NULL_HANDLE;
+
+        return *this;
+    }
+
+
+    // Vulkan framebuffer implementations.
+    VulkanFramebuffer::VulkanFramebuffer(
+        Frames&& frames,
+        const Vector2ui32& dimensions,
+        VkCommandPool commandPool,
+        std::vector<VkCommandBuffer>&& commandBuffers
+    ) :
+        frames(std::move(frames)),
+        dimensions(dimensions),
+        commandPool(commandPool),
+        commandBuffers(std::move(commandBuffers))
+    {}
+
 
 }
 

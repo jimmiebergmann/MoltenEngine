@@ -234,8 +234,6 @@ namespace Molten::Vulkan
         LogicalDevice& logicalDevice,
         VkCommandPool commandPool)
     {
-        Result<> result;
-
         commandBuffer = VK_NULL_HANDLE;
 
         VkCommandBufferAllocateInfo commandBufferInfo = {};
@@ -245,7 +243,7 @@ namespace Molten::Vulkan
         commandBufferInfo.commandBufferCount = 1;
 
         auto logicalDeviceHandle = logicalDevice.GetHandle();
-        if (!(result = vkAllocateCommandBuffers(logicalDeviceHandle, &commandBufferInfo, &commandBuffer)))
+        if (const auto result = vkAllocateCommandBuffers(logicalDeviceHandle, &commandBufferInfo, &commandBuffer); result != VK_SUCCESS)
         {
             return result;
         }
@@ -253,12 +251,12 @@ namespace Molten::Vulkan
         VkCommandBufferBeginInfo beginInfo = {};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-        if (!(result = vkBeginCommandBuffer(commandBuffer, &beginInfo)))
+        if (const auto result = vkBeginCommandBuffer(commandBuffer, &beginInfo); result != VK_SUCCESS)
         {
             return result;
         }
 
-        return result;
+        return {};
     }
 
     Result<> EndSingleTimeCommands(
@@ -266,9 +264,7 @@ namespace Molten::Vulkan
         LogicalDevice& logicalDevice,
         VkCommandPool commandPool)
     {
-        Result<> result;
-
-        if (!(result = vkEndCommandBuffer(commandBuffer)))
+        if (const auto result = vkEndCommandBuffer(commandBuffer); result != VK_SUCCESS)
         {
             return result;
         }
@@ -280,18 +276,18 @@ namespace Molten::Vulkan
 
         // Should we use a fence here? No? Yes?
         auto& deviceQueues = logicalDevice.GetDeviceQueues();
-        if (!(result = vkQueueSubmit(deviceQueues.graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE)))
+        if (const auto result = vkQueueSubmit(deviceQueues.graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE); result != VK_SUCCESS)
         {
             return result;
         }
-        if (!(result = vkQueueWaitIdle(deviceQueues.graphicsQueue)))
+        if (const auto result = vkQueueWaitIdle(deviceQueues.graphicsQueue); result != VK_SUCCESS)
         {
             return result;
         }
         
         vkFreeCommandBuffers(logicalDevice.GetHandle(), commandPool, 1, &commandBuffer);
 
-        return result;
+        return {};
     }
 
     bool TransitionImageLayout(

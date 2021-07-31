@@ -30,23 +30,24 @@
 
 #include "Molten/Renderer/Vulkan/VulkanHeaders.hpp"
 #include <vector>
-#include <string>
-#include <map>
 
 MOLTEN_UNSCOPED_ENUM_BEGIN
 
 namespace Molten::Vulkan
 {
 
+    using CommandBuffers = std::vector<VkCommandBuffer>;
     using DescriptorSetLayouts = std::vector<VkDescriptorSetLayout>;
     using DescriptorSets = std::vector<VkDescriptorSet>;
     using Fences = std::vector<VkFence>;
     using FrameBuffers = std::vector<VkFramebuffer>;
     using Images = std::vector<VkImage>;
     using ImageViews = std::vector<VkImageView>;
+    using PipelineShaderStageCreateInfos = std::vector<VkPipelineShaderStageCreateInfo>;
     using PresentModes = std::vector<VkPresentModeKHR>;
     using QueueFamilyProperties = std::vector<VkQueueFamilyProperties>;
     using Semaphores = std::vector<VkSemaphore>;
+    using ShaderModules = std::vector<VkShaderModule>;
     using SurfaceFormats = std::vector<VkSurfaceFormatKHR>;
 
 }

@@ -31,7 +31,9 @@
 #include "Molten/Renderer/Framebuffer.hpp"
 #include "Molten/Renderer/IndexBuffer.hpp"
 #include "Molten/Renderer/Pipeline.hpp"
+#include "Molten/Renderer/RenderPass.hpp"
 #include "Molten/Renderer/Sampler.hpp"
+#include "Molten/Renderer/ShaderProgram.hpp"
 #include "Molten/Renderer/Texture.hpp"
 #include "Molten/Renderer/UniformBuffer.hpp"
 #include "Molten/Renderer/VertexBuffer.hpp"
@@ -124,12 +126,18 @@ namespace Molten
         /** Create pipeline object. */
         virtual RenderResource<Pipeline> CreatePipeline(const PipelineDescriptor& descriptor) = 0;
 
+        /** Create render pass object. */
+        virtual SharedRenderResource<RenderPass> CreateRenderPass(const RenderPassDescriptor& descriptor) { return {}; } // TODO: Make pure.
+
         /** Create sampler object. */
         /**@{*/
         virtual RenderResource<Sampler1D> CreateSampler(const SamplerDescriptor1D& descriptor) = 0;
         virtual RenderResource<Sampler2D> CreateSampler(const SamplerDescriptor2D& descriptor) = 0;
         virtual RenderResource<Sampler3D> CreateSampler(const SamplerDescriptor3D& descriptor) = 0;
         /**@}*/
+
+        /** Create shader module object. */
+        virtual RenderResource<ShaderProgram> CreateShaderProgram(const VisualShaderProgramDescriptor& descriptor) = 0;
 
         /** Create texture object. */
         /**@{*/
@@ -165,9 +173,11 @@ namespace Molten
         virtual void Destroy(Framebuffer& framebuffer) = 0;
         virtual void Destroy(IndexBuffer& indexBuffer) = 0;
         virtual void Destroy(Pipeline& pipeline) = 0;
+        virtual void Destroy(RenderPass& renderPass) {} // TODO: Make pure.
         virtual void Destroy(Sampler1D& sampler1D) = 0;
         virtual void Destroy(Sampler2D& sampler2D) = 0;
         virtual void Destroy(Sampler3D& sampler3D) = 0;
+        virtual void Destroy(ShaderProgram& shaderProgram) = 0;
         virtual void Destroy(Texture1D& texture1D) = 0;
         virtual void Destroy(Texture2D& texture2D) = 0;
         virtual void Destroy(Texture3D& texture3D) = 0;
@@ -186,6 +196,8 @@ namespace Molten
         /** Bind pipeline to draw queue. */
         virtual void BindPipeline(Pipeline& pipeline) = 0;
 
+
+        virtual void DrawFrame(const RenderPassGroup& renderPassGroup) {} // TODO: Make pure.
 
         /** Begin and initialize rendering to framebuffers. */
         virtual void BeginDraw() = 0;
@@ -224,6 +236,11 @@ namespace Molten
 
         /** Update framed uniform buffer data. */
         virtual void UpdateFramedUniformBuffer(RenderResource<FramedUniformBuffer>& framedUniformBuffer, const void* data, const size_t size, const size_t offset) = 0;
+
+
+        // Experimental stuff.
+        virtual void BeginFramebufferDraw(Framebuffer& /*framebuffer*/) {}
+        virtual void EndFramebufferDraw(Framebuffer& /*framebuffer*/) {}
 
     };
 

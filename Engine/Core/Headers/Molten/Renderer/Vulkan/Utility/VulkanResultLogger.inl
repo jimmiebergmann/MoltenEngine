@@ -26,6 +26,22 @@
 namespace Molten::Vulkan
 {
 
+    inline void Logger::Write(
+        Molten::Logger* logger,
+        Molten::Logger::Severity severity,
+        const VkResult result,
+        const std::string& message)
+    {
+        if (!logger)
+        {
+            return;
+        }
+
+        const auto typeInfo = ResultMapper<VkResult>::GetInfo(result);
+        const auto msg = CreateMessage(typeInfo, message);
+        logger->Write(severity, msg);
+    }
+
     template<typename TResultType, template<typename> typename TResult>
     void Logger::Write(
         Molten::Logger* logger,
@@ -38,8 +54,8 @@ namespace Molten::Vulkan
             return;
         }
 
-        auto typeInfo = ResultMapper<TResultType>::GetInfo(result.Get<0>());
-        auto msg = CreateMessage(typeInfo, message);
+        const auto typeInfo = ResultMapper<TResultType>::GetInfo(result.Get<0>());
+        const auto msg = CreateMessage(typeInfo, message);
         logger->Write(severity, msg);
     }
 
@@ -57,17 +73,23 @@ namespace Molten::Vulkan
 
         if (result.index() == 0)
         {
-            auto typeInfo = ResultMapper<VkResult>::GetInfo(result.Get<0>());
-            auto msg = CreateMessage(typeInfo, message);
+            const auto typeInfo = ResultMapper<VkResult>::GetInfo(result.Get<0>());
+            const auto msg = CreateMessage(typeInfo, message);
             logger->Write(severity, msg);
         }
         else
         {
-            auto typeInfo = ResultMapper<TResultType>::GetInfo(result.Get<1>());
-            auto msg = CreateMessage(typeInfo, message);
+            const auto typeInfo = ResultMapper<TResultType>::GetInfo(result.Get<1>());
+            const auto msg = CreateMessage(typeInfo, message);
             logger->Write(severity, msg);
         }
         
+    }
+
+
+    inline void Logger::WriteInfo(Molten::Logger* logger, const VkResult result, const std::string& message)
+    {
+        Write(logger, Molten::Logger::Severity::Info, result, message);
     }
 
     template<typename TResultType, template<typename> typename TResult>
@@ -81,6 +103,12 @@ namespace Molten::Vulkan
         Write(logger, Molten::Logger::Severity::Info, result, message);
     }
 
+
+    inline void Logger::WriteDebug(Molten::Logger* logger, const VkResult result, const std::string& message)
+    {
+        Write(logger, Molten::Logger::Severity::Debug, result, message);
+    }
+
     template<typename TResultType, template<typename> typename TResult>
     void Logger::WriteDebug(Molten::Logger* logger, const TResult<TResultType>& result, const std::string& message)
     {
@@ -90,6 +118,12 @@ namespace Molten::Vulkan
     void Logger::WriteDebug(Molten::Logger* logger, TResult<VkResult, TResultType>& result, const std::string& message)
     {
         Write(logger, Molten::Logger::Severity::Debug, result, message);
+    }
+
+
+    inline void Logger::WriteWarning(Molten::Logger* logger, const VkResult result, const std::string& message)
+    {
+        Write(logger, Molten::Logger::Severity::Warning, result, message);
     }
 
     template<typename TResultType, template<typename> typename TResult>
@@ -103,6 +137,12 @@ namespace Molten::Vulkan
         Write(logger, Molten::Logger::Severity::Warning, result, message);
     }
 
+
+    inline void Logger::WriteError(Molten::Logger* logger, const VkResult result, const std::string& message)
+    {
+        Write(logger, Molten::Logger::Severity::Error, result, message);
+    }
+
     template<typename TResultType, template<typename> typename TResult>
     void Logger::WriteError(Molten::Logger* logger, const TResult<TResultType>& result, const std::string& message)
     {
@@ -113,6 +153,7 @@ namespace Molten::Vulkan
     {
         Write(logger, Molten::Logger::Severity::Error, result, message);
     }
+
 
     inline std::string Logger::CreateMessage(const ResultTypeInfo& typeInfo, const std::string& message)
     {

@@ -100,6 +100,7 @@ namespace Molten::Editor
     {
         if (!LoadWindow(descriptor) ||
             !LoadRenderer(descriptor) ||
+            //!LoadViewport() ||
             !LoadGui())
         {
             return false;
@@ -208,6 +209,16 @@ namespace Molten::Editor
         return true;
     }
 
+    /*bool Editor::LoadViewport()
+    {
+        FramebufferDescriptor framebufferDescriptor = {};
+        framebufferDescriptor.dimensions = { 2000, 2000 };
+
+        m_viewportFramebuffer = m_renderer->CreateFramebuffer(framebufferDescriptor);
+
+        return true;
+    }*/
+
     bool Editor::LoadGui()
     {
         m_fontNameRepository.AddSystemDirectories();
@@ -265,6 +276,12 @@ namespace Molten::Editor
         }
 
         UpdateCanvas();
+
+        // Experimental...
+        /*m_renderer->BeginFramebufferDraw(*m_viewportFramebuffer);
+        m_canvas->Draw();
+        m_renderer->EndFramebufferDraw(*m_viewportFramebuffer);*/
+        // Experimental...
 
         m_renderer->Resize(m_window->GetSize());
         m_renderer->BeginDraw();

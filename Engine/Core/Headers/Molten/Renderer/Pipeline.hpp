@@ -26,7 +26,7 @@
 #ifndef MOLTEN_CORE_RENDERER_PIPELINE_HPP
 #define MOLTEN_CORE_RENDERER_PIPELINE_HPP
 
-#include "Molten/Renderer/Shader.hpp"
+#include "Molten/Renderer/ShaderProgram.hpp"
 
 namespace Molten::Shader::Visual
 {
@@ -152,8 +152,7 @@ namespace Molten
             const Pipeline::FrontFace frontFace,
             const Pipeline::CullMode cullMode,
             const PipelineBlendingDescriptor blending,
-            Shader::Visual::VertexScript* vertexScript,
-            Shader::Visual::FragmentScript* fragmentScript);
+            ShaderProgram* shaderProgram);
         ~PipelineDescriptor() = default;
 
         PipelineDescriptor(const PipelineDescriptor&) = default;
@@ -166,8 +165,7 @@ namespace Molten
         Pipeline::FrontFace frontFace;
         Pipeline::CullMode cullMode;
         PipelineBlendingDescriptor blending;
-        Shader::Visual::VertexScript* vertexScript;
-        Shader::Visual::FragmentScript* fragmentScript;
+        ShaderProgram* shaderProgram;
 
     };
 

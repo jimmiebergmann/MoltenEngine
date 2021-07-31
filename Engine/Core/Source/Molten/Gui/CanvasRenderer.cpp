@@ -204,6 +204,12 @@ namespace Molten::Gui
         return fontSequence;
     }
 
+
+    SharedRenderResource<RenderPass> CanvasRenderer::GetRenderPass()
+    {
+        return m_renderPass;
+    }
+
     void CanvasRenderer::BeginDraw()
     {}
 
@@ -269,8 +275,6 @@ namespace Molten::Gui
     {}
 
     CanvasRenderer::ColoredRectData::ColoredRectData() :
-        vertexScript(nullptr),
-        fragmentScript(nullptr),
         projectionLocation(0),
         positionLocation(0),
         sizeLocation(0),
@@ -278,8 +282,6 @@ namespace Molten::Gui
     {}
 
     CanvasRenderer::TexturedRectData::TexturedRectData() :
-        vertexScript(nullptr),
-        fragmentScript(nullptr),
         projectionLocation(0),
         positionLocation(0),
         sizeLocation(0),
@@ -288,8 +290,6 @@ namespace Molten::Gui
     {}
 
     CanvasRenderer::FontRenderData::FontRenderData() :
-        vertexScript(nullptr),
-        fragmentScript(nullptr),
         projectionLocation(0),
         positionLocation(0)
     {}
@@ -330,11 +330,11 @@ namespace Molten::Gui
             throw Exception("Failed to create index buffer.");
         }
 
-        m_coloredRect.vertexScript = new Shader::Visual::VertexScript();
-        m_coloredRect.fragmentScript = new Shader::Visual::FragmentScript();
+        Shader::Visual::VertexScript vertexScript;
+        Shader::Visual::FragmentScript fragmentScript;
 
         { // Vertex
-            auto& script = *m_coloredRect.vertexScript;
+            auto& script = vertexScript;
 
             auto& inputs = script.GetInputInterface();
             auto& vertexPosition = inputs.AddMember<Vector2f32>();
@@ -366,7 +366,7 @@ namespace Molten::Gui
             outPosition->GetInputPin()->Connect(*projectedVertexPosition.GetOutputPin());
         }
         { // Fragment
-            auto& script = *m_coloredRect.fragmentScript;
+            auto& script = fragmentScript;
 
             auto& pushConstants = script.GetPushConstants();
             auto& vertexColor = pushConstants.AddMember<Vector4f32>(4);
@@ -401,13 +401,21 @@ namespace Molten::Gui
             Logger::WriteInfo(m_logger, "-------------------------------------");
         }*/
 
+        VisualShaderProgramDescriptor shaderProgramDesc;
+        shaderProgramDesc.vertexScript = &vertexScript;
+        shaderProgramDesc.fragmentScript = &fragmentScript;
+        m_coloredRect.shaderProgram = m_backendRenderer.CreateShaderProgram(shaderProgramDesc);
+        if (!m_coloredRect.shaderProgram)
+        {
+            throw Exception("Failed to create gui shader program");
+        }
+
         PipelineDescriptor pipelineDesc;
         pipelineDesc.cullMode = Pipeline::CullMode::None;
         pipelineDesc.polygonMode = Pipeline::PolygonMode::Fill;
         pipelineDesc.topology = Pipeline::Topology::TriangleList;
         pipelineDesc.frontFace = Pipeline::FrontFace::Clockwise;   
-        pipelineDesc.vertexScript = m_coloredRect.vertexScript;
-        pipelineDesc.fragmentScript = m_coloredRect.fragmentScript;
+        pipelineDesc.shaderProgram = m_coloredRect.shaderProgram.get();
         m_coloredRect.pipeline = m_backendRenderer.CreatePipeline(pipelineDesc);
         if (!m_coloredRect.pipeline)
         {
@@ -456,11 +464,11 @@ namespace Molten::Gui
             throw Exception("Failed to create index buffer.");
         }
 
-        m_texturedRect.vertexScript = new Shader::Visual::VertexScript();
-        m_texturedRect.fragmentScript = new Shader::Visual::FragmentScript();
+        Shader::Visual::VertexScript vertexScript;
+        Shader::Visual::FragmentScript fragmentScript;
 
         { // Vertex
-            auto& script = *m_texturedRect.vertexScript;
+            auto& script = vertexScript;
 
             auto& inputs = script.GetInputInterface();
             auto& vertexPosition = inputs.AddMember<Vector2f32>();
@@ -496,7 +504,7 @@ namespace Molten::Gui
             outPosition->GetInputPin()->Connect(*projectedVertexPosition.GetOutputPin());
         }
         { // Fragment
-            auto& script = *m_texturedRect.fragmentScript;
+            auto& script = fragmentScript;
 
             auto& pushConstants = script.GetPushConstants();
             auto& uvPosition = pushConstants.AddMember<Vector2f32>(4);
@@ -551,13 +559,21 @@ namespace Molten::Gui
             Logger::WriteInfo(m_logger, "-------------------------------------");
         }*/
 
+        VisualShaderProgramDescriptor shaderProgramDesc;
+        shaderProgramDesc.vertexScript = &vertexScript;
+        shaderProgramDesc.fragmentScript = &fragmentScript;
+        m_texturedRect.shaderProgram = m_backendRenderer.CreateShaderProgram(shaderProgramDesc);
+        if (!m_texturedRect.shaderProgram)
+        {
+            throw Exception("Failed to create gui shader program");
+        }
+
         PipelineDescriptor pipelineDesc;
         pipelineDesc.cullMode = Pipeline::CullMode::None;
         pipelineDesc.polygonMode = Pipeline::PolygonMode::Fill;
         pipelineDesc.topology = Pipeline::Topology::TriangleList;
         pipelineDesc.frontFace = Pipeline::FrontFace::Clockwise;
-        pipelineDesc.vertexScript = m_texturedRect.vertexScript;
-        pipelineDesc.fragmentScript = m_texturedRect.fragmentScript;
+        pipelineDesc.shaderProgram = m_texturedRect.shaderProgram.get();
         m_texturedRect.pipeline = m_backendRenderer.CreatePipeline(pipelineDesc);
         if (!m_texturedRect.pipeline)
         {
@@ -573,11 +589,11 @@ namespace Molten::Gui
 
     void CanvasRenderer::LoadFontRenderData()
     {
-        m_fontRenderData.vertexScript = new Shader::Visual::VertexScript();
-        m_fontRenderData.fragmentScript = new Shader::Visual::FragmentScript();
+        Shader::Visual::VertexScript vertexScript;
+        Shader::Visual::FragmentScript fragmentScript;
 
         { // Vertex
-            auto& script = *m_fontRenderData.vertexScript;
+            auto& script = vertexScript;
 
             auto& inputs = script.GetInputInterface();
             auto& inPosition = inputs.AddMember<Vector2f32>();
@@ -609,7 +625,7 @@ namespace Molten::Gui
             outPosition->GetInputPin()->Connect(*projectedVertexPosition.GetOutputPin());
         }
         { // Fragment
-            auto& script = *m_fontRenderData.fragmentScript;
+            auto& script = fragmentScript;
 
             auto& inputs = script.GetInputInterface();
             auto& inUv = inputs.AddMember<Vector2f32>();
@@ -652,14 +668,21 @@ namespace Molten::Gui
             Logger::WriteInfo(m_logger, "-------------------------------------");
         }*/
 
+        VisualShaderProgramDescriptor shaderProgramDesc;
+        shaderProgramDesc.vertexScript = &vertexScript;
+        shaderProgramDesc.fragmentScript = &fragmentScript;
+        m_fontRenderData.shaderProgram = m_backendRenderer.CreateShaderProgram(shaderProgramDesc);
+        if (!m_fontRenderData.shaderProgram)
+        {
+            throw Exception("Failed to create gui shader program");
+        }
 
         PipelineDescriptor pipelineDesc;
         pipelineDesc.cullMode = Pipeline::CullMode::None;
         pipelineDesc.polygonMode = Pipeline::PolygonMode::Fill;
         pipelineDesc.topology = Pipeline::Topology::TriangleList;
         pipelineDesc.frontFace = Pipeline::FrontFace::Clockwise;
-        pipelineDesc.vertexScript = m_fontRenderData.vertexScript;
-        pipelineDesc.fragmentScript = m_fontRenderData.fragmentScript;
+        pipelineDesc.shaderProgram = m_fontRenderData.shaderProgram.get();
         m_fontRenderData.pipeline = m_backendRenderer.CreatePipeline(pipelineDesc);
         if (!m_fontRenderData.pipeline)
         {
@@ -675,11 +698,6 @@ namespace Molten::Gui
         data.pipeline.reset();
         data.vertexBuffer.reset();
         data.indexBuffer.reset();
-
-        delete data.vertexScript;
-        data.vertexScript = nullptr;
-        delete data.fragmentScript;
-        data.fragmentScript = nullptr;
     }
 
     void CanvasRenderer::DestroyTexturedRect(TexturedRectData& data)
@@ -687,11 +705,6 @@ namespace Molten::Gui
         data.pipeline.reset();
         data.vertexBuffer.reset();
         data.indexBuffer.reset();
-
-        delete data.vertexScript;
-        data.vertexScript = nullptr;
-        delete data.fragmentScript;
-        data.fragmentScript = nullptr;
     }
 
 }

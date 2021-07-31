@@ -171,43 +171,43 @@ namespace Molten::Shader::Visual
          *
          * @return true if pins got connected, false if direction of target pin is not of opposite direction.
          */
-        virtual bool Connect(Pin& target) override;
+        bool Connect(Pin& target) override;
 
         /**
          * Disconnect this pin from all connected pins.
          *
          * @return Number of disconnected pins.
          */
-        virtual size_t Disconnect() override;
+        size_t Disconnect() override;
 
         /**
          * Disconnect this pin from connected pin by index.
          *
          * @return true if pin is disconnected, false if index >= GetConnectionCount().
          */
-        virtual bool Disconnect(const size_t index) override;
+        bool Disconnect(const size_t index) override;
 
         /**
          * Disconnect this pin from connected pin by target pin.
          *
          * @return true if pin is disconnected, false if target pin is not connected to this pin.
          */
-        virtual bool Disconnect(Pin& target) override;
+        bool Disconnect(Pin& target) override;
 
         /** Get data type of pin. */
-        virtual VariableDataType GetDataType() const override;
+        VariableDataType GetDataType() const override;
 
         /** Get size of data type in bytes. */
-        virtual size_t GetSizeOfDataType() const override;
+        size_t GetSizeOfDataType() const override;
 
         /** Get direction of pin, in or out. */
-        virtual PinDirection GetDirection() const override;
+        PinDirection GetDirection() const override;
 
         /**
          * Get number of connected pins of this pin.
          * Output pins can have multiple connections, but input pins can only have one.
          */
-        virtual size_t GetConnectionCount() const override;
+        size_t GetConnectionCount() const override;
 
         /**
          * Get connected pin by index.
@@ -215,14 +215,14 @@ namespace Molten::Shader::Visual
          * @return Pointer of connected pin, nullptr if index is >= GetConnectionCount() or pin isn't connected.
          */
          /**@{*/
-        virtual Pin* GetConnection(const size_t index = 0) override;
-        virtual const Pin* GetConnection(const size_t index = 0) const override;
+        Pin* GetConnection(const size_t index = 0) override;
+        const Pin* GetConnection(const size_t index = 0) const override;
         /**@}*/
 
         /** Get all connected pins, wrapped in a vector. */
         /**@{*/
-        virtual std::vector<Pin*> GetConnections() override;
-        virtual std::vector<const Pin*> GetConnections() const override;
+        std::vector<Pin*> GetConnections() override;
+        std::vector<const Pin*> GetConnections() const override;
         /**@}*/
 
         /** Get default value of pin. */
@@ -233,8 +233,8 @@ namespace Molten::Shader::Visual
 
     protected:
 
-        virtual void ConnectInternal(Pin& target) override;
-        virtual void DisconnectInternal(Pin& target) override;
+        void ConnectInternal(Pin& target) override;
+        void DisconnectInternal(Pin& target) override;
 
     private:
 
@@ -272,43 +272,43 @@ namespace Molten::Shader::Visual
          *
          * @return true if pins got connected, false if direction of target pin is not of opposite direction.
          */
-        virtual bool Connect(Pin& target) override;
+        bool Connect(Pin& target) override;
 
         /**
          * Disconnect this pin from all connected pins.
          *
          * @return Number of disconnected pins.
          */
-        virtual size_t Disconnect() override;
+        size_t Disconnect() override;
 
         /**
          * Disconnect this pin from connected pin by index.
          *
          * @return true if pin is disconnected, false if index >= GetConnectionCount().
          */
-        virtual bool Disconnect(const size_t index) override;
+        bool Disconnect(const size_t index) override;
 
         /**
          * Disconnect this pin from connected pin by target pin.
          *
          * @return true if pin is disconnected, false if target pin is not connected to this pin.
          */
-        virtual bool Disconnect(Pin& target) override;
+        bool Disconnect(Pin& target) override;
 
         /** Get data type of pin. */
-        virtual VariableDataType GetDataType() const override;
+        VariableDataType GetDataType() const override;
 
         /** Get size of data type in bytes. */
-        virtual size_t GetSizeOfDataType() const override;
+        size_t GetSizeOfDataType() const override;
 
         /** Get direction of pin, in or out. */
-        virtual PinDirection GetDirection() const override;
+        PinDirection GetDirection() const override;
 
         /**
          * Get number of connected pins of this pin.
          * Output pins can have multiple connections, but input pins can only have one.
          */
-        virtual size_t GetConnectionCount() const override;
+        size_t GetConnectionCount() const override;
 
         /**
          * Get connected pin by index.
@@ -316,20 +316,20 @@ namespace Molten::Shader::Visual
          * @return Pointer of connected pin, nullptr if index is >= GetConnectionCount() or pin isn't connected.
          */
          /**@{*/
-        virtual Pin* GetConnection(const size_t index = 0) override;
-        virtual const Pin* GetConnection(const size_t index = 0) const override;
+        Pin* GetConnection(const size_t index = 0) override;
+        const Pin* GetConnection(const size_t index = 0) const override;
         /**@}*/
 
         /** Get all connected pins, wrapped in a vector. */
         /**@{*/
-        virtual std::vector<Pin*> GetConnections() override;
-        virtual std::vector<const Pin*> GetConnections() const override;
+        std::vector<Pin*> GetConnections() override;
+        std::vector<const Pin*> GetConnections() const override;
         /**@}*/
 
     protected:
 
-        virtual void ConnectInternal(Pin& target) override;
-        virtual void DisconnectInternal(Pin& target) override;
+        void ConnectInternal(Pin& target) override;
+        void DisconnectInternal(Pin& target) override;
 
     private:
 

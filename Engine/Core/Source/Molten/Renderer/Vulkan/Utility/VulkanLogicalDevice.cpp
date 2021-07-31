@@ -55,8 +55,6 @@ namespace Molten::Vulkan
     {
         Destroy();
 
-        Result<> result;
-
         auto& deviceQueueIndices = physicalDevice.GetDeviceQueueIndices();
 
         if (!deviceQueueIndices.graphicsQueue.has_value() ||
@@ -107,7 +105,7 @@ namespace Molten::Vulkan
         deviceInfo.enabledLayerCount = static_cast<uint32_t>(ptrEnabledLayers.size());
         deviceInfo.ppEnabledLayerNames = ptrEnabledLayers.data();
         
-        if (!(result = vkCreateDevice(physicalDevice.GetHandle(), &deviceInfo, nullptr, &m_handle)))
+        if (const auto result = vkCreateDevice(physicalDevice.GetHandle(), &deviceInfo, nullptr, &m_handle); result != VK_SUCCESS)
         {
             return result;
         }
@@ -122,7 +120,7 @@ namespace Molten::Vulkan
         m_physicalDevice = &physicalDevice;
         m_enabledFeatures = enabledDeviceFeatures;
 
-        return result;
+        return {};
     }
 
     void LogicalDevice::Destroy()

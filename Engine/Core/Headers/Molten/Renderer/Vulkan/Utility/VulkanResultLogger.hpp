@@ -43,6 +43,12 @@ namespace Molten::Vulkan
 
         /** Write result and optional message. */
         /**@{*/
+        static void Write(
+            Molten::Logger* logger,
+            Molten::Logger::Severity severity,
+            const VkResult result,
+            const std::string& message = "");
+
         template<typename TResultType, template<typename> typename TResult>
         static void Write(
             Molten::Logger* logger,
@@ -60,6 +66,11 @@ namespace Molten::Vulkan
 
         /** Write result and optional message as info. */
         /**@{*/
+        static void WriteInfo(
+            Molten::Logger* logger,
+            const VkResult result,
+            const std::string& message = "");
+
         template<typename TResultType, template<typename> typename TResult>
         static void WriteInfo(
             Molten::Logger* logger,
@@ -75,6 +86,11 @@ namespace Molten::Vulkan
 
         /** Write result and optional message as error. */
         /**@{*/
+        static void WriteDebug(
+            Molten::Logger* logger,
+            const VkResult result,
+            const std::string& message = "");
+
         template<typename TResultType, template<typename> typename TResult>
         static void WriteDebug(
             Molten::Logger* logger,
@@ -90,6 +106,11 @@ namespace Molten::Vulkan
 
         /** Write result and optional message as warning. */
         /**@{*/
+        static void WriteWarning(
+            Molten::Logger* logger,
+            const VkResult result,
+            const std::string& message = "");
+
         template<typename TResultType, template<typename> typename TResult>
         static void WriteWarning(
             Molten::Logger* logger,
@@ -105,6 +126,11 @@ namespace Molten::Vulkan
 
         /** Write result and optional message as error. */
         /**@{*/
+        static void WriteError(
+            Molten::Logger* logger,
+            const VkResult result,
+            const std::string& message = "");
+
         template<typename TResultType, template<typename> typename TResult>
         static void WriteError(
             Molten::Logger* logger,

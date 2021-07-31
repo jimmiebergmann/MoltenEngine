@@ -26,6 +26,14 @@
 namespace Molten
 {
 
+
+    template<size_t VDimensions>
+    VulkanTexture<VDimensions>::VulkanTexture() :
+        deviceImage{},
+        imageView(VK_NULL_HANDLE),
+        bytesPerPixel(0)
+    {}
+
     template<size_t VDimensions>
     VulkanTexture<VDimensions>::VulkanTexture(
         Vulkan::DeviceImage&& deviceImage,
@@ -36,5 +44,28 @@ namespace Molten
         imageView(imageView),
         bytesPerPixel(bytesPerPixel)
     {}
+
+
+    template<size_t VDimensions>
+    VulkanTexture<VDimensions>::VulkanTexture(VulkanTexture&& vulkanTexture) noexcept :
+        deviceImage(std::move(vulkanTexture.deviceImage)),
+        imageView(vulkanTexture.imageView),
+        bytesPerPixel(vulkanTexture.bytesPerPixel)
+    {
+        vulkanTexture.imageView = VK_NULL_HANDLE;
+        vulkanTexture.bytesPerPixel = 0;
+    }
+
+    template<size_t VDimensions>
+    VulkanTexture<VDimensions>& VulkanTexture<VDimensions>::operator = (VulkanTexture&& vulkanTexture) noexcept
+    {
+        deviceImage = std::move(vulkanTexture.deviceImage);
+        imageView = vulkanTexture.imageView;
+        bytesPerPixel = vulkanTexture.bytesPerPixel;
+
+        vulkanTexture.imageView = VK_NULL_HANDLE;
+        vulkanTexture.bytesPerPixel = 0;
+        return *this;
+    }
 
 }

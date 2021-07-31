@@ -144,7 +144,7 @@ namespace Molten
     // Mapped descriptor binding implementations.
     MappedDescriptorBinding::MappedDescriptorBinding(
         const uint32_t index,
-        Shader::BindingType bindingType
+        const DescriptorBindingType bindingType
     ) :
         index(index),
         bindingType(bindingType)

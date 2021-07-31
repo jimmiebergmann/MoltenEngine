@@ -104,8 +104,7 @@ namespace Molten::Vulkan
 
         DeviceBufferGuard deviceBufferGuard(*this, deviceBuffer);
         
-        Result<> result;
-        if (!(result = vkCreateBuffer(m_logicalDeviceHandle, &bufferCreateInfo, nullptr, &deviceBuffer.buffer)))
+        if (const auto result = vkCreateBuffer(m_logicalDeviceHandle, &bufferCreateInfo, nullptr, &deviceBuffer.buffer); result != VK_SUCCESS)
         {
             return result;
         }
@@ -123,25 +122,25 @@ namespace Molten::Vulkan
             return VkResult::VK_ERROR_UNKNOWN;
         }
 
-        if(!(result = GetOrCreateMemory(
+        if(const auto result = GetOrCreateMemory(
             deviceBuffer.memory,
             memoryType->index,
-            memoryRequirements.size)))
+            memoryRequirements.size); !result.IsSuccessful())
         {
             return result;
         }
 
-        if (!(result = vkBindBufferMemory(
+        if (const auto result = vkBindBufferMemory(
             m_logicalDeviceHandle,
             deviceBuffer.buffer,
             deviceBuffer.memory->memoryBlock->deviceMemory,
-            deviceBuffer.memory->offset)))
+            deviceBuffer.memory->offset); result != VK_SUCCESS)
         {
             return result;
         }
 
         deviceBufferGuard.Release();
-        return result;
+        return {};
     }
 
     Result<> MemoryAllocator::CreateDeviceBuffer(
@@ -169,8 +168,7 @@ namespace Molten::Vulkan
 
         DeviceImageGuard deviceImageGuard(*this, deviceImage);
 
-        Result<> result;
-        if (!(result = vkCreateImage(m_logicalDeviceHandle, &imageCreateInfo, nullptr, &deviceImage.image)))
+        if (const auto result = vkCreateImage(m_logicalDeviceHandle, &imageCreateInfo, nullptr, &deviceImage.image); result != VK_SUCCESS)
         {
             return result;
         }
@@ -188,26 +186,26 @@ namespace Molten::Vulkan
             return VkResult::VK_ERROR_UNKNOWN;
         }
 
-        if (!(result = GetOrCreateMemory(
+        if (const auto result = GetOrCreateMemory(
             deviceImage.memory,
             memoryType->index,
-            memoryRequirements.size)))
+            memoryRequirements.size); !result.IsSuccessful())
         {
             return result;
         }
 
-        if (!(result = vkBindImageMemory(
+        if (const auto result = vkBindImageMemory(
             m_logicalDeviceHandle,
             deviceImage.image,
             deviceImage.memory->memoryBlock->deviceMemory,
-            deviceImage.memory->offset)))
+            deviceImage.memory->offset); result != VK_SUCCESS)
         {
             return result;
         }
 
         deviceImageGuard.Release();
 
-        return result;
+        return {};
     }
 
     void MemoryAllocator::FreeDeviceBuffer(DeviceBuffer& deviceBuffer)
@@ -276,7 +274,7 @@ namespace Molten::Vulkan
         }
 
         MemoryBlock* newMemoryBlock = nullptr;
-        if (const auto result = CreateMemoryBlock(newMemoryBlock, memoryPool, pagedMemorySize); !result)
+        if (const auto result = CreateMemoryBlock(newMemoryBlock, memoryPool, pagedMemorySize); !result.IsSuccessful())
         {
             return result;
         }
@@ -426,8 +424,7 @@ namespace Molten::Vulkan
         memoryAllocateInfo.allocationSize = newMemoryBlock->size;
         memoryAllocateInfo.memoryTypeIndex = memoryPool.physicalDeviceMemoryTypeIndex;         
 
-        Result<> result;
-        if (!(result = vkAllocateMemory(m_logicalDeviceHandle, &memoryAllocateInfo, nullptr, &newMemoryBlock->deviceMemory)))
+        if (const auto result = vkAllocateMemory(m_logicalDeviceHandle, &memoryAllocateInfo, nullptr, &newMemoryBlock->deviceMemory); result != VK_SUCCESS)
         {
             return result;
         }
@@ -439,7 +436,7 @@ namespace Molten::Vulkan
 
         memoryPool.memoryBlocks.push_back(std::move(newMemoryBlock));
           
-        return result;
+        return {};
     }
 
     VkDeviceSize MemoryAllocator::GetPagedSize(VkDeviceSize size) const

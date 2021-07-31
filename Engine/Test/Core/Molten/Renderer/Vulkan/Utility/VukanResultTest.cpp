@@ -36,26 +36,22 @@ namespace Molten::Vulkan
     {
 
         Result<> result1 = VkResult::VK_SUCCESS;
-        EXPECT_TRUE(result1);
-        EXPECT_FALSE(!result1);
+        EXPECT_TRUE(result1.IsSuccessful());
         ASSERT_EQ(result1.GetTypeIndex(), size_t(0));
         EXPECT_EQ(result1.Get<0>(), VkResult::VK_SUCCESS);
 
         Result<> result2 = result1;
-        EXPECT_TRUE(result2);
-        EXPECT_FALSE(!result2);
+        EXPECT_TRUE(result2.IsSuccessful());
         ASSERT_EQ(result2.GetTypeIndex(), size_t(0));
         EXPECT_EQ(result2.Get<0>(), VkResult::VK_SUCCESS);
 
         result2 = VkResult::VK_ERROR_DEVICE_LOST;
-        EXPECT_FALSE(result2);
-        EXPECT_TRUE(!result2);
+        EXPECT_FALSE(result2.IsSuccessful());
         ASSERT_EQ(result2.GetTypeIndex(), size_t(0));
         EXPECT_EQ(result2.Get<0>(), VkResult::VK_ERROR_DEVICE_LOST);
 
         Result<> result3 = result2;
-        EXPECT_FALSE(result3);
-        EXPECT_TRUE(!result3);
+        EXPECT_FALSE(result3.IsSuccessful());
         ASSERT_EQ(result3.GetTypeIndex(), size_t(0));
         EXPECT_EQ(result3.Get<0>(), VkResult::VK_ERROR_DEVICE_LOST);
     }

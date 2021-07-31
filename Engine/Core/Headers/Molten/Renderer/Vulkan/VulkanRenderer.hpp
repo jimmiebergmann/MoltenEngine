@@ -38,7 +38,6 @@
 #include "Molten/Renderer/Vulkan/Utility/VulkanPhysicalDeviceFeatures.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanLogicalDevice.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanSwapChain.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanShaderModule.hpp"
 #include "Molten/Renderer/Shader/Generator/GlslShaderGenerator.hpp"
 #include "Molten/Renderer/Shader/Visual/VisualShaderScript.hpp"
 
@@ -113,12 +112,18 @@ namespace Molten
         /** Create pipeline object. */
         RenderResource<Pipeline> CreatePipeline(const PipelineDescriptor& descriptor) override;
 
+        /** Create render pass object. */
+        SharedRenderResource<RenderPass> CreateRenderPass(const RenderPassDescriptor& descriptor) override;
+
         /** Create sampler object. */
         /**@{*/
         RenderResource<Sampler1D> CreateSampler(const SamplerDescriptor1D& descriptor) override;
         RenderResource<Sampler2D> CreateSampler(const SamplerDescriptor2D& descriptor) override;
         RenderResource<Sampler3D> CreateSampler(const SamplerDescriptor3D& descriptor) override;
         /**@}*/
+
+        /** Create shader module object. */
+        RenderResource<ShaderProgram> CreateShaderProgram(const VisualShaderProgramDescriptor& descriptor) override;
 
         /** Create texture object. */
         /**@{*/
@@ -154,9 +159,11 @@ namespace Molten
         void Destroy(Framebuffer& framebuffer) override;
         void Destroy(IndexBuffer& indexBuffer) override;
         void Destroy(Pipeline& pipeline) override;
+        void Destroy(RenderPass& renderPass) override;
         void Destroy(Sampler1D& sampler1D) override;
         void Destroy(Sampler2D& sampler2D) override;
         void Destroy(Sampler3D& sampler3D) override;
+        void Destroy(ShaderProgram& shaderProgram) override;
         void Destroy(Texture1D& texture1D) override;
         void Destroy(Texture2D& texture2D) override;
         void Destroy(Texture3D& texture3D) override;
@@ -174,6 +181,12 @@ namespace Molten
 
         /** Bind pipeline to draw queue. */
         void BindPipeline(Pipeline& pipeline) override;
+
+
+
+
+        void DrawFrame(const RenderPassGroup& renderPassGroup) override;
+
 
 
         /** Begin and initialize rendering to framebuffers. */
@@ -208,11 +221,18 @@ namespace Molten
         /** Sleep until the graphical device is ready. */
         void WaitForDevice() override;
 
+
         /** Update uniform buffer data. */
         void UpdateUniformBuffer(RenderResource<UniformBuffer>& uniformBuffer, const void* data, const size_t size, const size_t offset) override;
 
         /** Update uniform buffer data. */
         void UpdateFramedUniformBuffer(RenderResource<FramedUniformBuffer>& framedUniformBuffer, const void* data, const size_t size, const size_t offset) override;
+
+
+
+        // Experimental stuff.
+        void BeginFramebufferDraw(Framebuffer& framebuffer) override;
+        void EndFramebufferDraw(Framebuffer& framebuffer) override;
 
     private:
 
@@ -264,14 +284,7 @@ namespace Molten
         bool CreateDescriptorSetLayouts(
             Vulkan::DescriptorSetLayouts& setLayouts,
             const MappedDescriptorSets& mappedDescriptorSets);
-
-        bool LoadShaderModules(
-            Vulkan::ShaderModules& shaderModules,
-            std::vector<VkPipelineShaderStageCreateInfo>& shaderStageCreateInfos,
-            PushConstantLocations& pushConstantLocations,
-            VkPushConstantRange& pushConstantRange,
-            MappedDescriptorSets& mappedDescriptorSets,
-            const std::vector<Shader::Visual::Script*>& visualScripts);
+        /**@}*/
 
         /** Renderer creation variables. */
         /**@{*/

@@ -95,6 +95,7 @@ namespace Molten::Editor
         bool Load(const EditorDescriptor& descriptor);
         bool LoadWindow(const EditorDescriptor& descriptor);
         bool LoadRenderer(const EditorDescriptor& descriptor);
+        //bool LoadViewport();
         bool LoadGui();
 
         void Exit();
@@ -114,7 +115,10 @@ namespace Molten::Editor
         std::thread m_thread;
         Gui::CanvasRendererPointer m_canvasRenderer;
         Gui::FontNameRepository m_fontNameRepository;
+
+        //RenderResource<Framebuffer> m_viewportFramebuffer;
         Gui::CanvasPointer<Gui::EditorTheme> m_canvas;
+
         SleepClock m_fpsLimiter;
         SleepClock m_unfocusedWindowFpsLimiter;
 

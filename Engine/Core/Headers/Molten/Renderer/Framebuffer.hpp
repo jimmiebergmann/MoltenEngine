@@ -40,12 +40,16 @@ namespace Molten
         Framebuffer() = default;
         virtual ~Framebuffer() = default;
 
-        /* Deleted copy and move operations. */
+        /** Move constructor and assignment operator. */
+        /**@{*/
+        Framebuffer(Framebuffer&&) = default;
+        Framebuffer& operator = (Framebuffer&&) = default;
+        /**@}*/
+
+        /** Deleted copy constructor and assignment operator. */
         /**@{*/
         Framebuffer(const Framebuffer&) = delete;
-        Framebuffer(Framebuffer&&) = delete;
-        Framebuffer& operator =(const Framebuffer&) = delete;
-        Framebuffer& operator =(Framebuffer&&) = delete;
+        Framebuffer& operator = (const Framebuffer&) = delete;
         /**@}*/
 
     };
@@ -58,7 +62,7 @@ namespace Molten
 
         FramebufferDescriptor() = default;
 
-        Vector2ui32 size;
+        Vector2ui32 dimensions;
 
     };
 

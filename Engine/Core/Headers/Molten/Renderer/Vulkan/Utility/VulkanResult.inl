@@ -147,14 +147,9 @@ namespace Molten::Vulkan
         return 0;
     }
 
-    inline Result<VkResult>::operator bool() const
+    inline bool Result<VkResult>::IsSuccessful() const
     {
         return m_value == VkResult::VK_SUCCESS;
-    }
-
-    inline bool Result<VkResult>::operator!() const
-    {
-        return m_value != VkResult::VK_SUCCESS;
     }
 
     inline bool Result<VkResult>::operator ==(const Result<VkResult> result) const

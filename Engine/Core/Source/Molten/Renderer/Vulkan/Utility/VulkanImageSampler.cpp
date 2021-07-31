@@ -96,13 +96,7 @@ namespace Molten::Vulkan
         samplerInfo.minLod = 0.0f;
         samplerInfo.maxLod = 0.0f;
 
-        Result<> result;
-        if (!(result = vkCreateSampler(logicalDeviceHandle, &samplerInfo, nullptr, &m_handle)))
-        {
-            return result;
-        }
-
-        return result;
+        return vkCreateSampler(logicalDeviceHandle, &samplerInfo, nullptr, &m_handle);
     }
 
     VkSampler ImageSampler::GetHandle() const

@@ -43,11 +43,23 @@ namespace Molten
 
         using Base = Texture<VDimensions>;
 
-        VulkanTexture() = delete;
+        VulkanTexture();
         VulkanTexture(
             Vulkan::DeviceImage&& deviceImage,
             VkImageView imageView,
             const uint8_t bytesPerPixel);
+
+        /** Move constructor and assignment operator. */
+        /**@{*/
+        VulkanTexture(VulkanTexture&& vulkanTexture) noexcept;
+        VulkanTexture& operator = (VulkanTexture&& vulkanTexture) noexcept;
+        /**@}*/
+
+        /** Deleted copy constructor and assignment operator. */
+        /**@{*/
+        VulkanTexture(const VulkanTexture&) = delete;
+        VulkanTexture& operator = (const VulkanTexture&) = delete;
+        /**@}*/
 
         Vulkan::DeviceImage deviceImage;
         VkImageView imageView;

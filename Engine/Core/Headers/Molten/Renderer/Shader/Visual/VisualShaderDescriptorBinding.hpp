@@ -28,6 +28,7 @@
 
 #include "Molten/Renderer/Shader/Visual/VisualShaderNode.hpp"
 #include "Molten/Renderer/Shader/Visual/VisualShaderUniformBuffer.hpp"
+#include "Molten/Renderer/DescriptorSet.hpp"
 
 namespace Molten::Shader::Visual
 {
@@ -53,7 +54,7 @@ namespace Molten::Shader::Visual
         [[nodiscard]] virtual uint32_t GetId() const = 0;
 
         /** Get type of binding. */
-        [[nodiscard]] virtual BindingType GetBindingType() const = 0;
+        [[nodiscard]] virtual DescriptorBindingType GetBindingType() const = 0;
 
     protected:
 
@@ -86,7 +87,7 @@ namespace Molten::Shader::Visual
         [[nodiscard]] uint32_t GetId() const override;
 
         /** Get type of binding. */
-        [[nodiscard]] BindingType GetBindingType() const override;
+        [[nodiscard]] DescriptorBindingType GetBindingType() const override;
 
         size_t GetOutputPinCount() const override;
 
@@ -190,7 +191,7 @@ namespace Molten::Shader::Visual
         [[nodiscard]] uint32_t GetId() const override;
 
         /** Get type of binding. */
-        [[nodiscard]] BindingType GetBindingType() const override;
+        [[nodiscard]] DescriptorBindingType GetBindingType() const override;
 
         /**  Get number of output pins.*/
         size_t GetOutputPinCount() const override;

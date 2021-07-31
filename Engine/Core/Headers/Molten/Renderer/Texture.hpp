@@ -45,12 +45,16 @@ namespace Molten
         Texture() = default;
         virtual ~Texture() = default;
 
-        /* Deleted copy and move operations. */
+        /** Move constructor and assignment operator. */
+        /**@{*/
+        Texture(Texture&&) = default;
+        Texture& operator = (Texture&&) = default;
+        /**@}*/
+
+        /** Deleted copy constructor and assignment operator. */
         /**@{*/
         Texture(const Texture&) = delete;
-        Texture(Texture&&) = delete;
-        Texture& operator =(const Texture&) = delete;
-        Texture& operator =(Texture&&) = delete;
+        Texture& operator = (const Texture&) = delete;
         /**@}*/
 
     };

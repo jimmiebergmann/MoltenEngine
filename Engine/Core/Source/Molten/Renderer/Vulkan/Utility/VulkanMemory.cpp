@@ -50,9 +50,8 @@ namespace Molten::Vulkan
 
         auto logicalDeviceHandle = logicalDevice.GetHandle();
 
-        Result<> result;
         void* mappedData = nullptr;
-        if (!(result = vkMapMemory(logicalDeviceHandle, deviceMemory, mapOffset, size, 0, &mappedData)))
+        if (const auto result = vkMapMemory(logicalDeviceHandle, deviceMemory, mapOffset, size, 0, &mappedData); result != VK_SUCCESS)
         {
             return result;
         }
@@ -60,7 +59,7 @@ namespace Molten::Vulkan
         std::memcpy(mappedData, data, size);
         vkUnmapMemory(logicalDeviceHandle, deviceMemory);
 
-        return result;
+        return {};
     }
 
 }

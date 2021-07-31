@@ -100,9 +100,8 @@ namespace Molten::Vulkan
         const VkBufferImageCopy& bufferImageCopy,
         const VkImageLayout finalImageLayout)
     {
-        Result<> result;
         VkCommandBuffer commandBuffer = nullptr;
-        if (!(result = BeginSingleTimeCommands(commandBuffer, logicalDevice, commandPool)))
+        if (const auto result = BeginSingleTimeCommands(commandBuffer, logicalDevice, commandPool); !result.IsSuccessful())
         {
             return result;
         }
@@ -128,12 +127,12 @@ namespace Molten::Vulkan
             }
         }
 
-        if (!(result = Vulkan::EndSingleTimeCommands(commandBuffer, logicalDevice, commandPool)))
+        if (const auto result = Vulkan::EndSingleTimeCommands(commandBuffer, logicalDevice, commandPool); !result.IsSuccessful())
         {
             return result;
         }
 
-        return result;
+        return {};
     }
 
 }

@@ -39,6 +39,14 @@ namespace Molten
     class UniformBuffer;
     class FramedUniformBuffer;
 
+    /** Enumerator of descriptor binding types. */
+    enum class DescriptorBindingType : uint8_t
+    {
+        Sampler1D,
+        Sampler2D,
+        Sampler3D,
+        UniformBuffer
+    };
 
     /** Descriptor set resource object. */
     class MOLTEN_API DescriptorSet
@@ -181,10 +189,10 @@ namespace Molten
     {
         MappedDescriptorBinding(
             const uint32_t index,
-            Shader::BindingType bindingType);
+            const DescriptorBindingType bindingType);
 
         uint32_t index;
-        Shader::BindingType bindingType;
+        DescriptorBindingType bindingType;
     };
 
     using MappedDescriptorBindings = std::map<uint32_t, MappedDescriptorBinding>;

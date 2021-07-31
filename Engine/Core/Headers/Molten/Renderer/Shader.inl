@@ -31,42 +31,42 @@ namespace Molten::Shader
 
     // Data type padded implementations.
     template<typename T>
-    inline PaddedType<T>::PaddedType() :
+    PaddedType<T>::PaddedType() :
         value{}
     { }
 
     template<typename T>
-    inline PaddedType<T>::PaddedType(const T& newValue) :
+    PaddedType<T>::PaddedType(const T& newValue) :
         value(newValue)
     { }
 
     template<typename T>
-    inline PaddedType<T>::PaddedType(T&& newValue) :
+    PaddedType<T>::PaddedType(T&& newValue) :
         value(std::move(newValue))
     {}
 
     template<typename T>
-    inline PaddedType<T>& PaddedType<T>::operator =(const T& newValue)
+    PaddedType<T>& PaddedType<T>::operator =(const T& newValue)
     {
         value = newValue;
         return *this;
     }
 
     template<typename T>
-    inline PaddedType<T>& PaddedType<T>::operator =(T&& newValue)
+    PaddedType<T>& PaddedType<T>::operator =(T&& newValue)
     {
         value = std::move(newValue);
         return *this;
     }
 
     template<typename T>
-    inline T& PaddedType<T>::operator()()
+    T& PaddedType<T>::operator()()
     {
         return value;
     }
 
     template<typename T>
-    inline const T& PaddedType<T>::operator()() const
+    const T& PaddedType<T>::operator()() const
     {
         return value;
     }
