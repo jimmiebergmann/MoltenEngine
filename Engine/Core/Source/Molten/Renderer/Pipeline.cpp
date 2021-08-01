@@ -58,8 +58,7 @@ namespace Molten
         topology(Pipeline::Topology::TriangleList),
         polygonMode(Pipeline::PolygonMode::Fill),
         frontFace(Pipeline::FrontFace::Clockwise),
-        cullMode(Pipeline::CullMode::None),
-        shaderProgram(nullptr)
+        cullMode(Pipeline::CullMode::None)
     { }
 
     PipelineDescriptor::PipelineDescriptor(
@@ -68,14 +67,14 @@ namespace Molten
         const Pipeline::FrontFace frontFace,
         const Pipeline::CullMode cullMode,
         const PipelineBlendingDescriptor blending,
-        ShaderProgram* shaderProgram
+        SharedRenderResource<ShaderProgram> shaderProgram
     ) :
         topology(topology),
         polygonMode(polygonMode),
         frontFace(frontFace),
         cullMode(cullMode),
         blending(blending),
-        shaderProgram(shaderProgram)
+        shaderProgram(std::move(shaderProgram))
     { }
 
 }

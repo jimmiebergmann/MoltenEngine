@@ -218,37 +218,37 @@ namespace Molten
         return { };
     }
 
-    RenderResource<Sampler1D> OpenGLWin32Renderer::CreateSampler(const SamplerDescriptor1D& /*descriptor*/)
+    SharedRenderResource<Sampler1D> OpenGLWin32Renderer::CreateSampler(const SamplerDescriptor1D& /*descriptor*/)
     {
         return { };
     }
 
-    RenderResource<Sampler2D> OpenGLWin32Renderer::CreateSampler(const SamplerDescriptor2D& /*descriptor*/)
+    SharedRenderResource<Sampler2D> OpenGLWin32Renderer::CreateSampler(const SamplerDescriptor2D& /*descriptor*/)
     {
         return { };
     }
 
-    RenderResource<Sampler3D> OpenGLWin32Renderer::CreateSampler(const SamplerDescriptor3D& /*descriptor*/)
+    SharedRenderResource<Sampler3D> OpenGLWin32Renderer::CreateSampler(const SamplerDescriptor3D& /*descriptor*/)
     {
         return { };
     }
 
-    RenderResource<ShaderProgram> OpenGLWin32Renderer::CreateShaderProgram(const VisualShaderProgramDescriptor& /*descriptor*/)
+    SharedRenderResource<ShaderProgram> OpenGLWin32Renderer::CreateShaderProgram(const VisualShaderProgramDescriptor& /*descriptor*/)
     {
         return { };
     }
 
-    RenderResource<Texture1D> OpenGLWin32Renderer::CreateTexture(const TextureDescriptor1D& /*descriptor*/)
+    SharedRenderResource<Texture1D> OpenGLWin32Renderer::CreateTexture(const TextureDescriptor1D& /*descriptor*/)
     {
         return { };
     }
 
-    RenderResource<Texture2D> OpenGLWin32Renderer::CreateTexture(const TextureDescriptor2D& /*descriptor*/)
+    SharedRenderResource<Texture2D> OpenGLWin32Renderer::CreateTexture(const TextureDescriptor2D& /*descriptor*/)
     {
         return { };
     }
 
-    RenderResource<Texture3D> OpenGLWin32Renderer::CreateTexture(const TextureDescriptor3D& /*descriptor*/)
+    SharedRenderResource<Texture3D> OpenGLWin32Renderer::CreateTexture(const TextureDescriptor3D& /*descriptor*/)
     {
         return { };
     }

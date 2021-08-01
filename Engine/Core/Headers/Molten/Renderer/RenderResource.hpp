@@ -33,48 +33,11 @@ namespace Molten
 {
     class Renderer;
 
-    class DescriptorSet;
-    class FramedDescriptorSet;
-    class Framebuffer;
-    class IndexBuffer;
-    class Pipeline;
-    class RenderPass;
-    template<size_t VDimensions> class Sampler;
-    class ShaderProgram;
-    template<size_t VDimensions> class Texture;
-    class UniformBuffer;
-    class FramedUniformBuffer;
-    class VertexBuffer; 
-
-    struct MOLTEN_API RenderResourceDeleterHelper
-    {
-
-        explicit RenderResourceDeleterHelper(Renderer* renderer);
-
-        void Destroy(DescriptorSet& descriptorSet);
-        void Destroy(FramedDescriptorSet& framedDescriptorSet);
-        void Destroy(Framebuffer& framebuffer);
-        void Destroy(IndexBuffer& indexBuffer);
-        void Destroy(Pipeline& pipeline);
-        void Destroy(RenderPass& renderPass);
-        void Destroy(Sampler<1>& sampler1D);
-        void Destroy(Sampler<2>& sampler2D);
-        void Destroy(Sampler<3>& sampler3D);
-        void Destroy(ShaderProgram& shaderProgram);
-        void Destroy(Texture<1>& texture1D);
-        void Destroy(Texture<2>& texture2D);
-        void Destroy(Texture<3>& texture3D);
-        void Destroy(UniformBuffer& uniformBuffer);
-        void Destroy(FramedUniformBuffer& framedUniformBuffer);
-        void Destroy(VertexBuffer& vertexBuffer);
-
-        Renderer* renderer;
-
-    };
-
     template<typename T>
-    struct RenderResourceDeleter : private RenderResourceDeleterHelper
+    class RenderResourceDeleter
     {
+
+    public:
 
         explicit RenderResourceDeleter(Renderer* renderer = nullptr);
         ~RenderResourceDeleter() = default;
@@ -86,6 +49,9 @@ namespace Molten
 
         void operator()(T* resource);
 
+    private:
+
+        Renderer* m_renderer;
     };
 
 

@@ -38,10 +38,11 @@ namespace Molten
     struct CombinedTextureSampler
     {
 
-        CombinedTextureSampler();
+        CombinedTextureSampler() = default;
         CombinedTextureSampler(
-            RenderResource<Texture<VDimensions>>& texture,
-            Sampler<VDimensions>& sampler);
+            SharedRenderResource<Texture<VDimensions>> texture,
+            SharedRenderResource<Sampler<VDimensions>> sampler);
+
         ~CombinedTextureSampler() = default;
 
         CombinedTextureSampler(const CombinedTextureSampler&) = default;
@@ -49,8 +50,8 @@ namespace Molten
         CombinedTextureSampler& operator =(const CombinedTextureSampler&) = default;
         CombinedTextureSampler& operator =(CombinedTextureSampler&&) = default;
 
-        RenderResource<Texture<VDimensions>>* texture;
-        Sampler<VDimensions>* sampler;
+        SharedRenderResource<Texture<VDimensions>> texture;
+        SharedRenderResource<Sampler<VDimensions>> sampler;
 
     };
 

@@ -86,7 +86,7 @@ namespace Molten::Vulkan
 
     private:
 
-        Result<> Load();
+        Result<> Load(const uint32_t imageCount);
 
         Result<> LoadAssociatedObjects();
         void UnloadAssociatedObjects();
@@ -99,10 +99,9 @@ namespace Molten::Vulkan
         VkExtent2D m_extent;
         VkPresentModeKHR m_presentMode;
         VkSurfaceFormatKHR m_surfaceFormat;
-        uint32_t m_imageCount; // WHY?
-        Images m_images; /// Group together with image view?
+        Images m_images; // TODO: Group together with image view?
         ImageViews m_imageViews;
-        FrameBuffers m_framebuffers;
+        FrameBuffers m_framebuffers; // TODO: Old, get rid of.
         uint32_t m_maxFramesInFlight;
         Semaphores m_imageAvailableSemaphores;
         Semaphores m_renderFinishedSemaphores;

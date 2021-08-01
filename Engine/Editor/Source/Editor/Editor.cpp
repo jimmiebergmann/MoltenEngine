@@ -297,7 +297,7 @@ namespace Molten::Editor
     {
         if(m_windowTitleUpdateClock.GetTime() >= Seconds(1.0f))
         {
-            const auto fps = 1.0f / m_deltaTime.AsSeconds<double>();
+            const auto fps = 1.0 / m_deltaTime.AsSeconds<double>();
             m_window->SetTitle(m_windowTitle + " - FPS: " + std::to_string(fps));
             
             m_windowTitleUpdateClock.Reset();

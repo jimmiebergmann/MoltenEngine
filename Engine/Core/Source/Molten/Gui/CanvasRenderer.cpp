@@ -105,7 +105,7 @@ namespace Molten::Gui
 
         const auto descriptorSetDescriptor = DescriptorSetDescriptor{
             &m_texturedRect.pipeline, 0,
-            { 0,  { texture, *m_sampler2D } }
+            { 0,  { texture, m_sampler2D } }
         };
         auto descriptorSet = m_backendRenderer.CreateDescriptorSet(descriptorSetDescriptor);
         if (!descriptorSet)
@@ -404,8 +404,8 @@ namespace Molten::Gui
         VisualShaderProgramDescriptor shaderProgramDesc;
         shaderProgramDesc.vertexScript = &vertexScript;
         shaderProgramDesc.fragmentScript = &fragmentScript;
-        m_coloredRect.shaderProgram = m_backendRenderer.CreateShaderProgram(shaderProgramDesc);
-        if (!m_coloredRect.shaderProgram)
+        auto shaderProgram = m_backendRenderer.CreateShaderProgram(shaderProgramDesc);
+        if (!shaderProgram)
         {
             throw Exception("Failed to create gui shader program");
         }
@@ -415,7 +415,7 @@ namespace Molten::Gui
         pipelineDesc.polygonMode = Pipeline::PolygonMode::Fill;
         pipelineDesc.topology = Pipeline::Topology::TriangleList;
         pipelineDesc.frontFace = Pipeline::FrontFace::Clockwise;   
-        pipelineDesc.shaderProgram = m_coloredRect.shaderProgram.get();
+        pipelineDesc.shaderProgram = shaderProgram;
         m_coloredRect.pipeline = m_backendRenderer.CreatePipeline(pipelineDesc);
         if (!m_coloredRect.pipeline)
         {
@@ -538,15 +538,15 @@ namespace Molten::Gui
         // Debug
         /*{
             Shader::GlslGenerator::GlslTemplate glslTemplates;
-            std::vector<Shader::Visual::Script*> visualScripts = { m_texturedRect.vertexScript, m_texturedRect.fragmentScript };
+            std::vector<Shader::Visual::Script*> visualScripts = { &vertexScript, &fragmentScript };
             if (!Shader::GlslGenerator::GenerateGlslTemplate(glslTemplates, visualScripts, m_logger))
             {
                 return;
             }
 
             Shader::GlslGenerator glslGenerator;
-            auto vertGlsl = glslGenerator.Generate(*m_texturedRect.vertexScript, Shader::GlslGenerator::Compability::SpirV, &glslTemplates);
-            auto fragGlsl = glslGenerator.Generate(*m_texturedRect.fragmentScript, Shader::GlslGenerator::Compability::SpirV, &glslTemplates);
+            auto vertGlsl = glslGenerator.Generate(vertexScript, Shader::GlslGenerator::Compability::SpirV, &glslTemplates);
+            auto fragGlsl = glslGenerator.Generate(fragmentScript, Shader::GlslGenerator::Compability::SpirV, &glslTemplates);
 
             std::string vertStr(vertGlsl.begin(), vertGlsl.end());
             std::string fragStr(fragGlsl.begin(), fragGlsl.end());
@@ -562,8 +562,8 @@ namespace Molten::Gui
         VisualShaderProgramDescriptor shaderProgramDesc;
         shaderProgramDesc.vertexScript = &vertexScript;
         shaderProgramDesc.fragmentScript = &fragmentScript;
-        m_texturedRect.shaderProgram = m_backendRenderer.CreateShaderProgram(shaderProgramDesc);
-        if (!m_texturedRect.shaderProgram)
+        auto shaderProgram = m_backendRenderer.CreateShaderProgram(shaderProgramDesc);
+        if (!shaderProgram)
         {
             throw Exception("Failed to create gui shader program");
         }
@@ -573,7 +573,7 @@ namespace Molten::Gui
         pipelineDesc.polygonMode = Pipeline::PolygonMode::Fill;
         pipelineDesc.topology = Pipeline::Topology::TriangleList;
         pipelineDesc.frontFace = Pipeline::FrontFace::Clockwise;
-        pipelineDesc.shaderProgram = m_texturedRect.shaderProgram.get();
+        pipelineDesc.shaderProgram = shaderProgram;
         m_texturedRect.pipeline = m_backendRenderer.CreatePipeline(pipelineDesc);
         if (!m_texturedRect.pipeline)
         {
@@ -671,8 +671,8 @@ namespace Molten::Gui
         VisualShaderProgramDescriptor shaderProgramDesc;
         shaderProgramDesc.vertexScript = &vertexScript;
         shaderProgramDesc.fragmentScript = &fragmentScript;
-        m_fontRenderData.shaderProgram = m_backendRenderer.CreateShaderProgram(shaderProgramDesc);
-        if (!m_fontRenderData.shaderProgram)
+        auto shaderProgram = m_backendRenderer.CreateShaderProgram(shaderProgramDesc);
+        if (!shaderProgram)
         {
             throw Exception("Failed to create gui shader program");
         }
@@ -682,7 +682,7 @@ namespace Molten::Gui
         pipelineDesc.polygonMode = Pipeline::PolygonMode::Fill;
         pipelineDesc.topology = Pipeline::Topology::TriangleList;
         pipelineDesc.frontFace = Pipeline::FrontFace::Clockwise;
-        pipelineDesc.shaderProgram = m_fontRenderData.shaderProgram.get();
+        pipelineDesc.shaderProgram = shaderProgram;
         m_fontRenderData.pipeline = m_backendRenderer.CreatePipeline(pipelineDesc);
         if (!m_fontRenderData.pipeline)
         {

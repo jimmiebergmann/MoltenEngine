@@ -152,7 +152,7 @@ namespace Molten
             const Pipeline::FrontFace frontFace,
             const Pipeline::CullMode cullMode,
             const PipelineBlendingDescriptor blending,
-            ShaderProgram* shaderProgram);
+            SharedRenderResource<ShaderProgram> shaderProgram);
         ~PipelineDescriptor() = default;
 
         PipelineDescriptor(const PipelineDescriptor&) = default;
@@ -165,7 +165,7 @@ namespace Molten
         Pipeline::FrontFace frontFace;
         Pipeline::CullMode cullMode;
         PipelineBlendingDescriptor blending;
-        ShaderProgram* shaderProgram;
+        SharedRenderResource<ShaderProgram> shaderProgram;
 
     };
 

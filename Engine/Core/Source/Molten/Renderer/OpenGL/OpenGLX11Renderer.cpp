@@ -216,37 +216,37 @@ namespace Molten
         return { };
     }
 
-    RenderResource<Sampler1D> OpenGLX11Renderer::CreateSampler(const SamplerDescriptor1D& /*descriptor*/)
+    SharedRenderResource<Sampler1D> OpenGLX11Renderer::CreateSampler(const SamplerDescriptor1D& /*descriptor*/)
     {
         return { };
     }
 
-    RenderResource<Sampler2D> OpenGLX11Renderer::CreateSampler(const SamplerDescriptor2D& /*descriptor*/)
+    SharedRenderResource<Sampler2D> OpenGLX11Renderer::CreateSampler(const SamplerDescriptor2D& /*descriptor*/)
     {
         return { };
     }
 
-    RenderResource<Sampler3D> OpenGLX11Renderer::CreateSampler(const SamplerDescriptor3D& /*descriptor*/)
+    SharedRenderResource<Sampler3D> OpenGLX11Renderer::CreateSampler(const SamplerDescriptor3D& /*descriptor*/)
     {
         return { };
     }
 
-    RenderResource<ShaderProgram> OpenGLX11Renderer::CreateShaderProgram(const VisualShaderProgramDescriptor& /*descriptor*/ )
+    SharedRenderResource<ShaderProgram> OpenGLX11Renderer::CreateShaderProgram(const VisualShaderProgramDescriptor& /*descriptor*/ )
     {
         return { };
     }
 
-    RenderResource<Texture1D> OpenGLX11Renderer::CreateTexture(const TextureDescriptor1D& /*descriptor*/)
+    SharedRenderResource<Texture1D> OpenGLX11Renderer::CreateTexture(const TextureDescriptor1D& /*descriptor*/)
     {
         return { };
     }
 
-    RenderResource<Texture2D> OpenGLX11Renderer::CreateTexture(const TextureDescriptor2D& /*descriptor*/)
+    SharedRenderResource<Texture2D> OpenGLX11Renderer::CreateTexture(const TextureDescriptor2D& /*descriptor*/)
     {
         return { };
     }
 
-    RenderResource<Texture3D> OpenGLX11Renderer::CreateTexture(const TextureDescriptor3D& /*descriptor*/)
+    SharedRenderResource<Texture3D> OpenGLX11Renderer::CreateTexture(const TextureDescriptor3D& /*descriptor*/)
     {
         return { };
     }

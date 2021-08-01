@@ -98,19 +98,19 @@ namespace Molten
 
         /** Create sampler object. */
         /**@{*/
-        RenderResource<Sampler1D> CreateSampler(const SamplerDescriptor1D& descriptor) override;
-        RenderResource<Sampler2D> CreateSampler(const SamplerDescriptor2D& descriptor) override;
-        RenderResource<Sampler3D> CreateSampler(const SamplerDescriptor3D& descriptor) override;
+        SharedRenderResource<Sampler1D> CreateSampler(const SamplerDescriptor1D& descriptor) override;
+        SharedRenderResource<Sampler2D> CreateSampler(const SamplerDescriptor2D& descriptor) override;
+        SharedRenderResource<Sampler3D> CreateSampler(const SamplerDescriptor3D& descriptor) override;
         /**@}*/
 
         /** Create shader module object. */
-        RenderResource<ShaderProgram> CreateShaderProgram(const VisualShaderProgramDescriptor& descriptor) override;
+        SharedRenderResource<ShaderProgram> CreateShaderProgram(const VisualShaderProgramDescriptor& descriptor) override;
 
         /** Create texture object. */
         /**@{*/
-        RenderResource<Texture1D> CreateTexture(const TextureDescriptor1D& descriptor) override;
-        RenderResource<Texture2D> CreateTexture(const TextureDescriptor2D& descriptor) override;
-        RenderResource<Texture3D> CreateTexture(const TextureDescriptor3D& descriptor) override;
+        SharedRenderResource<Texture1D> CreateTexture(const TextureDescriptor1D& descriptor) override;
+        SharedRenderResource<Texture2D> CreateTexture(const TextureDescriptor2D& descriptor) override;
+        SharedRenderResource<Texture3D> CreateTexture(const TextureDescriptor3D& descriptor) override;
         /**@}*/
 
         /** Create uniform buffer object. */

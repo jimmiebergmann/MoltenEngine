@@ -34,12 +34,12 @@ namespace Molten
         VkPipeline graphicsPipeline,
         VkPipelineLayout pipelineLayout,
         Vulkan::DescriptorSetLayouts&& descriptionSetLayouts,
-        VulkanShaderProgram* shaderProgram
+        SharedRenderResource<VulkanShaderProgram> shaderProgram
     ) :
         graphicsPipeline(graphicsPipeline),
         pipelineLayout(pipelineLayout),
         descriptionSetLayouts(descriptionSetLayouts),
-        shaderProgram(shaderProgram)
+        shaderProgram(std::move(shaderProgram))
     {}
 
 }

@@ -45,7 +45,6 @@ namespace Molten::Vulkan
         m_extent{ 0, 0 },
         m_presentMode(VkPresentModeKHR::VK_PRESENT_MODE_MAX_ENUM_KHR),
         m_surfaceFormat{},
-        m_imageCount(0),
         m_images{},
         m_imageViews{},
         m_framebuffers{},
@@ -81,9 +80,8 @@ namespace Molten::Vulkan
         m_extent = surfaceCapabilities.currentExtent;
         m_presentMode = presentMode;
         m_surfaceFormat = surfaceFormat;
-        m_imageCount = imageCount;
 
-        return Load();
+        return Load(imageCount);
     }
 
     void SwapChain::Destroy()
@@ -104,9 +102,10 @@ namespace Molten::Vulkan
 
     Result<> SwapChain::Recreate()
     {
+        const auto imageCount = static_cast<uint32_t>(m_images.size());
         m_logicalDevice->WaitIdle();
         UnloadAssociatedObjects();
-        return Load();
+        return Load(imageCount);
     }
 
     bool SwapChain::IsCreated()
@@ -229,7 +228,7 @@ namespace Molten::Vulkan
 
     uint32_t SwapChain::GetImageCount() const
     {
-        return m_imageCount;
+        return static_cast<uint32_t>(m_images.size());
     }
 
     uint32_t SwapChain::GetMaxFramesInFlight() const
@@ -274,7 +273,7 @@ namespace Molten::Vulkan
         m_extent = extent;
     }
 
-    Result<> SwapChain::Load()
+    Result<> SwapChain::Load(const uint32_t imageCount)
     {
         auto oldHandle = m_handle;
 
@@ -292,7 +291,7 @@ namespace Molten::Vulkan
         swapchainInfo.surface = surface.GetHandle();
         swapchainInfo.presentMode = m_presentMode;
         swapchainInfo.clipped = VK_TRUE;
-        swapchainInfo.minImageCount = m_imageCount;
+        swapchainInfo.minImageCount = imageCount;
         swapchainInfo.imageFormat = m_surfaceFormat.format;
         swapchainInfo.imageColorSpace = m_surfaceFormat.colorSpace;
         swapchainInfo.imageExtent = m_extent;
@@ -358,10 +357,6 @@ namespace Molten::Vulkan
         if (const auto result = GetSwapchainImages(m_images); !result.IsSuccessful())
         {
             return result;
-        }
-        if (m_images.size() != m_imageCount)
-        {
-            return VkResult::VK_ERROR_UNKNOWN;
         }
 
         // Create image views.

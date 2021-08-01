@@ -614,20 +614,20 @@ namespace Molten
                 }
                 else if constexpr (std::is_same_v<T, CombinedTextureSampler1D>)
                 {
-                    const auto imageView = static_cast<VulkanTexture1D*>(bindingData.texture->get())->imageView;
-                    const auto sampler = static_cast<VulkanSampler1D*>(bindingData.sampler)->imageSampler.GetHandle();
+                    const auto imageView = static_cast<VulkanTexture1D*>(bindingData.texture.get())->imageView;
+                    const auto sampler = static_cast<VulkanSampler1D*>(bindingData.sampler.get())->imageSampler.GetHandle();
                     writeImageInfo(write, sampler, imageView);
                 }
                 else if constexpr (std::is_same_v<T, CombinedTextureSampler2D>)
                 {
-                    const auto imageView = static_cast<VulkanTexture2D*>(bindingData.texture->get())->imageView;
-                    const auto sampler = static_cast<VulkanSampler2D*>(bindingData.sampler)->imageSampler.GetHandle();
+                    const auto imageView = static_cast<VulkanTexture2D*>(bindingData.texture.get())->imageView;
+                    const auto sampler = static_cast<VulkanSampler2D*>(bindingData.sampler.get())->imageSampler.GetHandle();
                     writeImageInfo(write, sampler, imageView);
                 }
                 else if constexpr (std::is_same_v<T, CombinedTextureSampler3D>)
                 {
-                    const auto imageView = static_cast<VulkanTexture3D*>(bindingData.texture->get())->imageView;
-                    const auto sampler = static_cast<VulkanSampler3D*>(bindingData.sampler)->imageSampler.GetHandle();
+                    const auto imageView = static_cast<VulkanTexture3D*>(bindingData.texture.get())->imageView;
+                    const auto sampler = static_cast<VulkanSampler3D*>(bindingData.sampler.get())->imageSampler.GetHandle();
                     writeImageInfo(write, sampler, imageView);
                 }
                 else
@@ -831,20 +831,20 @@ namespace Molten
                 }
                 else if constexpr (std::is_same_v<T, CombinedTextureSampler1D>)
                 {
-                    const auto imageView = static_cast<VulkanTexture1D*>(bindingData.texture->get())->imageView;
-                    const auto sampler = static_cast<VulkanSampler1D*>(bindingData.sampler)->imageSampler.GetHandle();
+                    const auto imageView = static_cast<VulkanTexture1D*>(bindingData.texture.get())->imageView;
+                    const auto sampler = static_cast<VulkanSampler1D*>(bindingData.sampler.get())->imageSampler.GetHandle();
                     writeImageInfos(setWrites, writeIndex, bindingIndex, sampler, imageView);
                 }
                 else if constexpr (std::is_same_v<T, CombinedTextureSampler2D>)
                 {
-                    const auto imageView = static_cast<VulkanTexture2D*>(bindingData.texture->get())->imageView;
-                    const auto sampler = static_cast<VulkanSampler2D*>(bindingData.sampler)->imageSampler.GetHandle();
+                    const auto imageView = static_cast<VulkanTexture2D*>(bindingData.texture.get())->imageView;
+                    const auto sampler = static_cast<VulkanSampler2D*>(bindingData.sampler.get())->imageSampler.GetHandle();
                     writeImageInfos(setWrites, writeIndex, bindingIndex, sampler, imageView);
                 }
                 else if constexpr (std::is_same_v<T, CombinedTextureSampler3D>)
                 {
-                    const auto imageView = static_cast<VulkanTexture3D*>(bindingData.texture->get())->imageView;
-                    const auto sampler = static_cast<VulkanSampler3D*>(bindingData.sampler)->imageSampler.GetHandle();
+                    const auto imageView = static_cast<VulkanTexture3D*>(bindingData.texture.get())->imageView;
+                    const auto sampler = static_cast<VulkanSampler3D*>(bindingData.sampler.get())->imageSampler.GetHandle();
                     writeImageInfos(setWrites, writeIndex, bindingIndex, sampler, imageView);
                 }
                 else
@@ -1080,7 +1080,7 @@ namespace Molten
 
     RenderResource<Pipeline> VulkanRenderer::CreatePipeline(const PipelineDescriptor& descriptor)
     {
-        auto* vulkanShaderProgram = static_cast<VulkanShaderProgram*>(descriptor.shaderProgram);
+        auto vulkanShaderProgram = std::static_pointer_cast<VulkanShaderProgram>(descriptor.shaderProgram);
         if(!vulkanShaderProgram)
         {
             Logger::WriteError(m_logger, "Cannot create a pipeline without a shader program.");
@@ -1346,7 +1346,7 @@ namespace Molten
         }, RenderResourceDeleter<RenderPass>{ this });
     }
 
-    RenderResource<Sampler1D> VulkanRenderer::CreateSampler(const SamplerDescriptor1D& descriptor)
+    SharedRenderResource<Sampler1D> VulkanRenderer::CreateSampler(const SamplerDescriptor1D& descriptor)
     {
         const auto magFilter = GetSamplerFilter(descriptor.magFilter);
         const auto minFilter = GetSamplerFilter(descriptor.minFilter);
@@ -1371,12 +1371,12 @@ namespace Molten
             return {};
         }
 
-        return RenderResource<Sampler1D>(new VulkanSampler1D{
+        return SharedRenderResource<Sampler1D>(new VulkanSampler1D{
             std::move(imageSampler)
          }, RenderResourceDeleter<Sampler1D>{ this });
     }
 
-    RenderResource<Sampler2D> VulkanRenderer::CreateSampler(const SamplerDescriptor2D& descriptor)
+    SharedRenderResource<Sampler2D> VulkanRenderer::CreateSampler(const SamplerDescriptor2D& descriptor)
     {
         const auto magFilter = GetSamplerFilter(descriptor.magFilter);
         const auto minFilter = GetSamplerFilter(descriptor.minFilter);
@@ -1401,12 +1401,12 @@ namespace Molten
             return {};
         }
 
-        return RenderResource<Sampler2D>(new VulkanSampler2D{
+        return SharedRenderResource<Sampler2D>(new VulkanSampler2D{
             std::move(imageSampler)
         }, RenderResourceDeleter<Sampler2D>{ this });
     }
 
-    RenderResource<Sampler3D> VulkanRenderer::CreateSampler(const SamplerDescriptor3D& descriptor)
+    SharedRenderResource<Sampler3D> VulkanRenderer::CreateSampler(const SamplerDescriptor3D& descriptor)
     {
         const auto magFilter = GetSamplerFilter(descriptor.magFilter);
         const auto minFilter = GetSamplerFilter(descriptor.minFilter);
@@ -1431,12 +1431,12 @@ namespace Molten
             return {};
         }
 
-        return RenderResource<Sampler3D>(new VulkanSampler3D{
+        return SharedRenderResource<Sampler3D>(new VulkanSampler3D{
             std::move(imageSampler)
         }, RenderResourceDeleter<Sampler3D>{ this });
     }
 
-    RenderResource<ShaderProgram> VulkanRenderer::CreateShaderProgram(const VisualShaderProgramDescriptor& descriptor)
+    SharedRenderResource<ShaderProgram> VulkanRenderer::CreateShaderProgram(const VisualShaderProgramDescriptor& descriptor)
     {
         if (descriptor.vertexScript == nullptr)
         {
@@ -1544,7 +1544,7 @@ namespace Molten
         // Finalize.
         destroyer.Release();
 
-        return RenderResource<ShaderProgram>(new VulkanShaderProgram{
+        return SharedRenderResource<ShaderProgram>(new VulkanShaderProgram{
             std::move(shaderModules),
             std::move(pipelineShaderStageCreateInfos),
             std::move(glslTemplate.mappedDescriptorSets),
@@ -1555,7 +1555,7 @@ namespace Molten
         }, RenderResourceDeleter<ShaderProgram>{ this });
     }
 
-    RenderResource<Texture1D> VulkanRenderer::CreateTexture(const TextureDescriptor1D& descriptor)
+    SharedRenderResource<Texture1D> VulkanRenderer::CreateTexture(const TextureDescriptor1D& descriptor)
     {
         uint8_t bytesPerPixel = 0;
         uint8_t internalBytesPerPixel = 0;
@@ -1593,14 +1593,14 @@ namespace Molten
 
         deviceImageGuard.Release();
 
-        return RenderResource<Texture1D>(new VulkanTexture1D{
+        return SharedRenderResource<Texture1D>(new VulkanTexture1D{
             std::move(deviceImage),
             imageView,
             bytesPerPixel
         }, RenderResourceDeleter<Texture1D>{ this });
     }
 
-    RenderResource<Texture2D> VulkanRenderer::CreateTexture(const TextureDescriptor2D& descriptor)
+    SharedRenderResource<Texture2D> VulkanRenderer::CreateTexture(const TextureDescriptor2D& descriptor)
     {
         uint8_t bytesPerPixel = 0;
         uint8_t internalBytesPerPixel = 0;
@@ -1639,14 +1639,14 @@ namespace Molten
 
         deviceImageGuard.Release();
 
-        return RenderResource<Texture2D>(new VulkanTexture2D{
+        return SharedRenderResource<Texture2D>(new VulkanTexture2D{
             std::move(deviceImage),
             imageView,
             bytesPerPixel
         }, RenderResourceDeleter<Texture2D>{ this });
     }
 
-    RenderResource<Texture3D> VulkanRenderer::CreateTexture(const TextureDescriptor3D& descriptor)
+    SharedRenderResource<Texture3D> VulkanRenderer::CreateTexture(const TextureDescriptor3D& descriptor)
     {
         uint8_t bytesPerPixel = 0;
         uint8_t internalBytesPerPixel = 0;
@@ -1686,7 +1686,7 @@ namespace Molten
 
         deviceImageGuard.Release();
 
-        return RenderResource<Texture3D>(new VulkanTexture3D{
+        return SharedRenderResource<Texture3D>(new VulkanTexture3D{
             std::move(deviceImage),
             imageView,
             bytesPerPixel
@@ -2204,94 +2204,6 @@ namespace Molten
         if (const auto result = Vulkan::MapMemory(m_logicalDevice, deviceBuffer, data, size, offset); !result.IsSuccessful())
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to map memory of framed uniform buffer");
-        }
-    }
-
-    void VulkanRenderer::BeginFramebufferDraw(Framebuffer& framebuffer)
-    {
-        auto& vulkanFramebuffer = static_cast<VulkanFramebuffer&>(framebuffer);
-        auto& frames = vulkanFramebuffer.frames;
-        auto& frame = frames[0];
-        const auto extent = VkExtent2D{ vulkanFramebuffer.dimensions.x, vulkanFramebuffer.dimensions.y };
-
-        const auto currentImageIndex = m_swapChain.GetCurrentImageIndex();
-        m_currentCommandBuffer = &vulkanFramebuffer.commandBuffers[currentImageIndex];
-
-        VkCommandBufferBeginInfo commandBufferBeginInfo = {};
-        commandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        commandBufferBeginInfo.flags = 0;
-        commandBufferBeginInfo.pInheritanceInfo = nullptr;
-   
-        if (const auto result = vkBeginCommandBuffer(*m_currentCommandBuffer, &commandBufferBeginInfo); result != VK_SUCCESS)
-        {
-            Vulkan::Logger::WriteError(m_logger, result, "Failed to begin recording command buffer for framebuffer.");
-            return;
-        }
-
-        VkRenderPassBeginInfo renderPassBeginInfo = {};
-        renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        renderPassBeginInfo.renderPass = m_renderPass;
-        renderPassBeginInfo.framebuffer = frame.framebuffer; // TODO: TEST
-        renderPassBeginInfo.renderArea.offset = { 0, 0 };
-        renderPassBeginInfo.renderArea.extent = extent; // TODO: TEST
-
-        const VkClearValue clearColor = { 1.0f, 1.0f, 0.0f, 1.0f };
-        renderPassBeginInfo.clearValueCount = 1;
-        renderPassBeginInfo.pClearValues = &clearColor;
-
-        VkViewport viewport = {};
-        viewport.x = 0.0f;
-        viewport.y = 0.0f;
-        viewport.width = static_cast<float>(extent.width);
-        viewport.height = static_cast<float>(extent.height);
-        viewport.minDepth = 0.0f;
-        viewport.maxDepth = 0.0f;
-
-        VkRect2D scissor = {};
-        scissor.offset = { 0, 0 };
-        scissor.extent = extent;
-
-        vkCmdBeginRenderPass(*m_currentCommandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-        vkCmdSetViewport(*m_currentCommandBuffer, 0, 1, &viewport);
-        vkCmdSetScissor(*m_currentCommandBuffer, 0, 1, &scissor);
-    }
-
-    void VulkanRenderer::EndFramebufferDraw(Framebuffer& framebuffer)
-    {
-        // auto& vulkanFramebuffer = static_cast<VulkanFramebuffer&>(framebuffer);
-
-        vkCmdEndRenderPass(*m_currentCommandBuffer);
-        if (const auto result = vkEndCommandBuffer(*m_currentCommandBuffer); result != VK_SUCCESS)
-        {
-            Vulkan::Logger::WriteError(m_logger, result, "Failed to end command buffer for framebuffer");
-            return;
-        }
-
-        VkSubmitInfo submitInfo = {};
-        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-
-        //VkSemaphore imageSemaphores[] = { m_imageAvailableSemaphores[m_currentFrameIndex] };
-        VkPipelineStageFlags pipelineWaitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-        submitInfo.waitSemaphoreCount = 0;
-        submitInfo.pWaitSemaphores = nullptr; //imageSemaphores;
-        submitInfo.pWaitDstStageMask = pipelineWaitStages;
-        submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = m_currentCommandBuffer;
-
-        //VkSemaphore renderSemaphores[] = { m_renderFinishedSemaphores[m_currentFrameIndex] };
-        submitInfo.signalSemaphoreCount = 0;
-        submitInfo.pSignalSemaphores = nullptr;//renderSemaphores;
-
-        /*if (!(result = vkResetFences(m_logicalDevice.GetHandle(), 1, &m_inFlightFences[m_currentFrameIndex])))
-        {
-            return result;
-        }*/
-
-        auto& deviceQueues = m_logicalDevice.GetDeviceQueues();
-        if (const auto result = vkQueueSubmit(deviceQueues.graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE); result != VK_SUCCESS)
-        {
-            Vulkan::Logger::WriteError(m_logger, result, "Failed submit queue for framebuffer");
-            return;
         }
     }
 

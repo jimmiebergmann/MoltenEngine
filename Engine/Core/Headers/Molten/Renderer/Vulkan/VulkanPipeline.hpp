@@ -49,12 +49,12 @@ namespace Molten
             VkPipeline graphicsPipeline,
             VkPipelineLayout pipelineLayout,
             Vulkan::DescriptorSetLayouts&& descriptionSetLayouts,
-            VulkanShaderProgram* shaderProgram);
+            SharedRenderResource<VulkanShaderProgram> shaderProgram);
         
         VkPipeline graphicsPipeline;
         VkPipelineLayout pipelineLayout;
         Vulkan::DescriptorSetLayouts descriptionSetLayouts;
-        VulkanShaderProgram* shaderProgram; // TODO :Should be a shared resource.
+        SharedRenderResource<VulkanShaderProgram> shaderProgram;
 
     };
 

@@ -29,13 +29,17 @@ namespace Molten
     // Render resource deleter implementations.
     template<typename T>
     RenderResourceDeleter<T>::RenderResourceDeleter(Renderer* renderer) :
-        RenderResourceDeleterHelper(renderer)
+        m_renderer(renderer)
     {}
 
     template<typename T>
     void RenderResourceDeleter<T>::operator()(T* resource)
     {
-        RenderResourceDeleterHelper::Destroy(*resource);
+        if(m_renderer)
+        {
+            m_renderer->Destroy(*resource);
+        }
+
         delete resource;
     }
 

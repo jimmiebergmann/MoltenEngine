@@ -131,19 +131,19 @@ namespace Molten
 
         /** Create sampler object. */
         /**@{*/
-        virtual RenderResource<Sampler1D> CreateSampler(const SamplerDescriptor1D& descriptor) = 0;
-        virtual RenderResource<Sampler2D> CreateSampler(const SamplerDescriptor2D& descriptor) = 0;
-        virtual RenderResource<Sampler3D> CreateSampler(const SamplerDescriptor3D& descriptor) = 0;
+        virtual SharedRenderResource<Sampler1D> CreateSampler(const SamplerDescriptor1D& descriptor) = 0;
+        virtual SharedRenderResource<Sampler2D> CreateSampler(const SamplerDescriptor2D& descriptor) = 0;
+        virtual SharedRenderResource<Sampler3D> CreateSampler(const SamplerDescriptor3D& descriptor) = 0;
         /**@}*/
 
         /** Create shader module object. */
-        virtual RenderResource<ShaderProgram> CreateShaderProgram(const VisualShaderProgramDescriptor& descriptor) = 0;
+        virtual SharedRenderResource<ShaderProgram> CreateShaderProgram(const VisualShaderProgramDescriptor& descriptor) = 0;
 
         /** Create texture object. */
         /**@{*/
-        virtual RenderResource<Texture1D> CreateTexture(const TextureDescriptor1D& descriptor) = 0;
-        virtual RenderResource<Texture2D> CreateTexture(const TextureDescriptor2D& descriptor) = 0;
-        virtual RenderResource<Texture3D> CreateTexture(const TextureDescriptor3D& descriptor) = 0;
+        virtual SharedRenderResource<Texture1D> CreateTexture(const TextureDescriptor1D& descriptor) = 0;
+        virtual SharedRenderResource<Texture2D> CreateTexture(const TextureDescriptor2D& descriptor) = 0;
+        virtual SharedRenderResource<Texture3D> CreateTexture(const TextureDescriptor3D& descriptor) = 0;
         /**@}*/
 
         /** Create uniform buffer object. */
@@ -236,11 +236,6 @@ namespace Molten
 
         /** Update framed uniform buffer data. */
         virtual void UpdateFramedUniformBuffer(RenderResource<FramedUniformBuffer>& framedUniformBuffer, const void* data, const size_t size, const size_t offset) = 0;
-
-
-        // Experimental stuff.
-        virtual void BeginFramebufferDraw(Framebuffer& /*framebuffer*/) {}
-        virtual void EndFramebufferDraw(Framebuffer& /*framebuffer*/) {}
 
     };
 

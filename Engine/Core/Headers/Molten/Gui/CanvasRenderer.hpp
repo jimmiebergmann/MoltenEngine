@@ -32,6 +32,7 @@
 #include "Molten/Math/Bounds.hpp"
 #include "Molten/Renderer/RenderResource.hpp"
 #include "Molten/Renderer/Sampler.hpp"
+#include "Molten/Renderer/ShaderProgram.hpp"
 #include "Molten/Renderer/Texture.hpp"
 #include "Molten/Renderer/VertexBuffer.hpp"
 #include "Molten/Renderer/Font.hpp"
@@ -69,7 +70,7 @@ namespace Molten::Gui
         CanvasRendererTexture& operator =(const CanvasRendererTexture&) = delete;
         CanvasRendererTexture& operator =(CanvasRendererTexture&&) noexcept = default;
 
-        RenderResource<Texture2D> texture;
+        SharedRenderResource<Texture2D> texture;
         Vector2ui32 dimensions;
         RenderResource<DescriptorSet> descriptorSet;
 
@@ -143,7 +144,6 @@ namespace Molten::Gui
         {
             ColoredRectData();
 
-            RenderResource<ShaderProgram> shaderProgram;
             RenderResource<Pipeline> pipeline;
             RenderResource<VertexBuffer> vertexBuffer;
             RenderResource<IndexBuffer> indexBuffer;
@@ -158,7 +158,6 @@ namespace Molten::Gui
         {
             TexturedRectData();
 
-            RenderResource<ShaderProgram> shaderProgram;
             RenderResource<Pipeline> pipeline;
             RenderResource<VertexBuffer> vertexBuffer;
             RenderResource<IndexBuffer> indexBuffer;
@@ -174,7 +173,6 @@ namespace Molten::Gui
         {
             FontRenderData();
 
-            RenderResource<ShaderProgram> shaderProgram;
             RenderResource<Pipeline> pipeline;
 
             uint32_t projectionLocation;
@@ -191,7 +189,7 @@ namespace Molten::Gui
         Logger* m_logger;
         Renderer& m_backendRenderer;
         Matrix4x4f32 m_projection;
-        RenderResource<Sampler2D> m_sampler2D;
+        SharedRenderResource<Sampler2D> m_sampler2D;
         SharedRenderResource<RenderPass> m_renderPass;
         ColoredRectData m_coloredRect;
         TexturedRectData m_texturedRect;
