@@ -56,6 +56,18 @@ namespace Molten::Shader::Visual::Operators
     {
         inline static constexpr bool Supported = true;
     };
+    template<> struct Trait<Operators::DivVec2f32>
+    {
+        inline static constexpr bool Supported = true;
+    };
+    template<> struct Trait<Operators::DivVec3f32>
+    {
+        inline static constexpr bool Supported = true;
+    };
+    template<> struct Trait<Operators::DivVec4f32>
+    {
+        inline static constexpr bool Supported = true;
+    };
     // Multiplication
     template<> struct Trait<Operators::MultInt32>
     {

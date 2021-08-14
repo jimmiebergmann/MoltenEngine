@@ -54,18 +54,24 @@ namespace Molten::Shader::Visual
 
     public:
 
+        /* Deleted copy/move constructor/operators. */
+        /**@{*/
+        OperatorBase(const OperatorBase&) = delete;
+        OperatorBase(OperatorBase&&) = delete;
+        OperatorBase& operator = (const OperatorBase&) = delete;
+        OperatorBase& operator = (OperatorBase&&) = delete;
+        /**@}*/
+
         /** Get type of node. */
-        virtual NodeType GetType() const override;
+        [[nodiscard]] NodeType GetType() const override;
 
         /* Get operator type. */
-        virtual OperatorType GetOperatorType() const = 0;
+        [[nodiscard]] virtual OperatorType GetOperatorType() const = 0;
 
     protected:
 
         explicit OperatorBase(Script& script);
-        OperatorBase(const OperatorBase&) = delete;
-        OperatorBase(OperatorBase&&) = delete;
-        virtual ~OperatorBase() = default;
+        ~OperatorBase() override = default;
 
     };
 
@@ -78,18 +84,25 @@ namespace Molten::Shader::Visual
 
     public:
 
+
+        /* Deleted copy/move constructor/operators. */
+        /**@{*/
+        ArithmeticOperatorBase(const ArithmeticOperatorBase&) = delete;
+        ArithmeticOperatorBase(ArithmeticOperatorBase&&) = delete;
+        ArithmeticOperatorBase& operator = (const ArithmeticOperatorBase&) = delete;
+        ArithmeticOperatorBase& operator = (ArithmeticOperatorBase&&) = delete;
+        /**@}*/
+
         /* Get operator type. */
-        virtual OperatorType GetOperatorType() const override;
+        [[nodiscard]] OperatorType GetOperatorType() const override;
 
         /* Get arithmetic operator type. */
-        virtual ArithmeticOperatorType GetArithmeticOperatorType() const = 0;
+        [[nodiscard]] virtual ArithmeticOperatorType GetArithmeticOperatorType() const = 0;
 
     protected:
 
         explicit ArithmeticOperatorBase(Script& script);
-        ArithmeticOperatorBase(const ArithmeticOperatorBase&) = delete;
-        ArithmeticOperatorBase(ArithmeticOperatorBase&&) = delete;
-        virtual ~ArithmeticOperatorBase() = default;
+        ~ArithmeticOperatorBase() override = default;
 
     };
 
@@ -103,14 +116,40 @@ namespace Molten::Shader::Visual
 
     public:
 
+        /* Deleted copy/move constructor/operators. */
+        /**@{*/
+        ArithmeticOperator(const ArithmeticOperator&) = delete;
+        ArithmeticOperator(ArithmeticOperator&&) = delete;
+        ArithmeticOperator& operator = (const ArithmeticOperator&) = delete;
+        ArithmeticOperator& operator = (ArithmeticOperator&&) = delete;
+        /**@}*/
+
+
+        /** Get input pins of arithmetic operator as reference. */
+        /**@{*/
+        [[nodiscard]] InputPin<TLeftType>& GetLeftInput();
+        [[nodiscard]] const InputPin<TLeftType>& GetLeftInput() const;
+
+        [[nodiscard]] InputPin<TRightType>& GetRightInput();
+        [[nodiscard]] const InputPin<TRightType>& GetRightInput() const;
+        /**@}*/
+
+        /** Get output pin of arithmetic operator as reference. */
+        /**@{*/
+        [[nodiscard]] OutputPin<TOutputType>& GetOutput();
+        [[nodiscard]] const OutputPin<TOutputType>& GetOutput() const;
+        /**@}*/
+
+
         /* Get arithmetic operator type. */
-        virtual ArithmeticOperatorType GetArithmeticOperatorType() const override;
+        [[nodiscard]] ArithmeticOperatorType GetArithmeticOperatorType() const override;
+
 
         /** Get number of input pins. */
-        virtual size_t GetInputPinCount() const override;
+        [[nodiscard]] size_t GetInputPinCount() const override;
 
         /** Get number of output pins. */
-        virtual size_t GetOutputPinCount() const override;
+        [[nodiscard]] size_t GetOutputPinCount() const override;
 
         /**
          * Get input pin by index.
@@ -118,14 +157,14 @@ namespace Molten::Shader::Visual
          * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
          */
         /**@{*/
-        virtual Pin* GetInputPin(const size_t index = 0) override;
-        virtual const Pin* GetInputPin(const size_t index = 0) const override;
+        [[nodiscard]] Pin* GetInputPin(const size_t index = 0) override;
+        [[nodiscard]] const Pin* GetInputPin(const size_t index = 0) const override;
         /**@}*/
 
         /** Get all input pins, wrapped in a vector. */
         /**@{*/
-        virtual std::vector<Pin*> GetInputPins() override;
-        virtual std::vector<const Pin*> GetInputPins() const override;
+        [[nodiscard]] std::vector<Pin*> GetInputPins() override;
+        [[nodiscard]] std::vector<const Pin*> GetInputPins() const override;
         /**@}*/
 
         /**
@@ -134,22 +173,20 @@ namespace Molten::Shader::Visual
          * @return Pointer of output pin at given index, nullptr if index is >= GetOutputPinCount().
          */
         /**@{*/
-        virtual Pin* GetOutputPin(const size_t index = 0) override;
-        virtual const Pin* GetOutputPin(const size_t index = 0) const override;
+        [[nodiscard]] Pin* GetOutputPin(const size_t index = 0) override;
+        [[nodiscard]] const Pin* GetOutputPin(const size_t index = 0) const override;
         /**@}*/
 
         /** Get all output pins, wrapped in a vector. */
         /**@{*/
-        virtual std::vector<Pin*> GetOutputPins() override;
-        virtual std::vector<const Pin*> GetOutputPins() const override;
+        [[nodiscard]] std::vector<Pin*> GetOutputPins() override;
+        [[nodiscard]] std::vector<const Pin*> GetOutputPins() const override;
         /**@}*/
 
     protected:
 
         explicit ArithmeticOperator(Script& script);
-        ArithmeticOperator(const ArithmeticOperator&) = delete;
-        ArithmeticOperator(ArithmeticOperator&&) = delete;
-        ~ArithmeticOperator() = default;
+        ~ArithmeticOperator() override = default;
 
     private:
 

@@ -41,6 +41,9 @@ namespace Molten::Shader::Visual::Operators
     // Division
     using DivInt32   = ArithmeticOperator<ArithmeticOperatorType::Division, int32_t, int32_t, int32_t>;
     using DivFloat32 = ArithmeticOperator<ArithmeticOperatorType::Division, float, float, float>;
+    using DivVec2f32 = ArithmeticOperator<ArithmeticOperatorType::Division, Vector2f32, Vector2f32, Vector2f32>;
+    using DivVec3f32 = ArithmeticOperator<ArithmeticOperatorType::Division, Vector3f32, Vector3f32, Vector3f32>;
+    using DivVec4f32 = ArithmeticOperator<ArithmeticOperatorType::Division, Vector4f32, Vector4f32, Vector4f32>;
 
     // Multiplication
     using MultInt32       = ArithmeticOperator<ArithmeticOperatorType::Multiplication, int32_t, int32_t, int32_t>;
