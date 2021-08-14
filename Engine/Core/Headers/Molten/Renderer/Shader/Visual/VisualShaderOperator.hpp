@@ -84,7 +84,6 @@ namespace Molten::Shader::Visual
 
     public:
 
-
         /* Deleted copy/move constructor/operators. */
         /**@{*/
         ArithmeticOperatorBase(const ArithmeticOperatorBase&) = delete;
@@ -110,7 +109,7 @@ namespace Molten::Shader::Visual
     /**
     * @brief Operator node of shader script.
     */
-    template<ArithmeticOperatorType TOperator, typename TOutputType, typename TLeftType, typename TRightType>
+    template<ArithmeticOperatorType TOperator, typename TOutputType, typename TLeftType = TOutputType, typename TRightType = TOutputType>
     class ArithmeticOperator : public ArithmeticOperatorBase
     {
 
@@ -123,7 +122,6 @@ namespace Molten::Shader::Visual
         ArithmeticOperator& operator = (const ArithmeticOperator&) = delete;
         ArithmeticOperator& operator = (ArithmeticOperator&&) = delete;
         /**@}*/
-
 
         /** Get input pins of arithmetic operator as reference. */
         /**@{*/
@@ -140,10 +138,8 @@ namespace Molten::Shader::Visual
         [[nodiscard]] const OutputPin<TOutputType>& GetOutput() const;
         /**@}*/
 
-
         /* Get arithmetic operator type. */
         [[nodiscard]] ArithmeticOperatorType GetArithmeticOperatorType() const override;
-
 
         /** Get number of input pins. */
         [[nodiscard]] size_t GetInputPinCount() const override;

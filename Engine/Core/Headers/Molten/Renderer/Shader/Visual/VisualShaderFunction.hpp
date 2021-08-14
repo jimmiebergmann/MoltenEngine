@@ -27,6 +27,7 @@
 #define MOLTEN_CORE_RENDERER_SHADER_VISUAL_VISUALSHADERFUNCTION_HPP
 
 #include "Molten/Renderer/Shader/Visual/VisualShaderNode.hpp"
+#include "Molten/Utility/Template.hpp"
 #include <memory>
 #include <array>
 
@@ -70,18 +71,24 @@ namespace Molten::Shader::Visual
 
     public:
 
+        /* Deleted copy/move constructor/operators. */
+        /**@{*/
+        FunctionBase(const FunctionBase&) = delete;
+        FunctionBase(FunctionBase&&) = delete;
+        FunctionBase& operator = (const FunctionBase&) = delete;
+        FunctionBase& operator = (FunctionBase&&) = delete;
+        /**@}*/
+
         /** Get type of node. */
-        virtual NodeType GetType() const override;
+        [[nodiscard]] NodeType GetType() const override;
 
         /** Get function type. */
-        virtual FunctionType GetFunctionType() const = 0;
+        [[nodiscard]] virtual FunctionType GetFunctionType() const = 0;
 
     protected:
 
-        FunctionBase(Script& script);
-        FunctionBase(const FunctionBase&) = delete;
-        FunctionBase(FunctionBase&&) = delete;
-        virtual ~FunctionBase() = default;
+        explicit FunctionBase(Script& script);
+        ~FunctionBase() override = default;
 
     };
 
@@ -93,14 +100,39 @@ namespace Molten::Shader::Visual
 
     public:
 
+        template<size_t VIndex>
+        using InputTypeAt = GetTemplateArgumentTypeAt<VIndex, TInputTypes...>;
+
+        /* Deleted copy/move constructor/operators. */
+        /**@{*/
+        Function(const Function&) = delete;
+        Function(Function&&) = delete;
+        Function& operator = (const Function&) = delete;
+        Function& operator = (Function&&) = delete;
+        /**@}*/     
+
+        /** Get output pin of arithmetic operator as reference. */
+        /**@{*/
+        [[nodiscard]] OutputPin<TOutputType>& GetOutput();
+        [[nodiscard]] const OutputPin<TOutputType>& GetOutput() const;
+        /**@}*/
+
+        /** Get input pins of arithmetic operator as reference. */
+        /**@{*/
+        template<size_t VIndex>
+        [[nodiscard]] InputPin<InputTypeAt<VIndex>>& GetInput();
+        template<size_t VIndex>
+        [[nodiscard]] const InputPin<InputTypeAt<VIndex>>& GetInput() const;
+        /**@}*/
+
         /** Get function type. */
-        virtual FunctionType GetFunctionType() const override;
+        [[nodiscard]] FunctionType GetFunctionType() const override;
 
         /** Get number of input pins. */
-        virtual size_t GetInputPinCount() const override;
+        [[nodiscard]] size_t GetInputPinCount() const override;
 
         /**  Get number of output pins.*/
-        virtual size_t GetOutputPinCount() const override;
+        [[nodiscard]] size_t GetOutputPinCount() const override;
 
         /**
          * Get input pin by index.
@@ -108,14 +140,14 @@ namespace Molten::Shader::Visual
          * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
          */
          /**@{*/
-        virtual Pin* GetInputPin(const size_t index = 0) override;
-        virtual const Pin* GetInputPin(const size_t index = 0) const override;
+        [[nodiscard]] Pin* GetInputPin(const size_t index = 0) override;
+        [[nodiscard]] const Pin* GetInputPin(const size_t index = 0) const override;
         /**@}*/
 
         /** Get all input pins, wrapped in a vector. */
         /**@{*/
-        virtual std::vector<Pin*> GetInputPins() override;
-        virtual std::vector<const Pin*> GetInputPins() const override;
+        [[nodiscard]] std::vector<Pin*> GetInputPins() override;
+        [[nodiscard]] std::vector<const Pin*> GetInputPins() const override;
         /**@}*/
 
         /**
@@ -124,31 +156,28 @@ namespace Molten::Shader::Visual
          * @return Pointer of output pin at given index, nullptr if index is >= GetOutputPinCount().
          */
          /**@{*/
-        virtual Pin* GetOutputPin(const size_t index = 0) override;
-        virtual const Pin* GetOutputPin(const size_t index = 0) const override;
+        [[nodiscard]] Pin* GetOutputPin(const size_t index = 0) override;
+        [[nodiscard]] const Pin* GetOutputPin(const size_t index = 0) const override;
         /**@}*/
 
         /** Get all output pins, wrapped in a vector. */
         /**@{*/
-        virtual std::vector<Pin*> GetOutputPins() override;
-        virtual std::vector<const Pin*> GetOutputPins() const override;
+        [[nodiscard]] std::vector<Pin*> GetOutputPins() override;
+        [[nodiscard]] std::vector<const Pin*> GetOutputPins() const override;
         /**@}*/
 
     protected:
 
         explicit Function(Script& script);
-        Function(const Function&) = delete;
-        Function(Function&&) = delete;
-        ~Function() = default;
+        ~Function() override = default;
 
     private:
 
         static constexpr size_t OutputPinCount = 1;
         static constexpr size_t InputPinCount = sizeof...(TInputTypes);
 
-
-        std::array<std::unique_ptr<Pin>, InputPinCount> m_inputs;
-        std::unique_ptr<Pin> m_output;
+        std::tuple<std::unique_ptr<InputPin<TInputTypes>>...> m_inputs;
+        OutputPin<TOutputType> m_output;
 
         friend class VertexScript;
         friend class FragmentScript;

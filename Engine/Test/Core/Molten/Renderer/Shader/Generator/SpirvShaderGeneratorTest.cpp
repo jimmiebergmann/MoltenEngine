@@ -86,9 +86,21 @@ namespace Molten::Shader
             output1.Connect(*subVec4_1.GetOutputPin());
             */
 
+            auto& input1 = script.GetInputInterface().AddMember<Vector4f32>();
+            auto& input2 = script.GetInputInterface().AddMember<Vector4f32>();
+
+            auto& sin1 = script.CreateFunction<Visual::Functions::SinVec4f32>();
+            sin1.GetInput<0>().Connect(input2);
+
+            auto& cos1 = script.CreateFunction<Visual::Functions::CosVec4f32>();
+            cos1.GetInput<0>().Connect(sin1.GetOutput());
+
+            auto& tan1 = script.CreateFunction<Visual::Functions::TanVec4f32>();
+            tan1.GetInput<0>().Connect(cos1.GetOutput());
+
             auto& div1 = script.CreateOperator<Visual::Operators::DivVec4f32>();
-            div1.GetLeftInput().SetDefaultValue({ 0.125f, 0.25f, 0.5f, 1.0f });
-            div1.GetRightInput().SetDefaultValue({ 0.25f, 0.5f, 1.0f, 2.0f });
+            div1.GetLeftInput().Connect(tan1.GetOutput());
+            div1.GetRightInput().Connect(input1.GetPin());
 
             auto& mult1 = script.CreateOperator<Visual::Operators::MultVec4f32>();
             mult1.GetLeftInput().SetDefaultValue({ 0.5f, 1.0f, 2.0f, 3.0f });

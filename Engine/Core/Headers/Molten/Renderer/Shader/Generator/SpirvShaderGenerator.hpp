@@ -337,9 +337,9 @@ namespace Molten::Shader
         using GeneratorNodePointer = std::shared_ptr<GeneratorNode>;
 
         // Generator output interface pin.
-        struct GeneratorOutputInterfacePin
+        struct GeneratorInputOutputInterfacePin
         {
-            GeneratorOutputInterfacePin(
+            GeneratorInputOutputInterfacePin(
                 const Visual::Pin& pin,
                 DataTypePointerDefinitionPointer dataTypePointerDefinition,
                 const Spirv::Id id,
@@ -350,15 +350,15 @@ namespace Molten::Shader
             const Spirv::Id id;
             const Spirv::Word location;
         };
-        using GeneratorOutputInterfacePinPointer = std::shared_ptr<GeneratorOutputInterfacePin>;
+        using GeneratorInputOutputInterfacePinPointer = std::shared_ptr<GeneratorInputOutputInterfacePin>;
 
         // Generator output interface.
-        struct GeneratorOutputInterface
+        struct GeneratorInputOutputInterface
         {
-            using Pins = std::vector<GeneratorOutputInterfacePinPointer>;
-            using PinMap = std::map<const Visual::Pin*, GeneratorOutputInterfacePinPointer>;
+            using Pins = std::vector<GeneratorInputOutputInterfacePinPointer>;
+            using PinMap = std::map<const Visual::Pin*, GeneratorInputOutputInterfacePinPointer>;
 
-            GeneratorOutputInterfacePinPointer Find(const Visual::Pin& pin);
+            GeneratorInputOutputInterfacePinPointer Find(const Visual::Pin& pin);
 
             Pins pins;
             PinMap pinMap;
@@ -376,6 +376,7 @@ namespace Molten::Shader
         [[nodiscard]] bool TraverseScriptNodes();
         [[nodiscard]] GeneratorNodePointer ProcessScriptInputPin(GeneratorInputPin* generatorInputPin);
         [[nodiscard]] bool ProcessScriptNode(GeneratorNodePointer& generatorNode);
+        [[nodiscard]] bool ProcessScriptFunctionNode(GeneratorNodePointer& generatorNode);
         [[nodiscard]] bool ProcessScriptOperatorNode(GeneratorNodePointer& generatorNode);
         [[nodiscard]] bool ProcessScriptPushConstantNode(GeneratorNode& generatorNode);
         [[nodiscard]] bool ProcessScriptConstantNode(GeneratorNode& generatorNode);
@@ -400,7 +401,8 @@ namespace Molten::Shader
 
         Spirv::Id GetOrCreateInputPinDefaultConstant(const Visual::Pin& pin);
 
-        void CreateOutputInterfacePin(
+        static void CreateOutputInterfacePin(
+            GeneratorInputOutputInterface& inputOutputInterface,
             const Visual::Pin& pin,
             DataTypePointerDefinitionPointer dataTypePointerDefinition,
             const Spirv::Id id,
@@ -417,6 +419,7 @@ namespace Molten::Shader
         void WriteOperator(const GeneratorNodePointer& generatorNode, const Visual::OperatorBase& operatorBase);
         void WriteOperatorArithmetic(const GeneratorNodePointer& generatorNode, const Visual::ArithmeticOperatorBase& arithmeticOperatorBase);
         void WriteOutput(const GeneratorNodePointer& generatorNode, const Visual::OutputInterface& outputInterface);
+        [[nodiscard]] Spirv::Id WriteOutputLoadOp(const GeneratorInputPinPointer& generatorInputPin);
         /**@}*/
 
         Logger* m_logger;
@@ -433,7 +436,6 @@ namespace Molten::Shader
         Spirv::Id m_mainFunctionLabelId;
 
         PushConstantStructPointer m_pushConstantStruct; // TODO: Replace?
-        InputOutputStructPointer m_inputStruct; // TODO: Replace?
 
         DataTypeStorage m_dataTypes;
         ImageTypeStorage m_imageDataTypes;
@@ -450,7 +452,8 @@ namespace Molten::Shader
         
         std::map<const Visual::Node*, GeneratorNodePointer> m_nodes;
         std::map<const Visual::Pin*, GeneratorOutputPinPointer> m_outputPins;
-        GeneratorOutputInterface m_outputInterface;
+        GeneratorInputOutputInterface m_inputInterface;
+        GeneratorInputOutputInterface m_outputInterface;
         
         std::map<Spirv::Id, std::string> m_debugNames;
         std::map<std::string, size_t> m_debugNameCounters;

@@ -26,6 +26,8 @@
 #ifndef MOLTEN_CORE_UTILITY_TEMPLATE_HPP
 #define MOLTEN_CORE_UTILITY_TEMPLATE_HPP
 
+#include <tuple>
+
 namespace Molten
 {
 
@@ -39,8 +41,8 @@ namespace Molten
     *   using Type = typename decltype(type)::Type;
     * }
     */
-    template<typename ... Types, typename Callback>
-    constexpr void ForEachTemplateArgument(Callback&& callback);
+    template<typename ... TTypes, typename TCallback>
+    constexpr void ForEachTemplateArgument(TCallback&& callback);
 
     /**
     * @brief Loop each template type in a parameter pack.
@@ -54,15 +56,30 @@ namespace Molten
     *   using Type = typename decltype(type)::Type;
     * }
     */
-    template<typename ... Types, typename Callback>
-    constexpr void ForEachTemplateArgumentIndexed(Callback&& callback);
+    template<typename ... TTypes, typename TCallback>
+    constexpr void ForEachTemplateArgumentIndexed(TCallback&& callback);
 
     /**
     * @brief Checks if a set of template argument types contains Type.
     * @return True if Type is contained in Types, else false.
     */
-    template<typename Type, typename ... Types>
+    template<typename TType, typename ... TTypes>
     constexpr bool TemplateArgumentsContains();
+
+
+    /** Gets data type of variadic template parameter at index. */
+    template<size_t VIndex, typename ... TTypes>
+    struct GetTemplateArgumentAt
+    {
+
+        static constexpr size_t GetIndex();
+
+        using Type = std::tuple_element_t<GetIndex(), std::tuple<TTypes...>>;
+        
+    };
+
+    template<size_t VIndex, typename ... TTypes>
+    using GetTemplateArgumentTypeAt = typename GetTemplateArgumentAt <VIndex, TTypes...>::Type;
 
 }
 

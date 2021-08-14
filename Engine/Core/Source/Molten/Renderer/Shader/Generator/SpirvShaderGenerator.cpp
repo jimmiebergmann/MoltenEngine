@@ -198,7 +198,7 @@ namespace Molten::Shader
         return generatorOutputPins;
     }
 
-    SpirvGenerator::GeneratorOutputInterfacePin::GeneratorOutputInterfacePin(
+    SpirvGenerator::GeneratorInputOutputInterfacePin::GeneratorInputOutputInterfacePin(
         const Visual::Pin& pin,
         DataTypePointerDefinitionPointer dataTypePointerDefinition,
         const Spirv::Id id,
@@ -210,7 +210,7 @@ namespace Molten::Shader
         location(location)
     {}
 
-    SpirvGenerator::GeneratorOutputInterfacePinPointer SpirvGenerator::GeneratorOutputInterface::Find(const Visual::Pin& pin)
+    SpirvGenerator::GeneratorInputOutputInterfacePinPointer SpirvGenerator::GeneratorInputOutputInterface::Find(const Visual::Pin& pin)
     {
         const auto it = pinMap.find(&pin);
         return it != pinMap.end() ? it->second : nullptr;
@@ -232,13 +232,14 @@ namespace Molten::Shader
             "main",
             {} // TODO: Need inputs here.
         };
+        m_debugNames.insert({ m_mainEntryPoint.id, m_mainEntryPoint.name });
 
         m_voidTypeId = GetNextId();
         m_mainFunctionTypeId = GetNextId();
         m_mainFunctionLabelId = GetNextId();
 
         m_pushConstantStruct.reset();
-        m_inputStruct.reset();
+        //m_inputStruct.reset();
         //m_outputStruct.reset();
 
         m_dataTypes.dataTypes.clear();
@@ -261,6 +262,56 @@ namespace Molten::Shader
 
     void SpirvGenerator::InitInterfaces()
     {
+        // Add inputs.
+        const auto& inputInterface = m_script->GetInputInterface();
+        if (const auto outputPins = inputInterface.GetOutputPins(); !outputPins.empty())
+        {
+            auto generatorNode = CreateGeneratorNode(inputInterface);
+
+            Spirv::Word location = 0;
+            for (auto& generatorOutputPin : generatorNode->outputPins)
+            {
+                const auto& outputPin = generatorOutputPin->pin;
+
+                const auto pinDataType = outputPin.GetDataType();
+                auto dataTypePointerDefinition = GetOrCreateDataTypePointer(m_inputDataTypePointers, pinDataType);
+
+                const auto outputId = GetNextId();
+                generatorOutputPin->id = outputId;
+                CreateOutputInterfacePin(m_inputInterface, outputPin, std::move(dataTypePointerDefinition), outputId, location++);
+
+                if (m_includeDebugSymbols)
+                {
+                    m_debugNames.insert({ outputId, GetNextDebugName("in") });
+                }
+            }
+        }
+
+        // Add outputs
+        const auto& outputInterface = m_script->GetOutputInterface();
+        if (const auto inputPins = outputInterface.GetInputPins(); !inputPins.empty())
+        {
+            auto generatorNode = std::make_shared<GeneratorNode>(outputInterface);
+            m_outputNodes.push_back(generatorNode);
+
+            Spirv::Word location = 0;
+            for(auto& generatorInputPin : generatorNode->inputPins)
+            {
+                const auto& inputPin = generatorInputPin->pin;
+
+                const auto pinDataType = inputPin.GetDataType();
+                auto dataTypePointerDefinition = GetOrCreateDataTypePointer(m_outputDataTypePointers, pinDataType);
+
+                const auto outputId = GetNextId();
+                CreateOutputInterfacePin(m_outputInterface, inputPin, std::move(dataTypePointerDefinition), outputId, location++);
+
+                if (m_includeDebugSymbols)
+                {  
+                    m_debugNames.insert({ outputId, GetNextDebugName("out") });
+                }
+            }
+        }
+
         // Add push constants.
         const auto& pushConstants = m_script->GetPushConstantsBase();
         if (auto pushConstantsOutputPins = pushConstants.GetOutputPins(); !pushConstantsOutputPins.empty())
@@ -289,50 +340,6 @@ namespace Molten::Shader
             m_pushConstantStruct->structTypeId = GetNextId();
             m_pushConstantStruct->structTypePointerId = GetNextId();
             m_pushConstantStruct->id = GetNextId();
-        }
-
-        // Add inputs.
-        const auto& inputInterface = m_script->GetInputInterface();
-        if (const auto outputPins = inputInterface.GetOutputPins(); !outputPins.empty())
-        {
-            CreateGeneratorNode(inputInterface);
-
-            m_inputStruct = std::make_shared<InputOutputStruct>();
-
-            Spirv::Word location = 0;
-            for (const auto& outputPin : outputPins)
-            {
-                const auto pinDataType = outputPin->GetDataType();
-                auto dataTypePointerDefinition = GetOrCreateDataTypePointer(m_inputDataTypePointers, pinDataType);
-
-                m_inputStruct->members.push_back(InputOutputMember{ std::move(dataTypePointerDefinition), GetNextId(), location });
-                ++location;
-            }
-        }
-
-        // Add outputs
-        const auto& outputInterface = m_script->GetOutputInterface();
-        if (const auto inputPins = outputInterface.GetInputPins(); !inputPins.empty())
-        {
-            auto generatorNode = std::make_shared<GeneratorNode>(outputInterface);
-            m_outputNodes.push_back(generatorNode);
-
-            Spirv::Word location = 0;
-            for(auto& generatorInputPin : generatorNode->inputPins)
-            {
-                const auto& inputPin = generatorInputPin->pin;
-
-                const auto pinDataType = inputPin.GetDataType();
-                auto dataTypePointerDefinition = GetOrCreateDataTypePointer(m_outputDataTypePointers, pinDataType);
-
-                const auto outputId = GetNextId();
-                CreateOutputInterfacePin(inputPin, std::move(dataTypePointerDefinition), outputId, location++);
-
-                if (m_includeDebugSymbols)
-                {  
-                    m_debugNames.insert({ outputId, GetNextDebugName("out") });
-                }
-            }
         }
 
         // Add descriptor sets.
@@ -482,15 +489,24 @@ namespace Molten::Shader
     {
         switch (generatorNode->node.GetType())
         {
+            case Visual::NodeType::Function: return ProcessScriptFunctionNode(generatorNode);;
             case Visual::NodeType::Operator: return ProcessScriptOperatorNode(generatorNode);
             /*case Visual::NodeType::PushConstants: return ProcessScriptPushConstantNode(generatorNode);          
             case Visual::NodeType::Constant: return ProcessScriptConstantNode(generatorNode);
             case Visual::NodeType::DescriptorBinding: return ProcessScriptDescriptorBindingNode(generatorNode);
             case Visual::NodeType::Input: return ProcessScriptInputNode(generatorNode);*/
+            
             case Visual::NodeType::Output: return ProcessScriptOutputNode(generatorNode);
             default: break;
         }
 
+        Logger::WriteError(m_logger, "Unhandled operator node type: " + 
+            std::to_string(static_cast<uint32_t>(generatorNode->node.GetType())) + ".");
+        return false;
+    }
+
+    bool SpirvGenerator::ProcessScriptFunctionNode(GeneratorNodePointer& generatorNode)
+    {
         return true;
     }
 
@@ -681,14 +697,15 @@ namespace Molten::Shader
     }
 
     void SpirvGenerator::CreateOutputInterfacePin(
+        GeneratorInputOutputInterface& inputOutputInterface,
         const Visual::Pin& pin,
         DataTypePointerDefinitionPointer dataTypePointerDefinition,
         const Spirv::Id id,
         const Spirv::Word location)
     {
-        auto generatorOutputInterfacePin = std::make_shared<GeneratorOutputInterfacePin>(pin, std::move(dataTypePointerDefinition), id, location);
-        m_outputInterface.pins.push_back(generatorOutputInterfacePin);
-        m_outputInterface.pinMap.insert({ &pin, generatorOutputInterfacePin });
+        auto generatorOutputInterfacePin = std::make_shared<GeneratorInputOutputInterfacePin>(pin, std::move(dataTypePointerDefinition), id, location);
+        inputOutputInterface.pins.push_back(generatorOutputInterfacePin);
+        inputOutputInterface.pinMap.insert({ &pin, generatorOutputInterfacePin });
     }
 
     Spirv::Id SpirvGenerator::GetNextId()
@@ -742,14 +759,10 @@ namespace Molten::Shader
 
         m_module.AddOpMemoryModel(Spirv::AddressingModel::Logical, Spirv::MemoryModel::Glsl450);
 
-        if (m_inputStruct)
+        for (const auto& pin : m_inputInterface.pins)
         {
-            for (const auto& member : m_inputStruct->members)
-            {
-                m_mainEntryPoint.interface.push_back(member.id);
-            }
+            m_mainEntryPoint.interface.push_back(pin->id);
         }
-
         for(const auto& pin : m_outputInterface.pins)
         {
             m_mainEntryPoint.interface.push_back(pin->id);
@@ -766,21 +779,11 @@ namespace Molten::Shader
                 m_module.AddOpName(debugNamePair.first, debugNamePair.second);
             }
 
-            // TODO: Get rid of this...
-            m_module.AddOpName(m_mainEntryPoint.id, m_mainEntryPoint.name);
+            // TODO: Get rid of this...      
             if (m_pushConstantStruct)
             {
                 m_module.AddOpName(m_pushConstantStruct->structTypeId, "s_pc");
                 m_module.AddOpName(m_pushConstantStruct->id, "pc");
-            }
-
-            if (m_inputStruct)
-            {
-                size_t index = 0;
-                for (const auto& member : m_inputStruct->members)
-                {
-                    m_module.AddOpName(member.id, "in_" + std::to_string(index++));
-                }
             }
 
             if (!m_uniformBuffers.empty())
@@ -807,14 +810,11 @@ namespace Molten::Shader
             m_module.AddOpDecorateBlock(structId);
         }
 
-        if (m_inputStruct)
+        for (const auto& pin : m_inputInterface.pins)
         {
-            for (const auto& member : m_inputStruct->members)
-            {
-                m_module.AddOpDecorateLocation(member.id, member.location);
-            }
+            m_module.AddOpDecorateLocation(pin->id, pin->location);
         }
- 
+
         for (const auto& pin : m_outputInterface.pins)
         {
             m_module.AddOpDecorateLocation(pin->id, pin->location);
@@ -877,7 +877,7 @@ namespace Molten::Shader
             m_module.AddOpVariable(m_pushConstantStruct->id, m_pushConstantStruct->structTypePointerId, Spirv::StorageClass::PushConstant);
         }        
 
-        if (m_inputStruct)
+        if (!m_inputInterface.pins.empty())
         {
             for (const auto& dataTypePointerPair : m_inputDataTypePointers.dataTypePointers)
             {
@@ -885,10 +885,10 @@ namespace Molten::Shader
                 m_module.AddOpTypePointer(dataTypePointer->pointerId, Spirv::StorageClass::Input, dataTypePointer->dataTypeDefinition->typeId);
             }
 
-            for (const auto& member : m_inputStruct->members)
+            for (const auto& pin : m_inputInterface.pins)
             {
-                const auto& dataTypePointer = member.dataTypePointerDefinition;
-                m_module.AddOpVariable(member.id, dataTypePointer->pointerId, Spirv::StorageClass::Input);
+                const auto& dataTypePointer = pin->dataTypePointerDefinition;
+                m_module.AddOpVariable(pin->id, dataTypePointer->pointerId, Spirv::StorageClass::Input);
             }
         }
 
@@ -1071,29 +1071,28 @@ namespace Molten::Shader
     {
         for(auto& generatorInputPin : generatorNode->inputPins)
         {
-            const auto& inputPin = generatorInputPin->pin;
-            auto outputInterfacePin = m_outputInterface.Find(inputPin);
+            auto outputInterfacePin = m_outputInterface.Find(generatorInputPin->pin);
             if(outputInterfacePin == nullptr)
             {
                 continue;
             }
 
-            const auto dataType = GetOrCreateDataType(inputPin.GetDataType());
-
-            Spirv::Id inputId = 0;
-
-            if (generatorInputPin->connectedId != generatorInputPin->loadId)
-            {
-                m_module.AddOpLoad(dataType->typeId, generatorInputPin->loadId, generatorInputPin->connectedId);
-                inputId = generatorInputPin->loadId;
-            }
-            else
-            {
-                inputId = generatorInputPin->connectedId;
-            }
-
+            const auto inputId = WriteOutputLoadOp(generatorInputPin);
             m_module.AddOpStore(outputInterfacePin->id, inputId);
         }
+    }
+
+    Spirv::Id SpirvGenerator::WriteOutputLoadOp(const GeneratorInputPinPointer& generatorInputPin)
+    {
+        const auto dataType = GetOrCreateDataType(generatorInputPin->pin.GetDataType());
+
+        if (generatorInputPin->connectedId != generatorInputPin->loadId)
+        {
+            m_module.AddOpLoad(dataType->typeId, generatorInputPin->loadId, generatorInputPin->connectedId);
+            return generatorInputPin->loadId;
+        }
+        
+        return generatorInputPin->connectedId;
     }
 
 }
