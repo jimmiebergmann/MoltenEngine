@@ -33,8 +33,8 @@
 #include <vector>
 #include <memory>
 #include <map>
+#include <variant>
 #include <optional>
-#include <tuple>
 
 /** Forward declarations. */
 /**@{*/
@@ -121,48 +121,49 @@ namespace Molten::Shader
         struct GeneratorNode;
         struct GeneratorOutputPin;
 
-
         // Data type.
-        struct DataTypeDefinition
+        struct DataType
         {
-            DataTypeDefinition(
-                const VariableDataType dataType,
-                const Spirv::Id typeId);
-
-            VariableDataType dataType;
-            Spirv::Id typeId;
-        };
-        using DataTypeDefinitionPointer = std::shared_ptr<DataTypeDefinition>;
-
-        // Data type pointer.
-        struct DataTypePointerDefinition
-        {
-            DataTypePointerDefinition(
-                DataTypeDefinitionPointer dataTypeDefinition,
-                const Spirv::Id pointerId);
-
-            DataTypeDefinitionPointer dataTypeDefinition;
-            Spirv::Id pointerId;
-        };
-        using DataTypePointerDefinitionPointer = std::shared_ptr<DataTypePointerDefinition>;
-
-        // Constant
-        template<typename T>
-        struct Constant
-        {
-            Constant(
-                const Spirv::Id id,
-                DataTypeDefinitionPointer dataTypeDefinition,
-                const T value);
+            explicit DataType(const VariableDataType type);
 
             Spirv::Id id;
-            DataTypeDefinitionPointer dataTypeDefinition;
-            const T value;
+            VariableDataType type;
+            
         };
+        using DataTypePointer = std::shared_ptr<DataType>;
+        using DataTypePointers = std::vector<DataTypePointer>;
 
-        template<typename T>
-        using ConstantPointer = std::shared_ptr<Constant<T>>;
+        // Data type pointer.
+        struct DataTypePtr
+        {
+            DataTypePtr(
+                DataTypePointer dataType,
+                const Spirv::StorageClass storageClass);
 
+            Spirv::Id id;
+            DataTypePointer dataType;
+            Spirv::StorageClass storageClass;
+            
+        };
+        using DataTypePtrPointer = std::shared_ptr<DataTypePtr>;
+        using DataTypePtrPointers = std::vector<DataTypePtrPointer>;
+
+        // Constant.
+        struct Constant
+        {
+            using Variant = std::variant<bool, int32_t, float, Vector2f32, Vector3f32, Vector4f32, Matrix4x4f32>;
+
+            template<typename T>
+            Constant(DataTypePointer dataType, const T& value);
+
+            Spirv::Id id;
+            DataTypePointer dataType;
+            Variant value;
+        };
+        using ConstantPointer = std::shared_ptr<Constant>;
+        using ConstantPointers = std::vector<ConstantPointer>;
+     
+        /*
         // Push constant structures.
         struct PushConstantMember
         {
@@ -179,20 +180,6 @@ namespace Molten::Shader
             std::vector<PushConstantMember> members;
         };
         using PushConstantStructPointer = std::shared_ptr<PushConstantStruct>;
-
-        // Input structure.
-        struct InputOutputMember // TODO: In need anymore?
-        {
-            DataTypePointerDefinitionPointer dataTypePointerDefinition;
-            Spirv::Id id;
-            Spirv::Word location;
-        };
-
-        struct InputOutputStruct // TODO: In need anymore?
-        {
-            std::vector<InputOutputMember> members;
-        };
-        using InputOutputStructPointer = std::shared_ptr<InputOutputStruct>;
 
         // Uniform buffer.
         struct UniformBufferMember // TODO: In need anymore?
@@ -218,32 +205,10 @@ namespace Molten::Shader
             std::map<const Visual::Pin*, UniformBufferMemberPointer> memberMap;
         };
         using UniformBufferPointer = std::shared_ptr<UniformBuffer>;
-        using UniformBufferPointers = std::vector<UniformBufferPointer>;
-
-        // Data type storage.
-        struct DataTypeStorage
-        {
-            struct DataTypePair
-            {
-                VariableDataType dataType;
-                DataTypeDefinitionPointer dataTypeDefintion;
-            };
-
-            DataTypeDefinitionPointer Find(const VariableDataType dataType);
-
-            using DataTypePairs = std::vector<DataTypePair>;
-            DataTypePairs dataTypes;
-        };
-
-        // Data type pointer storage.
-        struct DataTypePointerStorage
-        {
-            using DataTypePointerMap = std::map<VariableDataType, DataTypePointerDefinitionPointer>;
-            DataTypePointerMap dataTypePointers;
-        };
+        using UniformBufferPointers = std::vector<UniformBufferPointer>;*/     
 
         // Image type storage.
-        struct ImageTypeStorage
+        /*struct ImageTypeStorage
         {
             struct ImageType
             {
@@ -256,48 +221,16 @@ namespace Molten::Shader
 
             using DataTypePointers = std::vector<ImageTypePointer>;
             DataTypePointers dataTypePointers;
-        };
-
-        // Constant storage.
-        template<typename T>
-        struct ConstantScalarStorage
-        {
-            using ScalarConstantMap = std::map<T, ConstantPointer<T>>;
-
-            ScalarConstantMap constants;
-        };
-
-        using ConstantScalarStorages = std::tuple<ConstantScalarStorage<int32_t>, ConstantScalarStorage<float>>;
-
-        template<size_t VDimensions, typename T>
-        struct ConstantVectorStorage
-        {
-            using VectorType = Vector<VDimensions, T>;
-            using Components = Vector<VDimensions, Spirv::Id>;
-
-            struct ConstantData
-            {
-                ConstantPointer<VectorType> constant;
-                Components components;
-            };
-            
-            using VectorConstantMap = std::map<VectorType, ConstantData, SpirvGeneratorConstantVectorComparer<T, VDimensions>>;
-
-            VectorConstantMap constants;
-        };
-
-        using ConstantVectorStorages = std::tuple<ConstantVectorStorage<2, float>, ConstantVectorStorage<3, float>, ConstantVectorStorage<4, float>>;
+        };*/
 
 
-         // Generator input pin.
+        // Generator input pin.
         struct GeneratorInputPin
         {
             explicit GeneratorInputPin(const Visual::Pin& pin);
 
             const Visual::Pin& pin;
             GeneratorOutputPin* connectedGeneratorOutputPin;
-            Spirv::Id connectedId;
-            Spirv::Id loadId;
         }; 
         using GeneratorInputPinPointer = std::shared_ptr<GeneratorInputPin>;
 
@@ -308,7 +241,8 @@ namespace Molten::Shader
 
             const Visual::Pin& pin;
             Spirv::Id id;
-            Spirv::Id storeId;
+            Spirv::StorageClass storageClass;
+            bool isVisited;
         };
         using GeneratorOutputPinPointer = std::shared_ptr<GeneratorOutputPin>;
 
@@ -323,6 +257,8 @@ namespace Molten::Shader
 
             GeneratorInputPin* GetNextInputPin();
 
+            GeneratorOutputPinPointer FindOutputPin(const Visual::Pin& pin);
+
             const Visual::Node& node;
             GeneratorInputPinPointers inputPins;
             GeneratorInputPinIterator inputPinIterator;
@@ -336,34 +272,160 @@ namespace Molten::Shader
         };
         using GeneratorNodePointer = std::shared_ptr<GeneratorNode>;
 
-        // Generator output interface pin.
-        struct GeneratorInputOutputInterfacePin
+        // Output structure
+        struct OutputStructure
         {
-            GeneratorInputOutputInterfacePin(
-                const Visual::Pin& pin,
-                DataTypePointerDefinitionPointer dataTypePointerDefinition,
-                const Spirv::Id id,
-                const Spirv::Word location);
+            struct Member
+            {
+                Member(
+                    GeneratorOutputPinPointer outputPin,
+                    DataTypePointer dataType,
+                    DataTypePtrPointer dataTypePointer = nullptr);
 
-            const Visual::Pin& pin;
-            const DataTypePointerDefinitionPointer dataTypePointerDefinition;
-            const Spirv::Id id;
-            const Spirv::Word location;
-        };
-        using GeneratorInputOutputInterfacePinPointer = std::shared_ptr<GeneratorInputOutputInterfacePin>;
+                GeneratorOutputPinPointer outputPin;
+                DataTypePointer dataType;
+                DataTypePtrPointer dataTypePointer;
+            };
 
-        // Generator output interface.
-        struct GeneratorInputOutputInterface
-        {
-            using Pins = std::vector<GeneratorInputOutputInterfacePinPointer>;
-            using PinMap = std::map<const Visual::Pin*, GeneratorInputOutputInterfacePinPointer>;
+            void Clear();
 
-            GeneratorInputOutputInterfacePinPointer Find(const Visual::Pin& pin);
+            using Members = std::vector<Member>;
 
-            Pins pins;
-            PinMap pinMap;
+            Members members;
         };
 
+        // Input structure
+        struct InputStructure
+        {
+            struct Member
+            {
+                Member(
+                    GeneratorInputPinPointer inputPin,
+                    DataTypePointer dataType,
+                    DataTypePtrPointer dataTypePointer = nullptr);
+
+                Spirv::Id id;
+                GeneratorInputPinPointer inputPin;
+                DataTypePointer dataType;
+                DataTypePtrPointer dataTypePointer;
+            };
+
+            Member* FindMember(GeneratorInputPinPointer& inputPin);
+
+            void Clear();
+
+            using Members = std::vector<Member>;
+
+            Members members;
+        };
+
+        // Data type storage.
+        class DataTypeStorage
+        {
+
+        public:
+
+            DataTypePointer Get(const VariableDataType type);
+            DataTypePointer GetOrCreate(const VariableDataType type);
+
+            DataTypePointers GetAllDependencySorted();
+
+            void Clear();
+
+        private:
+
+            struct DataTypePair
+            {
+                VariableDataType type;
+                DataTypePointer dataType;
+            };
+
+            using DataTypePairs = std::vector<DataTypePair>;
+            DataTypePairs m_dataTypes;
+        };
+
+        // Data type pointer storage
+        class DataTypePointerStorage
+        {
+
+        public:
+
+            DataTypePtrPointer Get(const Spirv::StorageClass storageClass, DataTypePointer& dataType);
+            DataTypePtrPointer GetOrCreate(const Spirv::StorageClass storageClass, DataTypePointer& dataType);
+
+            DataTypePtrPointers GetAll(const Spirv::StorageClass storageClass);
+
+            void Clear();
+
+        private:
+
+            using DataTypePointersMap = std::map<Spirv::StorageClass, DataTypePtrPointers>;
+
+            DataTypePointersMap m_dataTypePointers;
+
+        };
+
+        // Constant storage.
+        class ConstantStorage
+        {
+
+        public:
+
+            ConstantPointer Get(GeneratorInputPin& generatorInputPin);
+            template<typename T>
+            ConstantPointer Get(const T& value);
+
+            ConstantPointer GetOrCreate(DataTypeStorage& dataTypeStorage, GeneratorInputPin& generatorInputPin);
+            template<typename T>
+            ConstantPointer GetOrCreate(DataTypeStorage& dataTypeStorage, const T& value);  
+
+            ConstantPointers GetAllDependencySorted();
+
+            void Clear();
+
+        private:
+
+            using ConstantMap = std::unordered_map<VariableDataType, ConstantPointers>;
+            ConstantMap m_constants;
+
+        };
+
+        // Debug name storage
+        class DebugNameStorage
+        {
+
+        public:
+
+            struct NameEntry
+            {
+                NameEntry(
+                    GeneratorOutputPinPointer& generatorOutputPin,
+                    std::string name,
+                    const size_t opNameOffset);
+
+                GeneratorOutputPinPointer generatorOutputPin;
+                const std::string name;
+                const size_t opNameOffset;
+            };
+
+            using NameEntries = std::vector<NameEntry>;
+
+            DebugNameStorage();
+
+            void Add(GeneratorOutputPinPointer& generatorOutputPin, const std::string& name);
+            void AddWithoutCounter(GeneratorOutputPinPointer& generatorOutputPin, const std::string& name);
+
+            const NameEntries& GetEntries() const;
+
+            void Clear();            
+
+        private:
+
+            NameEntries m_entries;
+            std::map<std::string, size_t> m_debugNameCounters;
+            size_t m_currentOpNameOffset;
+
+        };
 
         void InitGenerator(
             const Visual::Script& script,
@@ -371,56 +433,47 @@ namespace Molten::Shader
 
         void InitInterfaces();
 
-        /** Script traversal functions. */
+        /** Build tree functions. */
         /**@{*/
-        [[nodiscard]] bool TraverseScriptNodes();
-        [[nodiscard]] GeneratorNodePointer ProcessScriptInputPin(GeneratorInputPin* generatorInputPin);
-        [[nodiscard]] bool ProcessScriptNode(GeneratorNodePointer& generatorNode);
-        [[nodiscard]] bool ProcessScriptFunctionNode(GeneratorNodePointer& generatorNode);
-        [[nodiscard]] bool ProcessScriptOperatorNode(GeneratorNodePointer& generatorNode);
-        [[nodiscard]] bool ProcessScriptPushConstantNode(GeneratorNode& generatorNode);
-        [[nodiscard]] bool ProcessScriptConstantNode(GeneratorNode& generatorNode);
-        [[nodiscard]] bool ProcessScriptDescriptorBindingNode(GeneratorNode& generatorNode);
-        [[nodiscard]] bool ProcessScriptInputNode(GeneratorNode& generatorNode);
-        [[nodiscard]] bool ProcessScriptOutputNode(GeneratorNodePointer& generatorNode);
+        [[nodiscard]] bool BuildTree();
+        [[nodiscard]] GeneratorNodePointer BuildVisitInputPin(GeneratorNodePointer& generatorNode, GeneratorInputPin* generatorInputPin);
+        void BuildVisitOutputPin(GeneratorNodePointer& generatorNode, GeneratorOutputPinPointer& generatorOutputPin);
+        void BuildVisitNode(GeneratorNodePointer& generatorNode);
+        bool AddOutputPinDebugName(GeneratorNodePointer& generatorNode, GeneratorOutputPinPointer& generatorOutputPin);
+        [[nodiscard]] bool AddFunctionDebugName(GeneratorNodePointer& generatorNode, GeneratorOutputPinPointer& generatorOutputPin);
+        [[nodiscard]] bool AddOperatorDebugName(GeneratorNodePointer& generatorNode, GeneratorOutputPinPointer& generatorOutputPin);
         /**@}*/
 
-        /** Get or create data types and pointers. */
-        /**@{*/
-        DataTypeDefinitionPointer GetOrCreateDataType(const VariableDataType dataType);
-        DataTypePointerDefinitionPointer GetOrCreateDataTypePointer(DataTypePointerStorage& storage, const VariableDataType dataType);
-        /**@}*/
-
-        /** Get or create constants. */
-        /**@{*/
-        template<typename T>
-        ConstantPointer<T> GetOrCreateConstantScalar(const T value);
-
-        template<size_t VDimensions, typename T>
-        ConstantPointer<Vector<VDimensions, T>> GetOrCreateConstantVector(const Vector<VDimensions, T>& value);
-
-        Spirv::Id GetOrCreateInputPinDefaultConstant(const Visual::Pin& pin);
-
-        static void CreateOutputInterfacePin(
-            GeneratorInputOutputInterface& inputOutputInterface,
-            const Visual::Pin& pin,
-            DataTypePointerDefinitionPointer dataTypePointerDefinition,
-            const Spirv::Id id,
-            const Spirv::Word location);
-        /**@}*/
-
-        GeneratorNodePointer CreateGeneratorNode(const Visual::Node& node);
+        [[nodiscard]] GeneratorNodePointer CreateGeneratorNode(const Visual::Node& node);
         [[nodiscard]] Spirv::Id GetNextId();
-        [[nodiscard]] std::string GetNextDebugName(const std::string& namePrefix);
+        [[nodiscard]] bool AccessNodeInputInMainFunction(GeneratorInputPin& generatorInputPin, std::vector<Spirv::Id>& inputIds);
+        [[nodiscard]] Spirv::Id AccessOrTransformStorageClass(GeneratorOutputPin& generatorOutputPin, const Spirv::StorageClass storageClass);
 
         /** Module writing functions. */
         /**@{*/
-        [[nodiscard]] Spirv::Words WriteModule();
-        void WriteOperator(const GeneratorNodePointer& generatorNode, const Visual::OperatorBase& operatorBase);
-        void WriteOperatorArithmetic(const GeneratorNodePointer& generatorNode, const Visual::ArithmeticOperatorBase& arithmeticOperatorBase);
-        void WriteOutput(const GeneratorNodePointer& generatorNode, const Visual::OutputInterface& outputInterface);
-        [[nodiscard]] Spirv::Id WriteOutputLoadOp(const GeneratorInputPinPointer& generatorInputPin);
-        /**@}*/
+        [[nodiscard]] bool WriteModule();
+        void UpdateDataTypeIds();
+        void UpdateInputPointerIds();
+        void UpdateInputIds();
+        void UpdateOutputPointerIds();
+        void UpdateOutputIds();
+        void WriteDebugNames();
+        void WriteDecorations();
+        void WriteInputDecorations();
+        void WriteOutputDecorations();
+        [[nodiscard]] bool WriteDataTypes();
+        void WriteInputPointers();
+        void WriteInputs();
+        void WriteOutputPointers();
+        void WriteOutputs();
+        [[nodiscard]] bool WriteConstants();
+        [[nodiscard]] bool WriteMainInstructions();
+        [[nodiscard]] bool WriteMainInstruction(const GeneratorNodePointer& generatorNode);
+        [[nodiscard]] bool WriteFunction(const GeneratorNodePointer& generatorNode, const Visual::FunctionBase& functionBase);
+        [[nodiscard]] bool WriteOperator(const GeneratorNodePointer& generatorNode, const Visual::OperatorBase& operatorBase);
+        [[nodiscard]] bool WriteOperatorArithmetic(const GeneratorNodePointer& generatorNode, const Visual::ArithmeticOperatorBase& arithmeticOperatorBase);
+        [[nodiscard]] bool WriteOutput(const GeneratorNodePointer& generatorNode, const Visual::OutputInterface& outputInterface);
+        void UpdateDebugNames();
 
         Logger* m_logger;
         const Visual::Script* m_script;
@@ -428,38 +481,31 @@ namespace Molten::Shader
         Spirv::ModuleBuffer m_module;
         Spirv::Id m_currentId;
         std::vector<Spirv::Capability> m_capabilities;
-        std::optional<Spirv::ExtensionImport> m_glslExtension;
+        Spirv::ExtensionImport m_glslExtension;
         Spirv::EntryPoint m_mainEntryPoint;
 
         Spirv::Id m_voidTypeId;
         Spirv::Id m_mainFunctionTypeId;
         Spirv::Id m_mainFunctionLabelId;
 
-        PushConstantStructPointer m_pushConstantStruct; // TODO: Replace?
+        std::vector<GeneratorNodePointer> m_rootNodes;
+        std::unordered_map<const Visual::Node*, GeneratorNodePointer> m_createdNodes;
+        std::unordered_map<const Visual::Pin*, GeneratorOutputPinPointer> m_visitedOutputPins;
 
-        DataTypeStorage m_dataTypes;
-        ImageTypeStorage m_imageDataTypes;
-        DataTypePointerStorage m_inputDataTypePointers;
-        DataTypePointerStorage m_outputDataTypePointers;
-        DataTypePointerStorage m_functionDataTypePointers;
-        UniformBufferPointers m_uniformBuffers;
-        //UniformBufferStorage m_uniformBufferStorage;
-
-        ConstantScalarStorages m_constantScalarStorages;
-        ConstantVectorStorages m_constantVectorStorages;
-
-        std::vector<GeneratorNodePointer> m_outputNodes;
-        
-        std::map<const Visual::Node*, GeneratorNodePointer> m_nodes;
-        std::map<const Visual::Pin*, GeneratorOutputPinPointer> m_outputPins;
-        GeneratorInputOutputInterface m_inputInterface;
-        GeneratorInputOutputInterface m_outputInterface;
-        
-        std::map<Spirv::Id, std::string> m_debugNames;
-        std::map<std::string, size_t> m_debugNameCounters;
+        DataTypeStorage m_dataTypeStorage;
+        DataTypePointerStorage m_dataTypePointerStorage;
+        ConstantStorage m_constantStorage; 
+        OutputStructure m_inputStructure;
+        InputStructure m_outputStructure;
+        DebugNameStorage m_debugNameStorage;
+        size_t m_opDebugNameStart;
 
         std::vector<GeneratorNodePointer> m_mainInstructions;
 
+        //ImageTypeStorage m_imageDataTypes;
+        //UniformBufferPointers m_uniformBuffers;
+        //UniformBufferStorage m_uniformBufferStorage;
+        //PushConstantStructPointer m_pushConstantStruct; // TODO: Replace?
     };
 
 }

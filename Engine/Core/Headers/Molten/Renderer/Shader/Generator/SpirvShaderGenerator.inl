@@ -26,55 +26,101 @@
 namespace Molten::Shader
 {
 
+    // Constant implementations.
     template<typename T>
-    SpirvGenerator::Constant<T>::Constant(
-        const Spirv::Id id,
-        DataTypeDefinitionPointer dataTypeDefinition,
-        const T value
-    ) :
-        id(id),
-        dataTypeDefinition(std::move(dataTypeDefinition)),
+    SpirvGenerator::Constant::Constant(DataTypePointer dataType, const T& value) :
+        id(0),
+        dataType(std::move(dataType)),
         value(value)
     {}
 
+    // Constant storage implementations.
     template<typename T>
-    SpirvGenerator::ConstantPointer<T> SpirvGenerator::GetOrCreateConstantScalar(const T value)
+    SpirvGenerator::ConstantPointer SpirvGenerator::ConstantStorage::Get(const T& value)
     {
-        auto& storage = std::get<ConstantScalarStorage<T>>(m_constantScalarStorages);
+        const auto variableDataType = VariableTrait<T>::dataType;
 
-        if (auto it = storage.constants.find(value); it != storage.constants.end())
+        auto constantsIt = m_constants.find(variableDataType);
+        if(constantsIt == m_constants.end())
         {
-            return it->second;
+            return nullptr;
         }
 
-        auto dataTypeDefinition = GetOrCreateDataType(VariableTrait<T>::dataType);
-        auto constant = std::make_shared<Constant<T>>(GetNextId(), dataTypeDefinition, value);
-        auto it = storage.constants.insert({ value, constant }).first;
-        return it->second;
+        auto& constants = constantsIt->second;
+        auto constantIt = std::find_if(constants.begin(), constants.end(), [&](const auto& constant)
+        {
+            if (const auto variantValue = std::get_if<T>(&constant->value); variantValue)
+            {
+                return *variantValue == value;
+            }
+
+            return false;
+        });
+
+        return constantIt != constants.end() ? *constantIt : nullptr;
     }
 
-    template<size_t VDimensions, typename T>
-    SpirvGenerator::ConstantPointer<Vector<VDimensions, T>> SpirvGenerator::GetOrCreateConstantVector(const Vector<VDimensions, T>& value)
+    template<typename T>
+    SpirvGenerator::ConstantPointer SpirvGenerator::ConstantStorage::GetOrCreate(DataTypeStorage& dataTypeStorage, const T& value)
     {
-        using VectorType = Vector<VDimensions, T>;
+        const auto variableDataType = VariableTrait<T>::dataType;
 
-        auto& storage = std::get<ConstantVectorStorage<VDimensions, T>>(m_constantVectorStorages);
-
-        if (auto it = storage.constants.find(value); it != storage.constants.end())
+        auto constantsIt = m_constants.find(variableDataType);
+        if (constantsIt == m_constants.end())
         {
-            return it->second.constant;
+            constantsIt = m_constants.insert({ variableDataType , {}}).first;
         }
 
-        Vector<VDimensions, Spirv::Id> components;
-        for (size_t i = 0; i < VectorType::Dimensions; i++)
+        auto& constants = constantsIt->second;
+        auto constantIt = std::find_if(constants.begin(), constants.end(), [&](const auto& constant)
         {
-            components.c[i] = GetOrCreateConstantScalar(value.c[i])->id;
+            if (const auto variantValue = std::get_if<T>(&constant->value); variantValue)
+            {
+                return *variantValue == value;
+            }
+
+            return false;
+        });
+
+        if(constantIt != constants.end())
+        {
+            return *constantIt;
         }
 
-        auto dataTypeDefinition = GetOrCreateDataType(VariableTrait<VectorType>::dataType);
-        auto constant = std::make_shared<Constant<VectorType>>(GetNextId(), dataTypeDefinition, value);
-        auto it = storage.constants.insert({ value, { constant, components } }).first;
-        return it->second.constant;
+        if constexpr (std::is_same_v<T, Vector2f32> == true)
+        {
+            for (size_t i = 0; i < Vector2f32::Dimensions; i++)
+            {
+                GetOrCreate(dataTypeStorage, value.c[i]);
+            }
+        }
+        else if constexpr (std::is_same_v<T, Vector3f32> == true)
+        {
+            for (size_t i = 0; i < Vector3f32::Dimensions; i++)
+            {
+                GetOrCreate(dataTypeStorage, value.c[i]);
+            }
+        }
+        else if constexpr (std::is_same_v<T, Vector4f32> == true)
+        {
+            for (size_t i = 0; i < Vector4f32::Dimensions; i++)
+            {
+                GetOrCreate(dataTypeStorage, value.c[i]);
+            }
+        }
+        else if constexpr (std::is_same_v<T, Matrix4x4f32> == true)
+        {
+            for (size_t i = 0; i < Matrix4x4f32::Components; i++)
+            {
+                GetOrCreate(dataTypeStorage, value.e[i]);
+            }
+        }
+
+        auto dataType = dataTypeStorage.GetOrCreate(variableDataType);
+
+        auto newConstant = std::make_shared<Constant>(std::move(dataType), value);
+        constants.push_back(newConstant);
+        return newConstant;
     }
 
 }

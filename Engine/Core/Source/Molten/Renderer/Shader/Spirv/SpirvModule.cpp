@@ -30,12 +30,12 @@ namespace Molten::Shader::Spirv
 {
 
     // Global implementations.
-    [[nodiscard]] static Word CreateOpCode(const OpCode opCode, const HalfWord wordCount)
+    [[nodiscard]] Word CreateOpCode(const OpCode opCode, const HalfWord wordCount)
     {
         return (static_cast<Word>(opCode)) | (static_cast<Word>(wordCount) << 16);
     }
 
-    [[nodiscard]] static HalfWord GetLiteralWordCount(const size_t stringLength)
+    [[nodiscard]] HalfWord GetLiteralWordCount(const size_t stringLength)
     {
         return static_cast<HalfWord>(stringLength / 4) + 1;
     }
@@ -63,6 +63,23 @@ namespace Molten::Shader::Spirv
         words.push_back(CreateOpCode(OpCode::ExtInstImport, literalWordCount + 2));
         words.push_back(extensionImport.resultId);
         AddLiteral(extensionImport.name);
+    }
+
+    void ModuleBuffer::AddOpExtInst(const Id resultTypeId, const Id resultId, const Id setId, const Word instruction, const std::vector<Id>& inputIds)
+    {
+        const size_t resultSize = 5 + inputIds.size();
+
+        std::vector<Word> result(resultSize);
+
+        result[0] = CreateOpCode(OpCode::ExtInst, static_cast<HalfWord>(resultSize));
+        result[1] = static_cast<Word>(resultTypeId);
+        result[2] = static_cast<Word>(resultId);
+        result[3] = static_cast<Word>(setId);
+        result[4] = static_cast<Word>(instruction);
+
+        std::copy(inputIds.begin(), inputIds.end(), result.begin() + 5);
+
+        words.insert(words.end(), result.begin(), result.end());
     }
 
     void ModuleBuffer::AddOpMemoryModel(const AddressingModel addressingModel, const MemoryModel memoryModel)
@@ -207,6 +224,17 @@ namespace Molten::Shader::Spirv
         words.insert(words.end(), result.begin(), result.end());
     }
 
+    void ModuleBuffer::AddOpTypeBool(const Id resultId)
+    {
+        const std::array<Word, 2> result =
+        {
+            CreateOpCode(OpCode::TypeBool, 2),
+            static_cast<Word>(resultId)
+        };
+
+        words.insert(words.end(), result.begin(), result.end());
+    }
+
     void ModuleBuffer::AddOpTypeInt32(const Id resultId, Signedness signedness)
     {
         const std::array<Word, 4> result =
@@ -307,6 +335,21 @@ namespace Molten::Shader::Spirv
             CreateOpCode(OpCode::TypeFunction, 3),
             static_cast<Word>(resultId),
             static_cast<Word>(returnTypeId)
+        };
+
+        words.insert(words.end(), result.begin(), result.end());
+    }
+
+    void ModuleBuffer::AddOpConstantBool(const Id resultId, const Id resultTypeId, const bool value)
+    {
+        const Word resultValue = value ? 1 : 0;
+
+        const std::array<Word, 4> result =
+        {
+            CreateOpCode(OpCode::Constant, 4),
+            static_cast<Word>(resultTypeId),
+            static_cast<Word>(resultId),
+            resultValue
         };
 
         words.insert(words.end(), result.begin(), result.end());
@@ -516,6 +559,18 @@ namespace Molten::Shader::Spirv
     void ModuleBuffer::AddOpFunctionEnd()
     {
         words.push_back(CreateOpCode(OpCode::FunctionEnd, 1));
+    }
+
+    bool ModuleBuffer::UpdateIdBound(const Word idBound)
+    {
+        if(words.size() < 4)
+        {
+            return false;
+        }
+
+        words[3] = idBound;
+
+        return true;
     }
 
     void ModuleBuffer::AddLiteral(const std::string& string)

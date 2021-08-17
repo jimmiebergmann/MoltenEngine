@@ -86,20 +86,36 @@ namespace Molten::Shader
             output1.Connect(*subVec4_1.GetOutputPin());
             */
 
+           /* auto& input1 = script.GetInputInterface().AddMember<Vector4f32>();
+
+            auto& sin1 = script.CreateFunction<Visual::Functions::SinVec4f32>();
+            sin1.GetInput<0>().Connect(input1);
+
+            auto& output1 = script.GetOutputInterface().AddMember<Vector4f32>();
+            output1.Connect(sin1.GetOutput());*/
+
             auto& input1 = script.GetInputInterface().AddMember<Vector4f32>();
             auto& input2 = script.GetInputInterface().AddMember<Vector4f32>();
 
             auto& sin1 = script.CreateFunction<Visual::Functions::SinVec4f32>();
             sin1.GetInput<0>().Connect(input2);
-
+            
             auto& cos1 = script.CreateFunction<Visual::Functions::CosVec4f32>();
             cos1.GetInput<0>().Connect(sin1.GetOutput());
 
             auto& tan1 = script.CreateFunction<Visual::Functions::TanVec4f32>();
             tan1.GetInput<0>().Connect(cos1.GetOutput());
 
+            auto& max1 = script.CreateFunction<Visual::Functions::MaxVec4f32>();
+            max1.GetInput<0>().Connect(tan1.GetOutput());
+            max1.GetInput<1>().SetDefaultValue({ 1.0f, 2.0f, 3.0f, 3.0f });
+
+            auto& min1 = script.CreateFunction<Visual::Functions::MinVec4f32>();
+            min1.GetInput<0>().Connect(max1.GetOutput());
+            min1.GetInput<1>().SetDefaultValue({ 1.0f, 2.0f, 3.0f, 3.0f });
+
             auto& div1 = script.CreateOperator<Visual::Operators::DivVec4f32>();
-            div1.GetLeftInput().Connect(tan1.GetOutput());
+            div1.GetLeftInput().Connect(min1.GetOutput());
             div1.GetRightInput().Connect(input1.GetPin());
 
             auto& mult1 = script.CreateOperator<Visual::Operators::MultVec4f32>();
@@ -115,7 +131,9 @@ namespace Molten::Shader
             add2.GetRightInput().Connect(add1.GetOutput());
 
             auto& output1 = script.GetOutputInterface().AddMember<Vector4f32>();
+            auto& output2 = script.GetOutputInterface().AddMember<Vector4f32>();
             output1.Connect(add2.GetOutput());
+            output2.Connect(add1.GetOutput());
         }
 
         SpirvGenerator::Template spirvTemplate;

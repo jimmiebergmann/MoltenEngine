@@ -26,9 +26,9 @@
 #ifndef MOLTEN_CORE_RENDERER_SHADER_SPIRV_SPIRVMODULE_HPP
 #define MOLTEN_CORE_RENDERER_SHADER_SPIRV_SPIRVMODULE_HPP
 
+#include "Molten/Math/Vector.hpp"
 #include <vector>
 #include <string>
-#include "Molten/Math/Vector.hpp"
 
 namespace Molten::Shader::Spirv
 {
@@ -44,11 +44,13 @@ namespace Molten::Shader::Spirv
         Name = 5,
         MemberName = 6,
         ExtInstImport = 11,
+        ExtInst = 12,
         MemoryModel = 14,
         EntryPoint = 15,
         ExecutionMode = 16,
         Capability = 17,
         TypeVoid = 19,
+        TypeBool = 20,
         TypeInt = 21,
         TypeFloat = 22,
         TypeVector = 23,
@@ -72,6 +74,16 @@ namespace Molten::Shader::Spirv
         FDiv = 136,
         Label = 248,
         Return = 253
+    };
+
+    enum class GlslInstruction : Word
+    {
+        Sin = 13,
+        Cos = 14,
+        Tan = 15,
+        FMin = 37,
+        FMax = 40,
+        Cross = 68
     };
 
     enum class AddressingModel : Word
@@ -178,6 +190,9 @@ namespace Molten::Shader::Spirv
         std::vector<Id> interface;
     };
 
+    [[nodiscard]] Word MOLTEN_API CreateOpCode(const OpCode opCode, const HalfWord wordCount);
+    [[nodiscard]] HalfWord GetLiteralWordCount(const size_t stringLength);
+
     class ModuleBuffer
     {
 
@@ -185,6 +200,7 @@ namespace Molten::Shader::Spirv
 
         void AddHeader(const Word version, const Word generatorMagicNumber, const Word idBound = 0, const Word reserved = 0);
         void AddOpExtInstImport(const ExtensionImport& extensionImport);
+        void AddOpExtInst(const Id resultTypeId, const Id resultId, const Id setId, const Word instruction, const std::vector<Id>& inputIds);
         void AddOpMemoryModel(const AddressingModel addressingModel, const MemoryModel memoryModel);
         void AddOpEntryPoint(const EntryPoint& entryPoint);
         void AddOpCapability(const Capability capability);
@@ -200,6 +216,7 @@ namespace Molten::Shader::Spirv
         void AddOpMemberDecorateOffset(const Id structureTypeId, const Word memberIndex, const Word byteOffset);
 
         void AddOpTypeVoid(const Id resultId);
+        void AddOpTypeBool(const Id resultId);
         void AddOpTypeInt32(const Id resultId, Signedness signedness);
         void AddOpTypeFloat32(const Id resultId);
         void AddOpTypeVector(const Id resultId, const Id componentTypeId, Word componentCount);
@@ -209,6 +226,7 @@ namespace Molten::Shader::Spirv
         void AddOpTypePointer(const Id resultId, const StorageClass storageClass, const Id typeId);
         void AddOpTypeFunction(const Id resultId, const Id returnTypeId);
 
+        void AddOpConstantBool(const Id resultId, const Id resultTypeId, const bool value);
         void AddOpConstantInt32(const Id resultId, const Id resultTypeId, const int32_t value);
         void AddOpConstantFloat32(const Id resultId, const Id resultTypeId, const float value);
         void AddOpConstantVector2(const Id resultId, const Id resultTypeId, const Vector2<Id>& valueIds);
@@ -230,6 +248,8 @@ namespace Molten::Shader::Spirv
         void AddOpReturn();
         void AddOpFunctionEnd();
 
+        bool UpdateIdBound(const Word idBound);
+
         Words words;
 
     private:
@@ -237,27 +257,6 @@ namespace Molten::Shader::Spirv
         void AddLiteral(const std::string& string);
 
     };
-
-    /*struct Instruction
-    {
-        [[nodiscard]] static Word CreateOpCode(const OpCode opCode, const HalfWord wordCount);
-        [[nodiscard]] static Instruction CreateOpCapability(const Capability capability);
-
-        OpCode opCode;
-        Words words;
-    };
-
-    using Instructions = std::vector<Instruction>;
-
-    struct Module
-    {
-        Word magicNumber;
-        Word version;
-        Word generatorMagicNumber;
-        Word idBounds;
-        Word reserved;
-        Instructions instructions;
-    };*/
 
 }
 
