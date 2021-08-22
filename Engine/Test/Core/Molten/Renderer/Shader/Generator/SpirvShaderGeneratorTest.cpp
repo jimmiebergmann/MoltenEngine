@@ -96,7 +96,7 @@ namespace Molten::Shader
 
 
             // Test with constants.
-            auto& const1 = script.CreateConstant<Vector4f32>({ 1.0f, 2.0f, 3.0f, 4.0f });
+            /*auto& const1 = script.CreateConstant<Vector4f32>({ 1.0f, 2.0f, 3.0f, 4.0f });
             auto& const2 = script.CreateConstant<Vector4f32>({ 1.0f, 2.0f, 3.0f, 4.0f });
             auto& const3 = script.CreateConstant<Vector4f32>({ 1.0f, 2.0f, 3.0f, 5.0f });
 
@@ -105,7 +105,7 @@ namespace Molten::Shader
             auto& output3 = script.GetOutputInterface().AddMember<Vector4f32>();
             output1.Connect(const1.GetOutput());
             output2.Connect(const2.GetOutput());
-            output3.Connect(const3.GetOutput());
+            output3.Connect(const3.GetOutput());*/
 
   
             // Test with input, output, operator and functions.
@@ -193,6 +193,18 @@ namespace Molten::Shader
             auto& output2 = script.GetOutputInterface().AddMember<Vector4f32>();
             output2.Connect(texture2.GetOutput());*/
 
+
+            // Tests with output and uniform buffers.
+            auto* set1 = script.GetDescriptorSets().AddSet(1);
+            auto* ubo1 = set1->AddBinding<Visual::FragmentUniformBuffer>(2);
+            auto& ubo1_1 = ubo1->AddPin<Vector4f32>();
+            auto& ubo1_2 = ubo1->AddPin<Vector4f32>();
+
+            auto& output1 = script.GetOutputInterface().AddMember<Vector4f32>();
+            auto& output2 = script.GetOutputInterface().AddMember<Vector4f32>();
+            output1.Connect(ubo1_1);
+            output2.Connect(ubo1_2);
+ 
         }
 
         SpirvGenerator::Template spirvTemplate;

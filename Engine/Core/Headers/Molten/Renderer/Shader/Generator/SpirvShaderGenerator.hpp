@@ -126,7 +126,7 @@ namespace Molten::Shader
         struct Constant;
         struct OutputStructure;
         struct InputStructure;
-        struct PushConstantStructure;
+        struct Structure;
         class DataTypeStorage;
         class DataTypePointerStorage;
         class ConstantStorage;
@@ -142,6 +142,7 @@ namespace Molten::Shader
         using DataTypePtrPointers = std::vector<DataTypePtrPointer>;
         using ConstantPointer = std::shared_ptr<Constant>;
         using ConstantPointers = std::vector<ConstantPointer>;
+        using StructurePointer = std::shared_ptr<Structure>;
         using IdPointer = std::shared_ptr<Spirv::Id>;
 
         // Generator input pin.
@@ -278,15 +279,17 @@ namespace Molten::Shader
         };
 
         // Push constant structure
-        struct PushConstantStructure
+        struct Structure
         {
             struct Member
             {
                 Member(
+                    Structure* structure,
                     GeneratorOutputPinPointer outputPin,
                     DataTypePointer dataType,
                     DataTypePtrPointer dataTypePointer);
 
+                Structure* structure;
                 Spirv::Id id;
                 Spirv::Word index;
                 Spirv::Word offset;
@@ -296,7 +299,7 @@ namespace Molten::Shader
                 DataTypePtrPointer dataTypePointer;
             };
 
-            PushConstantStructure();
+            explicit Structure(const Spirv::StorageClass storageClass);
 
             void AddMember(
                 DataTypeStorage& dataTypeStorage,
@@ -314,12 +317,8 @@ namespace Molten::Shader
             Spirv::Id typePointerId;
             Members members;
             bool isEmpty;
+            const Spirv::StorageClass storageClass;
         };
-
-       /* struct DescriptorSet
-        {
-            
-        };*/
 
         // Data type storage.
         class DataTypeStorage
@@ -428,11 +427,37 @@ namespace Molten::Shader
 
             void Clear();
 
-
         private:
             
             Samplers m_samplers;
 
+        };
+
+        // Uniform buffer storage
+        class UniformBufferStorage
+        {
+
+        public:
+
+            using SetAndBindingPair = std::pair<size_t, size_t>;
+            using UniforBufferMap = std::map<SetAndBindingPair, StructurePointer>;
+
+            void Add(
+                DataTypeStorage& dataTypeStorage,
+                DataTypePointerStorage& dataTypePointerStorage,
+                GeneratorOutputPinPointer& generatorOutputPin,
+                const Visual::DescriptorBindingBase& descriptorBindingBase);
+
+            Structure::Member* FindMember(const Visual::Pin* pin);
+
+            UniforBufferMap& GetBuffers();
+
+            void Clear();
+
+        private:
+
+            UniforBufferMap m_uniformBufferMap;
+            
         };
 
         // Debug name storage
@@ -465,8 +490,6 @@ namespace Molten::Shader
             const Visual::Script& script,
             const bool includeDebugSymbols);
 
-        void InitInterfaces();
-
         /** Build tree functions. */
         /**@{*/
         [[nodiscard]] bool BuildTree();
@@ -485,6 +508,8 @@ namespace Molten::Shader
         [[nodiscard]] bool WriteModule();
 
         void UpdatePushConstantMembers();
+        void UpdateUniformBuffersMembers();
+
         void UpdateDataTypeIds();
         void UpdateInputPointerIds();
         void UpdateInputIds();
@@ -494,6 +519,8 @@ namespace Molten::Shader
         void UpdatePushConstantStruct();
         void UpdateUniformConstantPointers();
         void UpdateSamplerIds();
+        void UpdateUniformPointerIds();
+        void UpdateUniformBufferStructs();
 
         void AddGlobalDebugNames();
 
@@ -502,6 +529,8 @@ namespace Molten::Shader
         void WriteOutputDecorations();
         void WritePushConstantDecorations();
         void WriteSamplerDecorations();
+        void WriteUniformBufferDecorations();
+
         [[nodiscard]] bool WriteDataTypes();
         void WriteInputPointers();
         void WriteInputs();
@@ -511,6 +540,8 @@ namespace Molten::Shader
         void WritePushConstantPointers();
         void WriteUniformConstantPointers();
         void WriteSamplers();
+        void WriteUniformBufferStructs();
+        void WriteUniformPointerIds();
         [[nodiscard]] bool WriteConstants();
 
         [[nodiscard]] bool WriteMainInstructions();
@@ -544,8 +575,9 @@ namespace Molten::Shader
         ConstantStorage m_constantStorage; 
         InputStructure m_inputStructure;
         OutputStructure m_outputStructure;
-        PushConstantStructure m_pushConstantStructure;
+        Structure m_pushConstantStructure;
         SamplerStorage m_samplerStorage;
+        UniformBufferStorage m_uniformBufferStorage;
         DebugNameStorage m_debugNameStorage;
 
         std::vector<GeneratorNodePointer> m_mainInstructions;

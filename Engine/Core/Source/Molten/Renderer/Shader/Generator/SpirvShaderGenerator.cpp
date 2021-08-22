@@ -105,37 +105,6 @@ namespace Molten::Shader
 
         return g_emptyString;
     }
-    /*
-    static bool GetGlslInstruction(Spirv::GlslInstruction& glslInstruction, const Visual::FunctionType functionType)
-    {
-        switch (functionType)
-        {
-            // Trigonometry
-            case Visual::FunctionType::Cos: glslInstruction = Spirv::GlslInstruction::Cos; return true;
-            case Visual::FunctionType::Sin: glslInstruction = Spirv::GlslInstruction::Sin; return true;
-            case Visual::FunctionType::Tan: glslInstruction = Spirv::GlslInstruction::Tan; return true;
-            // Mathematics.
-            case Visual::FunctionType::Max: glslInstruction = Spirv::GlslInstruction::FMax; return true;
-            case Visual::FunctionType::Min: glslInstruction = Spirv::GlslInstruction::FMin; return true;
-            // Vector.
-            case Visual::FunctionType::Cross: glslInstruction = Spirv::GlslInstruction::Cross; return true;
-            default: break;
-        }
-
-        return false;
-    }*/
-
-
-    // Spirv function traits.
-    /*template<Visual::FunctionType VFunction>
-    struct SpirvFunctionTrait;
-
-    template<>
-    struct SpirvFunctionTrait<Visual::FunctionType::Sin>
-    {
-        static constexpr size_t inputPinCount = 1;
-    };*/
-
 
     static std::optional<Spirv::Word> GetGlslFunction(const Visual::FunctionType functionType)
     {
@@ -172,10 +141,12 @@ namespace Molten::Shader
         m_script(nullptr),
         m_includeDebugSymbols(false),
         m_currentId(0),
+        m_glslExtension{},
         m_mainEntryPoint{},
         m_voidTypeId(0),
         m_mainFunctionTypeId(0),
-        m_mainFunctionLabelId(0)
+        m_mainFunctionLabelId(0),
+        m_pushConstantStructure(Spirv::StorageClass::PushConstant)
     {}
 
     Spirv::Words SpirvGenerator::Generate(
@@ -354,12 +325,14 @@ namespace Molten::Shader
     }
 
 
-    // Push constant structure implementations.
-    SpirvGenerator::PushConstantStructure::Member::Member(
+    // structure implementations.
+    SpirvGenerator::Structure::Member::Member(
+        Structure* structure,
         GeneratorOutputPinPointer outputPin,
         DataTypePointer dataType,
         DataTypePtrPointer dataTypePointer
     ) :
+        structure(structure),
         id(0),
         index(0),
         offset(0),
@@ -368,29 +341,30 @@ namespace Molten::Shader
         dataTypePointer(std::move(dataTypePointer))
     {}
 
-    SpirvGenerator::PushConstantStructure::PushConstantStructure() :
+    SpirvGenerator::Structure::Structure(const Spirv::StorageClass storageClass) :
         id(0),
         typeId(0),
         typePointerId(0),
-        isEmpty(true)
+        isEmpty(true),
+        storageClass(storageClass)
     {}
 
-    void SpirvGenerator::PushConstantStructure::AddMember(
+    void SpirvGenerator::Structure::AddMember(
         DataTypeStorage& dataTypeStorage,
         DataTypePointerStorage& dataTypePointerStorage,
         GeneratorOutputPinPointer& generatorOutputPin)
     {
         const auto& pin = generatorOutputPin->pin;
         auto dataType = dataTypeStorage.GetOrCreate(pin.GetDataType());
-        auto dataTypePointer = dataTypePointerStorage.GetOrCreate(Spirv::StorageClass::PushConstant, dataType);
+        auto dataTypePointer = dataTypePointerStorage.GetOrCreate(storageClass, dataType);
 
-        members.emplace_back(generatorOutputPin, std::move(dataType), std::move(dataTypePointer));
+        members.emplace_back(this, generatorOutputPin, std::move(dataType), std::move(dataTypePointer));
         isEmpty = false;
 
-        generatorOutputPin->storageClass = Spirv::StorageClass::PushConstant;
+        generatorOutputPin->storageClass = storageClass;
     }
 
-    SpirvGenerator::PushConstantStructure::Member* SpirvGenerator::PushConstantStructure::FindMember(const Visual::Pin* pin)
+    SpirvGenerator::Structure::Member* SpirvGenerator::Structure::FindMember(const Visual::Pin* pin)
     {
         const auto it = std::find_if(members.begin(), members.end(), [&](const auto& member)
         {
@@ -400,7 +374,7 @@ namespace Molten::Shader
         return it != members.end() ? &(*it) : nullptr;
     }
 
-    void SpirvGenerator::PushConstantStructure::Clear()
+    void SpirvGenerator::Structure::Clear()
     {
         id = 0;
         typeId = 0;
@@ -725,6 +699,50 @@ namespace Molten::Shader
     }
 
 
+    // Uniform buffer storage.
+    void SpirvGenerator::UniformBufferStorage::Add(
+        DataTypeStorage& dataTypeStorage,
+        DataTypePointerStorage& dataTypePointerStorage,
+        GeneratorOutputPinPointer& generatorOutputPin,
+        const Visual::DescriptorBindingBase& descriptorBindingBase)
+    {
+        const auto& set = descriptorBindingBase.GetSet();
+
+        const auto idPair = SetAndBindingPair{ set.GetId(), descriptorBindingBase.GetId() };
+        auto it = m_uniformBufferMap.find(idPair);
+        if(it == m_uniformBufferMap.end())
+        {
+            it = m_uniformBufferMap.insert({ idPair, std::make_shared<Structure>(Spirv::StorageClass::Uniform) }).first;
+        }
+
+        auto& structure = it->second;
+        structure->AddMember(dataTypeStorage, dataTypePointerStorage, generatorOutputPin);
+    }
+
+    SpirvGenerator::Structure::Member* SpirvGenerator::UniformBufferStorage::FindMember(const Visual::Pin* pin)
+    {
+        for(auto& uniformBuffer : m_uniformBufferMap)
+        {      
+            if(auto* member = uniformBuffer.second->FindMember(pin); member)
+            {
+                return member;
+            }
+        }
+
+        return nullptr;
+    }
+
+    SpirvGenerator::UniformBufferStorage::UniforBufferMap& SpirvGenerator::UniformBufferStorage::GetBuffers()
+    {
+        return m_uniformBufferMap;
+    }
+
+    void SpirvGenerator::UniformBufferStorage::Clear()
+    {
+        m_uniformBufferMap.clear();
+    }
+
+
     // Debug name storage implementations.
     SpirvGenerator::DebugNameStorage::DebugNameStorage() :
         m_debugNamesOffset(0)
@@ -804,177 +822,10 @@ namespace Molten::Shader
         m_outputStructure.Clear();
         m_pushConstantStructure.Clear();
         m_samplerStorage.Clear();
+        m_uniformBufferStorage.Clear();
         m_debugNameStorage.Clear();
 
         m_mainInstructions.clear();
-    }
-
-    void SpirvGenerator::InitInterfaces()
-    {
-        // Add inputs.
-        /*const auto& inputInterface = m_script->GetInputInterface();
-        if (const auto outputPins = inputInterface.GetOutputPins(); !outputPins.empty())
-        {
-            auto generatorNode = CreateGeneratorNode(inputInterface);
-
-            Spirv::Word location = 0;
-            for (auto& generatorOutputPin : generatorNode->outputPins)
-            {
-                const auto& outputPin = generatorOutputPin->pin;
-
-                const auto pinDataType = outputPin.GetDataType();
-                auto dataTypePointerDefinition = GetOrCreateDataTypePointer(m_inputDataTypePointers, pinDataType);
-
-                const auto outputId = GetNextId();
-                generatorOutputPin->id = outputId;
-                generatorOutputPin->storageClass = Spirv::StorageClass::Input;
-                CreateOutputInterfacePin(m_inputInterface, outputPin, std::move(dataTypePointerDefinition), outputId, location++);
-
-                if (m_includeDebugSymbols)
-                {
-                    m_debugNames.insert({ outputId, GetNextDebugName("in") });
-                }
-            }
-        }
-
-        // Add outputs
-        const auto& outputInterface = m_script->GetOutputInterface();
-        if (const auto inputPins = outputInterface.GetInputPins(); !inputPins.empty())
-        {
-            auto generatorNode = std::make_shared<GeneratorNode>(outputInterface);
-            m_outputNodes.push_back(generatorNode);
-
-            Spirv::Word location = 0;
-            for(auto& generatorInputPin : generatorNode->inputPins)
-            {
-                const auto& inputPin = generatorInputPin->pin;
-
-                const auto pinDataType = inputPin.GetDataType();
-                auto dataTypePointerDefinition = GetOrCreateDataTypePointer(m_outputDataTypePointers, pinDataType);
-
-                const auto outputId = GetNextId();
-                CreateOutputInterfacePin(m_outputInterface, inputPin, std::move(dataTypePointerDefinition), outputId, location++);
-
-                if (m_includeDebugSymbols)
-                {  
-                    m_debugNames.insert({ outputId, GetNextDebugName("out") });
-                }
-            }
-        }
-
-        // Add push constants.
-        const auto& pushConstants = m_script->GetPushConstantsBase();
-        if (auto pushConstantsOutputPins = pushConstants.GetOutputPins(); !pushConstantsOutputPins.empty())
-        {
-            CreateGeneratorNode(pushConstants);
-
-            m_pushConstantStruct = std::make_shared<PushConstantStruct>();
-
-            auto& pushConstantMembers = m_pushConstantStruct->members;
-            pushConstantMembers.reserve(pushConstantsOutputPins.size());
-
-            Spirv::Word index = 0;
-            Spirv::Word offset = 0;
-            for (const auto* pin : pushConstantsOutputPins)
-            {
-                GetOrCreateConstantScalar(static_cast<int32_t>(index));
-
-                const auto pinDataType = pin->GetDataType();
-
-                pushConstantMembers.push_back({ index, offset, GetOrCreateDataType(pinDataType) });
-
-                ++index;
-                offset += std::max(Spirv::Word{ 16 }, static_cast<Spirv::Word>(GetVariableByteOffset(pinDataType)));
-            }
-
-            m_pushConstantStruct->structTypeId = GetNextId();
-            m_pushConstantStruct->structTypePointerId = GetNextId();
-            m_pushConstantStruct->id = GetNextId();
-        }
-
-        // Add descriptor sets.
-        auto& descriptorSetsBase = m_script->GetDescriptorSetsBase();
-        for(size_t setIndex = 0; setIndex < descriptorSetsBase.GetSetCount(); setIndex++)
-        {
-            auto* setBase = descriptorSetsBase.GetSetBase(setIndex);
-            for (size_t bindingIndex = 0; bindingIndex < setBase->GetBindingCount(); bindingIndex++)
-            {
-                const auto* bindingBase = setBase->GetBindingBase(bindingIndex);
-
-                auto generatorNode = CreateGeneratorNode(*bindingBase);
-
-                // Uniform buffer.
-                const auto bindingType = bindingBase->GetBindingType();
-                if(bindingType == DescriptorBindingType::UniformBuffer)
-                {
-                    auto uniformBuffer = std::make_shared<UniformBuffer>();
-
-                    Spirv::Word memberIndex = 0;
-                    Spirv::Word memberOffset = 0;
- 
-                    for(auto& generatorOutputPin : generatorNode->outputPins)
-                    {
-                        const auto& outputPin = generatorOutputPin->pin;
-                        const auto pinDataType = outputPin.GetDataType();
-
-                        auto uniformBufferMember = std::make_shared<UniformBufferMember>();
-                        uniformBufferMember->index = memberIndex;
-                        uniformBufferMember->offset = memberOffset;
-                        uniformBufferMember->dataTypeDefinition = GetOrCreateDataType(pinDataType);
-                        uniformBufferMember->pointerId = GetNextId();
-                        uniformBufferMember->pin = &outputPin;
-
-                        uniformBuffer->members.push_back(uniformBufferMember);
-                        uniformBuffer->memberMap.insert({&outputPin, uniformBufferMember});
-
-                        ++memberIndex;
-                        memberOffset += std::max(Spirv::Word{ 16 }, static_cast<Spirv::Word>(GetVariableByteOffset(pinDataType)));
-                    }
-
-                    uniformBuffer->structTypeId = GetNextId();                  
-                    uniformBuffer->structTypePointerId = GetNextId();
-                    uniformBuffer->id = GetNextId();
-
-                    uniformBuffer->setIndex = setBase->GetId();
-                    uniformBuffer->bindingIndex = bindingBase->GetId();
-
-                    m_uniformBuffers.push_back(uniformBuffer);
-                }
-                else // Samplers.
-                {
-                    GetOrCreateDataType(VariableDataType::Float32);
-
-                    size_t dimensions = 0;
-                    switch(bindingType)
-                    {
-                        case DescriptorBindingType::Sampler1D: dimensions = 1; break;
-                        case DescriptorBindingType::Sampler2D: dimensions = 2; break;
-                        case DescriptorBindingType::Sampler3D: dimensions = 3; break;
-                        default: break;
-                    }
-
-                    if(m_imageDataTypes.Find(dimensions) == nullptr)
-                    {
-                        auto imageDataType = std::make_shared < ImageTypeStorage::ImageType>();
-                        imageDataType->dimensions = dimensions;
-                        imageDataType->typeId = GetNextId();
-                        m_imageDataTypes.dataTypePointers.push_back(std::move(imageDataType));
-                    }
-
-                    switch (bindingType)
-                    {
-                        case DescriptorBindingType::Sampler1D: GetOrCreateDataType(VariableDataType::Sampler1D); break;
-                        case DescriptorBindingType::Sampler2D: GetOrCreateDataType(VariableDataType::Sampler2D); break;
-                        case DescriptorBindingType::Sampler3D: GetOrCreateDataType(VariableDataType::Sampler3D); break;
-                        default: break;
-                    }
-
-                   // generatorNode->outputPins[0]->id =
-                    
-                }
-            }
-        }*/
-
     }
 
     bool SpirvGenerator::BuildTree()
@@ -1104,7 +955,7 @@ namespace Molten::Shader
                     } break;
                     case DescriptorBindingType::UniformBuffer:
                     {
-
+                        m_uniformBufferStorage.Add(m_dataTypeStorage, m_dataTypePointerStorage, generatorOutputPin, bindingBase);
                     } break;
                     default: break;
                 }
@@ -1125,31 +976,6 @@ namespace Molten::Shader
             default: break;
         }
     }
-
-
-    /*
-    bool SpirvGenerator::ProcessScriptConstantNode(GeneratorNode& generatorNode)
-    {
-        const auto& constantBase = static_cast<const Visual::ConstantBase&>(generatorNode.node);
-
-        switch(constantBase.GetDataType())
-        {
-            case VariableDataType::Int32: GetOrCreateConstantScalar(static_cast<const Visual::Constant<int32_t>&>(constantBase).GetValue()); return true;
-            case VariableDataType::Float32: GetOrCreateConstantScalar(static_cast<const Visual::Constant<float>&>(constantBase).GetValue()); return true;
-            case VariableDataType::Vector2f32: GetOrCreateConstantVector(static_cast<const Visual::Constant<Vector2f32>&>(constantBase).GetValue()); return true;
-            case VariableDataType::Vector3f32: GetOrCreateConstantVector(static_cast<const Visual::Constant<Vector3f32>&>(constantBase).GetValue()); return true;
-            case VariableDataType::Vector4f32: GetOrCreateConstantVector(static_cast<const Visual::Constant<Vector4f32>&>(constantBase).GetValue()); return true;
-            default: break;
-        }
-
-        Logger::WriteError(m_logger, "Data type of constant node is not support, data type: " + 
-            std::to_string(static_cast<size_t>(constantBase.GetDataType())) + ".");
-        
-        return false;
-
-        return true;
-    }
-    */
 
     SpirvGenerator::GeneratorNodePointer SpirvGenerator::CreateGeneratorNode(const Visual::Node& node)
     {
@@ -1225,7 +1051,7 @@ namespace Molten::Shader
             case Spirv::StorageClass::PushConstant:
             {
                 auto* member = m_pushConstantStructure.FindMember(&generatorOutputPin.pin);
-                if(!member)
+                if (!member)
                 {
                     return 0;
                 }
@@ -1240,10 +1066,26 @@ namespace Molten::Shader
 
                 return generatorOutputPin.id;
             }
-            /*case Spirv::StorageClass::UniformConstant:
+            case Spirv::StorageClass::Uniform:
             {
-                return 0;
-            } break;*/
+                auto* member = m_uniformBufferStorage.FindMember(&generatorOutputPin.pin);
+                if (!member)
+                {
+                    return 0;
+                }
+
+                const auto* structure = member->structure;
+
+                const auto accessChainId = GetNextId();
+                const auto newId = GetNextId();
+                m_module.AddOpAccessChain(member->dataTypePointer->id, accessChainId, structure->id, member->indexConstant->id);
+                m_module.AddOpLoad(member->dataType->id, newId, accessChainId);
+                
+                generatorOutputPin.id = newId;
+                generatorOutputPin.storageClass = Spirv::StorageClass::Function;
+
+                return generatorOutputPin.id;
+            }
             default: break;
         }
 
@@ -1252,23 +1094,9 @@ namespace Molten::Shader
 
     bool SpirvGenerator::WriteModule()
     {     
-        /*
-
-
-        for(const auto& uniformBuffer : m_uniformBuffers)
-        {
-            for (const auto& member : uniformBuffer->members)
-            {
-                m_module.AddOpMemberDecorateOffset(uniformBuffer->structTypeId, member->index, member->offset);
-            }
-
-            m_module.AddOpDecorateBlock(uniformBuffer->structTypeId);
-            m_module.AddOpDecorateDescriptorSet(uniformBuffer->id, uniformBuffer->setIndex);
-            m_module.AddOpDecorateBinding(uniformBuffer->id, uniformBuffer->bindingIndex);          
-        }
-*/
-
         UpdatePushConstantMembers();
+        UpdateUniformBuffersMembers();
+
         UpdateDataTypeIds();
         UpdateInputPointerIds();
         UpdateInputIds();
@@ -1278,6 +1106,8 @@ namespace Molten::Shader
         UpdatePushConstantStruct();
         UpdateUniformConstantPointers();
         UpdateSamplerIds();
+        UpdateUniformPointerIds();
+        UpdateUniformBufferStructs();
 
         if (m_includeDebugSymbols)
         {
@@ -1329,6 +1159,8 @@ namespace Molten::Shader
         WritePushConstantPointers();
         WriteUniformConstantPointers();
         WriteSamplers();
+        WriteUniformBufferStructs();
+        WriteUniformPointerIds();
 
         if (!WriteConstants())
         {
@@ -1385,6 +1217,50 @@ namespace Molten::Shader
                 member->index = index++;
                 member->offset = prevOffset;
                 member->indexConstant = m_constantStorage.GetOrCreate(m_dataTypeStorage, static_cast<int32_t>(member->index));
+            }
+        }
+    }
+
+    void SpirvGenerator::UpdateUniformBuffersMembers()
+    {
+        const auto& descriptorSets = m_script->GetDescriptorSetsBase();
+        
+        for(size_t i = 0; i < descriptorSets.GetSetCount(); i++)
+        {
+            const auto* set = descriptorSets.GetSetBase(i);
+            //const auto setId = set->GetId();
+
+            for(size_t j = 0; j < set->GetBindingCount(); j++)
+            {
+                const auto* binding = set->GetBindingBase(j);
+
+                if(binding->GetBindingType() != DescriptorBindingType::UniformBuffer)
+                {
+                    continue;
+                }
+
+                //const auto bindingId = binding->GetId();
+
+                Spirv::Word index = 0;
+                Spirv::Word offset = 0;
+
+                for (const auto* pin : binding->GetOutputPins())
+                {
+                    const auto pinDataType = pin->GetDataType();
+
+                    const auto prevOffset = offset;
+                    offset += std::max(Spirv::Word{ 16 }, static_cast<Spirv::Word>(GetVariableByteOffset(pinDataType)));
+
+                    auto* member = m_uniformBufferStorage.FindMember(pin);
+                    if (!member)
+                    {
+                        continue;
+                    }
+
+                    member->index = index++;
+                    member->offset = prevOffset;
+                    member->indexConstant = m_constantStorage.GetOrCreate(m_dataTypeStorage, static_cast<int32_t>(member->index));
+                }
             }
         }
     }
@@ -1471,6 +1347,26 @@ namespace Molten::Shader
         }
     }
 
+    void SpirvGenerator::UpdateUniformPointerIds()
+    {
+        for (auto& dataTypePointers : m_dataTypePointerStorage.GetAll(Spirv::StorageClass::Uniform))
+        {
+            dataTypePointers->id = GetNextId();
+        }
+    }
+
+    void SpirvGenerator::UpdateUniformBufferStructs()
+    {
+        for(auto& uniformBufferPair : m_uniformBufferStorage.GetBuffers())
+        {
+            auto& uniformBuffer = uniformBufferPair.second;
+            uniformBuffer->typeId = GetNextId();
+            uniformBuffer->typePointerId = GetNextId();
+            uniformBuffer->id = GetNextId();
+        }
+
+    }
+
     void SpirvGenerator::AddGlobalDebugNames()
     {
         m_debugNameStorage.AddWithoutCounter(m_mainEntryPoint.id, m_mainEntryPoint.name);
@@ -1487,12 +1383,19 @@ namespace Molten::Shader
 
         if (!m_pushConstantStructure.isEmpty)
         {
+            m_debugNameStorage.AddWithoutCounter(m_pushConstantStructure.typeId, "s_pc");
             m_debugNameStorage.AddWithoutCounter(m_pushConstantStructure.id, "pc");
         }
 
-        for(const auto& sampler : m_samplerStorage.GetSamplers())
+        for (const auto& sampler : m_samplerStorage.GetSamplers())
         {
             m_debugNameStorage.Add(sampler.outputPin->id, "sampler");
+        }
+
+        for (const auto& uniformBufferPair : m_uniformBufferStorage.GetBuffers())
+        {
+            m_debugNameStorage.Add(uniformBufferPair.second->typeId, "s_ubo");
+            m_debugNameStorage.Add(uniformBufferPair.second->id, "ubo");        
         }
     }
 
@@ -1502,6 +1405,7 @@ namespace Molten::Shader
         WriteOutputDecorations();
         WritePushConstantDecorations();
         WriteSamplerDecorations();
+        WriteUniformBufferDecorations();
     }
 
     void SpirvGenerator::WriteInputDecorations()
@@ -1531,7 +1435,7 @@ namespace Molten::Shader
             return;
         }
 
-        PushConstantStructure::Members membersCopy = m_pushConstantStructure.members;
+        Structure::Members membersCopy = m_pushConstantStructure.members;
 
         std::sort(membersCopy.begin(), membersCopy.end(), [&](const auto& lhs, const auto& rhs)
         {
@@ -1552,6 +1456,33 @@ namespace Molten::Shader
         {
             m_module.AddOpDecorateDescriptorSet(sampler.outputPin->id, sampler.setId);
             m_module.AddOpDecorateBinding(sampler.outputPin->id, sampler.bindingId);
+        }
+    }
+
+    void SpirvGenerator::WriteUniformBufferDecorations()
+    {
+        for(const auto& uniformBufferPair : m_uniformBufferStorage.GetBuffers())
+        {
+            const auto& uniformBuffer = uniformBufferPair.second;
+            const auto& idPairs = uniformBufferPair.first;
+
+            Structure::Members membersCopy = uniformBuffer->members;
+
+            std::sort(membersCopy.begin(), membersCopy.end(), [&](const auto& lhs, const auto& rhs)
+            {
+                return lhs.index < rhs.index;
+            });
+
+            const auto structTypeId = uniformBuffer->typeId;
+
+            for (const auto& member : membersCopy)
+            {
+                m_module.AddOpMemberDecorateOffset(structTypeId, member.index, member.offset);
+            }
+
+            m_module.AddOpDecorateBlock(uniformBuffer->typeId);
+            m_module.AddOpDecorateDescriptorSet(uniformBuffer->id, static_cast<Spirv::Id>(idPairs.first));
+            m_module.AddOpDecorateBinding(uniformBuffer->id, static_cast<Spirv::Id>(idPairs.second));
         }
     }
 
@@ -1739,6 +1670,32 @@ namespace Molten::Shader
         for (const auto& sampler : m_samplerStorage.GetSamplers())
         {
             m_module.AddOpVariable(sampler.outputPin->id, sampler.dataTypePointer->id, Spirv::StorageClass::UniformConstant);
+        }
+    }
+
+    void SpirvGenerator::WriteUniformBufferStructs()
+    {
+        for(const auto& uniformBufferPair : m_uniformBufferStorage.GetBuffers())
+        {
+            const auto& uniformBuffer = uniformBufferPair.second;
+
+            Spirv::Words memberTypeids;
+            for (const auto& member : uniformBuffer->members)
+            {
+                memberTypeids.push_back(member.dataType->id);
+            }
+
+            m_module.AddOpTypeStruct(uniformBuffer->typeId, memberTypeids);
+            m_module.AddOpTypePointer(uniformBuffer->typePointerId, Spirv::StorageClass::Uniform, uniformBuffer->typeId);
+            m_module.AddOpVariable(uniformBuffer->id, uniformBuffer->typePointerId, Spirv::StorageClass::Uniform);
+        }
+    }
+
+    void SpirvGenerator::WriteUniformPointerIds()
+    {
+        for (const auto& dataTypePointers : m_dataTypePointerStorage.GetAll(Spirv::StorageClass::Uniform))
+        {
+            m_module.AddOpTypePointer(dataTypePointers->id, Spirv::StorageClass::Uniform, dataTypePointers->dataType->id);
         }
     }
 
