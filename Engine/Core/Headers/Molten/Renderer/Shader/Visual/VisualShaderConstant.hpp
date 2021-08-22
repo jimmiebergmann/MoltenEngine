@@ -36,14 +36,25 @@ namespace Molten::Shader::Visual
 
     public:
 
-        /** Constructor. */
-        ConstantBase(Script& script);
+        /* Deleted copy/move constructor/operators. */
+        /**@{*/
+        ConstantBase(const ConstantBase&) = delete;
+        ConstantBase(ConstantBase&&) = delete;
+        ConstantBase& operator =(const ConstantBase&) = delete;
+        ConstantBase& operator =(ConstantBase&&) = delete;
+        /**@}*/
 
         /** Get type of node. */
-        NodeType GetType() const override;
+        [[nodiscard]] NodeType GetType() const override;
 
         /** Get data type of constant. */
-        virtual VariableDataType GetDataType() const = 0;
+        [[nodiscard]] virtual VariableDataType GetDataType() const = 0;
+
+    protected:
+
+        explicit ConstantBase(Script& script);
+
+        ~ConstantBase() override = default;
 
     };
 
@@ -58,44 +69,61 @@ namespace Molten::Shader::Visual
         using DataType = TDataType;
         using PinType = OutputPin<DataType>;
 
+        /* Deleted copy/move constructor/operators. */
+        /**@{*/
+        Constant(const Constant&) = delete;
+        Constant(Constant&&) = delete;
+        Constant& operator =(const Constant&) = delete;
+        Constant& operator =(Constant&&) = delete;
+        /**@}*/
 
-        /** Constructor. */
-        Constant(Script& script, const TDataType& value);
+        /** Get output pin of function as reference. */
+        /**@{*/
+        [[nodiscard]] OutputPin<TDataType>& GetOutput();
+        [[nodiscard]] const OutputPin<TDataType>& GetOutput() const;
+        /**@}*/
 
         /** Get data type of constant. */
-        VariableDataType GetDataType() const override;
-
+        [[nodiscard]] VariableDataType GetDataType() const override;
 
         /**  Get number of output pins.*/
-        size_t GetOutputPinCount() const override;
+        [[nodiscard]] size_t GetOutputPinCount() const override;
 
-        /**
-         * Get output pin by index.
+        /** Get output pin by index.
          *
          * @return Pointer of output pin at given index, nullptr if index is >= GetOutputPinCount().
          */
-         /**@{*/
-        Pin* GetOutputPin(const size_t index = 0) override;
-        const Pin* GetOutputPin(const size_t index = 0) const override;
+        /**@{*/
+        [[nodiscard]] Pin* GetOutputPin(const size_t index = 0) override;
+        [[nodiscard]] const Pin* GetOutputPin(const size_t index = 0) const override;
         /**@}*/
 
         /** Get all output pins, wrapped in a vector. */
         /**@{*/
-        std::vector<Pin*> GetOutputPins() override;
-        std::vector<const Pin*> GetOutputPins() const override;
+        [[nodiscard]] std::vector<Pin*> GetOutputPins() override;
+        [[nodiscard]] std::vector<const Pin*> GetOutputPins() const override;
         /**@}*/
 
 
         /** Get value of constant. */
-        const TDataType& GetValue() const;
+        [[nodiscard]] const TDataType& GetValue() const;
 
         /** Set value of constant. */
         void SetValue(const TDataType& value);
 
+    protected:
+
+        Constant(Script& script, const TDataType& value);
+
+        ~Constant() override = default;
+
     private:
 
         TDataType m_value;
-        OutputPin<TDataType> m_pin;
+        OutputPin<TDataType> m_output;
+
+        friend class VertexScript;
+        friend class FragmentScript;
 
     };
 

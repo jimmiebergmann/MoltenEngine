@@ -30,7 +30,7 @@ namespace Molten::Shader::Visual
 
     // Single descriptor set implementations.
     template<typename ... TAllowedBindingTypes>
-    inline DescriptorSet<TAllowedBindingTypes...>::DescriptorSet(Script& script, const uint32_t id) :
+    DescriptorSet<TAllowedBindingTypes...>::DescriptorSet(Script& script, const uint32_t id) :
         m_script(script),
         m_id(id),
         m_bindings{},
@@ -38,47 +38,47 @@ namespace Molten::Shader::Visual
     {}
 
     template<typename ... TAllowedBindingTypes>
-    inline typename DescriptorSet<TAllowedBindingTypes...>::Iterator DescriptorSet<TAllowedBindingTypes...>::begin()
+    typename DescriptorSet<TAllowedBindingTypes...>::Iterator DescriptorSet<TAllowedBindingTypes...>::begin()
     {
         return m_bindings.begin();
     }
     template<typename ... TAllowedBindingTypes>
-    inline typename DescriptorSet<TAllowedBindingTypes...>::ConstIterator DescriptorSet<TAllowedBindingTypes...>::begin() const
+    typename DescriptorSet<TAllowedBindingTypes...>::ConstIterator DescriptorSet<TAllowedBindingTypes...>::begin() const
     {
         return m_bindings.begin();
     }
 
     template<typename ... TAllowedBindingTypes>
-    inline typename DescriptorSet<TAllowedBindingTypes...>::Iterator DescriptorSet<TAllowedBindingTypes...>::end()
+    typename DescriptorSet<TAllowedBindingTypes...>::Iterator DescriptorSet<TAllowedBindingTypes...>::end()
     {
         return m_bindings.end();
     }
     template<typename ... TAllowedBindingTypes>
-    inline typename DescriptorSet<TAllowedBindingTypes...>::ConstIterator DescriptorSet<TAllowedBindingTypes...>::end() const
+    typename DescriptorSet<TAllowedBindingTypes...>::ConstIterator DescriptorSet<TAllowedBindingTypes...>::end() const
     {
         return m_bindings.end();
     }
 
     template<typename ... TAllowedBindingTypes>
-    inline Script& DescriptorSet<TAllowedBindingTypes...>::GetScript()
+    Script& DescriptorSet<TAllowedBindingTypes...>::GetScript()
     {
         return m_script;
     }
     template<typename ... TAllowedBindingTypes>
-    inline const Script& DescriptorSet<TAllowedBindingTypes...>::GetScript() const
+    const Script& DescriptorSet<TAllowedBindingTypes...>::GetScript() const
     {
         return m_script;
     }
 
     template<typename ... TAllowedBindingTypes>
-    inline uint32_t DescriptorSet<TAllowedBindingTypes...>::GetId() const
+    uint32_t DescriptorSet<TAllowedBindingTypes...>::GetId() const
     {
         return m_id;
     }
 
     template<typename ... TAllowedBindingTypes>
     template<typename TBindingType>
-    inline DescriptorBinding<TBindingType>* DescriptorSet<TAllowedBindingTypes...>::AddBinding(const uint32_t id)
+    DescriptorBinding<TBindingType>* DescriptorSet<TAllowedBindingTypes...>::AddBinding(const uint32_t id)
     {
        static_assert(TemplateArgumentsContains<DescriptorBinding<TBindingType>, TAllowedBindingTypes...>(), 
             "Provided TBindingType is not allowed for this set.");
@@ -88,7 +88,7 @@ namespace Molten::Shader::Visual
             return nullptr;
         }
  
-        auto binding = new DescriptorBinding<TBindingType>(m_script, id);
+        auto binding = new DescriptorBinding<TBindingType>(m_script, *this, id);
         m_bindings.push_back(binding);
         m_usedBindingIds.insert(id);
 
@@ -96,7 +96,7 @@ namespace Molten::Shader::Visual
     }
 
     template<typename ... TAllowedBindingTypes>
-    inline void DescriptorSet<TAllowedBindingTypes...>::RemoveBinding(const size_t index)
+    void DescriptorSet<TAllowedBindingTypes...>::RemoveBinding(const size_t index)
     {
         if (index >= m_bindings.size())
         {
@@ -109,7 +109,7 @@ namespace Molten::Shader::Visual
     }
 
     template<typename ... TAllowedBindingTypes>
-    inline void DescriptorSet<TAllowedBindingTypes...>::RemoveBinding(Iterator it)
+    void DescriptorSet<TAllowedBindingTypes...>::RemoveBinding(Iterator it)
     {
         if(it == m_bindings.end())
         {
@@ -123,7 +123,7 @@ namespace Molten::Shader::Visual
     }
 
     template<typename ... TAllowedBindingTypes>
-    inline void DescriptorSet<TAllowedBindingTypes...>::RemoveBinding(ConstIterator it)
+    void DescriptorSet<TAllowedBindingTypes...>::RemoveBinding(ConstIterator it)
     {
         if (it == m_bindings.end())
         {
@@ -137,7 +137,7 @@ namespace Molten::Shader::Visual
     }
 
     template<typename ... TAllowedBindingTypes>
-    inline void DescriptorSet<TAllowedBindingTypes...>::RemoveAllBindings()
+    void DescriptorSet<TAllowedBindingTypes...>::RemoveAllBindings()
     {
         for (auto* binding : m_bindings)
         {
@@ -149,7 +149,7 @@ namespace Molten::Shader::Visual
 
     template<typename ... TAllowedBindingTypes>
     template<typename TBindingType>
-    inline DescriptorBinding<TBindingType>* DescriptorSet<TAllowedBindingTypes...>::GetBinding(const size_t index)
+    DescriptorBinding<TBindingType>* DescriptorSet<TAllowedBindingTypes...>::GetBinding(const size_t index)
     {
         if (index >= m_bindings.size())
         {
@@ -159,7 +159,7 @@ namespace Molten::Shader::Visual
     }
     template<typename ... TAllowedBindingTypes>
     template<typename TBindingType>
-    inline const DescriptorBinding<TBindingType>* DescriptorSet<TAllowedBindingTypes...>::GetBinding(const size_t index) const
+    const DescriptorBinding<TBindingType>* DescriptorSet<TAllowedBindingTypes...>::GetBinding(const size_t index) const
     {
         if (index >= m_bindings.size())
         {
@@ -169,7 +169,7 @@ namespace Molten::Shader::Visual
     }
 
     template<typename ... TAllowedBindingTypes>
-    inline DescriptorBindingBase* DescriptorSet<TAllowedBindingTypes...>::GetBindingBase(const size_t index)
+    DescriptorBindingBase* DescriptorSet<TAllowedBindingTypes...>::GetBindingBase(const size_t index)
     {
         if (index >= m_bindings.size())
         {
@@ -178,7 +178,7 @@ namespace Molten::Shader::Visual
         return m_bindings[index];
     }
     template<typename ... TAllowedBindingTypes>
-    inline const DescriptorBindingBase* DescriptorSet<TAllowedBindingTypes...>::GetBindingBase(const size_t index) const
+    const DescriptorBindingBase* DescriptorSet<TAllowedBindingTypes...>::GetBindingBase(const size_t index) const
     {
         if (index >= m_bindings.size())
         {
@@ -188,13 +188,13 @@ namespace Molten::Shader::Visual
     }
 
     template<typename ... TAllowedBindingTypes>
-    inline size_t DescriptorSet<TAllowedBindingTypes...>::GetBindingCount() const
+    size_t DescriptorSet<TAllowedBindingTypes...>::GetBindingCount() const
     {
         return m_bindings.size();
     }
 
     template<typename ... TAllowedBindingTypes>
-    inline DescriptorSet<TAllowedBindingTypes...>::~DescriptorSet()
+    DescriptorSet<TAllowedBindingTypes...>::~DescriptorSet()
     {
         RemoveAllBindings();
     }
@@ -202,42 +202,42 @@ namespace Molten::Shader::Visual
 
     // Multiple descriptor sets implementations.
     template<typename ... TAllowedBindingTypes>
-    inline DescriptorSets<TAllowedBindingTypes...>::DescriptorSets(Script& script) :
+    DescriptorSets<TAllowedBindingTypes...>::DescriptorSets(Script& script) :
         m_script(script),
         m_sets{},
         m_usedSetIds{}
     {}
 
     template<typename ... TAllowedBindingTypes>
-    inline DescriptorSets<TAllowedBindingTypes...>::~DescriptorSets()
+    DescriptorSets<TAllowedBindingTypes...>::~DescriptorSets()
     {
         RemoveAllSets();
     }
 
     template<typename ... TAllowedBindingTypes>
-    inline typename DescriptorSets<TAllowedBindingTypes...>::Iterator DescriptorSets<TAllowedBindingTypes...>::begin()
+    typename DescriptorSets<TAllowedBindingTypes...>::Iterator DescriptorSets<TAllowedBindingTypes...>::begin()
     {
         return m_sets.begin();
     }
     template<typename ... TAllowedBindingTypes>
-    inline typename DescriptorSets<TAllowedBindingTypes...>::ConstIterator DescriptorSets<TAllowedBindingTypes...>::begin() const
+    typename DescriptorSets<TAllowedBindingTypes...>::ConstIterator DescriptorSets<TAllowedBindingTypes...>::begin() const
     {
         return m_sets.begin();
     }
 
     template<typename ... TAllowedBindingTypes>
-    inline typename DescriptorSets<TAllowedBindingTypes...>::Iterator DescriptorSets<TAllowedBindingTypes...>::end()
+    typename DescriptorSets<TAllowedBindingTypes...>::Iterator DescriptorSets<TAllowedBindingTypes...>::end()
     {
         return m_sets.end();
     }
     template<typename ... TAllowedBindingTypes>
-    inline typename DescriptorSets<TAllowedBindingTypes...>::ConstIterator DescriptorSets<TAllowedBindingTypes...>::end() const
+    typename DescriptorSets<TAllowedBindingTypes...>::ConstIterator DescriptorSets<TAllowedBindingTypes...>::end() const
     {
         return m_sets.end();
     }
 
     template<typename ... TAllowedBindingTypes>
-    inline typename DescriptorSets<TAllowedBindingTypes...>::DescriptorSetType* DescriptorSets<TAllowedBindingTypes...>::AddSet(const uint32_t id)
+    typename DescriptorSets<TAllowedBindingTypes...>::DescriptorSetType* DescriptorSets<TAllowedBindingTypes...>::AddSet(const uint32_t id)
     {
         if (m_usedSetIds.find(id) != m_usedSetIds.end())
         {
@@ -252,7 +252,7 @@ namespace Molten::Shader::Visual
     }
 
     template<typename ... TAllowedBindingTypes>
-    inline void DescriptorSets<TAllowedBindingTypes...>::RemoveSet(const size_t index)
+    void DescriptorSets<TAllowedBindingTypes...>::RemoveSet(const size_t index)
     {
         if(index >= m_sets.size())
         {
@@ -265,7 +265,7 @@ namespace Molten::Shader::Visual
     }
 
     template<typename ... TAllowedBindingTypes>
-    inline void DescriptorSets<TAllowedBindingTypes...>::RemoveSet(Iterator it)
+    void DescriptorSets<TAllowedBindingTypes...>::RemoveSet(Iterator it)
     {
         if (it == m_sets.end())
         {
@@ -279,7 +279,7 @@ namespace Molten::Shader::Visual
     }
 
     template<typename ... TAllowedBindingTypes>
-    inline void DescriptorSets<TAllowedBindingTypes...>::RemoveSet(ConstIterator it)
+    void DescriptorSets<TAllowedBindingTypes...>::RemoveSet(ConstIterator it)
     {
         if (it == m_sets.end())
         {
@@ -293,7 +293,7 @@ namespace Molten::Shader::Visual
     }
 
     template<typename ... TAllowedBindingTypes>
-    inline void DescriptorSets<TAllowedBindingTypes...>::RemoveAllSets()
+    void DescriptorSets<TAllowedBindingTypes...>::RemoveAllSets()
     {
         for (auto* set : m_sets)
         {
@@ -304,7 +304,7 @@ namespace Molten::Shader::Visual
     }
 
     template<typename ... TAllowedBindingTypes>
-    inline typename DescriptorSets<TAllowedBindingTypes...>::DescriptorSetType* DescriptorSets<TAllowedBindingTypes...>::GetSet(const size_t index)
+    typename DescriptorSets<TAllowedBindingTypes...>::DescriptorSetType* DescriptorSets<TAllowedBindingTypes...>::GetSet(const size_t index)
     {
         if (index >= m_sets.size())
         {
@@ -313,26 +313,7 @@ namespace Molten::Shader::Visual
         return m_sets[index];
     }
     template<typename ... TAllowedBindingTypes>
-    inline const typename DescriptorSets<TAllowedBindingTypes...>::DescriptorSetType* DescriptorSets<TAllowedBindingTypes...>::GetSet(const size_t index) const
-    {
-        if (index >= m_sets.size())
-        {
-            return nullptr;
-        }
-        return m_sets[index];
-    }
-
-    template<typename ... TAllowedBindingTypes>
-    inline DescriptorSetBase* DescriptorSets<TAllowedBindingTypes...>::GetSetBase(const size_t index)
-    {
-        if (index >= m_sets.size())
-        {
-            return nullptr;
-        }
-        return m_sets[index];
-    }
-    template<typename ... TAllowedBindingTypes>
-    inline const DescriptorSetBase* DescriptorSets<TAllowedBindingTypes...>::GetSetBase(const size_t index) const
+    const typename DescriptorSets<TAllowedBindingTypes...>::DescriptorSetType* DescriptorSets<TAllowedBindingTypes...>::GetSet(const size_t index) const
     {
         if (index >= m_sets.size())
         {
@@ -342,7 +323,26 @@ namespace Molten::Shader::Visual
     }
 
     template<typename ... TAllowedBindingTypes>
-    inline size_t DescriptorSets<TAllowedBindingTypes...>::GetSetCount() const
+    DescriptorSetBase* DescriptorSets<TAllowedBindingTypes...>::GetSetBase(const size_t index)
+    {
+        if (index >= m_sets.size())
+        {
+            return nullptr;
+        }
+        return m_sets[index];
+    }
+    template<typename ... TAllowedBindingTypes>
+    const DescriptorSetBase* DescriptorSets<TAllowedBindingTypes...>::GetSetBase(const size_t index) const
+    {
+        if (index >= m_sets.size())
+        {
+            return nullptr;
+        }
+        return m_sets[index];
+    }
+
+    template<typename ... TAllowedBindingTypes>
+    size_t DescriptorSets<TAllowedBindingTypes...>::GetSetCount() const
     {
         return m_sets.size();
     }

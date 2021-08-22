@@ -26,6 +26,7 @@
 #include "Molten/Renderer/Shader/Generator/SpirvShaderGenerator.hpp"
 #include "Molten/Logger.hpp"
 #include <stack>
+#include <algorithm>
 
 namespace Molten::Shader
 {
@@ -49,7 +50,7 @@ namespace Molten::Shader
     static const std::string g_functionNameTexture3D = "texture3D";
 
     // Global implementations.
-    /*static size_t GetVariableByteOffset(const VariableDataType dataType)
+    static size_t GetVariableByteOffset(const VariableDataType dataType)
     {
         switch (dataType)
         {
@@ -65,26 +66,18 @@ namespace Molten::Shader
             case VariableDataType::Sampler3D: break;
         }
         return 0;
-    }*/
+    }
 
-    static const std::string& GetOperatorName(const Visual::OperatorBase& operatorBase)
+    static const std::string& GetArithmeticOperatorName(const Visual::ArithmeticOperatorType arithmeticOperatorType)
     {
-        switch(operatorBase.GetOperatorType())
+        switch (arithmeticOperatorType)
         {
-            case Visual::OperatorType::Arithmetic:
-            {
-                const auto& arithmeticBase = static_cast<const Visual::ArithmeticOperatorBase&>(operatorBase);
-                switch (arithmeticBase.GetArithmeticOperatorType())
-                {
-                    case Visual::ArithmeticOperatorType::Addition: return g_arithmeticOperatorNameAdd;
-                    case Visual::ArithmeticOperatorType::Division: return g_arithmeticOperatorNameDiv;
-                    case Visual::ArithmeticOperatorType::Multiplication: return g_arithmeticOperatorNameMul;
-                    case Visual::ArithmeticOperatorType::Subtraction: return g_arithmeticOperatorNameSub;
-                    default: break;
-                }
-            } break;
+            case Visual::ArithmeticOperatorType::Addition: return g_arithmeticOperatorNameAdd;
+            case Visual::ArithmeticOperatorType::Division: return g_arithmeticOperatorNameDiv;
+            case Visual::ArithmeticOperatorType::Multiplication: return g_arithmeticOperatorNameMul;
+            case Visual::ArithmeticOperatorType::Subtraction: return g_arithmeticOperatorNameSub;
             default: break;
-        }
+        }      
 
         return g_emptyString;
     }
@@ -182,8 +175,7 @@ namespace Molten::Shader
         m_mainEntryPoint{},
         m_voidTypeId(0),
         m_mainFunctionTypeId(0),
-        m_mainFunctionLabelId(0),
-        m_opDebugNameStart(0)      
+        m_mainFunctionLabelId(0)
     {}
 
     Spirv::Words SpirvGenerator::Generate(
@@ -207,93 +199,6 @@ namespace Molten::Shader
     }
 
 
-    // Data type implementations.
-    SpirvGenerator::DataType::DataType(const VariableDataType type) :
-        id(0),
-        type(type)
-    {}
-
-
-    // Data type pointer implementations.
-    SpirvGenerator::DataTypePtr::DataTypePtr(
-        DataTypePointer dataType,
-        const Spirv::StorageClass storageClass
-    ) :
-        id(0),
-        dataType(std::move(dataType)),
-        storageClass(storageClass)
-    {}
-
-
-    // Output structure member implementations.
-    SpirvGenerator::OutputStructure::Member::Member(
-        GeneratorOutputPinPointer outputPin,
-            DataTypePointer dataType,
-            DataTypePtrPointer dataTypePointer
-    ) :
-        outputPin(std::move(outputPin)),
-        dataType(std::move(dataType)),
-        dataTypePointer(std::move(dataTypePointer))
-    {}
-
-
-    // Output structure member implementations.
-    void SpirvGenerator::OutputStructure::Clear()
-    {
-        members.clear();
-    }
-
-
-    // Input structure member implementations.
-    SpirvGenerator::InputStructure::Member::Member(
-        GeneratorInputPinPointer inputPin,
-        DataTypePointer dataType,
-        DataTypePtrPointer dataTypePointer
-    ) :
-        id(0),
-        inputPin(std::move(inputPin)),
-        dataType(std::move(dataType)),
-        dataTypePointer(std::move(dataTypePointer))
-    {}
-
-
-    // Input structure member implementations.
-    SpirvGenerator::InputStructure::Member* SpirvGenerator::InputStructure::FindMember(GeneratorInputPinPointer& inputPin)
-    {
-        auto it = std::find_if(members.begin(), members.end(), [&](const auto& member)
-        {
-            return member.inputPin == inputPin;
-        });
-
-        return it != members.end() ? &(*it) : nullptr;
-    }
-
-    void SpirvGenerator::InputStructure::Clear()
-    {
-        members.clear();
-    }
-
-
-    /*SpirvGenerator::DataTypePointerDefinition::DataTypePointerDefinition(
-        DataTypeDefinitionPointer dataTypeDefinition,
-        const Spirv::Id pointerId
-    ):
-        dataTypeDefinition(std::move(dataTypeDefinition)),
-        pointerId(pointerId)
-    {}*/
-    
-
-    /*SpirvGenerator::ImageTypeStorage::ImageTypePointer SpirvGenerator::ImageTypeStorage::Find(const size_t dimensions)
-    {
-        auto it = std::find_if(dataTypePointers.begin(), dataTypePointers.end(), [&](const auto& imageDataType)
-        {
-            return imageDataType->dimensions == dimensions;
-        });
-
-        return it != dataTypePointers.end() ? *it : nullptr;
-    }*/
-
-
     // Generator output pin implementations.
     SpirvGenerator::GeneratorInputPin::GeneratorInputPin(const Visual::Pin& pin) :
         pin(pin),
@@ -305,8 +210,8 @@ namespace Molten::Shader
     SpirvGenerator::GeneratorOutputPin::GeneratorOutputPin(const Visual::Pin& pin) :
         pin(pin),
         id(0),
-        storageClass(Spirv::StorageClass::Function),
-        isVisited(false)
+        storageClass(Spirv::StorageClass::Function)//,
+        //isVisited(false)
     {}
 
 
@@ -332,9 +237,9 @@ namespace Molten::Shader
 
     SpirvGenerator::GeneratorOutputPinPointer SpirvGenerator::GeneratorNode::FindOutputPin(const Visual::Pin& pin)
     {
-        for(auto& outputPin : outputPins)
+        for (auto& outputPin : outputPins)
         {
-            if(&outputPin->pin == &pin)
+            if (&outputPin->pin == &pin)
             {
                 return outputPin;
             }
@@ -372,6 +277,139 @@ namespace Molten::Shader
     }
 
 
+    // Data type implementations.
+    SpirvGenerator::DataType::DataType(const VariableDataType type) :
+        id(0),
+        type(type)
+    {}
+
+
+    // Data type pointer implementations.
+    SpirvGenerator::DataTypePtr::DataTypePtr(
+        DataTypePointer dataType,
+        const Spirv::StorageClass storageClass
+    ) :
+        id(0),
+        dataType(std::move(dataType)),
+        storageClass(storageClass)
+    {}
+
+
+    // Input structure implementations.
+    SpirvGenerator::InputStructure::Member::Member(
+        GeneratorOutputPinPointer outputPin,
+            DataTypePointer dataType,
+            DataTypePtrPointer dataTypePointer
+    ) :
+        outputPin(std::move(outputPin)),
+        dataType(std::move(dataType)),
+        dataTypePointer(std::move(dataTypePointer))
+    {}
+
+    void SpirvGenerator::InputStructure::AddMember(
+        DataTypeStorage& dataTypeStorage,
+        DataTypePointerStorage& dataTypePointerStorage,
+        GeneratorOutputPinPointer& generatorOutputPin)
+    {
+        const auto& pin = generatorOutputPin->pin;
+        auto dataType = dataTypeStorage.GetOrCreate(pin.GetDataType());
+        auto dataTypePointer = dataTypePointerStorage.GetOrCreate(Spirv::StorageClass::Input, dataType);
+
+        members.emplace_back(generatorOutputPin, std::move(dataType), std::move(dataTypePointer));
+
+        generatorOutputPin->storageClass = Spirv::StorageClass::Input;
+    }
+
+    void SpirvGenerator::InputStructure::Clear()
+    {
+        members.clear();
+    }
+
+
+    // Output structure implementations.
+    SpirvGenerator::OutputStructure::Member::Member(
+        GeneratorInputPinPointer inputPin,
+        DataTypePointer dataType,
+        DataTypePtrPointer dataTypePointer
+    ) :
+        id(0),
+        inputPin(std::move(inputPin)),
+        dataType(std::move(dataType)),
+        dataTypePointer(std::move(dataTypePointer))
+    {}
+
+    SpirvGenerator::OutputStructure::Member* SpirvGenerator::OutputStructure::FindMember(GeneratorInputPinPointer& inputPin)
+    {
+        const auto it = std::find_if(members.begin(), members.end(), [&](const auto& member)
+        {
+            return member.inputPin == inputPin;
+        });
+
+        return it != members.end() ? &(*it) : nullptr;
+    }
+
+    void SpirvGenerator::OutputStructure::Clear()
+    {
+        members.clear();
+    }
+
+
+    // Push constant structure implementations.
+    SpirvGenerator::PushConstantStructure::Member::Member(
+        GeneratorOutputPinPointer outputPin,
+        DataTypePointer dataType,
+        DataTypePtrPointer dataTypePointer
+    ) :
+        id(0),
+        index(0),
+        offset(0),
+        outputPin(std::move(outputPin)),
+        dataType(std::move(dataType)),
+        dataTypePointer(std::move(dataTypePointer))
+    {}
+
+    SpirvGenerator::PushConstantStructure::PushConstantStructure() :
+        id(0),
+        typeId(0),
+        typePointerId(0),
+        isEmpty(true)
+    {}
+
+    void SpirvGenerator::PushConstantStructure::AddMember(
+        DataTypeStorage& dataTypeStorage,
+        DataTypePointerStorage& dataTypePointerStorage,
+        GeneratorOutputPinPointer& generatorOutputPin)
+    {
+        const auto& pin = generatorOutputPin->pin;
+        auto dataType = dataTypeStorage.GetOrCreate(pin.GetDataType());
+        auto dataTypePointer = dataTypePointerStorage.GetOrCreate(Spirv::StorageClass::PushConstant, dataType);
+
+        members.emplace_back(generatorOutputPin, std::move(dataType), std::move(dataTypePointer));
+        isEmpty = false;
+
+        generatorOutputPin->storageClass = Spirv::StorageClass::PushConstant;
+    }
+
+    SpirvGenerator::PushConstantStructure::Member* SpirvGenerator::PushConstantStructure::FindMember(const Visual::Pin* pin)
+    {
+        const auto it = std::find_if(members.begin(), members.end(), [&](const auto& member)
+        {
+            return &member.outputPin->pin == pin;
+        });
+
+        return it != members.end() ? &(*it) : nullptr;
+    }
+
+    void SpirvGenerator::PushConstantStructure::Clear()
+    {
+        id = 0;
+        typeId = 0;
+        typePointerId = 0;
+        members.clear();
+        isEmpty = true;
+    }
+
+
     // Data type storage implementations.
     SpirvGenerator::DataTypePointer SpirvGenerator::DataTypeStorage::Get(const VariableDataType type)
     {
@@ -395,9 +433,9 @@ namespace Molten::Shader
             case VariableDataType::Vector2f32:
             case VariableDataType::Vector3f32:
             case VariableDataType::Vector4f32:
-            {
-                GetOrCreate(VariableDataType::Float32);
-            } break;
+            case VariableDataType::Sampler1D:
+            case VariableDataType::Sampler2D:
+            case VariableDataType::Sampler3D: GetOrCreate(VariableDataType::Float32); break;
             default: break;
         }
 
@@ -434,6 +472,21 @@ namespace Molten::Shader
                 case VariableDataType::Vector3f32:
                 case VariableDataType::Vector4f32:
                 case VariableDataType::Matrix4x4f32:
+                {
+                    result.push_back(dataTypePair.dataType);
+                } break;
+                default: break;
+            }
+        }
+
+        // Sampler types.
+        for (const auto& dataTypePair : m_dataTypes)
+        {
+            switch (dataTypePair.type)
+            {
+                case VariableDataType::Sampler1D:
+                case VariableDataType::Sampler2D:
+                case VariableDataType::Sampler3D:
                 {
                     result.push_back(dataTypePair.dataType);
                 } break;
@@ -529,6 +582,23 @@ namespace Molten::Shader
         return nullptr;
     }
 
+    SpirvGenerator::ConstantPointer SpirvGenerator::ConstantStorage::Get(const Visual::ConstantBase& constantBase)
+    {
+        switch (constantBase.GetDataType())
+        {
+            case VariableDataType::Bool: return Get(static_cast<const Visual::Constant<bool>&>(constantBase).GetValue());
+            case VariableDataType::Int32: return Get(static_cast<const Visual::Constant<int32_t>&>(constantBase).GetValue());
+            case VariableDataType::Float32: return Get(static_cast<const Visual::Constant<float>&>(constantBase).GetValue());
+            case VariableDataType::Vector2f32: return Get(static_cast<const Visual::Constant<Vector2f32>&>(constantBase).GetValue());
+            case VariableDataType::Vector3f32: return Get(static_cast<const Visual::Constant<Vector3f32>&>(constantBase).GetValue());
+            case VariableDataType::Vector4f32: return Get(static_cast<const Visual::Constant<Vector4f32>&>(constantBase).GetValue());
+            case VariableDataType::Matrix4x4f32: return Get(static_cast<const Visual::Constant<Matrix4x4f32>&>(constantBase).GetValue());
+            default: break;
+        }
+
+        return nullptr;
+    }
+
     SpirvGenerator::ConstantPointer SpirvGenerator::ConstantStorage::GetOrCreate(DataTypeStorage& dataTypeStorage, GeneratorInputPin& generatorInputPin)
     {
         const auto& pin = generatorInputPin.pin;
@@ -546,6 +616,23 @@ namespace Molten::Shader
             case VariableDataType::Vector3f32: return GetOrCreate(dataTypeStorage, static_cast<const Visual::InputPin<Vector3f32>&>(pin).GetDefaultValue());
             case VariableDataType::Vector4f32: return GetOrCreate(dataTypeStorage, static_cast<const Visual::InputPin<Vector4f32>&>(pin).GetDefaultValue());
             case VariableDataType::Matrix4x4f32: return GetOrCreate(dataTypeStorage, static_cast<const Visual::InputPin<Matrix4x4f32>&>(pin).GetDefaultValue());
+            default: break;
+        }
+
+        return nullptr;
+    }
+
+    SpirvGenerator::ConstantPointer SpirvGenerator::ConstantStorage::GetOrCreate(DataTypeStorage& dataTypeStorage, const Visual::ConstantBase& constantBase)
+    {
+        switch (constantBase.GetDataType())
+        {
+            case VariableDataType::Bool: return GetOrCreate(dataTypeStorage, static_cast<const Visual::Constant<bool>&>(constantBase).GetValue());
+            case VariableDataType::Int32: return GetOrCreate(dataTypeStorage, static_cast<const Visual::Constant<int32_t>&>(constantBase).GetValue());
+            case VariableDataType::Float32: return GetOrCreate(dataTypeStorage, static_cast<const Visual::Constant<float>&>(constantBase).GetValue());
+            case VariableDataType::Vector2f32: return GetOrCreate(dataTypeStorage, static_cast<const Visual::Constant<Vector2f32>&>(constantBase).GetValue());
+            case VariableDataType::Vector3f32: return GetOrCreate(dataTypeStorage, static_cast<const Visual::Constant<Vector3f32>&>(constantBase).GetValue());
+            case VariableDataType::Vector4f32: return GetOrCreate(dataTypeStorage, static_cast<const Visual::Constant<Vector4f32>&>(constantBase).GetValue());
+            case VariableDataType::Matrix4x4f32: return GetOrCreate(dataTypeStorage, static_cast<const Visual::Constant<Matrix4x4f32>&>(constantBase).GetValue());
             default: break;
         }
 
@@ -594,22 +681,66 @@ namespace Molten::Shader
     }
 
 
-    // Debug name storage implementations.
-    SpirvGenerator::DebugNameStorage::NameEntry::NameEntry(
-        GeneratorOutputPinPointer& generatorOutputPin,
-        std::string name,
-        const size_t opNameOffset
+    // Uniform storage implementations.
+    SpirvGenerator::SamplerStorage::Sampler::Sampler(
+        const Spirv::Id setId,
+        const Spirv::Id bindingId,
+        GeneratorOutputPinPointer outputPin,
+        DataTypePointer dataType,
+        DataTypePtrPointer dataTypePointer
     ) :
-        generatorOutputPin(generatorOutputPin),
-        name(std::move(name)),
-        opNameOffset(opNameOffset)
+        setId(setId),
+        bindingId(bindingId),
+        outputPin(std::move(outputPin)),
+        dataType(std::move(dataType)),
+        dataTypePointer(std::move(dataTypePointer))
     {}
 
+    void SpirvGenerator::SamplerStorage::Add(
+        DataTypeStorage& dataTypeStorage,
+        DataTypePointerStorage& dataTypePointerStorage,
+        GeneratorOutputPinPointer& generatorOutputPin,
+        const Visual::DescriptorBindingBase& descriptorBindingBase)
+    {
+        const auto setId = descriptorBindingBase.GetSet().GetId();
+        const auto bindingId = descriptorBindingBase.GetId();
+
+        const auto& pin = generatorOutputPin->pin;
+        auto dataType = dataTypeStorage.GetOrCreate(pin.GetDataType());
+        auto dataTypePointer = dataTypePointerStorage.GetOrCreate(Spirv::StorageClass::UniformConstant, dataType);
+
+        m_samplers.emplace_back(setId, bindingId, generatorOutputPin, std::move(dataType), std::move(dataTypePointer));
+
+        generatorOutputPin->storageClass = Spirv::StorageClass::UniformConstant;
+    }
+
+    SpirvGenerator::SamplerStorage::Samplers& SpirvGenerator::SamplerStorage::GetSamplers()
+    {
+        return m_samplers;
+    }
+
+    void SpirvGenerator::SamplerStorage::Clear()
+    {
+        m_samplers.clear();
+    }
+
+
+    // Debug name storage implementations.
     SpirvGenerator::DebugNameStorage::DebugNameStorage() :
-        m_currentOpNameOffset(0)
+        m_debugNamesOffset(0)
     {}
 
-    void SpirvGenerator::DebugNameStorage::Add(GeneratorOutputPinPointer& generatorOutputPin, const std::string& name)
+    void SpirvGenerator::DebugNameStorage::SetDebugNamesOffset(const size_t offset)
+    {
+        m_debugNamesOffset = offset;
+    }
+
+    size_t SpirvGenerator::DebugNameStorage::GetDebugNamesOffset() const
+    {
+        return m_debugNamesOffset;
+    }
+
+    void SpirvGenerator::DebugNameStorage::Add(const Spirv::Id targetId, const std::string& name)
     {
         auto counterIt = m_debugNameCounters.find(name);
         if(counterIt == m_debugNameCounters.end())
@@ -618,27 +749,26 @@ namespace Molten::Shader
         }
 
         auto& counter = counterIt->second;
-        std::string nameWithCounter = name + "_" + std::to_string(counter++);
+        const std::string nameWithCounter = name + "_" + std::to_string(counter++);
 
-        return AddWithoutCounter(generatorOutputPin, std::move(nameWithCounter));
+        return AddWithoutCounter(targetId, nameWithCounter);
     }
 
-    void SpirvGenerator::DebugNameStorage::AddWithoutCounter(GeneratorOutputPinPointer& generatorOutputPin, const std::string& name)
+    void SpirvGenerator::DebugNameStorage::AddWithoutCounter(const Spirv::Id targetId, const std::string& name)
     {
-        m_entries.emplace_back(generatorOutputPin, name, m_currentOpNameOffset);
-        m_currentOpNameOffset += static_cast<size_t>(Spirv::GetLiteralWordCount(name.size())) + 2;
+        m_buffer.AddOpName(targetId, name);
     }
 
-    const SpirvGenerator::DebugNameStorage::NameEntries& SpirvGenerator::DebugNameStorage::GetEntries() const
+    Spirv::ModuleBuffer& SpirvGenerator::DebugNameStorage::GetBuffer()
     {
-        return m_entries;
+        return m_buffer;
     }
 
     void SpirvGenerator::DebugNameStorage::Clear()
     {
-        m_entries.clear();
         m_debugNameCounters.clear();
-        m_currentOpNameOffset = 0;
+        m_buffer.words.clear();
+        m_debugNamesOffset = 0;
     }
 
 
@@ -672,8 +802,9 @@ namespace Molten::Shader
         m_constantStorage.Clear();   
         m_inputStructure.Clear();
         m_outputStructure.Clear();
+        m_pushConstantStructure.Clear();
+        m_samplerStorage.Clear();
         m_debugNameStorage.Clear();
-        m_opDebugNameStart = 0;
 
         m_mainInstructions.clear();
     }
@@ -943,31 +1074,42 @@ namespace Molten::Shader
 
     void SpirvGenerator::BuildVisitOutputPin(GeneratorNodePointer& generatorNode, GeneratorOutputPinPointer& generatorOutputPin)
     {
-        generatorOutputPin->isVisited = true;
         m_visitedOutputPins.insert({ &generatorOutputPin->pin, generatorOutputPin });
 
-        const auto& node = generatorNode->node;
-        const auto& pin = generatorOutputPin->pin;
-
-        auto dataType = m_dataTypeStorage.GetOrCreate(pin.GetDataType());
-
-        switch(node.GetType())
+        switch(const auto& node = generatorNode->node; generatorNode->node.GetType())
         {
             case Visual::NodeType::Input:
             {
-                generatorOutputPin->storageClass = Spirv::StorageClass::Input;
-                auto dataTypePointer = m_dataTypePointerStorage.GetOrCreate(Spirv::StorageClass::Input, dataType);
-                m_inputStructure.members.emplace_back(generatorOutputPin, std::move(dataType), std::move(dataTypePointer));
+                m_inputStructure.AddMember(m_dataTypeStorage, m_dataTypePointerStorage, generatorOutputPin);
+            } break;
+            case Visual::NodeType::PushConstants:
+            {
+                m_pushConstantStructure.AddMember(m_dataTypeStorage, m_dataTypePointerStorage, generatorOutputPin);
+            } break;
+            case Visual::NodeType::Constant:
+            {
+                const auto& constantBase = static_cast<const Visual::ConstantBase&>(node);
+                m_constantStorage.GetOrCreate(m_dataTypeStorage, constantBase);
+            } break;
+            case Visual::NodeType::DescriptorBinding:
+            {
+                const auto& bindingBase = static_cast<const Visual::DescriptorBindingBase&>(node);
+                switch (const auto bindingType = bindingBase.GetBindingType(); bindingType)
+                {
+                    case DescriptorBindingType::Sampler1D:
+                    case DescriptorBindingType::Sampler2D:
+                    case DescriptorBindingType::Sampler3D:
+                    {
+                        m_samplerStorage.Add(m_dataTypeStorage, m_dataTypePointerStorage, generatorOutputPin, bindingBase);
+                    } break;
+                    case DescriptorBindingType::UniformBuffer:
+                    {
+
+                    } break;
+                    default: break;
+                }
             } break;
             default: break;
-        }
-
-        if(m_includeDebugSymbols)
-        {
-            if(!AddOutputPinDebugName(generatorNode, generatorOutputPin))
-            {
-                // Error checking here!
-            }           
         }
     }
 
@@ -978,49 +1120,12 @@ namespace Molten::Shader
         {
             case Visual::NodeType::Function:
             case Visual::NodeType::Operator:
+            case Visual::NodeType::Constant:
             case Visual::NodeType::Output: m_mainInstructions.push_back(generatorNode); break;
             default: break;
         }
     }
 
-    bool SpirvGenerator::AddOutputPinDebugName(GeneratorNodePointer& generatorNode, GeneratorOutputPinPointer& generatorOutputPin)
-    {
-        switch (generatorNode->node.GetType())
-        {
-            case Visual::NodeType::Function: return AddFunctionDebugName(generatorNode, generatorOutputPin);
-            case Visual::NodeType::Operator: return AddOperatorDebugName(generatorNode, generatorOutputPin);
-            case Visual::NodeType::Input:m_debugNameStorage.Add(generatorOutputPin, "in"); return true;
-            default: break;
-        }
-
-        return true;
-    }
-
-    bool SpirvGenerator::AddFunctionDebugName(GeneratorNodePointer& generatorNode, GeneratorOutputPinPointer& generatorOutputPin)
-    {
-        const auto& functionBase = static_cast<const Visual::FunctionBase&>(generatorNode->node);
-        const auto& functioName = GetFunctionName(functionBase.GetFunctionType());
-        if (functioName.empty())
-        {
-            return false;
-        }
-
-        m_debugNameStorage.Add(generatorOutputPin, functioName);
-        return true;
-    }
-
-    bool SpirvGenerator::AddOperatorDebugName(GeneratorNodePointer& generatorNode, GeneratorOutputPinPointer& generatorOutputPin)
-    {
-        const auto& operatorBase = static_cast<const Visual::OperatorBase&>(generatorNode->node);
-        const auto& operatorName = GetOperatorName(operatorBase);
-        if (operatorName.empty())
-        {
-            return false;
-        }
-
-        m_debugNameStorage.Add(generatorOutputPin, operatorName);
-        return true;
-    }
 
     /*
     bool SpirvGenerator::ProcessScriptConstantNode(GeneratorNode& generatorNode)
@@ -1059,16 +1164,22 @@ namespace Molten::Shader
         return generatorNode;
     }
 
-    Spirv::Id SpirvGenerator::GetNextId()
+    Spirv::Id SpirvGenerator::GetNextId(const Spirv::Id incrementor)
     {
-        return ++m_currentId;
+        return (m_currentId += incrementor);
     }
 
-    bool SpirvGenerator::AccessNodeInputInMainFunction(GeneratorInputPin& generatorInputPin, std::vector<Spirv::Id>& inputIds)
+    bool SpirvGenerator::AccessNodeInputInMain(GeneratorInputPin& generatorInputPin, std::vector<Spirv::Id>& inputIds)
     {
         if (auto* connectedOutputPin = generatorInputPin.connectedGeneratorOutputPin; connectedOutputPin)
         {
-            const auto inputId = AccessOrTransformStorageClass(*connectedOutputPin, Spirv::StorageClass::Function);
+            const auto inputId = AccessOrTransformStorageClassInMain(*connectedOutputPin);
+            if(inputId == 0)
+            {
+                Logger::WriteError(m_logger, "Id is 0 of connected pin or storage class transformation failed.");
+                return false;
+            }
+
             inputIds.push_back(inputId);
         }
         else
@@ -1086,64 +1197,63 @@ namespace Molten::Shader
         return true;
     }
 
-    Spirv::Id SpirvGenerator::AccessOrTransformStorageClass(GeneratorOutputPin& generatorOutputPin, const Spirv::StorageClass storageClass)
+    Spirv::Id SpirvGenerator::AccessOrTransformStorageClassInMain(GeneratorOutputPin& generatorOutputPin)
     {
-        if(generatorOutputPin.storageClass != storageClass)
+        switch(generatorOutputPin.storageClass)
         {
-            const auto outputDataType = m_dataTypeStorage.Get(generatorOutputPin.pin.GetDataType());
-            const auto newId = GetNextId();
+            case Spirv::StorageClass::Function: return generatorOutputPin.id;
+            case Spirv::StorageClass::UniformConstant:
+            case Spirv::StorageClass::Input:
+            {
+                const auto dataType = generatorOutputPin.pin.GetDataType();
+                const auto outputDataType = m_dataTypeStorage.Get(dataType);
+                if (!outputDataType)
+                {
+                    Logger::WriteError(m_logger, "Failed to get data type for output pin: " + std::to_string(static_cast<int>(dataType)) + ".");
+                    return 0;
+                }
 
-            m_module.AddOpLoad(outputDataType->id, newId, generatorOutputPin.id);
+                const auto newId = GetNextId();
 
-            generatorOutputPin.id = newId;
-            generatorOutputPin.storageClass = storageClass;
+                m_module.AddOpLoad(outputDataType->id, newId, generatorOutputPin.id);
+
+                generatorOutputPin.id = newId;
+                generatorOutputPin.storageClass = Spirv::StorageClass::Function;
+
+                return generatorOutputPin.id;
+            }
+            case Spirv::StorageClass::PushConstant:
+            {
+                auto* member = m_pushConstantStructure.FindMember(&generatorOutputPin.pin);
+                if(!member)
+                {
+                    return 0;
+                }
+
+                const auto accessChainId = GetNextId();
+                const auto newId = GetNextId();
+                m_module.AddOpAccessChain(member->dataTypePointer->id, accessChainId, m_pushConstantStructure.id, member->indexConstant->id);
+                m_module.AddOpLoad(member->dataType->id, newId, accessChainId);
+
+                generatorOutputPin.id = newId;
+                generatorOutputPin.storageClass = Spirv::StorageClass::Function;
+
+                return generatorOutputPin.id;
+            }
+            /*case Spirv::StorageClass::UniformConstant:
+            {
+                return 0;
+            } break;*/
+            default: break;
         }
 
-        return generatorOutputPin.id;
+        return 0;
     }
 
     bool SpirvGenerator::WriteModule()
-    {
+    {     
+        /*
 
-
-        // Create debug names
-        /*if(m_includeDebugSymbols)
-        {
-            for(const auto& debugNamePair : m_debugNames)
-            {
-                m_module.AddOpName(debugNamePair.first, debugNamePair.second);
-            }
-
-            // TODO: Get rid of this...      
-            if (m_pushConstantStruct)
-            {
-                m_module.AddOpName(m_pushConstantStruct->structTypeId, "s_pc");
-                m_module.AddOpName(m_pushConstantStruct->id, "pc");
-            }
-
-            if (!m_uniformBuffers.empty())
-            {
-                size_t index = 0;
-                for (const auto& uniformBuffer : m_uniformBuffers)
-                {
-                    m_module.AddOpName(uniformBuffer->id, "ubo_" + std::to_string(index));
-                    m_module.AddOpName(uniformBuffer->structTypeId, "s_ubo_" + std::to_string(index));
-                    ++index;
-                }
-            }
-        }
-        
-        // Create decorations.
-        if(m_pushConstantStruct)
-        {
-            const auto structId = m_pushConstantStruct->structTypeId;
-            for(const auto& member : m_pushConstantStruct->members)
-            {
-                m_module.AddOpMemberDecorateOffset(structId, member.index, member.offset);
-            }
-
-            m_module.AddOpDecorateBlock(structId);
-        }
 
         for(const auto& uniformBuffer : m_uniformBuffers)
         {
@@ -1158,11 +1268,21 @@ namespace Molten::Shader
         }
 */
 
+        UpdatePushConstantMembers();
         UpdateDataTypeIds();
         UpdateInputPointerIds();
         UpdateInputIds();
         UpdateOutputPointerIds();
         UpdateOutputIds();
+        UpdatePushConstantPointerIds();
+        UpdatePushConstantStruct();
+        UpdateUniformConstantPointers();
+        UpdateSamplerIds();
+
+        if (m_includeDebugSymbols)
+        {
+            AddGlobalDebugNames();
+        }
 
         m_module.words.clear();
 
@@ -1192,10 +1312,7 @@ namespace Molten::Shader
         m_module.AddOpEntryPoint(m_mainEntryPoint);
         m_module.AddOpExecutionMode(m_mainEntryPoint.id, Spirv::ExecutionMode::OriginUpperLeft);
 
-        if(m_includeDebugSymbols)
-        {
-            WriteDebugNames();
-        }
+        m_debugNameStorage.SetDebugNamesOffset(m_module.words.size());
 
         WriteDecorations();
 
@@ -1208,64 +1325,15 @@ namespace Molten::Shader
         WriteInputs();
         WriteOutputPointers();
         WriteOutputs();
-  
+        WritePushConstantStruct();
+        WritePushConstantPointers();
+        WriteUniformConstantPointers();
+        WriteSamplers();
+
         if (!WriteConstants())
         {
             return false;
         }
-
-        
-
-
-        /*
-        
-
-        if (m_pushConstantStruct)
-        {
-            std::vector<Spirv::Id> pushConstantMemberTypeIds;
-            for (const auto& member : m_pushConstantStruct->members)
-            {
-                pushConstantMemberTypeIds.push_back(member.dataTypeDefinition->typeId);
-            }
-            
-            m_module.AddOpTypeStruct(m_pushConstantStruct->structTypeId, pushConstantMemberTypeIds);
-            m_module.AddOpTypePointer(m_pushConstantStruct->structTypePointerId, Spirv::StorageClass::PushConstant, m_pushConstantStruct->structTypeId);
-            m_module.AddOpVariable(m_pushConstantStruct->id, m_pushConstantStruct->structTypePointerId, Spirv::StorageClass::PushConstant);
-        }        
-
-
-        for (const auto& uniformBuffer : m_uniformBuffers)
-        {
-            std::vector<Spirv::Id> structMemberTypeIds;
-            for (const auto& member : uniformBuffer->members)
-            {
-                structMemberTypeIds.push_back(member->dataTypeDefinition->typeId);
-            }
-            
-            m_module.AddOpTypeStruct(uniformBuffer->structTypeId, structMemberTypeIds);
-            m_module.AddOpTypePointer(uniformBuffer->structTypePointerId, Spirv::StorageClass::Uniform, uniformBuffer->structTypeId);
-            m_module.AddOpVariable(uniformBuffer->id, uniformBuffer->structTypePointerId, Spirv::StorageClass::Uniform);
-
-            for (const auto& member : uniformBuffer->members)
-            {
-                m_module.AddOpTypePointer(member->pointerId, Spirv::StorageClass::Uniform, member->dataTypeDefinition->typeId);
-            }
-        }
-
-        for(const auto& imageDataType : m_imageDataTypes.dataTypePointers)
-        {
-            const auto dataType = GetOrCreateDataType(VariableDataType::Float32);
-
-            switch (imageDataType->dimensions)
-            {
-                case 1: m_module.AddOpTypeImage(imageDataType->typeId, dataType->typeId, Spirv::Dimensionality::Image1D); break;
-                case 2: m_module.AddOpTypeImage(imageDataType->typeId, dataType->typeId, Spirv::Dimensionality::Image2D); break;
-                case 3: m_module.AddOpTypeImage(imageDataType->typeId, dataType->typeId, Spirv::Dimensionality::Image3D); break;
-                default: break;
-            }
-        }
-
-        */
 
         // Create main functions
         m_module.AddOpFunction(m_mainEntryPoint.id, m_voidTypeId, Spirv::FunctionControl::None, m_mainFunctionTypeId);
@@ -1283,17 +1351,55 @@ namespace Molten::Shader
 
         if(m_includeDebugSymbols)
         {
-            UpdateDebugNames();
+            InsertDebugNames();
         }
 
         return true;
+    }
+
+    void SpirvGenerator::UpdatePushConstantMembers()
+    {
+        if (m_pushConstantStructure.isEmpty)
+        {
+            return;
+        }
+
+        const auto& pushConstants = m_script->GetPushConstantsBase();
+        if (auto pushConstantsOutputPins = pushConstants.GetOutputPins(); !pushConstantsOutputPins.empty())
+        {
+            Spirv::Word index = 0;
+            Spirv::Word offset = 0;
+            for (const auto* pin : pushConstantsOutputPins)
+            {
+                const auto pinDataType = pin->GetDataType();
+
+                const auto prevOffset = offset;
+                offset += std::max(Spirv::Word{ 16 }, static_cast<Spirv::Word>(GetVariableByteOffset(pinDataType)));
+
+                auto* member = m_pushConstantStructure.FindMember(pin);
+                if (!member)
+                {
+                    continue;
+                }
+
+                member->index = index++;
+                member->offset = prevOffset;
+                member->indexConstant = m_constantStorage.GetOrCreate(m_dataTypeStorage, static_cast<int32_t>(member->index));
+            }
+        }
     }
 
     void SpirvGenerator::UpdateDataTypeIds()
     {
         for (auto& dataType : m_dataTypeStorage.GetAllDependencySorted())
         {
-            dataType->id = GetNextId();
+            switch(dataType->type)
+            {
+                case VariableDataType::Sampler1D:
+                case VariableDataType::Sampler2D:
+                case VariableDataType::Sampler3D: dataType->id = GetNextId(2); break;
+                default: dataType->id = GetNextId(); break;
+            }
         }
     }
 
@@ -1329,15 +1435,64 @@ namespace Molten::Shader
         }
     }
 
-    void SpirvGenerator::WriteDebugNames()
+    void SpirvGenerator::UpdatePushConstantPointerIds()
     {
-        m_module.AddOpName(m_mainEntryPoint.id, m_mainEntryPoint.name);
-
-        m_opDebugNameStart = m_module.words.size();
-
-        for(const auto& entry : m_debugNameStorage.GetEntries())
+        for (auto& dataTypePointers : m_dataTypePointerStorage.GetAll(Spirv::StorageClass::PushConstant))
         {
-            m_module.AddOpName(0, entry.name);
+            dataTypePointers->id = GetNextId();
+        }
+    }
+
+    void SpirvGenerator::UpdatePushConstantStruct()
+    {
+        if (m_pushConstantStructure.isEmpty)
+        {
+            return;
+        }
+
+        m_pushConstantStructure.typeId = GetNextId();
+        m_pushConstantStructure.typePointerId = GetNextId();
+        m_pushConstantStructure.id = GetNextId();
+    }
+
+    void SpirvGenerator::UpdateUniformConstantPointers()
+    {
+        for (auto& dataTypePointers : m_dataTypePointerStorage.GetAll(Spirv::StorageClass::UniformConstant))
+        {
+            dataTypePointers->id = GetNextId();
+        }
+    }
+
+    void SpirvGenerator::UpdateSamplerIds()
+    {
+        for (auto& sampler : m_samplerStorage.GetSamplers())
+        {
+            sampler.outputPin->id = GetNextId();
+        }
+    }
+
+    void SpirvGenerator::AddGlobalDebugNames()
+    {
+        m_debugNameStorage.AddWithoutCounter(m_mainEntryPoint.id, m_mainEntryPoint.name);
+
+        for (auto& member : m_inputStructure.members)
+        {
+            m_debugNameStorage.Add(member.outputPin->id, "in");
+        }
+
+        for (auto& member : m_outputStructure.members)
+        {
+            m_debugNameStorage.Add(member.id, "out");
+        }
+
+        if (!m_pushConstantStructure.isEmpty)
+        {
+            m_debugNameStorage.AddWithoutCounter(m_pushConstantStructure.id, "pc");
+        }
+
+        for(const auto& sampler : m_samplerStorage.GetSamplers())
+        {
+            m_debugNameStorage.Add(sampler.outputPin->id, "sampler");
         }
     }
 
@@ -1345,6 +1500,8 @@ namespace Molten::Shader
     {
         WriteInputDecorations();
         WriteOutputDecorations();
+        WritePushConstantDecorations();
+        WriteSamplerDecorations();
     }
 
     void SpirvGenerator::WriteInputDecorations()
@@ -1364,6 +1521,37 @@ namespace Molten::Shader
         {
             m_module.AddOpDecorateLocation(member.id, location);
             ++location;
+        }
+    }
+
+    void SpirvGenerator::WritePushConstantDecorations()
+    {
+        if(m_pushConstantStructure.isEmpty)
+        {
+            return;
+        }
+
+        PushConstantStructure::Members membersCopy = m_pushConstantStructure.members;
+
+        std::sort(membersCopy.begin(), membersCopy.end(), [&](const auto& lhs, const auto& rhs)
+        {
+            return lhs.index < rhs.index;
+        });
+
+        const auto structTypeId = m_pushConstantStructure.typeId;
+
+        for (const auto& member : membersCopy)
+        {
+            m_module.AddOpMemberDecorateOffset(structTypeId, member.index, member.offset);
+        }
+    }
+
+    void SpirvGenerator::WriteSamplerDecorations()
+    {
+        for (const auto& sampler : m_samplerStorage.GetSamplers())
+        {
+            m_module.AddOpDecorateDescriptorSet(sampler.outputPin->id, sampler.setId);
+            m_module.AddOpDecorateBinding(sampler.outputPin->id, sampler.bindingId);
         }
     }
 
@@ -1399,7 +1587,7 @@ namespace Molten::Shader
                     const auto componentDataType = m_dataTypeStorage.Get(VariableDataType::Float32);
                     if (!componentDataType)
                     {
-                        Logger::WriteError(m_logger, "Failed to find component data type for Vector2f32:" +
+                        Logger::WriteError(m_logger, "Failed to find component data type for Vector2f32: " +
                             std::to_string(static_cast<int32_t>(VariableDataType::Float32)) + ".");
                         return false;
                     }
@@ -1410,7 +1598,7 @@ namespace Molten::Shader
                     const auto componentDataType = m_dataTypeStorage.Get(VariableDataType::Float32);
                     if (!componentDataType)
                     {
-                        Logger::WriteError(m_logger, "Failed to find component data type for Vector3f32:" +
+                        Logger::WriteError(m_logger, "Failed to find component data type for Vector3f32: " +
                             std::to_string(static_cast<int32_t>(VariableDataType::Float32)) + ".");
                         return false;
                     }
@@ -1421,15 +1609,57 @@ namespace Molten::Shader
                     const auto componentDataType = m_dataTypeStorage.Get(VariableDataType::Float32);
                     if (!componentDataType)
                     {
-                        Logger::WriteError(m_logger, "Failed to find component data type for Vector4f32:" +
+                        Logger::WriteError(m_logger, "Failed to find component data type for Vector4f32: " +
                             std::to_string(static_cast<int32_t>(VariableDataType::Float32)) + ".");
                         return false;
                     }
                     m_module.AddOpTypeVector(dataType->id, componentDataType->id, 4);
                 } break;
+                case VariableDataType::Sampler1D:
+                {
+                    const auto componentDataType = m_dataTypeStorage.Get(VariableDataType::Float32);
+                    if (!componentDataType)
+                    {
+                        Logger::WriteError(m_logger, "Failed to find float data type for Image1D type: " +
+                            std::to_string(static_cast<int32_t>(VariableDataType::Float32)) + ".");
+                        return false;
+                    }
+
+                    const auto imageTypeId = dataType->id - 1;
+                    m_module.AddOpTypeImage(imageTypeId, componentDataType->id, Spirv::Dimensionality::Image1D);
+                    m_module.AddOpTypeSampledImage(dataType->id, imageTypeId);
+                } break;
+                case VariableDataType::Sampler2D:
+                {
+                    const auto componentDataType = m_dataTypeStorage.Get(VariableDataType::Float32);
+                    if (!componentDataType)
+                    {
+                        Logger::WriteError(m_logger, "Failed to find float data type for Image2D type: " +
+                            std::to_string(static_cast<int32_t>(VariableDataType::Float32)) + ".");
+                        return false;
+                    }
+
+                    const auto imageTypeId = dataType->id - 1;
+                    m_module.AddOpTypeImage(imageTypeId, componentDataType->id, Spirv::Dimensionality::Image2D);
+                    m_module.AddOpTypeSampledImage(dataType->id, imageTypeId);
+                } break;
+                case VariableDataType::Sampler3D:
+                {
+                    const auto componentDataType = m_dataTypeStorage.Get(VariableDataType::Float32);
+                    if (!componentDataType)
+                    {
+                        Logger::WriteError(m_logger, "Failed to find float data type for Image3D type: " +
+                            std::to_string(static_cast<int32_t>(VariableDataType::Float32)) + ".");
+                        return false;
+                    }
+
+                    const auto imageTypeId = dataType->id - 1;
+                    m_module.AddOpTypeImage(imageTypeId, componentDataType->id, Spirv::Dimensionality::Image3D);
+                    m_module.AddOpTypeSampledImage(dataType->id, imageTypeId);
+                } break;
                 default:
                 {
-                    Logger::WriteError(m_logger, "Unsupported data type:" +
+                    Logger::WriteError(m_logger, "Unsupported data type: " +
                         std::to_string(static_cast<int32_t>(type)) + ".");
                     return false;
                 }
@@ -1467,6 +1697,48 @@ namespace Molten::Shader
         for (const auto& member : m_outputStructure.members)
         {
             m_module.AddOpVariable(member.id, member.dataTypePointer->id, Spirv::StorageClass::Output);
+        }
+    }
+
+    void SpirvGenerator::WritePushConstantStruct()
+    {
+        if(m_pushConstantStructure.isEmpty)
+        {
+            return;
+        }
+
+        Spirv::Words memberTypeids;
+        for (const auto& member : m_pushConstantStructure.members)
+        {
+            memberTypeids.push_back(member.dataType->id);
+        }
+
+        m_module.AddOpTypeStruct(m_pushConstantStructure.typeId, memberTypeids);
+        m_module.AddOpTypePointer(m_pushConstantStructure.typePointerId, Spirv::StorageClass::PushConstant, m_pushConstantStructure.typeId);
+        m_module.AddOpVariable(m_pushConstantStructure.id, m_pushConstantStructure.typePointerId, Spirv::StorageClass::PushConstant);
+    }
+
+    void SpirvGenerator::WritePushConstantPointers()
+    {
+        for (const auto& dataTypePointers : m_dataTypePointerStorage.GetAll(Spirv::StorageClass::PushConstant))
+        {
+            m_module.AddOpTypePointer(dataTypePointers->id, Spirv::StorageClass::PushConstant, dataTypePointers->dataType->id);
+        }
+    }
+
+    void SpirvGenerator::WriteUniformConstantPointers()
+    {
+        for (const auto& dataTypePointers : m_dataTypePointerStorage.GetAll(Spirv::StorageClass::UniformConstant))
+        {
+            m_module.AddOpTypePointer(dataTypePointers->id, Spirv::StorageClass::UniformConstant, dataTypePointers->dataType->id);
+        }
+    }
+
+    void SpirvGenerator::WriteSamplers()
+    {
+        for (const auto& sampler : m_samplerStorage.GetSamplers())
+        {
+            m_module.AddOpVariable(sampler.outputPin->id, sampler.dataTypePointer->id, Spirv::StorageClass::UniformConstant);
         }
     }
 
@@ -1600,10 +1872,11 @@ namespace Molten::Shader
             case Visual::NodeType::Function: return WriteFunction(generatorNode, static_cast<const Visual::FunctionBase&>(generatorNode->node));
             case Visual::NodeType::Operator: return WriteOperator(generatorNode, static_cast<const Visual::OperatorBase&>(generatorNode->node));
             case Visual::NodeType::Output: return WriteOutput(generatorNode, static_cast<const Visual::OutputInterface&>(generatorNode->node));
+            case Visual::NodeType::Constant: return WriteConstant(generatorNode, static_cast<const Visual::ConstantBase&>(generatorNode->node));
             default: break;
         }
     
-        return true; // TODO: SWITCH TO FALSE!.
+        return false;
     }
 
     bool SpirvGenerator::WriteFunction(const GeneratorNodePointer& generatorNode, const Visual::FunctionBase& functionBase)
@@ -1620,7 +1893,7 @@ namespace Molten::Shader
         std::vector<Spirv::Id> inputIds;
         for(const auto& generatorInputPin : generatorNode->inputPins)
         {
-            if(!AccessNodeInputInMainFunction(*generatorInputPin, inputIds))
+            if(!AccessNodeInputInMain(*generatorInputPin, inputIds))
             {
                 return false;
             }
@@ -1629,7 +1902,15 @@ namespace Molten::Shader
         outputPin->id = GetNextId();
 
         const auto functionType = functionBase.GetFunctionType();
-      
+
+        if(m_includeDebugSymbols)
+        {
+            if(const auto& debugName = GetFunctionName(functionType); !debugName.empty())
+            {
+                m_debugNameStorage.Add(outputPin->id, debugName);
+            }   
+        }
+
         if(const auto glslFunction = GetGlslFunction(functionType); glslFunction.has_value())
         {
             const auto instruction = glslFunction.value();
@@ -1642,10 +1923,30 @@ namespace Molten::Shader
 
             return true;
         }
-        /*else
+        else
         {
-            return false;
-        }*/   
+            switch(functionType)
+            {
+                case Visual::FunctionType::Texture1D:
+                case Visual::FunctionType::Texture2D:
+                case Visual::FunctionType::Texture3D:
+                {
+                    if(inputIds.size() != 2)
+                    {
+                        Logger::WriteError(m_logger, "Texture sample function requires 2 input pins, found " + std::to_string(inputIds.size()) + ".");
+                        return false;
+                    }
+
+                    m_module.AddOpImageSampleImplicitLod(
+                        outputDataType->id,
+                        outputPin->id,
+                        inputIds[0],
+                        inputIds[1]);
+                    return true;
+                }
+                default: return false;
+            }
+        } 
 
         return false;
     }
@@ -1680,7 +1981,7 @@ namespace Molten::Shader
         std::vector<Spirv::Id> inputIds;
         for (const auto& generatorInputPin : generatorNode->inputPins)
         {
-            if (!AccessNodeInputInMainFunction(*generatorInputPin, inputIds))
+            if (!AccessNodeInputInMain(*generatorInputPin, inputIds))
             {
                 return false;
             }
@@ -1688,7 +1989,17 @@ namespace Molten::Shader
 
         outputPin->id = GetNextId();
 
-        switch(arithmeticOperatorBase.GetArithmeticOperatorType())
+        const auto arithmeticOperatorType = arithmeticOperatorBase.GetArithmeticOperatorType();
+
+        if (m_includeDebugSymbols)
+        {
+            if (const auto& debugName = GetArithmeticOperatorName(arithmeticOperatorType); !debugName.empty())
+            {
+                m_debugNameStorage.Add(outputPin->id, debugName);
+            }
+        }
+
+        switch(arithmeticOperatorType)
         {
             case Visual::ArithmeticOperatorType::Addition: m_module.AddOpFAdd(outputDataType->id, outputPin->id, inputIds[0], inputIds[1]); break;
             case Visual::ArithmeticOperatorType::Division: m_module.AddOpFDiv(outputDataType->id, outputPin->id, inputIds[0], inputIds[1]); break;
@@ -1705,7 +2016,7 @@ namespace Molten::Shader
         for (auto& generatorInputPin : generatorNode->inputPins)
         {
             std::vector<Spirv::Id> inputIds;
-            if (!AccessNodeInputInMainFunction(*generatorInputPin, inputIds))
+            if (!AccessNodeInputInMain(*generatorInputPin, inputIds))
             {
                 return false;
             }
@@ -1722,13 +2033,32 @@ namespace Molten::Shader
         return true;
     }
 
-    void SpirvGenerator::UpdateDebugNames()
+    bool SpirvGenerator::WriteConstant(const GeneratorNodePointer& generatorNode, const Visual::ConstantBase& constantBase)
     {
-        for (const auto& entry : m_debugNameStorage.GetEntries())
+        if (const auto outputPinCount = generatorNode->outputPins.size(); outputPinCount != 1)
         {
-            const auto offset = m_opDebugNameStart + entry.opNameOffset + 1;
-            m_module.words[offset] = static_cast<Spirv::Word>(entry.generatorOutputPin->id);
+            Logger::WriteError(m_logger, "Constant expects 1 output pin, found " + std::to_string(outputPinCount) + ".");
+            return false;
         }
+        if(auto& outputPin = generatorNode->outputPins.front(); outputPin->id == 0)
+        {
+            const auto constant = m_constantStorage.Get(constantBase);
+            if(!constant)
+            {
+                Logger::WriteError(m_logger, "Failed to find value for constant node.");
+                return false;
+            }
+            outputPin->id = constant->id;
+        }
+
+        return true;
+    }
+
+    void SpirvGenerator::InsertDebugNames()
+    {
+        const auto& debugNames = m_debugNameStorage.GetBuffer().words;
+        const auto offset = m_debugNameStorage.GetDebugNamesOffset();
+        m_module.words.insert(m_module.words.begin() + offset, debugNames.begin(), debugNames.end());
     }
 
 }

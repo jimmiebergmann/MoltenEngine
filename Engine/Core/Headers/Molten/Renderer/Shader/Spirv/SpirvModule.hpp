@@ -66,8 +66,10 @@ namespace Molten::Shader::Spirv
         Variable = 59,
         Load = 61,
         Store = 62,
+        AccessChain = 65,
         Decorate = 71,
         MemberDecorate = 72,
+        ImageSampleImplicitLod = 87,
         FAdd = 129,
         FSub = 131,
         FMul = 133,
@@ -158,6 +160,7 @@ namespace Molten::Shader::Spirv
 
     enum class StorageClass : Word
     {
+        UniformConstant = 0,
         Input = 1,
         Uniform = 2,
         Output = 3,
@@ -236,7 +239,9 @@ namespace Molten::Shader::Spirv
         void AddOpVariable(const Id resultId, const Id resultTypeId, const StorageClass storageClass);
         void AddOpLoad(const Id resultTypeId, const Id resultId, const Id pointerId);
         void AddOpStore(const Id pointerId, const Id objectId);
+        void AddOpAccessChain(const Id resultTypeId, const Id resultId, const Id baseId, const Id constantIndexId);
 
+        void AddOpImageSampleImplicitLod(const Id resultTypeId, const Id resultId, const Id sampledImageId, const Id coordinateId);
         void AddOpFAdd(const Id resultTypeId, const Id resultId, const Id operand1Id, const Id operand2Id);
         void AddOpFSub(const Id resultTypeId, const Id resultId, const Id operand1Id, const Id operand2Id);
         void AddOpFMul(const Id resultTypeId, const Id resultId, const Id operand1Id, const Id operand2Id);

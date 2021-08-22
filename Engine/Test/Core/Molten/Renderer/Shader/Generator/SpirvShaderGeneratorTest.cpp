@@ -94,7 +94,22 @@ namespace Molten::Shader
             auto& output1 = script.GetOutputInterface().AddMember<Vector4f32>();
             output1.Connect(sin1.GetOutput());*/
 
-            auto& input1 = script.GetInputInterface().AddMember<Vector4f32>();
+
+            // Test with constants.
+            auto& const1 = script.CreateConstant<Vector4f32>({ 1.0f, 2.0f, 3.0f, 4.0f });
+            auto& const2 = script.CreateConstant<Vector4f32>({ 1.0f, 2.0f, 3.0f, 4.0f });
+            auto& const3 = script.CreateConstant<Vector4f32>({ 1.0f, 2.0f, 3.0f, 5.0f });
+
+            auto& output1 = script.GetOutputInterface().AddMember<Vector4f32>();
+            auto& output2 = script.GetOutputInterface().AddMember<Vector4f32>();
+            auto& output3 = script.GetOutputInterface().AddMember<Vector4f32>();
+            output1.Connect(const1.GetOutput());
+            output2.Connect(const2.GetOutput());
+            output3.Connect(const3.GetOutput());
+
+  
+            // Test with input, output, operator and functions.
+            /*auto& input1 = script.GetInputInterface().AddMember<Vector4f32>();
             auto& input2 = script.GetInputInterface().AddMember<Vector4f32>();
 
             auto& sin1 = script.CreateFunction<Visual::Functions::SinVec4f32>();
@@ -133,7 +148,51 @@ namespace Molten::Shader
             auto& output1 = script.GetOutputInterface().AddMember<Vector4f32>();
             auto& output2 = script.GetOutputInterface().AddMember<Vector4f32>();
             output1.Connect(add2.GetOutput());
-            output2.Connect(add1.GetOutput());
+            output2.Connect(add1.GetOutput());*/
+
+
+            // Test with output and push constant.
+            /*auto& pc1 = script.GetPushConstants().AddMember<Vector4f32>(4);
+            auto& pc2 = script.GetPushConstants().AddMember<Vector4f32>(5);
+            auto& pc3 = script.GetPushConstants().AddMember<Vector4f32>(6);
+
+            auto& mult1 = script.CreateOperator<Visual::Operators::MultVec4f32>();
+            mult1.GetLeftInput().Connect(pc1.GetPin());
+            mult1.GetRightInput().Connect(pc1.GetPin());
+
+            auto& add1 = script.CreateOperator<Visual::Operators::AddVec4f32>();
+            add1.GetLeftInput().Connect(pc2.GetPin());
+            add1.GetRightInput().Connect(pc3.GetPin());
+
+            auto& add2 = script.CreateOperator<Visual::Operators::AddVec4f32>();
+            add2.GetLeftInput().Connect(pc3.GetPin());
+            add2.GetRightInput().Connect(mult1.GetOutput());
+
+            auto& add3 = script.CreateOperator<Visual::Operators::AddVec4f32>();
+            add3.GetLeftInput().Connect(add1.GetOutput());
+            add3.GetRightInput().Connect(add2.GetOutput());
+
+            auto& output1 = script.GetOutputInterface().AddMember<Vector4f32>();
+            output1.Connect(add3.GetOutput());*/
+
+
+            // Test with output and texture.
+            /*auto* sampler1 = script.GetDescriptorSets().AddSet(1)->AddBinding<Sampler2D>(2);
+
+            auto& texture1 = script.CreateFunction<Visual::Functions::Texture2D>();
+            texture1.GetInput<0>().Connect(sampler1->GetOutput());
+            texture1.GetInput<1>().SetDefaultValue({ 0.0f, 0.0f });
+
+            auto& texture2 = script.CreateFunction<Visual::Functions::Texture2D>();
+            texture2.GetInput<0>().Connect(sampler1->GetOutput());
+            texture2.GetInput<1>().SetDefaultValue({ 1.0f, 0.0f });
+
+            auto& output1 = script.GetOutputInterface().AddMember<Vector4f32>();
+            output1.Connect(texture1.GetOutput());
+
+            auto& output2 = script.GetOutputInterface().AddMember<Vector4f32>();
+            output2.Connect(texture2.GetOutput());*/
+
         }
 
         SpirvGenerator::Template spirvTemplate;

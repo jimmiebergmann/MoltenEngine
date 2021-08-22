@@ -31,7 +31,7 @@ namespace Molten::Shader::Visual
 
     // Vertex shader script implementations.
     template<typename TDataType>
-    inline Constant<TDataType>& VertexScript::CreateConstant(const TDataType& value)
+    Constant<TDataType>& VertexScript::CreateConstant(const TDataType& value)
     {
         auto constant = new Constant<TDataType>(*this, value);
         m_nodes.insert(constant);
@@ -39,7 +39,7 @@ namespace Molten::Shader::Visual
     }
 
     template<typename TFunction>
-    inline TFunction& VertexScript::CreateFunction()
+    TFunction& VertexScript::CreateFunction()
     {
         // CHECK FUNCTION TYPE.
         static_assert(std::is_base_of<FunctionBase, TFunction>::value,
@@ -51,7 +51,7 @@ namespace Molten::Shader::Visual
     }
 
     template<typename TOperator>
-    inline TOperator& VertexScript::CreateOperator()
+    TOperator& VertexScript::CreateOperator()
     {
         static_assert(Operators::Trait<TOperator>::Supported, "Passed operator node is not supported.");
 
@@ -63,7 +63,7 @@ namespace Molten::Shader::Visual
 
     // Fragment shader script implementations.
     template<typename TDataType>
-    inline Constant<TDataType>& FragmentScript::CreateConstant(const TDataType& value)
+    Constant<TDataType>& FragmentScript::CreateConstant(const TDataType& value)
     {
         auto constant = new Constant<TDataType>(*this, value);
         m_nodes.insert(constant);
@@ -71,7 +71,7 @@ namespace Molten::Shader::Visual
     }
 
     template<typename TFunction>
-    inline TFunction& FragmentScript::CreateFunction()
+    TFunction& FragmentScript::CreateFunction()
     {
         // CHECK FUNCTION TYPE.
         static_assert(std::is_base_of<FunctionBase, TFunction>::value,
@@ -83,7 +83,7 @@ namespace Molten::Shader::Visual
     }
 
     template<typename TOperator>
-    inline TOperator& FragmentScript::CreateOperator()
+    TOperator& FragmentScript::CreateOperator()
     {
         static_assert(Operators::Trait<TOperator>::Supported, "Passed operator node is not supported.");
 

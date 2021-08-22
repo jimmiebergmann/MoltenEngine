@@ -28,14 +28,18 @@ namespace Molten::Shader::Visual
 
     // Constant implementations.
     template<typename TDataType>
-    inline Constant<TDataType>::Constant(Script& script, const TDataType& value) :
-        ConstantBase(script),
-        m_value(value),
-        m_pin(*this)
-    {}
+    OutputPin<TDataType>& Constant<TDataType>::GetOutput()
+    {
+        return m_output;
+    }
+    template<typename TDataType>
+    const OutputPin<TDataType>& Constant<TDataType>::GetOutput() const
+    {
+        return m_output;
+    }
 
     template<typename TDataType>
-    inline VariableDataType Constant<TDataType>::GetDataType() const
+    VariableDataType Constant<TDataType>::GetDataType() const
     {
         return VariableTrait<TDataType>::dataType;
     }
@@ -53,7 +57,7 @@ namespace Molten::Shader::Visual
         {
             return nullptr;
         }
-        return &m_pin;
+        return &m_output;
     }
 
     template<typename TDataType>
@@ -63,33 +67,37 @@ namespace Molten::Shader::Visual
         {
             return nullptr;
         }
-        return &m_pin;
+        return &m_output;
     }
 
     template<typename TDataType>
     std::vector<Pin*> Constant<TDataType>::GetOutputPins()
     {
-        return { &m_pin };
+        return { &m_output };
     }
     template<typename TDataType>
     std::vector<const Pin*> Constant<TDataType>::GetOutputPins() const
     {
-        return { &m_pin };
+        return { &m_output };
     }
 
-
-
-
     template<typename TDataType>
-    inline const TDataType& Constant<TDataType>::GetValue() const
+    const TDataType& Constant<TDataType>::GetValue() const
     {
         return m_value;
     }
 
     template<typename TDataType>
-    inline void Constant<TDataType>::SetValue(const TDataType& value)
+    void Constant<TDataType>::SetValue(const TDataType& value)
     {
         m_value = value;
     }
+
+    template<typename TDataType>
+    Constant<TDataType>::Constant(Script& script, const TDataType& value) :
+        ConstantBase(script),
+        m_value(value),
+        m_output(*this)
+    {}
 
 }

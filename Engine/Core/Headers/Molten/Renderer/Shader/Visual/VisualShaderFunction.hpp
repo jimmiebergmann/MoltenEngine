@@ -61,7 +61,6 @@ namespace Molten::Shader::Visual
         Texture1D,
         Texture2D,
         Texture3D
-
     };
 
 
@@ -111,13 +110,13 @@ namespace Molten::Shader::Visual
         Function& operator = (Function&&) = delete;
         /**@}*/     
 
-        /** Get output pin of arithmetic operator as reference. */
+        /** Get output pin of function as reference. */
         /**@{*/
         [[nodiscard]] OutputPin<TOutputType>& GetOutput();
         [[nodiscard]] const OutputPin<TOutputType>& GetOutput() const;
         /**@}*/
 
-        /** Get input pins of arithmetic operator as reference. */
+        /** Get input pins of function as reference. */
         /**@{*/
         template<size_t VIndex>
         [[nodiscard]] InputPin<InputTypeAt<VIndex>>& GetInput();

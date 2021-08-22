@@ -29,13 +29,26 @@ namespace Molten::Shader::Visual
 {
 
     // Descriptor binding base implementations.
-    DescriptorBindingBase::DescriptorBindingBase(Script& script) :
-        Node(script)
-    {}
+    DescriptorSetBase& DescriptorBindingBase::GetSet()
+    {
+        return m_setBase;
+    }
+    const DescriptorSetBase& DescriptorBindingBase::GetSet() const
+    {
+        return m_setBase;
+    }
 
     NodeType DescriptorBindingBase::GetType() const
     {
         return NodeType::DescriptorBinding;
     }
+
+    DescriptorBindingBase::DescriptorBindingBase(
+        Script& script,
+        DescriptorSetBase& set
+    ) :
+        Node(script),
+        m_setBase(set)
+    {}
 
 }

@@ -29,13 +29,13 @@ namespace Molten::Shader::Visual
 {
 
     // Constant implementations.
-    ConstantBase::ConstantBase(Script& script) :
-        Node(script)
-    {}
-
     NodeType ConstantBase::GetType() const
     {
         return NodeType::Constant;
     }
+
+    ConstantBase::ConstantBase(Script& script) :
+        Node(script)
+    {}
 
 }
