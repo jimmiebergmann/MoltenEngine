@@ -39,14 +39,15 @@ namespace Molten::Shader::Visual
     /** Enumerator of node types. */
     enum class NodeType : uint8_t
     {
+        Constant,           ///< Constant value in shader script.
+        Composite,          ///< Composite type creation from other composites or scalars.
         Function,           ///< Built-in shader function.
         Operator,           ///< Operator node in local space.
-        PushConstants,      ///< Push constant node, constants set by the client.
-        Constant,           
+        PushConstants,      ///< Push constant node, constants set by the client. 
         DescriptorBinding,
         VertexOutput,
         Output,
-        Input 
+        Input
     };
 
 

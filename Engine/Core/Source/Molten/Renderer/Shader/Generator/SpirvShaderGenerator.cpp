@@ -68,6 +68,37 @@ namespace Molten::Shader
         return 0;
     }
 
+    static size_t GetVariableComponentCount(const VariableDataType dataType)
+    {
+        switch (dataType)
+        {
+            case VariableDataType::Bool:         return 1;
+            case VariableDataType::Int32:        return 1;
+            case VariableDataType::Float32:      return 1;
+            case VariableDataType::Vector2f32:   return 2;
+            case VariableDataType::Vector3f32:   return 3;
+            case VariableDataType::Vector4f32:   return 4;
+            case VariableDataType::Matrix4x4f32:
+            case VariableDataType::Sampler1D:
+            case VariableDataType::Sampler2D:
+            case VariableDataType::Sampler3D: break;
+        }
+        return 0;
+    }
+
+    static VariableDataType GetVariableComponentType(const VariableDataType dataType)
+    {
+        switch (dataType)
+        {
+            case VariableDataType::Vector2f32:
+            case VariableDataType::Vector3f32:
+            case VariableDataType::Vector4f32:
+            case VariableDataType::Matrix4x4f32: return VariableDataType::Float32;
+            default: break;
+        }
+        return dataType;
+    }
+
     static const std::string& GetArithmeticOperatorName(const Visual::ArithmeticOperatorType arithmeticOperatorType)
     {
         switch (arithmeticOperatorType)
@@ -384,6 +415,31 @@ namespace Molten::Shader
     }
 
 
+    // Vertex output struct implementations.
+    SpirvGenerator::VertexOutputStructure::VertexOutputStructure() :
+        id(0),
+        typeId(0),
+        typePointerId(0),
+        isEmpty(true)
+    {}
+
+    void SpirvGenerator::VertexOutputStructure::Clear()
+    {
+        id = 0;
+        typeId = 0;
+        typePointerId = 0;
+        position.Clear();
+        isEmpty = true;
+    }
+
+    void SpirvGenerator::VertexOutputStructure::Position::Clear()
+    {
+        dataType = nullptr;
+        dataTypePointer = nullptr;
+        indexConstantPointer = nullptr;
+    }
+
+
     // Data type storage implementations.
     SpirvGenerator::DataTypePointer SpirvGenerator::DataTypeStorage::Get(const VariableDataType type)
     {
@@ -533,7 +589,7 @@ namespace Molten::Shader
 
 
     // Constant storage implementations.
-    SpirvGenerator::ConstantPointer SpirvGenerator::ConstantStorage::Get(GeneratorInputPin& generatorInputPin)
+    SpirvGenerator::ConstantPointer SpirvGenerator::ConstantStorage::Get(const GeneratorInputPin& generatorInputPin)
     {
         const auto& pin = generatorInputPin.pin;
         if (pin.GetDirection() != Visual::PinDirection::In)
@@ -743,6 +799,43 @@ namespace Molten::Shader
     }
 
 
+    // Composite extract storage implementations.
+    SpirvGenerator::CompositeExtractStorage::CompositeExtract::CompositeExtract(const size_t index) :
+        index(index),
+        id(0)
+    {}
+
+    SpirvGenerator::CompositeExtractStorage::CompositeExtract* SpirvGenerator::CompositeExtractStorage::GetOrCreate(
+        GeneratorOutputPin* generatorOutputPin,
+        const size_t index)
+    {
+        auto it = m_compositeExtractMap.find(generatorOutputPin);
+        if(it == m_compositeExtractMap.end())
+        {
+            it = m_compositeExtractMap.insert({ generatorOutputPin, {}}).first;
+        }
+
+        auto& compositeExtracts = it->second;
+
+        auto it2 = std::find_if(compositeExtracts.begin(), compositeExtracts.end(), [&](const auto& compositeExtract)
+        {
+            return compositeExtract.index == index;
+        });
+        if(it2 != compositeExtracts.end())
+        {
+            return &(*it2);
+        }
+
+        compositeExtracts.emplace_back(index);
+        return &compositeExtracts.back();
+    }
+
+    void SpirvGenerator::CompositeExtractStorage::Clear()
+    {
+        m_compositeExtractMap.clear();
+    }
+
+
     // Debug name storage implementations.
     SpirvGenerator::DebugNameStorage::DebugNameStorage() :
         m_debugNamesOffset(0)
@@ -820,9 +913,11 @@ namespace Molten::Shader
         m_constantStorage.Clear();   
         m_inputStructure.Clear();
         m_outputStructure.Clear();
+        m_vertexOutputStructure.Clear();
         m_pushConstantStructure.Clear();
         m_samplerStorage.Clear();
         m_uniformBufferStorage.Clear();
+        m_compositeExtractStorage.Clear();
         m_debugNameStorage.Clear();
 
         m_mainInstructions.clear();
@@ -843,6 +938,28 @@ namespace Molten::Shader
                 auto dataTypePointer = m_dataTypePointerStorage.GetOrCreate(Spirv::StorageClass::Output, dataType);
                 m_outputStructure.members.emplace_back(outputNodePin, std::move(dataType), std::move(dataTypePointer));
             }
+
+            m_rootNodes.push_back(std::move(generatorNode));
+        }
+
+        // Add vertex output if current script is a vertex script.
+        if(const auto* vertexOutput = m_script->GetVertexOutput(); vertexOutput)
+        {
+            auto generatorNode = std::make_shared<GeneratorNode>(*vertexOutput);
+
+            for (auto& outputNodePin : generatorNode->inputPins)
+            {
+                const auto& pin = outputNodePin->pin;
+                auto dataType = m_dataTypeStorage.GetOrCreate(pin.GetDataType());
+                auto dataTypePointer = m_dataTypePointerStorage.GetOrCreate(Spirv::StorageClass::Output, dataType);
+                auto positionIndexConstant = m_constantStorage.GetOrCreate(m_dataTypeStorage, int32_t{ 0 });
+
+                m_vertexOutputStructure.position.dataType = dataType;
+                m_vertexOutputStructure.position.dataTypePointer = dataTypePointer;
+                m_vertexOutputStructure.position.indexConstantPointer = positionIndexConstant;
+            }
+
+            m_vertexOutputStructure.isEmpty = false;
 
             m_rootNodes.push_back(std::move(generatorNode));
         }
@@ -929,18 +1046,14 @@ namespace Molten::Shader
 
         switch(const auto& node = generatorNode->node; generatorNode->node.GetType())
         {
-            case Visual::NodeType::Input:
-            {
-                m_inputStructure.AddMember(m_dataTypeStorage, m_dataTypePointerStorage, generatorOutputPin);
-            } break;
-            case Visual::NodeType::PushConstants:
-            {
-                m_pushConstantStructure.AddMember(m_dataTypeStorage, m_dataTypePointerStorage, generatorOutputPin);
-            } break;
             case Visual::NodeType::Constant:
             {
                 const auto& constantBase = static_cast<const Visual::ConstantBase&>(node);
                 m_constantStorage.GetOrCreate(m_dataTypeStorage, constantBase);
+            } break;
+            case Visual::NodeType::PushConstants:
+            {
+                m_pushConstantStructure.AddMember(m_dataTypeStorage, m_dataTypePointerStorage, generatorOutputPin);
             } break;
             case Visual::NodeType::DescriptorBinding:
             {
@@ -960,6 +1073,10 @@ namespace Molten::Shader
                     default: break;
                 }
             } break;
+            case Visual::NodeType::Input:
+            {
+                m_inputStructure.AddMember(m_dataTypeStorage, m_dataTypePointerStorage, generatorOutputPin);
+            } break;
             default: break;
         }
     }
@@ -969,9 +1086,11 @@ namespace Molten::Shader
         const auto& node = generatorNode->node;
         switch(node.GetType())
         {
+            case Visual::NodeType::Constant:
+            case Visual::NodeType::Composite:
             case Visual::NodeType::Function:
             case Visual::NodeType::Operator:
-            case Visual::NodeType::Constant:
+            case Visual::NodeType::VertexOutput:
             case Visual::NodeType::Output: m_mainInstructions.push_back(generatorNode); break;
             default: break;
         }
@@ -995,31 +1114,39 @@ namespace Molten::Shader
         return (m_currentId += incrementor);
     }
 
-    bool SpirvGenerator::AccessNodeInputInMain(GeneratorInputPin& generatorInputPin, std::vector<Spirv::Id>& inputIds)
+    Spirv::Id SpirvGenerator::AccessNodeInputInMain(GeneratorInputPin& generatorInputPin)
     {
         if (auto* connectedOutputPin = generatorInputPin.connectedGeneratorOutputPin; connectedOutputPin)
         {
             const auto inputId = AccessOrTransformStorageClassInMain(*connectedOutputPin);
-            if(inputId == 0)
+            if (inputId == 0)
             {
                 Logger::WriteError(m_logger, "Id is 0 of connected pin or storage class transformation failed.");
-                return false;
+                return 0;
             }
 
-            inputIds.push_back(inputId);
+            return inputId;
         }
-        else
+   
+        const auto constant = m_constantStorage.Get(generatorInputPin);
+        if (!constant)
         {
-            const auto constant = m_constantStorage.Get(generatorInputPin);
-            if (!constant)
-            {
-                Logger::WriteError(m_logger, "Failed to find constant input value for function.");
-                return false;
-            }
-
-            inputIds.push_back(constant->id);
+            Logger::WriteError(m_logger, "Failed to find constant input value for node access.");
+            return 0;
         }
 
+        return constant->id;
+    }
+
+    bool SpirvGenerator::AccessNodeInputInMain(GeneratorInputPin& generatorInputPin, std::vector<Spirv::Id>& inputIds)
+    {
+        const auto id = AccessNodeInputInMain(generatorInputPin);
+        if(id == 0)
+        {
+            return false;
+        }
+
+        inputIds.push_back(id);
         return true;
     }
 
@@ -1102,6 +1229,7 @@ namespace Molten::Shader
         UpdateInputIds();
         UpdateOutputPointerIds();
         UpdateOutputIds();
+        UpdateVertexOutputs();
         UpdatePushConstantPointerIds();
         UpdatePushConstantStruct();
         UpdateUniformConstantPointers();
@@ -1138,9 +1266,17 @@ namespace Molten::Shader
         {
             m_mainEntryPoint.interface.push_back(member.id);
         }
+        if(!m_vertexOutputStructure.isEmpty)
+        {
+            m_mainEntryPoint.interface.push_back(m_vertexOutputStructure.id);
+        }
 
         m_module.AddOpEntryPoint(m_mainEntryPoint);
-        m_module.AddOpExecutionMode(m_mainEntryPoint.id, Spirv::ExecutionMode::OriginUpperLeft);
+
+        if(m_script->GetType() == Shader::Type::Fragment)
+        {
+            m_module.AddOpExecutionMode(m_mainEntryPoint.id, Spirv::ExecutionMode::OriginUpperLeft);
+        }     
 
         m_debugNameStorage.SetDebugNamesOffset(m_module.words.size());
 
@@ -1155,6 +1291,7 @@ namespace Molten::Shader
         WriteInputs();
         WriteOutputPointers();
         WriteOutputs();
+        WriteVertexOutputs();
         WritePushConstantStruct();
         WritePushConstantPointers();
         WriteUniformConstantPointers();
@@ -1311,6 +1448,24 @@ namespace Molten::Shader
         }
     }
 
+    void SpirvGenerator::UpdateVertexOutputs()
+    {
+        if(m_vertexOutputStructure.isEmpty)
+        {
+            return;
+        }
+
+        m_vertexOutputStructure.typeId = GetNextId();
+        m_vertexOutputStructure.typePointerId = GetNextId();
+        m_vertexOutputStructure.id = GetNextId();
+
+        if(m_includeDebugSymbols)
+        {
+            m_debugNameStorage.AddWithoutCounter(m_vertexOutputStructure.typeId, "gl_PerVertex");
+            m_debugNameStorage.AddWithoutCounter(m_vertexOutputStructure.id, "vout");
+        }
+    }
+
     void SpirvGenerator::UpdatePushConstantPointerIds()
     {
         for (auto& dataTypePointers : m_dataTypePointerStorage.GetAll(Spirv::StorageClass::PushConstant))
@@ -1403,6 +1558,7 @@ namespace Molten::Shader
     {
         WriteInputDecorations();
         WriteOutputDecorations();
+        WriteVertexOutputDecorations();
         WritePushConstantDecorations();
         WriteSamplerDecorations();
         WriteUniformBufferDecorations();
@@ -1426,6 +1582,17 @@ namespace Molten::Shader
             m_module.AddOpDecorateLocation(member.id, location);
             ++location;
         }
+    }
+
+    void SpirvGenerator::WriteVertexOutputDecorations()
+    {
+        if(m_vertexOutputStructure.isEmpty)
+        {
+            return;
+        }
+
+        m_module.AddOpMemberDecorateBuiltIn(m_vertexOutputStructure.typeId, 0, Spirv::BuiltIn::Position);
+        m_module.AddOpDecorateBlock(m_vertexOutputStructure.typeId);
     }
 
     void SpirvGenerator::WritePushConstantDecorations()
@@ -1631,6 +1798,22 @@ namespace Molten::Shader
         }
     }
 
+    void SpirvGenerator::WriteVertexOutputs()
+    {
+        if(m_vertexOutputStructure.isEmpty)
+        {
+            return;
+        }
+
+        const auto& position = m_vertexOutputStructure.position;
+
+        const auto memberTypeIds = std::vector{ position.dataType->id };
+
+        m_module.AddOpTypeStruct(m_vertexOutputStructure.typeId, memberTypeIds);
+        m_module.AddOpTypePointer(m_vertexOutputStructure.typePointerId, Spirv::StorageClass::Output, m_vertexOutputStructure.typeId);
+        m_module.AddOpVariable(m_vertexOutputStructure.id, m_vertexOutputStructure.typePointerId, Spirv::StorageClass::Output);
+    }
+
     void SpirvGenerator::WritePushConstantStruct()
     {
         if(m_pushConstantStructure.isEmpty)
@@ -1826,10 +2009,12 @@ namespace Molten::Shader
     {
         switch (generatorNode->node.GetType())
         {
+            case Visual::NodeType::Constant: return WriteConstant(generatorNode, static_cast<const Visual::ConstantBase&>(generatorNode->node));
+            case Visual::NodeType::Composite: return WriteComposite(generatorNode, static_cast<const Visual::CompositeBase&>(generatorNode->node));
             case Visual::NodeType::Function: return WriteFunction(generatorNode, static_cast<const Visual::FunctionBase&>(generatorNode->node));
             case Visual::NodeType::Operator: return WriteOperator(generatorNode, static_cast<const Visual::OperatorBase&>(generatorNode->node));
+            case Visual::NodeType::VertexOutput: return WriteVertexOutput(generatorNode, static_cast<const Visual::VertexOutput&>(generatorNode->node));
             case Visual::NodeType::Output: return WriteOutput(generatorNode, static_cast<const Visual::OutputInterface&>(generatorNode->node));
-            case Visual::NodeType::Constant: return WriteConstant(generatorNode, static_cast<const Visual::ConstantBase&>(generatorNode->node));
             default: break;
         }
     
@@ -1868,6 +2053,7 @@ namespace Molten::Shader
             }   
         }
 
+        // GLSL extension functions.
         if(const auto glslFunction = GetGlslFunction(functionType); glslFunction.has_value())
         {
             const auto instruction = glslFunction.value();
@@ -1880,31 +2066,31 @@ namespace Molten::Shader
 
             return true;
         }
-        else
+
+        // Build-in functions.
+        switch(functionType)
         {
-            switch(functionType)
+            case Visual::FunctionType::Texture1D:
+            case Visual::FunctionType::Texture2D:
+            case Visual::FunctionType::Texture3D:
             {
-                case Visual::FunctionType::Texture1D:
-                case Visual::FunctionType::Texture2D:
-                case Visual::FunctionType::Texture3D:
+                if(inputIds.size() != 2)
                 {
-                    if(inputIds.size() != 2)
-                    {
-                        Logger::WriteError(m_logger, "Texture sample function requires 2 input pins, found " + std::to_string(inputIds.size()) + ".");
-                        return false;
-                    }
-
-                    m_module.AddOpImageSampleImplicitLod(
-                        outputDataType->id,
-                        outputPin->id,
-                        inputIds[0],
-                        inputIds[1]);
-                    return true;
+                    Logger::WriteError(m_logger, "Texture sample function requires 2 input pins, found " + std::to_string(inputIds.size()) + ".");
+                    return false;
                 }
-                default: return false;
-            }
-        } 
 
+                m_module.AddOpImageSampleImplicitLod(
+                    outputDataType->id,
+                    outputPin->id,
+                    inputIds[0],
+                    inputIds[1]);
+                return true;
+            }
+            default: break;
+        }
+        
+        // Unknown function.
         return false;
     }
 
@@ -1968,6 +2154,32 @@ namespace Molten::Shader
         return true;
     }
 
+    bool SpirvGenerator::WriteVertexOutput(const GeneratorNodePointer& generatorNode, const Visual::VertexOutput& vertexOutput)
+    {
+        for (const auto& generatorInputPin : generatorNode->inputPins)
+        {
+            const auto inputId = AccessNodeInputInMain(*generatorInputPin);
+            if(inputId == 0)
+            {
+                return false;
+            }
+
+            auto inputPinId = GetNextId();
+
+            const auto& position = m_vertexOutputStructure.position;
+
+            m_module.AddOpAccessChain(
+                position.dataTypePointer->id,
+                inputPinId,
+                m_vertexOutputStructure.id,
+                position.indexConstantPointer->id);
+
+            m_module.AddOpStore(inputPinId, inputId);
+        }
+ 
+        return true;
+    }
+
     bool SpirvGenerator::WriteOutput(const GeneratorNodePointer& generatorNode, const Visual::OutputInterface& outputInterface)
     {
         for (auto& generatorInputPin : generatorNode->inputPins)
@@ -2007,6 +2219,161 @@ namespace Molten::Shader
             }
             outputPin->id = constant->id;
         }
+
+        return true;
+    }
+
+    bool SpirvGenerator::WriteComposite(const GeneratorNodePointer& generatorNode, const Visual::CompositeBase& constantBase)
+    {
+        if (const auto outputPinCount = generatorNode->outputPins.size(); outputPinCount != 1)
+        {
+            Logger::WriteError(m_logger, "Composite expects 1 output pin, found " + std::to_string(outputPinCount) + ".");
+            return false;
+        }
+
+        const auto& generatorOutputPin = generatorNode->outputPins.front();
+        const auto outputComponentCount = GetVariableComponentCount(generatorOutputPin->pin.GetDataType());
+        if(outputComponentCount == 0)
+        {
+            Logger::WriteError(m_logger, "Unsupported output data type for composite: " + 
+                std::to_string(static_cast<size_t>(generatorOutputPin->pin.GetDataType())) + ".");
+            return false;
+        }
+
+        size_t inputsComponentCount = 0;
+        for(const auto& inputPin : generatorNode->inputPins)
+        {
+            const auto inputDataType = inputPin->pin.GetDataType();
+            const auto componentCount = GetVariableComponentCount(inputDataType);
+            if(componentCount == 0)
+            {
+                Logger::WriteError(m_logger, "Unsupported input data type for composite: " +
+                    std::to_string(static_cast<size_t>(inputDataType)) + ".");
+            }
+
+            inputsComponentCount += componentCount;
+        }
+
+        if(outputComponentCount != inputsComponentCount)
+        {
+            Logger::WriteError(m_logger, "Composite expects " + std::to_string(outputComponentCount) + 
+                " components, found " + std::to_string(inputsComponentCount) + ".");
+            return false;
+        }
+
+        std::vector<Spirv::Id> inputIds;
+
+        auto addConstantInputs = [&](const auto& origin) -> bool
+        {
+            auto constant = m_constantStorage.Get(origin);
+            if (!constant)
+            {
+                Logger::WriteError(m_logger, "Failed to get default constant value for composite type.");
+                return false;
+            }
+
+            if (!constant->componentConstants.empty())
+            {
+                for (const auto& componentConstant : constant->componentConstants)
+                {
+                    inputIds.push_back(componentConstant->id);
+                }
+            }
+            else
+            {
+                inputIds.push_back(constant->id);
+            }
+
+            return true;
+        };
+
+        for (const auto& generatorInputPin : generatorNode->inputPins)
+        {
+            if (auto* connectedPin = generatorInputPin->connectedGeneratorOutputPin; connectedPin)
+            {
+                // Is connection a constant node. Use constant values directly instead of extracting each component.
+                if(const auto& connectedNode = connectedPin->pin.GetNode(); connectedNode.GetType() == Visual::NodeType::Constant)
+                {
+                    if (!addConstantInputs(static_cast<const Visual::ConstantBase&>(connectedNode)))
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    // Connected to a regual node.
+                    const auto connectedDataType = connectedPin->pin.GetDataType();
+                    const auto componentCount = GetVariableComponentCount(connectedDataType);
+
+                    if(componentCount == 0)
+                    {
+                        Logger::WriteError(m_logger, "Failed to find component count for composite of type: " +
+                            std::to_string(static_cast<size_t>(connectedDataType)) + ".");
+                        return false;
+                    }
+
+                    if(componentCount == 1)
+                    {
+                        // Single component input variable, access it directly and use it.
+                        const auto connectedId = AccessNodeInputInMain(*generatorInputPin);
+                        if (connectedId == 0)
+                        {
+                            return false;
+                        }
+
+                        inputIds.push_back(connectedId);
+                    }
+                    else
+                    {
+                        // Multiple components of input variable, do composite extract if needed.
+                        const auto connectedId = AccessNodeInputInMain(*generatorInputPin);
+                        if (connectedId == 0)
+                        {
+                            return false;
+                        }
+
+                        const auto componentDataType = m_dataTypeStorage.Get(GetVariableComponentType(connectedDataType));
+                        if(!componentDataType)
+                        {
+                            Logger::WriteError(m_logger, "Failed to find component data type for composite of type: " +
+                                std::to_string(static_cast<size_t>(connectedDataType)) + ".");
+                            return false;
+                        }
+
+                        for (size_t i = 0; i < componentCount; i++)
+                        {
+                            auto* componentExtract = m_compositeExtractStorage.GetOrCreate(connectedPin, i);
+                            if (componentExtract->id == 0)
+                            {
+                                componentExtract->id = GetNextId();
+
+                                m_module.AddOpCompositeExtract(
+                                    componentDataType->id,
+                                    componentExtract->id,
+                                    connectedId,
+                                    static_cast<uint32_t>(i));
+                            }
+
+                            inputIds.push_back(componentExtract->id);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // Default value(constant).
+                if(!addConstantInputs(*generatorInputPin))
+                {
+                    return false;
+                }
+            }
+        }
+
+        generatorOutputPin->id = GetNextId();
+        const auto outputPinDataType = generatorOutputPin->pin.GetDataType();
+        const auto dataType = m_dataTypeStorage.Get(outputPinDataType);
+
+        m_module.AddOpCompositeConstruct(dataType->id, generatorOutputPin->id, inputIds);
 
         return true;
     }

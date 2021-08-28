@@ -25,6 +25,7 @@
 
 #include "Molten/Renderer/Shader/Visual/VisualShaderFunctions.hpp"
 #include "Molten/Renderer/Shader/Visual/VisualShaderOperators.hpp"
+#include "Molten/Renderer/Shader/Visual/VisualShaderComposites.hpp"
 
 namespace Molten::Shader::Visual
 {
@@ -53,11 +54,22 @@ namespace Molten::Shader::Visual
     template<typename TOperator>
     TOperator& VertexScript::CreateOperator()
     {
+        static_assert(std::is_base_of<OperatorBase, TOperator>::value, "Specified template parameter is not base of OperatorBase.");
         static_assert(Operators::Trait<TOperator>::Supported, "Passed operator node is not supported.");
 
         auto op = new TOperator(*this);
         m_nodes.insert(op);
         return *op;
+    }
+
+    template<typename TComposite>
+    TComposite& VertexScript::CreateComposite()
+    {
+        static_assert(std::is_base_of<CompositeBase, TComposite>::value, "Specified template parameter is not base of OperatorBase.");
+
+        auto comp = new TComposite(*this);
+        m_nodes.insert(comp);
+        return *comp;
     }
 
 
@@ -85,11 +97,22 @@ namespace Molten::Shader::Visual
     template<typename TOperator>
     TOperator& FragmentScript::CreateOperator()
     {
+        static_assert(std::is_base_of<OperatorBase, TOperator>::value, "Specified template parameter is not base of OperatorBase.");
         static_assert(Operators::Trait<TOperator>::Supported, "Passed operator node is not supported.");
 
         auto op = new TOperator(*this);
         m_nodes.insert(op);
         return *op;
+    }
+
+    template<typename TComposite>
+    TComposite& FragmentScript::CreateComposite()
+    {
+        static_assert(std::is_base_of<CompositeBase, TComposite>::value, "Specified template parameter is not base of OperatorBase.");
+
+        auto comp = new TComposite(*this);
+        m_nodes.insert(comp);
+        return *comp;
     }
 
 }

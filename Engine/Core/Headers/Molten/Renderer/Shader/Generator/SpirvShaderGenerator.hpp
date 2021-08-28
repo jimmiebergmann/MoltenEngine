@@ -126,6 +126,7 @@ namespace Molten::Shader
         struct Constant;
         struct OutputStructure;
         struct InputStructure;
+        struct VertexOutputStructure;
         struct Structure;
         class DataTypeStorage;
         class DataTypePointerStorage;
@@ -219,11 +220,15 @@ namespace Molten::Shader
             using Variant = std::variant<bool, int32_t, float, Vector2f32, Vector3f32, Vector4f32, Matrix4x4f32>;
 
             template<typename T>
-            Constant(DataTypePointer dataType, const T& value);
+            Constant(
+                DataTypePointer dataType,
+                const T& value,
+                ConstantPointers componentConstants);
 
             Spirv::Id id;
             DataTypePointer dataType;
             Variant value;
+            ConstantPointers componentConstants;
         }; 
 
         // Input structure
@@ -320,6 +325,32 @@ namespace Molten::Shader
             const Spirv::StorageClass storageClass;
         };
 
+        // Vertex output data.
+        struct VertexOutputStructure
+        {
+
+            VertexOutputStructure();
+
+            void Clear();
+
+            struct Position
+            {
+                void Clear();
+
+                DataTypePointer dataType;
+                DataTypePtrPointer dataTypePointer;
+                ConstantPointer indexConstantPointer;
+            };
+            
+
+            Spirv::Id id;
+            Spirv::Id typeId;
+            Spirv::Id typePointerId;
+            Position position;
+            bool isEmpty;
+
+        };
+
         // Data type storage.
         class DataTypeStorage
         {
@@ -372,7 +403,7 @@ namespace Molten::Shader
 
         public:
 
-            ConstantPointer Get(GeneratorInputPin& generatorInputPin);
+            ConstantPointer Get(const GeneratorInputPin& generatorInputPin);
             ConstantPointer Get(const Visual::ConstantBase& constantBase);
             template<typename T>
             ConstantPointer Get(const T& value);
@@ -460,6 +491,35 @@ namespace Molten::Shader
             
         };
 
+        // Composite extract storage.
+        class CompositeExtractStorage
+        {
+
+        public:
+
+            struct CompositeExtract
+            {
+                explicit CompositeExtract(const size_t index);
+
+                size_t index;
+                Spirv::Id id;
+                
+            };
+
+            CompositeExtract* GetOrCreate(
+                GeneratorOutputPin* generatorOutputPin,
+                const size_t index);
+
+            void Clear();
+
+        private:
+
+            using CompositeExtractMap = std::unordered_map<GeneratorOutputPin*, std::vector<CompositeExtract>>;
+
+            CompositeExtractMap m_compositeExtractMap;
+            
+        };
+
         // Debug name storage
         class DebugNameStorage
         {
@@ -500,6 +560,7 @@ namespace Molten::Shader
 
         [[nodiscard]] GeneratorNodePointer CreateGeneratorNode(const Visual::Node& node);
         [[nodiscard]] Spirv::Id GetNextId(const Spirv::Id incrementor = 1);
+        [[nodiscard]] Spirv::Id AccessNodeInputInMain(GeneratorInputPin& generatorInputPin);
         [[nodiscard]] bool AccessNodeInputInMain(GeneratorInputPin& generatorInputPin, std::vector<Spirv::Id>& inputIds);
         [[nodiscard]] Spirv::Id AccessOrTransformStorageClassInMain(GeneratorOutputPin& generatorOutputPin);
 
@@ -509,33 +570,35 @@ namespace Molten::Shader
 
         void UpdatePushConstantMembers();
         void UpdateUniformBuffersMembers();
-
+   
         void UpdateDataTypeIds();
         void UpdateInputPointerIds();
         void UpdateInputIds();
         void UpdateOutputPointerIds();
         void UpdateOutputIds();
+        void UpdateVertexOutputs();
         void UpdatePushConstantPointerIds();
         void UpdatePushConstantStruct();
         void UpdateUniformConstantPointers();
         void UpdateSamplerIds();
         void UpdateUniformPointerIds();
         void UpdateUniformBufferStructs();
-
         void AddGlobalDebugNames();
 
         void WriteDecorations();
         void WriteInputDecorations();
         void WriteOutputDecorations();
+        void WriteVertexOutputDecorations();
         void WritePushConstantDecorations();
         void WriteSamplerDecorations();
-        void WriteUniformBufferDecorations();
+        void WriteUniformBufferDecorations();      
 
         [[nodiscard]] bool WriteDataTypes();
         void WriteInputPointers();
         void WriteInputs();
         void WriteOutputPointers();
         void WriteOutputs();
+        void WriteVertexOutputs();
         void WritePushConstantStruct();
         void WritePushConstantPointers();
         void WriteUniformConstantPointers();
@@ -549,8 +612,10 @@ namespace Molten::Shader
         [[nodiscard]] bool WriteFunction(const GeneratorNodePointer& generatorNode, const Visual::FunctionBase& functionBase);
         [[nodiscard]] bool WriteOperator(const GeneratorNodePointer& generatorNode, const Visual::OperatorBase& operatorBase);
         [[nodiscard]] bool WriteOperatorArithmetic(const GeneratorNodePointer& generatorNode, const Visual::ArithmeticOperatorBase& arithmeticOperatorBase);
+        [[nodiscard]] bool WriteVertexOutput(const GeneratorNodePointer& generatorNode, const Visual::VertexOutput& vertexOutput);
         [[nodiscard]] bool WriteOutput(const GeneratorNodePointer& generatorNode, const Visual::OutputInterface& outputInterface);
         [[nodiscard]] bool WriteConstant(const GeneratorNodePointer& generatorNode, const Visual::ConstantBase& constantBase);
+        [[nodiscard]] bool WriteComposite(const GeneratorNodePointer& generatorNode, const Visual::CompositeBase& constantBase);
         void InsertDebugNames();
 
         Logger* m_logger;
@@ -575,10 +640,13 @@ namespace Molten::Shader
         ConstantStorage m_constantStorage; 
         InputStructure m_inputStructure;
         OutputStructure m_outputStructure;
+        VertexOutputStructure m_vertexOutputStructure;
         Structure m_pushConstantStructure;
         SamplerStorage m_samplerStorage;
         UniformBufferStorage m_uniformBufferStorage;
+        CompositeExtractStorage m_compositeExtractStorage;
         DebugNameStorage m_debugNameStorage;
+        
 
         std::vector<GeneratorNodePointer> m_mainInstructions;
 

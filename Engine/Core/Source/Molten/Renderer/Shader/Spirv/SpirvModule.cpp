@@ -213,6 +213,20 @@ namespace Molten::Shader::Spirv
         words.insert(words.end(), result.begin(), result.end());
     }
 
+    void ModuleBuffer::AddOpMemberDecorateBuiltIn(const Id structureTypeId, const Word memberIndex, const BuiltIn builtIn)
+    {
+        const std::array<Word, 5> result =
+        {
+            CreateOpCode(OpCode::MemberDecorate, 5),
+            static_cast<Word>(structureTypeId),
+            memberIndex,
+            static_cast<Word>(Decoration::BuiltIn),
+            static_cast<Word>(builtIn)
+        };
+
+        words.insert(words.end(), result.begin(), result.end());
+    }
+
     void ModuleBuffer::AddOpTypeVoid(const Id resultId)
     {
         const std::array<Word, 2> result =
@@ -484,6 +498,35 @@ namespace Molten::Shader::Spirv
         words.insert(words.end(), result.begin(), result.end());
     }
 
+    void ModuleBuffer::AddOpCompositeConstruct(const Id resultTypeId, const Id resultId, const std::vector<Id>& inputIds)
+    {
+         const size_t resultSize = 3 + inputIds.size();
+
+         std::vector<Word> result(resultSize);
+
+         result[0] = CreateOpCode(OpCode::CompositeConstruct, static_cast<HalfWord>(resultSize));
+         result[1] = static_cast<Word>(resultTypeId);
+         result[2] = static_cast<Word>(resultId);
+
+         std::copy(inputIds.begin(), inputIds.end(), result.begin() + 3);
+
+         words.insert(words.end(), result.begin(), result.end());
+    }
+
+    void ModuleBuffer::AddOpCompositeExtract(const Id resultTypeId, const Id resultId, const Id compositeId, uint32_t index)
+    {
+        const std::array<Word, 5> result =
+        {
+            CreateOpCode(OpCode::CompositeExtract, 5),
+            static_cast<Word>(resultTypeId),
+            static_cast<Word>(resultId),
+            static_cast<Word>(compositeId),
+            index
+        };
+
+        words.insert(words.end(), result.begin(), result.end());
+    }
+
     void ModuleBuffer::AddOpImageSampleImplicitLod(const Id resultTypeId, const Id resultId, const Id sampledImageId, const Id coordinateId)
     {
         const std::array<Word, 5> result =
@@ -496,6 +539,11 @@ namespace Molten::Shader::Spirv
         };
 
         words.insert(words.end(), result.begin(), result.end());
+    }
+
+    void AddOpCompositeConstruct(const Id resultTypeId, const Id resultId, const std::vector<Id>& inputIds)
+    {
+        
     }
 
     void ModuleBuffer::AddOpFAdd(const Id resultTypeId, const Id resultId, const Id operand1Id, const Id operand2Id)

@@ -69,6 +69,8 @@ namespace Molten::Shader::Spirv
         AccessChain = 65,
         Decorate = 71,
         MemberDecorate = 72,
+        CompositeConstruct = 80,
+        CompositeExtract = 81,
         ImageSampleImplicitLod = 87,
         FAdd = 129,
         FSub = 131,
@@ -137,6 +139,7 @@ namespace Molten::Shader::Spirv
     enum class Decoration : Word
     {
         Block = 2,
+        BuiltIn = 11,
         Location = 30,
         Binding = 33,
         DescriptorSet = 34,
@@ -179,6 +182,14 @@ namespace Molten::Shader::Spirv
         SubpassData = 6
     };
 
+    enum class BuiltIn : Word
+    {
+        Position = 0,
+        PointSize = 1,
+        ClipDistance = 3,
+        CullDistance = 4
+    };
+
     struct ExtensionImport
     {
         Id resultId;
@@ -217,6 +228,7 @@ namespace Molten::Shader::Spirv
         void AddOpDecorateBinding(const Id targetId, const Id bindingId);
         void AddOpDecorateLocation(const Id targetId, const Id locationId);
         void AddOpMemberDecorateOffset(const Id structureTypeId, const Word memberIndex, const Word byteOffset);
+        void AddOpMemberDecorateBuiltIn(const Id structureTypeId, const Word memberIndex, const BuiltIn builtIn);
 
         void AddOpTypeVoid(const Id resultId);
         void AddOpTypeBool(const Id resultId);
@@ -241,6 +253,8 @@ namespace Molten::Shader::Spirv
         void AddOpStore(const Id pointerId, const Id objectId);
         void AddOpAccessChain(const Id resultTypeId, const Id resultId, const Id baseId, const Id constantIndexId);
 
+        void AddOpCompositeConstruct(const Id resultTypeId, const Id resultId, const std::vector<Id>& inputIds);
+        void AddOpCompositeExtract(const Id resultTypeId, const Id resultId, const Id compositeId, uint32_t index);
         void AddOpImageSampleImplicitLod(const Id resultTypeId, const Id resultId, const Id sampledImageId, const Id coordinateId);
         void AddOpFAdd(const Id resultTypeId, const Id resultId, const Id operand1Id, const Id operand2Id);
         void AddOpFSub(const Id resultTypeId, const Id resultId, const Id operand1Id, const Id operand2Id);

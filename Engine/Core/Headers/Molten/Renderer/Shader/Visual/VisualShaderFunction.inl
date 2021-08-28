@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -27,53 +27,53 @@ namespace Molten::Shader::Visual
 {
 
     // Function node implementations.
-    template<FunctionType TFunctionType, typename TOutputType, typename ... TInputTypes>
-    OutputPin<TOutputType>& Function<TFunctionType, TOutputType, TInputTypes...>::GetOutput()
+    template<FunctionType VFunctionType, typename TOutputType, typename ... TInputTypes>
+    OutputPin<TOutputType>& Function<VFunctionType, TOutputType, TInputTypes...>::GetOutput()
     {
         return m_output;
     }
 
-    template<FunctionType TFunctionType, typename TOutputType, typename ... TInputTypes>
-    const OutputPin<TOutputType>& Function<TFunctionType, TOutputType, TInputTypes...>::GetOutput() const
+    template<FunctionType VFunctionType, typename TOutputType, typename ... TInputTypes>
+    const OutputPin<TOutputType>& Function<VFunctionType, TOutputType, TInputTypes...>::GetOutput() const
     {
         return m_output;
     }
 
-    template<FunctionType TFunctionType, typename TOutputType, typename ... TInputTypes>
+    template<FunctionType VFunctionType, typename TOutputType, typename ... TInputTypes>
     template<size_t VIndex>
-    InputPin<typename Function<TFunctionType, TOutputType, TInputTypes...>::template InputTypeAt<VIndex>>&
-        Function<TFunctionType, TOutputType, TInputTypes...>::GetInput()
+    InputPin<typename Function<VFunctionType, TOutputType, TInputTypes...>::template InputTypeAt<VIndex>>&
+        Function<VFunctionType, TOutputType, TInputTypes...>::GetInput()
     {
         return *std::get<VIndex>(m_inputs);
     }
 
-    template<FunctionType TFunctionType, typename TOutputType, typename ... TInputTypes>
+    template<FunctionType VFunctionType, typename TOutputType, typename ... TInputTypes>
     template<size_t VIndex>
-    const InputPin<typename Function<TFunctionType, TOutputType, TInputTypes...>::template InputTypeAt<VIndex>>&
-        Function<TFunctionType, TOutputType, TInputTypes...>::GetInput() const
+    const InputPin<typename Function<VFunctionType, TOutputType, TInputTypes...>::template InputTypeAt<VIndex>>&
+        Function<VFunctionType, TOutputType, TInputTypes...>::GetInput() const
     {
         return *std::get<VIndex>(m_inputs);
     }
 
-    template<FunctionType TFunctionType, typename TOutputType, typename ... TInputTypes>
-    FunctionType Function<TFunctionType, TOutputType, TInputTypes...>::GetFunctionType() const
+    template<FunctionType VFunctionType, typename TOutputType, typename ... TInputTypes>
+    FunctionType Function<VFunctionType, TOutputType, TInputTypes...>::GetFunctionType() const
     {
-        return TFunctionType;
+        return VFunctionType;
     }
 
-    template<FunctionType TFunctionType, typename TOutputType, typename ... TInputTypes>
-    size_t Function<TFunctionType, TOutputType, TInputTypes...>::GetInputPinCount() const
+    template<FunctionType VFunctionType, typename TOutputType, typename ... TInputTypes>
+    size_t Function<VFunctionType, TOutputType, TInputTypes...>::GetInputPinCount() const
     {
         return InputPinCount;
     }
-    template<FunctionType TFunctionType, typename TOutputType, typename ... TInputTypes>
-    size_t Function<TFunctionType, TOutputType, TInputTypes...>::GetOutputPinCount() const
+    template<FunctionType VFunctionType, typename TOutputType, typename ... TInputTypes>
+    size_t Function<VFunctionType, TOutputType, TInputTypes...>::GetOutputPinCount() const
     {
         return OutputPinCount;
     }
 
-    template<FunctionType TFunctionType, typename TOutputType, typename ... TInputTypes>
-    Pin* Function<TFunctionType, TOutputType, TInputTypes...>::GetInputPin(const size_t index)
+    template<FunctionType VFunctionType, typename TOutputType, typename ... TInputTypes>
+    Pin* Function<VFunctionType, TOutputType, TInputTypes...>::GetInputPin(const size_t index)
     {
         if constexpr(InputPinCount > 0)
         {
@@ -91,8 +91,8 @@ namespace Molten::Shader::Visual
             return nullptr;
         }
     }
-    template<FunctionType TFunctionType, typename TOutputType, typename ... TInputTypes>
-    const Pin* Function<TFunctionType, TOutputType, TInputTypes...>::GetInputPin(const size_t index) const
+    template<FunctionType VFunctionType, typename TOutputType, typename ... TInputTypes>
+    const Pin* Function<VFunctionType, TOutputType, TInputTypes...>::GetInputPin(const size_t index) const
     {
         if constexpr (InputPinCount > 0)
         {
@@ -111,24 +111,24 @@ namespace Molten::Shader::Visual
         }
     }
 
-    template<FunctionType TFunctionType, typename TOutputType, typename ... TInputTypes>
-    std::vector<Pin*> Function<TFunctionType, TOutputType, TInputTypes...>::GetInputPins()
+    template<FunctionType VFunctionType, typename TOutputType, typename ... TInputTypes>
+    std::vector<Pin*> Function<VFunctionType, TOutputType, TInputTypes...>::GetInputPins()
     {
         return std::apply([](auto&&... elems) {
             return std::vector<Pin*>{ static_cast<Pin*>(elems.get()) ... };
         }, m_inputs);
 
     }
-    template<FunctionType TFunctionType, typename TOutputType, typename ... TInputTypes>
-    std::vector<const Pin*> Function<TFunctionType, TOutputType, TInputTypes...>::GetInputPins() const
+    template<FunctionType VFunctionType, typename TOutputType, typename ... TInputTypes>
+    std::vector<const Pin*> Function<VFunctionType, TOutputType, TInputTypes...>::GetInputPins() const
     {
         return std::apply([](auto&&... elems) {
             return std::vector<const Pin*>{ static_cast<const Pin*>(elems.get()) ... };
         }, m_inputs);
     }
 
-    template<FunctionType TFunctionType, typename TOutputType, typename ... TInputTypes>
-    Pin* Function<TFunctionType, TOutputType, TInputTypes...>::GetOutputPin(const size_t index)
+    template<FunctionType VFunctionType, typename TOutputType, typename ... TInputTypes>
+    Pin* Function<VFunctionType, TOutputType, TInputTypes...>::GetOutputPin(const size_t index)
     {
         if (index != 0)
         {
@@ -136,8 +136,8 @@ namespace Molten::Shader::Visual
         }
         return &m_output;
     }
-    template<FunctionType TFunctionType, typename TOutputType, typename ... TInputTypes>
-    const Pin* Function<TFunctionType, TOutputType, TInputTypes...>::GetOutputPin(const size_t index) const
+    template<FunctionType VFunctionType, typename TOutputType, typename ... TInputTypes>
+    const Pin* Function<VFunctionType, TOutputType, TInputTypes...>::GetOutputPin(const size_t index) const
     {
         if (index != 0)
         {
@@ -146,19 +146,19 @@ namespace Molten::Shader::Visual
         return &m_output;
     }
 
-    template<FunctionType TFunctionType, typename TOutputType, typename ... TInputTypes>
-    std::vector<Pin*> Function<TFunctionType, TOutputType, TInputTypes...>::GetOutputPins()
+    template<FunctionType VFunctionType, typename TOutputType, typename ... TInputTypes>
+    std::vector<Pin*> Function<VFunctionType, TOutputType, TInputTypes...>::GetOutputPins()
     {
         return { &m_output };
     }
-    template<FunctionType TFunctionType, typename TOutputType, typename ... TInputTypes>
-    std::vector<const Pin*> Function<TFunctionType, TOutputType, TInputTypes...>::GetOutputPins() const
+    template<FunctionType VFunctionType, typename TOutputType, typename ... TInputTypes>
+    std::vector<const Pin*> Function<VFunctionType, TOutputType, TInputTypes...>::GetOutputPins() const
     {
         return { &m_output };
     }
 
-    template<FunctionType TFunctionType, typename TOutputType, typename ... TInputTypes>
-    Function<TFunctionType, TOutputType, TInputTypes...>::Function(Script& script) :
+    template<FunctionType VFunctionType, typename TOutputType, typename ... TInputTypes>
+    Function<VFunctionType, TOutputType, TInputTypes...>::Function(Script& script) :
         FunctionBase(script),
         m_output(*this),
         m_inputs(std::make_tuple<std::unique_ptr<InputPin<TInputTypes>>...>(std::make_unique<InputPin<TInputTypes>>(*this)...))

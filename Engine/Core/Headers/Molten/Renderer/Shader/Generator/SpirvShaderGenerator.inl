@@ -28,10 +28,15 @@ namespace Molten::Shader
 
     // Constant implementations.
     template<typename T>
-    SpirvGenerator::Constant::Constant(DataTypePointer dataType, const T& value) :
+    SpirvGenerator::Constant::Constant(
+        DataTypePointer dataType, 
+        const T& value,
+        ConstantPointers componentConstants
+    ) :
         id(0),
         dataType(std::move(dataType)),
-        value(value)
+        value(value),
+        componentConstants(std::move(componentConstants))
     {}
 
     // Constant storage implementations.
@@ -87,38 +92,40 @@ namespace Molten::Shader
             return *constantIt;
         }
 
+        ConstantPointers componentConstants;
+
         if constexpr (std::is_same_v<T, Vector2f32> == true)
         {
             for (size_t i = 0; i < Vector2f32::Dimensions; i++)
             {
-                GetOrCreate(dataTypeStorage, value.c[i]);
+                componentConstants.push_back(GetOrCreate(dataTypeStorage, value.c[i]));
             }
         }
         else if constexpr (std::is_same_v<T, Vector3f32> == true)
         {
             for (size_t i = 0; i < Vector3f32::Dimensions; i++)
             {
-                GetOrCreate(dataTypeStorage, value.c[i]);
+                componentConstants.push_back(GetOrCreate(dataTypeStorage, value.c[i]));
             }
         }
         else if constexpr (std::is_same_v<T, Vector4f32> == true)
         {
             for (size_t i = 0; i < Vector4f32::Dimensions; i++)
             {
-                GetOrCreate(dataTypeStorage, value.c[i]);
+                componentConstants.push_back(GetOrCreate(dataTypeStorage, value.c[i]));
             }
         }
         else if constexpr (std::is_same_v<T, Matrix4x4f32> == true)
         {
             for (size_t i = 0; i < Matrix4x4f32::Components; i++)
             {
-                GetOrCreate(dataTypeStorage, value.e[i]);
+                componentConstants.push_back(GetOrCreate(dataTypeStorage, value.e[i]));
             }
         }
 
         auto dataType = dataTypeStorage.GetOrCreate(variableDataType);
 
-        auto newConstant = std::make_shared<Constant>(std::move(dataType), value);
+        auto newConstant = std::make_shared<Constant>(std::move(dataType), value, std::move(componentConstants));
         constants.push_back(newConstant);
         return newConstant;
     }

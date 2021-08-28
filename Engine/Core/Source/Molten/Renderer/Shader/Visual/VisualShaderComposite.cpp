@@ -23,19 +23,20 @@
 *
 */
 
-#include "Molten/Renderer/Shader/Visual/VisualShaderConstant.hpp"
+#include "Molten/Renderer/Shader/Visual/VisualShaderComposite.hpp"
 
 namespace Molten::Shader::Visual
 {
 
-    // Constant implementations.
-    NodeType ConstantBase::GetType() const
+    // Composite node base implementations.
+    NodeType CompositeBase::GetType() const
     {
-        return NodeType::Constant;
+        return NodeType::Composite;
     }
 
-    ConstantBase::ConstantBase(Script& script) :
+    CompositeBase::CompositeBase(Script& script) :
         Node(script)
-    {}
+    { }
+
 
 }

@@ -33,7 +33,7 @@
 namespace Molten::Shader
 {
 
-    TEST(Shader, SpirvShaderGenerator)
+    TEST(Shader, SpirvShaderGenerator_FragmentScript_Constants)
     {
         Logger logger;
 
@@ -41,62 +41,7 @@ namespace Molten::Shader
         {
             auto& script = fragmentScript;
 
-            /*auto& compsToVec4_1 = script.CreateFunction<Visual::Functions::CompsToVec4f32>();
-            auto& const1 = script.CreateConstant<float>(4.25f);
-
-            auto& sin1 = script.CreateFunction<Visual::Functions::Sinf32>();
-            auto& const2 = script.CreateConstant<float>(6.0f);
-            sin1.GetInputPin()->Connect(*const2.GetOutputPin());
-
-            auto& input1 = script.GetInputInterface().AddMember<float>();
-
-            auto& pc1 = script.GetPushConstants().AddMember<float>(0);
-
-            compsToVec4_1.GetInputPin(0)->Connect(*const1.GetOutputPin());
-            compsToVec4_1.GetInputPin(1)->Connect(*sin1.GetOutputPin());
-            compsToVec4_1.GetInputPin(2)->Connect(input1);
-            compsToVec4_1.GetInputPin(2)->Connect(pc1);
-
-            auto* set1 = script.GetDescriptorSets().AddSet(10);
-            auto* ubo1 = set1->AddBinding<Visual::FragmentUniformBuffer>(5);
-            auto& ubo1_m1 = ubo1->AddPin<Vector4f32>();
-
-            auto& addVec4_1 = script.CreateOperator<Visual::Operators::AddVec4f32>();
-            addVec4_1.GetInputPin(0)->Connect(ubo1_m1);
-            addVec4_1.GetInputPin(1)->Connect(*compsToVec4_1.GetOutputPin());
-
-            auto& pc2 = script.GetPushConstants().AddMember<Vector4f32>(1);
-
-            auto& multVec4_1 = script.CreateOperator<Visual::Operators::MultVec4f32>();
-            multVec4_1.GetInputPin(0)->Connect(pc2);
-            multVec4_1.GetInputPin(1)->Connect(*addVec4_1.GetOutputPin());
-
-            auto* sampler1 = set1->AddBinding<Sampler2D>(10);
-            auto& input2 = script.GetInputInterface().AddMember<Vector2f32>();
-
-            auto& texture1 = script.CreateFunction<Visual::Functions::Texture2D>();
-            texture1.GetInputPin(0)->Connect(*sampler1->GetOutputPin());
-            texture1.GetInputPin(1)->Connect(input2);
-
-            auto& subVec4_1 = script.CreateOperator<Visual::Operators::SubVec4f32>();
-            subVec4_1.GetInputPin(0)->Connect(*multVec4_1.GetOutputPin());
-            subVec4_1.GetInputPin(1)->Connect(*texture1.GetOutputPin());
-
-            auto& output1 = script.GetOutputInterface().AddMember<Vector4f32>();
-            output1.Connect(*subVec4_1.GetOutputPin());
-            */
-
-           /* auto& input1 = script.GetInputInterface().AddMember<Vector4f32>();
-
-            auto& sin1 = script.CreateFunction<Visual::Functions::SinVec4f32>();
-            sin1.GetInput<0>().Connect(input1);
-
-            auto& output1 = script.GetOutputInterface().AddMember<Vector4f32>();
-            output1.Connect(sin1.GetOutput());*/
-
-
-            // Test with constants.
-            /*auto& const1 = script.CreateConstant<Vector4f32>({ 1.0f, 2.0f, 3.0f, 4.0f });
+            auto& const1 = script.CreateConstant<Vector4f32>({ 1.0f, 2.0f, 3.0f, 4.0f });
             auto& const2 = script.CreateConstant<Vector4f32>({ 1.0f, 2.0f, 3.0f, 4.0f });
             auto& const3 = script.CreateConstant<Vector4f32>({ 1.0f, 2.0f, 3.0f, 5.0f });
 
@@ -105,16 +50,89 @@ namespace Molten::Shader
             auto& output3 = script.GetOutputInterface().AddMember<Vector4f32>();
             output1.Connect(const1.GetOutput());
             output2.Connect(const2.GetOutput());
-            output3.Connect(const3.GetOutput());*/
+            output3.Connect(const3.GetOutput());
+        }
 
-  
-            // Test with input, output, operator and functions.
-            /*auto& input1 = script.GetInputInterface().AddMember<Vector4f32>();
+        SpirvGenerator::Template spirvTemplate;
+        EXPECT_TRUE(SpirvGenerator::CreateTemplate(spirvTemplate, { &fragmentScript }, &logger));
+
+        SpirvGenerator generator(&logger);
+        const auto source = generator.Generate(fragmentScript, &spirvTemplate, true);
+        EXPECT_FALSE(source.empty());
+        EXPECT_EQ(source.size(), size_t{ 135 });
+
+#if 0
+        {
+            std::ofstream fout("SpirvTest/SpirvGenerator.spiv", std::ios::binary);
+            fout.write(reinterpret_cast<const char*>(source.data()), source.size() * sizeof(Spirv::Word));
+            fout.close();
+        }
+#endif
+    }
+
+    TEST(Shader, SpirvShaderGenerator_FragmentScript_PushConstants)
+    {
+        Logger logger;
+
+        Visual::FragmentScript fragmentScript;
+        {
+            auto& script = fragmentScript;
+
+            auto& pc1 = script.GetPushConstants().AddMember<Vector4f32>(4);
+            auto& pc2 = script.GetPushConstants().AddMember<Vector4f32>(5);
+            auto& pc3 = script.GetPushConstants().AddMember<Vector4f32>(6);
+
+            auto& mult1 = script.CreateOperator<Visual::Operators::MultVec4f32>();
+            mult1.GetLeftInput().Connect(pc1.GetPin());
+            mult1.GetRightInput().Connect(pc1.GetPin());
+
+            auto& add1 = script.CreateOperator<Visual::Operators::AddVec4f32>();
+            add1.GetLeftInput().Connect(pc2.GetPin());
+            add1.GetRightInput().Connect(pc3.GetPin());
+
+            auto& add2 = script.CreateOperator<Visual::Operators::AddVec4f32>();
+            add2.GetLeftInput().Connect(pc3.GetPin());
+            add2.GetRightInput().Connect(mult1.GetOutput());
+
+            auto& add3 = script.CreateOperator<Visual::Operators::AddVec4f32>();
+            add3.GetLeftInput().Connect(add1.GetOutput());
+            add3.GetRightInput().Connect(add2.GetOutput());
+
+            auto& output1 = script.GetOutputInterface().AddMember<Vector4f32>();
+            output1.Connect(add3.GetOutput());
+        }
+
+        SpirvGenerator::Template spirvTemplate;
+        EXPECT_TRUE(SpirvGenerator::CreateTemplate(spirvTemplate, { &fragmentScript }, &logger));
+
+        SpirvGenerator generator(&logger);
+        const auto source = generator.Generate(fragmentScript, &spirvTemplate, true);
+        EXPECT_FALSE(source.empty());
+        EXPECT_EQ(source.size(), size_t{ 187 });
+
+#if 0
+        {
+            std::ofstream fout("SpirvTest/SpirvGenerator.spiv", std::ios::binary);
+            fout.write(reinterpret_cast<const char*>(source.data()), source.size() * sizeof(Spirv::Word));
+            fout.close();
+        }
+#endif
+    }
+
+    TEST(Shader, SpirvShaderGenerator_FragmentScript_OperatorsAndFunctions)
+    {
+        Logger logger;
+
+        Visual::FragmentScript fragmentScript;
+        {
+            auto& script = fragmentScript;
+
+            auto& input1 = script.GetInputInterface().AddMember<Vector4f32>();
             auto& input2 = script.GetInputInterface().AddMember<Vector4f32>();
 
             auto& sin1 = script.CreateFunction<Visual::Functions::SinVec4f32>();
             sin1.GetInput<0>().Connect(input2);
-            
+
             auto& cos1 = script.CreateFunction<Visual::Functions::CosVec4f32>();
             cos1.GetInput<0>().Connect(sin1.GetOutput());
 
@@ -141,43 +159,42 @@ namespace Molten::Shader
             add1.GetLeftInput().Connect(mult1.GetOutput());
             add1.GetRightInput().SetDefaultValue({ 2.0f, 3.0f, 4.0f, 5.0f });
 
-            auto& add2 = script.CreateOperator<Visual::Operators::AddVec4f32>();
-            add2.GetLeftInput().SetDefaultValue({1.0f, 2.0f, 3.0f, 4.0f});
-            add2.GetRightInput().Connect(add1.GetOutput());
+            auto& sub1 = script.CreateOperator<Visual::Operators::SubVec4f32>();
+            sub1.GetLeftInput().SetDefaultValue({ 1.0f, 2.0f, 3.0f, 4.0f });
+            sub1.GetRightInput().Connect(add1.GetOutput());
 
             auto& output1 = script.GetOutputInterface().AddMember<Vector4f32>();
             auto& output2 = script.GetOutputInterface().AddMember<Vector4f32>();
-            output1.Connect(add2.GetOutput());
-            output2.Connect(add1.GetOutput());*/
+            output1.Connect(sub1.GetOutput());
+            output2.Connect(add1.GetOutput());
+        }
 
+        SpirvGenerator::Template spirvTemplate;
+        EXPECT_TRUE(SpirvGenerator::CreateTemplate(spirvTemplate, { &fragmentScript }, &logger));
 
-            // Test with output and push constant.
-            /*auto& pc1 = script.GetPushConstants().AddMember<Vector4f32>(4);
-            auto& pc2 = script.GetPushConstants().AddMember<Vector4f32>(5);
-            auto& pc3 = script.GetPushConstants().AddMember<Vector4f32>(6);
+        SpirvGenerator generator(&logger);
+        const auto source = generator.Generate(fragmentScript, &spirvTemplate, true);
+        EXPECT_FALSE(source.empty());
+        EXPECT_EQ(source.size(), size_t{ 263 });
 
-            auto& mult1 = script.CreateOperator<Visual::Operators::MultVec4f32>();
-            mult1.GetLeftInput().Connect(pc1.GetPin());
-            mult1.GetRightInput().Connect(pc1.GetPin());
+#if 0
+        {
+            std::ofstream fout("SpirvTest/SpirvGenerator.spiv", std::ios::binary);
+            fout.write(reinterpret_cast<const char*>(source.data()), source.size() * sizeof(Spirv::Word));
+            fout.close();
+        }
+#endif
+    }
 
-            auto& add1 = script.CreateOperator<Visual::Operators::AddVec4f32>();
-            add1.GetLeftInput().Connect(pc2.GetPin());
-            add1.GetRightInput().Connect(pc3.GetPin());
+    TEST(Shader, SpirvShaderGenerator_FragmentScript_Sampler)
+    {
+        Logger logger;
 
-            auto& add2 = script.CreateOperator<Visual::Operators::AddVec4f32>();
-            add2.GetLeftInput().Connect(pc3.GetPin());
-            add2.GetRightInput().Connect(mult1.GetOutput());
+        Visual::FragmentScript fragmentScript;
+        {
+            auto& script = fragmentScript;
 
-            auto& add3 = script.CreateOperator<Visual::Operators::AddVec4f32>();
-            add3.GetLeftInput().Connect(add1.GetOutput());
-            add3.GetRightInput().Connect(add2.GetOutput());
-
-            auto& output1 = script.GetOutputInterface().AddMember<Vector4f32>();
-            output1.Connect(add3.GetOutput());*/
-
-
-            // Test with output and texture.
-            /*auto* sampler1 = script.GetDescriptorSets().AddSet(1)->AddBinding<Sampler2D>(2);
+            auto* sampler1 = script.GetDescriptorSets().AddSet(1)->AddBinding<Sampler2D>(2);
 
             auto& texture1 = script.CreateFunction<Visual::Functions::Texture2D>();
             texture1.GetInput<0>().Connect(sampler1->GetOutput());
@@ -191,75 +208,146 @@ namespace Molten::Shader
             output1.Connect(texture1.GetOutput());
 
             auto& output2 = script.GetOutputInterface().AddMember<Vector4f32>();
-            output2.Connect(texture2.GetOutput());*/
+            output2.Connect(texture2.GetOutput());
+        }
 
+        SpirvGenerator::Template spirvTemplate;
+        EXPECT_TRUE(SpirvGenerator::CreateTemplate(spirvTemplate, { &fragmentScript }, &logger));
 
-            // Tests with output and uniform buffers.
+        SpirvGenerator generator(&logger);
+        const auto source = generator.Generate(fragmentScript, &spirvTemplate, true);
+        EXPECT_FALSE(source.empty());
+        EXPECT_EQ(source.size(), size_t{ 164 });
+
+#if 0
+        {
+            std::ofstream fout("SpirvTest/SpirvGenerator.spiv", std::ios::binary);
+            fout.write(reinterpret_cast<const char*>(source.data()), source.size() * sizeof(Spirv::Word));
+            fout.close();
+        }
+#endif
+    }
+
+    TEST(Shader, SpirvShaderGenerator_FragmentScript_UniformBuffer)
+    {
+        Logger logger;
+
+        Visual::FragmentScript fragmentScript;
+        {
+            auto& script = fragmentScript;
+
             auto* set1 = script.GetDescriptorSets().AddSet(1);
             auto* ubo1 = set1->AddBinding<Visual::FragmentUniformBuffer>(2);
             auto& ubo1_1 = ubo1->AddPin<Vector4f32>();
             auto& ubo1_2 = ubo1->AddPin<Vector4f32>();
 
+            auto* set2 = script.GetDescriptorSets().AddSet(2);
+            auto* ubo2 = set2->AddBinding<Visual::FragmentUniformBuffer>(2);
+            auto& ubo2_1 = ubo2->AddPin<Vector4f32>();
+
             auto& output1 = script.GetOutputInterface().AddMember<Vector4f32>();
             auto& output2 = script.GetOutputInterface().AddMember<Vector4f32>();
+            auto& output3 = script.GetOutputInterface().AddMember<Vector4f32>();
             output1.Connect(ubo1_1);
             output2.Connect(ubo1_2);
- 
+            output3.Connect(ubo2_1);
         }
 
         SpirvGenerator::Template spirvTemplate;
-        {
-            Molten::Test::Benchmarker bench("Generate SPIR-V template");
-            EXPECT_TRUE(SpirvGenerator::CreateTemplate(spirvTemplate, { &fragmentScript }, &logger));
-        }
+        EXPECT_TRUE(SpirvGenerator::CreateTemplate(spirvTemplate, { &fragmentScript }, &logger));
 
         SpirvGenerator generator(&logger);
-        Spirv::Words source;
-        {
-            Molten::Test::Benchmarker bench("Generate SPIR-V source code");
-            source = generator.Generate(fragmentScript, &spirvTemplate, true);
-        }
-
+        const auto source = generator.Generate(fragmentScript, &spirvTemplate, true);
         EXPECT_FALSE(source.empty());
+        EXPECT_EQ(source.size(), size_t{ 220 });
 
-        // Debug dump.
-#if 1
+#if 0
         {
             std::ofstream fout("SpirvTest/SpirvGenerator.spiv", std::ios::binary);
-            fout.write(reinterpret_cast<char*>(source.data()), source.size() * sizeof(Spirv::Word) );
+            fout.write(reinterpret_cast<const char*>(source.data()), source.size() * sizeof(Spirv::Word));
             fout.close();
         }
+#endif
+    }
+
+    TEST(Shader, SpirvShaderGenerator_FragmentScript_Composite)
+    {
+        Logger logger;
+
+        Visual::FragmentScript fragmentScript;
         {
-            Molten::Test::Benchmarker bench1("OLD - Generate GLSL source code");
+            auto& script = fragmentScript;
+            
+            auto& input1 = script.GetInputInterface().AddMember<Vector2f32>();
+            auto& input2 = script.GetInputInterface().AddMember<float>();
 
-            GlslGenerator glslGenerator;
-            auto glslCode = glslGenerator.Generate(fragmentScript, Shader::GlslGenerator::Compability::SpirV, nullptr);
+            auto& vec2Comp1 = script.CreateComposite<Visual::Composites::Vec2f32FromFloat32>();
+            vec2Comp1.GetInput<0>().Connect(input2);
+            vec2Comp1.GetInput<1>().SetDefaultValue(5.0f);
 
-            bench1.Stop();
+            auto& vec3Comp1 = script.CreateComposite<Visual::Composites::Vec3f32FromVec2f32Float32>();
+            vec3Comp1.GetInput<0>().Connect(input1);
+            vec3Comp1.GetInput<1>().Connect(input2);
 
-            EXPECT_FALSE(glslCode.empty());
+            auto& vec4Comp1 = script.CreateComposite<Visual::Composites::Vec4f32FromVec2f32>();
+            vec4Comp1.GetInput<0>().Connect(input1);
+            vec4Comp1.GetInput<1>().Connect(input1);
 
-            Molten::Test::Benchmarker bench2("OLD - Generate SPIR-V source code");
+            auto& output1 = script.GetOutputInterface().AddMember<Vector2f32>();
+            output1.Connect(vec2Comp1.GetOutput());
 
-            const auto scriptType = fragmentScript.GetType();
-            auto spirvCode2 = Shader::GlslGenerator::ConvertGlslToSpriV(glslCode, scriptType);
+            auto& output2 = script.GetOutputInterface().AddMember<Vector3f32>();
+            output2.Connect(vec3Comp1.GetOutput());
 
-            bench2.Stop();
-
-            EXPECT_FALSE(spirvCode2.empty());
-
-            {
-                std::ofstream fout("SpirvTest/GlslGenerator.frag", std::ios::binary);
-                fout.write(reinterpret_cast<char*>(glslCode.data()), glslCode.size());
-                fout.close();
-            }
-            {
-                std::ofstream fout("SpirvTest/SpirvGeneratorOld.spiv", std::ios::binary);
-                fout.write(reinterpret_cast<char*>(spirvCode2.data()), spirvCode2.size());
-                fout.close();
-            }
+            auto& output3 = script.GetOutputInterface().AddMember<Vector4f32>();
+            output3.Connect(vec4Comp1.GetOutput());
         }
 
+        SpirvGenerator::Template spirvTemplate;
+        EXPECT_TRUE(SpirvGenerator::CreateTemplate(spirvTemplate, { &fragmentScript }, &logger));
+
+        SpirvGenerator generator(&logger);
+        const auto source = generator.Generate(fragmentScript, &spirvTemplate, true);
+        EXPECT_FALSE(source.empty());
+        EXPECT_EQ(source.size(), size_t{ 191 });
+
+#if 0
+        {
+            std::ofstream fout("SpirvTest/SpirvGenerator.spiv", std::ios::binary);
+            fout.write(reinterpret_cast<const char*>(source.data()), source.size() * sizeof(Spirv::Word) );
+            fout.close();
+        }
+#endif
+    }
+
+    TEST(Shader, SpirvShaderGenerator_VertexScript)
+    {
+        Logger logger;
+
+        Visual::VertexScript vertexScript;
+        {
+            auto& script = vertexScript;
+
+            auto& const1 = script.CreateConstant<Vector4f32>({ 1.0f, 2.0f, 3.0f, 4.0f });
+
+            script.GetVertexOutput()->GetInputPin()->Connect(const1.GetOutput());
+
+        }
+
+        SpirvGenerator::Template spirvTemplate;
+        EXPECT_TRUE(SpirvGenerator::CreateTemplate(spirvTemplate, { &vertexScript }, &logger));
+
+        SpirvGenerator generator(&logger);
+        const auto source = generator.Generate(vertexScript, &spirvTemplate, true);
+        EXPECT_FALSE(source.empty());
+        EXPECT_EQ(source.size(), size_t{ 119 });
+
+#if 0
+        {
+            std::ofstream fout("SpirvTest/SpirvGenerator.spiv", std::ios::binary);
+            fout.write(reinterpret_cast<const char*>(source.data()), source.size() * sizeof(Spirv::Word));
+            fout.close();
+        }
 #endif
 
     }
