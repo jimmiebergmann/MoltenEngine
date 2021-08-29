@@ -157,20 +157,10 @@ namespace Molten::Shader
     }
 
 
-
     // Spirv generator implementations.
-    bool SpirvGenerator::CreateTemplate(
-        Template& /*glslTemplate*/,
-        const std::vector<Visual::Script*>& /*scripts*/,
-        Logger* /*logger*/)
-    {
-        return true;
-    }
-
     SpirvGenerator::SpirvGenerator(Logger* logger) :
         m_logger(logger),
-        m_script(nullptr),
-        m_includeDebugSymbols(false),
+        m_descriptor(nullptr),
         m_currentId(0),
         m_glslExtension{},
         m_mainEntryPoint{},
@@ -180,12 +170,12 @@ namespace Molten::Shader
         m_pushConstantStructure(Spirv::StorageClass::PushConstant)
     {}
 
-    Spirv::Words SpirvGenerator::Generate(
-        const Visual::Script& script,
-        const Template* /*spirvTemplate*/,
-        const bool includeDebugSymbols)
+    SpirvGeneratoResult SpirvGenerator::Generate(const SpirvGeneratorDescriptor& descriptor)
     {
-        InitGenerator(script, includeDebugSymbols);
+        if(!InitGenerator(descriptor))
+        {
+            return {};
+        }
 
         if(!BuildTree())
         {
@@ -197,7 +187,8 @@ namespace Molten::Shader
             return {};
         }
 
-        return std::move(m_module.words);
+
+        return { std::move(m_module.words), m_inputStructure.GetUnusedMemberIndices() };
     }
 
 
@@ -298,7 +289,7 @@ namespace Molten::Shader
 
 
     // Input structure implementations.
-    SpirvGenerator::InputStructure::Member::Member(
+    /*SpirvGenerator::InputStructure::Member::Member(
         GeneratorOutputPinPointer outputPin,
             DataTypePointer dataType,
             DataTypePtrPointer dataTypePointer
@@ -306,7 +297,21 @@ namespace Molten::Shader
         outputPin(std::move(outputPin)),
         dataType(std::move(dataType)),
         dataTypePointer(std::move(dataTypePointer))
+    {}*/
+    SpirvGenerator::InputStructure::Member::Member(const Visual::Pin* pin) :
+        pin(pin),
+        outputPin{},
+        dataType{},
+        dataTypePointer{}
     {}
+
+    void SpirvGenerator::InputStructure::Initialize(const Visual::InputInterface& inputInterface)
+    {
+        for(const auto& input : inputInterface)
+        {
+            m_members.emplace_back(&input->GetPin());
+        }
+    }
 
     void SpirvGenerator::InputStructure::AddMember(
         DataTypeStorage& dataTypeStorage,
@@ -314,17 +319,63 @@ namespace Molten::Shader
         GeneratorOutputPinPointer& generatorOutputPin)
     {
         const auto& pin = generatorOutputPin->pin;
-        auto dataType = dataTypeStorage.GetOrCreate(pin.GetDataType());
-        auto dataTypePointer = dataTypePointerStorage.GetOrCreate(Spirv::StorageClass::Input, dataType);
 
-        members.emplace_back(generatorOutputPin, std::move(dataType), std::move(dataTypePointer));
+        const auto it = std::find_if(m_members.begin(), m_members.end(), [&](const auto& member)
+        {
+            return member.pin == &pin;
+        });
+
+        if(it == m_members.end())
+        {
+            return;
+        }
+
+        auto& member = *it;
+        if(member.outputPin)
+        {
+            return;
+        }
+
+        member.dataType = dataTypeStorage.GetOrCreate(pin.GetDataType());
+        member.dataTypePointer = dataTypePointerStorage.GetOrCreate(Spirv::StorageClass::Input, member.dataType);
+        member.outputPin = generatorOutputPin;
 
         generatorOutputPin->storageClass = Spirv::StorageClass::Input;
     }
 
+    std::vector<size_t> SpirvGenerator::InputStructure::GetUnusedMemberIndices()
+    {
+        std::vector<size_t> indices;
+
+        for (size_t i = 0; i < m_members.size(); i++)
+        {
+            if (m_members[i].outputPin == nullptr)
+            {
+                indices.push_back(i);
+            }
+        }
+
+        return indices;
+    }
+
+    SpirvGenerator::InputStructure::Members SpirvGenerator::InputStructure::GetMembers()
+    {
+        Members result;
+
+        for(auto& member : m_members)
+        {
+            if(member.outputPin)
+            {
+                result.push_back(member);
+            }
+        }
+
+        return result;
+    }
+
     void SpirvGenerator::InputStructure::Clear()
     {
-        members.clear();
+        m_members.clear();
     }
 
 
@@ -884,17 +935,21 @@ namespace Molten::Shader
 
 
     // Spirv generator private function implementations.
-    void SpirvGenerator::InitGenerator(const Visual::Script& script, const bool includeDebugSymbols)
+    bool SpirvGenerator::InitGenerator(const SpirvGeneratorDescriptor& descriptor)
     {
-        m_script = &script;
+        if(!descriptor.script)
+        {
+            Logger::WriteError(m_logger, "Provided script for Spir-V generator is nullptr.");
+            return false;
+        }
 
-        m_includeDebugSymbols = includeDebugSymbols;
+        m_descriptor = &descriptor;
         m_module.words.clear();
         m_currentId = 0;
         m_capabilities = { Spirv::Capability::Shader };
         m_glslExtension = { GetNextId(), "GLSL.std.450" };
         m_mainEntryPoint = {
-            m_script->GetType() == Shader::Type::Vertex ? Spirv::ExecutionModel::Vertex : Spirv::ExecutionModel::Fragment,
+            m_descriptor->script->GetType() == Shader::Type::Vertex ? Spirv::ExecutionModel::Vertex : Spirv::ExecutionModel::Fragment,
             GetNextId(),
             "main",
             {}
@@ -921,29 +976,52 @@ namespace Molten::Shader
         m_debugNameStorage.Clear();
 
         m_mainInstructions.clear();
+
+        m_inputStructure.Initialize(m_descriptor->script->GetInputInterface());
+
+        return true;
     }
 
     bool SpirvGenerator::BuildTree()
     {
         // Initialize root notes from output interface.
-        const auto& outputInterface = m_script->GetOutputInterface();
+        const auto& outputInterface = m_descriptor->script->GetOutputInterface();
         if (const auto inputPins = outputInterface.GetInputPins(); !inputPins.empty())
         {
             auto generatorNode = std::make_shared<GeneratorNode>(outputInterface);
-            
+
+            size_t index = 0;
             for (auto& outputNodePin : generatorNode->inputPins)
             {
-                const auto& pin = outputNodePin->pin;
-                auto dataType = m_dataTypeStorage.GetOrCreate(pin.GetDataType());
-                auto dataTypePointer = m_dataTypePointerStorage.GetOrCreate(Spirv::StorageClass::Output, dataType);
-                m_outputStructure.members.emplace_back(outputNodePin, std::move(dataType), std::move(dataTypePointer));
+                const auto it = std::find(m_descriptor->ignoredOutputIndices.begin(), m_descriptor->ignoredOutputIndices.end(), index);
+                if(it == m_descriptor->ignoredOutputIndices.end())
+                {
+                    const auto& pin = outputNodePin->pin;
+                    auto dataType = m_dataTypeStorage.GetOrCreate(pin.GetDataType());
+                    auto dataTypePointer = m_dataTypePointerStorage.GetOrCreate(Spirv::StorageClass::Output, dataType);
+                    m_outputStructure.members.emplace_back(outputNodePin, std::move(dataType), std::move(dataTypePointer));
+                } 
+
+                ++index;
             }
 
             m_rootNodes.push_back(std::move(generatorNode));
         }
 
+        // Initialize input pins
+        if(!m_descriptor->ignoreUnusedInputs)
+        {
+            const auto& inputInterface = m_descriptor->script->GetInputInterface();
+            auto generatorInputNode = CreateGeneratorNode(inputInterface);
+
+            for(auto& generatorOutputPin : generatorInputNode->outputPins)
+            {
+                BuildVisitOutputPin(generatorInputNode, generatorOutputPin);
+            }
+        }
+
         // Add vertex output if current script is a vertex script.
-        if(const auto* vertexOutput = m_script->GetVertexOutput(); vertexOutput)
+        if(const auto* vertexOutput = m_descriptor->script->GetVertexOutput(); vertexOutput)
         {
             auto generatorNode = std::make_shared<GeneratorNode>(*vertexOutput);
 
@@ -1237,7 +1315,7 @@ namespace Molten::Shader
         UpdateUniformPointerIds();
         UpdateUniformBufferStructs();
 
-        if (m_includeDebugSymbols)
+        if (m_descriptor->includeDebugSymbols)
         {
             AddGlobalDebugNames();
         }
@@ -1258,7 +1336,7 @@ namespace Molten::Shader
 
         m_module.AddOpMemoryModel(Spirv::AddressingModel::Logical, Spirv::MemoryModel::Glsl450);
         
-        for (const auto& member : m_inputStructure.members)
+        for (const auto& member : m_inputStructure.GetMembers())
         {
             m_mainEntryPoint.interface.push_back(member.outputPin->id);
         }
@@ -1273,7 +1351,7 @@ namespace Molten::Shader
 
         m_module.AddOpEntryPoint(m_mainEntryPoint);
 
-        if(m_script->GetType() == Shader::Type::Fragment)
+        if(m_descriptor->script->GetType() == Shader::Type::Fragment)
         {
             m_module.AddOpExecutionMode(m_mainEntryPoint.id, Spirv::ExecutionMode::OriginUpperLeft);
         }     
@@ -1318,7 +1396,7 @@ namespace Molten::Shader
 
         m_module.UpdateIdBound(m_currentId + 1);
 
-        if(m_includeDebugSymbols)
+        if(m_descriptor->includeDebugSymbols)
         {
             InsertDebugNames();
         }
@@ -1333,7 +1411,7 @@ namespace Molten::Shader
             return;
         }
 
-        const auto& pushConstants = m_script->GetPushConstantsBase();
+        const auto& pushConstants = m_descriptor->script->GetPushConstantsBase();
         if (auto pushConstantsOutputPins = pushConstants.GetOutputPins(); !pushConstantsOutputPins.empty())
         {
             Spirv::Word index = 0;
@@ -1360,7 +1438,7 @@ namespace Molten::Shader
 
     void SpirvGenerator::UpdateUniformBuffersMembers()
     {
-        const auto& descriptorSets = m_script->GetDescriptorSetsBase();
+        const auto& descriptorSets = m_descriptor->script->GetDescriptorSetsBase();
         
         for(size_t i = 0; i < descriptorSets.GetSetCount(); i++)
         {
@@ -1426,7 +1504,7 @@ namespace Molten::Shader
 
     void SpirvGenerator::UpdateInputIds()
     {
-        for (auto& member : m_inputStructure.members)
+        for (auto& member : m_inputStructure.GetMembers())
         {
             member.outputPin->id = GetNextId();
         }
@@ -1459,7 +1537,7 @@ namespace Molten::Shader
         m_vertexOutputStructure.typePointerId = GetNextId();
         m_vertexOutputStructure.id = GetNextId();
 
-        if(m_includeDebugSymbols)
+        if(m_descriptor->includeDebugSymbols)
         {
             m_debugNameStorage.AddWithoutCounter(m_vertexOutputStructure.typeId, "gl_PerVertex");
             m_debugNameStorage.AddWithoutCounter(m_vertexOutputStructure.id, "vout");
@@ -1526,7 +1604,7 @@ namespace Molten::Shader
     {
         m_debugNameStorage.AddWithoutCounter(m_mainEntryPoint.id, m_mainEntryPoint.name);
 
-        for (auto& member : m_inputStructure.members)
+        for (auto& member : m_inputStructure.GetMembers())
         {
             m_debugNameStorage.Add(member.outputPin->id, "in");
         }
@@ -1567,7 +1645,7 @@ namespace Molten::Shader
     void SpirvGenerator::WriteInputDecorations()
     {
         Spirv::Word location = 0;
-        for (const auto& member : m_inputStructure.members)
+        for (const auto& member : m_inputStructure.GetMembers())
         {
             m_module.AddOpDecorateLocation(member.outputPin->id, location);
             ++location;
@@ -1776,7 +1854,7 @@ namespace Molten::Shader
 
     void SpirvGenerator::WriteInputs()
     {
-        for (const auto& member : m_inputStructure.members)
+        for (const auto& member : m_inputStructure.GetMembers())
         {
             m_module.AddOpVariable(member.outputPin->id, member.dataTypePointer->id, Spirv::StorageClass::Input);
         }
@@ -2045,7 +2123,7 @@ namespace Molten::Shader
 
         const auto functionType = functionBase.GetFunctionType();
 
-        if(m_includeDebugSymbols)
+        if(m_descriptor->includeDebugSymbols)
         {
             if(const auto& debugName = GetFunctionName(functionType); !debugName.empty())
             {
@@ -2134,7 +2212,7 @@ namespace Molten::Shader
 
         const auto arithmeticOperatorType = arithmeticOperatorBase.GetArithmeticOperatorType();
 
-        if (m_includeDebugSymbols)
+        if (m_descriptor->includeDebugSymbols)
         {
             if (const auto& debugName = GetArithmeticOperatorName(arithmeticOperatorType); !debugName.empty())
             {
@@ -2182,22 +2260,28 @@ namespace Molten::Shader
 
     bool SpirvGenerator::WriteOutput(const GeneratorNodePointer& generatorNode, const Visual::OutputInterface& outputInterface)
     {
+        size_t index = 0;
         for (auto& generatorInputPin : generatorNode->inputPins)
         {
-            std::vector<Spirv::Id> inputIds;
-            if (!AccessNodeInputInMain(*generatorInputPin, inputIds))
+            const auto it = std::find(m_descriptor->ignoredOutputIndices.begin(), m_descriptor->ignoredOutputIndices.end(), index);
+            if (it == m_descriptor->ignoredOutputIndices.end())
             {
-                return false;
-            }
+                std::vector<Spirv::Id> inputIds;
+                if (!AccessNodeInputInMain(*generatorInputPin, inputIds))
+                {
+                    return false;
+                }
 
-            const auto* member = m_outputStructure.FindMember(generatorInputPin);
-            if(!member)
-            {
-                Logger::WriteError(m_logger, "Failed to find output interface member.");
-                return false;
-            }
+                const auto* member = m_outputStructure.FindMember(generatorInputPin);
+                if (!member)
+                {
+                    Logger::WriteError(m_logger, "Failed to find output interface member.");
+                    return false;
+                }
 
-            m_module.AddOpStore(member->id, inputIds[0]);
+                m_module.AddOpStore(member->id, inputIds[0]);
+            }
+            ++index;
         }
         return true;
     }

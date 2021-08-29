@@ -54,39 +54,21 @@ namespace Molten::Shader::Visual
 namespace Molten::Shader
 {
 
-    template<typename T, size_t VDimensions>
-    struct SpirvGeneratorConstantVectorComparer;
-
-    template<typename T>
-    struct SpirvGeneratorConstantVectorComparer<T, 2>
+    /** SPIR-V code generator descriptor. */
+    struct MOLTEN_API SpirvGeneratorDescriptor
     {
-        bool operator()(const Vector2<T>& lhs, const Vector2<T>& rhs) const
-        {
-            return lhs.x < rhs.x || lhs.y < rhs.y;
-        }
-    };
-    template<typename T>
-    struct SpirvGeneratorConstantVectorComparer<T, 3>
-    {
-        bool operator()(const Vector3<T>& lhs, const Vector3<T>& rhs) const
-        {
-            return lhs.x < rhs.x || lhs.y < rhs.y || lhs.z < rhs.z;
-        }
-    };
-    template<typename T>
-    struct SpirvGeneratorConstantVectorComparer<T, 4>
-    {
-        bool operator()(const Vector4<T>& lhs, const Vector4<T>& rhs) const
-        {
-            return lhs.x < rhs.x || lhs.y < rhs.y || lhs.z < rhs.z || lhs.w < rhs.w;
-        }
+        const Visual::Script* script = nullptr;
+        std::vector<size_t> ignoredOutputIndices = {};
+        bool ignoreUnusedInputs = false;
+        bool includeDebugSymbols = false;
     };
 
 
-    /** No in use yet. */
-    struct MOLTEN_API SpirvTemplate
+    /** SPIR-V code generator result. */
+    struct MOLTEN_API SpirvGeneratoResult
     {
-        
+        Spirv::Words source;
+        std::vector<size_t> ignoredInputIndices;
     };
 
 
@@ -96,25 +78,15 @@ namespace Molten::Shader
 
     public:
 
-        using Template = SpirvTemplate;
-
-        /** No in use yet. */
-        static bool CreateTemplate(
-            Template& glslTemplate,
-            const std::vector<Visual::Script*>& scripts,
-            Logger* logger);
-
         explicit SpirvGenerator(Logger* logger = nullptr);
+        ~SpirvGenerator() = default;
 
         SpirvGenerator(const SpirvGenerator&) = delete;
         SpirvGenerator(SpirvGenerator&&) = delete;
         SpirvGenerator& operator = (const SpirvGenerator&) = delete;
         SpirvGenerator& operator = (SpirvGenerator&&) = delete;
 
-        [[nodiscard]] Spirv::Words Generate(
-            const Visual::Script& script,
-            const Template* spirvTemplate = nullptr,
-            const bool includeDebugSymbols = false);
+        [[nodiscard]] SpirvGeneratoResult Generate(const SpirvGeneratorDescriptor& descriptor);
 
     private:
 
@@ -125,7 +97,7 @@ namespace Molten::Shader
         struct DataTypePtr;
         struct Constant;
         struct OutputStructure;
-        struct InputStructure;
+        class InputStructure;
         struct VertexOutputStructure;
         struct Structure;
         class DataTypeStorage;
@@ -163,7 +135,6 @@ namespace Molten::Shader
             const Visual::Pin& pin;
             Spirv::Id id;
             Spirv::StorageClass storageClass;
-            //bool isVisited;
         };
 
         // Generator node.
@@ -232,30 +203,39 @@ namespace Molten::Shader
         }; 
 
         // Input structure
-        struct InputStructure
+        class InputStructure
         {
+
+        public:
+
             struct Member
             {
-                Member(
-                    GeneratorOutputPinPointer outputPin,
-                    DataTypePointer dataType,
-                    DataTypePtrPointer dataTypePointer = nullptr);
+                explicit Member(const Visual::Pin* pin);
 
+                const Visual::Pin* pin;
                 GeneratorOutputPinPointer outputPin;
                 DataTypePointer dataType;
                 DataTypePtrPointer dataTypePointer;
             };
+
+            using Members = std::vector<Member>;
+
+            void Initialize(const Visual::InputInterface& inputInterface);
 
             void AddMember(
                 DataTypeStorage& dataTypeStorage,
                 DataTypePointerStorage& dataTypePointerStorage,
                 GeneratorOutputPinPointer& generatorOutputPin);
 
+            std::vector<size_t> GetUnusedMemberIndices();
+
+            Members GetMembers();
+
             void Clear();
 
-            using Members = std::vector<Member>;
+        private:
 
-            Members members;
+            Members m_members;
         };
 
         // Output structure
@@ -546,9 +526,7 @@ namespace Molten::Shader
 
         };
 
-        void InitGenerator(
-            const Visual::Script& script,
-            const bool includeDebugSymbols);
+        [[nodiscard]] bool InitGenerator(const SpirvGeneratorDescriptor& descriptor);
 
         /** Build tree functions. */
         /**@{*/
@@ -619,8 +597,8 @@ namespace Molten::Shader
         void InsertDebugNames();
 
         Logger* m_logger;
-        const Visual::Script* m_script;
-        bool m_includeDebugSymbols;
+
+        const SpirvGeneratorDescriptor* m_descriptor;
         Spirv::ModuleBuffer m_module;
         Spirv::Id m_currentId;
         std::vector<Spirv::Capability> m_capabilities;
@@ -647,13 +625,8 @@ namespace Molten::Shader
         CompositeExtractStorage m_compositeExtractStorage;
         DebugNameStorage m_debugNameStorage;
         
-
         std::vector<GeneratorNodePointer> m_mainInstructions;
 
-        //ImageTypeStorage m_imageDataTypes;
-        //UniformBufferPointers m_uniformBuffers;
-        //UniformBufferStorage m_uniformBufferStorage;
-        //PushConstantStructPointer m_pushConstantStruct; // TODO: Replace?
     };
 
 }
