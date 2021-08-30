@@ -97,13 +97,13 @@ namespace Molten::Shader::Spirv
     void ModuleBuffer::AddOpEntryPoint(const EntryPoint& entryPoint)
     {
         const auto literalWordCount = GetLiteralWordCount(entryPoint.name.size());
-        const HalfWord wordCount = literalWordCount + static_cast<HalfWord>(entryPoint.interface.size()) + 3;
+        const HalfWord wordCount = literalWordCount + static_cast<HalfWord>(entryPoint.interfaceIds.size()) + 3;
 
         words.push_back(CreateOpCode(OpCode::EntryPoint, wordCount));
         words.push_back(static_cast<Word>(entryPoint.executionModel));
         words.push_back(static_cast<Word>(entryPoint.id));
         AddLiteral(entryPoint.name);
-        words.insert(words.end(), entryPoint.interface.begin(), entryPoint.interface.end());
+        words.insert(words.end(), entryPoint.interfaceIds.begin(), entryPoint.interfaceIds.end());
     }
 
     void ModuleBuffer::AddOpCapability(const Capability capability)
@@ -227,6 +227,33 @@ namespace Molten::Shader::Spirv
         words.insert(words.end(), result.begin(), result.end());
     }
 
+    void ModuleBuffer::AddOpMemberDecorateColMajor(const Id structureTypeId, const Word memberIndex)
+    {
+        const std::array<Word, 4> result =
+        {
+            CreateOpCode(OpCode::MemberDecorate, 4),
+            static_cast<Word>(structureTypeId),
+            memberIndex,
+            static_cast<Word>(Decoration::ColMajor)
+        };
+
+        words.insert(words.end(), result.begin(), result.end());
+    }
+
+    void ModuleBuffer::AddOpMemberDecorateMatrixStride(const Id structureTypeId, const Word memberIndex, const uint32_t stride)
+    {
+        const std::array<Word, 5> result =
+        {
+            CreateOpCode(OpCode::MemberDecorate, 5),
+            static_cast<Word>(structureTypeId),
+            memberIndex,
+            static_cast<Word>(Decoration::MatrixStride),
+            static_cast<Word>(stride)
+        };
+
+        words.insert(words.end(), result.begin(), result.end());
+    }
+
     void ModuleBuffer::AddOpTypeVoid(const Id resultId)
     {
         const std::array<Word, 2> result =
@@ -282,6 +309,19 @@ namespace Molten::Shader::Spirv
             static_cast<Word>(resultId),
             static_cast<Word>(componentTypeId),
             componentCount,
+        };
+
+        words.insert(words.end(), result.begin(), result.end());
+    }
+
+    void ModuleBuffer::AddOpTypeMatrix(const Id resultId, const Id columnTypeId, Word columnCount)
+    {
+        const std::array<Word, 4> result =
+        {
+            CreateOpCode(OpCode::TypeMatrix, 4),
+            static_cast<Word>(resultId),
+            static_cast<Word>(columnTypeId),
+            columnCount,
         };
 
         words.insert(words.end(), result.begin(), result.end());
@@ -597,6 +637,34 @@ namespace Molten::Shader::Spirv
             static_cast<Word>(resultId),
             static_cast<Word>(operand1Id),
             static_cast<Word>(operand2Id)
+        };
+
+        words.insert(words.end(), result.begin(), result.end());
+    }
+
+    void ModuleBuffer::AddOpVectorTimesMatrix(const Id resultTypeId, const Id resultId, const Id vectorId, const Id matrixId)
+    {
+        const std::array<Word, 5> result =
+        {
+            CreateOpCode(OpCode::VectorTimesMatrix, 5),
+            static_cast<Word>(resultTypeId),
+            static_cast<Word>(resultId),
+            static_cast<Word>(vectorId),
+            static_cast<Word>(matrixId)
+        };
+
+        words.insert(words.end(), result.begin(), result.end());
+    }
+
+    void ModuleBuffer::AddOpMatrixTimesVector(const Id resultTypeId, const Id resultId, const Id matrixId, const Id vectorId)
+    {
+        const std::array<Word, 5> result =
+        {
+            CreateOpCode(OpCode::MatrixTimesVector, 5),
+            static_cast<Word>(resultTypeId),
+            static_cast<Word>(resultId),
+            static_cast<Word>(matrixId),
+            static_cast<Word>(vectorId)
         };
 
         words.insert(words.end(), result.begin(), result.end());

@@ -113,6 +113,31 @@ namespace Molten::Shader
         return g_emptyString;
     }
 
+    static Spirv::OpCode GetArithmeticOperatorOpCode(const Visual::ArithmeticOperatorType arithmeticOperatorType, const VariableDataType leftType, const VariableDataType rightType)
+    {
+        switch (arithmeticOperatorType)
+        {
+            case Visual::ArithmeticOperatorType::Addition: return Spirv::OpCode::FAdd;
+            case Visual::ArithmeticOperatorType::Division: return Spirv::OpCode::FDiv;
+            case Visual::ArithmeticOperatorType::Multiplication:
+            {
+                if (leftType == VariableDataType::Matrix4x4f32 && rightType == VariableDataType::Vector4f32)
+                {
+                    return Spirv::OpCode::MatrixTimesVector;
+                }
+                if (leftType == VariableDataType::Vector4f32 && rightType == VariableDataType::Matrix4x4f32)
+                {
+                    return Spirv::OpCode::VectorTimesMatrix;
+                }
+                return Spirv::OpCode::FMul;
+            }
+            case Visual::ArithmeticOperatorType::Subtraction: return Spirv::OpCode::FSub;
+            default: break;
+        }
+
+        return Spirv::OpCode::Nop;
+    }
+
     static const std::string& GetFunctionName(const Visual::FunctionType functionType)
     {
         switch (functionType)
@@ -169,6 +194,111 @@ namespace Molten::Shader
         m_mainFunctionLabelId(0),
         m_pushConstantStructure(Spirv::StorageClass::PushConstant)
     {}
+
+    bool SpirvGenerator::CreateCombinedShaderTemplate(
+        SpirvCombinedShadersTemplate& combinedShadersTemplate,
+        std::vector<const Visual::Script*> scripts,
+        Logger* logger)
+    {
+        auto& locations = combinedShadersTemplate.pushConstantLocations;
+        locations.clear();
+
+        // Loop scripts and add location data types to output.
+        // Data types of of same push constant id's are evaluated and error checked.
+        size_t scriptIndex = 0;
+        for (const auto* script : scripts)
+        {
+            auto& pushConstants = script->GetPushConstantsBase();
+            const size_t pushConstantCount = pushConstants.GetMemberCount();
+
+            for (size_t i = 0; i < pushConstantCount; i++)
+            {
+                auto* pushConstant = pushConstants.GetMemberBase(i);
+                if (pushConstant == nullptr)
+                {
+                    Logger::WriteError(logger, "Push constant at id " + std::to_string(i) +
+                        " of script no " + std::to_string(scriptIndex) + " is nullptr.");
+                    return false;
+                }
+
+                const auto id = pushConstant->GetId();
+                const auto dataType = pushConstant->GetPin().GetDataType();
+
+                auto it = locations.find(id);
+                if (it == locations.end())
+                {
+                    locations.insert({ id, { id, 0, dataType } });
+                }
+                else
+                {
+                    auto& pushConstantLocation = it->second;
+                    if (pushConstantLocation.dataType != dataType)
+                    {
+                        Logger::WriteError(logger, "Push constant at id " + std::to_string(i) +
+                            " already exists with different data type: Exists: " +
+                            std::to_string(static_cast<int32_t>(pushConstantLocation.dataType)) +
+                            ", New: " + std::to_string(static_cast<int32_t>(dataType)) + ".");
+                        return false;
+                    }
+                }
+            }
+
+            // Calculate offsets(location).
+            size_t offset = 0;
+            for (auto& locationPair : locations)
+            {
+                auto& location = locationPair.second;
+                location.location = static_cast<uint32_t>(offset);
+                offset += std::max(size_t{ 16 }, GetVariableByteOffset(location.dataType));
+            }
+            combinedShadersTemplate.pushConstantBlockByteCount = static_cast<uint32_t>(offset);
+
+            ++scriptIndex;
+        }
+
+        // Map descriptor sets and their bindings.
+        auto& mappedDescriptorSets = combinedShadersTemplate.mappedDescriptorSets;
+        mappedDescriptorSets.clear();
+
+        for (const auto* script : scripts)
+        {
+            const auto& sets = script->GetDescriptorSetsBase();
+            const size_t setCount = sets.GetSetCount();
+            for (size_t i = 0; i < setCount; i++)
+            {
+                const auto* set = sets.GetSetBase(i);
+                const size_t bindingCount = set->GetBindingCount();
+
+                if (bindingCount == 0)
+                {
+                    continue;
+                }
+                auto& mappedSet = mappedDescriptorSets.insert({ set->GetId(), {} }).first->second;
+
+                for (size_t j = 0; j < bindingCount; j++)
+                {
+                    const auto* binding = set->GetBindingBase(j);
+                    mappedSet.bindings.insert({ binding->GetId(), { 0, binding->GetBindingType() } });
+                }
+            }
+        }
+
+        uint32_t setIndex = 0;
+        for (auto& mappedDescriptorSetPair : mappedDescriptorSets)
+        {
+            auto& mappedDescriptorSet = mappedDescriptorSetPair.second;
+            mappedDescriptorSet.index = setIndex++;
+
+            uint32_t bindingIndex = 0;
+            for (auto& mappedBindingPair : mappedDescriptorSet.bindings)
+            {
+                auto& mappedBinding = mappedBindingPair.second;
+                mappedBinding.index = bindingIndex++;
+            }
+        }
+
+        return true;
+    }
 
     SpirvGeneratoResult SpirvGenerator::Generate(const SpirvGeneratorDescriptor& descriptor)
     {
@@ -517,6 +647,7 @@ namespace Molten::Shader
             case VariableDataType::Sampler1D:
             case VariableDataType::Sampler2D:
             case VariableDataType::Sampler3D: GetOrCreate(VariableDataType::Float32); break;
+            case VariableDataType::Matrix4x4f32: GetOrCreate(VariableDataType::Vector4f32); break;
             default: break;
         }
 
@@ -552,6 +683,18 @@ namespace Molten::Shader
                 case VariableDataType::Vector2f32:
                 case VariableDataType::Vector3f32:
                 case VariableDataType::Vector4f32:
+                {
+                    result.push_back(dataTypePair.dataType);
+                } break;
+                default: break;
+            }
+        }
+
+        // Matrix types:
+        for (const auto& dataTypePair : m_dataTypes)
+        {
+            switch (dataTypePair.type)
+            {
                 case VariableDataType::Matrix4x4f32:
                 {
                     result.push_back(dataTypePair.dataType);
@@ -1299,7 +1442,10 @@ namespace Molten::Shader
 
     bool SpirvGenerator::WriteModule()
     {     
-        UpdatePushConstantMembers();
+        if(!UpdatePushConstantMembers())
+        {
+            return false;
+        }
         UpdateUniformBuffersMembers();
 
         UpdateDataTypeIds();
@@ -1338,15 +1484,15 @@ namespace Molten::Shader
         
         for (const auto& member : m_inputStructure.GetMembers())
         {
-            m_mainEntryPoint.interface.push_back(member.outputPin->id);
+            m_mainEntryPoint.interfaceIds.push_back(member.outputPin->id);
         }
         for (const auto& member : m_outputStructure.members)
         {
-            m_mainEntryPoint.interface.push_back(member.id);
+            m_mainEntryPoint.interfaceIds.push_back(member.id);
         }
         if(!m_vertexOutputStructure.isEmpty)
         {
-            m_mainEntryPoint.interface.push_back(m_vertexOutputStructure.id);
+            m_mainEntryPoint.interfaceIds.push_back(m_vertexOutputStructure.id);
         }
 
         m_module.AddOpEntryPoint(m_mainEntryPoint);
@@ -1404,36 +1550,76 @@ namespace Molten::Shader
         return true;
     }
 
-    void SpirvGenerator::UpdatePushConstantMembers()
+    bool SpirvGenerator::UpdatePushConstantMembers()
     {
         if (m_pushConstantStructure.isEmpty)
         {
-            return;
+            return true;
         }
 
-        const auto& pushConstants = m_descriptor->script->GetPushConstantsBase();
-        if (auto pushConstantsOutputPins = pushConstants.GetOutputPins(); !pushConstantsOutputPins.empty())
+        // Using combined shaders template.
+        if(const auto* combinedShadersTemplate = m_descriptor->combinedShadersTemplate; combinedShadersTemplate)
         {
+            const auto& pushConstantLocations = combinedShadersTemplate->pushConstantLocations;
+
+            const auto& pushConstants = m_descriptor->script->GetPushConstantsBase();
+            const size_t pushConstantCount = pushConstants.GetMemberCount();
+
             Spirv::Word index = 0;
-            Spirv::Word offset = 0;
-            for (const auto* pin : pushConstantsOutputPins)
+            for(size_t i = 0; i < pushConstantCount; i++)
             {
-                const auto pinDataType = pin->GetDataType();
+                const auto* pushConstant = pushConstants.GetMemberBase(i);
+                const auto& pin = pushConstant->GetPin();
 
-                const auto prevOffset = offset;
-                offset += std::max(Spirv::Word{ 16 }, static_cast<Spirv::Word>(GetVariableByteOffset(pinDataType)));
-
-                auto* member = m_pushConstantStructure.FindMember(pin);
+                auto* member = m_pushConstantStructure.FindMember(&pin);
                 if (!member)
                 {
                     continue;
                 }
 
+                const auto id = pushConstant->GetId();
+
+                const auto it = pushConstantLocations.find(id);
+                if(it == pushConstantLocations.end())
+                {
+                    Logger::WriteError(m_logger, "Push constant is missing from template, id: " + std::to_string(id) + ".");
+                    return false;
+                }
+
                 member->index = index++;
-                member->offset = prevOffset;
+                member->offset = it->second.location;
                 member->indexConstant = m_constantStorage.GetOrCreate(m_dataTypeStorage, static_cast<int32_t>(member->index));
             }
         }
+        else
+        {
+            // Standalone script.
+            const auto& pushConstants = m_descriptor->script->GetPushConstantsBase();
+            if (auto pushConstantsOutputPins = pushConstants.GetOutputPins(); !pushConstantsOutputPins.empty())
+            {
+                Spirv::Word index = 0;
+                Spirv::Word offset = 0;
+                for (const auto* pin : pushConstantsOutputPins)
+                {
+                    const auto pinDataType = pin->GetDataType();
+
+                    const auto prevOffset = offset;
+                    offset += std::max(Spirv::Word{ 16 }, static_cast<Spirv::Word>(GetVariableByteOffset(pinDataType)));
+
+                    auto* member = m_pushConstantStructure.FindMember(pin);
+                    if (!member)
+                    {
+                        continue;
+                    }
+
+                    member->index = index++;
+                    member->offset = prevOffset;
+                    member->indexConstant = m_constantStorage.GetOrCreate(m_dataTypeStorage, static_cast<int32_t>(member->index));
+                }
+            }
+        }
+
+        return true;
     }
 
     void SpirvGenerator::UpdateUniformBuffersMembers()
@@ -1692,7 +1878,15 @@ namespace Molten::Shader
         for (const auto& member : membersCopy)
         {
             m_module.AddOpMemberDecorateOffset(structTypeId, member.index, member.offset);
+
+            if(member.dataType->type == VariableDataType::Matrix4x4f32)
+            {
+                m_module.AddOpMemberDecorateColMajor(structTypeId, member.index);
+                m_module.AddOpMemberDecorateMatrixStride(structTypeId, member.index, 16);
+            }
         }
+
+        m_module.AddOpDecorateBlock(structTypeId);
     }
 
     void SpirvGenerator::WriteSamplerDecorations()
@@ -1790,6 +1984,17 @@ namespace Molten::Shader
                         return false;
                     }
                     m_module.AddOpTypeVector(dataType->id, componentDataType->id, 4);
+                } break;
+                case VariableDataType::Matrix4x4f32:
+                {
+                    const auto componentDataType = m_dataTypeStorage.Get(VariableDataType::Vector4f32);
+                    if (!componentDataType)
+                    {
+                        Logger::WriteError(m_logger, "Failed to find component data type for Matrix4x4f32: " +
+                            std::to_string(static_cast<int32_t>(VariableDataType::Vector4f32)) + ".");
+                        return false;
+                    }
+                    m_module.AddOpTypeMatrix(dataType->id, componentDataType->id, 4);
                 } break;
                 case VariableDataType::Sampler1D:
                 {
@@ -2200,12 +2405,15 @@ namespace Molten::Shader
         const auto outputDataType = m_dataTypeStorage.Get(outputPin->pin.GetDataType());
  
         std::vector<Spirv::Id> inputIds;
+        std::vector<VariableDataType> inputDataTypes;
         for (const auto& generatorInputPin : generatorNode->inputPins)
         {
             if (!AccessNodeInputInMain(*generatorInputPin, inputIds))
             {
                 return false;
             }
+
+            inputDataTypes.push_back(generatorInputPin->pin.GetDataType());
         }
 
         outputPin->id = GetNextId();
@@ -2220,13 +2428,22 @@ namespace Molten::Shader
             }
         }
 
-        switch(arithmeticOperatorType)
+        const auto opCode = GetArithmeticOperatorOpCode(arithmeticOperatorType, inputDataTypes[0], inputDataTypes[1]);
+
+        switch(opCode)
         {
-            case Visual::ArithmeticOperatorType::Addition: m_module.AddOpFAdd(outputDataType->id, outputPin->id, inputIds[0], inputIds[1]); break;
-            case Visual::ArithmeticOperatorType::Division: m_module.AddOpFDiv(outputDataType->id, outputPin->id, inputIds[0], inputIds[1]); break;
-            case Visual::ArithmeticOperatorType::Multiplication: m_module.AddOpFMul(outputDataType->id, outputPin->id, inputIds[0], inputIds[1]); break;
-            case Visual::ArithmeticOperatorType::Subtraction: m_module.AddOpFSub(outputDataType->id, outputPin->id, inputIds[0], inputIds[1]); break;
-            default: return false;
+            case Spirv::OpCode::FAdd: m_module.AddOpFAdd(outputDataType->id, outputPin->id, inputIds[0], inputIds[1]); break;
+            case Spirv::OpCode::FDiv: m_module.AddOpFDiv(outputDataType->id, outputPin->id, inputIds[0], inputIds[1]); break;
+            case Spirv::OpCode::FMul: m_module.AddOpFMul(outputDataType->id, outputPin->id, inputIds[0], inputIds[1]); break;
+            case Spirv::OpCode::FSub: m_module.AddOpFSub(outputDataType->id, outputPin->id, inputIds[0], inputIds[1]); break;
+            case Spirv::OpCode::MatrixTimesVector: m_module.AddOpMatrixTimesVector(outputDataType->id, outputPin->id, inputIds[0], inputIds[1]); break;
+            case Spirv::OpCode::VectorTimesMatrix: m_module.AddOpVectorTimesMatrix(outputDataType->id, outputPin->id, inputIds[0], inputIds[1]); break;
+            default:
+            {
+                Logger::WriteError(m_logger, "Failed to find op code for arithmetic operator of input types: " 
+                    + std::to_string(static_cast<size_t>(inputDataTypes[0])) + " and " + std::to_string(static_cast<size_t>(inputDataTypes[1])) + ".");
+                return false;
+            } break;
         }
         
         return true;

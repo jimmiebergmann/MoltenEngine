@@ -37,13 +37,6 @@ namespace Molten::Shader::Visual
     /** Enumerator of function types. */
     enum class FunctionType : uint16_t
     {
-        // Constructors
-        CreateVec2,
-        CreateVec3,
-        CreateVec4,
-        /*CreateMat3x3,
-        CreateMat4x4,*/
-
         // Trigonometry
         Cos,
         Sin,

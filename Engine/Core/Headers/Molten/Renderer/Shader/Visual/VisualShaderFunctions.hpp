@@ -31,20 +31,6 @@
 namespace Molten::Shader::Visual::Functions
 {
 
-    // Constructors
-    using CompsToVec2f32 = Function<FunctionType::CreateVec2, Vector2f32, float, float>;
-    using CompsToVec3f32 = Function<FunctionType::CreateVec3, Vector3f32, float, float, float>;
-    using CompsToVec4f32 = Function<FunctionType::CreateVec4, Vector4f32, float, float, float, float>;
-
-    using Vec2ToVec3f32 = Function<FunctionType::CreateVec3, Vector3f32, Vector2f32, float>;
-    using Vec2ToVec4f32 = Function<FunctionType::CreateVec4, Vector4f32, Vector2f32, float, float>;
-    using Vec3ToVec4f32 = Function<FunctionType::CreateVec4, Vector4f32, Vector3f32, float>;
-    using Vec3ToVec2f32 = Function<FunctionType::CreateVec2, Vector2f32, Vector3f32>;
-    using Vec4ToVec2f32 = Function<FunctionType::CreateVec2, Vector2f32, Vector4f32>;
-    using Vec4ToVec3f32 = Function<FunctionType::CreateVec3, Vector3f32, Vector4f32>;
-
-    /*using Mat4x4ToMat3x3f32 = Function<FunctionType::CreateMat3x3, Matrix3x3f32, Matrix4x4f32>;*/
-
     // Trigonometry
     using Cosf32     = Function<FunctionType::Cos, float, float>;
     using CosVec2f32 = Function<FunctionType::Cos, Vector2f32, Vector2f32>;

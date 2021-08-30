@@ -30,6 +30,8 @@
 #include "Molten/Renderer/Shader.hpp"
 #include "Molten/Renderer/Shader/Spirv/SpirvModule.hpp"
 #include "Molten/Renderer/Shader/Visual/VisualShaderScript.hpp"
+#include "Molten/Renderer/PushConstant.hpp"
+#include "Molten/Renderer/DescriptorSet.hpp"
 #include <vector>
 #include <memory>
 #include <map>
@@ -54,11 +56,21 @@ namespace Molten::Shader::Visual
 namespace Molten::Shader
 {
 
+    /** Template for combined shader stages. */
+    struct SpirvCombinedShadersTemplate
+    {
+        MappedDescriptorSets mappedDescriptorSets = {};
+        PushConstantLocations pushConstantLocations = {};
+        uint32_t pushConstantBlockByteCount = 0;
+    };
+
+
     /** SPIR-V code generator descriptor. */
     struct MOLTEN_API SpirvGeneratorDescriptor
     {
         const Visual::Script* script = nullptr;
         std::vector<size_t> ignoredOutputIndices = {};
+        SpirvCombinedShadersTemplate* combinedShadersTemplate = nullptr;
         bool ignoreUnusedInputs = false;
         bool includeDebugSymbols = false;
     };
@@ -85,6 +97,11 @@ namespace Molten::Shader
         SpirvGenerator(SpirvGenerator&&) = delete;
         SpirvGenerator& operator = (const SpirvGenerator&) = delete;
         SpirvGenerator& operator = (SpirvGenerator&&) = delete;
+
+        [[nodiscard]] static bool CreateCombinedShaderTemplate(
+            SpirvCombinedShadersTemplate& combinedShadersTemplate,
+            std::vector<const Visual::Script*> scripts,
+            Logger* logger = nullptr);
 
         [[nodiscard]] SpirvGeneratoResult Generate(const SpirvGeneratorDescriptor& descriptor);
 
@@ -546,7 +563,7 @@ namespace Molten::Shader
         /**@{*/
         [[nodiscard]] bool WriteModule();
 
-        void UpdatePushConstantMembers();
+        [[nodiscard]] bool UpdatePushConstantMembers();
         void UpdateUniformBuffersMembers();
    
         void UpdateDataTypeIds();

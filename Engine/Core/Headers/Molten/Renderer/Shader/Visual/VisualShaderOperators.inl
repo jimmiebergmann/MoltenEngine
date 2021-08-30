@@ -93,7 +93,7 @@ namespace Molten::Shader::Visual::Operators
     {
         inline static constexpr bool Supported = true;
     };
-    template<> struct Trait<MultVec4Mat4f32>
+    template<> struct Trait<MultMat4f32Vec4f32>
     {
         inline static constexpr bool Supported = true;
     };

@@ -54,6 +54,7 @@ namespace Molten::Shader::Spirv
         TypeInt = 21,
         TypeFloat = 22,
         TypeVector = 23,
+        TypeMatrix = 24,
         TypeImage = 25,
         TypeSampledImage = 27,
         TypeStruct = 30,
@@ -76,6 +77,8 @@ namespace Molten::Shader::Spirv
         FSub = 131,
         FMul = 133,
         FDiv = 136,
+        VectorTimesMatrix = 144,
+        MatrixTimesVector = 145,
         Label = 248,
         Return = 253
     };
@@ -139,6 +142,8 @@ namespace Molten::Shader::Spirv
     enum class Decoration : Word
     {
         Block = 2,
+        ColMajor = 5,
+        MatrixStride = 7,
         BuiltIn = 11,
         Location = 30,
         Binding = 33,
@@ -201,7 +206,7 @@ namespace Molten::Shader::Spirv
         ExecutionModel executionModel;
         Id id;
         std::string name;
-        std::vector<Id> interface;
+        std::vector<Id> interfaceIds;
     };
 
     [[nodiscard]] Word MOLTEN_API CreateOpCode(const OpCode opCode, const HalfWord wordCount);
@@ -229,12 +234,15 @@ namespace Molten::Shader::Spirv
         void AddOpDecorateLocation(const Id targetId, const Id locationId);
         void AddOpMemberDecorateOffset(const Id structureTypeId, const Word memberIndex, const Word byteOffset);
         void AddOpMemberDecorateBuiltIn(const Id structureTypeId, const Word memberIndex, const BuiltIn builtIn);
+        void AddOpMemberDecorateColMajor(const Id structureTypeId, const Word memberIndex);
+        void AddOpMemberDecorateMatrixStride(const Id structureTypeId, const Word memberIndex, const uint32_t stride);
 
         void AddOpTypeVoid(const Id resultId);
         void AddOpTypeBool(const Id resultId);
         void AddOpTypeInt32(const Id resultId, Signedness signedness);
         void AddOpTypeFloat32(const Id resultId);
         void AddOpTypeVector(const Id resultId, const Id componentTypeId, Word componentCount);
+        void AddOpTypeMatrix(const Id resultId, const Id columnTypeId, Word columnCount);
         void AddOpTypeImage(const Id resultId, const Id sampledTypeId, const Dimensionality dimmensions);
         void AddOpTypeSampledImage(const Id resultId, const Id imageTypeId);
         void AddOpTypeStruct(const Id resultId, const std::vector<Id>& memberTypeIds);
@@ -260,6 +268,8 @@ namespace Molten::Shader::Spirv
         void AddOpFSub(const Id resultTypeId, const Id resultId, const Id operand1Id, const Id operand2Id);
         void AddOpFMul(const Id resultTypeId, const Id resultId, const Id operand1Id, const Id operand2Id);
         void AddOpFDiv(const Id resultTypeId, const Id resultId, const Id operand1Id, const Id operand2Id);
+        void AddOpVectorTimesMatrix(const Id resultTypeId, const Id resultId, const Id vectorId, const Id matrixId);
+        void AddOpMatrixTimesVector(const Id resultTypeId, const Id resultId, const Id matrixId, const Id vectorId);
 
         void AddOpFunction(const Id resultId, const Id resultTypeId, const FunctionControl functionControl, const Id functionTypeId);
         void AddOpLabel(const Id resultId);

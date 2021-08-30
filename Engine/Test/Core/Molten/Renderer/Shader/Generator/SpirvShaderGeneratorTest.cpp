@@ -25,7 +25,6 @@
 
 #include "Test.hpp"
 #include "Molten/Logger.hpp"
-#include "Molten/Renderer/Shader/Generator/GlslShaderGenerator.hpp"
 #include "Molten/Renderer/Shader/Generator/SpirvShaderGenerator.hpp"
 #include "Molten/Renderer/Shader/Visual/VisualShaderScript.hpp"
 #include <fstream>
@@ -54,7 +53,7 @@ namespace Molten::Shader
         }
 
         SpirvGenerator generator(&logger);
-        const SpirvGeneratorDescriptor descriptor = { &fragmentScript, {}, true, true };
+        const SpirvGeneratorDescriptor descriptor = { &fragmentScript, {}, nullptr, true, true };
         const auto result = generator.Generate(descriptor);
         EXPECT_FALSE(result.source.empty());
         EXPECT_EQ(result.source.size(), size_t{ 135 });
@@ -62,7 +61,7 @@ namespace Molten::Shader
 #if 0
         {
             std::ofstream fout("SpirvTest/SpirvGenerator.spiv", std::ios::binary);
-            fout.write(reinterpret_cast<const char*>(source.data()), source.size() * sizeof(Spirv::Word));
+            fout.write(reinterpret_cast<const char*>(result.source.data()), result.source.size() * sizeof(Spirv::Word));
             fout.close();
         }
 #endif
@@ -101,15 +100,15 @@ namespace Molten::Shader
         }
 
         SpirvGenerator generator(&logger);
-        const SpirvGeneratorDescriptor descriptor = { &fragmentScript, {}, true, true };
+        const SpirvGeneratorDescriptor descriptor = { &fragmentScript, {}, nullptr, true, true };
         const auto result = generator.Generate(descriptor);
         EXPECT_FALSE(result.source.empty());
-        EXPECT_EQ(result.source.size(), size_t{ 187 });
+        EXPECT_EQ(result.source.size(), size_t{ 190 });
 
 #if 0
         {
             std::ofstream fout("SpirvTest/SpirvGenerator.spiv", std::ios::binary);
-            fout.write(reinterpret_cast<const char*>(source.data()), source.size() * sizeof(Spirv::Word));
+            fout.write(reinterpret_cast<const char*>(result.source.data()), result.source.size() * sizeof(Spirv::Word));
             fout.close();
         }
 #endif
@@ -125,6 +124,7 @@ namespace Molten::Shader
 
             auto& input1 = script.GetInputInterface().AddMember<Vector4f32>();
             auto& input2 = script.GetInputInterface().AddMember<Vector4f32>();
+            auto& input3 = script.GetInputInterface().AddMember<Matrix4x4f32>();
 
             auto& sin1 = script.CreateFunction<Visual::Functions::SinVec4f32>();
             sin1.GetInput<0>().Connect(input2);
@@ -151,6 +151,10 @@ namespace Molten::Shader
             mult1.GetLeftInput().SetDefaultValue({ 0.5f, 1.0f, 2.0f, 3.0f });
             mult1.GetRightInput().Connect(div1.GetOutput());
 
+            auto& mult2 = script.CreateOperator<Visual::Operators::MultMat4f32Vec4f32>();
+            EXPECT_TRUE(mult2.GetLeftInput().Connect(input3));
+            EXPECT_TRUE(mult2.GetRightInput().Connect(mult1.GetOutput()));
+
             auto& add1 = script.CreateOperator<Visual::Operators::AddVec4f32>();
             add1.GetLeftInput().Connect(mult1.GetOutput());
             add1.GetRightInput().SetDefaultValue({ 2.0f, 3.0f, 4.0f, 5.0f });
@@ -161,20 +165,22 @@ namespace Molten::Shader
 
             auto& output1 = script.GetOutputInterface().AddMember<Vector4f32>();
             auto& output2 = script.GetOutputInterface().AddMember<Vector4f32>();
+            auto& output3 = script.GetOutputInterface().AddMember<Vector4f32>();
             output1.Connect(sub1.GetOutput());
             output2.Connect(add1.GetOutput());
+            output3.Connect(mult2.GetOutput());
         }
 
         SpirvGenerator generator(&logger);
-        const SpirvGeneratorDescriptor descriptor = { &fragmentScript, {}, true, true };
+        const SpirvGeneratorDescriptor descriptor = { &fragmentScript, {}, nullptr, true, true };
         const auto result = generator.Generate(descriptor);
         EXPECT_FALSE(result.source.empty());
-        EXPECT_EQ(result.source.size(), size_t{ 263 });
+        EXPECT_EQ(result.source.size(), size_t{ 313 });
 
 #if 0
         {
             std::ofstream fout("SpirvTest/SpirvGenerator.spiv", std::ios::binary);
-            fout.write(reinterpret_cast<const char*>(source.data()), source.size() * sizeof(Spirv::Word));
+            fout.write(reinterpret_cast<const char*>(result.source.data()), result.source.size() * sizeof(Spirv::Word));
             fout.close();
         }
 #endif
@@ -206,7 +212,7 @@ namespace Molten::Shader
         }
 
         SpirvGenerator generator(&logger);
-        const SpirvGeneratorDescriptor descriptor = { &fragmentScript, {}, true, true };
+        const SpirvGeneratorDescriptor descriptor = { &fragmentScript, {}, nullptr, true, true };
         const auto result = generator.Generate(descriptor);
         EXPECT_FALSE(result.source.empty());
         EXPECT_EQ(result.source.size(), size_t{ 164 });
@@ -214,7 +220,7 @@ namespace Molten::Shader
 #if 0
         {
             std::ofstream fout("SpirvTest/SpirvGenerator.spiv", std::ios::binary);
-            fout.write(reinterpret_cast<const char*>(source.data()), source.size() * sizeof(Spirv::Word));
+            fout.write(reinterpret_cast<const char*>(result.source.data()), result.source.size() * sizeof(Spirv::Word));
             fout.close();
         }
 #endif
@@ -246,7 +252,7 @@ namespace Molten::Shader
         }
 
         SpirvGenerator generator(&logger);
-        const SpirvGeneratorDescriptor descriptor = { &fragmentScript, {}, true, true };
+        const SpirvGeneratorDescriptor descriptor = { &fragmentScript, {}, nullptr, true, true };
         const auto result = generator.Generate(descriptor);
         EXPECT_FALSE(result.source.empty());
         EXPECT_EQ(result.source.size(), size_t{ 220 });
@@ -254,7 +260,7 @@ namespace Molten::Shader
 #if 0
         {
             std::ofstream fout("SpirvTest/SpirvGenerator.spiv", std::ios::binary);
-            fout.write(reinterpret_cast<const char*>(source.data()), source.size() * sizeof(Spirv::Word));
+            fout.write(reinterpret_cast<const char*>(result.source.data()), result.source.size() * sizeof(Spirv::Word));
             fout.close();
         }
 #endif
@@ -294,7 +300,7 @@ namespace Molten::Shader
         }
 
         SpirvGenerator generator(&logger);
-        const SpirvGeneratorDescriptor descriptor = { &fragmentScript, {}, true, true };
+        const SpirvGeneratorDescriptor descriptor = { &fragmentScript, {}, nullptr, true, true };
         const auto result = generator.Generate(descriptor);
         EXPECT_FALSE(result.source.empty());
         EXPECT_EQ(result.source.size(), size_t{ 191 });
@@ -302,7 +308,7 @@ namespace Molten::Shader
 #if 0
         {
             std::ofstream fout("SpirvTest/SpirvGenerator.spiv", std::ios::binary);
-            fout.write(reinterpret_cast<const char*>(source.data()), source.size() * sizeof(Spirv::Word) );
+            fout.write(reinterpret_cast<const char*>(result.source.data()), result.source.size() * sizeof(Spirv::Word) );
             fout.close();
         }
 #endif
@@ -323,7 +329,7 @@ namespace Molten::Shader
         }
 
         SpirvGenerator generator(&logger);
-        const SpirvGeneratorDescriptor descriptor = { &vertexScript, {}, true, true };
+        const SpirvGeneratorDescriptor descriptor = { &vertexScript, {}, nullptr, true, true };
         const auto result = generator.Generate(descriptor);
         EXPECT_FALSE(result.source.empty());
         EXPECT_EQ(result.source.size(), size_t{ 119 });
@@ -331,7 +337,7 @@ namespace Molten::Shader
 #if 0
         {
             std::ofstream fout("SpirvTest/SpirvGenerator.spiv", std::ios::binary);
-            fout.write(reinterpret_cast<const char*>(source.data()), source.size() * sizeof(Spirv::Word));
+            fout.write(reinterpret_cast<const char*>(result.source.data()), result.source.size() * sizeof(Spirv::Word));
             fout.close();
         }
 #endif
@@ -378,13 +384,13 @@ namespace Molten::Shader
 
         SpirvGenerator generator(&logger);
 
-        const SpirvGeneratorDescriptor fragDescriptor = { &fragmentScript, {}, true, true };
+        const SpirvGeneratorDescriptor fragDescriptor = { &fragmentScript, {}, nullptr, true, true };
         const auto fragResult = generator.Generate(fragDescriptor);
         EXPECT_FALSE(fragResult.source.empty());
         EXPECT_EQ(fragResult.source.size(), size_t{ 90 });
         EXPECT_FALSE(fragResult.ignoredInputIndices.empty());
 
-        const SpirvGeneratorDescriptor vertDescriptor = { &vertexScript, fragResult.ignoredInputIndices, false, true };
+        const SpirvGeneratorDescriptor vertDescriptor = { &vertexScript, fragResult.ignoredInputIndices, nullptr, false, true };
         const auto vertResult = generator.Generate(vertDescriptor);
         EXPECT_FALSE(vertResult.source.empty());
         EXPECT_EQ(vertResult.source.size(), size_t{ 194 });

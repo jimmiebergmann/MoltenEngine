@@ -46,13 +46,13 @@ namespace Molten::Shader::Visual::Operators
     using DivVec4f32 = ArithmeticOperator<ArithmeticOperatorType::Division, Vector4f32>;
 
     // Multiplication
-    using MultInt32       = ArithmeticOperator<ArithmeticOperatorType::Multiplication, int32_t>;
-    using MultFloat32     = ArithmeticOperator<ArithmeticOperatorType::Multiplication, float>;
-    using MultVec2f32     = ArithmeticOperator<ArithmeticOperatorType::Multiplication, Vector2f32>;
-    using MultVec3f32     = ArithmeticOperator<ArithmeticOperatorType::Multiplication, Vector3f32>;
-    using MultVec4f32     = ArithmeticOperator<ArithmeticOperatorType::Multiplication, Vector4f32>;
-    using MultMat4f32     = ArithmeticOperator<ArithmeticOperatorType::Multiplication, Matrix4x4f32>;
-    using MultVec4Mat4f32 = ArithmeticOperator<ArithmeticOperatorType::Multiplication, Vector4f32, Matrix4x4f32>;
+    using MultInt32             = ArithmeticOperator<ArithmeticOperatorType::Multiplication, int32_t>;
+    using MultFloat32           = ArithmeticOperator<ArithmeticOperatorType::Multiplication, float>;
+    using MultVec2f32           = ArithmeticOperator<ArithmeticOperatorType::Multiplication, Vector2f32>;
+    using MultVec3f32           = ArithmeticOperator<ArithmeticOperatorType::Multiplication, Vector3f32>;
+    using MultVec4f32           = ArithmeticOperator<ArithmeticOperatorType::Multiplication, Vector4f32>;
+    using MultMat4f32           = ArithmeticOperator<ArithmeticOperatorType::Multiplication, Matrix4x4f32>;
+    using MultMat4f32Vec4f32    = ArithmeticOperator<ArithmeticOperatorType::Multiplication, Vector4f32, Matrix4x4f32, Vector4f32>;
 
     // Subtraction
     using SubInt32   = ArithmeticOperator<ArithmeticOperatorType::Subtraction, int32_t>;
