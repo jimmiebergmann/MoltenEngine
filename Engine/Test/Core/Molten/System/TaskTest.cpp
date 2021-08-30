@@ -56,8 +56,8 @@ namespace Molten
         ThreadPool threadPool;
         ParallelTaskGroup parallelGroup(threadPool);
 
-        const int32_t taskCount = 24;
-        std::array<int32_t, taskCount> results = { 0 };
+        const size_t taskCount = 24;
+        std::array<size_t, taskCount> results = { 0 };
 
         auto clearResults = [&results]()
         {
@@ -67,12 +67,12 @@ namespace Molten
             }
         };
 
-        for (int32_t i = 0; i < taskCount; i++)
+        for (size_t i = 0; i < taskCount; i++)
         {
             parallelGroup.Emplace<Task>([&, i]()
             {
-                int32_t loop = i;
-                for (int32_t j = 0; j < 10001; j++)
+                size_t loop = i;
+                for (size_t j = 0; j < 10001; j++)
                 {
                     loop = j + i + 10;
                 }

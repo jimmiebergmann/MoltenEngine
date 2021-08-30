@@ -34,16 +34,16 @@ namespace Molten
     {
         {
             const ThreadPool pool(0);
-            EXPECT_GT(pool.GetWorkerCount(), 0);
+            EXPECT_GT(pool.GetWorkerCount(), size_t{ 0 });
             EXPECT_EQ(pool.GetWorkerCount(), std::thread::hardware_concurrency());
         }
         {
             const ThreadPool pool(1);
-            EXPECT_EQ(pool.GetWorkerCount(), 1);
+            EXPECT_EQ(pool.GetWorkerCount(), size_t{ 1 });
         }
         {
             const ThreadPool pool(2);
-            EXPECT_EQ(pool.GetWorkerCount(), 2);
+            EXPECT_EQ(pool.GetWorkerCount(), size_t{ 2 });
         }
 
     }
@@ -51,19 +51,19 @@ namespace Molten
     TEST(System, ThreadPool_Execute_SingleThread)
     {
         ThreadPool pool(1);
-        std::array<uint32_t, 200> values = {};
+        std::array<size_t, 200> values = {};
 
         for(size_t i = 0; i < values.size(); i++)
         {
             pool.Execute([i, &values]()
             {
-                values[i] = static_cast<uint32_t>(i + 1);
+                values[i] = i + 1;
             }).get();
         }
 
         for (size_t i = 0; i < values.size(); i++)
         {
-            EXPECT_EQ(values[i], static_cast<uint32_t>(i + 1));
+            EXPECT_EQ(values[i], i + 1);
         }
     }
 
@@ -73,7 +73,7 @@ namespace Molten
         ThreadPool pool(std::thread::hardware_concurrency());
 
         { // Set value.
-            std::array<uint32_t, 200> values = {};
+            std::array<size_t, 200> values = {};
 
             size_t index = 0;
             for (size_t i = 0; i < 20; i++)
@@ -84,7 +84,7 @@ namespace Molten
                 {
                     auto result = pool.Execute([index, &values]()
                     {
-                        values[index] = static_cast<uint32_t>(index + 1);
+                        values[index] = index + 1;
                     });
 
                     results.push_back(std::move(result));
@@ -100,20 +100,20 @@ namespace Molten
 
             for (size_t i = 0; i < values.size(); i++)
             {
-                EXPECT_EQ(values[i], static_cast<uint32_t>(i + 1));
+                EXPECT_EQ(values[i], i + 1);
             }
         }    
         { // Set value and future.
        
-            std::array<std::pair<uint32_t, std::future<uint32_t>>, 50> values = {};
+            std::array<std::pair<size_t, std::future<size_t>>, 50> values = {};
 
             for (size_t i = 0; i < values.size(); i++)
             {
-                std::vector<std::future<uint32_t>> results;
+                std::vector<std::future<size_t>> results;
 
                 auto result = pool.Execute([i, &values]()
                 {
-                    return values[i].first = static_cast<uint32_t>(i + 1);
+                    return values[i].first = i + 1;
                 });
 
                 values[i].second = std::move(result);
@@ -121,8 +121,8 @@ namespace Molten
 
             for (size_t i = 0; i < values.size(); i++)
             {
-                EXPECT_EQ(values[i].second.get(), static_cast<uint32_t>(i + 1));
-                EXPECT_EQ(values[i].first, static_cast<uint32_t>(i + 1));
+                EXPECT_EQ(values[i].second.get(), i + 1);
+                EXPECT_EQ(values[i].first, i + 1);
             }
         }
         { // Non-copyable but movable future type.

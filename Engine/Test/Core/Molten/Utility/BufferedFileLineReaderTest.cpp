@@ -73,10 +73,10 @@ namespace Molten
             ASSERT_EQ(lineReader.ReadLine(line, addBuffer), BufferedFileLineReader::LineReadResult::EndOfFile);
         }
 
-        ASSERT_EQ(buffers.size(), 1);
+        ASSERT_EQ(buffers.size(), size_t{ 1 });
         EXPECT_NE(buffers[0], nullptr);
 
-        ASSERT_EQ(lines.size(), 11);
+        ASSERT_EQ(lines.size(), size_t{ 11 });
         EXPECT_STREQ(lines[0].c_str(), "Hello first world");
         EXPECT_STREQ(lines[1].c_str(), "Hello second world");
         EXPECT_STREQ(lines[2].c_str(), "Hello third world");
@@ -98,9 +98,10 @@ namespace Molten
 
             std::vector<std::string> lines;
             std::vector<BufferedFileLineReader::Buffer> buffers;
-            auto addBuffer = [&](auto& buffer) { buffers.push_back(buffer); };
 
             {
+                auto addBuffer = [&](auto& buffer) { buffers.push_back(buffer); };
+
                 BufferedFileLineReader lineReader(ss, 19, 19);
 
                 Molten::Test::Benchmarker bm("Reading lines");
@@ -115,12 +116,12 @@ namespace Molten
                 ASSERT_EQ(lineReader.ReadLine(line, addBuffer), BufferedFileLineReader::LineReadResult::EndOfFile);
             }
 
-            ASSERT_EQ(buffers.size(), 3);
+            ASSERT_EQ(buffers.size(), size_t{ 3 });
             EXPECT_NE(buffers[0], nullptr);
             EXPECT_NE(buffers[1], nullptr);
             EXPECT_NE(buffers[2], nullptr);
 
-            ASSERT_EQ(lines.size(), 3);
+            ASSERT_EQ(lines.size(), size_t{ 3 });
             EXPECT_STREQ(lines[0].c_str(), "Hello first world");
             EXPECT_STREQ(lines[1].c_str(), "Hello second world");
             EXPECT_STREQ(lines[2].c_str(), "Hello third world ");
@@ -131,9 +132,10 @@ namespace Molten
 
             std::vector<std::string> lines;
             std::vector<BufferedFileLineReader::Buffer> buffers;
-            auto addBuffer = [&](auto& buffer) { buffers.push_back(buffer); };
-
+            
             {
+                auto addBuffer = [&](auto& buffer) { buffers.push_back(buffer); };
+
                 BufferedFileLineReader lineReader(ss, 19, 19);
 
                 Molten::Test::Benchmarker bm("Reading lines");
@@ -150,12 +152,12 @@ namespace Molten
                 ASSERT_EQ(lineReader.ReadLine(line, addBuffer), BufferedFileLineReader::LineReadResult::EndOfFile);
             }
 
-            ASSERT_EQ(buffers.size(), 3);
+            ASSERT_EQ(buffers.size(), size_t{ 3 });
             EXPECT_NE(buffers[0], nullptr);
             EXPECT_NE(buffers[1], nullptr);
             EXPECT_NE(buffers[2], nullptr);
 
-            ASSERT_EQ(lines.size(), 4);
+            ASSERT_EQ(lines.size(), size_t{ 4 });
             EXPECT_STREQ(lines[0].c_str(), "Hello first world");
             EXPECT_STREQ(lines[1].c_str(), "Hello second world");
             EXPECT_STREQ(lines[2].c_str(), "Hello third world");
@@ -171,9 +173,10 @@ namespace Molten
 
             std::vector<std::string> lines;
             std::vector<BufferedFileLineReader::Buffer> buffers;
-            auto addBuffer = [&](auto& buffer) { buffers.push_back(buffer); };
 
             {
+                auto addBuffer = [&](auto& buffer) { buffers.push_back(buffer); };
+
                 BufferedFileLineReader lineReader(ss, 30, 30);
 
                 Molten::Test::Benchmarker bm("Reading lines");
@@ -188,12 +191,12 @@ namespace Molten
                 ASSERT_EQ(lineReader.ReadLine(line, addBuffer), BufferedFileLineReader::LineReadResult::EndOfFile);
             }
 
-            ASSERT_EQ(buffers.size(), 3);
+            ASSERT_EQ(buffers.size(), size_t{ 3 });
             EXPECT_NE(buffers[0], nullptr);
             EXPECT_NE(buffers[1], nullptr);
             EXPECT_NE(buffers[2], nullptr);
 
-            ASSERT_EQ(lines.size(), 3);
+            ASSERT_EQ(lines.size(), size_t{ 3 });
             EXPECT_STREQ(lines[0].c_str(), "Hello first world - foo");
             EXPECT_STREQ(lines[1].c_str(), "Hello second world");
             EXPECT_STREQ(lines[2].c_str(), "Hello third world - bar");
@@ -204,9 +207,10 @@ namespace Molten
 
             std::vector<std::string> lines;
             std::vector<BufferedFileLineReader::Buffer> buffers;
-            auto addBuffer = [&](auto& buffer) { buffers.push_back(buffer); };
 
             {
+                auto addBuffer = [&](auto& buffer) { buffers.push_back(buffer); };
+
                 BufferedFileLineReader lineReader(ss, 30, 30);
 
                 Molten::Test::Benchmarker bm("Reading lines");
@@ -223,12 +227,12 @@ namespace Molten
                 ASSERT_EQ(lineReader.ReadLine(line, addBuffer), BufferedFileLineReader::LineReadResult::EndOfFile);
             }
 
-            ASSERT_EQ(buffers.size(), 3);
+            ASSERT_EQ(buffers.size(), size_t{ 3 });
             EXPECT_NE(buffers[0], nullptr);
             EXPECT_NE(buffers[1], nullptr);
             EXPECT_NE(buffers[2], nullptr);
 
-            ASSERT_EQ(lines.size(), 4);
+            ASSERT_EQ(lines.size(), size_t{ 4 });
             EXPECT_STREQ(lines[0].c_str(), "Hello first world - foo");
             EXPECT_STREQ(lines[1].c_str(), "Hello second world");
             EXPECT_STREQ(lines[2].c_str(), "Hello third world - bar");
@@ -238,7 +242,7 @@ namespace Molten
     }
 
 
-    void ReadCompareFile(const std::string filename, const size_t minbufferSize, const size_t maxbufferSize)
+    void ReadCompareFile(const std::string& filename, const size_t minbufferSize, const size_t maxbufferSize)
     {
         { // Compare BufferedFileLineReader and std::getline.
             std::ifstream file(filename);
@@ -252,7 +256,7 @@ namespace Molten
 
             BufferedFileLineReader lineReader(bufferFile, minbufferSize, maxbufferSize);
 
-            BufferedFileLineReader::LineReadResult result = BufferedFileLineReader::LineReadResult::Successful;
+            auto result = BufferedFileLineReader::LineReadResult::Successful;
             while (result == BufferedFileLineReader::LineReadResult::Successful)
             {
                 std::string fileLine;
@@ -289,8 +293,7 @@ namespace Molten
                 auto addBuffer = [&](auto& buffer) { buffers.push_back(buffer); };
 
                 BufferedFileLineReader lineReader(file, 2048, 1048576);
-
-                BufferedFileLineReader::LineReadResult result = BufferedFileLineReader::LineReadResult::Successful;
+                auto result = BufferedFileLineReader::LineReadResult::Successful;
 
                 {
                     Molten::Test::Benchmarker bm(filename + " - BufferedFileLineReader");
