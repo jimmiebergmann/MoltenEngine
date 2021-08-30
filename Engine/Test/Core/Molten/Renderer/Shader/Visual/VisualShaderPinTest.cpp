@@ -126,10 +126,10 @@ namespace Molten::Shader::Visual
 
             EXPECT_EQ(pin1.GetConnections().size(), size_t{ 0 });
             EXPECT_EQ(pin2.GetConnections().size(), size_t{ 0 });
-            EXPECT_FALSE(pin1.Connect(pin2));
+            EXPECT_FALSE(pin1.ConnectBase(pin2));
             EXPECT_EQ(pin1.GetConnections().size(), size_t{ 0 });
             EXPECT_EQ(pin2.GetConnections().size(), size_t{ 0 });
-            EXPECT_FALSE(pin2.Connect(pin1));
+            EXPECT_FALSE(pin2.ConnectBase(pin1));
             EXPECT_EQ(pin1.GetConnections().size(), size_t{ 0 });
             EXPECT_EQ(pin2.GetConnections().size(), size_t{ 0 });
         }
@@ -331,10 +331,10 @@ namespace Molten::Shader::Visual
 
             EXPECT_EQ(pin1.GetConnections().size(), size_t{ 0 });
             EXPECT_EQ(pin2.GetConnections().size(), size_t{ 0 });
-            EXPECT_FALSE(pin1.Connect(pin2));
+            EXPECT_FALSE(pin1.ConnectBase(pin2));
             EXPECT_EQ(pin1.GetConnections().size(), size_t{ 0 });
             EXPECT_EQ(pin2.GetConnections().size(), size_t{ 0 });
-            EXPECT_FALSE(pin2.Connect(pin1));
+            EXPECT_FALSE(pin2.ConnectBase(pin1));
             EXPECT_EQ(pin1.GetConnections().size(), size_t{ 0 });
             EXPECT_EQ(pin2.GetConnections().size(), size_t{ 0 });
         }
@@ -518,7 +518,7 @@ namespace Molten::Shader::Visual
                 OutputPin<float> out1(node1);
                 OutputPin<float> out2(node2);
 
-                EXPECT_FALSE(out1.Connect(out2));
+                EXPECT_FALSE(out1.ConnectBase(out2));
 
                 EXPECT_EQ(out1.GetConnections().size(), size_t{ 0 });
                 EXPECT_EQ(out1.GetConnection(), nullptr);
@@ -532,7 +532,7 @@ namespace Molten::Shader::Visual
                 OutputPin<float> out1(node1);
                 InputPin<int32_t> in1(node2);
 
-                EXPECT_FALSE(out1.Connect(in1));
+                EXPECT_FALSE(out1.ConnectBase(in1));
 
                 EXPECT_EQ(out1.GetConnections().size(), size_t{ 0 });
                 EXPECT_EQ(out1.GetConnection(), nullptr);

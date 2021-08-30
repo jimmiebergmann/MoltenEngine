@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -63,7 +63,7 @@ namespace Molten::Shader::Visual
          *
          * @return true if pins got connected, false if direction of target pin is not of opposite direction.
          */
-        virtual bool Connect(Pin& target) = 0;
+        virtual bool ConnectBase(Pin& target) = 0;
 
         /**
          * Disconnect this pin from all connected pins.
@@ -171,7 +171,10 @@ namespace Molten::Shader::Visual
          *
          * @return true if pins got connected, false if direction of target pin is not of opposite direction.
          */
-        bool Connect(Pin& target) override;
+        /**@{*/
+        bool Connect(OutputPin<T>& target);
+        bool ConnectBase(Pin& target) override;
+        /**@}*/
 
         /**
          * Disconnect this pin from all connected pins.
@@ -272,7 +275,10 @@ namespace Molten::Shader::Visual
          *
          * @return true if pins got connected, false if direction of target pin is not of opposite direction.
          */
-        bool Connect(Pin& target) override;
+        /**@{*/
+        bool Connect(InputPin<T>& target);
+        bool ConnectBase(Pin& target) override;
+        /**@}*/
 
         /**
          * Disconnect this pin from all connected pins.

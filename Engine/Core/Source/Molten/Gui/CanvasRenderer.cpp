@@ -332,23 +332,23 @@ namespace Molten::Gui
             auto* outPosition = script.GetVertexOutput();
 
             auto& vertexScaled = script.CreateOperator<Shader::Visual::Operators::MultVec2f32>();
-            vertexScaled.GetInputPin(0)->Connect(vertexPosition);
-            vertexScaled.GetInputPin(1)->Connect(size);
+            vertexScaled.GetLeftInput().Connect(vertexPosition);
+            vertexScaled.GetRightInput().Connect(size);
 
             auto& vertexScaledMoved = script.CreateOperator<Shader::Visual::Operators::AddVec2f32>();
-            vertexScaledMoved.GetInputPin(0)->Connect(*vertexScaled.GetOutputPin());
-            vertexScaledMoved.GetInputPin(1)->Connect(position);
+            vertexScaledMoved.GetLeftInput().Connect(vertexScaled.GetOutput());
+            vertexScaledMoved.GetRightInput().Connect(position);
 
             auto& vertexPositionVec4 = script.CreateComposite<Shader::Visual::Composites::Vec4f32FromVec2f32Float32>();
-            vertexPositionVec4.GetInput<0>().Connect(*vertexScaledMoved.GetOutputPin());
+            vertexPositionVec4.GetInput<0>().Connect(vertexScaledMoved.GetOutput());
             vertexPositionVec4.GetInput<1>().SetDefaultValue(0.0f);
             vertexPositionVec4.GetInput<2>().SetDefaultValue(1.0f);
 
             auto& projectedVertexPosition = script.CreateOperator<Shader::Visual::Operators::MultMat4f32Vec4f32>();
-            projectedVertexPosition.GetInputPin(0)->Connect(projection);
-            projectedVertexPosition.GetInputPin(1)->Connect(*vertexPositionVec4.GetOutputPin());
+            projectedVertexPosition.GetLeftInput().Connect(projection);
+            projectedVertexPosition.GetRightInput().Connect(vertexPositionVec4.GetOutput());
 
-            outPosition->GetInputPin()->Connect(*projectedVertexPosition.GetOutputPin());
+            outPosition->GetInputPin()->ConnectBase(*projectedVertexPosition.GetOutputPin());
         }
         { // Fragment
             auto& script = fragmentScript;
@@ -470,23 +470,23 @@ namespace Molten::Gui
             auto* outPosition = script.GetVertexOutput();
 
             auto& vertexScaled = script.CreateOperator<Shader::Visual::Operators::MultVec2f32>();
-            vertexScaled.GetInputPin(0)->Connect(vertexPosition);
-            vertexScaled.GetInputPin(1)->Connect(size);
+            vertexScaled.GetLeftInput().Connect(vertexPosition);
+            vertexScaled.GetRightInput().Connect(size);
 
             auto& vertexScaledMoved = script.CreateOperator<Shader::Visual::Operators::AddVec2f32>();
-            vertexScaledMoved.GetInputPin(0)->Connect(*vertexScaled.GetOutputPin());
-            vertexScaledMoved.GetInputPin(1)->Connect(position);
+            vertexScaledMoved.GetLeftInput().Connect(vertexScaled.GetOutput());
+            vertexScaledMoved.GetRightInput().Connect(position);
 
             auto& vertexPositionVec4 = script.CreateComposite<Shader::Visual::Composites::Vec4f32FromVec2f32Float32>();
-            vertexPositionVec4.GetInput<0>().Connect(*vertexScaledMoved.GetOutputPin());
+            vertexPositionVec4.GetInput<0>().Connect(vertexScaledMoved.GetOutput());
             vertexPositionVec4.GetInput<1>().SetDefaultValue(0.0f);
             vertexPositionVec4.GetInput<2>().SetDefaultValue(1.0f);
 
             auto& projectedVertexPosition = script.CreateOperator<Shader::Visual::Operators::MultMat4f32Vec4f32>();
-            projectedVertexPosition.GetInputPin(0)->Connect(projection);
-            projectedVertexPosition.GetInputPin(1)->Connect(*vertexPositionVec4.GetOutputPin());
+            projectedVertexPosition.GetLeftInput().Connect(projection);
+            projectedVertexPosition.GetRightInput().Connect(vertexPositionVec4.GetOutput());
 
-            outPosition->GetInputPin()->Connect(*projectedVertexPosition.GetOutputPin());
+            outPosition->GetInputPin()->ConnectBase(*projectedVertexPosition.GetOutputPin());
         }
         { // Fragment
             auto& script = fragmentScript;
@@ -503,21 +503,21 @@ namespace Molten::Gui
             auto* sampler = descSet->AddBinding<Shader::Sampler2D>(0);
 
             auto& uvScaled = script.CreateOperator<Shader::Visual::Operators::MultVec2f32>();
-            uvScaled.GetInputPin(0)->Connect(inUv);
-            uvScaled.GetInputPin(1)->Connect(uvSize);
+            uvScaled.GetLeftInput().Connect(inUv);
+            uvScaled.GetRightInput().Connect(uvSize);
 
             auto& uvScaledMoved = script.CreateOperator<Shader::Visual::Operators::AddVec2f32>();
-            uvScaledMoved.GetInputPin(0)->Connect(*uvScaled.GetOutputPin());
-            uvScaledMoved.GetInputPin(1)->Connect(uvPosition);
+            uvScaledMoved.GetLeftInput().Connect(uvScaled.GetOutput());
+            uvScaledMoved.GetRightInput().Connect(uvPosition);
 
             auto& textureColor = script.CreateFunction<Shader::Visual::Functions::Texture2D>();
-            textureColor.GetInputPin(0)->Connect(*sampler->GetOutputPin());
-            textureColor.GetInputPin(1)->Connect(*uvScaledMoved.GetOutputPin());
+            textureColor.GetInput<0>().Connect(sampler->GetOutput());
+            textureColor.GetInput<1>().Connect(uvScaledMoved.GetOutput());
 
             auto& outputs = script.GetOutputInterface();
             auto& outColor = outputs.AddMember<Vector4f32>();
 
-            outColor.Connect(*textureColor.GetOutputPin());
+            outColor.Connect(textureColor.GetOutput());
         }
 
         // Debug
@@ -595,19 +595,19 @@ namespace Molten::Gui
             auto* outPosition = script.GetVertexOutput();
 
             auto& vertexPosition = script.CreateOperator<Shader::Visual::Operators::AddVec2f32>();
-            vertexPosition.GetInputPin(0)->Connect(inPosition);
-            vertexPosition.GetInputPin(1)->Connect(position);
+            vertexPosition.GetLeftInput().Connect(inPosition);
+            vertexPosition.GetRightInput().Connect(position);
 
             auto& vertexPositionVec4 = script.CreateComposite<Shader::Visual::Composites::Vec4f32FromVec2f32Float32>();
-            vertexPositionVec4.GetInput<0>().Connect(*vertexPosition.GetOutputPin());
+            vertexPositionVec4.GetInput<0>().Connect(vertexPosition.GetOutput());
             vertexPositionVec4.GetInput<1>().SetDefaultValue(0.0f);
             vertexPositionVec4.GetInput<2>().SetDefaultValue(1.0f);
 
             auto& projectedVertexPosition = script.CreateOperator<Shader::Visual::Operators::MultMat4f32Vec4f32>();
-            projectedVertexPosition.GetInputPin(0)->Connect(projection);
-            projectedVertexPosition.GetInputPin(1)->Connect(*vertexPositionVec4.GetOutputPin());
+            projectedVertexPosition.GetLeftInput().Connect(projection);
+            projectedVertexPosition.GetRightInput().Connect(vertexPositionVec4.GetOutput());
 
-            outPosition->GetInputPin()->Connect(*projectedVertexPosition.GetOutputPin());
+            outPosition->GetInputPin()->ConnectBase(*projectedVertexPosition.GetOutputPin());
         }
         { // Fragment
             auto& script = fragmentScript;
@@ -623,10 +623,10 @@ namespace Molten::Gui
             auto& outColor = outputs.AddMember<Vector4f32>();
 
             auto& textureColor = script.CreateFunction<Shader::Visual::Functions::Texture2D>();
-            textureColor.GetInputPin(0)->Connect(*sampler->GetOutputPin());
-            textureColor.GetInputPin(1)->Connect(inUv);
+            textureColor.GetInput<0>().Connect(sampler->GetOutput());
+            textureColor.GetInput<1>().Connect(inUv);
 
-            outColor.Connect(*textureColor.GetOutputPin()); 
+            outColor.Connect(textureColor.GetOutput()); 
         }
 
         // Debug

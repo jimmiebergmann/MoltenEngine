@@ -80,15 +80,15 @@ namespace Molten::Shader
             auto& pc3 = script.GetPushConstants().AddMember<Vector4f32>(6);
 
             auto& mult1 = script.CreateOperator<Visual::Operators::MultVec4f32>();
-            mult1.GetLeftInput().Connect(pc1.GetPin());
-            mult1.GetRightInput().Connect(pc1.GetPin());
+            mult1.GetLeftInput().Connect(pc1);
+            mult1.GetRightInput().Connect(pc1);
 
             auto& add1 = script.CreateOperator<Visual::Operators::AddVec4f32>();
-            add1.GetLeftInput().Connect(pc2.GetPin());
-            add1.GetRightInput().Connect(pc3.GetPin());
+            add1.GetLeftInput().Connect(pc2);
+            add1.GetRightInput().Connect(pc3);
 
             auto& add2 = script.CreateOperator<Visual::Operators::AddVec4f32>();
-            add2.GetLeftInput().Connect(pc3.GetPin());
+            add2.GetLeftInput().Connect(pc3);
             add2.GetRightInput().Connect(mult1.GetOutput());
 
             auto& add3 = script.CreateOperator<Visual::Operators::AddVec4f32>();
@@ -145,7 +145,7 @@ namespace Molten::Shader
 
             auto& div1 = script.CreateOperator<Visual::Operators::DivVec4f32>();
             div1.GetLeftInput().Connect(min1.GetOutput());
-            div1.GetRightInput().Connect(input1.GetPin());
+            div1.GetRightInput().Connect(input1);
 
             auto& mult1 = script.CreateOperator<Visual::Operators::MultVec4f32>();
             mult1.GetLeftInput().SetDefaultValue({ 0.5f, 1.0f, 2.0f, 3.0f });
@@ -324,7 +324,7 @@ namespace Molten::Shader
 
             auto& const1 = script.CreateConstant<Vector4f32>({ 1.0f, 2.0f, 3.0f, 4.0f });
 
-            script.GetVertexOutput()->GetInputPin()->Connect(const1.GetOutput());
+            script.GetVertexOutput()->GetInputPin()->ConnectBase(const1.GetOutput());
 
         }
 
@@ -364,7 +364,7 @@ namespace Molten::Shader
             auto& script = vertexScript;
 
             auto& const1 = script.CreateConstant<Vector4f32>({ 1.0f, 2.0f, 3.0f, 4.0f });
-            script.GetVertexOutput()->GetInputPin()->Connect(const1.GetOutput());
+            script.GetVertexOutput()->GetInputPin()->ConnectBase(const1.GetOutput());
 
             script.GetInputInterface().AddMember<Vector4f32>();
 

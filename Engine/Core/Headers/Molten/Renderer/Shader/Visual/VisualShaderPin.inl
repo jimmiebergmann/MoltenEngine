@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -28,27 +28,27 @@ namespace Molten::Shader::Visual
 
     // Input pin implementations.
     template<typename T>
-    inline InputPin<T>::InputPin(Node& node, const std::string& name) :
+    InputPin<T>::InputPin(Node& node, const std::string& name) :
         Pin(node, name),
         m_defaultValue(VariableTrait<T>::defaultValue),
         m_connection(nullptr)
     { }
 
     template<typename T>
-    inline InputPin<T>::InputPin(Node& node, const T& defaultValue, const std::string& name) :
+    InputPin<T>::InputPin(Node& node, const T& defaultValue, const std::string& name) :
         Pin(node, name),
         m_defaultValue(defaultValue),
         m_connection(nullptr)
     { }
 
     template<typename T>
-    inline InputPin<T>::~InputPin()
+    InputPin<T>::~InputPin()
     {
         Disconnect();
     }
 
     template<typename T>
-    inline bool InputPin<T>::Connect(Pin& target)
+    bool InputPin<T>::ConnectBase(Pin& target)
     {
         if (target.GetDataType() != GetDataType() ||
             &target.GetNode() == &GetNode() ||
@@ -74,7 +74,30 @@ namespace Molten::Shader::Visual
     }
 
     template<typename T>
-    inline size_t InputPin<T>::Disconnect()
+    bool InputPin<T>::Connect(OutputPin<T>& target)
+    {
+        if (&target.GetNode() == &GetNode())
+        {
+            return false;
+        }
+
+        if (&target == m_connection)
+        {
+            return true;
+        }
+
+        if (m_connection)
+        {
+            Pin::DisconnectInternal(*m_connection, *this);
+        }
+        Pin::ConnectInternal(target, *this);
+        m_connection = &target;
+
+        return true;
+    }
+
+    template<typename T>
+    size_t InputPin<T>::Disconnect()
     {
         if (!m_connection)
         {
@@ -88,7 +111,7 @@ namespace Molten::Shader::Visual
     }
 
     template<typename T>
-    inline bool InputPin<T>::Disconnect(const size_t index)
+    bool InputPin<T>::Disconnect(const size_t index)
     {
         if (!m_connection || index != 0)
         {
@@ -102,7 +125,7 @@ namespace Molten::Shader::Visual
     }
 
     template<typename T>
-    inline bool InputPin<T>::Disconnect(Pin& target)
+    bool InputPin<T>::Disconnect(Pin& target)
     {
         if (!m_connection || &target != m_connection)
         {
@@ -122,25 +145,25 @@ namespace Molten::Shader::Visual
     }
 
     template<typename T>
-    inline size_t InputPin<T>::GetSizeOfDataType() const
+    size_t InputPin<T>::GetSizeOfDataType() const
     {
         return sizeof(T);
     }
 
     template<typename T>
-    inline PinDirection InputPin<T>::GetDirection() const
+    PinDirection InputPin<T>::GetDirection() const
     {
         return PinDirection::In;
     }
 
     template<typename T>
-    inline size_t InputPin<T>::GetConnectionCount() const
+    size_t InputPin<T>::GetConnectionCount() const
     {
         return m_connection ? 1 : 0;
     }
 
     template<typename T>
-    inline Pin* InputPin<T>::GetConnection(const size_t index)
+    Pin* InputPin<T>::GetConnection(const size_t index)
     {
         if (index != 0)
         {
@@ -150,7 +173,7 @@ namespace Molten::Shader::Visual
     }
 
     template<typename T>
-    inline const Pin* InputPin<T>::GetConnection(const size_t index) const
+    const Pin* InputPin<T>::GetConnection(const size_t index) const
     {
         if (index != 0)
         {
@@ -160,7 +183,7 @@ namespace Molten::Shader::Visual
     }
 
     template<typename T>
-    inline std::vector<Pin*> InputPin<T>::GetConnections()
+    std::vector<Pin*> InputPin<T>::GetConnections()
     {
         if (!m_connection)
         {
@@ -170,7 +193,7 @@ namespace Molten::Shader::Visual
     }
 
     template<typename T>
-    inline std::vector<const Pin*> InputPin<T>::GetConnections() const
+    std::vector<const Pin*> InputPin<T>::GetConnections() const
     {
         if (!m_connection)
         {
@@ -180,7 +203,7 @@ namespace Molten::Shader::Visual
     }
 
     template<typename T>
-    inline T InputPin<T>::GetDefaultValue() const
+    T InputPin<T>::GetDefaultValue() const
     {
         return m_defaultValue;
     }
@@ -192,13 +215,13 @@ namespace Molten::Shader::Visual
     }
 
     template<typename T>
-    inline void InputPin<T>::ConnectInternal(Pin& target)
+    void InputPin<T>::ConnectInternal(Pin& target)
     {
         m_connection = &target;
     }
 
     template<typename T>
-    inline void InputPin<T>::DisconnectInternal(Pin& )
+    void InputPin<T>::DisconnectInternal(Pin& )
     {
         m_connection = nullptr;
     }
@@ -206,18 +229,18 @@ namespace Molten::Shader::Visual
 
     // Output pin implementations.
     template<typename T>
-    inline OutputPin<T>::OutputPin(Node& node, const std::string& name) :
+    OutputPin<T>::OutputPin(Node& node, const std::string& name) :
         Pin(node, name)
     { }
 
     template<typename T>
-    inline OutputPin<T>::~OutputPin()
+    OutputPin<T>::~OutputPin()
     {
         Disconnect();
     }
 
     template<typename T>
-    inline bool OutputPin<T>::Connect(Pin& target)
+    bool OutputPin<T>::ConnectBase(Pin& target)
     {
         if (target.GetDataType() != GetDataType() ||
             &target.GetNode() == &GetNode() ||
@@ -240,7 +263,27 @@ namespace Molten::Shader::Visual
     }
 
     template<typename T>
-    inline size_t OutputPin<T>::Disconnect()
+    bool OutputPin<T>::Connect(InputPin<T>& target)
+    {
+        if (&target.GetNode() == &GetNode())
+        {
+            return false;
+        }
+
+        auto it = std::find(m_connections.begin(), m_connections.end(), &target);
+        if (it != m_connections.end())
+        {
+            return true;
+        }
+
+        Pin::ConnectInternal(target, *this);
+        m_connections.push_back(&target);
+
+        return true;
+    }
+
+    template<typename T>
+    size_t OutputPin<T>::Disconnect()
     {
         size_t count = m_connections.size();
 
@@ -254,7 +297,7 @@ namespace Molten::Shader::Visual
     }
 
     template<typename T>
-    inline bool OutputPin<T>::Disconnect(const size_t index)
+    bool OutputPin<T>::Disconnect(const size_t index)
     {
         if (index >= m_connections.size())
         {
@@ -270,7 +313,7 @@ namespace Molten::Shader::Visual
     }
 
     template<typename T>
-    inline bool OutputPin<T>::Disconnect(Pin& target)
+    bool OutputPin<T>::Disconnect(Pin& target)
     {
         auto it = std::find(m_connections.begin(), m_connections.end(), &target);
         if (it == m_connections.end())
@@ -285,31 +328,31 @@ namespace Molten::Shader::Visual
     }
 
     template<typename T>
-    inline VariableDataType OutputPin<T>::GetDataType() const
+    VariableDataType OutputPin<T>::GetDataType() const
     {
         return VariableTrait<T>::dataType;
     }
 
     template<typename T>
-    inline size_t OutputPin<T>::GetSizeOfDataType() const
+    size_t OutputPin<T>::GetSizeOfDataType() const
     {
         return sizeof(T);
     }
 
     template<typename T>
-    inline PinDirection OutputPin<T>::GetDirection() const
+    PinDirection OutputPin<T>::GetDirection() const
     {
         return PinDirection::Out;
     }
 
     template<typename T>
-    inline size_t OutputPin<T>::GetConnectionCount() const
+    size_t OutputPin<T>::GetConnectionCount() const
     {
         return m_connections.size();
     }
 
     template<typename T>
-    inline Pin* OutputPin<T>::GetConnection(const size_t index)
+    Pin* OutputPin<T>::GetConnection(const size_t index)
     {
         if (index >= m_connections.size())
         {
@@ -319,7 +362,7 @@ namespace Molten::Shader::Visual
     }
 
     template<typename T>
-    inline const Pin* OutputPin<T>::GetConnection(const size_t index) const
+    const Pin* OutputPin<T>::GetConnection(const size_t index) const
     {
         if (index >= m_connections.size())
         {
@@ -329,25 +372,25 @@ namespace Molten::Shader::Visual
     }
 
     template<typename T>
-    inline std::vector<Pin*> OutputPin<T>::GetConnections()
+    std::vector<Pin*> OutputPin<T>::GetConnections()
     {
         return m_connections;
     }
 
     template<typename T>
-    inline std::vector<const Pin*> OutputPin<T>::GetConnections() const
+    std::vector<const Pin*> OutputPin<T>::GetConnections() const
     {
         return { m_connections.begin(), m_connections.end() };
     }
 
     template<typename T>
-    inline void OutputPin<T>::ConnectInternal(Pin& target)
+    void OutputPin<T>::ConnectInternal(Pin& target)
     {
         m_connections.push_back(&target);
     }
 
     template<typename T>
-    inline void OutputPin<T>::DisconnectInternal(Pin& target)
+    void OutputPin<T>::DisconnectInternal(Pin& target)
     {
         auto it = std::find(m_connections.begin(), m_connections.end(), &target);
         if (it == m_connections.end())
