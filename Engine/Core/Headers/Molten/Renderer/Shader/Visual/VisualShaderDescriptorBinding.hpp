@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -33,10 +33,11 @@
 namespace Molten::Shader::Visual
 {
 
-    /** Forward declarations. */ 
+    /** Forward declarations. */
+    class DescriptorSetBase;
     template<typename ... TAllowedBindingTypes> class DescriptorSet;
     template<typename TBindingType, typename ... TAllowedDataTypes> class DescriptorBinding;
-
+    
 
     /** Base class for Descriptor binding. */
     class MOLTEN_API DescriptorBindingBase : public Node
@@ -44,8 +45,17 @@ namespace Molten::Shader::Visual
 
     public:
 
-        /** Constructor. */
-        DescriptorBindingBase(Script& script);
+        /* Deleted copy/move constructor/operators. */
+        /**@{*/
+        DescriptorBindingBase(const DescriptorBindingBase&) = delete;
+        DescriptorBindingBase(DescriptorBindingBase&&) = delete;
+        DescriptorBindingBase& operator = (const DescriptorBindingBase&) = delete;
+        DescriptorBindingBase& operator = (DescriptorBindingBase&&) = delete;
+        /**@}*/
+
+        /** Get parent set. */
+        [[nodiscard]] DescriptorSetBase& GetSet();
+        [[nodiscard]] const DescriptorSetBase& GetSet() const;
 
         /** Get type of node. */
         [[nodiscard]] NodeType GetType() const override;
@@ -64,8 +74,12 @@ namespace Molten::Shader::Visual
         template<typename ... TAllowedBindingTypes>
         friend class DescriptorSet;
 
-        /** Private destructor. */
-        virtual ~DescriptorBindingBase() = default;
+        DescriptorBindingBase(
+            Script& script,
+            DescriptorSetBase& set);
+        ~DescriptorBindingBase() override = default;
+
+        DescriptorSetBase& m_setBase;
 
     };
 
@@ -81,7 +95,19 @@ namespace Molten::Shader::Visual
 
     public:
 
-        DescriptorBindingSamplerBase(Script& script, const uint32_t id);
+        /* Deleted copy/move constructor/operators. */
+        /**@{*/
+        DescriptorBindingSamplerBase(const DescriptorBindingSamplerBase&) = delete;
+        DescriptorBindingSamplerBase(DescriptorBindingSamplerBase&&) = delete;
+        DescriptorBindingSamplerBase& operator =(const DescriptorBindingSamplerBase&) = delete;
+        DescriptorBindingSamplerBase& operator =(DescriptorBindingSamplerBase&&) = delete;
+        /**@}*/
+
+        /** Get output pin of sampler binding as reference. */
+        /**@{*/
+        [[nodiscard]] OutputPin<TOutputType>& GetOutput();
+        [[nodiscard]] const OutputPin<TOutputType>& GetOutput() const;
+        /**@}*/
 
         /** Get id of this binding. */
         [[nodiscard]] uint32_t GetId() const override;
@@ -89,103 +115,130 @@ namespace Molten::Shader::Visual
         /** Get type of binding. */
         [[nodiscard]] DescriptorBindingType GetBindingType() const override;
 
-        size_t GetOutputPinCount() const override;
+        [[nodiscard]] size_t GetOutputPinCount() const override;
 
-        Pin* GetOutputPin(const size_t index = 0) override;
-        const Pin* GetOutputPin(const size_t index = 0) const override;
+        [[nodiscard]] Pin* GetOutputPin(const size_t index = 0) override;
+        [[nodiscard]] const Pin* GetOutputPin(const size_t index = 0) const override;
 
-        std::vector<Pin*> GetOutputPins() override;
-        std::vector<const Pin*> GetOutputPins() const override;
+        [[nodiscard]] std::vector<Pin*> GetOutputPins() override;
+        [[nodiscard]] std::vector<const Pin*> GetOutputPins() const override;
 
     protected:
 
-        template<typename ... TAllowedBindingTypes>
-        friend class DescriptorSet;
+        DescriptorBindingSamplerBase(
+            Script& script,
+            DescriptorSetBase& set,
+            const uint32_t id);
 
-        /** Private destructor. */
-        ~DescriptorBindingSamplerBase() = default;
-
-        DescriptorBindingSamplerBase(const DescriptorBindingSamplerBase&) = delete;
-        DescriptorBindingSamplerBase(DescriptorBindingSamplerBase&&) = delete;
-        DescriptorBindingSamplerBase& operator =(const DescriptorBindingSamplerBase&) = delete;
-        DescriptorBindingSamplerBase& operator =(DescriptorBindingSamplerBase&&) = delete;
+        ~DescriptorBindingSamplerBase() override = default;
 
         uint32_t m_id;
-        OutputPin<TOutputType> m_pin;
+        OutputPin<TOutputType> m_output;
 
     };
 
 
-    /** Descritor binding of sampler 1D type. */
+    /** Descriptor binding of sampler 1D type. */
     template<>
     class DescriptorBinding<Sampler1D> : public DescriptorBindingSamplerBase<Sampler1D>
     {
 
     public:
 
-        /** Constructor. */
-        DescriptorBinding(Script& script, const uint32_t id);
+        /* Deleted copy/move constructor/operators. */
+        /**@{*/
+        DescriptorBinding(const DescriptorBinding&) = delete;
+        DescriptorBinding(DescriptorBinding&&) = delete;
+        DescriptorBinding& operator =(const DescriptorBinding&) = delete;
+        DescriptorBinding& operator =(DescriptorBinding&&) = delete;
+        /**@}*/
 
-    private:
+    protected:
 
         template<typename ... TAllowedBindingTypes> 
         friend class DescriptorSet;
 
-        /** Private destructor. */
-        ~DescriptorBinding() = default;
+        DescriptorBinding(
+            Script& script,
+            DescriptorSetBase& set,
+            const uint32_t id);
+
+        ~DescriptorBinding() override = default;
 
     };
 
-    /** Descritor binding of sampler 2D type. */
+    /** Descriptor binding of sampler 2D type. */
     template<>
     class DescriptorBinding<Sampler2D> : public DescriptorBindingSamplerBase<Sampler2D>
     {
 
     public:
 
-        /** Constructor. */
-        DescriptorBinding(Script& script, const uint32_t id);
+        /* Deleted copy/move constructor/operators. */
+        /**@{*/
+        DescriptorBinding(const DescriptorBinding&) = delete;
+        DescriptorBinding(DescriptorBinding&&) = delete;
+        DescriptorBinding& operator =(const DescriptorBinding&) = delete;
+        DescriptorBinding& operator =(DescriptorBinding&&) = delete;
+        /**@}*/
 
-    private:
+    protected:
 
         template<typename ... TAllowedBindingTypes>
         friend class DescriptorSet;
 
-        /** Private destructor. */
-        ~DescriptorBinding() = default;
+        DescriptorBinding(
+            Script& script,
+            DescriptorSetBase& set,
+            const uint32_t id);
+
+        ~DescriptorBinding() override = default;
 
     };
 
-    /** Descritor binding of sampler 3D type. */
+    /** Descriptor binding of sampler 3D type. */
     template<>
     class DescriptorBinding<Sampler3D> : public DescriptorBindingSamplerBase<Sampler3D>
     {
 
     public:
 
-        /** Constructor. */
-        DescriptorBinding(Script& script, const uint32_t id);
+        /* Deleted copy/move constructor/operators. */
+        /**@{*/
+        DescriptorBinding(const DescriptorBinding&) = delete;
+        DescriptorBinding(DescriptorBinding&&) = delete;
+        DescriptorBinding& operator =(const DescriptorBinding&) = delete;
+        DescriptorBinding& operator =(DescriptorBinding&&) = delete;
+        /**@}*/
 
-    private:
+    protected:
 
         template<typename ... TAllowedBindingTypes>
         friend class DescriptorSet;
 
-        /** Private destructor. */
-        ~DescriptorBinding() = default;
+        DescriptorBinding(
+            Script& script,
+            DescriptorSetBase& set,
+            const uint32_t id);
+
+        ~DescriptorBinding() override = default;
 
     };
 
-
+    /** Descriptor binding of uniform buffer type. */
     template<typename ... TAllowedDataTypes>
     class DescriptorBinding<UniformBuffer<TAllowedDataTypes...>> : public DescriptorBindingBase
     {
 
     public:
 
-        /** Constructor. */
-        DescriptorBinding(Script& script, const uint32_t id);
-
+        /* Deleted copy/move constructor/operators. */
+        /**@{*/
+        DescriptorBinding(const DescriptorBinding&) = delete;
+        DescriptorBinding(DescriptorBinding&&) = delete;
+        DescriptorBinding& operator =(const DescriptorBinding&) = delete;
+        DescriptorBinding& operator =(DescriptorBinding&&) = delete;
+        /**@}*/
 
         /** Get id of this binding. */
         [[nodiscard]] uint32_t GetId() const override;
@@ -194,26 +247,26 @@ namespace Molten::Shader::Visual
         [[nodiscard]] DescriptorBindingType GetBindingType() const override;
 
         /**  Get number of output pins.*/
-        size_t GetOutputPinCount() const override;
+        [[nodiscard]] size_t GetOutputPinCount() const override;
 
         /** Get output pin by index.
          *
          * @return Pointer of output pin at given index, nullptr if index is >= GetOutputPinCount().
          */
-         /**@{*/
-        Pin* GetOutputPin(const size_t index = 0) override;
-        const Pin* GetOutputPin(const size_t index = 0) const override;
+        /**@{*/
+        [[nodiscard]] Pin* GetOutputPin(const size_t index = 0) override;
+        [[nodiscard]] const Pin* GetOutputPin(const size_t index = 0) const override;
         /**@}*/
 
         /** Get all output pins, wrapped in a vector. */
         /**@{*/
-        std::vector<Pin*> GetOutputPins() override;
-        std::vector<const Pin*> GetOutputPins() const override;
+        [[nodiscard]] std::vector<Pin*> GetOutputPins() override;
+        [[nodiscard]] std::vector<const Pin*> GetOutputPins() const override;
         /**@}*/
 
         /** Append new pin to this structure. */
         template<typename TDataType>
-        OutputPin<TDataType>& AddPin();
+        [[nodiscard]] OutputPin<TDataType>& AddPin();
 
         /** Remove and destroy all pins. Accessing any removed pin is undefined behaviour. */
         void RemovePin(const size_t index);
@@ -222,26 +275,25 @@ namespace Molten::Shader::Visual
         void RemoveAllPins();
 
         /** Get number of pins in this structure. */
-        size_t GetPinCount() const;
+        [[nodiscard]] size_t GetPinCount() const;
 
         /** Get sum of pin data member sizes in bytes. Kind of like sizeof(...). */
-        size_t GetSizeOf() const;
+        [[nodiscard]] size_t GetSizeOf() const;
 
     private:
 
         template<typename ... TAllowedBindingTypes>
         friend class DescriptorSet;
 
-        /** Private destructor. */
-        ~DescriptorBinding();
+        DescriptorBinding(
+            Script& script,
+            DescriptorSetBase& set,
+            const uint32_t id);
 
-        DescriptorBinding(const DescriptorBinding&) = delete;
-        DescriptorBinding(DescriptorBinding&&) = delete;
-        DescriptorBinding& operator =(const DescriptorBinding&) = delete;
-        DescriptorBinding& operator =(DescriptorBinding&&) = delete;
+        ~DescriptorBinding() override;
 
         template<typename T>
-        inline std::vector<T*> CreatePinVector() const;
+        std::vector<T*> CreatePinVector() const;
 
         struct PinWrapper
         {

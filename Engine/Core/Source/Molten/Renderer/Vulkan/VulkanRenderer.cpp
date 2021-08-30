@@ -27,9 +27,6 @@
 #if defined(MOLTEN_ENABLE_VULKAN)
 
 #include "Molten/Renderer/Vulkan/VulkanRenderer.hpp"
-#include "Molten/Renderer/Shader/Visual/VisualShaderScript.hpp"
-#include "Molten/Renderer/Shader/Visual/VisualShaderStructure.hpp"
-#include "Molten/Renderer/Shader/Generator/GlslShaderGenerator.hpp"
 #include "Molten/Renderer/Vulkan/VulkanDescriptorSet.hpp"
 #include "Molten/Renderer/Vulkan/VulkanFramebuffer.hpp"
 #include "Molten/Renderer/Vulkan/VulkanIndexBuffer.hpp"
@@ -44,6 +41,9 @@
 #include "Molten/Renderer/Vulkan/Utility/VulkanResultLogger.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanDeviceBuffer.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanDeviceImage.hpp"
+#include "Molten/Renderer/Shader/Visual/VisualShaderScript.hpp"
+#include "Molten/Renderer/Shader/Visual/VisualShaderStructure.hpp"
+#include "Molten/Renderer/Shader/Generator/SpirvShaderGenerator.hpp"
 #include "Molten/Window/Window.hpp"
 #include "Molten/Logger.hpp"
 #include "Molten/System/Exception.hpp"
@@ -51,6 +51,8 @@
 #include <algorithm>
 #include <limits>
 #include <memory>
+
+
 
 namespace Molten
 {
@@ -1438,20 +1440,21 @@ namespace Molten
 
     SharedRenderResource<ShaderProgram> VulkanRenderer::CreateShaderProgram(const VisualShaderProgramDescriptor& descriptor)
     {
-        if (descriptor.vertexScript == nullptr)
+        const auto* vertexScript = descriptor.vertexScript;
+        if (vertexScript == nullptr)
         {
             Logger::WriteError(m_logger, "Cannot create shader program without vertex script.");
             return {};
         }
-        if (descriptor.fragmentScript == nullptr)
+
+        const auto* fragmentScript = descriptor.fragmentScript;
+        if (fragmentScript == nullptr)
         {
             Logger::WriteError(m_logger, "Cannot create shader program without fragment script.");
             return {};
         }
 
-        auto& vertexOutputs = descriptor.vertexScript->GetOutputInterface();
-        auto& fragmentInputs = descriptor.fragmentScript->GetInputInterface();
-        if (!vertexOutputs.CompareStructure(fragmentInputs))
+        if (!vertexScript->GetOutputInterface().CompareStructure(fragmentScript->GetInputInterface()))
         {
             Logger::WriteError(m_logger, "Vertex output structure is not compatible with fragment input structure.");
             return {};
@@ -1464,45 +1467,57 @@ namespace Molten
         {
             for (auto& shaderModule : shaderModules)
             {
-                if(shaderModule)
+                if (shaderModule)
                 {
                     vkDestroyShaderModule(m_logicalDevice.GetHandle(), shaderModule, nullptr);
-                }     
+                }
             }
         });
 
-        std::vector<Shader::Visual::Script*> visualScripts = { descriptor.vertexScript, descriptor.fragmentScript };
-
-        Shader::GlslGenerator::GlslTemplate glslTemplate;
-        if (!Shader::GlslGenerator::GenerateGlslTemplate(glslTemplate, visualScripts, m_logger))
+        Shader::SpirvCombinedShadersTemplate spirvTemplate = {};
+        if(!Shader::SpirvGenerator::CreateCombinedShaderTemplate(spirvTemplate, { descriptor.fragmentScript, descriptor.vertexScript }, m_logger))
         {
-            Logger::WriteError(m_logger, "Failed to generate glsl template.");
             return {};
         }
 
-        for (size_t i = 0; i < visualScripts.size(); i++)
+        Shader::SpirvGenerator spirvGenerator(m_logger);
+        std::vector<std::pair<Shader::Type, Shader::SpirvGeneratoResult>> shaderSources;  
+
+        auto generateSource = [&](const auto* script, const std::vector<size_t>& ignoredOutputIndices, const bool ignoreUnusedInputs)
         {
-            const auto& script = visualScripts[i];
+            const Shader::SpirvGeneratorDescriptor spirvDescriptor = { script, ignoredOutputIndices, &spirvTemplate, ignoreUnusedInputs, true };
+            auto spirvResult = spirvGenerator.Generate(spirvDescriptor);
 
-            auto glslCode = m_glslGenerator.Generate(*script, Shader::GlslGenerator::Compability::SpirV, &glslTemplate, m_logger);
-            if (glslCode.empty())
+            if (spirvResult.source.empty())
             {
-                Logger::WriteError(m_logger, "Failed to generate GLSL code.");
-                return {};
+                return false;
             }
 
-            const auto scriptType = script->GetType();
-            auto spirvCode = Shader::GlslGenerator::ConvertGlslToSpriV(glslCode, scriptType, m_logger);
-            if (spirvCode.empty())
-            {
-                Logger::WriteError(m_logger, "Failed to convert GLSL to SPIR-V.");
-                return {};
-            }
+            shaderSources.emplace_back(script->GetType(), std::move(spirvResult));
+            return true;
+        };
+
+        if (!generateSource(fragmentScript, {}, true))
+        {
+            Logger::WriteError(m_logger, "Failed to generate SPIR-V code for Vertex stage. ");
+            return {};
+        }
+
+        if (!generateSource(vertexScript, shaderSources.back().second.ignoredInputIndices, false))
+        {
+            Logger::WriteError(m_logger, "Failed to generate SPIR-V code for Vertex stage. ");
+            return {};
+        }
+
+        for (size_t i = 0; i < shaderSources.size(); i++)
+        {
+            const auto shaderStage = shaderSources[i].first;
+            auto& spirvResult = shaderSources[i].second;
 
             VkShaderModuleCreateInfo shaderModuleInfo = {};
             shaderModuleInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-            shaderModuleInfo.codeSize = spirvCode.size();
-            shaderModuleInfo.pCode = reinterpret_cast<const uint32_t*>(spirvCode.data());
+            shaderModuleInfo.codeSize = spirvResult.source.size() * sizeof(Shader::Spirv::Word);
+            shaderModuleInfo.pCode = spirvResult.source.data();
 
             auto& shaderModule = shaderModules[i];
             if (const auto result = vkCreateShaderModule(m_logicalDevice.GetHandle(), &shaderModuleInfo, nullptr, &shaderModule); result != VK_SUCCESS)
@@ -1510,19 +1525,19 @@ namespace Molten
                 Vulkan::Logger::WriteError(m_logger, result, "Failed create shader module");
                 return {};
             }
- 
+
             auto& stageCreateInfo = pipelineShaderStageCreateInfos[i];
             stageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
             stageCreateInfo.pName = "main";
             stageCreateInfo.module = shaderModule;
-            stageCreateInfo.stage = GetShaderProgramStageFlag(scriptType);
+            stageCreateInfo.stage = GetShaderProgramStageFlag(shaderStage);
         }
 
         // Push constant information.
         VkPushConstantRange pushConstantRange = {};
         pushConstantRange.stageFlags = VK_SHADER_STAGE_ALL;
         pushConstantRange.offset = 0;
-        pushConstantRange.size = glslTemplate.pushConstantBlockByteSize;
+        pushConstantRange.size = spirvTemplate.pushConstantBlockByteCount;
 
         // Vertex input information.
         std::vector<VkVertexInputAttributeDescription> vertexInputAttributeDescriptions;
@@ -1538,7 +1553,7 @@ namespace Molten
 
             vertexBindingDescription->binding = 0;
             vertexBindingDescription->stride = vertexBindingStride;
-            vertexBindingDescription->inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+            vertexBindingDescription->inputRate = VkVertexInputRate::VK_VERTEX_INPUT_RATE_VERTEX;
         }
 
         // Finalize.
@@ -1547,10 +1562,10 @@ namespace Molten
         return SharedRenderResource<ShaderProgram>(new VulkanShaderProgram{
             std::move(shaderModules),
             std::move(pipelineShaderStageCreateInfos),
-            std::move(glslTemplate.mappedDescriptorSets),
+            std::move(spirvTemplate.mappedDescriptorSets),
             std::move(vertexInputAttributeDescriptions),
             std::move(vertexBindingDescription),
-            std::move(glslTemplate.pushConstantLocations),
+            std::move(spirvTemplate.pushConstantLocations),
             pushConstantRange
         }, RenderResourceDeleter<ShaderProgram>{ this });
     }

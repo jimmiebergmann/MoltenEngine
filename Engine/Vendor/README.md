@@ -15,5 +15,4 @@ $ git clone --recurse-submodules https://github.com/jimmiebergmann/MoltenEngine.
 
 ### Available submodules
 *   Google Test - <https://github.com/google/googletest> ([License](https://github.com/google/googletest/blob/master/LICENSE))
-*   Glslang - <https://github.com/jimmiebergmann/glslang> ([License](https://github.com/jimmiebergmann/glslang/blob/master/LICENSE.txt)) 
 *   FreeType2 - <https://github.com/jimmiebergmann/FreeType2> ([License](https://github.com/jimmiebergmann/FreeType2/blob/master/docs/LICENSE.TXT))

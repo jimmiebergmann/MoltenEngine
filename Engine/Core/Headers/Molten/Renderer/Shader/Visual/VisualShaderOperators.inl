@@ -27,82 +27,94 @@ namespace Molten::Shader::Visual::Operators
 {
 
     // Addition
-    template<> struct Trait<Operators::AddInt32>
+    template<> struct Trait<AddInt32>
     {
         inline static constexpr bool Supported = true;
     };
-    template<> struct Trait<Operators::AddFloat32>
+    template<> struct Trait<AddFloat32>
     {
         inline static constexpr bool Supported = true;
     };
-    template<> struct Trait<Operators::AddVec2f32>
+    template<> struct Trait<AddVec2f32>
     {
         inline static constexpr bool Supported = true;
     };
-    template<> struct Trait<Operators::AddVec3f32>
+    template<> struct Trait<AddVec3f32>
     {
         inline static constexpr bool Supported = true;
     };
-    template<> struct Trait<Operators::AddVec4f32>
+    template<> struct Trait<AddVec4f32>
     {
         inline static constexpr bool Supported = true;
     };
     // Division
-    template<> struct Trait<Operators::DivInt32>
+    template<> struct Trait<DivInt32>
     {
         inline static constexpr bool Supported = true;
     };
-    template<> struct Trait<Operators::DivFloat32>
+    template<> struct Trait<DivFloat32>
+    {
+        inline static constexpr bool Supported = true;
+    };
+    template<> struct Trait<DivVec2f32>
+    {
+        inline static constexpr bool Supported = true;
+    };
+    template<> struct Trait<DivVec3f32>
+    {
+        inline static constexpr bool Supported = true;
+    };
+    template<> struct Trait<DivVec4f32>
     {
         inline static constexpr bool Supported = true;
     };
     // Multiplication
-    template<> struct Trait<Operators::MultInt32>
+    template<> struct Trait<MultInt32>
     {
         inline static constexpr bool Supported = true;
     };
-    template<> struct Trait<Operators::MultFloat32>
+    template<> struct Trait<MultFloat32>
     {
         inline static constexpr bool Supported = true;
     };
-    template<> struct Trait<Operators::MultVec2f32>
+    template<> struct Trait<MultVec2f32>
     {
         inline static constexpr bool Supported = true;
     };
-    template<> struct Trait<Operators::MultVec3f32>
+    template<> struct Trait<MultVec3f32>
     {
         inline static constexpr bool Supported = true;
     };
-    template<> struct Trait<Operators::MultVec4f32>
+    template<> struct Trait<MultVec4f32>
     {
         inline static constexpr bool Supported = true;
     };
-    template<> struct Trait<Operators::MultMat4f32>
+    template<> struct Trait<MultMat4f32>
     {
         inline static constexpr bool Supported = true;
     };
-    template<> struct Trait<Operators::MultMat4Vec4f32>
+    template<> struct Trait<MultMat4f32Vec4f32>
     {
         inline static constexpr bool Supported = true;
     };
     // Subtraction
-    template<> struct Trait<Operators::SubInt32>
+    template<> struct Trait<SubInt32>
     {
         inline static constexpr bool Supported = true;
     };
-    template<> struct Trait<Operators::SubFloat32>
+    template<> struct Trait<SubFloat32>
     {
         inline static constexpr bool Supported = true;
     };
-    template<> struct Trait<Operators::SubVec2f32>
+    template<> struct Trait<SubVec2f32>
     {
         inline static constexpr bool Supported = true;
     };
-    template<> struct Trait<Operators::SubVec3f32>
+    template<> struct Trait<SubVec3f32>
     {
         inline static constexpr bool Supported = true;
     };
-    template<> struct Trait<Operators::SubVec4f32>
+    template<> struct Trait<SubVec4f32>
     {
         inline static constexpr bool Supported = true;
     };

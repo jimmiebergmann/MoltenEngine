@@ -65,6 +65,8 @@ namespace Molten::Test
         explicit Benchmarker(const std::string& description);
         ~Benchmarker();
 
+        void Stop();
+
     private:
 
         Benchmarker(const Benchmarker&) = delete;
@@ -76,7 +78,8 @@ namespace Molten::Test
         std::pair<double, std::string> GetConvertedTime(const Time& time);
 
         std::string m_description;
-        Molten::Clock m_clock;
+        Clock m_clock;
+        bool m_stopped;
 
     };
 

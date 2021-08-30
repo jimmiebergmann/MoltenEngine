@@ -46,3 +46,14 @@ function(SetDefaultCompileOptions target)
 
 endfunction(SetDefaultCompileOptions)
 
+# Add multi-processor compilation.
+function(EnableMultiProcessorCompilation target)
+
+  if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+    target_compile_options(${target} PRIVATE /MP)
+  endif()
+  
+  get_target_property(compilerFlags ${target} COMPILE_OPTIONS)
+  message("Setting \"target_compile_options\": \"${compilerFlags}\" for ${CMAKE_CXX_COMPILER_ID}, target ${target}.")
+  
+endfunction(EnableMultiProcessorCompilation)

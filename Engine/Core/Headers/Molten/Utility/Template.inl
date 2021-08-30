@@ -39,23 +39,30 @@ namespace Molten
 
     }
 
-    template<typename ... Types, typename Callback>
-    inline constexpr void ForEachTemplateArgument(Callback&& callback)
+    template<typename ... TTypes, typename TCallback>
+    constexpr void ForEachTemplateArgument(TCallback&& callback)
     {
-        (callback(Private::ForEachTemplateTypeWrapper<Types>{}), ...);
+        (callback(Private::ForEachTemplateTypeWrapper<TTypes>{}), ...);
     }
 
-    template<typename ... Types, typename Callback>
-    inline constexpr void ForEachTemplateArgumentIndexed(Callback&& callback)
+    template<typename ... TTypes, typename TCallback>
+    constexpr void ForEachTemplateArgumentIndexed(TCallback&& callback)
     {
         size_t index = 0;
-        (callback(Private::ForEachTemplateTypeWrapper<Types>{}, index++), ...);
+        (callback(Private::ForEachTemplateTypeWrapper<TTypes>{}, index++), ...);
     }
 
-    template<typename Type, typename ... Types>
-    inline constexpr bool TemplateArgumentsContains()
+    template<typename TType, typename ... TTypes>
+    constexpr bool TemplateArgumentsContains()
     {
-        return (std::is_same<Type, Types>::value || ...);
+        return (std::is_same_v<TType, TTypes> || ...);
+    }
+
+    template<size_t VIndex, typename ... TTypes>
+    constexpr size_t GetTemplateArgumentAt<VIndex, TTypes...>::GetIndex()
+    {
+        static_assert(VIndex < sizeof...(TTypes), "Molten::GetTemplateArgumentAt failed due to index out of bounds.");
+        return VIndex;
     }
 
 }

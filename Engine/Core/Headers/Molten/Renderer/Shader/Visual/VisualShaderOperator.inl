@@ -23,62 +23,93 @@
 *
 */
 
-#include <array>
-
 namespace Molten::Shader::Visual
 {
 
     // Arithmetic operator node implementations.
     template<ArithmeticOperatorType TOperator, typename TOutputType, typename TLeftType, typename TRightType>
-    inline ArithmeticOperatorType ArithmeticOperator<TOperator, TOutputType, TLeftType, TRightType>::GetArithmeticOperatorType() const
+    ArithmeticOperatorType ArithmeticOperator<TOperator, TOutputType, TLeftType, TRightType>::GetArithmeticOperatorType() const
     {
         return TOperator;
     }
 
     template<ArithmeticOperatorType TOperator, typename TOutputType, typename TLeftType, typename TRightType>
-    inline size_t ArithmeticOperator<TOperator, TOutputType, TLeftType, TRightType>::GetInputPinCount() const
+    InputPin<TLeftType>& ArithmeticOperator<TOperator, TOutputType, TLeftType, TRightType>::GetLeftInput()
+    {
+        return m_inputLeft;
+    }
+    template<ArithmeticOperatorType TOperator, typename TOutputType, typename TLeftType, typename TRightType>
+    const InputPin<TLeftType>& ArithmeticOperator<TOperator, TOutputType, TLeftType, TRightType>::GetLeftInput() const
+    {
+        return m_inputLeft;
+    }
+
+    template<ArithmeticOperatorType TOperator, typename TOutputType, typename TLeftType, typename TRightType>
+    InputPin<TRightType>& ArithmeticOperator<TOperator, TOutputType, TLeftType, TRightType>::GetRightInput()
+    {
+        return m_inputRight;
+    }
+    template<ArithmeticOperatorType TOperator, typename TOutputType, typename TLeftType, typename TRightType>
+    const InputPin<TRightType>& ArithmeticOperator<TOperator, TOutputType, TLeftType, TRightType>::GetRightInput() const
+    {
+        return m_inputRight;
+    }
+
+    template<ArithmeticOperatorType TOperator, typename TOutputType, typename TLeftType, typename TRightType>
+    OutputPin<TOutputType>& ArithmeticOperator<TOperator, TOutputType, TLeftType, TRightType>::GetOutput()
+    {
+        return m_output;
+    }
+    template<ArithmeticOperatorType TOperator, typename TOutputType, typename TLeftType, typename TRightType>
+    const OutputPin<TOutputType>& ArithmeticOperator<TOperator, TOutputType, TLeftType, TRightType>::GetOutput() const
+    {
+        return m_output;
+    }
+
+    template<ArithmeticOperatorType TOperator, typename TOutputType, typename TLeftType, typename TRightType>
+    size_t ArithmeticOperator<TOperator, TOutputType, TLeftType, TRightType>::GetInputPinCount() const
     {
         return 2;
     }
 
     template<ArithmeticOperatorType TOperator, typename TOutputType, typename TLeftType, typename TRightType>
-    inline size_t ArithmeticOperator<TOperator, TOutputType, TLeftType, TRightType>::GetOutputPinCount() const
+    size_t ArithmeticOperator<TOperator, TOutputType, TLeftType, TRightType>::GetOutputPinCount() const
     {
         return 1;
     }
 
     template<ArithmeticOperatorType TOperator, typename TOutputType, typename TLeftType, typename TRightType>
-    inline Pin* ArithmeticOperator<TOperator, TOutputType, TLeftType, TRightType>::GetInputPin(const size_t index)
+    Pin* ArithmeticOperator<TOperator, TOutputType, TLeftType, TRightType>::GetInputPin(const size_t index)
     {
         if (index > 1)
         {
             return nullptr;
         }
-        return std::array<Pin*, 2>{&m_inputLeft, &m_inputRight}[index] ;
+        return std::array<Pin*, 2>{&m_inputLeft, &m_inputRight}[index];
     }
     template<ArithmeticOperatorType TOperator, typename TOutputType, typename TLeftType, typename TRightType>
-    inline const Pin* ArithmeticOperator<TOperator, TOutputType, TLeftType, TRightType>::GetInputPin(const size_t index) const
+    const Pin* ArithmeticOperator<TOperator, TOutputType, TLeftType, TRightType>::GetInputPin(const size_t index) const
     {
         if (index > 1)
         {
             return nullptr;
         }
-        return std::array<const Pin*, 2>{&m_inputLeft, &m_inputRight}[index] ;
+        return std::array<const Pin*, 2>{&m_inputLeft, &m_inputRight}[index];
     }
 
     template<ArithmeticOperatorType TOperator, typename TOutputType, typename TLeftType, typename TRightType>
-    inline std::vector<Pin*> ArithmeticOperator<TOperator, TOutputType, TLeftType, TRightType>::GetInputPins()
+    std::vector<Pin*> ArithmeticOperator<TOperator, TOutputType, TLeftType, TRightType>::GetInputPins()
     {
         return { &m_inputLeft, &m_inputRight };
     }
     template<ArithmeticOperatorType TOperator, typename TOutputType, typename TLeftType, typename TRightType>
-    inline std::vector<const Pin*> ArithmeticOperator<TOperator, TOutputType, TLeftType, TRightType>::GetInputPins() const
+    std::vector<const Pin*> ArithmeticOperator<TOperator, TOutputType, TLeftType, TRightType>::GetInputPins() const
     {
         return { &m_inputLeft, &m_inputRight };
     }
 
     template<ArithmeticOperatorType TOperator, typename TOutputType, typename TLeftType, typename TRightType>
-    inline Pin* ArithmeticOperator<TOperator, TOutputType, TLeftType, TRightType>::GetOutputPin(const size_t index)
+    Pin* ArithmeticOperator<TOperator, TOutputType, TLeftType, TRightType>::GetOutputPin(const size_t index)
     {
         if (index != 0)
         {
@@ -87,7 +118,7 @@ namespace Molten::Shader::Visual
         return &m_output;
     }
     template<ArithmeticOperatorType TOperator, typename TOutputType, typename TLeftType, typename TRightType>
-    inline const Pin* ArithmeticOperator<TOperator, TOutputType, TLeftType, TRightType>::GetOutputPin(const size_t index) const
+    const Pin* ArithmeticOperator<TOperator, TOutputType, TLeftType, TRightType>::GetOutputPin(const size_t index) const
     {
         if (index != 0)
         {
@@ -97,18 +128,18 @@ namespace Molten::Shader::Visual
     }
 
     template<ArithmeticOperatorType TOperator, typename TOutputType, typename TLeftType, typename TRightType>
-    inline std::vector<Pin*> ArithmeticOperator<TOperator, TOutputType, TLeftType, TRightType>::GetOutputPins()
+    std::vector<Pin*> ArithmeticOperator<TOperator, TOutputType, TLeftType, TRightType>::GetOutputPins()
     {
         return { &m_output };
     }
     template<ArithmeticOperatorType TOperator, typename TOutputType, typename TLeftType, typename TRightType>
-    inline std::vector<const Pin*> ArithmeticOperator<TOperator, TOutputType, TLeftType, TRightType>::GetOutputPins() const
+    std::vector<const Pin*> ArithmeticOperator<TOperator, TOutputType, TLeftType, TRightType>::GetOutputPins() const
     {
         return { &m_output };
     }
 
     template<ArithmeticOperatorType TOperator, typename TOutputType, typename TLeftType, typename TRightType>
-    inline ArithmeticOperator<TOperator, TOutputType, TLeftType, TRightType>::ArithmeticOperator(Script& script) :
+    ArithmeticOperator<TOperator, TOutputType, TLeftType, TRightType>::ArithmeticOperator(Script& script) :
         ArithmeticOperatorBase(script),
         m_inputLeft(*this),
         m_inputRight(*this),

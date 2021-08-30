@@ -132,14 +132,23 @@ namespace Molten::Editor
 
     void Application::LoadLogger(const std::optional<std::string>& filename)
     {
+
+#if MOLTEN_BUILD == MOLTEN_BUILD_RELEASE
+        const uint32_t loggerSeverityFlags = 
+            static_cast<uint32_t>(Logger::Severity::Error) |
+            static_cast<uint32_t>(Logger::Severity::Warning);
+#else
+        const uint32_t loggerSeverityFlags = Logger::SeverityAllFlags;
+#endif
+        
         auto createDefaultLogger = [&]()
         {
-            return std::make_shared<Logger>();
+            return std::make_shared<Logger>(loggerSeverityFlags);
         };
 
         auto createFileLogger = [&]() -> std::shared_ptr<Logger>
         {
-            auto fileLogger = std::make_shared<FileLogger>(*filename);
+            auto fileLogger = std::make_shared<FileLogger>(*filename, FileLogger::OpenMode::Append, loggerSeverityFlags);
             if (!fileLogger->IsOpen())
             {
                 return nullptr;
@@ -166,8 +175,6 @@ namespace Molten::Editor
     {
         try
         {
-            //::SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS); //WIN32
-
             Semaphore cancellationSemaphore;
             m_editor = std::make_unique<Editor>(cancellationSemaphore);
             if (!m_editor->Open(editorDescriptor))

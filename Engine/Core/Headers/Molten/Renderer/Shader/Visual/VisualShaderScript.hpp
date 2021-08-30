@@ -136,13 +136,19 @@ namespace Molten::Shader::Visual
         template<typename TFunction>
         TFunction& CreateFunction();
 
-        /**
-         * Create new operator node and append it to the shader script.
+        /** Create new operator node and append it to the shader script.
          *
          * @tparam TOperator Operator node object to create.
          */
         template<typename TOperator>
         TOperator& CreateOperator();
+
+        /** Create new composite node and append it to the shader script.
+         *
+         * @tparam TComposite Composite node object to create.
+         */
+        template<typename TComposite>
+        TComposite& CreateComposite();
 
         /** Get type of shader script. */
         Type GetType() const override;
@@ -245,6 +251,13 @@ namespace Molten::Shader::Visual
          */
         template<typename TOperator>
         TOperator& CreateOperator();
+
+        /** Create new composite node and append it to the shader script.
+         *
+         * @tparam TComposite Composite node object to create.
+         */
+        template<typename TComposite>
+        TComposite& CreateComposite();
 
         /** Get type of shader script. */
         Type GetType() const override;

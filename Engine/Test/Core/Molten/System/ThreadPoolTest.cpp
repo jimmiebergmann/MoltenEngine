@@ -170,46 +170,44 @@ namespace Molten
             }
         }
     }
-
     
     TEST(System, ThreadPool_TryExecute)
     {
         ThreadPool pool(1);
         std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
-        std::array<size_t, 3> values = { 0 };
+        std::array<size_t, 3> values = { 0, 0, 0 };
 
         for (size_t i = 0; i < 2; i++)
         {
-            values = { 0 };
+            values = { 0, 0, 0 };
 
-            Semaphore sem;
+            Semaphore semResult1Wait;
             auto tryResult1 = pool.TryExecute([&]()
             {
+                semResult1Wait.Wait();
                 values[0] = 1;
-                sem.NotifyOne();
             });
-            EXPECT_TRUE(tryResult1.has_value());
+            ASSERT_TRUE(tryResult1.has_value());
 
             auto tryResult2 = pool.TryExecute([&]()
             {
                 values[1] = 2;
             });
+            ASSERT_FALSE(tryResult2.has_value());
 
-            EXPECT_FALSE(tryResult2.has_value());
+            semResult1Wait.NotifyOne();
+            tryResult1.value().wait();
 
-            sem.Wait();
-            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+            std::this_thread::sleep_for(std::chrono::duration<double>(0.5f));
 
             auto tryResult3 = pool.TryExecute([&]()
             {
                 values[2] = 3;
             });
 
-            EXPECT_TRUE(tryResult3.has_value());
-
-            auto& waitResult = tryResult3.value();
-            waitResult.get();
+            ASSERT_TRUE(tryResult3.has_value());
+            tryResult3.value().wait();
 
             EXPECT_EQ(values[0], 1);
             EXPECT_EQ(values[1], 0);

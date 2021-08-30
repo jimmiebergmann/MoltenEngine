@@ -29,7 +29,9 @@ include_directories ("${EditorHeadersDir}")
 include_directories ("${CoreHeadersDir}")
 
 add_executable(MoltenEditor "${EditorSources}" "${EditorHeaders}")
+
 SetDefaultCompileOptions(MoltenEditor)
+EnableMultiProcessorCompilation(MoltenEditor)
 
 CreateSourceGroups("${EditorSources}" "${EditorSourceDir}")
 CreateSourceGroups("${EditorHeaders}" "${EditorHeadersDir}")

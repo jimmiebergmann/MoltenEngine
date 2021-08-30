@@ -27,26 +27,11 @@
 #include "Molten/Renderer/Renderer.hpp"
 #include "Molten/Renderer/Pipeline.hpp"
 #include "Molten/Renderer/Shader/Visual/VisualShaderScript.hpp"
-#include "Molten/Renderer/Shader/Generator/GlslShaderGenerator.hpp"
 #include "Molten/Logger.hpp"
 #include <array>
 
 namespace Molten::Gui
 {
-
-    // Canvas renderer texture implementations.
-    /*CanvasRendererTexture::CanvasRendererTexture(CanvasRendererTexture&& canvasRendererTexture) noexcept :
-        texture(std::move(canvasRendererTexture.texture)),
-        descriptorSet(std::move(canvasRendererTexture.descriptorSet))
-    {}
-
-    CanvasRendererTexture& CanvasRendererTexture::operator =(CanvasRendererTexture&& canvasRendererTexture) noexcept
-    {
-        texture = std::move(canvasRendererTexture.texture);
-        descriptorSet = std::move(canvasRendererTexture.descriptorSet);
-        return *this;
-    }*/
-
 
     // Canvas renderer implementations.
     CanvasRendererPointer CanvasRenderer::Create(Renderer& renderer, Logger* logger, const Vector2f32& size)
@@ -354,12 +339,12 @@ namespace Molten::Gui
             vertexScaledMoved.GetInputPin(0)->Connect(*vertexScaled.GetOutputPin());
             vertexScaledMoved.GetInputPin(1)->Connect(position);
 
-            auto& vertexPositionVec4 = script.CreateFunction<Shader::Visual::Functions::Vec2ToVec4f32>();
-            vertexPositionVec4.GetInputPin(0)->Connect(*vertexScaledMoved.GetOutputPin());
-            static_cast<Shader::Visual::InputPin<float>*>(vertexPositionVec4.GetInputPin(1))->SetDefaultValue(0.0f);
-            static_cast<Shader::Visual::InputPin<float>*>(vertexPositionVec4.GetInputPin(2))->SetDefaultValue(1.0f);
+            auto& vertexPositionVec4 = script.CreateComposite<Shader::Visual::Composites::Vec4f32FromVec2f32Float32>();
+            vertexPositionVec4.GetInput<0>().Connect(*vertexScaledMoved.GetOutputPin());
+            vertexPositionVec4.GetInput<1>().SetDefaultValue(0.0f);
+            vertexPositionVec4.GetInput<2>().SetDefaultValue(1.0f);
 
-            auto& projectedVertexPosition = script.CreateOperator<Shader::Visual::Operators::MultMat4Vec4f32>();
+            auto& projectedVertexPosition = script.CreateOperator<Shader::Visual::Operators::MultMat4f32Vec4f32>();
             projectedVertexPosition.GetInputPin(0)->Connect(projection);
             projectedVertexPosition.GetInputPin(1)->Connect(*vertexPositionVec4.GetOutputPin());
 
@@ -492,12 +477,12 @@ namespace Molten::Gui
             vertexScaledMoved.GetInputPin(0)->Connect(*vertexScaled.GetOutputPin());
             vertexScaledMoved.GetInputPin(1)->Connect(position);
 
-            auto& vertexPositionVec4 = script.CreateFunction<Shader::Visual::Functions::Vec2ToVec4f32>();
-            vertexPositionVec4.GetInputPin(0)->Connect(*vertexScaledMoved.GetOutputPin());
-            static_cast<Shader::Visual::InputPin<float>*>(vertexPositionVec4.GetInputPin(1))->SetDefaultValue(0.0f);
-            static_cast<Shader::Visual::InputPin<float>*>(vertexPositionVec4.GetInputPin(2))->SetDefaultValue(1.0f);
+            auto& vertexPositionVec4 = script.CreateComposite<Shader::Visual::Composites::Vec4f32FromVec2f32Float32>();
+            vertexPositionVec4.GetInput<0>().Connect(*vertexScaledMoved.GetOutputPin());
+            vertexPositionVec4.GetInput<1>().SetDefaultValue(0.0f);
+            vertexPositionVec4.GetInput<2>().SetDefaultValue(1.0f);
 
-            auto& projectedVertexPosition = script.CreateOperator<Shader::Visual::Operators::MultMat4Vec4f32>();
+            auto& projectedVertexPosition = script.CreateOperator<Shader::Visual::Operators::MultMat4f32Vec4f32>();
             projectedVertexPosition.GetInputPin(0)->Connect(projection);
             projectedVertexPosition.GetInputPin(1)->Connect(*vertexPositionVec4.GetOutputPin());
 
@@ -613,12 +598,12 @@ namespace Molten::Gui
             vertexPosition.GetInputPin(0)->Connect(inPosition);
             vertexPosition.GetInputPin(1)->Connect(position);
 
-            auto& vertexPositionVec4 = script.CreateFunction<Shader::Visual::Functions::Vec2ToVec4f32>();
-            vertexPositionVec4.GetInputPin(0)->Connect(*vertexPosition.GetOutputPin());
-            static_cast<Shader::Visual::InputPin<float>*>(vertexPositionVec4.GetInputPin(1))->SetDefaultValue(0.0f);
-            static_cast<Shader::Visual::InputPin<float>*>(vertexPositionVec4.GetInputPin(2))->SetDefaultValue(1.0f);
+            auto& vertexPositionVec4 = script.CreateComposite<Shader::Visual::Composites::Vec4f32FromVec2f32Float32>();
+            vertexPositionVec4.GetInput<0>().Connect(*vertexPosition.GetOutputPin());
+            vertexPositionVec4.GetInput<1>().SetDefaultValue(0.0f);
+            vertexPositionVec4.GetInput<2>().SetDefaultValue(1.0f);
 
-            auto& projectedVertexPosition = script.CreateOperator<Shader::Visual::Operators::MultMat4Vec4f32>();
+            auto& projectedVertexPosition = script.CreateOperator<Shader::Visual::Operators::MultMat4f32Vec4f32>();
             projectedVertexPosition.GetInputPin(0)->Connect(projection);
             projectedVertexPosition.GetInputPin(1)->Connect(*vertexPositionVec4.GetOutputPin());
 

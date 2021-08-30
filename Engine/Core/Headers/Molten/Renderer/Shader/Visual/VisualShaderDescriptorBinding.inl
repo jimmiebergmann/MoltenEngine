@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -31,106 +31,125 @@ namespace Molten::Shader::Visual
 
     // Descriptor binding sampler base implementations.
     template<typename TOutputType>
-    inline DescriptorBindingSamplerBase<TOutputType>::DescriptorBindingSamplerBase(Script& script, const uint32_t id) :
-        DescriptorBindingBase(script),
-        m_id(id),
-        m_pin(*this)
-    {}
+    OutputPin<TOutputType>& DescriptorBindingSamplerBase<TOutputType>::GetOutput()
+    {
+        return m_output;
+    }
+    template<typename TOutputType>
+    const OutputPin<TOutputType>& DescriptorBindingSamplerBase<TOutputType>::GetOutput() const
+    {
+        return m_output;
+    }
 
     template<typename TOutputType>
-    inline uint32_t DescriptorBindingSamplerBase<TOutputType>::GetId() const
+    uint32_t DescriptorBindingSamplerBase<TOutputType>::GetId() const
     {
         return m_id;
     }
 
     template<typename TOutputType>
-    inline DescriptorBindingType DescriptorBindingSamplerBase<TOutputType>::GetBindingType() const
+    DescriptorBindingType DescriptorBindingSamplerBase<TOutputType>::GetBindingType() const
     {
         return DescriptorBindingSamplerTraits<TOutputType>::bindingType;
     }
 
     template<typename TOutputType>
-    inline size_t DescriptorBindingSamplerBase<TOutputType>::GetOutputPinCount() const
+    size_t DescriptorBindingSamplerBase<TOutputType>::GetOutputPinCount() const
     {
         return 1;
     }
 
     template<typename TOutputType>
-    inline Pin* DescriptorBindingSamplerBase<TOutputType>::GetOutputPin(const size_t index)
+    Pin* DescriptorBindingSamplerBase<TOutputType>::GetOutputPin(const size_t index)
     {
         if(index != 0)
         {
             return nullptr;
         }
-        return &m_pin;
+        return &m_output;
     }
     template<typename TOutputType>
-    inline const Pin* DescriptorBindingSamplerBase<TOutputType>::GetOutputPin(const size_t index) const
+    const Pin* DescriptorBindingSamplerBase<TOutputType>::GetOutputPin(const size_t index) const
     {
         if (index != 0)
         {
             return nullptr;
         }
-        return &m_pin;
+        return &m_output;
     }
 
     template<typename TOutputType>
-    inline std::vector<Pin*> DescriptorBindingSamplerBase<TOutputType>::GetOutputPins()
+    std::vector<Pin*> DescriptorBindingSamplerBase<TOutputType>::GetOutputPins()
     {
-        return { &m_pin };
+        return { &m_output };
     }
     template<typename TOutputType>
-    inline std::vector<const Pin*> DescriptorBindingSamplerBase<TOutputType>::GetOutputPins() const
+    std::vector<const Pin*> DescriptorBindingSamplerBase<TOutputType>::GetOutputPins() const
     {
-        return { &m_pin };
+        return { &m_output };
     }
+
+    template<typename TOutputType>
+    DescriptorBindingSamplerBase<TOutputType>::DescriptorBindingSamplerBase(
+        Script& script,
+        DescriptorSetBase& set,
+        const uint32_t id
+    ) :
+        DescriptorBindingBase(script, set),
+        m_id(id),
+        m_output(*this)
+    {}
 
 
     // Descriptor binding Sampler1D specializing implementations.
-    inline DescriptorBinding<Sampler1D>::DescriptorBinding(Script& script, const uint32_t id) :
-        DescriptorBindingSamplerBase<Sampler1D>(script, id)
+    inline DescriptorBinding<Sampler1D>::DescriptorBinding(
+        Script& script, 
+        DescriptorSetBase& set,
+        const uint32_t id
+    ) :
+        DescriptorBindingSamplerBase<Sampler1D>(script, set, id)
     {}
 
     // Descriptor binding Sampler2D specializing implementations.
-    inline DescriptorBinding<Sampler2D>::DescriptorBinding(Script& script, const uint32_t id) :
-        DescriptorBindingSamplerBase<Sampler2D>(script, id)
+    inline DescriptorBinding<Sampler2D>::DescriptorBinding(
+        Script& script,
+        DescriptorSetBase& set,
+        const uint32_t id
+    ) :
+        DescriptorBindingSamplerBase<Sampler2D>(script, set, id)
     {}
 
     // Descriptor binding Sampler3D specializing implementations.
-    inline DescriptorBinding<Sampler3D>::DescriptorBinding(Script& script, const uint32_t id) :
-        DescriptorBindingSamplerBase<Sampler3D>(script, id)
+    inline DescriptorBinding<Sampler3D>::DescriptorBinding(
+        Script& script,
+        DescriptorSetBase& set,
+        const uint32_t id
+    ) :
+        DescriptorBindingSamplerBase<Sampler3D>(script, set, id)
     {}
 
 
     // Descriptor binding UnfiformBuffer specializing implementations.
     template<typename ... TAllowedDataTypes>
-    inline DescriptorBinding<UniformBuffer<TAllowedDataTypes...>>::DescriptorBinding(Script& script, const uint32_t id) :
-        DescriptorBindingBase(script),
-        m_id(id),
-        m_pinWrappers{},
-        m_sizeOf(0)
-    {}
-
-    template<typename ... TAllowedDataTypes>
-    inline uint32_t DescriptorBinding<UniformBuffer<TAllowedDataTypes...>>::GetId() const
+    uint32_t DescriptorBinding<UniformBuffer<TAllowedDataTypes...>>::GetId() const
     {
         return m_id;
     }
 
     template<typename ... TAllowedDataTypes>
-    inline DescriptorBindingType DescriptorBinding<UniformBuffer<TAllowedDataTypes...>>::GetBindingType() const
+    DescriptorBindingType DescriptorBinding<UniformBuffer<TAllowedDataTypes...>>::GetBindingType() const
     {
         return DescriptorBindingType::UniformBuffer;
     }
 
     template<typename ... TAllowedDataTypes>
-    inline size_t DescriptorBinding<UniformBuffer<TAllowedDataTypes...>>::GetOutputPinCount() const
+    size_t DescriptorBinding<UniformBuffer<TAllowedDataTypes...>>::GetOutputPinCount() const
     {
         return m_pinWrappers.size();
     }
 
     template<typename ... TAllowedDataTypes>
-    inline Pin* DescriptorBinding<UniformBuffer<TAllowedDataTypes...>>::GetOutputPin(const size_t index)
+    Pin* DescriptorBinding<UniformBuffer<TAllowedDataTypes...>>::GetOutputPin(const size_t index)
     {
         if (index >= m_pinWrappers.size())
         {
@@ -139,7 +158,7 @@ namespace Molten::Shader::Visual
         return m_pinWrappers[index].pin;
     }
     template<typename ... TAllowedDataTypes>
-    inline const Pin* DescriptorBinding<UniformBuffer<TAllowedDataTypes...>>::GetOutputPin(const size_t index) const
+    const Pin* DescriptorBinding<UniformBuffer<TAllowedDataTypes...>>::GetOutputPin(const size_t index) const
     {
         if (index >= m_pinWrappers.size())
         {
@@ -149,20 +168,20 @@ namespace Molten::Shader::Visual
     }
     
     template<typename ... TAllowedDataTypes>
-    inline std::vector<Pin*> DescriptorBinding<UniformBuffer<TAllowedDataTypes...>>::GetOutputPins()
+    std::vector<Pin*> DescriptorBinding<UniformBuffer<TAllowedDataTypes...>>::GetOutputPins()
     {
         return CreatePinVector<Pin>();
     }
 
     template<typename ... TAllowedDataTypes>
-    inline std::vector<const Pin*> DescriptorBinding<UniformBuffer<TAllowedDataTypes...>>::GetOutputPins() const
+    std::vector<const Pin*> DescriptorBinding<UniformBuffer<TAllowedDataTypes...>>::GetOutputPins() const
     {
         return CreatePinVector<const Pin>();
     }
     
     template<typename ... TAllowedDataTypes>
     template<typename TDataType>
-    inline OutputPin<TDataType>& DescriptorBinding<UniformBuffer<TAllowedDataTypes...>>::AddPin()
+    OutputPin<TDataType>& DescriptorBinding<UniformBuffer<TAllowedDataTypes...>>::AddPin()
     {
         static_assert(TemplateArgumentsContains<TDataType, TAllowedDataTypes...>(),
             "Provided TDataType is not allowed for this descriptor binding.");
@@ -174,7 +193,7 @@ namespace Molten::Shader::Visual
     }
 
     template<typename ... TAllowedDataTypes>
-    inline void DescriptorBinding<UniformBuffer<TAllowedDataTypes...>>::RemovePin(const size_t index)
+    void DescriptorBinding<UniformBuffer<TAllowedDataTypes...>>::RemovePin(const size_t index)
     {
         if (index >= m_pinWrappers.size())
         {
@@ -188,7 +207,7 @@ namespace Molten::Shader::Visual
     }
 
     template<typename ... TAllowedDataTypes>
-    inline void DescriptorBinding<UniformBuffer<TAllowedDataTypes...>>::RemoveAllPins()
+    void DescriptorBinding<UniformBuffer<TAllowedDataTypes...>>::RemoveAllPins()
     {
         for (auto& pinWrapper : m_pinWrappers)
         {
@@ -199,26 +218,38 @@ namespace Molten::Shader::Visual
     }
 
     template<typename ... TAllowedDataTypes>
-    inline size_t DescriptorBinding<UniformBuffer<TAllowedDataTypes...>>::GetPinCount() const
+    size_t DescriptorBinding<UniformBuffer<TAllowedDataTypes...>>::GetPinCount() const
     {
         return m_pinWrappers.size();
     }
 
     template<typename ... TAllowedDataTypes>
-    inline size_t DescriptorBinding<UniformBuffer<TAllowedDataTypes...>>::GetSizeOf() const
+    size_t DescriptorBinding<UniformBuffer<TAllowedDataTypes...>>::GetSizeOf() const
     {
         return m_sizeOf;
     }
 
     template<typename ... TAllowedDataTypes>
-    inline DescriptorBinding<UniformBuffer<TAllowedDataTypes...>>::~DescriptorBinding()
+    DescriptorBinding<UniformBuffer<TAllowedDataTypes...>>::~DescriptorBinding()
     {
         RemoveAllPins();
     }
 
     template<typename ... TAllowedDataTypes>
+    DescriptorBinding<UniformBuffer<TAllowedDataTypes...>>::DescriptorBinding(
+        Script& script,
+        DescriptorSetBase& set,
+        const uint32_t id
+    ) :
+        DescriptorBindingBase(script, set),
+        m_id(id),
+        m_pinWrappers{},
+        m_sizeOf(0)
+    {}
+
+    template<typename ... TAllowedDataTypes>
     template<typename T>
-    inline std::vector<T*> DescriptorBinding<UniformBuffer<TAllowedDataTypes...>>::CreatePinVector() const
+    std::vector<T*> DescriptorBinding<UniformBuffer<TAllowedDataTypes...>>::CreatePinVector() const
     {
         std::vector<T*> pins(m_pinWrappers.size(), nullptr);
         std::transform(m_pinWrappers.begin(), m_pinWrappers.end(), pins.begin(),

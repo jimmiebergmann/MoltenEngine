@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -32,35 +32,38 @@ namespace Molten::Shader::Visual::Operators
 {
 
     // Addition
-    using AddInt32   = ArithmeticOperator<ArithmeticOperatorType::Addition, int32_t, int32_t, int32_t>;
-    using AddFloat32 = ArithmeticOperator<ArithmeticOperatorType::Addition, float, float, float>;
-    using AddVec2f32 = ArithmeticOperator<ArithmeticOperatorType::Addition, Vector2f32, Vector2f32, Vector2f32>;
-    using AddVec3f32 = ArithmeticOperator<ArithmeticOperatorType::Addition, Vector3f32, Vector3f32, Vector3f32>;
-    using AddVec4f32 = ArithmeticOperator<ArithmeticOperatorType::Addition, Vector4f32, Vector4f32, Vector4f32>;
+    using AddInt32   = ArithmeticOperator<ArithmeticOperatorType::Addition, int32_t>;
+    using AddFloat32 = ArithmeticOperator<ArithmeticOperatorType::Addition, float>;
+    using AddVec2f32 = ArithmeticOperator<ArithmeticOperatorType::Addition, Vector2f32>;
+    using AddVec3f32 = ArithmeticOperator<ArithmeticOperatorType::Addition, Vector3f32>;
+    using AddVec4f32 = ArithmeticOperator<ArithmeticOperatorType::Addition, Vector4f32>;
 
     // Division
-    using DivInt32   = ArithmeticOperator<ArithmeticOperatorType::Division, int32_t, int32_t, int32_t>;
-    using DivFloat32 = ArithmeticOperator<ArithmeticOperatorType::Division, float, float, float>;
+    using DivInt32   = ArithmeticOperator<ArithmeticOperatorType::Division, int32_t>;
+    using DivFloat32 = ArithmeticOperator<ArithmeticOperatorType::Division, float>;
+    using DivVec2f32 = ArithmeticOperator<ArithmeticOperatorType::Division, Vector2f32>;
+    using DivVec3f32 = ArithmeticOperator<ArithmeticOperatorType::Division, Vector3f32>;
+    using DivVec4f32 = ArithmeticOperator<ArithmeticOperatorType::Division, Vector4f32>;
 
     // Multiplication
-    using MultInt32       = ArithmeticOperator<ArithmeticOperatorType::Multiplication, int32_t, int32_t, int32_t>;
-    using MultFloat32     = ArithmeticOperator<ArithmeticOperatorType::Multiplication, float, float, float>;
-    using MultVec2f32     = ArithmeticOperator<ArithmeticOperatorType::Multiplication, Vector2f32, Vector2f32, Vector2f32>;
-    using MultVec3f32     = ArithmeticOperator<ArithmeticOperatorType::Multiplication, Vector3f32, Vector3f32, Vector3f32>;
-    using MultVec4f32     = ArithmeticOperator<ArithmeticOperatorType::Multiplication, Vector4f32, Vector4f32, Vector4f32>;
-    using MultMat4f32     = ArithmeticOperator<ArithmeticOperatorType::Multiplication, Matrix4x4f32, Matrix4x4f32, Matrix4x4f32>;
-    using MultMat4Vec4f32 = ArithmeticOperator<ArithmeticOperatorType::Multiplication, Vector4f32, Matrix4x4f32, Vector4f32>;
+    using MultInt32             = ArithmeticOperator<ArithmeticOperatorType::Multiplication, int32_t>;
+    using MultFloat32           = ArithmeticOperator<ArithmeticOperatorType::Multiplication, float>;
+    using MultVec2f32           = ArithmeticOperator<ArithmeticOperatorType::Multiplication, Vector2f32>;
+    using MultVec3f32           = ArithmeticOperator<ArithmeticOperatorType::Multiplication, Vector3f32>;
+    using MultVec4f32           = ArithmeticOperator<ArithmeticOperatorType::Multiplication, Vector4f32>;
+    using MultMat4f32           = ArithmeticOperator<ArithmeticOperatorType::Multiplication, Matrix4x4f32>;
+    using MultMat4f32Vec4f32    = ArithmeticOperator<ArithmeticOperatorType::Multiplication, Vector4f32, Matrix4x4f32, Vector4f32>;
 
     // Subtraction
-    using SubInt32   = ArithmeticOperator<ArithmeticOperatorType::Subtraction, int32_t, int32_t, int32_t>;
-    using SubFloat32 = ArithmeticOperator<ArithmeticOperatorType::Subtraction, float, float, float>;
-    using SubVec2f32 = ArithmeticOperator<ArithmeticOperatorType::Subtraction, Vector2f32, Vector2f32, Vector2f32>;
-    using SubVec3f32 = ArithmeticOperator<ArithmeticOperatorType::Subtraction, Vector3f32, Vector3f32, Vector3f32>;
-    using SubVec4f32 = ArithmeticOperator<ArithmeticOperatorType::Subtraction, Vector4f32, Vector4f32, Vector4f32>;
+    using SubInt32   = ArithmeticOperator<ArithmeticOperatorType::Subtraction, int32_t>;
+    using SubFloat32 = ArithmeticOperator<ArithmeticOperatorType::Subtraction, float>;
+    using SubVec2f32 = ArithmeticOperator<ArithmeticOperatorType::Subtraction, Vector2f32>;
+    using SubVec3f32 = ArithmeticOperator<ArithmeticOperatorType::Subtraction, Vector3f32>;
+    using SubVec4f32 = ArithmeticOperator<ArithmeticOperatorType::Subtraction, Vector4f32>;
 
 
     /** Type trait for statically checking information of a certain operator type. */
-    template<typename Op>
+    template<typename TOperator>
     struct Trait
     {
         inline static constexpr bool Supported = false; ///< Set to true if Op is an accepted operator node.

@@ -36,14 +36,27 @@ namespace Molten::Test
     }
 
     Benchmarker::Benchmarker(const std::string& description) :
-        m_description(description)
+        m_description(description),
+        m_stopped(false)
     {}
 
     Benchmarker::~Benchmarker()
     {
-        auto time = m_clock.GetTime();       
+        Stop();
+    }
+
+    void Benchmarker::Stop()
+    {
+        if(m_stopped)
+        {
+            return;
+        }
+
+        auto time = m_clock.GetTime();
         auto [convertedTime, convertedUnit] = GetConvertedTime(time);
         PrintInfo("Benchmarked \"" + m_description + "\", took " + std::to_string(convertedTime) + " " + convertedUnit + ".");
+
+        m_stopped = true;
     }
 
     std::pair<double, std::string> Benchmarker::GetConvertedTime(const Time& time)

@@ -38,7 +38,6 @@
 #include "Molten/Renderer/Vulkan/Utility/VulkanPhysicalDeviceFeatures.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanLogicalDevice.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanSwapChain.hpp"
-#include "Molten/Renderer/Shader/Generator/GlslShaderGenerator.hpp"
 #include "Molten/Renderer/Shader/Visual/VisualShaderScript.hpp"
 
 MOLTEN_UNSCOPED_ENUM_BEGIN
@@ -318,7 +317,6 @@ namespace Molten
         bool m_beginDraw;
         uint32_t m_endedDraws;
         VulkanPipeline* m_currentPipeline;
-        Shader::GlslGenerator m_glslGenerator;
         /**@}*/
            
     };

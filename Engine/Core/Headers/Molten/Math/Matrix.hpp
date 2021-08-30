@@ -228,6 +228,12 @@ namespace Molten
         */
         Vector<4, T> operator *(const Vector<4, T>& vector) const;
 
+        /* Compare operators. */
+        /**@{*/
+        bool operator == (const Matrix<4, 4, T>& matrix) const;
+        bool operator != (const Matrix<4, 4, T>& matrix) const;
+        /**@}*/
+
         union
         {        
             T e[Components]; //< Elements of matrix.

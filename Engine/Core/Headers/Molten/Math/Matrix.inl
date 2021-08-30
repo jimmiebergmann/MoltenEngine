@@ -340,4 +340,24 @@ namespace Molten
         };
     }
 
+    template<typename T>
+    bool Matrix<4, 4, T>::operator == (const Matrix<4, 4, T>& matrix) const
+    {
+        return
+            column[0] == matrix.column[0] && 
+            column[1] == matrix.column[1] && 
+            column[2] == matrix.column[2] &&
+            column[3] == matrix.column[3];
+    }
+
+    template<typename T>
+    bool Matrix<4, 4, T>::operator != (const Matrix<4, 4, T>& matrix) const
+    {
+        return
+            column[0] != matrix.column[0] ||
+            column[1] != matrix.column[1] ||
+            column[2] != matrix.column[2] ||
+            column[3] != matrix.column[3];
+    }
+
 }

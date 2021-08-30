@@ -27,6 +27,7 @@
 #include "Molten/System/Semaphore.hpp"
 #include "Molten/System/Clock.hpp"
 #include <thread>
+#include <array>
 
 namespace Molten
 {
@@ -35,30 +36,54 @@ namespace Molten
     {
         {
             Semaphore sem;
-            EXPECT_EQ(sem.GetWaitCount(), size_t(0));
+            EXPECT_EQ(sem.GetWaitCount(), size_t{ 0 });
             sem.NotifyOne();
-            EXPECT_EQ(sem.GetWaitCount(), size_t(0));
+            EXPECT_EQ(sem.GetWaitCount(), size_t{ 0 });
             sem.Wait();
-            EXPECT_EQ(sem.GetWaitCount(), size_t(0));
+            EXPECT_EQ(sem.GetWaitCount(), size_t{ 0 });
         }
     }
     TEST(System, Semaphore_NotifyOne)
     {
         {
             Semaphore sem;
+            std::array<std::thread, 3> threads;
+            std::array<size_t, 3> values = { 0 };
 
-            auto thread = std::thread(
-                [&sem]()
+            for(size_t i = 0; i < threads.size(); i++)
+            {
+                Semaphore startSem;
+                threads[i] = std::thread(
+                    [&sem, &startSem, &values, i]()
                 {
-                    std::this_thread::sleep_for(std::chrono::duration<double>(0.5f));
-                    EXPECT_EQ(sem.GetWaitCount(), size_t(1));
-                    sem.NotifyOne();
+                    startSem.NotifyOne();
+                    sem.Wait();
+                    values[i] = i + 1;
                 });
 
-            sem.Wait();
-            thread.join();
+                startSem.Wait();
+            }
 
-            EXPECT_EQ(sem.GetWaitCount(), size_t(0));
+            std::this_thread::sleep_for(std::chrono::duration<double>(0.1f));
+            EXPECT_EQ(sem.GetWaitCount(), size_t{ 3 });
+            sem.NotifyOne();
+            std::this_thread::sleep_for(std::chrono::duration<double>(0.1f));
+            EXPECT_EQ(sem.GetWaitCount(), size_t{ 2 });
+            sem.NotifyOne();
+            std::this_thread::sleep_for(std::chrono::duration<double>(0.1f));
+            EXPECT_EQ(sem.GetWaitCount(), size_t{ 1 });
+            sem.NotifyOne();
+            std::this_thread::sleep_for(std::chrono::duration<double>(0.1f));
+            EXPECT_EQ(sem.GetWaitCount(), size_t{ 0 });
+
+            for (auto& thread : threads)
+            {
+                thread.join();
+            }
+
+            EXPECT_EQ(values[0], size_t{ 1 });
+            EXPECT_EQ(values[1], size_t{ 2 });
+            EXPECT_EQ(values[2], size_t{ 3 });
         }
     }
     TEST(System, Semaphore_NotifyAll)
@@ -67,7 +92,7 @@ namespace Molten
             Semaphore sem;
 
             const size_t thread_count = 5;
-            bool status[thread_count] = { 0 };
+            bool status[thread_count] = { false };
             std::thread threads[thread_count];
 
             auto func = [&sem](bool & status)
@@ -77,7 +102,7 @@ namespace Molten
             };
 
 
-            EXPECT_EQ(sem.GetWaitCount(), size_t(0));
+            EXPECT_EQ(sem.GetWaitCount(), size_t{ 0 });
             for (size_t i = 0; i < thread_count; i++)
             {
                 threads[i] = std::thread(func, std::ref(status[i]));
@@ -93,7 +118,7 @@ namespace Molten
                 EXPECT_TRUE(status[i]);
             }
 
-            EXPECT_EQ(sem.GetWaitCount(), size_t(0));
+            EXPECT_EQ(sem.GetWaitCount(), size_t{ 0 });
         }
     }
 
@@ -103,7 +128,7 @@ namespace Molten
             Semaphore sem;
             Clock clock;
             sem.WaitFor(Seconds(1));
-            auto time = clock.GetTime();
+            const auto time = clock.GetTime();
             EXPECT_GE(time, Seconds(0.99f));
             EXPECT_LE(time, Seconds(5.0f));
         }

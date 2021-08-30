@@ -23,8 +23,8 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_SHADER_VISUAL_VISUALSHADERFUNCTION_HPP
-#define MOLTEN_CORE_RENDERER_SHADER_VISUAL_VISUALSHADERFUNCTION_HPP
+#ifndef MOLTEN_CORE_RENDERER_SHADER_VISUAL_VISUALSHADERCOMPOSITE_HPP
+#define MOLTEN_CORE_RENDERER_SHADER_VISUAL_VISUALSHADERCOMPOSITE_HPP
 
 #include "Molten/Renderer/Shader/Visual/VisualShaderNode.hpp"
 #include "Molten/Utility/Template.hpp"
@@ -34,60 +34,46 @@
 namespace Molten::Shader::Visual
 {
 
-    /** Enumerator of function types. */
-    enum class FunctionType : uint16_t
+    /** Enumerator of composite types. */
+    enum class CompositeType : uint16_t
     {
-        // Trigonometry
-        Cos,
-        Sin,
-        Tan,
-
-        // Mathematics.
-        Max,
-        Min,
-
-        // Vector.
-        Cross,
-        Dot,
-
-        // Texture
-        Texture1D,
-        Texture2D,
-        Texture3D
+        Vector2f32,
+        Vector3f32,
+        Vector4f32
     };
 
 
-    /** Visual script function node base class. */
-    class MOLTEN_API FunctionBase : public Node
+    /** Visual script composite node base class. */
+    class MOLTEN_API CompositeBase : public Node
     {
 
     public:
 
         /* Deleted copy/move constructor/operators. */
         /**@{*/
-        FunctionBase(const FunctionBase&) = delete;
-        FunctionBase(FunctionBase&&) = delete;
-        FunctionBase& operator = (const FunctionBase&) = delete;
-        FunctionBase& operator = (FunctionBase&&) = delete;
+        CompositeBase(const CompositeBase&) = delete;
+        CompositeBase(CompositeBase&&) = delete;
+        CompositeBase& operator = (const CompositeBase&) = delete;
+        CompositeBase& operator = (CompositeBase&&) = delete;
         /**@}*/
 
         /** Get type of node. */
         [[nodiscard]] NodeType GetType() const override;
 
-        /** Get function type. */
-        [[nodiscard]] virtual FunctionType GetFunctionType() const = 0;
+        /** Get composite type. */
+        [[nodiscard]] virtual CompositeType GetCompositeType() const = 0;
 
     protected:
 
-        explicit FunctionBase(Script& script);
-        ~FunctionBase() override = default;
+        explicit CompositeBase(Script& script);
+        ~CompositeBase() override = default;
 
     };
 
 
-    /** Visual script function node class. */
-    template<FunctionType VFunctionType, typename TOutputType, typename ... TInputTypes>
-    class Function : public FunctionBase
+    /** Visual script composite node class. */
+    template<CompositeType VCompositeType, typename TOutputType, typename ... TInputTypes>
+    class Composite : public CompositeBase
     {
 
     public:
@@ -97,19 +83,19 @@ namespace Molten::Shader::Visual
 
         /* Deleted copy/move constructor/operators. */
         /**@{*/
-        Function(const Function&) = delete;
-        Function(Function&&) = delete;
-        Function& operator = (const Function&) = delete;
-        Function& operator = (Function&&) = delete;
-        /**@}*/     
+        Composite(const Composite&) = delete;
+        Composite(Composite&&) = delete;
+        Composite& operator = (const Composite&) = delete;
+        Composite& operator = (Composite&&) = delete;
+        /**@}*/
 
-        /** Get output pin of function as reference. */
+        /** Get output pin of composite as reference. */
         /**@{*/
         [[nodiscard]] OutputPin<TOutputType>& GetOutput();
         [[nodiscard]] const OutputPin<TOutputType>& GetOutput() const;
         /**@}*/
 
-        /** Get input pins of function as reference. */
+        /** Get input pins of composite as reference. */
         /**@{*/
         template<size_t VIndex>
         [[nodiscard]] InputPin<InputTypeAt<VIndex>>& GetInput();
@@ -117,8 +103,8 @@ namespace Molten::Shader::Visual
         [[nodiscard]] const InputPin<InputTypeAt<VIndex>>& GetInput() const;
         /**@}*/
 
-        /** Get function type. */
-        [[nodiscard]] FunctionType GetFunctionType() const override;
+        /** Get composite type. */
+        [[nodiscard]] CompositeType GetCompositeType() const override;
 
         /** Get number of input pins. */
         [[nodiscard]] size_t GetInputPinCount() const override;
@@ -126,8 +112,7 @@ namespace Molten::Shader::Visual
         /**  Get number of output pins.*/
         [[nodiscard]] size_t GetOutputPinCount() const override;
 
-        /**
-         * Get input pin by index.
+        /** Get input pin by index.
          *
          * @return Pointer of input pin at given index, nullptr if index is >= GetInputPinCount().
          */
@@ -142,8 +127,7 @@ namespace Molten::Shader::Visual
         [[nodiscard]] std::vector<const Pin*> GetInputPins() const override;
         /**@}*/
 
-        /**
-         * Get output pin by index.
+        /** Get output pin by index.
          *
          * @return Pointer of output pin at given index, nullptr if index is >= GetOutputPinCount().
          */
@@ -160,8 +144,8 @@ namespace Molten::Shader::Visual
 
     protected:
 
-        explicit Function(Script& script);
-        ~Function() override = default;
+        explicit Composite(Script& script);
+        ~Composite() override = default;
 
     private:
 
@@ -176,8 +160,9 @@ namespace Molten::Shader::Visual
 
     };
 
+
 }
 
-#include "Molten/Renderer/Shader/Visual/VisualShaderFunction.inl"
+#include "Molten/Renderer/Shader/Visual/VisualShaderComposite.inl"
 
 #endif
