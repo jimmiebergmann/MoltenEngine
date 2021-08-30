@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -28,24 +28,14 @@
 namespace Molten
 {
 
-    template<size_t _Rows, size_t _Columns, typename T>
-    Matrix<_Rows, _Columns, T>::Matrix()
-    {
-    }
+    template<size_t VRows, size_t VColumns, typename T>
+    Matrix<VRows, VColumns, T>::Matrix()
+    {}
 
 
     // Implementations of 3x3 matrix.
     template<typename T>
-    constexpr size_t Matrix<3, 3, T>::Rows;
-
-    template<typename T>
-    constexpr size_t Matrix<3, 3, T>::Columns;
-
-    template<typename T>
-    constexpr size_t Matrix<3, 3, T>::Components;
-
-    template<typename T>
-    inline Matrix<3, 3, T> Matrix<3, 3, T>::Identity()
+    Matrix<3, 3, T> Matrix<3, 3, T>::Identity()
     {
         return { static_cast<T>(1), static_cast<T>(0), static_cast<T>(0),
                  static_cast<T>(0), static_cast<T>(1), static_cast<T>(0),
@@ -53,35 +43,37 @@ namespace Molten
     }
 
     template<typename T>
-    inline Matrix<3, 3, T>::Matrix() :
+    Matrix<3, 3, T>::Matrix() :
         e{ static_cast<T>(0), static_cast<T>(0), static_cast<T>(0),
            static_cast<T>(0), static_cast<T>(0), static_cast<T>(0),
            static_cast<T>(0), static_cast<T>(0), static_cast<T>(0) }
-    { }
+    {}
 
     template<typename T>
-    inline Matrix<3, 3, T>::Matrix(const T value) :
+    Matrix<3, 3, T>::Matrix(const T value) :
         e{ value, value, value,
            value, value, value,
            value, value, value }
-    { }
+    {}
 
     template<typename T>
-    inline Matrix<3, 3, T>::Matrix(const T e1, const T e2, const T e3,
-                                   const T e4, const T e5, const T e6,
-                                   const T e7, const T e8, const T e9) :
+    Matrix<3, 3, T>::Matrix(
+        const T e1, const T e2, const T e3,
+        const T e4, const T e5, const T e6,
+        const T e7, const T e8, const T e9
+    ) :
         e{ e1, e2, e3,
            e4, e5, e6,
            e7, e8, e9 }
-    { }
+    {}
 
     template<typename T>
-    inline Matrix<3, 3, T>::Matrix(const Vector3<T>& column1, const Vector3<T>& column2, const Vector3<T>& column3) :
+    Matrix<3, 3, T>::Matrix(const Vector3<T>& column1, const Vector3<T>& column2, const Vector3<T>& column3) :
         column{ column1, column2, column3 }
-    { }
+    {}
 
     template<typename T>
-    inline Matrix<3, 3, T> Matrix<3, 3, T>::operator *(const Matrix<3, 3, T>& matrix) const
+    Matrix<3, 3, T> Matrix<3, 3, T>::operator *(const Matrix<3, 3, T>& matrix) const
     {
         return
         {
@@ -100,7 +92,7 @@ namespace Molten
     }
 
     template<typename T>
-    inline Matrix<3, 3, T>& Matrix<3, 3, T>::operator *=(const Matrix<3, 3, T>& matrix)
+    Matrix<3, 3, T>& Matrix<3, 3, T>::operator *=(const Matrix<3, 3, T>& matrix)
     {
         (*this) = (*this) * matrix;
         return *this;
@@ -120,16 +112,7 @@ namespace Molten
 
     // Implementations of 4x4 matrix.
     template<typename T>
-    constexpr size_t Matrix<4, 4, T>::Rows;
-
-    template<typename T>
-    constexpr size_t Matrix<4, 4, T>::Columns;
-
-    template<typename T>
-    constexpr size_t Matrix<4, 4, T>::Components;
-
-    template<typename T>
-    inline Matrix<4, 4, T> Matrix<4, 4, T>::Identity()
+    Matrix<4, 4, T> Matrix<4, 4, T>::Identity()
     {
         return { static_cast<T>(1), static_cast<T>(0), static_cast<T>(0), static_cast<T>(0),
                  static_cast<T>(0), static_cast<T>(1), static_cast<T>(0), static_cast<T>(0),
@@ -138,7 +121,7 @@ namespace Molten
     }
 
     template<typename T>
-    inline Matrix<4, 4, T> Matrix<4, 4, T>::LookAtPoint(const Vector3<T>& position, const Vector3<T>& point, const Vector3<T>& up)
+    Matrix<4, 4, T> Matrix<4, 4, T>::LookAtPoint(const Vector3<T>& position, const Vector3<T>& point, const Vector3<T>& up)
     {
         auto normDir = (point - position).Normal();
         auto side = normDir.Cross(up).Normal();
@@ -155,7 +138,7 @@ namespace Molten
     }
 
     template<typename T>
-    inline Matrix<4, 4, T> Matrix<4, 4, T>::LookAtDirection(const Vector3<T>& position, const Vector3<T>& direction, const Vector3<T>& up)
+    Matrix<4, 4, T> Matrix<4, 4, T>::LookAtDirection(const Vector3<T>& position, const Vector3<T>& direction, const Vector3<T>& up)
     {
         auto normDir = direction.Normal();
         auto side = normDir.Cross(up).Normal();
@@ -172,7 +155,7 @@ namespace Molten
     }
 
     template<typename T>
-    inline Matrix<4, 4, T> Matrix<4, 4, T>::Perspective(const Angle fov, const T aspect, const T near, const T far)
+    Matrix<4, 4, T> Matrix<4, 4, T>::Perspective(const Angle fov, const T aspect, const T near, const T far)
     {
         const T tanHalfFov = std::tan(fov.AsRadians<T>() / static_cast<T>(2));
         const T zRange = far - near;
@@ -197,7 +180,7 @@ namespace Molten
     }
 
     template<typename T>
-    inline Matrix<4, 4, T> Matrix<4, 4, T>::Orthographic(const T left, const T right, const T bottom, const T top,
+    Matrix<4, 4, T> Matrix<4, 4, T>::Orthographic(const T left, const T right, const T bottom, const T top,
                                                          const T near, const T far)
     {   
         const T subX = right - left;
@@ -231,7 +214,7 @@ namespace Molten
     }
 
     template<typename T>
-    inline Matrix<4, 4, T>::Matrix() :
+    Matrix<4, 4, T>::Matrix() :
         e{ static_cast<T>(0), static_cast<T>(0), static_cast<T>(0), static_cast<T>(0),
            static_cast<T>(0), static_cast<T>(0), static_cast<T>(0), static_cast<T>(0),
            static_cast<T>(0), static_cast<T>(0), static_cast<T>(0), static_cast<T>(0),
@@ -240,21 +223,20 @@ namespace Molten
     }
 
     template<typename T>
-    inline Matrix<4, 4, T>::Matrix(const T value) :
+    Matrix<4, 4, T>::Matrix(const T value) :
         e{ value, value, value, value,
            value, value, value, value,
            value, value, value, value,
            value, value, value, value }
-    {
-    }
+    {}
 
     template<typename T>
-    inline Matrix<4, 4, T>::Matrix(
-            const T e1,  const T e2,  const T e3,  const T e4,
-            const T e5,  const T e6,  const T e7,  const T e8,
-            const T e9,  const T e10, const T e11, const T e12,
-            const T e13, const T e14, const T e15, const T e16) :
-
+    Matrix<4, 4, T>::Matrix(
+        const T e1,  const T e2,  const T e3,  const T e4,
+        const T e5,  const T e6,  const T e7,  const T e8,
+        const T e9,  const T e10, const T e11, const T e12,
+        const T e13, const T e14, const T e15, const T e16
+    ) :
         e{ e1,  e2,  e3,  e4,
            e5,  e6,  e7,  e8,
            e9,  e10, e11, e12,
@@ -262,13 +244,13 @@ namespace Molten
     {}
 
     template<typename T>
-    inline Matrix<4, 4, T>::Matrix(const Vector4<T>& column1, const Vector4<T>& column2,
+    Matrix<4, 4, T>::Matrix(const Vector4<T>& column1, const Vector4<T>& column2,
                                    const Vector4<T>& column3, const Vector4<T>& column4) :
         column{ column1, column2, column3, column4 }
     {}
 
     template<typename T>
-    inline void Matrix<4, 4, T>::Translate(const Vector3<T>& translation)
+    void Matrix<4, 4, T>::Translate(const Vector3<T>& translation)
     {
         Matrix<4, 4, T> trans =
         {
@@ -281,7 +263,7 @@ namespace Molten
     }
 
     template<typename T>
-    inline void Matrix<4, 4, T>::Scale(const Vector3<T>& scale)
+    void Matrix<4, 4, T>::Scale(const Vector3<T>& scale)
     {
         Matrix<4, 4, T> trans =
         {
@@ -294,7 +276,7 @@ namespace Molten
     }
 
     template<typename T>
-    inline Matrix<4, 4, T> Matrix<4, 4, T>::operator *(const Matrix<4, 4, T>& matrix) const
+    Matrix<4, 4, T> Matrix<4, 4, T>::operator *(const Matrix<4, 4, T>& matrix) const
     {
         return
         {
@@ -321,7 +303,7 @@ namespace Molten
     }
 
     template<typename T>
-    inline Matrix<4, 4, T>& Matrix<4, 4, T>::operator *=(const Matrix<4, 4, T>& matrix)
+    Matrix<4, 4, T>& Matrix<4, 4, T>::operator *=(const Matrix<4, 4, T>& matrix)
     {
         (*this) = (*this) * matrix;
         return *this;
@@ -329,7 +311,7 @@ namespace Molten
 
 
     template<typename T>
-    inline Vector<4, T> Matrix<4, 4, T>::operator *(const Vector<4, T>& vector) const
+    Vector<4, T> Matrix<4, 4, T>::operator *(const Vector<4, T>& vector) const
     {
         return
         {

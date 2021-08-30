@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -38,33 +38,33 @@ namespace Molten
             EXPECT_TRUE((std::is_same<Matrix4x4f64::Type, double>::value));
         }
         {
-            EXPECT_EQ(Matrix4x4<int32_t>::Rows, size_t(4));
-            EXPECT_EQ(Matrix4x4<int32_t>::Columns, size_t(4));
-            EXPECT_EQ(Matrix4x4<int32_t>::Components, size_t(16));
+            EXPECT_EQ(Matrix4x4<int32_t>::Rows, size_t{ 4 });
+            EXPECT_EQ(Matrix4x4<int32_t>::Columns, size_t{ 4 });
+            EXPECT_EQ(Matrix4x4<int32_t>::Components, size_t{ 16 });
 
-            EXPECT_EQ(Matrix4x4i32::Rows, size_t(4));
-            EXPECT_EQ(Matrix4x4i32::Columns, size_t(4));
-            EXPECT_EQ(Matrix4x4i32::Components, size_t(16));
+            EXPECT_EQ(Matrix4x4i32::Rows, size_t{ 4 });
+            EXPECT_EQ(Matrix4x4i32::Columns, size_t{ 4 });
+            EXPECT_EQ(Matrix4x4i32::Components, size_t{ 16 });
 
-            EXPECT_EQ(Matrix4x4i64::Rows, size_t(4));
-            EXPECT_EQ(Matrix4x4i64::Columns, size_t(4));
-            EXPECT_EQ(Matrix4x4i64::Components, size_t(16));
+            EXPECT_EQ(Matrix4x4i64::Rows, size_t{ 4 });
+            EXPECT_EQ(Matrix4x4i64::Columns, size_t{ 4 });
+            EXPECT_EQ(Matrix4x4i64::Components, size_t{ 16 });
 
-            EXPECT_EQ(Matrix4x4f32::Rows, size_t(4));
-            EXPECT_EQ(Matrix4x4f32::Columns, size_t(4));
-            EXPECT_EQ(Matrix4x4f32::Components, size_t(16));
+            EXPECT_EQ(Matrix4x4f32::Rows, size_t{ 4 });
+            EXPECT_EQ(Matrix4x4f32::Columns, size_t{ 4 });
+            EXPECT_EQ(Matrix4x4f32::Components, size_t{ 16 });
 
-            EXPECT_EQ(Matrix4x4f64::Rows, size_t(4));
-            EXPECT_EQ(Matrix4x4f64::Columns, size_t(4));
-            EXPECT_EQ(Matrix4x4f64::Components, size_t(16));
+            EXPECT_EQ(Matrix4x4f64::Rows, size_t{ 4 });
+            EXPECT_EQ(Matrix4x4f64::Columns, size_t{ 4 });
+            EXPECT_EQ(Matrix4x4f64::Components, size_t{ 16 });
         }
         {
             using sizeofType = decltype(sizeof(int32_t));
 
-            EXPECT_EQ(sizeof(Matrix4x4i32), sizeofType(64));
-            EXPECT_EQ(sizeof(Matrix4x4i64), sizeofType(128));
-            EXPECT_EQ(sizeof(Matrix4x4f32), sizeofType(64));
-            EXPECT_EQ(sizeof(Matrix4x4f64), sizeofType(128));
+            EXPECT_EQ(sizeof(Matrix4x4i32), sizeofType{ 64 });
+            EXPECT_EQ(sizeof(Matrix4x4i64), sizeofType{ 128 });
+            EXPECT_EQ(sizeof(Matrix4x4f32), sizeofType{ 64 });
+            EXPECT_EQ(sizeof(Matrix4x4f64), sizeofType{ 128 });
         }
     }
 
@@ -84,9 +84,9 @@ namespace Molten
             for (int32_t y = 0; y < rows; y++)
             {
                 int32_t i = (x * rows) + y;
-                EXPECT_EQ(matrix.e[i], static_cast<int32_t>(i));
-                EXPECT_EQ(matrix.column[x][y], static_cast<int32_t>(i));
-                EXPECT_EQ(matrix.column[x].c[y], static_cast<int32_t>(i));
+                EXPECT_EQ(matrix.e[i], i);
+                EXPECT_EQ(matrix.column[x][y], i);
+                EXPECT_EQ(matrix.column[x].c[y], i);
             }
         }
         
@@ -95,120 +95,120 @@ namespace Molten
     TEST(Math, Matrix4x4)
     {
         {
-            Matrix4x4i32 mat(
+            const Matrix4x4i32 mat(
                 1, 2, 3, 4,
                 5, 6, 7, 8,
                 9, 10, 11, 12,
                 13, 14, 15, 16);
 
-            EXPECT_EQ(mat.e[0], int32_t(1));
-            EXPECT_EQ(mat.e[1], int32_t(2));
-            EXPECT_EQ(mat.e[2], int32_t(3));
-            EXPECT_EQ(mat.e[3], int32_t(4));
-            EXPECT_EQ(mat.e[4], int32_t(5));
-            EXPECT_EQ(mat.e[5], int32_t(6));
-            EXPECT_EQ(mat.e[6], int32_t(7));
-            EXPECT_EQ(mat.e[7], int32_t(8));
-            EXPECT_EQ(mat.e[8], int32_t(9));
-            EXPECT_EQ(mat.e[9], int32_t(10));
-            EXPECT_EQ(mat.e[10], int32_t(11));
-            EXPECT_EQ(mat.e[11], int32_t(12));
-            EXPECT_EQ(mat.e[12], int32_t(13));
-            EXPECT_EQ(mat.e[13], int32_t(14));
-            EXPECT_EQ(mat.e[14], int32_t(15));
-            EXPECT_EQ(mat.e[15], int32_t(16));
+            EXPECT_EQ(mat.e[0], int32_t{ 1 });
+            EXPECT_EQ(mat.e[1], int32_t{ 2 });
+            EXPECT_EQ(mat.e[2], int32_t{ 3 });
+            EXPECT_EQ(mat.e[3], int32_t{ 4 });
+            EXPECT_EQ(mat.e[4], int32_t{ 5 });
+            EXPECT_EQ(mat.e[5], int32_t{ 6 });
+            EXPECT_EQ(mat.e[6], int32_t{ 7 });
+            EXPECT_EQ(mat.e[7], int32_t{ 8 });
+            EXPECT_EQ(mat.e[8], int32_t{ 9 });
+            EXPECT_EQ(mat.e[9], int32_t{ 10 });
+            EXPECT_EQ(mat.e[10], int32_t{ 11 });
+            EXPECT_EQ(mat.e[11], int32_t{ 12 });
+            EXPECT_EQ(mat.e[12], int32_t{ 13 });
+            EXPECT_EQ(mat.e[13], int32_t{ 14 });
+            EXPECT_EQ(mat.e[14], int32_t{ 15 });
+            EXPECT_EQ(mat.e[15], int32_t{ 16 });
 
-            EXPECT_EQ(mat.column[0][0], int32_t(1));
-            EXPECT_EQ(mat.column[0][1], int32_t(2));
-            EXPECT_EQ(mat.column[0][2], int32_t(3));
-            EXPECT_EQ(mat.column[0][3], int32_t(4));
-            EXPECT_EQ(mat.column[1][0], int32_t(5));
-            EXPECT_EQ(mat.column[1][1], int32_t(6));
-            EXPECT_EQ(mat.column[1][2], int32_t(7));
-            EXPECT_EQ(mat.column[1][3], int32_t(8));
-            EXPECT_EQ(mat.column[2][0], int32_t(9));
-            EXPECT_EQ(mat.column[2][1], int32_t(10));
-            EXPECT_EQ(mat.column[2][2], int32_t(11));
-            EXPECT_EQ(mat.column[2][3], int32_t(12));
-            EXPECT_EQ(mat.column[3][0], int32_t(13));
-            EXPECT_EQ(mat.column[3][1], int32_t(14));
-            EXPECT_EQ(mat.column[3][2], int32_t(15));
-            EXPECT_EQ(mat.column[3][3], int32_t(16));
+            EXPECT_EQ(mat.column[0][0], int32_t{ 1 });
+            EXPECT_EQ(mat.column[0][1], int32_t{ 2 });
+            EXPECT_EQ(mat.column[0][2], int32_t{ 3 });
+            EXPECT_EQ(mat.column[0][3], int32_t{ 4 });
+            EXPECT_EQ(mat.column[1][0], int32_t{ 5 });
+            EXPECT_EQ(mat.column[1][1], int32_t{ 6 });
+            EXPECT_EQ(mat.column[1][2], int32_t{ 7 });
+            EXPECT_EQ(mat.column[1][3], int32_t{ 8 });
+            EXPECT_EQ(mat.column[2][0], int32_t{ 9 });
+            EXPECT_EQ(mat.column[2][1], int32_t{ 10 });
+            EXPECT_EQ(mat.column[2][2], int32_t{ 11 });
+            EXPECT_EQ(mat.column[2][3], int32_t{ 12 });
+            EXPECT_EQ(mat.column[3][0], int32_t{ 13 });
+            EXPECT_EQ(mat.column[3][1], int32_t{ 14 });
+            EXPECT_EQ(mat.column[3][2], int32_t{ 15 });
+            EXPECT_EQ(mat.column[3][3], int32_t{ 16 });
 
-            EXPECT_EQ(mat.column[0].x, int32_t(1));
-            EXPECT_EQ(mat.column[0].y, int32_t(2));
-            EXPECT_EQ(mat.column[0].z, int32_t(3));
-            EXPECT_EQ(mat.column[0].w, int32_t(4));
-            EXPECT_EQ(mat.column[1].x, int32_t(5));
-            EXPECT_EQ(mat.column[1].y, int32_t(6));
-            EXPECT_EQ(mat.column[1].z, int32_t(7));
-            EXPECT_EQ(mat.column[1].w, int32_t(8));
-            EXPECT_EQ(mat.column[2].x, int32_t(9));
-            EXPECT_EQ(mat.column[2].y, int32_t(10));
-            EXPECT_EQ(mat.column[2].z, int32_t(11));
-            EXPECT_EQ(mat.column[2].w, int32_t(12));
-            EXPECT_EQ(mat.column[3].x, int32_t(13));
-            EXPECT_EQ(mat.column[3].y, int32_t(14));
-            EXPECT_EQ(mat.column[3].z, int32_t(15));
-            EXPECT_EQ(mat.column[3].w, int32_t(16));
+            EXPECT_EQ(mat.column[0].x, int32_t{ 1 });
+            EXPECT_EQ(mat.column[0].y, int32_t{ 2 });
+            EXPECT_EQ(mat.column[0].z, int32_t{ 3 });
+            EXPECT_EQ(mat.column[0].w, int32_t{ 4 });
+            EXPECT_EQ(mat.column[1].x, int32_t{ 5 });
+            EXPECT_EQ(mat.column[1].y, int32_t{ 6 });
+            EXPECT_EQ(mat.column[1].z, int32_t{ 7 });
+            EXPECT_EQ(mat.column[1].w, int32_t{ 8 });
+            EXPECT_EQ(mat.column[2].x, int32_t{ 9 });
+            EXPECT_EQ(mat.column[2].y, int32_t{ 10 });
+            EXPECT_EQ(mat.column[2].z, int32_t{ 11 });
+            EXPECT_EQ(mat.column[2].w, int32_t{ 12 });
+            EXPECT_EQ(mat.column[3].x, int32_t{ 13 });
+            EXPECT_EQ(mat.column[3].y, int32_t{ 14 });
+            EXPECT_EQ(mat.column[3].z, int32_t{ 15 });
+            EXPECT_EQ(mat.column[3].w, int32_t{ 16 });
         }
         {
-            Matrix4x4f32 mat(
+            const Matrix4x4f32 mat(
                 Vector4f32(1, 2, 3, 4),
                 Vector4f32(5, 6, 7, 8),
                 Vector4f32(9, 10, 11, 12),
                 Vector4f32(13, 14, 15, 16));
 
-            EXPECT_EQ(mat.e[0], int32_t(1));
-            EXPECT_EQ(mat.e[1], int32_t(2));
-            EXPECT_EQ(mat.e[2], int32_t(3));
-            EXPECT_EQ(mat.e[3], int32_t(4));
-            EXPECT_EQ(mat.e[4], int32_t(5));
-            EXPECT_EQ(mat.e[5], int32_t(6));
-            EXPECT_EQ(mat.e[6], int32_t(7));
-            EXPECT_EQ(mat.e[7], int32_t(8));
-            EXPECT_EQ(mat.e[8], int32_t(9));
-            EXPECT_EQ(mat.e[9], int32_t(10));
-            EXPECT_EQ(mat.e[10], int32_t(11));
-            EXPECT_EQ(mat.e[11], int32_t(12));
-            EXPECT_EQ(mat.e[12], int32_t(13));
-            EXPECT_EQ(mat.e[13], int32_t(14));
-            EXPECT_EQ(mat.e[14], int32_t(15));
-            EXPECT_EQ(mat.e[15], int32_t(16));
+            EXPECT_EQ(mat.e[0], int32_t{ 1 });
+            EXPECT_EQ(mat.e[1], int32_t{ 2 });
+            EXPECT_EQ(mat.e[2], int32_t{ 3 });
+            EXPECT_EQ(mat.e[3], int32_t{ 4 });
+            EXPECT_EQ(mat.e[4], int32_t{ 5 });
+            EXPECT_EQ(mat.e[5], int32_t{ 6 });
+            EXPECT_EQ(mat.e[6], int32_t{ 7 });
+            EXPECT_EQ(mat.e[7], int32_t{ 8 });
+            EXPECT_EQ(mat.e[8], int32_t{ 9 });
+            EXPECT_EQ(mat.e[9], int32_t{ 10 });
+            EXPECT_EQ(mat.e[10], int32_t{ 11 });
+            EXPECT_EQ(mat.e[11], int32_t{ 12 });
+            EXPECT_EQ(mat.e[12], int32_t{ 13 });
+            EXPECT_EQ(mat.e[13], int32_t{ 14 });
+            EXPECT_EQ(mat.e[14], int32_t{ 15 });
+            EXPECT_EQ(mat.e[15], int32_t{ 16 });
 
-            EXPECT_EQ(mat.column[0][0], int32_t(1));
-            EXPECT_EQ(mat.column[0][1], int32_t(2));
-            EXPECT_EQ(mat.column[0][2], int32_t(3));
-            EXPECT_EQ(mat.column[0][3], int32_t(4));
-            EXPECT_EQ(mat.column[1][0], int32_t(5));
-            EXPECT_EQ(mat.column[1][1], int32_t(6));
-            EXPECT_EQ(mat.column[1][2], int32_t(7));
-            EXPECT_EQ(mat.column[1][3], int32_t(8));
-            EXPECT_EQ(mat.column[2][0], int32_t(9));
-            EXPECT_EQ(mat.column[2][1], int32_t(10));
-            EXPECT_EQ(mat.column[2][2], int32_t(11));
-            EXPECT_EQ(mat.column[2][3], int32_t(12));
-            EXPECT_EQ(mat.column[3][0], int32_t(13));
-            EXPECT_EQ(mat.column[3][1], int32_t(14));
-            EXPECT_EQ(mat.column[3][2], int32_t(15));
-            EXPECT_EQ(mat.column[3][3], int32_t(16));
+            EXPECT_EQ(mat.column[0][0], int32_t{ 1 });
+            EXPECT_EQ(mat.column[0][1], int32_t{ 2 });
+            EXPECT_EQ(mat.column[0][2], int32_t{ 3 });
+            EXPECT_EQ(mat.column[0][3], int32_t{ 4 });
+            EXPECT_EQ(mat.column[1][0], int32_t{ 5 });
+            EXPECT_EQ(mat.column[1][1], int32_t{ 6 });
+            EXPECT_EQ(mat.column[1][2], int32_t{ 7 });
+            EXPECT_EQ(mat.column[1][3], int32_t{ 8 });
+            EXPECT_EQ(mat.column[2][0], int32_t{ 9 });
+            EXPECT_EQ(mat.column[2][1], int32_t{ 10 });
+            EXPECT_EQ(mat.column[2][2], int32_t{ 11 });
+            EXPECT_EQ(mat.column[2][3], int32_t{ 12 });
+            EXPECT_EQ(mat.column[3][0], int32_t{ 13 });
+            EXPECT_EQ(mat.column[3][1], int32_t{ 14 });
+            EXPECT_EQ(mat.column[3][2], int32_t{ 15 });
+            EXPECT_EQ(mat.column[3][3], int32_t{ 16 });
 
-            EXPECT_EQ(mat.column[0].x, int32_t(1));
-            EXPECT_EQ(mat.column[0].y, int32_t(2));
-            EXPECT_EQ(mat.column[0].z, int32_t(3));
-            EXPECT_EQ(mat.column[0].w, int32_t(4));
-            EXPECT_EQ(mat.column[1].x, int32_t(5));
-            EXPECT_EQ(mat.column[1].y, int32_t(6));
-            EXPECT_EQ(mat.column[1].z, int32_t(7));
-            EXPECT_EQ(mat.column[1].w, int32_t(8));
-            EXPECT_EQ(mat.column[2].x, int32_t(9));
-            EXPECT_EQ(mat.column[2].y, int32_t(10));
-            EXPECT_EQ(mat.column[2].z, int32_t(11));
-            EXPECT_EQ(mat.column[2].w, int32_t(12));
-            EXPECT_EQ(mat.column[3].x, int32_t(13));
-            EXPECT_EQ(mat.column[3].y, int32_t(14));
-            EXPECT_EQ(mat.column[3].z, int32_t(15));
-            EXPECT_EQ(mat.column[3].w, int32_t(16));
+            EXPECT_EQ(mat.column[0].x, int32_t{ 1 });
+            EXPECT_EQ(mat.column[0].y, int32_t{ 2 });
+            EXPECT_EQ(mat.column[0].z, int32_t{ 3 });
+            EXPECT_EQ(mat.column[0].w, int32_t{ 4 });
+            EXPECT_EQ(mat.column[1].x, int32_t{ 5 });
+            EXPECT_EQ(mat.column[1].y, int32_t{ 6 });
+            EXPECT_EQ(mat.column[1].z, int32_t{ 7 });
+            EXPECT_EQ(mat.column[1].w, int32_t{ 8 });
+            EXPECT_EQ(mat.column[2].x, int32_t{ 9 });
+            EXPECT_EQ(mat.column[2].y, int32_t{ 10 });
+            EXPECT_EQ(mat.column[2].z, int32_t{ 11 });
+            EXPECT_EQ(mat.column[2].w, int32_t{ 12 });
+            EXPECT_EQ(mat.column[3].x, int32_t{ 13 });
+            EXPECT_EQ(mat.column[3].y, int32_t{ 14 });
+            EXPECT_EQ(mat.column[3].z, int32_t{ 15 });
+            EXPECT_EQ(mat.column[3].w, int32_t{ 16 });
         }
     }
 
@@ -233,13 +233,13 @@ namespace Molten
     TEST(Math, Matrix4x4_Mult)
     {
         {
-            Matrix4x4i32 mat1(
+            const Matrix4x4i32 mat1(
                 Vector4i32(1, 2, 3, 4),
                 Vector4i32(5, 6, 7, 8),
                 Vector4i32(9, 10, 11, 12),
                 Vector4i32(13, 14, 15, 16));
 
-            Matrix4x4i32 mat2(
+            const Matrix4x4i32 mat2(
                 Vector4i32(17, 18, 19, 20),
                 Vector4i32(21, 22, 23, 24),
                 Vector4i32(25, 26, 27, 28),
@@ -247,22 +247,22 @@ namespace Molten
 
             auto mat3 = mat1 * mat2;
 
-            EXPECT_EQ(mat3.e[0], int32_t(538));
-            EXPECT_EQ(mat3.e[1], int32_t(612));
-            EXPECT_EQ(mat3.e[2], int32_t(686));
-            EXPECT_EQ(mat3.e[3], int32_t(760));
-            EXPECT_EQ(mat3.e[4], int32_t(650));
-            EXPECT_EQ(mat3.e[5], int32_t(740));
-            EXPECT_EQ(mat3.e[6], int32_t(830));
-            EXPECT_EQ(mat3.e[7], int32_t(920));
-            EXPECT_EQ(mat3.e[8], int32_t(762));
-            EXPECT_EQ(mat3.e[9], int32_t(868));
-            EXPECT_EQ(mat3.e[10], int32_t(974));
-            EXPECT_EQ(mat3.e[11], int32_t(1080));
-            EXPECT_EQ(mat3.e[12], int32_t(874));
-            EXPECT_EQ(mat3.e[13], int32_t(996));
-            EXPECT_EQ(mat3.e[14], int32_t(1118));
-            EXPECT_EQ(mat3.e[15], int32_t(1240));
+            EXPECT_EQ(mat3.e[0], int32_t{ 538 });
+            EXPECT_EQ(mat3.e[1], int32_t{ 612 });
+            EXPECT_EQ(mat3.e[2], int32_t{ 686 });
+            EXPECT_EQ(mat3.e[3], int32_t{ 760 });
+            EXPECT_EQ(mat3.e[4], int32_t{ 650 });
+            EXPECT_EQ(mat3.e[5], int32_t{ 740 });
+            EXPECT_EQ(mat3.e[6], int32_t{ 830 });
+            EXPECT_EQ(mat3.e[7], int32_t{ 920 });
+            EXPECT_EQ(mat3.e[8], int32_t{ 762 });
+            EXPECT_EQ(mat3.e[9], int32_t{ 868 });
+            EXPECT_EQ(mat3.e[10], int32_t{ 974 });
+            EXPECT_EQ(mat3.e[11], int32_t{ 1080 });
+            EXPECT_EQ(mat3.e[12], int32_t{ 874 });
+            EXPECT_EQ(mat3.e[13], int32_t{ 996 });
+            EXPECT_EQ(mat3.e[14], int32_t{ 1118 });
+            EXPECT_EQ(mat3.e[15], int32_t{ 1240 });
         }
         {
             Matrix4x4i32 mat1(
@@ -271,7 +271,7 @@ namespace Molten
                 Vector4i32(9, 10, 11, 12),
                 Vector4i32(13, 14, 15, 16));
 
-            Matrix4x4i32 mat2(
+            const Matrix4x4i32 mat2(
                 Vector4i32(17, 18, 19, 20),
                 Vector4i32(21, 22, 23, 24),
                 Vector4i32(25, 26, 27, 28),
@@ -279,25 +279,25 @@ namespace Molten
 
             mat1 *= mat2;
 
-            EXPECT_EQ(mat1.e[0], int32_t(538));
-            EXPECT_EQ(mat1.e[1], int32_t(612));
-            EXPECT_EQ(mat1.e[2], int32_t(686));
-            EXPECT_EQ(mat1.e[3], int32_t(760));
-            EXPECT_EQ(mat1.e[4], int32_t(650));
-            EXPECT_EQ(mat1.e[5], int32_t(740));
-            EXPECT_EQ(mat1.e[6], int32_t(830));
-            EXPECT_EQ(mat1.e[7], int32_t(920));
-            EXPECT_EQ(mat1.e[8], int32_t(762));
-            EXPECT_EQ(mat1.e[9], int32_t(868));
-            EXPECT_EQ(mat1.e[10], int32_t(974));
-            EXPECT_EQ(mat1.e[11], int32_t(1080));
-            EXPECT_EQ(mat1.e[12], int32_t(874));
-            EXPECT_EQ(mat1.e[13], int32_t(996));
-            EXPECT_EQ(mat1.e[14], int32_t(1118));
-            EXPECT_EQ(mat1.e[15], int32_t(1240));
+            EXPECT_EQ(mat1.e[0], int32_t{ 538 });
+            EXPECT_EQ(mat1.e[1], int32_t{ 612 });
+            EXPECT_EQ(mat1.e[2], int32_t{ 686 });
+            EXPECT_EQ(mat1.e[3], int32_t{ 760 });
+            EXPECT_EQ(mat1.e[4], int32_t{ 650 });
+            EXPECT_EQ(mat1.e[5], int32_t{ 740 });
+            EXPECT_EQ(mat1.e[6], int32_t{ 830 });
+            EXPECT_EQ(mat1.e[7], int32_t{ 920 });
+            EXPECT_EQ(mat1.e[8], int32_t{ 762 });
+            EXPECT_EQ(mat1.e[9], int32_t{ 868 });
+            EXPECT_EQ(mat1.e[10], int32_t{ 974 });
+            EXPECT_EQ(mat1.e[11], int32_t{ 1080 });
+            EXPECT_EQ(mat1.e[12], int32_t{ 874 });
+            EXPECT_EQ(mat1.e[13], int32_t{ 996 });
+            EXPECT_EQ(mat1.e[14], int32_t{ 1118 });
+            EXPECT_EQ(mat1.e[15], int32_t{ 1240 });
         }       
         {
-            Matrix4x4i32 mat1(
+            const Matrix4x4i32 mat1(
                 Vector4i32(1, 2, 3, 4),
                 Vector4i32(5, 6, 7, 8),
                 Vector4i32(9, 10, 11, 12),
@@ -305,12 +305,12 @@ namespace Molten
 
             Vector4i32 vec1(17, 18, 19, 20);
 
-            auto vec2 = mat1 * vec1;
+            const auto vec2 = mat1 * vec1;
 
-            EXPECT_EQ(vec2.c[0], int32_t(190));
-            EXPECT_EQ(vec2.c[1], int32_t(486));
-            EXPECT_EQ(vec2.c[2], int32_t(782));
-            EXPECT_EQ(vec2.c[3], int32_t(1078));
+            EXPECT_EQ(vec2.c[0], int32_t{ 190 });
+            EXPECT_EQ(vec2.c[1], int32_t{ 486 });
+            EXPECT_EQ(vec2.c[2], int32_t{ 782 });
+            EXPECT_EQ(vec2.c[3], int32_t{ 1078 });
         }
     }
 
@@ -324,25 +324,25 @@ namespace Molten
 
         mat1.Translate({ 10, 11, 12 });
 
-        EXPECT_EQ(mat1.e[0], int32_t(1));
-        EXPECT_EQ(mat1.e[1], int32_t(0));
-        EXPECT_EQ(mat1.e[2], int32_t(0));
-        EXPECT_EQ(mat1.e[3], int32_t(0));
+        EXPECT_EQ(mat1.e[0], int32_t{ 1 });
+        EXPECT_EQ(mat1.e[1], int32_t{ 0 });
+        EXPECT_EQ(mat1.e[2], int32_t{ 0 });
+        EXPECT_EQ(mat1.e[3], int32_t{ 0 });
 
-        EXPECT_EQ(mat1.e[4], int32_t(0));
-        EXPECT_EQ(mat1.e[5], int32_t(1));
-        EXPECT_EQ(mat1.e[6], int32_t(0));
-        EXPECT_EQ(mat1.e[7], int32_t(0));
+        EXPECT_EQ(mat1.e[4], int32_t{ 0 });
+        EXPECT_EQ(mat1.e[5], int32_t{ 1 });
+        EXPECT_EQ(mat1.e[6], int32_t{ 0 });
+        EXPECT_EQ(mat1.e[7], int32_t{ 0 });
 
-        EXPECT_EQ(mat1.e[8], int32_t(0));
-        EXPECT_EQ(mat1.e[9], int32_t(0));
-        EXPECT_EQ(mat1.e[10], int32_t(1));
-        EXPECT_EQ(mat1.e[11], int32_t(0));
+        EXPECT_EQ(mat1.e[8], int32_t{ 0 });
+        EXPECT_EQ(mat1.e[9], int32_t{ 0 });
+        EXPECT_EQ(mat1.e[10], int32_t{ 1 });
+        EXPECT_EQ(mat1.e[11], int32_t{ 0 });
 
-        EXPECT_EQ(mat1.e[12], int32_t(14));
-        EXPECT_EQ(mat1.e[13], int32_t(19));
-        EXPECT_EQ(mat1.e[14], int32_t(24));
-        EXPECT_EQ(mat1.e[15], int32_t(1));
+        EXPECT_EQ(mat1.e[12], int32_t{ 14 });
+        EXPECT_EQ(mat1.e[13], int32_t{ 19 });
+        EXPECT_EQ(mat1.e[14], int32_t{ 24 });
+        EXPECT_EQ(mat1.e[15], int32_t{ 1 });
     }
 
     TEST(Math, Matrix4x4_Scale)
@@ -355,25 +355,25 @@ namespace Molten
 
         mat1.Scale({ 5, 6, 7 });
 
-        EXPECT_EQ(mat1.e[0], int32_t(10));
-        EXPECT_EQ(mat1.e[1], int32_t(0));
-        EXPECT_EQ(mat1.e[2], int32_t(0));
-        EXPECT_EQ(mat1.e[3], int32_t(0));
+        EXPECT_EQ(mat1.e[0], int32_t{ 10 });
+        EXPECT_EQ(mat1.e[1], int32_t{ 0 });
+        EXPECT_EQ(mat1.e[2], int32_t{ 0 });
+        EXPECT_EQ(mat1.e[3], int32_t{ 0 });
 
-        EXPECT_EQ(mat1.e[4], int32_t(0));
-        EXPECT_EQ(mat1.e[5], int32_t(18));
-        EXPECT_EQ(mat1.e[6], int32_t(0));
-        EXPECT_EQ(mat1.e[7], int32_t(0));
+        EXPECT_EQ(mat1.e[4], int32_t{ 0 });
+        EXPECT_EQ(mat1.e[5], int32_t{ 18 });
+        EXPECT_EQ(mat1.e[6], int32_t{ 0 });
+        EXPECT_EQ(mat1.e[7], int32_t{ 0 });
 
-        EXPECT_EQ(mat1.e[8], int32_t(0));
-        EXPECT_EQ(mat1.e[9], int32_t(0));
-        EXPECT_EQ(mat1.e[10], int32_t(28));
-        EXPECT_EQ(mat1.e[11], int32_t(0));
+        EXPECT_EQ(mat1.e[8], int32_t{ 0 });
+        EXPECT_EQ(mat1.e[9], int32_t{ 0 });
+        EXPECT_EQ(mat1.e[10], int32_t{ 28 });
+        EXPECT_EQ(mat1.e[11], int32_t{ 0 });
 
-        EXPECT_EQ(mat1.e[12], int32_t(0));
-        EXPECT_EQ(mat1.e[13], int32_t(0));
-        EXPECT_EQ(mat1.e[14], int32_t(0));
-        EXPECT_EQ(mat1.e[15], int32_t(1));
+        EXPECT_EQ(mat1.e[12], int32_t{ 0 });
+        EXPECT_EQ(mat1.e[13], int32_t{ 0 });
+        EXPECT_EQ(mat1.e[14], int32_t{ 0 });
+        EXPECT_EQ(mat1.e[15], int32_t{ 1 });
     }
 
 }
