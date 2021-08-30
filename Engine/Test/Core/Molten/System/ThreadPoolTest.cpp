@@ -63,7 +63,7 @@ namespace Molten
 
         for (size_t i = 0; i < values.size(); i++)
         {
-            EXPECT_EQ(values[i], i + 1);
+            EXPECT_EQ(values[i], size_t{ i + 1 });
         }
     }
 
@@ -100,7 +100,7 @@ namespace Molten
 
             for (size_t i = 0; i < values.size(); i++)
             {
-                EXPECT_EQ(values[i], i + 1);
+                EXPECT_EQ(values[i], size_t{ i + 1 });
             }
         }    
         { // Set value and future.
@@ -121,8 +121,8 @@ namespace Molten
 
             for (size_t i = 0; i < values.size(); i++)
             {
-                EXPECT_EQ(values[i].second.get(), i + 1);
-                EXPECT_EQ(values[i].first, i + 1);
+                EXPECT_EQ(values[i].second.get(), size_t{ i + 1 });
+                EXPECT_EQ(values[i].first, size_t{ i + 1 });
             }
         }
         { // Non-copyable but movable future type.
@@ -199,7 +199,7 @@ namespace Molten
             semResult1Wait.NotifyOne();
             tryResult1.value().wait();
 
-            std::this_thread::sleep_for(std::chrono::duration<double>(0.5f));
+            std::this_thread::sleep_for(std::chrono::duration<double>(0.5));
 
             auto tryResult3 = pool.TryExecute([&]()
             {
@@ -209,9 +209,9 @@ namespace Molten
             ASSERT_TRUE(tryResult3.has_value());
             tryResult3.value().wait();
 
-            EXPECT_EQ(values[0], 1);
-            EXPECT_EQ(values[1], 0);
-            EXPECT_EQ(values[2], 3);
+            EXPECT_EQ(values[0], size_t{ 1 });
+            EXPECT_EQ(values[1], size_t{ 0 });
+            EXPECT_EQ(values[2], size_t{ 3 });
         }
     }
 

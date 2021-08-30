@@ -38,7 +38,7 @@ namespace Molten
 
         EXPECT_FALSE(result.IsSuccessful());
         EXPECT_EQ(result.GetError().code, TextFileFormatResult::OpenFileError);
-        EXPECT_EQ(result.GetError().lineNumber, 0);
+        EXPECT_EQ(result.GetError().lineNumber, size_t{ 0 });
     }
 
     TEST(FileFormat, ObjMeshFile)
@@ -50,14 +50,14 @@ namespace Molten
         EXPECT_NO_THROW(result = objFile.ReadFromFile("../Engine/Test/Data/ObjMesh/TestCubes.obj", threadPool));
         ASSERT_TRUE(result.IsSuccessful());
 
-        ASSERT_EQ(objFile.objects.size(), 3);
+        ASSERT_EQ(objFile.objects.size(), size_t{ 3 });
         {
             auto& object = objFile.objects[0];
             ASSERT_NE(object, nullptr);
 
             EXPECT_STREQ(object->name.c_str(), "Cube.001");
 
-            ASSERT_EQ(object->vertices.size(), 8);
+            ASSERT_EQ(object->vertices.size(), size_t{ 8 });
             EXPECT_VECTOR3_NEAR(object->vertices[0], Vector3f32(1.0f, 1.0f, 0.5f), 1e-4);
             EXPECT_VECTOR3_NEAR(object->vertices[1], Vector3f32(1.0f, -1.0f, 0.5f), 1e-4);
             EXPECT_VECTOR3_NEAR(object->vertices[2], Vector3f32(1.0f, 1.0f, 2.5f), 1e-4);
@@ -67,7 +67,7 @@ namespace Molten
             EXPECT_VECTOR3_NEAR(object->vertices[6], Vector3f32(-1.0f, 1.0f, 2.5f), 1e-4);
             EXPECT_VECTOR3_NEAR(object->vertices[7], Vector3f32(-1.0f, -1.0f, 2.5f), 1e-4);
 
-            ASSERT_EQ(object->textureCoordinates.size(), 14);
+            ASSERT_EQ(object->textureCoordinates.size(), size_t{ 14 });
             EXPECT_VECTOR2_NEAR(object->textureCoordinates[0], Vector2f32(0.625f, 0.5f), 1e-4);
             EXPECT_VECTOR2_NEAR(object->textureCoordinates[1], Vector2f32(0.875f, 0.5f), 1e-4);
             EXPECT_VECTOR2_NEAR(object->textureCoordinates[2], Vector2f32(0.875f, 0.75f), 1e-4);
@@ -83,7 +83,7 @@ namespace Molten
             EXPECT_VECTOR2_NEAR(object->textureCoordinates[12], Vector2f32(0.375f, 0.5f), 1e-4);
             EXPECT_VECTOR2_NEAR(object->textureCoordinates[13], Vector2f32(0.125f, 0.75f), 1e-4);
 
-            ASSERT_EQ(object->normals.size(), 9);
+            ASSERT_EQ(object->normals.size(), size_t{ 9 });
             EXPECT_VECTOR3_NEAR(object->normals[0], Vector3f32(0.0f, 1.0f, 0.0f), 1e-4);
             EXPECT_VECTOR3_NEAR(object->normals[1], Vector3f32(0.5773f, -0.5773f, 0.5773f), 1e-4);
             EXPECT_VECTOR3_NEAR(object->normals[2], Vector3f32(0.5773f, 0.5773f, 0.5773f), 1e-4);
@@ -95,19 +95,19 @@ namespace Molten
             EXPECT_VECTOR3_NEAR(object->normals[8], Vector3f32(0.5773f, 0.5773f, -0.5773f), 1e-4);
 
 
-            ASSERT_EQ(object->groups.size(), 1);
+            ASSERT_EQ(object->groups.size(), size_t{ 1 });
             auto& group = object->groups[0];
             ASSERT_NE(group, nullptr);
             EXPECT_STREQ(group->name.c_str(), "");
             EXPECT_STREQ(group->material.c_str(), "Material.001");
 
-            ASSERT_EQ(group->smoothingGroups.size(), 2);
+            ASSERT_EQ(group->smoothingGroups.size(), size_t{ 2 });
             {
                 auto& smoothGroup = group->smoothingGroups[0];
                 ASSERT_NE(smoothGroup, nullptr);
                 EXPECT_EQ(smoothGroup->id, uint32_t{ 0 });
 
-                ASSERT_EQ(smoothGroup->triangles.size(), 2);
+                ASSERT_EQ(smoothGroup->triangles.size(), size_t{ 2 });
                 {
                     auto& triangle = smoothGroup->triangles[0];
 
@@ -144,7 +144,7 @@ namespace Molten
                 ASSERT_NE(smoothGroup, nullptr);
                 EXPECT_EQ(smoothGroup->id, uint32_t{ 1 });
 
-                ASSERT_EQ(smoothGroup->triangles.size(), 10);
+                ASSERT_EQ(smoothGroup->triangles.size(), size_t{ 10 });
                 {
                     auto& triangle = smoothGroup->triangles[0];
 
@@ -185,22 +185,22 @@ namespace Molten
 
             EXPECT_STREQ(object->name.c_str(), "Cube.002");
 
-            EXPECT_EQ(object->vertices.size(), 8);
-            EXPECT_EQ(object->textureCoordinates.size(), 14);
-            EXPECT_EQ(object->normals.size(), 6);
+            EXPECT_EQ(object->vertices.size(), size_t{ 8 });
+            EXPECT_EQ(object->textureCoordinates.size(), size_t{ 14 });
+            EXPECT_EQ(object->normals.size(), size_t{ 6 });
 
-            ASSERT_EQ(object->groups.size(), 1);
+            ASSERT_EQ(object->groups.size(), size_t{ 1 });
             {
                 auto& group = object->groups[0];
                 ASSERT_NE(group, nullptr);
                 EXPECT_STREQ(group->name.c_str(), "");
                 EXPECT_STREQ(group->material.c_str(), "Material.002");
 
-                ASSERT_EQ(group->smoothingGroups.size(), 1);
+                ASSERT_EQ(group->smoothingGroups.size(), size_t{ 1 });
                 auto& smoothGroup = group->smoothingGroups[0];
                 ASSERT_NE(smoothGroup, nullptr);
                 EXPECT_EQ(smoothGroup->id, uint32_t{ 0 });
-                EXPECT_EQ(smoothGroup->triangles.size(), 12);
+                EXPECT_EQ(smoothGroup->triangles.size(), size_t{ 12 });
 
                 // Skipping test for the rest...
             }           
@@ -211,11 +211,11 @@ namespace Molten
 
             EXPECT_STREQ(object->name.c_str(), "Cube.003");
 
-            EXPECT_EQ(object->vertices.size(), 8);
-            EXPECT_EQ(object->textureCoordinates.size(), 14);
-            EXPECT_EQ(object->normals.size(), 10);
+            EXPECT_EQ(object->vertices.size(), size_t{ 8 });
+            EXPECT_EQ(object->textureCoordinates.size(), size_t{ 14 });
+            EXPECT_EQ(object->normals.size(), size_t{ 10 });
 
-            ASSERT_EQ(object->groups.size(), 2);
+            ASSERT_EQ(object->groups.size(), size_t{ 2 });
             {
                 {
                     auto& group = object->groups[0];
@@ -223,11 +223,11 @@ namespace Molten
                     EXPECT_STREQ(group->name.c_str(), "");
                     EXPECT_STREQ(group->material.c_str(), "Material.002");
 
-                    ASSERT_EQ(group->smoothingGroups.size(), 1);
+                    ASSERT_EQ(group->smoothingGroups.size(), size_t{ 1 });
                     auto& smoothGroup = group->smoothingGroups[0];
                     ASSERT_NE(smoothGroup, nullptr);
                     EXPECT_EQ(smoothGroup->id, uint32_t{ 0 });
-                    EXPECT_EQ(smoothGroup->triangles.size(), 2);
+                    EXPECT_EQ(smoothGroup->triangles.size(), size_t{ 2 });
                 }
                 {
                     auto& group = object->groups[1];
@@ -235,18 +235,18 @@ namespace Molten
                     EXPECT_STREQ(group->name.c_str(), "Test group");
                     EXPECT_STREQ(group->material.c_str(), "Material.002");
 
-                    ASSERT_EQ(group->smoothingGroups.size(), 2);
+                    ASSERT_EQ(group->smoothingGroups.size(), size_t{ 2 });
                     {
                         auto& smoothGroup = group->smoothingGroups[0];
                         ASSERT_NE(smoothGroup, nullptr);
                         EXPECT_EQ(smoothGroup->id, uint32_t{ 0 });
-                        EXPECT_EQ(smoothGroup->triangles.size(), 2);
+                        EXPECT_EQ(smoothGroup->triangles.size(), size_t{ 2 });
                     }
                     {
                         auto& smoothGroup = group->smoothingGroups[1];
                         ASSERT_NE(smoothGroup, nullptr);
                         EXPECT_EQ(smoothGroup->id, uint32_t{ 1 });
-                        EXPECT_EQ(smoothGroup->triangles.size(), 8);
+                        EXPECT_EQ(smoothGroup->triangles.size(), size_t{ 8 });
                     }
                 }
             }

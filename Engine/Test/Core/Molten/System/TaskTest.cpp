@@ -47,7 +47,7 @@ namespace Molten
 
         for (size_t i = 0; i < taskCount; i++)
         {
-            EXPECT_EQ(results[i], i + 1);
+            EXPECT_EQ(results[i], size_t{ i + 1 });
         }
     }
 
@@ -83,7 +83,7 @@ namespace Molten
 
         for (size_t i = 0; i < taskCount; i++)
         {
-            EXPECT_EQ(results[i], 0);
+            EXPECT_EQ(results[i], size_t{ 0 });
         }
 
         {
@@ -94,7 +94,7 @@ namespace Molten
             }
             for (size_t i = 0; i < taskCount; i++)
             {
-                EXPECT_EQ(results[i], i + 10010);
+                EXPECT_EQ(results[i], size_t{ i + 10010 });
             }
         }
         {
@@ -105,7 +105,7 @@ namespace Molten
             }
             for (size_t i = 0; i < taskCount; i++)
             {
-                EXPECT_EQ(results[i], i + 10010);
+                EXPECT_EQ(results[i], size_t{ i + 10010 });
             }
         }
         {
@@ -116,7 +116,7 @@ namespace Molten
             }
             for (size_t i = 0; i < taskCount; i++)
             {
-                EXPECT_EQ(results[i], i + 10010);
+                EXPECT_EQ(results[i], size_t{ i + 10010 });
             }
         }
         {
@@ -130,7 +130,7 @@ namespace Molten
             }
             for (size_t i = 0; i < taskCount; i++)
             {
-                EXPECT_EQ(results[i], i + 10010);
+                EXPECT_EQ(results[i], size_t{ i + 10010 });
             }
         }
         {
@@ -144,7 +144,7 @@ namespace Molten
             }
             for (size_t i = 0; i < taskCount; i++)
             {
-                EXPECT_EQ(results[i], i + 10010);
+                EXPECT_EQ(results[i], size_t{ i + 10010 });
             }
         }
         {
@@ -155,7 +155,7 @@ namespace Molten
             }
             for (size_t i = 0; i < taskCount; i++)
             {
-                EXPECT_EQ(results[i], i + 10010);
+                EXPECT_EQ(results[i], size_t{ i + 10010 });
             }
         }
         {
@@ -166,7 +166,7 @@ namespace Molten
             }
             for (size_t i = 0; i < taskCount; i++)
             {
-                EXPECT_EQ(results[i], i + 10010);
+                EXPECT_EQ(results[i], size_t{ i + 10010 });
             }
         }
         {
@@ -177,7 +177,7 @@ namespace Molten
             }
             for (size_t i = 0; i < taskCount; i++)
             {
-                EXPECT_EQ(results[i], i + 10010);
+                EXPECT_EQ(results[i], size_t{ i + 10010 });
             }
         }
     }
@@ -193,7 +193,7 @@ namespace Molten
         {
             for (size_t i = 0; i < results.size(); i++)
             {
-                EXPECT_EQ(results[i], 0);
+                EXPECT_EQ(results[i], size_t{ 0 });
             }
             results[0] = 1;
         });
@@ -203,7 +203,7 @@ namespace Molten
         {
             for(size_t i = 4; i < results.size(); i++)
             {
-                EXPECT_EQ(results[i], 0);
+                EXPECT_EQ(results[i], size_t{ 0 });
             }
             results[1] = 2;
         });
@@ -211,7 +211,7 @@ namespace Molten
         {
             for (size_t i = 4; i < results.size(); i++)
             {
-                EXPECT_EQ(results[i], 0);
+                EXPECT_EQ(results[i], size_t{ 0 });
             }
             results[2] = 3;
         });
@@ -219,21 +219,21 @@ namespace Molten
         {
             for (size_t i = 4; i < results.size(); i++)
             {
-                EXPECT_EQ(results[i], 0);
+                EXPECT_EQ(results[i], size_t{ 0 });
             }
             results[3] = 4;
         });
 
         serialGroup.EmplaceBack<Task>([&]()
         {
-            EXPECT_EQ(results[0], 1);
-            EXPECT_EQ(results[1], 2);
-            EXPECT_EQ(results[2], 3);
-            EXPECT_EQ(results[3], 4);
+            EXPECT_EQ(results[0], size_t{ 1 });
+            EXPECT_EQ(results[1], size_t{ 2 });
+            EXPECT_EQ(results[2], size_t{ 3 });
+            EXPECT_EQ(results[3], size_t{ 4 });
 
             for (size_t i = 4; i < results.size(); i++)
             {
-                EXPECT_EQ(results[i], 0);
+                EXPECT_EQ(results[i], size_t{ 0 });
             }
             results[4] = 5;
         });
@@ -241,75 +241,75 @@ namespace Molten
         auto p2 = serialGroup.EmplaceBack<ParallelTaskGroup>();
         p2->Emplace<Task>([&]()
         {
-            EXPECT_EQ(results[0], 1);
-            EXPECT_EQ(results[1], 2);
-            EXPECT_EQ(results[2], 3);
-            EXPECT_EQ(results[3], 4);
-            EXPECT_EQ(results[4], 5);
+            EXPECT_EQ(results[0], size_t{ 1 });
+            EXPECT_EQ(results[1], size_t{ 2 });
+            EXPECT_EQ(results[2], size_t{ 3 });
+            EXPECT_EQ(results[3], size_t{ 4 });
+            EXPECT_EQ(results[4], size_t{ 5 });
 
             for (size_t i = 8; i < results.size(); i++)
             {
-                EXPECT_EQ(results[i], 0);
+                EXPECT_EQ(results[i], size_t{ 0 });
             }
             results[5] = 6;
         });
         p2->Emplace<Task>([&]()
         {
-            EXPECT_EQ(results[0], 1);
-            EXPECT_EQ(results[1], 2);
-            EXPECT_EQ(results[2], 3);
-            EXPECT_EQ(results[3], 4);
-            EXPECT_EQ(results[4], 5);
+            EXPECT_EQ(results[0], size_t{ 1 });
+            EXPECT_EQ(results[1], size_t{ 2 });
+            EXPECT_EQ(results[2], size_t{ 3 });
+            EXPECT_EQ(results[3], size_t{ 4 });
+            EXPECT_EQ(results[4], size_t{ 5 });
 
             for (size_t i = 8; i < results.size(); i++)
             {
-                EXPECT_EQ(results[i], 0);
+                EXPECT_EQ(results[i], size_t{ 0 });
             }
             results[6] = 7;
         });
         p2->Emplace<Task>([&]()
         {
-            EXPECT_EQ(results[0], 1);
-            EXPECT_EQ(results[1], 2);
-            EXPECT_EQ(results[2], 3);
-            EXPECT_EQ(results[3], 4);
-            EXPECT_EQ(results[4], 5);
+            EXPECT_EQ(results[0], size_t{ 1 });
+            EXPECT_EQ(results[1], size_t{ 2 });
+            EXPECT_EQ(results[2], size_t{ 3 });
+            EXPECT_EQ(results[3], size_t{ 4 });
+            EXPECT_EQ(results[4], size_t{ 5 });
 
             for (size_t i = 8; i < results.size(); i++)
             {
-                EXPECT_EQ(results[i], 0);
+                EXPECT_EQ(results[i], size_t{ 0 });
             }
             results[7] = 8;
         });
 
         serialGroup.EmplaceBack<Task>([&]()
         {
-            EXPECT_EQ(results[0], 1);
-            EXPECT_EQ(results[1], 2);
-            EXPECT_EQ(results[2], 3);
-            EXPECT_EQ(results[3], 4);
-            EXPECT_EQ(results[4], 5);
-            EXPECT_EQ(results[5], 6);
-            EXPECT_EQ(results[6], 7);
-            EXPECT_EQ(results[7], 8);
+            EXPECT_EQ(results[0], size_t{ 1 });
+            EXPECT_EQ(results[1], size_t{ 2 });
+            EXPECT_EQ(results[2], size_t{ 3 });
+            EXPECT_EQ(results[3], size_t{ 4 });
+            EXPECT_EQ(results[4], size_t{ 5 });
+            EXPECT_EQ(results[5], size_t{ 6 });
+            EXPECT_EQ(results[6], size_t{ 7 });
+            EXPECT_EQ(results[7], size_t{ 8 });
 
             for (size_t i = 8; i < results.size(); i++)
             {
-                EXPECT_EQ(results[i], 0);
+                EXPECT_EQ(results[i], size_t{ 0 });
             }
             results[8] = 9;
         });
         serialGroup.EmplaceBack<Task>([&]()
         {
-            EXPECT_EQ(results[0], 1);
-            EXPECT_EQ(results[1], 2);
-            EXPECT_EQ(results[2], 3);
-            EXPECT_EQ(results[3], 4);
-            EXPECT_EQ(results[4], 5);
-            EXPECT_EQ(results[5], 6);
-            EXPECT_EQ(results[6], 7);
-            EXPECT_EQ(results[7], 8);
-            EXPECT_EQ(results[8], 9);
+            EXPECT_EQ(results[0], size_t{ 1 });
+            EXPECT_EQ(results[1], size_t{ 2 });
+            EXPECT_EQ(results[2], size_t{ 3 });
+            EXPECT_EQ(results[3], size_t{ 4 });
+            EXPECT_EQ(results[4], size_t{ 5 });
+            EXPECT_EQ(results[5], size_t{ 6 });
+            EXPECT_EQ(results[6], size_t{ 7 });
+            EXPECT_EQ(results[7], size_t{ 8 });
+            EXPECT_EQ(results[8], size_t{ 9 });
   
             results[9] = 10;
         });
@@ -319,16 +319,16 @@ namespace Molten
             results = { 0 };
 
             EXPECT_NO_THROW(serialGroup.Execute());
-            EXPECT_EQ(results[0], 1);
-            EXPECT_EQ(results[1], 2);
-            EXPECT_EQ(results[2], 3);
-            EXPECT_EQ(results[3], 4);
-            EXPECT_EQ(results[4], 5);
-            EXPECT_EQ(results[5], 6);
-            EXPECT_EQ(results[6], 7);
-            EXPECT_EQ(results[7], 8);
-            EXPECT_EQ(results[8], 9);
-            EXPECT_EQ(results[9], 10);
+            EXPECT_EQ(results[0], size_t{ 1 });
+            EXPECT_EQ(results[1], size_t{ 2 });
+            EXPECT_EQ(results[2], size_t{ 3 });
+            EXPECT_EQ(results[3], size_t{ 4 });
+            EXPECT_EQ(results[4], size_t{ 5 });
+            EXPECT_EQ(results[5], size_t{ 6 });
+            EXPECT_EQ(results[6], size_t{ 7 });
+            EXPECT_EQ(results[7], size_t{ 8 });
+            EXPECT_EQ(results[8], size_t{ 9 });
+            EXPECT_EQ(results[9], size_t{ 10 });
         }
     }
 
@@ -379,15 +379,15 @@ namespace Molten
 
             EXPECT_NO_THROW(serialGroup.Execute());
 
-            EXPECT_EQ(index, 8);
-            EXPECT_EQ(results[0], 5);
-            EXPECT_EQ(results[1], 4);
-            EXPECT_EQ(results[2], 6);
-            EXPECT_EQ(results[3], 3);
-            EXPECT_EQ(results[4], 2);
-            EXPECT_EQ(results[5], 7);
-            EXPECT_EQ(results[6], 1);
-            EXPECT_EQ(results[7], 8);
+            EXPECT_EQ(index, size_t{ 8 });
+            EXPECT_EQ(results[0], size_t{ 5 });
+            EXPECT_EQ(results[1], size_t{ 4 });
+            EXPECT_EQ(results[2], size_t{ 6 });
+            EXPECT_EQ(results[3], size_t{ 3 });
+            EXPECT_EQ(results[4], size_t{ 2 });
+            EXPECT_EQ(results[5], size_t{ 7 });
+            EXPECT_EQ(results[6], size_t{ 1 });
+            EXPECT_EQ(results[7], size_t{ 8 });
         }
         {
             SerialTaskGroup serialGroup(threadPool);
@@ -401,38 +401,38 @@ namespace Molten
             p1->Emplace<Task>([&]()
             {
                 results[0] = 3;
-                EXPECT_EQ(results[1], 2);
-                EXPECT_EQ(results[2], 0);
-                EXPECT_EQ(results[3], 1);
+                EXPECT_EQ(results[1], size_t{ 2 });
+                EXPECT_EQ(results[2], size_t{ 0 });
+                EXPECT_EQ(results[3], size_t{ 1 });
             });
             p2->Emplace<Task>([&]()
             {
-                EXPECT_EQ(results[0], 0);
+                EXPECT_EQ(results[0], size_t{ 0 });
                 results[1] = 2;
-                EXPECT_EQ(results[2], 0);
-                EXPECT_EQ(results[3], 1);
+                EXPECT_EQ(results[2], size_t{ 0 });
+                EXPECT_EQ(results[3], size_t{ 1 });
                 
             });
             p3->Emplace<Task>([&]()
             {
-                EXPECT_EQ(results[0], 3);
-                EXPECT_EQ(results[1], 2);
+                EXPECT_EQ(results[0], size_t{ 3 });
+                EXPECT_EQ(results[1], size_t{ 2 });
                 results[2] = 4;
-                EXPECT_EQ(results[3], 1);
+                EXPECT_EQ(results[3], size_t{ 1 });
             });
             p4->Emplace<Task>([&]()
             {
-                EXPECT_EQ(results[0], 0);
-                EXPECT_EQ(results[1], 0);
-                EXPECT_EQ(results[2], 0);
+                EXPECT_EQ(results[0], size_t{ 0 });
+                EXPECT_EQ(results[1], size_t{ 0 });
+                EXPECT_EQ(results[2], size_t{ 0 });
                 results[3] = 1;
             });
 
             EXPECT_NO_THROW(serialGroup.Execute());
-            EXPECT_EQ(results[0], 3);
-            EXPECT_EQ(results[1], 2);
-            EXPECT_EQ(results[2], 4);
-            EXPECT_EQ(results[3], 1);
+            EXPECT_EQ(results[0], size_t{ 3 });
+            EXPECT_EQ(results[1], size_t{ 2 });
+            EXPECT_EQ(results[2], size_t{ 4 });
+            EXPECT_EQ(results[3], size_t{ 1 });
         }
     }
 
