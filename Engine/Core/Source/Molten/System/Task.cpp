@@ -121,10 +121,10 @@ namespace Molten
 
     ParallelTaskGroup::Futures& ParallelTaskGroup::CreateFutures(const size_t count)
     {
-        const auto currentCount = static_cast<int64_t>(m_futures.size());
+        const auto currentCount = m_futures.size();
 
         // Current future count is bigger or equal to requested count. Just clear available futures.
-        if(const auto countDiff = static_cast<int64_t>(count) - currentCount; countDiff <= 0)
+        if(const auto countDiff = static_cast<int64_t>(count) - static_cast<int64_t>(currentCount); countDiff <= 0)
         {
             for (auto it = m_futures.begin(); it != m_futures.begin() + count; ++it)
             {

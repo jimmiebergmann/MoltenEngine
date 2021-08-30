@@ -40,9 +40,9 @@ namespace Molten
         m_currentBufferSize(0),
         m_currentBufferPosition(0)
     {
-        const size_t startPos = m_inStream.tellg();
+        const auto startPos = m_inStream.tellg();
         m_inStream.seekg(0, std::istream::end);
-        m_fileSize = m_inStream.tellg();
+        m_fileSize = static_cast<size_t>(m_inStream.tellg());
         m_inStream.seekg(startPos, std::istream::beg);
     }
 
