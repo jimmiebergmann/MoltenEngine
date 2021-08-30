@@ -9,7 +9,6 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/../CMake/Tools.cmake)
 
 # Options.
 option(MOLTEN_ENABLE_VULKAN "Enables Vulkan renderer." ON)
-option(MOLTEN_ENABLE_GLSLANG "Enables glslang compiler." ON)
 option(MOLTEN_ENABLE_OPENGL "Enables OpenGL renderer." ON)
 option(MOLTEN_ENABLE_COVERAGE "Enables coverage reporting." OFF)
 option(MOLTEN_ENABLE_X11 "Enables X server." ON)
@@ -37,17 +36,6 @@ else()
   set(MOLTEN_ENABLE_X11 OFF)
 endif()
 
-# Glslang configurations
-if(MOLTEN_ENABLE_GLSLANG)
-  include(${CMAKE_CURRENT_SOURCE_DIR}/../CMake/FindGlslang.cmake)
-  option(BUILD_EXTERNAL "" OFF)
-  option(ENABLE_HLSL "" OFF)
-  option(ENABLE_CTEST "" OFF)
-  option(ENABLE_SPVREMAPPER "" OFF)
-  option(ENABLE_GLSLANG_BINARIES "" OFF)
-  add_subdirectory("${Glslang_DIR}" "${Glslang_DIR}")
-endif()
-
 # Vulkan configurations
 if(MOLTEN_ENABLE_VULKAN)
   include(${CMAKE_CURRENT_SOURCE_DIR}/../CMake/FindVulkan.cmake)  
@@ -69,7 +57,9 @@ endif()
 include_directories ("${CoreHeadersDir}")
 include_directories ("${ThirdPartyDir}")
 add_library(Molten SHARED "${CoreSources}" "${CoreHeaders}")
+
 SetDefaultCompileOptions(Molten)
+EnableMultiProcessorCompilation(Molten)
 
 CreateSourceGroups("${CoreSources}" "${CoreSourceDir}")
 CreateSourceGroups("${CoreHeaders}" "${CoreHeadersDir}")
@@ -103,11 +93,6 @@ if(MOLTEN_ENABLE_VULKAN AND Vulkan_FOUND)
   target_compile_definitions(Molten PUBLIC "MOLTEN_ENABLE_VULKAN")
 endif()
 
-if(MOLTEN_ENABLE_GLSLANG AND Glslang_FOUND)
-  target_link_libraries(Molten "${Glslang_LIBRARY}" "${SPIRV_LIBRARY}")  
-  target_compile_definitions(Molten PUBLIC "MOLTEN_ENABLE_GLSLANG")
-endif()
-
 if(MOLTEN_ENABLE_OPENGL AND OpenGL_FOUND)
   target_link_libraries(Molten "${OPENGL_LIBRARIES}")
   target_compile_definitions(Molten PUBLIC "MOLTEN_ENABLE_OPENGL")
@@ -130,21 +115,15 @@ target_include_directories(Molten PUBLIC "${VendorDir}")
 # Print summary
 message("MOLTEN SUMMARY: ")
 message("Vulkan_FOUND:  ${Vulkan_FOUND}  ")
-message("Glslang_FOUND: ${Glslang_FOUND}")
 message("OpenGL_FOUND:  ${OpenGL_FOUND}")
 message("FreeType2_FOUND:  ${FreeType2_FOUND}")
 
-if(Glslang_FOUND)
+if(Vulkan_FOUND)
   message("Vulkan_INCLUDE: ${Vulkan_INCLUDE}")
   message("Vulkan_LIBRARY: ${Vulkan_LIBRARY}")
 endif()
 
-if(Glslang_FOUND)
-  message("Glslang_LIBRARY: ${Glslang_LIBRARY}")
-  message("SPIRV_LIBRARY: ${SPIRV_LIBRARY}")
-endif()
-
-if(Glslang_FOUND)
+if(OpenGL_FOUND)
   message("OPENGL_LIBRARIES: ${OPENGL_LIBRARIES}")
 endif()
 

@@ -39,7 +39,9 @@ include_directories ("${TestHeadersDir}")
 include_directories ("${CoreHeadersDir}")
 
 add_executable(MoltenCoreTest "${TestSources}" "${TestHeaders}" "${CoreTestSources}" "${CoreTestHeaders}")
+
 SetDefaultCompileOptions(MoltenCoreTest)
+EnableMultiProcessorCompilation(MoltenCoreTest)
 
 CreateSourceGroups("${TestSources}" "${TestDir}")
 CreateSourceGroups("${TestHeaders}" "${TestDir}")
