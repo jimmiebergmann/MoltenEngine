@@ -40,7 +40,7 @@ namespace Molten
     }
 
     template<typename T>
-    bool ParseVector(std::string_view lineView, T& value)
+    static bool ParseVector(std::string_view lineView, T& value)
     {
         auto currentLineView = lineView;
 
@@ -71,8 +71,8 @@ namespace Molten
     // Trianble implementations.
     ObjMeshFile::Triangle::Triangle() :
         vertexIndices{ std::numeric_limits<uint32_t>::max(), std::numeric_limits<uint32_t>::max(), std::numeric_limits<uint32_t>::max() },
-        normalIndices{ std::numeric_limits<uint32_t>::max(), std::numeric_limits<uint32_t>::max(), std::numeric_limits<uint32_t>::max() },
-        textureCoordinateIndices{ std::numeric_limits<uint32_t>::max(), std::numeric_limits<uint32_t>::max(), std::numeric_limits<uint32_t>::max() }
+        textureCoordinateIndices{ std::numeric_limits<uint32_t>::max(), std::numeric_limits<uint32_t>::max(), std::numeric_limits<uint32_t>::max() },
+        normalIndices{ std::numeric_limits<uint32_t>::max(), std::numeric_limits<uint32_t>::max(), std::numeric_limits<uint32_t>::max() }
     {}
 
 
@@ -454,7 +454,7 @@ namespace Molten
 
         return {};
     }
-    ObjMeshFileReader::ProcessMaterialResult ObjMeshFileReader::ProcessMaterial(std::string&& filename)
+    ObjMeshFileReader::ProcessMaterialResult ObjMeshFileReader::ProcessMaterial(std::string&& /*filename*/)
     {
         return { nullptr };
     }

@@ -59,6 +59,7 @@ include_directories ("${ThirdPartyDir}")
 add_library(Molten SHARED "${CoreSources}" "${CoreHeaders}")
 
 SetDefaultCompileOptions(Molten)
+SetDefaultLinkerInputs(Molten)
 EnableMultiProcessorCompilation(Molten)
 
 CreateSourceGroups("${CoreSources}" "${CoreSourceDir}")

@@ -174,8 +174,8 @@ namespace Molten::Shader
 
         private:
 
-            static GeneratorInputPinPointers CreateInputPins(GeneratorNode* generatorNode, const Visual::Node& parentNode);
-            static GeneratorOutputPinPointers CreateOutputPins(GeneratorNode* generatorNode, const Visual::Node& parentNode);
+            static GeneratorInputPinPointers CreateInputPins(const Visual::Node& parentNode);
+            static GeneratorOutputPinPointers CreateOutputPins(const Visual::Node& parentNode);
 
         };
 
@@ -548,7 +548,7 @@ namespace Molten::Shader
         /** Build tree functions. */
         /**@{*/
         [[nodiscard]] bool BuildTree();
-        [[nodiscard]] GeneratorNodePointer BuildVisitInputPin(GeneratorNodePointer& generatorNode, GeneratorInputPin* generatorInputPin);
+        [[nodiscard]] GeneratorNodePointer BuildVisitInputPin(GeneratorInputPin* generatorInputPin);
         void BuildVisitOutputPin(GeneratorNodePointer& generatorNode, GeneratorOutputPinPointer& generatorOutputPin);
         void BuildVisitNode(GeneratorNodePointer& generatorNode);
         /**@}*/
@@ -607,10 +607,10 @@ namespace Molten::Shader
         [[nodiscard]] bool WriteFunction(const GeneratorNodePointer& generatorNode, const Visual::FunctionBase& functionBase);
         [[nodiscard]] bool WriteOperator(const GeneratorNodePointer& generatorNode, const Visual::OperatorBase& operatorBase);
         [[nodiscard]] bool WriteOperatorArithmetic(const GeneratorNodePointer& generatorNode, const Visual::ArithmeticOperatorBase& arithmeticOperatorBase);
-        [[nodiscard]] bool WriteVertexOutput(const GeneratorNodePointer& generatorNode, const Visual::VertexOutput& vertexOutput);
-        [[nodiscard]] bool WriteOutput(const GeneratorNodePointer& generatorNode, const Visual::OutputInterface& outputInterface);
+        [[nodiscard]] bool WriteVertexOutput(const GeneratorNodePointer& generatorNode);
+        [[nodiscard]] bool WriteOutput(const GeneratorNodePointer& generatorNode);
         [[nodiscard]] bool WriteConstant(const GeneratorNodePointer& generatorNode, const Visual::ConstantBase& constantBase);
-        [[nodiscard]] bool WriteComposite(const GeneratorNodePointer& generatorNode, const Visual::CompositeBase& constantBase);
+        [[nodiscard]] bool WriteComposite(const GeneratorNodePointer& generatorNode);
         void InsertDebugNames();
 
         Logger* m_logger;

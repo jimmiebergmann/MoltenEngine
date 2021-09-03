@@ -219,7 +219,7 @@ namespace Molten
         virtual Vector2f32 GetScale() const = 0;
 
         /** Get current size of window. */
-        virtual Vector2ui32 GetSize() const = 0; 
+        virtual Vector2ui32 GetSize() const override = 0; 
 
         /** Get current position of window. */
         virtual Vector2i32 GetPosition() const = 0;

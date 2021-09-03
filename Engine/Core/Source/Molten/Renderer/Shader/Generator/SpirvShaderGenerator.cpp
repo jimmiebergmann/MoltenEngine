@@ -341,9 +341,9 @@ namespace Molten::Shader
     // Generator node implementations.
     SpirvGenerator::GeneratorNode::GeneratorNode(const Visual::Node& node) :
         node(node),
-        inputPins(CreateInputPins(this, node)),
+        inputPins(CreateInputPins(node)),
         inputPinIterator(inputPins.begin()),
-        outputPins(CreateOutputPins(this, node))
+        outputPins(CreateOutputPins(node))
     {}
 
     SpirvGenerator::GeneratorInputPin* SpirvGenerator::GeneratorNode::GetNextInputPin()
@@ -371,7 +371,7 @@ namespace Molten::Shader
         return nullptr;
     }
 
-    SpirvGenerator::GeneratorNode::GeneratorInputPinPointers SpirvGenerator::GeneratorNode::CreateInputPins(GeneratorNode* generatorNode, const Visual::Node& parentNode)
+    SpirvGenerator::GeneratorNode::GeneratorInputPinPointers SpirvGenerator::GeneratorNode::CreateInputPins(const Visual::Node& parentNode)
     {
         auto inputPins = parentNode.GetInputPins();
 
@@ -385,7 +385,7 @@ namespace Molten::Shader
         return generatorInputPins;
     }
 
-    SpirvGenerator::GeneratorNode::GeneratorOutputPinPointers SpirvGenerator::GeneratorNode::CreateOutputPins(GeneratorNode* generatorNode, const Visual::Node& parentNode)
+    SpirvGenerator::GeneratorNode::GeneratorOutputPinPointers SpirvGenerator::GeneratorNode::CreateOutputPins(const Visual::Node& parentNode)
     {
         auto outputPins = parentNode.GetOutputPins();
 
@@ -1197,7 +1197,7 @@ namespace Molten::Shader
 
                 if (auto* currentInputPin = currentNode->GetNextInputPin(); currentInputPin)
                 {
-                    if (auto newNode = BuildVisitInputPin(currentNode, currentInputPin); newNode)
+                    if (auto newNode = BuildVisitInputPin(currentInputPin); newNode)
                     {
                         nodeStack.push(newNode);
                     }
@@ -1213,7 +1213,7 @@ namespace Molten::Shader
         return true;
     }
 
-    SpirvGenerator::GeneratorNodePointer SpirvGenerator::BuildVisitInputPin(GeneratorNodePointer& generatorNode, GeneratorInputPin* generatorInputPin)
+    SpirvGenerator::GeneratorNodePointer SpirvGenerator::BuildVisitInputPin(GeneratorInputPin* generatorInputPin)
     {
         auto* connectedOutputPin = generatorInputPin->pin.GetConnection();
 
@@ -2293,11 +2293,11 @@ namespace Molten::Shader
         switch (generatorNode->node.GetType())
         {
             case Visual::NodeType::Constant: return WriteConstant(generatorNode, static_cast<const Visual::ConstantBase&>(generatorNode->node));
-            case Visual::NodeType::Composite: return WriteComposite(generatorNode, static_cast<const Visual::CompositeBase&>(generatorNode->node));
+            case Visual::NodeType::Composite: return WriteComposite(generatorNode);
             case Visual::NodeType::Function: return WriteFunction(generatorNode, static_cast<const Visual::FunctionBase&>(generatorNode->node));
             case Visual::NodeType::Operator: return WriteOperator(generatorNode, static_cast<const Visual::OperatorBase&>(generatorNode->node));
-            case Visual::NodeType::VertexOutput: return WriteVertexOutput(generatorNode, static_cast<const Visual::VertexOutput&>(generatorNode->node));
-            case Visual::NodeType::Output: return WriteOutput(generatorNode, static_cast<const Visual::OutputInterface&>(generatorNode->node));
+            case Visual::NodeType::VertexOutput: return WriteVertexOutput(generatorNode);
+            case Visual::NodeType::Output: return WriteOutput(generatorNode);
             default: break;
         }
     
@@ -2449,7 +2449,7 @@ namespace Molten::Shader
         return true;
     }
 
-    bool SpirvGenerator::WriteVertexOutput(const GeneratorNodePointer& generatorNode, const Visual::VertexOutput& vertexOutput)
+    bool SpirvGenerator::WriteVertexOutput(const GeneratorNodePointer& generatorNode)
     {
         for (const auto& generatorInputPin : generatorNode->inputPins)
         {
@@ -2475,7 +2475,7 @@ namespace Molten::Shader
         return true;
     }
 
-    bool SpirvGenerator::WriteOutput(const GeneratorNodePointer& generatorNode, const Visual::OutputInterface& outputInterface)
+    bool SpirvGenerator::WriteOutput(const GeneratorNodePointer& generatorNode)
     {
         size_t index = 0;
         for (auto& generatorInputPin : generatorNode->inputPins)
@@ -2524,7 +2524,7 @@ namespace Molten::Shader
         return true;
     }
 
-    bool SpirvGenerator::WriteComposite(const GeneratorNodePointer& generatorNode, const Visual::CompositeBase& constantBase)
+    bool SpirvGenerator::WriteComposite(const GeneratorNodePointer& generatorNode)
     {
         if (const auto outputPinCount = generatorNode->outputPins.size(); outputPinCount != 1)
         {

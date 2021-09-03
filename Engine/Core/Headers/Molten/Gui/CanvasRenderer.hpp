@@ -186,7 +186,7 @@ namespace Molten::Gui
         void LoadTexturedRect();
         void LoadFontRenderData();
 
-        Logger* m_logger;
+        //Logger* m_logger;
         Renderer& m_backendRenderer;
         Matrix4x4f32 m_projection;
         SharedRenderResource<Sampler2D> m_sampler2D;

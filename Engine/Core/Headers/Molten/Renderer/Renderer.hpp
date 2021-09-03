@@ -127,7 +127,7 @@ namespace Molten
         virtual RenderResource<Pipeline> CreatePipeline(const PipelineDescriptor& descriptor) = 0;
 
         /** Create render pass object. */
-        virtual SharedRenderResource<RenderPass> CreateRenderPass(const RenderPassDescriptor& descriptor) { return {}; } // TODO: Make pure.
+        virtual SharedRenderResource<RenderPass> CreateRenderPass(const RenderPassDescriptor& /*descriptor*/) { return {}; } // TODO: Make pure.
 
         /** Create sampler object. */
         /**@{*/
@@ -173,7 +173,7 @@ namespace Molten
         virtual void Destroy(Framebuffer& framebuffer) = 0;
         virtual void Destroy(IndexBuffer& indexBuffer) = 0;
         virtual void Destroy(Pipeline& pipeline) = 0;
-        virtual void Destroy(RenderPass& renderPass) {} // TODO: Make pure.
+        virtual void Destroy(RenderPass& /*renderPass*/) {} // TODO: Make pure.
         virtual void Destroy(Sampler1D& sampler1D) = 0;
         virtual void Destroy(Sampler2D& sampler2D) = 0;
         virtual void Destroy(Sampler3D& sampler3D) = 0;
@@ -197,7 +197,7 @@ namespace Molten
         virtual void BindPipeline(Pipeline& pipeline) = 0;
 
 
-        virtual void DrawFrame(const RenderPassGroup& renderPassGroup) {} // TODO: Make pure.
+        virtual void DrawFrame(const RenderPassGroup& /*renderPassGroup*/) {} // TODO: Make pure.
 
         /** Begin and initialize rendering to framebuffers. */
         virtual void BeginDraw() = 0;

@@ -32,8 +32,19 @@
 namespace Molten
 {
     class Renderer;
+    class DescriptorSet;
+    class FramedDescriptorSet;
+    class Framebuffer;
+    class IndexBuffer;
+    class Pipeline;
+    class RenderPass;
+    template<size_t VDimensions> class Sampler;
+    class ShaderProgram;
+    template<size_t VDimensions> class Texture;
+    class UniformBuffer;
+    class FramedUniformBuffer;
+    class VertexBuffer;
 
-    template<typename T>
     class RenderResourceDeleter
     {
 
@@ -47,7 +58,22 @@ namespace Molten
         RenderResourceDeleter& operator =(const RenderResourceDeleter& renderResourceDeleter) = default;
         RenderResourceDeleter& operator =(RenderResourceDeleter &&) = default;
 
-        void operator()(T* resource);
+        void operator()(FramedDescriptorSet* framedDescriptorSet);
+        void operator()(DescriptorSet* descriptorSet);
+        void operator()(Framebuffer* framebuffer);
+        void operator()(IndexBuffer* indexBuffer);
+        void operator()(Pipeline* pipeline);
+        void operator()(RenderPass* renderPass);
+        void operator()(Sampler<1>* sampler1D);
+        void operator()(Sampler<2>* sampler2D);
+        void operator()(Sampler<3>* sampler3D);
+        void operator()(ShaderProgram* shaderProgram);
+        void operator()(Texture<1>* texture1D);
+        void operator()(Texture<2>* texture2D);
+        void operator()(Texture<3>* texture3D);
+        void operator()(UniformBuffer* uniformBuffer);
+        void operator()(FramedUniformBuffer* framedUniformBuffer);
+        void operator()(VertexBuffer* vertexBuffer);
 
     private:
 
@@ -56,13 +82,11 @@ namespace Molten
 
 
     template<typename T>
-    using RenderResource = std::unique_ptr<T, RenderResourceDeleter<T>>;
+    using RenderResource = std::unique_ptr<T, RenderResourceDeleter>;
 
     template<typename T>
     using SharedRenderResource = std::shared_ptr<T>;
 
 }
-
-#include "Molten/Renderer/RenderResource.inl"
 
 #endif

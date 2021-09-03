@@ -182,36 +182,38 @@ namespace Molten
         {
             values = { 0, 0, 0 };
 
-            Semaphore semResult1Wait;
             auto tryResult1 = pool.TryExecute([&]()
             {
-                semResult1Wait.Wait();
                 values[0] = 1;
             });
+            
             ASSERT_TRUE(tryResult1.has_value());
+            tryResult1.value().wait();
+            
+            std::this_thread::sleep_for(std::chrono::seconds(1));
 
             auto tryResult2 = pool.TryExecute([&]()
             {
                 values[1] = 2;
             });
-            ASSERT_FALSE(tryResult2.has_value());
+            
+            std::this_thread::sleep_for(std::chrono::seconds(1));
 
-            semResult1Wait.NotifyOne();
-            tryResult1.value().wait();
-
-            std::this_thread::sleep_for(std::chrono::duration<double>(0.5));
+            ASSERT_TRUE(tryResult2.has_value());
+            tryResult2.value().wait();
 
             auto tryResult3 = pool.TryExecute([&]()
             {
                 values[2] = 3;
             });
-
-            ASSERT_TRUE(tryResult3.has_value());
+            ASSERT_TRUE(tryResult3.has_value());     
             tryResult3.value().wait();
 
             EXPECT_EQ(values[0], size_t{ 1 });
-            EXPECT_EQ(values[1], size_t{ 0 });
+            EXPECT_EQ(values[1], size_t{ 2 });
             EXPECT_EQ(values[2], size_t{ 3 });
+
+            std::this_thread::sleep_for(std::chrono::seconds(1));
         }
     }
 

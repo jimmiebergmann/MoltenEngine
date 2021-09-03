@@ -46,14 +46,19 @@ function(SetDefaultCompileOptions target)
 
 endfunction(SetDefaultCompileOptions)
 
+# Set default linker inputs
+function(SetDefaultLinkerInputs target)
+  if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang|GNU")  
+    target_link_libraries(${target} "pthread")
+  endif()
+endfunction(SetDefaultLinkerInputs)
+
 # Add multi-processor compilation.
 function(EnableMultiProcessorCompilation target)
 
   if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
     target_compile_options(${target} PRIVATE /MP)
-  endif()
-  
-  get_target_property(compilerFlags ${target} COMPILE_OPTIONS)
-  message("Setting \"target_compile_options\": \"${compilerFlags}\" for ${CMAKE_CXX_COMPILER_ID}, target ${target}.")
-  
+    get_target_property(compilerFlags ${target} COMPILE_OPTIONS)
+    message("Setting \"target_compile_options\": \"${compilerFlags}\" for ${CMAKE_CXX_COMPILER_ID}, target ${target}.")
+  endif()  
 endfunction(EnableMultiProcessorCompilation)

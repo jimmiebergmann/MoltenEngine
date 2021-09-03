@@ -160,8 +160,8 @@ namespace Molten::Shader::Visual
     template<CompositeType VCompositeType, typename TOutputType, typename ... TInputTypes>
     Composite<VCompositeType, TOutputType, TInputTypes...>::Composite(Script& script) :
         CompositeBase(script),
-        m_output(*this),
-        m_inputs(std::make_tuple<std::unique_ptr<InputPin<TInputTypes>>...>(std::make_unique<InputPin<TInputTypes>>(*this)...))
+        m_inputs(std::make_tuple<std::unique_ptr<InputPin<TInputTypes>>...>(std::make_unique<InputPin<TInputTypes>>(*this)...)),
+        m_output(*this)
     {}
 
 }

@@ -11,9 +11,9 @@ addons:
       - ubuntu-toolchain-r-test
       - llvm-toolchain-xenial-8
     packages:
-      - gcc-8
-      - g++-8
-      - clang-8
+      - gcc-11
+      - g++-11
+      - clang-11
       - lcov
       - valgrind
       - mesa-utils
@@ -33,26 +33,26 @@ matrix:
     - os: linux
       compiler: gcc
       env:
-        - CC=gcc-8 CXX=g++-8
+        - CC=gcc-11 CXX=g++-11
         - CONFIG=Release
         
     - os: linux
       compiler: gcc
       env:
-        - CC=gcc-8 CXX=g++-8
+        - CC=gcc-11 CXX=g++-11
         - CONFIG=Debug OUTPUT_NAME_POSTFIX=Debug
         - CODECOV_UPLOAD=Yes
         
     - os: linux
       compiler: clang
       env:
-        - CC=clang-8 && CXX=clang++-8
+        - CC=clang-11 && CXX=clang++-11
         - CONFIG=Release
         
     - os: linux
       compiler: clang
       env:
-        - CC=clang-8 && CXX=clang++-8
+        - CC=clang-11 && CXX=clang++-11
         - CONFIG=Debug OUTPUT_NAME_POSTFIX=Debug
         
 before_script:

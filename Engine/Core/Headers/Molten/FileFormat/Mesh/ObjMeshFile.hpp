@@ -29,6 +29,7 @@
 #include "Molten/Math/Vector.hpp"
 #include "Molten/FileFormat/TextFileFormatResult.hpp"
 #include <string>
+#include <string_view>
 #include <filesystem>
 #include <array>
 #include <vector>

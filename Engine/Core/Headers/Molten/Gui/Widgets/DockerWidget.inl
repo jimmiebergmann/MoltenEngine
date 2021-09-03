@@ -56,9 +56,7 @@ namespace Molten::Gui
         m_edgeDragData{},
         m_leafs{},
         m_leafDragData{}
-    {
-        //m_leafDragData.overlayWidget = GetData().GetCanvas()->CreateOverlayChild<DockerOverlay>();
-    }
+    {}
 
     template<typename TTheme>
     template<template<typename> typename TWidget, typename ... TArgs>
@@ -921,7 +919,9 @@ namespace Molten::Gui
     template<typename TTheme>
     typename Docker<TTheme>::ElementPointer Docker<TTheme>::ExtractElement(Element* element)
     {
-        auto [extractedElement, extractedEdge] = element->Extract();
+        auto extractedElementAndEdge = element->Extract();
+        auto extractedElement = std::move(extractedElementAndEdge.first);
+        auto* extractedEdge = extractedElementAndEdge.second;
 
         if (extractedEdge)
         {
@@ -935,7 +935,7 @@ namespace Molten::Gui
             }
         }
 
-        return std::move(extractedElement);
+        return extractedElement;
     }
 
     template<typename TTheme>

@@ -39,8 +39,8 @@ namespace Molten::Gui
         return std::make_shared<CanvasRenderer>(renderer, logger, size);
     }
 
-    CanvasRenderer::CanvasRenderer(Renderer& renderer, Logger* logger, const Vector2f32& size) :
-        m_logger(logger),
+    CanvasRenderer::CanvasRenderer(Renderer& renderer, Logger* /*logger*/, const Vector2f32& size) :
+        //m_logger(logger),
         m_backendRenderer(renderer)
     {
         if (size.x != 0.0f && size.y != 0.0f)

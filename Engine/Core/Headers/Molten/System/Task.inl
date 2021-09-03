@@ -30,16 +30,13 @@ namespace Molten
     template<typename TEntryType, typename ... TTaskArgs>
     std::shared_ptr<TEntryType> ParallelTaskGroup::Emplace(TTaskArgs ... taskArgs)
     {
-        if constexpr (std::is_same_v<TEntryType, Task> == true)
-        {
-            auto entry = std::make_shared<TEntryType>(std::forward<TTaskArgs>(taskArgs)...);
-            m_tasks.push_back(entry);
-            return entry;
-        }
-        else
-        {
-            static_assert(false, "ParallelTaskGroup::Emplace: Provided TEntryType is not supported.");
-        }
+        static_assert(std::is_same_v<TEntryType, Task>, 
+            "ParallelTaskGroup::Emplace: Provided TEntryType is not supported.");
+
+        auto entry = std::make_shared<TEntryType>(std::forward<TTaskArgs>(taskArgs)...);
+        m_tasks.push_back(entry);
+        return entry;
+
     }
 
 
@@ -47,6 +44,9 @@ namespace Molten
     template<typename TEntryType, typename ... TTaskArgs>
     std::shared_ptr<TEntryType> SerialTaskGroup::EmplaceFront(TTaskArgs ... taskArgs)
     {
+        static_assert(std::is_same_v<TEntryType, Task> || std::is_same_v<TEntryType, ParallelTaskGroup>, 
+            "ParallelTaskGroup::EmplaceFront: Provided TEntryType is not supported.");
+
         if constexpr (std::is_same_v<TEntryType, Task> == true)
         {
             auto entry = std::make_shared<TEntryType>(std::forward<TTaskArgs>(taskArgs)...);
@@ -59,15 +59,14 @@ namespace Molten
             m_entries.insert(m_entries.begin(), entry);
             return entry;
         }
-        else
-        {
-            static_assert(false, "SerialTaskGroup::EmplaceFront: Provided TEntryType is not supported.");
-        }  
     }
 
     template<typename TEntryType, typename ... TTaskArgs>
     std::shared_ptr<TEntryType> SerialTaskGroup::EmplaceBack(TTaskArgs ... taskArgs)
     {
+        static_assert(std::is_same_v<TEntryType, Task> || std::is_same_v<TEntryType, ParallelTaskGroup>, 
+            "ParallelTaskGroup::EmplaceBack: Provided TEntryType is not supported.");
+
         if constexpr (std::is_same_v<TEntryType, Task> == true)
         {
             auto entry = std::make_shared<TEntryType>(std::forward<TTaskArgs>(taskArgs)...);
@@ -79,16 +78,15 @@ namespace Molten
             auto entry = std::make_shared<TEntryType>(m_threadPool, std::forward<TTaskArgs>(taskArgs)...);
             m_entries.insert(m_entries.end(), entry);
             return entry;
-        }
-        else
-        {
-            static_assert(false, "SerialTaskGroup::EmplaceBack: Provided TEntryType is not supported.");
         }
     }
 
     template<typename TEntryType, typename ... TTaskArgs>
     std::shared_ptr<TEntryType> SerialTaskGroup::Emplace(Entries::const_iterator it, TTaskArgs ... taskArgs)
     {
+        static_assert(std::is_same_v<TEntryType, Task> || std::is_same_v<TEntryType, ParallelTaskGroup>, 
+            "ParallelTaskGroup::Emplace: Provided TEntryType is not supported.");
+
         if constexpr (std::is_same_v<TEntryType, Task> == true)
         {
             auto entry = std::make_shared<TEntryType>(std::forward<TTaskArgs>(taskArgs)...);
@@ -100,10 +98,6 @@ namespace Molten
             auto entry = std::make_shared<TEntryType>(m_threadPool, std::forward<TTaskArgs>(taskArgs)...);
             m_entries.insert(it, entry);
             return entry;
-        }
-        else
-        {
-            static_assert(false, "SerialTaskGroup::Emplace: Provided TEntryType is not supported.");
         }
     }
 

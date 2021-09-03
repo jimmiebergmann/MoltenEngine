@@ -25,6 +25,7 @@
 
 #include "Molten/Renderer/Shader/Spirv/SpirvModule.hpp"
 #include <array>
+#include <cstring>
 
 namespace Molten::Shader::Spirv
 {
@@ -579,11 +580,6 @@ namespace Molten::Shader::Spirv
         };
 
         words.insert(words.end(), result.begin(), result.end());
-    }
-
-    void AddOpCompositeConstruct(const Id resultTypeId, const Id resultId, const std::vector<Id>& inputIds)
-    {
-        
     }
 
     void ModuleBuffer::AddOpFAdd(const Id resultTypeId, const Id resultId, const Id operand1Id, const Id operand2Id)

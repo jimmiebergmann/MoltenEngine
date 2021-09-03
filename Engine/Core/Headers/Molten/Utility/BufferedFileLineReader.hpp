@@ -27,6 +27,7 @@
 #define MOLTEN_CORE_UTILITY_BUFFEREDFILELINEREADER_HPP
 
 #include "Molten/Core.hpp"
+#include <cstring>
 #include <memory>
 #include <istream>
 #include <string_view>
