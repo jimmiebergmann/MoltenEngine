@@ -31,7 +31,7 @@ namespace Molten
 
     // Static implementations.
     template<typename T>
-    void DestroyResource(Renderer* renderer, T* resource)
+    static void DestroyResource(Renderer* renderer, T* resource)
     {
         if(renderer)
         {

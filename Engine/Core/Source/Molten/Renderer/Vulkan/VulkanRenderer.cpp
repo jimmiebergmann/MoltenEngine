@@ -690,7 +690,7 @@ namespace Molten
             setIndex,
             descriptorSet,
             descriptorPool
-        }, RenderResourceDeleter<DescriptorSet>{ this });
+        }, RenderResourceDeleter{ this });
     }
 
     RenderResource<FramedDescriptorSet> VulkanRenderer::CreateFramedDescriptorSet(const FramedDescriptorSetDescriptor& descriptor)
@@ -916,7 +916,7 @@ namespace Molten
             setIndex,
             std::move(descriptorSets),
             descriptorPool
-        }, RenderResourceDeleter<FramedDescriptorSet>{ this });
+        }, RenderResourceDeleter{ this });
     }
 
     RenderResource<Framebuffer> VulkanRenderer::CreateFramebuffer(const FramebufferDescriptor& descriptor)
@@ -1026,7 +1026,7 @@ namespace Molten
             descriptor.dimensions,
             commandPool,
             std::move(commandBuffers)
-        }, RenderResourceDeleter<Framebuffer>{ this });
+        }, RenderResourceDeleter{ this });
     }
 
     RenderResource<IndexBuffer> VulkanRenderer::CreateIndexBuffer(const IndexBufferDescriptor& descriptor)
@@ -1077,7 +1077,7 @@ namespace Molten
             std::move(indexBuffer),
             descriptor.indexCount,
             descriptor.dataType
-        }, RenderResourceDeleter<IndexBuffer>{ this });
+        }, RenderResourceDeleter{ this });
     }
 
     RenderResource<Pipeline> VulkanRenderer::CreatePipeline(const PipelineDescriptor& descriptor)
@@ -1237,7 +1237,7 @@ namespace Molten
             pipelineLayout,
             std::move(setLayouts),
             vulkanShaderProgram
-        }, RenderResourceDeleter<Pipeline>{ this });
+        }, RenderResourceDeleter{ this });
     }
 
     SharedRenderResource<RenderPass> VulkanRenderer::CreateRenderPass(const RenderPassDescriptor& descriptor)
@@ -1345,7 +1345,7 @@ namespace Molten
             std::move(finishSemaphores),
             renderPass,
             descriptor.recordFunction
-        }, RenderResourceDeleter<RenderPass>{ this });
+        }, RenderResourceDeleter{ this });
     }
 
     SharedRenderResource<Sampler1D> VulkanRenderer::CreateSampler(const SamplerDescriptor1D& descriptor)
@@ -1375,7 +1375,7 @@ namespace Molten
 
         return SharedRenderResource<Sampler1D>(new VulkanSampler1D{
             std::move(imageSampler)
-         }, RenderResourceDeleter<Sampler1D>{ this });
+         }, RenderResourceDeleter{ this });
     }
 
     SharedRenderResource<Sampler2D> VulkanRenderer::CreateSampler(const SamplerDescriptor2D& descriptor)
@@ -1405,7 +1405,7 @@ namespace Molten
 
         return SharedRenderResource<Sampler2D>(new VulkanSampler2D{
             std::move(imageSampler)
-        }, RenderResourceDeleter<Sampler2D>{ this });
+        }, RenderResourceDeleter{ this });
     }
 
     SharedRenderResource<Sampler3D> VulkanRenderer::CreateSampler(const SamplerDescriptor3D& descriptor)
@@ -1435,7 +1435,7 @@ namespace Molten
 
         return SharedRenderResource<Sampler3D>(new VulkanSampler3D{
             std::move(imageSampler)
-        }, RenderResourceDeleter<Sampler3D>{ this });
+        }, RenderResourceDeleter{ this });
     }
 
     SharedRenderResource<ShaderProgram> VulkanRenderer::CreateShaderProgram(const VisualShaderProgramDescriptor& descriptor)
@@ -1567,7 +1567,7 @@ namespace Molten
             std::move(vertexBindingDescription),
             std::move(spirvTemplate.pushConstantLocations),
             pushConstantRange
-        }, RenderResourceDeleter<ShaderProgram>{ this });
+        }, RenderResourceDeleter{ this });
     }
 
     SharedRenderResource<Texture1D> VulkanRenderer::CreateTexture(const TextureDescriptor1D& descriptor)
@@ -1612,7 +1612,7 @@ namespace Molten
             std::move(deviceImage),
             imageView,
             bytesPerPixel
-        }, RenderResourceDeleter<Texture1D>{ this });
+        }, RenderResourceDeleter{ this });
     }
 
     SharedRenderResource<Texture2D> VulkanRenderer::CreateTexture(const TextureDescriptor2D& descriptor)
@@ -1658,7 +1658,7 @@ namespace Molten
             std::move(deviceImage),
             imageView,
             bytesPerPixel
-        }, RenderResourceDeleter<Texture2D>{ this });
+        }, RenderResourceDeleter{ this });
     }
 
     SharedRenderResource<Texture3D> VulkanRenderer::CreateTexture(const TextureDescriptor3D& descriptor)
@@ -1705,7 +1705,7 @@ namespace Molten
             std::move(deviceImage),
             imageView,
             bytesPerPixel
-        }, RenderResourceDeleter<Texture3D>{ this });
+        }, RenderResourceDeleter{ this });
     }
 
     RenderResource<UniformBuffer> VulkanRenderer::CreateUniformBuffer(const UniformBufferDescriptor& descriptor)
@@ -1724,7 +1724,7 @@ namespace Molten
 
         return RenderResource<UniformBuffer>(new VulkanUniformBuffer{
             std::move(deviceBuffer)
-        }, RenderResourceDeleter<UniformBuffer>{ this });
+        }, RenderResourceDeleter{ this });
     }
 
     RenderResource<FramedUniformBuffer> VulkanRenderer::CreateFramedUniformBuffer(const FramedUniformBufferDescriptor& descriptor)
@@ -1761,7 +1761,7 @@ namespace Molten
 
         return RenderResource<FramedUniformBuffer>(new VulkanFramedUniformBuffer{
             std::move(deviceBuffers)
-        }, RenderResourceDeleter<FramedUniformBuffer>{ this });
+        }, RenderResourceDeleter{ this });
     }
 
     RenderResource<VertexBuffer> VulkanRenderer::CreateVertexBuffer(const VertexBufferDescriptor& descriptor)
@@ -1814,7 +1814,7 @@ namespace Molten
             std::move(vertexBuffer),
             descriptor.vertexCount,
             descriptor.vertexSize
-        }, RenderResourceDeleter<VertexBuffer>{ this });
+        }, RenderResourceDeleter{ this });
     }
 
     bool VulkanRenderer::UpdateTexture(Texture1D& texture1D, const TextureUpdateDescriptor1D& descriptor)
