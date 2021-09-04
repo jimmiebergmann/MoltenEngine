@@ -1,5 +1,5 @@
 os: linux
-dist: bionic
+dist: focal
 language: cpp
 
 services:
@@ -8,7 +8,7 @@ services:
 addons:
   apt:
     sources:
-      - sourceline: 'deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-12 main'
+      - sourceline: "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-11 main"
         key_url: 'https://apt.llvm.org/llvm-snapshot.gpg.key'
       - sourceline: 'ppa:ubuntu-toolchain-r/test'
     packages:
@@ -57,11 +57,11 @@ jobs:
         - CONFIG=Debug OUTPUT_NAME_POSTFIX=Debug
         
 before_script:
-  - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 90
-  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 90
-  - sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-8 90
-  - sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-8 90
-  - sudo update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-8 90  
+  - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 90
+  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 90
+  - sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-11 90
+  - sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-11 90
+  - sudo update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-11 90  
   - |
       DOWNLOAD_CMAKE_VERSION=3.18.1
       wget -O cmake.sh https://github.com/Kitware/CMake/releases/download/v${DOWNLOAD_CMAKE_VERSION}/cmake-${DOWNLOAD_CMAKE_VERSION}-Linux-x86_64.sh
@@ -95,9 +95,6 @@ script:
   - cd ../Build
   
 after_success:
-  #- lcov --directory ./Core --capture --output-file coverage.info
-  #- lcov -e coverage.info '*/Core/Headers/*' '*/Core/Source/*' --output-file coverage.info
-  #- lcov --list coverage.info
   - |
     if [ ${CODECOV_UPLOAD} ]; then
       cd $TRAVIS_BUILD_DIR
