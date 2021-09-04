@@ -31,29 +31,6 @@ environment:
       configuration: Release
       arch: Win32
       
-      
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      compiler: msvc-15-seh
-      generator: "Visual Studio 15 2017"
-      configuration: Debug
-      output_name_postfix: Debug
-
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      compiler: msvc-15-seh
-      generator: "Visual Studio 15 2017 Win64"
-      configuration: Debug
-      output_name_postfix: Debug
-
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      compiler: msvc-15-seh
-      generator: "Visual Studio 15 2017"
-      configuration: Release
-
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      compiler: msvc-15-seh
-      generator: "Visual Studio 15 2017 Win64"
-      configuration: Release
-      
 cache:
   - C:\ProgramData\VulkanSDK_Installer -> appveyor.yml
       
