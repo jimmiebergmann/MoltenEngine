@@ -63,13 +63,11 @@ function(EnableMultiProcessorCompilation target)
   endif()  
 endfunction(EnableMultiProcessorCompilation)
 
-#Add sub-directory and remove warnings.
-function(AddSubDirectoryWithoutWarnings dir)
-  add_subdirectory(${dir} ${dir} EXCLUDE_FROM_ALL)
+# Remove warning as error from target.
+function(RemoveWarningAsError target)
   if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang|GNU")  
-	set_source_files_properties(
-		DIRECTORY ${dir}
-		PROPERTIES
-		COMPILE_FLAGS "-w")
-	endif()
-endfunction(AddSubDirectoryWithoutWarnings)
+    target_compile_options(${target} PRIVATE -w)
+  elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+    #
+  endif()
+endfunction(RemoveWarningAsError)

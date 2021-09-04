@@ -25,10 +25,15 @@ file(GLOB_RECURSE TestHeaders "${TestDir}/*.h" "${TestDir}/*.hpp")
 file(GLOB_RECURSE CoreTestSources "${CoreTestDir}/*.c" "${CoreTestDir}/*.cpp")
 file(GLOB_RECURSE CoreTestHeaders "${CoreTestDir}/*.h" "${CoreTestDir}/*.hpp")
 
+# Add google test
 SET(gtest_force_shared_crt on CACHE BOOL
   "Use shared (DLL) run-time lib even when Google Test is built as static lib.")
-AddSubDirectoryWithoutWarnings(${ThirdPartyDir}/googletest)
+  
+add_subdirectory(${ThirdPartyDir}/googletest ${ThirdPartyDir}/googletest EXCLUDE_FROM_ALL)
+RemoveWarningAsError(gtest)
 
+
+#Add molten lib
 if (NOT TARGET Molten)
 	add_subdirectory(${CoreDir} ${CoreDir} EXCLUDE_FROM_ALL)
 endif() 
