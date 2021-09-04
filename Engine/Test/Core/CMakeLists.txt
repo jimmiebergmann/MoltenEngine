@@ -27,9 +27,12 @@ file(GLOB_RECURSE CoreTestHeaders "${CoreTestDir}/*.h" "${CoreTestDir}/*.hpp")
 
 SET(gtest_force_shared_crt on CACHE BOOL
   "Use shared (DLL) run-time lib even when Google Test is built as static lib.")
-add_subdirectory(${ThirdPartyDir}/googletest
-                 ${ThirdPartyDir}/googletest
-                 EXCLUDE_FROM_ALL)
+add_subdirectory(${ThirdPartyDir}/googletest EXCLUDE_FROM_ALL)
+set_source_files_properties(
+  ${ThirdPartyDir}/googletest
+  PROPERTIES
+  COMPILE_FLAGS "-w"
+)
 
 if (NOT TARGET Molten)
 	add_subdirectory(${CoreDir} ${CoreDir} EXCLUDE_FROM_ALL)
