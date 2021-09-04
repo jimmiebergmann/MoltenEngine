@@ -62,3 +62,14 @@ function(EnableMultiProcessorCompilation target)
     message("Setting \"target_compile_options\": \"${compilerFlags}\" for ${CMAKE_CXX_COMPILER_ID}, target ${target}.")
   endif()  
 endfunction(EnableMultiProcessorCompilation)
+
+#Add sub-directory and remove warnings.
+function(AddSubDirectoryWithoutWarnings dir)
+  add_subdirectory(${dir} ${dir} EXCLUDE_FROM_ALL)
+  if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang|GNU")  
+	set_source_files_properties(
+		DIRECTORY ${dir}
+		PROPERTIES
+		COMPILE_FLAGS "-w")
+	endif()
+endfunction(AddSubDirectoryWithoutWarnings)
