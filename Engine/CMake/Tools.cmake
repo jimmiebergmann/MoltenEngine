@@ -68,6 +68,6 @@ function(RemoveWarningAsError target)
   if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang|GNU")  
     target_compile_options(${target} PRIVATE -w)
   elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-    #
+    target_compile_options(${target} PRIVATE /WX-)
   endif()
 endfunction(RemoveWarningAsError)
