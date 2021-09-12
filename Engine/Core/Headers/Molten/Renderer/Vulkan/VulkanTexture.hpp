@@ -31,6 +31,7 @@
 #include "Molten/Renderer/Texture.hpp"
 #include "Molten/Renderer/Vulkan/VulkanHeaders.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanDeviceImage.hpp"
+#include "Molten/Renderer/Vulkan/VulkanTextureFrame.hpp"
 
 namespace Molten
 {
@@ -48,6 +49,8 @@ namespace Molten
             Vulkan::DeviceImage&& deviceImage,
             VkImageView imageView,
             const uint8_t bytesPerPixel);
+
+        ~VulkanTexture() override = default;
 
         /** Move constructor and assignment operator. */
         /**@{*/
@@ -70,6 +73,43 @@ namespace Molten
     using VulkanTexture1D = VulkanTexture<1>;
     using VulkanTexture2D = VulkanTexture<2>;
     using VulkanTexture3D = VulkanTexture<3>;
+
+
+    template<size_t VDimensions>
+    class VulkanFramedTexture : public FramedTexture<VDimensions>
+    {
+
+    public:
+
+        using Base = Texture<VDimensions>;  
+
+        VulkanFramedTexture();
+        VulkanFramedTexture(
+            VulkanTextureFrames&& frames,
+            const uint8_t bytesPerPixel);
+
+        ~VulkanFramedTexture() override = default;
+
+        /** Move constructor and assignment operator. */
+        /**@{*/
+        VulkanFramedTexture(VulkanFramedTexture&& vulkanTexture) noexcept;
+        VulkanFramedTexture& operator = (VulkanFramedTexture&& vulkanTexture) noexcept;
+        /**@}*/
+
+        /** Deleted copy constructor and assignment operator. */
+        /**@{*/
+        VulkanFramedTexture(const VulkanFramedTexture&) = delete;
+        VulkanFramedTexture& operator = (const VulkanFramedTexture&) = delete;
+        /**@}*/
+
+        VulkanTextureFrames frames;
+        uint8_t bytesPerPixel;
+
+    };
+
+    using VulkanFramedTexture1D = VulkanFramedTexture<1>;
+    using VulkanFramedTexture2D = VulkanFramedTexture<2>;
+    using VulkanFramedTexture3D = VulkanFramedTexture<3>;
 
 }
 

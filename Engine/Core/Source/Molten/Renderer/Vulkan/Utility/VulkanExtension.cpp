@@ -121,6 +121,7 @@ namespace Molten::Vulkan
             return result;
         }
 
+        extensions.reserve(extensionProperties.size());
         std::copy(extensionProperties.begin(), extensionProperties.end(), std::back_inserter(extensions));
         return result;
     }

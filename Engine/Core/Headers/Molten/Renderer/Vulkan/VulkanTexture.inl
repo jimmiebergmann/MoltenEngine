@@ -26,7 +26,7 @@
 namespace Molten
 {
 
-
+    // Vulkan texture implementations.
     template<size_t VDimensions>
     VulkanTexture<VDimensions>::VulkanTexture() :
         deviceImage{},
@@ -65,6 +65,41 @@ namespace Molten
 
         vulkanTexture.imageView = VK_NULL_HANDLE;
         vulkanTexture.bytesPerPixel = 0;
+        return *this;
+    }
+
+
+    // Vulkan framed texture implementations.
+    template<size_t VDimensions>
+    VulkanFramedTexture<VDimensions>::VulkanFramedTexture() :
+        frames{},
+        bytesPerPixel(0)
+    {}
+
+    template<size_t VDimensions>
+    VulkanFramedTexture<VDimensions>::VulkanFramedTexture(
+        VulkanTextureFrames&& frames,
+        const uint8_t bytesPerPixel
+    ) :
+        frames(std::move(frames)),
+        bytesPerPixel(bytesPerPixel)
+    {}
+
+    template<size_t VDimensions>
+    VulkanFramedTexture<VDimensions>::VulkanFramedTexture(VulkanFramedTexture && vulkanTexture) noexcept :
+        frames(std::move(vulkanTexture.frames)),
+        bytesPerPixel(std::move(vulkanTexture.bytesPerPixel))
+    {
+        vulkanTexture.bytesPerPixel = 0;
+    }
+
+    template<size_t VDimensions>
+    VulkanFramedTexture<VDimensions>& VulkanFramedTexture<VDimensions>::operator = (VulkanFramedTexture && vulkanTexture) noexcept
+    {
+        frames = std::move(vulkanTexture.frames);
+        bytesPerPixel = std::move(vulkanTexture.bytesPerPixel);
+        vulkanTexture.bytesPerPixel = 0;
+
         return *this;
     }
 

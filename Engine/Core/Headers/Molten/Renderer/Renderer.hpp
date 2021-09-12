@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -28,7 +28,6 @@
 
 #include "Molten/Renderer/RenderTarget.hpp"
 #include "Molten/Renderer/DescriptorSet.hpp"
-#include "Molten/Renderer/Framebuffer.hpp"
 #include "Molten/Renderer/IndexBuffer.hpp"
 #include "Molten/Renderer/Pipeline.hpp"
 #include "Molten/Renderer/RenderPass.hpp"
@@ -90,7 +89,7 @@ namespace Molten
         virtual void Close() = 0;
 
         /** Checks if renderer is open Same value returned as last call to Open. */
-        virtual bool IsOpen() const = 0;
+        [[nodiscard]] virtual bool IsOpen() const = 0;
 
         /**
          * Resize the framebuffers.
@@ -99,61 +98,60 @@ namespace Molten
         virtual void Resize(const Vector2ui32& size) = 0;
 
         /** Get backend API type. */
-        virtual BackendApi GetBackendApi() const = 0;
+        [[nodiscard]] virtual BackendApi GetBackendApi() const = 0;
 
         /** Get renderer API version. */
-        virtual Version GetVersion() const = 0;
+        [[nodiscard]] virtual Version GetVersion() const = 0;
 
         /** Get supported capabilities and features of renderer. */
-        virtual const RendererCapabilities& GetCapabilities() const = 0;
+        [[nodiscard]] virtual const RendererCapabilities& GetCapabilities() const = 0;
 
         /** Get location of pipeline push constant by id. Id is set in shader script. */
-        virtual uint32_t GetPushConstantLocation(Pipeline& pipeline, const uint32_t id) = 0;
+        [[nodiscard]] virtual uint32_t GetPushConstantLocation(Pipeline& pipeline, const uint32_t id) = 0;
+
+        [[nodiscard]] virtual SharedRenderResource<RenderPass> GetSwapChainRenderPass() { return {}; }
 
 
         /** Create descriptor set object. */
-        virtual RenderResource<DescriptorSet> CreateDescriptorSet(const DescriptorSetDescriptor& descriptor) = 0;
+        [[nodiscard]] virtual RenderResource<DescriptorSet> CreateDescriptorSet(const DescriptorSetDescriptor& descriptor) = 0;
 
         /** Create framed descriptor set object. */
-        virtual RenderResource<FramedDescriptorSet> CreateFramedDescriptorSet(const FramedDescriptorSetDescriptor& descriptor) = 0;
-
-        /** Create framebuffer object. */
-        virtual RenderResource<Framebuffer> CreateFramebuffer(const FramebufferDescriptor& descriptor) = 0;
+        [[nodiscard]] virtual RenderResource<FramedDescriptorSet> CreateFramedDescriptorSet(const FramedDescriptorSetDescriptor& descriptor) = 0;
 
         /**  Create index buffer object. */
-        virtual RenderResource<IndexBuffer> CreateIndexBuffer(const IndexBufferDescriptor& descriptor) = 0;
+        [[nodiscard]] virtual RenderResource<IndexBuffer> CreateIndexBuffer(const IndexBufferDescriptor& descriptor) = 0;
 
         /** Create pipeline object. */
-        virtual RenderResource<Pipeline> CreatePipeline(const PipelineDescriptor& descriptor) = 0;
+        [[nodiscard]] virtual RenderResource<Pipeline> CreatePipeline(const PipelineDescriptor& descriptor) = 0;
 
         /** Create render pass object. */
-        virtual SharedRenderResource<RenderPass> CreateRenderPass(const RenderPassDescriptor& /*descriptor*/) { return {}; } // TODO: Make pure.
+        [[nodiscard]] virtual SharedRenderResource<RenderPass> CreateRenderPass(const RenderPassDescriptor& descriptor) = 0;
 
         /** Create sampler object. */
         /**@{*/
-        virtual SharedRenderResource<Sampler1D> CreateSampler(const SamplerDescriptor1D& descriptor) = 0;
-        virtual SharedRenderResource<Sampler2D> CreateSampler(const SamplerDescriptor2D& descriptor) = 0;
-        virtual SharedRenderResource<Sampler3D> CreateSampler(const SamplerDescriptor3D& descriptor) = 0;
+        [[nodiscard]] virtual SharedRenderResource<Sampler1D> CreateSampler(const SamplerDescriptor1D& descriptor) = 0;
+        [[nodiscard]] virtual SharedRenderResource<Sampler2D> CreateSampler(const SamplerDescriptor2D& descriptor) = 0;
+        [[nodiscard]] virtual SharedRenderResource<Sampler3D> CreateSampler(const SamplerDescriptor3D& descriptor) = 0;
         /**@}*/
 
         /** Create shader module object. */
-        virtual SharedRenderResource<ShaderProgram> CreateShaderProgram(const VisualShaderProgramDescriptor& descriptor) = 0;
+        [[nodiscard]] virtual SharedRenderResource<ShaderProgram> CreateShaderProgram(const VisualShaderProgramDescriptor& descriptor) = 0;
 
         /** Create texture object. */
         /**@{*/
-        virtual SharedRenderResource<Texture1D> CreateTexture(const TextureDescriptor1D& descriptor) = 0;
-        virtual SharedRenderResource<Texture2D> CreateTexture(const TextureDescriptor2D& descriptor) = 0;
-        virtual SharedRenderResource<Texture3D> CreateTexture(const TextureDescriptor3D& descriptor) = 0;
+        [[nodiscard]] virtual SharedRenderResource<Texture1D> CreateTexture(const TextureDescriptor1D& descriptor) = 0;
+        [[nodiscard]] virtual SharedRenderResource<Texture2D> CreateTexture(const TextureDescriptor2D& descriptor) = 0;
+        [[nodiscard]] virtual SharedRenderResource<Texture3D> CreateTexture(const TextureDescriptor3D& descriptor) = 0;
         /**@}*/
 
         /** Create uniform buffer object. */
-        virtual RenderResource<UniformBuffer> CreateUniformBuffer(const UniformBufferDescriptor& descriptor) = 0;
+        [[nodiscard]] virtual RenderResource<UniformBuffer> CreateUniformBuffer(const UniformBufferDescriptor& descriptor) = 0;
 
         /** Create framed uniform buffer object. */
-        virtual RenderResource<FramedUniformBuffer> CreateFramedUniformBuffer(const FramedUniformBufferDescriptor& descriptor) = 0;
+        [[nodiscard]] virtual RenderResource<FramedUniformBuffer> CreateFramedUniformBuffer(const FramedUniformBufferDescriptor& descriptor) = 0;
 
         /** Create vertex buffer object. */
-        virtual RenderResource<VertexBuffer> CreateVertexBuffer(const VertexBufferDescriptor& descriptor) = 0;
+        [[nodiscard]] virtual RenderResource<VertexBuffer> CreateVertexBuffer(const VertexBufferDescriptor& descriptor) = 0;
 
 
         /** Update texture data. */
@@ -163,6 +161,16 @@ namespace Molten
         virtual bool UpdateTexture(Texture3D& texture3D, const TextureUpdateDescriptor3D& descriptor) = 0;
         /**@}*/
 
+        /** Update uniform buffer data. */
+        virtual void UpdateUniformBuffer(RenderResource<UniformBuffer>& uniformBuffer, const void* data, const size_t size, const size_t offset) = 0;
+
+        /** Update framed uniform buffer data. */
+        virtual void UpdateFramedUniformBuffer(RenderResource<FramedUniformBuffer>& framedUniformBuffer, const void* data, const size_t size, const size_t offset) = 0;
+
+
+        /** Draw next frame by one or multiple render passes. */
+        virtual bool DrawFrame(const RenderPasses& renderPasses) = 0;
+
 
         /** Destroys render resource.
          *  Some renderer implementations are not destroying the resource right away, but puts them in a cleanup queue.
@@ -170,7 +178,6 @@ namespace Molten
         /**@{*/
         virtual void Destroy(DescriptorSet& descriptorSet) = 0;
         virtual void Destroy(FramedDescriptorSet& framedDescriptorSet) = 0;
-        virtual void Destroy(Framebuffer& framebuffer) = 0;
         virtual void Destroy(IndexBuffer& indexBuffer) = 0;
         virtual void Destroy(Pipeline& pipeline) = 0;
         virtual void Destroy(RenderPass& /*renderPass*/) {} // TODO: Make pure.
@@ -187,55 +194,8 @@ namespace Molten
         /**@}*/
 
 
-        /** Bind descriptor set to draw queue. */
-        virtual void BindDescriptorSet(DescriptorSet& descriptorSet) = 0;
-
-        /** Bind framed descriptor set to draw queue. */
-        virtual void BindFramedDescriptorSet(FramedDescriptorSet& framedDescriptorSet) = 0;
-
-        /** Bind pipeline to draw queue. */
-        virtual void BindPipeline(Pipeline& pipeline) = 0;
-
-
-        virtual void DrawFrame(const RenderPassGroup& /*renderPassGroup*/) {} // TODO: Make pure.
-
-        /** Begin and initialize rendering to framebuffers. */
-        virtual void BeginDraw() = 0;
-
-        /** Draw vertex buffer, using the current bound pipeline. */
-        virtual void DrawVertexBuffer(VertexBuffer& vertexBuffer) = 0;
-
-        /** Draw indexed vertex buffer, using the current bound pipeline. */
-        virtual void DrawVertexBuffer(IndexBuffer& indexBuffer, VertexBuffer& vertexBuffer) = 0;
-
-        /** Push constant values to shader stage.
-         *  This function call has no effect if provided id argument is greater than the number of push constants in pipeline.
-         *
-         * @param location Id of push constant to update. This id can be shared between multiple shader stages.
-         */
-        /**@{*/
-        virtual void PushConstant(const uint32_t location, const bool& value) = 0;
-        virtual void PushConstant(const uint32_t location, const int32_t& value) = 0;
-        virtual void PushConstant(const uint32_t location, const float& value) = 0;
-        virtual void PushConstant(const uint32_t location, const Vector2f32& value) = 0;
-        virtual void PushConstant(const uint32_t location, const Vector3f32& value) = 0;
-        virtual void PushConstant(const uint32_t location, const Vector4f32& value) = 0;
-        virtual void PushConstant(const uint32_t location, const Matrix4x4f32& value) = 0;
-        /**@}*/
-
-
-        /** Finalize and present rendering. */
-        virtual void EndDraw() = 0;
-
-
         /** Sleep until the graphical device is ready. */
         virtual void WaitForDevice() = 0;
-
-        /** Update uniform buffer data. */
-        virtual void UpdateUniformBuffer(RenderResource<UniformBuffer>& uniformBuffer, const void* data, const size_t size, const size_t offset) = 0;
-
-        /** Update framed uniform buffer data. */
-        virtual void UpdateFramedUniformBuffer(RenderResource<FramedUniformBuffer>& framedUniformBuffer, const void* data, const size_t size, const size_t offset) = 0;
 
     };
 

@@ -52,7 +52,7 @@ namespace Molten::Vulkan
 
         auto surfaceHandle = surface.GetHandle();
 
-        if(const auto result =  FetchPhysicalDeviceCapabilities(m_capabilities, physicalDeviceHandle, surfaceHandle); !result.IsSuccessful())
+        if(const auto result = FetchPhysicalDeviceCapabilities(m_capabilities, physicalDeviceHandle, surfaceHandle); !result.IsSuccessful())
         {
             return result;
         }
@@ -66,6 +66,21 @@ namespace Molten::Vulkan
 
         m_surface = &surface;
         m_handle = physicalDeviceHandle;
+        return {};
+    }
+
+    Result<> PhysicalDevice::ReloadCapabilities()
+    {
+        if(m_handle == VK_NULL_HANDLE)
+        {
+            return VkResult::VK_ERROR_UNKNOWN;
+        }
+
+        if (const auto result = FetchPhysicalDeviceCapabilities(m_capabilities, m_handle, m_surface->GetHandle()); !result.IsSuccessful())
+        {
+            return result;
+        }
+
         return {};
     }
 

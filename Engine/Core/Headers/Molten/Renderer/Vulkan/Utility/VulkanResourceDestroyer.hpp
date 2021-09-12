@@ -25,7 +25,6 @@
 
 #ifndef MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANRESOURCEDESTROYER_HPP
 #define MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANRESOURCEDESTROYER_HPP
-#include "Molten/Renderer/Vulkan/VulkanFramebuffer.hpp"
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 
@@ -35,21 +34,25 @@
 #include "Molten/Renderer/Vulkan/Utility/VulkanDeviceBuffer.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanDeviceImage.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanImageSampler.hpp"
+#include "Molten/Renderer/Vulkan/VulkanTextureFrame.hpp"
 #include <variant>
 #include <queue>
+
+// TODO: TEMP!
+#include "Molten/Renderer/Vulkan/VulkanRenderPass.hpp" 
 
 namespace Molten
 {
     // TODO: All those resources will be moved to Vulkan namespace later...
     class VulkanDescriptorSet;
     class VulkanFramedDescriptorSet;
-    class VulkanFramebuffer;
     class VulkanIndexBuffer;
     class VulkanPipeline;
     class VulkanRenderPass;
     template<size_t VDimensions> class VulkanSampler;
     class VulkanShaderProgram;
     template<size_t VDimensions> class VulkanTexture;
+    template<size_t VDimensions> class VulkanFramedTexture;
     class VulkanUniformBuffer;
     class VulkanFramedUniformBuffer;
     class VulkanVertexBuffer;
@@ -81,7 +84,6 @@ namespace Molten::Vulkan
 
         void Add(const uint32_t cleanupFrameIndex, VulkanDescriptorSet& descriptorSet);
         void Add(const uint32_t cleanupFrameIndex, VulkanFramedDescriptorSet& descriptorSet);
-        void Add(const uint32_t cleanupFrameIndex, VulkanFramebuffer& framebuffer);
         void Add(const uint32_t cleanupFrameIndex, VulkanIndexBuffer& indexBuffer);
         void Add(const uint32_t cleanupFrameIndex, VulkanPipeline& pipeline);
         void Add(const uint32_t cleanupFrameIndex, VulkanRenderPass& renderPass);
@@ -92,6 +94,9 @@ namespace Molten::Vulkan
         void Add(const uint32_t cleanupFrameIndex, VulkanTexture<1>& texture1D);
         void Add(const uint32_t cleanupFrameIndex, VulkanTexture<2>& texture2D);
         void Add(const uint32_t cleanupFrameIndex, VulkanTexture<3>& texture3D);
+        void Add(const uint32_t cleanupFrameIndex, VulkanFramedTexture<1>& framedTexture1D);
+        void Add(const uint32_t cleanupFrameIndex, VulkanFramedTexture<2>& framedTexture2D);
+        void Add(const uint32_t cleanupFrameIndex, VulkanFramedTexture<3>& framedTexture3D);
         void Add(const uint32_t cleanupFrameIndex, VulkanUniformBuffer& uniformBuffer);
         void Add(const uint32_t cleanupFrameIndex, VulkanFramedUniformBuffer& framedUniformBuffer);
         void Add(const uint32_t cleanupFrameIndex, VulkanVertexBuffer& vertexBuffer);
@@ -106,14 +111,8 @@ namespace Molten::Vulkan
 
         struct FramedDescriptorSetCleanup
         {
-            Vulkan::DescriptorSets descriptorSets;
+            DescriptorSets descriptorSets;
             VkDescriptorPool descriptorPool;
-        };
-
-        struct FramebufferCleanup
-        {
-            VulkanFramebuffer::Frames frames;
-            VkCommandPool commandPool;
         };
 
         struct IndexBufferCleanup
@@ -132,6 +131,7 @@ namespace Molten::Vulkan
         {
             VkCommandPool commandPool;
             VkRenderPass renderPass;
+            VulkanRenderPass::Frames frames;
         };
 
         struct SamplerCleanup
@@ -148,6 +148,11 @@ namespace Molten::Vulkan
         {
             DeviceImage deviceImage;
             VkImageView imageView;
+        };
+
+        struct FramedTextureCleanup
+        {
+            VulkanTextureFrames frames;
         };
 
         struct UniformBufferCleanup
@@ -168,13 +173,13 @@ namespace Molten::Vulkan
         using CleanupVariant = std::variant <
             DescriptorSetCleanup,
             FramedDescriptorSetCleanup,
-            FramebufferCleanup,
             IndexBufferCleanup,
             PipelineCleanup,
             RenderPassCleanup,
             SamplerCleanup,
             ShaderProgramCleanup,
             TextureCleanup,
+            FramedTextureCleanup,
             UniformBufferCleanup,
             FramedUniformBufferCleanup,
             VertexBufferCleanup
@@ -192,13 +197,13 @@ namespace Molten::Vulkan
 
         void Process(DescriptorSetCleanup& data);
         void Process(FramedDescriptorSetCleanup& data);
-        void Process(FramebufferCleanup& data);
         void Process(IndexBufferCleanup& data);
         void Process(PipelineCleanup& data);
         void Process(RenderPassCleanup& data);
         void Process(SamplerCleanup& data);
         void Process(ShaderProgramCleanup& data);
         void Process(TextureCleanup& data);
+        void Process(FramedTextureCleanup& data);
         void Process(UniformBufferCleanup& data);
         void Process(FramedUniformBufferCleanup& data);
         void Process(VertexBufferCleanup& data);

@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -26,15 +26,6 @@
 #ifndef MOLTEN_EDITOR_EDITOR_HPP
 #define MOLTEN_EDITOR_EDITOR_HPP
 
-/*
-#include "Molten/Renderer/Renderer.hpp"
-#include "Molten/Renderer/Shader/Visual/VisualShaderScript.hpp"
-#include "Molten/Scene/Camera.hpp"
-#include "Molten/System/Clock.hpp"
-#include "Molten/Window/Window.hpp"
-#include "Molten/Gui/Canvas.hpp"
-#include <memory>*/
-
 #include "Molten/Window/Window.hpp"
 #include "Molten/Renderer/Renderer.hpp"
 #include "Molten/Renderer/Font.hpp"
@@ -54,17 +45,14 @@ namespace Molten
 namespace Molten::Editor
 {
 
-    class EditorDescriptor
+    /** Editor creation descriptor struct. */
+    struct EditorDescriptor
     {
-
-    public:
-
         std::shared_ptr<Logger> logger;
         std::optional<Renderer::BackendApi> backendRendererApi;
         std::optional<Version> backendRendererApiVersion;
         std::optional<uint32_t> fpsLimit;
         std::optional<uint32_t> windowUnfocusedFpsLimit;
-
     };
 
 
@@ -75,7 +63,7 @@ namespace Molten::Editor
     public:
 
         /** Constructor. */
-        Editor(Semaphore& cancellationSemaphore);
+        explicit Editor(Semaphore& cancellationSemaphore);
 
         /** Destructor. */
         ~Editor();
@@ -95,7 +83,7 @@ namespace Molten::Editor
         bool Load(const EditorDescriptor& descriptor);
         bool LoadWindow(const EditorDescriptor& descriptor);
         bool LoadRenderer(const EditorDescriptor& descriptor);
-        //bool LoadViewport();
+        bool LoadRenderPasses();
         bool LoadGui();
 
         void Exit();
@@ -112,11 +100,10 @@ namespace Molten::Editor
         std::unique_ptr<Window> m_window;
         std::string m_windowTitle;
         std::unique_ptr<Renderer> m_renderer;
+        RenderPasses m_renderPasses;
         std::thread m_thread;
         Gui::CanvasRendererPointer m_canvasRenderer;
         Gui::FontNameRepository m_fontNameRepository;
-
-        //RenderResource<Framebuffer> m_viewportFramebuffer;
         Gui::CanvasPointer<Gui::EditorTheme> m_canvas;
 
         SleepClock m_fpsLimiter;

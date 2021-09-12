@@ -26,7 +26,7 @@
 #ifndef MOLTEN_CORE_RENDERER_PIPELINE_HPP
 #define MOLTEN_CORE_RENDERER_PIPELINE_HPP
 
-#include "Molten/Renderer/ShaderProgram.hpp"
+#include "Molten/Renderer/RenderResource.hpp"
 
 namespace Molten::Shader::Visual
 {
@@ -36,6 +36,9 @@ namespace Molten::Shader::Visual
 
 namespace Molten
 {
+    class ShaderProgram;
+    class RenderPass;
+
     
     /** Pipeline base class. */
     class MOLTEN_API Pipeline
@@ -165,6 +168,7 @@ namespace Molten
         Pipeline::FrontFace frontFace;
         Pipeline::CullMode cullMode;
         PipelineBlendingDescriptor blending;
+        SharedRenderResource<RenderPass> renderPass;
         SharedRenderResource<ShaderProgram> shaderProgram;
 
     };

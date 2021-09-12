@@ -30,15 +30,17 @@
 #include "Molten/Renderer/RenderResource.hpp"
 #include "Molten/Math/Bounds.hpp"
 #include <vector>
+#include <variant>
 #include <optional>
 #include <functional>
 
 namespace Molten
 {
 
-    class Framebuffer;
-    class RenderPass; ///< Forward declaration.
+    class RenderPass;
+    template<size_t VDimensions> class FramedTexture;
     using RenderPassFunction = std::function<void(CommandBuffer&)>; ///< Typedef of callback function at rendering.
+
 
     /** Render pass resource object. */
     class MOLTEN_API RenderPass
@@ -70,17 +72,39 @@ namespace Molten
 
     };
 
+    /** Group of render passes, used for sequential render pass rendering, per frame. */
+    using RenderPasses = std::vector<SharedRenderResource<RenderPass>>;
+
+
+    enum class RenderPassAttachmentType : uint8_t
+    {
+        Color,
+        DepthStencil
+    };
+
+    struct RenderPassAttachment
+    {
+        using TextureVariant = std::variant<
+            std::monostate,
+            SharedRenderResource<FramedTexture<1>>,
+            SharedRenderResource<FramedTexture<2>>,
+            SharedRenderResource<FramedTexture<3>>
+        >;
+
+        RenderPassAttachmentType type = RenderPassAttachmentType::Color;
+        TextureVariant texture = {};
+        std::optional<Vector4f32> clearValue = {};
+    };
+
+    using RenderPassAttachments = std::vector<RenderPassAttachment>;
+
 
     /** Descriptor class of render pass class. */
     struct MOLTEN_API RenderPassDescriptor
     {
-        Framebuffer& framebuffer; ///< TODO: Should be a shared resource.
         RenderPassFunction recordFunction = nullptr;
+        RenderPassAttachments attachments = {};
     };
-
-
-    /** Group of render passes, used for sequential render pass rendering, per frame. */
-    using RenderPassGroup = std::vector<SharedRenderResource<RenderPass>>;
 
 }
 

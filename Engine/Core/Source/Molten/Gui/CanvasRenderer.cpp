@@ -25,6 +25,7 @@
 
 #include "Molten/Gui/CanvasRenderer.hpp"
 #include "Molten/Renderer/Renderer.hpp"
+#include "Molten/Renderer/CommandBuffer.hpp"
 #include "Molten/Renderer/Pipeline.hpp"
 #include "Molten/Renderer/Shader/Visual/VisualShaderScript.hpp"
 #include "Molten/Logger.hpp"
@@ -41,7 +42,8 @@ namespace Molten::Gui
 
     CanvasRenderer::CanvasRenderer(Renderer& renderer, Logger* /*logger*/, const Vector2f32& size) :
         //m_logger(logger),
-        m_backendRenderer(renderer)
+        m_backendRenderer(renderer),
+        m_commandBuffer(nullptr)
     {
         if (size.x != 0.0f && size.y != 0.0f)
         {
@@ -189,39 +191,35 @@ namespace Molten::Gui
         return fontSequence;
     }
 
-
-    SharedRenderResource<RenderPass> CanvasRenderer::GetRenderPass()
+    void CanvasRenderer::SetCommandBuffer(CommandBuffer& commandBuffer)
     {
-        return m_renderPass;
+        m_commandBuffer = &commandBuffer;
     }
-
-    void CanvasRenderer::BeginDraw()
-    {}
 
     void CanvasRenderer::DrawRect(const Bounds2f32& bounds, const Vector4f32& color)
     {
-        m_backendRenderer.BindPipeline(*m_coloredRect.pipeline);
+        m_commandBuffer->BindPipeline(*m_coloredRect.pipeline);
 
-        m_backendRenderer.PushConstant(m_coloredRect.projectionLocation, m_projection);
-        m_backendRenderer.PushConstant(m_coloredRect.positionLocation, bounds.low);
-        m_backendRenderer.PushConstant(m_coloredRect.sizeLocation, bounds.high - bounds.low);
-        m_backendRenderer.PushConstant(m_coloredRect.colorLocation, color);
+        m_commandBuffer->PushConstant(m_coloredRect.projectionLocation, m_projection);
+        m_commandBuffer->PushConstant(m_coloredRect.positionLocation, bounds.low);
+        m_commandBuffer->PushConstant(m_coloredRect.sizeLocation, bounds.high - bounds.low);
+        m_commandBuffer->PushConstant(m_coloredRect.colorLocation, color);
 
-        m_backendRenderer.DrawVertexBuffer(*m_coloredRect.indexBuffer, *m_coloredRect.vertexBuffer);
+        m_commandBuffer->DrawVertexBuffer(*m_coloredRect.indexBuffer, *m_coloredRect.vertexBuffer);
     }
 
     void CanvasRenderer::DrawRect(const Bounds2f32& bounds, CanvasRendererTexture& texture)
     {
-        m_backendRenderer.BindPipeline(*m_texturedRect.pipeline);
-        m_backendRenderer.BindDescriptorSet(*texture.descriptorSet);
+        m_commandBuffer->BindPipeline(*m_texturedRect.pipeline);
+        m_commandBuffer->BindDescriptorSet(*texture.descriptorSet);
 
-        m_backendRenderer.PushConstant(m_texturedRect.projectionLocation, m_projection);
-        m_backendRenderer.PushConstant(m_texturedRect.positionLocation, bounds.low);
-        m_backendRenderer.PushConstant(m_texturedRect.sizeLocation, bounds.high - bounds.low);
-        m_backendRenderer.PushConstant(m_texturedRect.uvPositionLocation, {0.0f, 0.0f});
-        m_backendRenderer.PushConstant(m_texturedRect.uvSizeLocation, { 1.0f, 1.0f });
+        m_commandBuffer->PushConstant(m_texturedRect.projectionLocation, m_projection);
+        m_commandBuffer->PushConstant(m_texturedRect.positionLocation, bounds.low);
+        m_commandBuffer->PushConstant(m_texturedRect.sizeLocation, bounds.high - bounds.low);
+        m_commandBuffer->PushConstant(m_texturedRect.uvPositionLocation, {0.0f, 0.0f});
+        m_commandBuffer->PushConstant(m_texturedRect.uvSizeLocation, { 1.0f, 1.0f });
 
-        m_backendRenderer.DrawVertexBuffer(*m_texturedRect.indexBuffer, *m_texturedRect.vertexBuffer);
+        m_commandBuffer->DrawVertexBuffer(*m_texturedRect.indexBuffer, *m_texturedRect.vertexBuffer);
     }
 
     void CanvasRenderer::DrawRect(const Bounds2f32& bounds, const Bounds2f32& textureCoords, CanvasRendererTexture& texture)
@@ -229,35 +227,32 @@ namespace Molten::Gui
         const auto uvPosition = textureCoords.low / Vector2f32{ texture.dimensions };
         const auto uvSize = (textureCoords.high - textureCoords.low) / Vector2f32{ texture.dimensions };
 
-        m_backendRenderer.BindPipeline(*m_texturedRect.pipeline);
-        m_backendRenderer.BindDescriptorSet(*texture.descriptorSet);
+        m_commandBuffer->BindPipeline(*m_texturedRect.pipeline);
+        m_commandBuffer->BindDescriptorSet(*texture.descriptorSet);
 
-        m_backendRenderer.PushConstant(m_texturedRect.projectionLocation, m_projection);
-        m_backendRenderer.PushConstant(m_texturedRect.positionLocation, bounds.low);
-        m_backendRenderer.PushConstant(m_texturedRect.sizeLocation, bounds.high - bounds.low);
-        m_backendRenderer.PushConstant(m_texturedRect.uvPositionLocation, uvPosition);
-        m_backendRenderer.PushConstant(m_texturedRect.uvSizeLocation, uvSize);
+        m_commandBuffer->PushConstant(m_texturedRect.projectionLocation, m_projection);
+        m_commandBuffer->PushConstant(m_texturedRect.positionLocation, bounds.low);
+        m_commandBuffer->PushConstant(m_texturedRect.sizeLocation, bounds.high - bounds.low);
+        m_commandBuffer->PushConstant(m_texturedRect.uvPositionLocation, uvPosition);
+        m_commandBuffer->PushConstant(m_texturedRect.uvSizeLocation, uvSize);
 
-        m_backendRenderer.DrawVertexBuffer(*m_texturedRect.indexBuffer, *m_texturedRect.vertexBuffer);
+        m_commandBuffer->DrawVertexBuffer(*m_texturedRect.indexBuffer, *m_texturedRect.vertexBuffer);
     }
 
     void CanvasRenderer::DrawFontSequence(const Vector2f32& position, CanvasRendererFontSequence& fontSequence)
     {
-        m_backendRenderer.BindPipeline(*m_fontRenderData.pipeline);
+        m_commandBuffer->BindPipeline(*m_fontRenderData.pipeline);
 
         for(auto& group : fontSequence.groups)
         {
-            m_backendRenderer.BindDescriptorSet(*group.texture->descriptorSet);
+            m_commandBuffer->BindDescriptorSet(*group.texture->descriptorSet);
 
-            m_backendRenderer.PushConstant(m_fontRenderData.projectionLocation, m_projection);
-            m_backendRenderer.PushConstant(m_fontRenderData.positionLocation, position);
-            m_backendRenderer.DrawVertexBuffer(*group.vertexBuffer);
+            m_commandBuffer->PushConstant(m_fontRenderData.projectionLocation, m_projection);
+            m_commandBuffer->PushConstant(m_fontRenderData.positionLocation, position);
+            m_commandBuffer->DrawVertexBuffer(*group.vertexBuffer);
         }
       
     }
-
-    void CanvasRenderer::EndDraw()
-    {}
 
     CanvasRenderer::ColoredRectData::ColoredRectData() :
         projectionLocation(0),
@@ -399,7 +394,8 @@ namespace Molten::Gui
         pipelineDesc.cullMode = Pipeline::CullMode::None;
         pipelineDesc.polygonMode = Pipeline::PolygonMode::Fill;
         pipelineDesc.topology = Pipeline::Topology::TriangleList;
-        pipelineDesc.frontFace = Pipeline::FrontFace::Clockwise;   
+        pipelineDesc.frontFace = Pipeline::FrontFace::Clockwise;
+        pipelineDesc.renderPass = m_backendRenderer.GetSwapChainRenderPass();
         pipelineDesc.shaderProgram = shaderProgram;
         m_coloredRect.pipeline = m_backendRenderer.CreatePipeline(pipelineDesc);
         if (!m_coloredRect.pipeline)
@@ -558,6 +554,7 @@ namespace Molten::Gui
         pipelineDesc.polygonMode = Pipeline::PolygonMode::Fill;
         pipelineDesc.topology = Pipeline::Topology::TriangleList;
         pipelineDesc.frontFace = Pipeline::FrontFace::Clockwise;
+        pipelineDesc.renderPass = m_backendRenderer.GetSwapChainRenderPass();
         pipelineDesc.shaderProgram = shaderProgram;
         m_texturedRect.pipeline = m_backendRenderer.CreatePipeline(pipelineDesc);
         if (!m_texturedRect.pipeline)
@@ -667,6 +664,7 @@ namespace Molten::Gui
         pipelineDesc.polygonMode = Pipeline::PolygonMode::Fill;
         pipelineDesc.topology = Pipeline::Topology::TriangleList;
         pipelineDesc.frontFace = Pipeline::FrontFace::Clockwise;
+        pipelineDesc.renderPass = m_backendRenderer.GetSwapChainRenderPass();
         pipelineDesc.shaderProgram = shaderProgram;
         m_fontRenderData.pipeline = m_backendRenderer.CreatePipeline(pipelineDesc);
         if (!m_fontRenderData.pipeline)

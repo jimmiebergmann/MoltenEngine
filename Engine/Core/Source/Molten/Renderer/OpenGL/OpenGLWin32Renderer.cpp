@@ -203,17 +203,17 @@ namespace Molten
         return { };
     }
 
-    RenderResource<Framebuffer> OpenGLWin32Renderer::CreateFramebuffer(const FramebufferDescriptor&)
-    {
-        return { };
-    }
-
     RenderResource<IndexBuffer> OpenGLWin32Renderer::CreateIndexBuffer(const IndexBufferDescriptor& /*descriptor*/)
     {
         return { };
     }
 
     RenderResource<Pipeline> OpenGLWin32Renderer::CreatePipeline(const PipelineDescriptor& /*descriptor*/)
+    {
+        return { };
+    }
+
+    SharedRenderResource<RenderPass> OpenGLWin32Renderer::CreateRenderPass(const RenderPassDescriptor& /*descriptor*/)
     {
         return { };
     }
@@ -283,15 +283,24 @@ namespace Molten
         return false;
     }
 
+    void OpenGLWin32Renderer::UpdateUniformBuffer(RenderResource<UniformBuffer>& /*uniformBuffer*/, const void* /*data*/, const size_t /*size*/, const size_t /*offset*/)
+    {
+    }
+
+    void OpenGLWin32Renderer::UpdateFramedUniformBuffer(RenderResource<FramedUniformBuffer>& /*framedUniformBuffer*/, const void* /*data*/, const size_t /*size*/, const size_t /*offset*/)
+    {
+    }
+
+    bool OpenGLWin32Renderer::DrawFrame(const RenderPasses& /*renderPasses*/)
+    {
+        return false;
+    }
+
     void OpenGLWin32Renderer::Destroy(DescriptorSet& /*descriptorSet*/)
     {
     }
 
     void OpenGLWin32Renderer::Destroy(FramedDescriptorSet& /*framedDescriptorSet*/)
-    {
-    }
-
-    void OpenGLWin32Renderer::Destroy(Framebuffer& /*framebuffer*/)
     {
     }
 
@@ -343,65 +352,7 @@ namespace Molten
     {
     }
 
-    void OpenGLWin32Renderer::BindDescriptorSet(DescriptorSet& /*descriptorSet*/)
-    {
-    }
-
-    void OpenGLWin32Renderer::BindFramedDescriptorSet(FramedDescriptorSet& /*framedDescriptorSet*/)
-    {
-    }
-
-    void OpenGLWin32Renderer::BindPipeline(Pipeline& /*pipeline*/)
-    {
-    }
-
-    void OpenGLWin32Renderer::BeginDraw()
-    {
-    }
-
-    void OpenGLWin32Renderer::DrawVertexBuffer(VertexBuffer& /*vertexBuffer*/)
-    {
-    }
-
-    void OpenGLWin32Renderer::DrawVertexBuffer(IndexBuffer& /*indexBuffer*/, VertexBuffer& /*vertexBuffer*/)
-    {
-    }
-
-    void OpenGLWin32Renderer::PushConstant(const uint32_t /*location*/, const bool& /*value*/)
-    {
-    }
-    void OpenGLWin32Renderer::PushConstant(const uint32_t /*location*/, const int32_t& /*value*/)
-    {
-    }
-    void OpenGLWin32Renderer::PushConstant(const uint32_t /*location*/, const float& /*value*/)
-    {
-    }
-    void OpenGLWin32Renderer::PushConstant(const uint32_t /*location*/, const Vector2f32& /*value*/)
-    {
-    }
-    void OpenGLWin32Renderer::PushConstant(const uint32_t /*location*/, const Vector3f32& /*value*/)
-    {
-    }
-    void OpenGLWin32Renderer::PushConstant(const uint32_t /*location*/, const Vector4f32& /*value*/)
-    {
-    }
-    void OpenGLWin32Renderer::PushConstant(const uint32_t /*location*/, const Matrix4x4f32& /*value*/)
-    {
-    }
-
-    void OpenGLWin32Renderer::EndDraw()
-    {
-    }
-
     void OpenGLWin32Renderer::WaitForDevice()
-    {
-    }
-
-    void OpenGLWin32Renderer::UpdateUniformBuffer(RenderResource<UniformBuffer>& /*uniformBuffer*/, const void* /*data*/, const size_t /*size*/, const size_t /*offset*/)
-    {
-    }
-
-    void OpenGLWin32Renderer::UpdateFramedUniformBuffer(RenderResource<FramedUniformBuffer>& /*framedUniformBuffer*/, const void* /*data*/, const size_t /*size*/, const size_t /*offset*/)
     {
     }
 

@@ -49,8 +49,7 @@ namespace Molten::Vulkan
 
 namespace Molten
 {
-
-    class VulkanFramebuffer;
+    class VulkanRenderPass;
 
     /**
     * @brief Vulkan renderer class.
@@ -76,7 +75,7 @@ namespace Molten
         void Close() override;
 
         /** Checks if renderer is open Same value returned as last call to Open. */
-        bool IsOpen() const override;
+        [[nodiscard]] bool IsOpen() const override;
 
         /** Resize the framebuffers.
          *  Execute this function as soon as the render target's work area is resized.
@@ -84,61 +83,60 @@ namespace Molten
         void Resize(const Vector2ui32& size) override;
 
         /** Get backend API type. */
-        BackendApi GetBackendApi() const override;
+        [[nodiscard]] BackendApi GetBackendApi() const override;
 
         /** Get renderer API version. */
-        Version GetVersion() const override;
+        [[nodiscard]] Version GetVersion() const override;
 
         /** Get supported capabilities and features of renderer. */
-        const RendererCapabilities& GetCapabilities() const override;
+        [[nodiscard]] const RendererCapabilities& GetCapabilities() const override;
 
         /** Get location of pipeline push constant by id. Id is set in shader script. */
-        uint32_t GetPushConstantLocation(Pipeline& pipeline, const uint32_t id) override;
+        [[nodiscard]] uint32_t GetPushConstantLocation(Pipeline& pipeline, const uint32_t id) override;
+
+        [[nodiscard]] SharedRenderResource<RenderPass> GetSwapChainRenderPass() override;
 
 
         /** Create descriptor set object. */
-        RenderResource<DescriptorSet> CreateDescriptorSet(const DescriptorSetDescriptor& descriptor) override;
+        [[nodiscard]] RenderResource<DescriptorSet> CreateDescriptorSet(const DescriptorSetDescriptor& descriptor) override;
 
         /** Create framed descriptor set object. */
-        RenderResource<FramedDescriptorSet> CreateFramedDescriptorSet(const FramedDescriptorSetDescriptor& descriptor) override;
-
-        /** Create framebuffer object. */
-        RenderResource<Framebuffer> CreateFramebuffer(const FramebufferDescriptor& descriptor) override;
+        [[nodiscard]] RenderResource<FramedDescriptorSet> CreateFramedDescriptorSet(const FramedDescriptorSetDescriptor& descriptor) override;
 
         /**  Create index buffer object. */
-        RenderResource<IndexBuffer> CreateIndexBuffer(const IndexBufferDescriptor& descriptor) override;
+        [[nodiscard]] RenderResource<IndexBuffer> CreateIndexBuffer(const IndexBufferDescriptor& descriptor) override;
 
         /** Create pipeline object. */
-        RenderResource<Pipeline> CreatePipeline(const PipelineDescriptor& descriptor) override;
+        [[nodiscard]] RenderResource<Pipeline> CreatePipeline(const PipelineDescriptor& descriptor) override;
 
         /** Create render pass object. */
-        SharedRenderResource<RenderPass> CreateRenderPass(const RenderPassDescriptor& descriptor) override;
+        [[nodiscard]] SharedRenderResource<RenderPass> CreateRenderPass(const RenderPassDescriptor& descriptor) override;
 
         /** Create sampler object. */
         /**@{*/
-        SharedRenderResource<Sampler1D> CreateSampler(const SamplerDescriptor1D& descriptor) override;
-        SharedRenderResource<Sampler2D> CreateSampler(const SamplerDescriptor2D& descriptor) override;
-        SharedRenderResource<Sampler3D> CreateSampler(const SamplerDescriptor3D& descriptor) override;
+        [[nodiscard]] SharedRenderResource<Sampler1D> CreateSampler(const SamplerDescriptor1D& descriptor) override;
+        [[nodiscard]] SharedRenderResource<Sampler2D> CreateSampler(const SamplerDescriptor2D& descriptor) override;
+        [[nodiscard]] SharedRenderResource<Sampler3D> CreateSampler(const SamplerDescriptor3D& descriptor) override;
         /**@}*/
 
         /** Create shader module object. */
-        SharedRenderResource<ShaderProgram> CreateShaderProgram(const VisualShaderProgramDescriptor& descriptor) override;
+        [[nodiscard]] SharedRenderResource<ShaderProgram> CreateShaderProgram(const VisualShaderProgramDescriptor& descriptor) override;
 
         /** Create texture object. */
         /**@{*/
-        SharedRenderResource<Texture1D> CreateTexture(const TextureDescriptor1D& descriptor) override;
-        SharedRenderResource<Texture2D> CreateTexture(const TextureDescriptor2D& descriptor) override;
-        SharedRenderResource<Texture3D> CreateTexture(const TextureDescriptor3D& descriptor) override;
+        [[nodiscard]] SharedRenderResource<Texture1D> CreateTexture(const TextureDescriptor1D& descriptor) override;
+        [[nodiscard]] SharedRenderResource<Texture2D> CreateTexture(const TextureDescriptor2D& descriptor) override;
+        [[nodiscard]] SharedRenderResource<Texture3D> CreateTexture(const TextureDescriptor3D& descriptor) override;
         /**@}*/
 
         /** Create uniform buffer object. */
-        RenderResource<UniformBuffer> CreateUniformBuffer(const UniformBufferDescriptor& descriptor) override;
+        [[nodiscard]] RenderResource<UniformBuffer> CreateUniformBuffer(const UniformBufferDescriptor& descriptor) override;
 
         /** Create framed uniform buffer object. */
-        RenderResource<FramedUniformBuffer> CreateFramedUniformBuffer(const FramedUniformBufferDescriptor& descriptor) override;
+        [[nodiscard]] RenderResource<FramedUniformBuffer> CreateFramedUniformBuffer(const FramedUniformBufferDescriptor& descriptor) override;
 
         /** Create vertex buffer object. */
-        RenderResource<VertexBuffer> CreateVertexBuffer(const VertexBufferDescriptor& descriptor) override;
+        [[nodiscard]] RenderResource<VertexBuffer> CreateVertexBuffer(const VertexBufferDescriptor& descriptor) override;
 
 
         /** Update texture data. */
@@ -148,6 +146,16 @@ namespace Molten
         bool UpdateTexture(Texture3D& texture3D, const TextureUpdateDescriptor3D& descriptor) override;
         /**@}*/
 
+        /** Update uniform buffer data. */
+        void UpdateUniformBuffer(RenderResource<UniformBuffer>& uniformBuffer, const void* data, const size_t size, const size_t offset) override;
+
+        /** Update uniform buffer data. */
+        void UpdateFramedUniformBuffer(RenderResource<FramedUniformBuffer>& framedUniformBuffer, const void* data, const size_t size, const size_t offset) override;
+
+
+        /** Draw next frame by one or multiple render passes. */
+        bool DrawFrame(const RenderPasses& renderPasses) override;
+
 
         /** Destroys render resource.
          *  Resources are not destroyed right away, but instead put in a cleanup queue in order to make sure that resources in use not are destroyed.
@@ -155,7 +163,6 @@ namespace Molten
         /**@{*/
         void Destroy(DescriptorSet& descriptorSet) override;
         void Destroy(FramedDescriptorSet& framedDescriptorSet) override;
-        void Destroy(Framebuffer& framebuffer) override;
         void Destroy(IndexBuffer& indexBuffer) override;
         void Destroy(Pipeline& pipeline) override;
         void Destroy(RenderPass& renderPass) override;
@@ -172,82 +179,36 @@ namespace Molten
         /**@}*/
 
 
-        /** Bind descriptor set to draw queue. */
-        void BindDescriptorSet(DescriptorSet& descriptorSet) override;
-
-        /** Bind framed descriptor set to draw queue. */
-        void BindFramedDescriptorSet(FramedDescriptorSet& framedDescriptorSet) override;
-
-        /** Bind pipeline to draw queue. */
-        void BindPipeline(Pipeline& pipeline) override;
-
-
-
-
-        void DrawFrame(const RenderPassGroup& renderPassGroup) override;
-
-
-
-        /** Begin and initialize rendering to framebuffers. */
-        void BeginDraw() override;
-
-        /** Draw vertex buffer, using the current bound pipeline. */
-        void DrawVertexBuffer(VertexBuffer& vertexBuffer) override;
-
-        /** Draw indexed vertex buffer, using the current bound pipeline. */
-        void DrawVertexBuffer(IndexBuffer& indexBuffer, VertexBuffer& vertexBuffer) override;
-
-        /** Push constant values to shader stage.
-         *  This function call has no effect if provided id argument is greater than the number of push constants in pipeline.
-         *
-         * @param location Id of push constant to update. This id can be shared between multiple shader stages.
-         */
-        /**@{*/
-        void PushConstant(const uint32_t location, const bool& value) override;
-        void PushConstant(const uint32_t location, const int32_t& value) override;
-        void PushConstant(const uint32_t location, const float& value) override;
-        void PushConstant(const uint32_t location, const Vector2f32& value) override;
-        void PushConstant(const uint32_t location, const Vector3f32& value) override;
-        void PushConstant(const uint32_t location, const Vector4f32& value) override;
-        void PushConstant(const uint32_t location, const Matrix4x4f32& value) override;
-        /**@}*/
-
-
-        /** Finalize and present rendering. */
-        void EndDraw() override;
-
-
         /** Sleep until the graphical device is ready. */
         void WaitForDevice() override;
-
-
-        /** Update uniform buffer data. */
-        void UpdateUniformBuffer(RenderResource<UniformBuffer>& uniformBuffer, const void* data, const size_t size, const size_t offset) override;
-
-        /** Update uniform buffer data. */
-        void UpdateFramedUniformBuffer(RenderResource<FramedUniformBuffer>& framedUniformBuffer, const void* data, const size_t size, const size_t offset) override;
 
     private:
 
         /** Renderer creation functions. */
         /**@{*/
-        bool LoadRequirements();
-        bool LoadInstance(const Version& version);      
-        bool LoadSurface();
-        bool LoadPhysicalDevice();
-        bool LoadLogicalDevice();
-        bool LoadMemoryAllocator();
-        bool LoadRenderPass();
-        bool LoadSwapChain();
-        bool LoadCommandPool();
+        [[nodiscard]] bool LoadRequirements();
+        [[nodiscard]] bool LoadInstance(const Version& version);
+        [[nodiscard]] bool LoadSurface();
+        [[nodiscard]] bool LoadPhysicalDevice();
+        [[nodiscard]] bool LoadLogicalDevice();
+        [[nodiscard]] bool LoadMemoryAllocator();
+        [[nodiscard]] bool LoadSwapChain();
+        [[nodiscard]] bool LoadCommandPool();
         /**@}*/
 
+        /** Renderer recreation functions and load functions with vulkan result. */
+        /**@{*/
+        [[nodiscard]] bool ReloadSwapChain();
+        Vulkan::Result<> LoadSwapChainRenderPass();
+        Vulkan::Result<> ReloadSwapChainRenderPass();
+        /** @}*/
+
         /** Get next cleanup frame index. */
-        uint32_t GetNextDestroyerFrameIndex() const;
+        [[nodiscard]] uint32_t GetNextDestroyerFrameIndex() const;
 
         /** Texture creation/update helper functions.*/
         /**@{*/
-        bool CreateTexture(
+        [[nodiscard]] bool CreateTexture(
             Vulkan::DeviceImage& deviceImage,
             VkImageView& imageView,
             const Vector3ui32& dimensions,
@@ -259,7 +220,7 @@ namespace Molten
             const VkImageViewType imageViewType,
             const VkComponentMapping& componentMapping);
 
-        bool UpdateTexture(
+        [[nodiscard]] bool UpdateTexture(
             Vulkan::DeviceImage& deviceImage,
             const uint8_t bytesPerPixel,
             const void* data,
@@ -269,12 +230,12 @@ namespace Molten
 
         /** Shader creation and manipulation functions. */
         /**@{*/
-        bool CreateVertexInputAttributes(
+        [[nodiscard]] bool CreateVertexInputAttributes(
             const Shader::Visual::InputInterface& inputs,
             std::vector<VkVertexInputAttributeDescription>& attributes, 
             uint32_t& stride) const;
         
-        bool CreateDescriptorSetLayouts(
+        [[nodiscard]] bool CreateDescriptorSetLayouts(
             Vulkan::DescriptorSetLayouts& setLayouts,
             const MappedDescriptorSets& mappedDescriptorSets);
         /**@}*/
@@ -306,18 +267,14 @@ namespace Molten
         Vulkan::PhysicalDevice m_physicalDevice;
         Vulkan::LogicalDevice m_logicalDevice;
         Vulkan::MemoryAllocator m_memoryAllocator;
-        Vulkan::ResourceDestroyer m_resourceDestroyer;
-        VkRenderPass m_renderPass;
+        Vulkan::ResourceDestroyer m_resourceDestroyer;  
         Vulkan::SwapChain m_swapChain;
+        SharedRenderResource<VulkanRenderPass> m_swapChainRenderPass;
         VkSurfaceFormatKHR m_surfaceFormat;
         VkPresentModeKHR m_presentMode;
         VkCommandPool m_commandPool;
-        std::vector<VkCommandBuffer> m_commandBuffers;
-        VkCommandBuffer* m_currentCommandBuffer;
-        bool m_beginDraw;
-        uint32_t m_endedDraws;
-        VulkanPipeline* m_currentPipeline;
-        /**@}*/
+        uint32_t m_drawFrameCount;
+        bool m_drawingFrame;
            
     };
 

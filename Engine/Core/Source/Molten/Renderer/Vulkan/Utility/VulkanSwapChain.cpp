@@ -41,21 +41,14 @@ namespace Molten::Vulkan
     SwapChain::SwapChain() :
         m_handle(VK_NULL_HANDLE),
         m_logicalDevice(nullptr),
-        m_renderPass{VK_NULL_HANDLE},
         m_extent{ 0, 0 },
         m_presentMode(VkPresentModeKHR::VK_PRESENT_MODE_MAX_ENUM_KHR),
         m_surfaceFormat{},
-        m_images{},
-        m_imageViews{},
-        m_framebuffers{},
-        m_maxFramesInFlight(0),
+        m_images{},     
         m_imageAvailableSemaphores{},
-        m_renderFinishedSemaphores{},
-        m_inFlightFences{},
-        m_imagesInFlight{},
-        m_currentFrameIndex(0),
+        m_frameFences{},
         m_currentImageIndex(0),
-        m_resize(false)
+        m_currentFrameIndex(0)
     {}
 
     SwapChain::~SwapChain()
@@ -65,19 +58,13 @@ namespace Molten::Vulkan
 
     Result<> SwapChain::Create(
         LogicalDevice& logicalDevice,
-        const VkRenderPass renderPass,
         const VkSurfaceFormatKHR& surfaceFormat,
         const VkPresentModeKHR presentMode,
         const uint32_t imageCount)
     {
         Destroy();
 
-        auto& physicalDevice = logicalDevice.GetPhysicalDevice();
-        auto& surfaceCapabilities = physicalDevice.GetCapabilities().surfaceCapabilities.capabilities;
-
         m_logicalDevice = &logicalDevice;
-        m_renderPass = renderPass;
-        m_extent = surfaceCapabilities.currentExtent;
         m_presentMode = presentMode;
         m_surfaceFormat = surfaceFormat;
 
@@ -113,95 +100,57 @@ namespace Molten::Vulkan
         return m_handle != VK_NULL_HANDLE;
     }
 
-    Result<> SwapChain::BeginDraw()
+    Result<> SwapChain::AcquireNextImage()
     {
-        auto logicalDeviceHandle = m_logicalDevice->GetHandle();
+        const auto logicalDeviceHandle = m_logicalDevice->GetHandle();
 
-        vkWaitForFences(logicalDeviceHandle, 1, &m_inFlightFences[m_currentFrameIndex], VK_TRUE, std::numeric_limits<uint64_t>::max());
+        vkWaitForFences(logicalDeviceHandle, 1, &m_frameFences[m_currentFrameIndex], VK_TRUE, std::numeric_limits<uint64_t>::max());
 
-        const auto acquireImageResult = vkAcquireNextImageKHR(
+        if (const auto acquireImageResult = vkAcquireNextImageKHR(
             logicalDeviceHandle,
             m_handle,
             std::numeric_limits<uint64_t>::max(),
             m_imageAvailableSemaphores[m_currentFrameIndex],
             VK_NULL_HANDLE,
-            &m_currentImageIndex);
-
-        if (acquireImageResult == VK_ERROR_OUT_OF_DATE_KHR || acquireImageResult == VK_SUBOPTIMAL_KHR || m_resize)
-        {
-            if (const auto result = Recreate(); !result.IsSuccessful())
-            {
-                return result;
-            }
-
-            if (const auto result = BeginDraw(); !result.IsSuccessful())
-            {
-                return result;
-            }
-
-            return VkResult::VK_SUCCESS;
-        }
-        else if (acquireImageResult != VK_SUCCESS)
+            &m_currentImageIndex); acquireImageResult != VK_SUCCESS)
         {
             return acquireImageResult;
         }
 
-        if (m_imagesInFlight[m_currentImageIndex] != VK_NULL_HANDLE)
-        {
-            vkWaitForFences(logicalDeviceHandle, 1, &m_imagesInFlight[m_currentImageIndex], VK_TRUE, std::numeric_limits<uint64_t>::max());
-        }
-        m_imagesInFlight[m_currentImageIndex] = m_inFlightFences[m_currentFrameIndex];
-
-        if (m_currentImageIndex >= static_cast<uint32_t>(m_images.size()))
+        if (m_currentImageIndex >= m_images.size())
         {
             return VkResult::VK_ERROR_UNKNOWN;
+        }
+
+        if (const auto result = vkResetFences(logicalDeviceHandle, 1, &m_frameFences[m_currentFrameIndex]); result != VK_SUCCESS)
+        {
+            return result;
         }
 
         return VkResult::VK_SUCCESS;
     }
 
-    Result<> SwapChain::EndDraw(VkCommandBuffer& commandBuffer)
+    Result<> SwapChain::PresentImage(VkSemaphore waitSemaphore)
     {
-        auto logicalDeviceHandle = m_logicalDevice->GetHandle();
-
-        VkSubmitInfo submitInfo = {};
-        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-
-        VkSemaphore imageSemaphores[] = { m_imageAvailableSemaphores[m_currentFrameIndex] };
-        VkPipelineStageFlags pipelineWaitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-        submitInfo.waitSemaphoreCount = 1;
-        submitInfo.pWaitSemaphores = imageSemaphores;
-        submitInfo.pWaitDstStageMask = pipelineWaitStages;
-        submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = &commandBuffer;
-
-        VkSemaphore renderSemaphores[] = { m_renderFinishedSemaphores[m_currentFrameIndex] };
-        submitInfo.signalSemaphoreCount = 1;
-        submitInfo.pSignalSemaphores = renderSemaphores;
-
-        if (const auto result = vkResetFences(logicalDeviceHandle, 1, &m_inFlightFences[m_currentFrameIndex]); result != VK_SUCCESS)
-        {
-            return result;
-        }
-
-        auto& deviceQueues = m_logicalDevice->GetDeviceQueues();
-        if (const auto result = vkQueueSubmit(deviceQueues.graphicsQueue, 1, &submitInfo, m_inFlightFences[m_currentFrameIndex]); result != VK_SUCCESS)
-        {
-            return result;
-        }
+        const uint32_t waitSemaphoreCount = waitSemaphore != VK_NULL_HANDLE ? 1 : 0;
+        const VkSemaphore* waitSemaphorePtr = waitSemaphoreCount ? &waitSemaphore : nullptr;
 
         VkPresentInfoKHR presentInfo = {};
         presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-        presentInfo.waitSemaphoreCount = 1;
-        presentInfo.pWaitSemaphores = renderSemaphores;
+        presentInfo.waitSemaphoreCount = waitSemaphoreCount;
+        presentInfo.pWaitSemaphores = waitSemaphorePtr;
 
         presentInfo.swapchainCount = 1;
         presentInfo.pSwapchains = &m_handle;
         presentInfo.pImageIndices = &m_currentImageIndex;
 
-        vkQueuePresentKHR(deviceQueues.presentQueue, &presentInfo);
+        auto& deviceQueues = m_logicalDevice->GetDeviceQueues();
+        if(const Result<> result = vkQueuePresentKHR(deviceQueues.presentQueue, &presentInfo); !result.IsSuccessful())
+        {
+            return result;
+        }
 
-        m_currentFrameIndex = (m_currentFrameIndex + 1) % m_maxFramesInFlight;
+        m_currentFrameIndex = (m_currentFrameIndex + 1) % static_cast<uint32_t>(m_images.size());
 
         return VkResult::VK_SUCCESS;
     }
@@ -226,28 +175,24 @@ namespace Molten::Vulkan
         return m_surfaceFormat;
     }
 
-    uint32_t SwapChain::GetImageCount() const
+    const Images& SwapChain::GetImages() const
     {
-        return static_cast<uint32_t>(m_images.size());
-    }
-
-    uint32_t SwapChain::GetMaxFramesInFlight() const
-    {
-        return m_maxFramesInFlight;
+        return m_images;
     }
 
     uint32_t SwapChain::GetCurrentImageIndex() const
     {
         return m_currentImageIndex;
     }
-    uint32_t SwapChain::GetCurrentFrameIndex() const
+
+    VkFence SwapChain::GetCurrentFrameFence() const
     {
-        return m_currentFrameIndex;
+        return m_frameFences[m_currentFrameIndex];
     }
 
-    VkFramebuffer SwapChain::GetCurrentFramebuffer() const
+    VkSemaphore SwapChain::GetCurrentImageAvailableSemaphore() const
     {
-        return m_framebuffers[m_currentImageIndex];
+        return m_imageAvailableSemaphores[m_currentFrameIndex];
     }
 
     LogicalDevice& SwapChain::GetLogicalDevice()
@@ -264,18 +209,9 @@ namespace Molten::Vulkan
         return m_logicalDevice != nullptr;
     }
 
-    void SwapChain::SetExtent(VkExtent2D extent)
-    {
-        if (extent.width != m_extent.width || extent.height != m_extent.height)
-        {
-            m_resize = true;
-        }
-        m_extent = extent;
-    }
-
     Result<> SwapChain::Load(const uint32_t imageCount)
     {
-        auto oldHandle = m_handle;
+        const auto oldHandle = m_handle;
 
         SmartFunction destroyer([&]()
         {
@@ -285,6 +221,8 @@ namespace Molten::Vulkan
         auto& physicalDevice = m_logicalDevice->GetPhysicalDevice();
         auto& surface = physicalDevice.GetSurface();
         auto& surfaceCapabilities = physicalDevice.GetCapabilities().surfaceCapabilities.capabilities;
+
+        m_extent = surfaceCapabilities.currentExtent;
 
         VkSwapchainCreateInfoKHR swapchainInfo = {};
         swapchainInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
@@ -320,7 +258,7 @@ namespace Molten::Vulkan
             swapchainInfo.pQueueFamilyIndices = nullptr;
         }
 
-        auto logicalDeviceHandle = m_logicalDevice->GetHandle();
+        const auto logicalDeviceHandle = m_logicalDevice->GetHandle();
 
         if (const auto result = vkCreateSwapchainKHR(logicalDeviceHandle, &swapchainInfo, nullptr, &m_handle); result != VkResult::VK_SUCCESS)
         {
@@ -342,7 +280,6 @@ namespace Molten::Vulkan
         }
 
         // Finalize.
-        m_resize = false;
         destroyer.Release();
 
         return {};
@@ -351,112 +288,72 @@ namespace Molten::Vulkan
 
     Result<> SwapChain::LoadAssociatedObjects()
     {
-        auto logicalDeviceHandle = m_logicalDevice->GetHandle();
+        const auto logicalDeviceHandle = m_logicalDevice->GetHandle();
+
+        SmartFunction destroyer([&]()
+        {
+            auto& logicalDevice = m_logicalDevice->GetHandle();
+
+            for (auto& fence : m_frameFences)
+            {
+                vkDestroyFence(logicalDevice, fence, nullptr);
+            }
+
+            for (auto& semaphore : m_imageAvailableSemaphores)
+            {
+                vkDestroySemaphore(logicalDevice, semaphore, nullptr);
+            }
+        });
 
         // Get images from the swap chain.
-        if (const auto result = GetSwapchainImages(m_images); !result.IsSuccessful())
+        if (const auto result = FetchwapchainImages(m_images); !result.IsSuccessful())
         {
             return result;
         }
-
-        // Create image views.
-        m_imageViews.resize(m_images.size(), VK_NULL_HANDLE);
-        for (size_t i = 0; i < m_imageViews.size(); i++)
-        {
-            VkImageViewCreateInfo imageViewInfo = {};
-            imageViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-            imageViewInfo.image = m_images[i];
-            imageViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-            imageViewInfo.format = m_surfaceFormat.format;
-            imageViewInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-            imageViewInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-            imageViewInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-            imageViewInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-            imageViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-            imageViewInfo.subresourceRange.baseMipLevel = 0;
-            imageViewInfo.subresourceRange.levelCount = 1;
-            imageViewInfo.subresourceRange.baseArrayLayer = 0;
-            imageViewInfo.subresourceRange.layerCount = 1;
-
-            if (const auto result = vkCreateImageView(logicalDeviceHandle, &imageViewInfo, nullptr, &m_imageViews[i]); result != VK_SUCCESS)
-            {
-                return result;
-            }
-        }
-
-        // Load framebuffers.
-        for (auto& imageView : m_imageViews)
-        {
-            auto framebuffer = CreateFramebuffer(logicalDeviceHandle, m_renderPass, imageView, { m_extent.width, m_extent.height });
-            m_framebuffers.push_back(framebuffer);
-        }
-        if (!m_framebuffers.size())
-        {
-            return VkResult::VK_ERROR_UNKNOWN;
-        }
-
-        m_maxFramesInFlight = static_cast<uint32_t>(m_framebuffers.size()) - 1;      
 
         // Load sync objects.
-        m_imagesInFlight.resize(m_images.size(), VK_NULL_HANDLE);
+        if (const auto result = CreateSemaphores(m_imageAvailableSemaphores, logicalDeviceHandle, m_images.size()); result != VK_SUCCESS)
+        {
+            return result;
+        }
 
-        if (const auto result = Vulkan::CreateSemaphores(m_imageAvailableSemaphores, logicalDeviceHandle, m_maxFramesInFlight); result != VK_SUCCESS)
+        if (const auto result = CreateFences(m_frameFences, logicalDeviceHandle, VK_FENCE_CREATE_SIGNALED_BIT, m_images.size()); result != VK_SUCCESS)
         {
             return result;
         }
-        if (const auto result = Vulkan::CreateSemaphores(m_renderFinishedSemaphores, logicalDeviceHandle, m_maxFramesInFlight); result != VK_SUCCESS)
-        {
-            return result;
-        }
-        if (const auto result = Vulkan::CreateFences(m_inFlightFences, logicalDeviceHandle, VK_FENCE_CREATE_SIGNALED_BIT, m_maxFramesInFlight); result != VK_SUCCESS)
-        {
-            return result;
-        }
+
+        destroyer.Release();
 
         return {};
     }
 
     void SwapChain::UnloadAssociatedObjects()
     {
-        auto logicalDeviceHandle = m_logicalDevice->GetHandle();
+        const auto logicalDeviceHandle = m_logicalDevice->GetHandle();
 
-        Vulkan::DestroySemaphores(logicalDeviceHandle, m_imageAvailableSemaphores);
+        DestroySemaphores(logicalDeviceHandle, m_imageAvailableSemaphores);
         m_imageAvailableSemaphores.clear();
-        Vulkan::DestroySemaphores(logicalDeviceHandle, m_renderFinishedSemaphores);
-        m_renderFinishedSemaphores.clear();
-        Vulkan::DestroyFences(logicalDeviceHandle, m_inFlightFences);
-        m_inFlightFences.clear();
-
-        m_imagesInFlight.clear();
-
-        for (auto& framebuffer : m_framebuffers)
-        {
-            vkDestroyFramebuffer(logicalDeviceHandle, framebuffer, nullptr);
-        }
-        m_framebuffers.clear();
-
-        Vulkan::DestroyImageViews(logicalDeviceHandle, m_imageViews);
+        DestroyFences(logicalDeviceHandle, m_frameFences);
+        m_frameFences.clear();
     }
 
-    Result<> SwapChain::GetSwapchainImages(Images& images)
+    Result<> SwapChain::FetchwapchainImages(Images& images)
     {
-        Result<> result;
-
-        auto logicalDeviceHandle = m_logicalDevice->GetHandle();
+        const auto logicalDeviceHandle = m_logicalDevice->GetHandle();
 
         uint32_t imageCount = 0;
-        if ((result = vkGetSwapchainImagesKHR(logicalDeviceHandle, m_handle, &imageCount, nullptr)) != VkResult::VK_SUCCESS)
+        if (const auto result = vkGetSwapchainImagesKHR(logicalDeviceHandle, m_handle, &imageCount, nullptr); result != VkResult::VK_SUCCESS)
         {
             return result;
         }
 
         images.resize(imageCount);
-        if ((result = vkGetSwapchainImagesKHR(logicalDeviceHandle, m_handle, &imageCount, images.data())) != VkResult::VK_SUCCESS)
+        if (const auto result = vkGetSwapchainImagesKHR(logicalDeviceHandle, m_handle, &imageCount, images.data()); result != VkResult::VK_SUCCESS)
         {
             return result;
         }
 
-        return result;
+        return VkResult::VK_SUCCESS;
     }
 
 }

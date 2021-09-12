@@ -54,7 +54,7 @@ namespace Molten::Vulkan
             return;
         }
 
-        const auto typeInfo = ResultMapper<TResultType>::GetInfo(result.Get<0>());
+        const auto typeInfo = ResultMapper<TResultType>::GetInfo(result.template Get<0>());
         const auto msg = CreateMessage(typeInfo, message);
         logger->Write(severity, msg);
     }
@@ -73,13 +73,13 @@ namespace Molten::Vulkan
 
         if (result.index() == 0)
         {
-            const auto typeInfo = ResultMapper<VkResult>::GetInfo(result.Get<0>());
+            const auto typeInfo = ResultMapper<VkResult>::GetInfo(result.template Get<0>());
             const auto msg = CreateMessage(typeInfo, message);
             logger->Write(severity, msg);
         }
         else
         {
-            const auto typeInfo = ResultMapper<TResultType>::GetInfo(result.Get<1>());
+            const auto typeInfo = ResultMapper<TResultType>::GetInfo(result.template Get<1>());
             const auto msg = CreateMessage(typeInfo, message);
             logger->Write(severity, msg);
         }

@@ -69,8 +69,6 @@ namespace Molten::Gui
     template<typename TTheme>
     void Canvas<TTheme>::Draw()
     {
-        m_canvasRenderer.BeginDraw();
-
         m_canvasRenderer.DrawRect({ { 0.0f, 0.0f }, m_size }, m_theme.backgroundColor);
 
         auto layerPartialLane = m_layers.template GetLane<typename LayerData<TTheme>::ListPartialLaneType>();
@@ -78,8 +76,6 @@ namespace Molten::Gui
         {
             layer->GetLayer()->Draw();
         }
-
-        m_canvasRenderer.EndDraw();
     }
 
     template<typename TTheme>

@@ -28,7 +28,6 @@
 
 #include "Molten/Renderer/Vulkan/VulkanRenderer.hpp"
 #include "Molten/Renderer/Vulkan/VulkanDescriptorSet.hpp"
-#include "Molten/Renderer/Vulkan/VulkanFramebuffer.hpp"
 #include "Molten/Renderer/Vulkan/VulkanIndexBuffer.hpp"
 #include "Molten/Renderer/Vulkan/VulkanPipeline.hpp"
 #include "Molten/Renderer/Vulkan/VulkanRenderPass.hpp"
@@ -58,9 +57,9 @@ namespace Molten
 {
 
     // Static helper functions and traits.
-    static VkShaderStageFlagBits GetShaderProgramStageFlag(const Shader::Type type)
+    MOLTEN_UNSCOPED_ENUM_BEGIN
+    static VkShaderStageFlagBits GetVulkanShaderProgramStageFlag(const Shader::Type type)
     {
-        MOLTEN_UNSCOPED_ENUM_BEGIN
         switch (type)
         {
             case Shader::Type::Vertex:   return VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT;
@@ -68,11 +67,9 @@ namespace Molten
         }
 
         throw Exception("Provided shader type is not supported by the Vulkan renderer.");
-        MOLTEN_UNSCOPED_ENUM_END
     }
-
-    MOLTEN_UNSCOPED_ENUM_BEGIN
-    static VkPrimitiveTopology GetPrimitiveTopology(const Pipeline::Topology topology)
+ 
+    static VkPrimitiveTopology GetVulkanPrimitiveTopology(const Pipeline::Topology topology)
     {     
         switch (topology)
         {
@@ -85,7 +82,7 @@ namespace Molten
         throw Exception("Provided primitive topology is not supported by the Vulkan renderer.");      
     }
 
-    static VkPolygonMode GetPolygonMode(const Pipeline::PolygonMode polygonMode)
+    static VkPolygonMode GetVulkanPolygonMode(const Pipeline::PolygonMode polygonMode)
     {
         switch (polygonMode)
         {
@@ -97,7 +94,7 @@ namespace Molten
 
     }
     
-    static VkFrontFace GetFrontFace(const Pipeline::FrontFace frontFace)
+    static VkFrontFace GetVulkanFrontFace(const Pipeline::FrontFace frontFace)
     {
         switch (frontFace)
         {
@@ -107,7 +104,7 @@ namespace Molten
         throw Exception("Provided front face is not supported by the Vulkan renderer.");
     }
 
-    static VkCullModeFlagBits GetCullMode(const Pipeline::CullMode cullMode)
+    static VkCullModeFlagBits GetVulkanCullMode(const Pipeline::CullMode cullMode)
     {
         switch (cullMode)
         {
@@ -119,7 +116,7 @@ namespace Molten
         throw Exception("Provided cull mode is not supported by the Vulkan renderer.");
     }
 
-    static VkFormat GetImageFormat(const ImageFormat imageFormat, uint8_t& bytesPerPixel)
+    static VkFormat GetVulkanImageFormat(const ImageFormat imageFormat, uint8_t& bytesPerPixel)
     {
         switch (imageFormat)
         {
@@ -142,7 +139,7 @@ namespace Molten
         throw Exception("Provided image format is not supported by the Vulkan renderer.");
     }
 
-    static bool GetVertexAttributeFormatAndSize(const Shader::VariableDataType format, VkFormat & vulkanFormat, uint32_t & formatSize)
+    static bool GetVulkanVertexAttributeFormat(const Shader::VariableDataType format, VkFormat & vulkanFormat, uint32_t & formatSize)
     {       
         switch (format)
         {
@@ -193,7 +190,7 @@ namespace Molten
         return false;     
     }
 
-    static VkIndexType GetIndexBufferDataType(const IndexBuffer::DataType dataType)
+    /*static VkIndexType GetIndexBufferDataType(const IndexBuffer::DataType dataType)
     {
         switch (dataType)
         {
@@ -202,9 +199,9 @@ namespace Molten
         }
         
         throw Exception("Provided data type is not supported as index buffer data type by the Vulkan renderer.");
-    }
+    }*/
   
-    static VkDescriptorType GetDescriptorType(const DescriptorBindingType bindingType)
+    static VkDescriptorType GetVulkanDescriptorType(const DescriptorBindingType bindingType)
     {
         switch(bindingType)
         {
@@ -216,7 +213,7 @@ namespace Molten
         throw Exception("Provided binding type is not handled.");
     }
 
-    static VkFilter GetSamplerFilter(const SamplerFilter samplerFilter)
+    static VkFilter GetVulkanSamplerFilter(const SamplerFilter samplerFilter)
     {
         switch (samplerFilter)
         {
@@ -226,7 +223,7 @@ namespace Molten
         throw Exception("Provided sampler filter is not handled.");
     }
 
-    static VkSamplerAddressMode GetSamplerAddressMode(const SamplerWrapMode samplerWrapMode)
+    static VkSamplerAddressMode GetVulkanSamplerAddressMode(const SamplerWrapMode samplerWrapMode)
     {
         switch (samplerWrapMode)
         {
@@ -237,7 +234,7 @@ namespace Molten
         throw Exception("Provided sampler wrap mode is not handled.");
     }
 
-    static VkBlendFactor GetBlendFactor(const Pipeline::BlendFunction blendFunction)
+    static VkBlendFactor GetVulkanBlendFactor(const Pipeline::BlendFunction blendFunction)
     {
         switch (blendFunction)
         {
@@ -256,7 +253,7 @@ namespace Molten
         throw Exception("Provided blend function is not handled.");
     }
 
-    static VkBlendOp GetBlendOperator(const Pipeline::BlendOperator blendOperator)
+    static VkBlendOp GetVulkanBlendOperator(const Pipeline::BlendOperator blendOperator)
     {
         switch (blendOperator)
         {
@@ -270,7 +267,7 @@ namespace Molten
         throw Exception("Provided blend operator is not handled.");
     }
 
-    static VkComponentSwizzle GetComponentSwizzle(const ImageComponentSwizzle componentswizzle)
+    static VkComponentSwizzle GetVulkanComponentSwizzle(const ImageComponentSwizzle componentswizzle)
     {
         switch (componentswizzle)
         {
@@ -286,13 +283,13 @@ namespace Molten
         throw Exception("Provided texture component swizzle is not handled.");
     }
 
-    static VkComponentMapping GetComponentMappings(const ImageSwizzleMapping swizzleMapping)
+    static VkComponentMapping GetVulkanComponentMappings(const ImageSwizzleMapping swizzleMapping)
     {
         return {
-            GetComponentSwizzle(swizzleMapping.red),
-            GetComponentSwizzle(swizzleMapping.green),
-            GetComponentSwizzle(swizzleMapping.blue),
-            GetComponentSwizzle(swizzleMapping.alpha)
+            GetVulkanComponentSwizzle(swizzleMapping.red),
+            GetVulkanComponentSwizzle(swizzleMapping.green),
+            GetVulkanComponentSwizzle(swizzleMapping.blue),
+            GetVulkanComponentSwizzle(swizzleMapping.alpha)
         };
     }
 
@@ -366,16 +363,19 @@ namespace Molten
         m_logicalDevice{},
         m_memoryAllocator{},
         m_resourceDestroyer(m_logicalDevice, m_memoryAllocator),
-        m_renderPass(VK_NULL_HANDLE),
+        //m_renderPass(VK_NULL_HANDLE),
         m_swapChain{},
+        //m_swapChainFramedTexture{},
+        m_swapChainRenderPass{},
         m_surfaceFormat{},
         m_presentMode(VkPresentModeKHR::VK_PRESENT_MODE_IMMEDIATE_KHR),
         m_commandPool(VK_NULL_HANDLE),
-        m_commandBuffers{},
-        m_currentCommandBuffer(nullptr),
-        m_beginDraw(false),
-        m_currentPipeline(nullptr),
-        m_endedDraws(0)
+        //m_commandBuffers{},
+        //m_currentCommandBuffer(nullptr),
+        //m_beginDraw(false)//,
+        //m_currentPipeline(nullptr),
+        m_drawFrameCount(0),
+        m_drawingFrame(false)
     {}
 
     VulkanRenderer::VulkanRenderer(RenderTarget& renderTarget, const Version& version, Logger* logger) :
@@ -407,8 +407,9 @@ namespace Molten
             LoadPhysicalDevice() &&
             LoadLogicalDevice() &&
             LoadMemoryAllocator() &&
-            LoadRenderPass() &&
+            //LoadRenderPass() &&
             LoadSwapChain() &&
+            //LoadSwapChainRenderPass() &&
             LoadCommandPool();
 
         m_isOpen = loaded;
@@ -417,6 +418,27 @@ namespace Molten
 
     void VulkanRenderer::Close()
     {
+        if(m_swapChainRenderPass)
+        {
+            if(m_swapChainRenderPass->m_attachments.size())
+            {
+                auto& attachment = m_swapChainRenderPass->m_attachments[0];
+                auto& texture = std::get<2>(attachment.texture);
+
+                for(auto& textureFrame : texture->frames)
+                {
+                    textureFrame.deviceImage.image = VK_NULL_HANDLE;
+                }
+
+                m_resourceDestroyer.Add(GetNextDestroyerFrameIndex(), *texture);
+
+                m_swapChainRenderPass->m_attachments.clear();
+            }
+
+            m_resourceDestroyer.Add(GetNextDestroyerFrameIndex(), *m_swapChainRenderPass);
+            m_swapChainRenderPass.reset();
+        }
+
         m_resourceDestroyer.ProcessAll();
         m_memoryAllocator.Destroy();
 
@@ -428,17 +450,9 @@ namespace Molten
             {
                 vkDestroyCommandPool(m_logicalDevice.GetHandle(), m_commandPool, nullptr);
                 m_commandPool = VK_NULL_HANDLE;
-                m_commandBuffers = {};
-                m_currentCommandBuffer = nullptr;
             }
 
             m_swapChain.Destroy();  
-
-            if (m_renderPass)
-            {
-                vkDestroyRenderPass(m_logicalDevice.GetHandle(), m_renderPass, nullptr);
-                m_renderPass = VK_NULL_HANDLE;
-            }
         }
 
         m_logicalDevice.Destroy();
@@ -456,11 +470,8 @@ namespace Molten
         m_physicalDevice = {};
         m_logicalDevice = {};
         m_swapChain = {};
-        m_commandBuffers.clear();
-        m_currentCommandBuffer = nullptr;
-        m_beginDraw = false;      
-        m_currentPipeline = nullptr;
-        m_endedDraws = 0;
+        m_drawFrameCount = 0;
+        m_drawingFrame = false;
     }
 
     bool VulkanRenderer::IsOpen() const
@@ -468,11 +479,11 @@ namespace Molten
         return m_isOpen;
     }
 
-    void VulkanRenderer::Resize(const Vector2ui32& size)
+    void VulkanRenderer::Resize(const Vector2ui32& /*size*/)
     {
-        if (m_beginDraw)
+        /*if (m_drawingFrame)
         {
-            Logger::WriteError(m_logger, "Cannot resize renderer while drawing.");
+            Logger::WriteError(m_logger, "Cannot resize renderer while drawing frame.");
             return;
         }
 
@@ -484,7 +495,7 @@ namespace Molten
 
         swapChainExtent.width = size.x;
         swapChainExtent.height = size.y;
-        m_swapChain.SetExtent(swapChainExtent);
+        m_swapChain.SetExtent(swapChainExtent);*/
     }
 
     Renderer::BackendApi VulkanRenderer::GetBackendApi() const
@@ -514,6 +525,11 @@ namespace Molten
         }
 
         return it->second.location;
+    }
+
+    SharedRenderResource<RenderPass> VulkanRenderer::GetSwapChainRenderPass()
+    {
+        return m_swapChainRenderPass;
     }
 
     RenderResource<DescriptorSet> VulkanRenderer::CreateDescriptorSet(const DescriptorSetDescriptor& descriptor)
@@ -711,11 +727,11 @@ namespace Molten
         std::vector<std::unique_ptr<VkDescriptorBufferInfo[]>> bufferInfos;
         std::vector<std::unique_ptr<VkDescriptorImageInfo[]>> imageInfos;
         std::vector<VkDescriptorPoolSize> poolSizes;
-        const uint32_t swapChainImageCount = m_swapChain.GetImageCount();  
+        const size_t swapChainImageCount = m_swapChain.GetImages().size();  
     
         const auto& bindings = descriptor.bindings;
         auto setWrites = std::make_unique<std::vector<VkWriteDescriptorSet>[]>(swapChainImageCount);
-        for (uint32_t i = 0; i < swapChainImageCount; i++)
+        for (size_t i = 0; i < swapChainImageCount; i++)
         {
             setWrites[i].resize(bindings.size());
         }
@@ -768,7 +784,7 @@ namespace Molten
             }
 
             bufferInfos.push_back(std::move(bufferInfo));
-            AddBindingToPool(descriptorType, swapChainImageCount);
+            AddBindingToPool(descriptorType, static_cast<uint32_t>(swapChainImageCount));
         };
 
         auto writeImageInfos = [&](
@@ -798,7 +814,7 @@ namespace Molten
             }
 
             imageInfos.push_back(std::move(imageInfo));
-            AddBindingToPool(descriptorType, swapChainImageCount);
+            AddBindingToPool(descriptorType, static_cast<uint32_t>(swapChainImageCount));
         };
 
         size_t writeIndex = 0;
@@ -868,7 +884,7 @@ namespace Molten
         poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
         poolInfo.pPoolSizes = poolSizes.data();
-        poolInfo.maxSets = swapChainImageCount;
+        poolInfo.maxSets = static_cast<uint32_t>(swapChainImageCount);
         poolInfo.flags = 0;
 
         VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
@@ -890,7 +906,7 @@ namespace Molten
         VkDescriptorSetAllocateInfo allocInfo = {};
         allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         allocInfo.descriptorPool = descriptorPool;
-        allocInfo.descriptorSetCount = swapChainImageCount;
+        allocInfo.descriptorSetCount = static_cast<uint32_t>(swapChainImageCount);
         allocInfo.pSetLayouts = setLayouts.data();
 
         Vulkan::DescriptorSets descriptorSets(swapChainImageCount, VK_NULL_HANDLE);
@@ -900,7 +916,7 @@ namespace Molten
             return {};
         }
 
-        for(uint32_t i = 0; i < swapChainImageCount; i++)
+        for(size_t i = 0; i < swapChainImageCount; i++)
         {
             const auto descriptorSet = descriptorSets[i];
             for (auto& write : setWrites[i])
@@ -916,116 +932,6 @@ namespace Molten
             setIndex,
             std::move(descriptorSets),
             descriptorPool
-        }, RenderResourceDeleter{ this });
-    }
-
-    RenderResource<Framebuffer> VulkanRenderer::CreateFramebuffer(const FramebufferDescriptor& descriptor)
-    {
-        VulkanFramebuffer::Frames frames(m_swapChain.GetImageCount());
-        //Vulkan::DeviceImageAndViews deviceImageAndViews(m_swapChain.GetImageCount());
-
-        const auto imageFormat = m_surfaceFormat.format;
-
-        // TODO: Insufficient device image guarding.
-
-        for(auto& frame : frames)
-        {
-            // Create image.
-            VkImageCreateInfo imageInfo = {};
-            imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-            imageInfo.flags = 0;
-            imageInfo.imageType = VkImageType::VK_IMAGE_TYPE_2D;
-            imageInfo.extent.width = descriptor.dimensions.x;
-            imageInfo.extent.height = descriptor.dimensions.y;
-            imageInfo.extent.depth = 1;
-            imageInfo.mipLevels = 1;
-            imageInfo.arrayLayers = 1;
-            imageInfo.format = imageFormat;
-            imageInfo.tiling = VkImageTiling::VK_IMAGE_TILING_OPTIMAL;
-            imageInfo.initialLayout = VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
-            imageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-            imageInfo.sharingMode = VkSharingMode::VK_SHARING_MODE_EXCLUSIVE;
-            imageInfo.samples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
-
-            if (const auto result = m_memoryAllocator.CreateDeviceImage(
-                frame.texture.deviceImage,
-                imageInfo,
-                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT); !result.IsSuccessful())
-            {
-                Vulkan::Logger::WriteError(m_logger, result, "Failed to create device image for framebuffer");
-                return {};
-            }
-
-            // Create image view.
-            VkImageViewCreateInfo viewInfo = {};
-            viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-            viewInfo.image = frame.texture.deviceImage.image;
-            viewInfo.viewType = VkImageViewType::VK_IMAGE_VIEW_TYPE_2D;
-            viewInfo.format = imageFormat;
-            viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-            viewInfo.subresourceRange.baseMipLevel = 0;
-            viewInfo.subresourceRange.levelCount = 1;
-            viewInfo.subresourceRange.baseArrayLayer = 0;
-            viewInfo.subresourceRange.layerCount = 1;
-            viewInfo.components = {};
-
-            if (const auto result = vkCreateImageView(m_logicalDevice.GetHandle(), &viewInfo, nullptr, &frame.texture.imageView); result != VK_SUCCESS)
-            {
-                Vulkan::Logger::WriteError(m_logger, result, "Failed to create image view for framebuffer");
-                return {};
-            }
-
-            // Create framebuffer.
-            VkImageView framebufferAttachments[] = { frame.texture.imageView };
-
-            VkFramebufferCreateInfo framebufferInfo = {};
-            framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-            framebufferInfo.renderPass = m_renderPass;
-            framebufferInfo.attachmentCount = 1;
-            framebufferInfo.pAttachments = framebufferAttachments;
-            framebufferInfo.width = descriptor.dimensions.x;
-            framebufferInfo.height = descriptor.dimensions.y;
-            framebufferInfo.layers = 1;
-
-            if (const auto result = vkCreateFramebuffer(m_logicalDevice.GetHandle(), &framebufferInfo, nullptr, &frame.framebuffer); result != VK_SUCCESS)
-            {
-                Vulkan::Logger::WriteError(m_logger, result, "Failed to create framebuffer object for framebuffer");
-                return {};
-            }
-        }
-
-        VkCommandPoolCreateInfo commandPoolInfo = {};
-        commandPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-        commandPoolInfo.queueFamilyIndex = m_physicalDevice.GetDeviceQueueIndices().graphicsQueue.value();
-        commandPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-
-        VkCommandPool commandPool = VK_NULL_HANDLE;
-        if (const auto result = vkCreateCommandPool(m_logicalDevice.GetHandle(), &commandPoolInfo, nullptr, &commandPool); result != VK_SUCCESS)
-        {
-            Vulkan::Logger::WriteError(m_logger, result, "Failed to create command pool for framebuffer.");
-            return {};
-        }
-
-        std::vector<VkCommandBuffer> commandBuffers(frames.size());
-
-        VkCommandBufferAllocateInfo commandBufferInfo = {};
-        commandBufferInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        commandBufferInfo.commandPool = commandPool;
-        commandBufferInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        commandBufferInfo.commandBufferCount = static_cast<uint32_t>(commandBuffers.size());
-
-        if (const auto result = vkAllocateCommandBuffers(m_logicalDevice.GetHandle(), &commandBufferInfo, commandBuffers.data()); result != VK_SUCCESS)
-        {
-            vkDestroyCommandPool(m_logicalDevice.GetHandle(), commandPool, nullptr);
-            Vulkan::Logger::WriteError(m_logger, result, "Failed to allocate command buffers for framebuffer.");
-            return {};
-        }
-
-        return RenderResource<Framebuffer>(new VulkanFramebuffer{
-            std::move(frames),
-            descriptor.dimensions,
-            commandPool,
-            std::move(commandBuffers)
         }, RenderResourceDeleter{ this });
     }
 
@@ -1089,6 +995,13 @@ namespace Molten
             return {};
         }
 
+        auto vulkanRenderPass = std::static_pointer_cast<VulkanRenderPass>(descriptor.renderPass);
+        if (!vulkanRenderPass)
+        {
+            Logger::WriteError(m_logger, "Cannot create a pipeline without a render pass.");
+            return {};
+        }
+
         Vulkan::DescriptorSetLayouts setLayouts;
 
         SmartFunction destroyer([&]()
@@ -1113,7 +1026,7 @@ namespace Molten
 
         VkPipelineInputAssemblyStateCreateInfo inputAssemblyStateInfo = {};
         inputAssemblyStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-        inputAssemblyStateInfo.topology = GetPrimitiveTopology(descriptor.topology);
+        inputAssemblyStateInfo.topology = GetVulkanPrimitiveTopology(descriptor.topology);
         inputAssemblyStateInfo.primitiveRestartEnable = VK_FALSE;
 
         VkPipelineViewportStateCreateInfo viewportStateInfo = {};
@@ -1127,10 +1040,10 @@ namespace Molten
         rasterizerInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
         rasterizerInfo.depthClampEnable = VK_FALSE;
         rasterizerInfo.rasterizerDiscardEnable = VK_FALSE;
-        rasterizerInfo.polygonMode = GetPolygonMode(descriptor.polygonMode);
+        rasterizerInfo.polygonMode = GetVulkanPolygonMode(descriptor.polygonMode);
         rasterizerInfo.lineWidth = 1.0f;
-        rasterizerInfo.cullMode = GetCullMode(descriptor.cullMode);
-        rasterizerInfo.frontFace = GetFrontFace(descriptor.frontFace);
+        rasterizerInfo.cullMode = GetVulkanCullMode(descriptor.cullMode);
+        rasterizerInfo.frontFace = GetVulkanFrontFace(descriptor.frontFace);
         rasterizerInfo.depthBiasEnable = VK_FALSE;
         rasterizerInfo.depthBiasConstantFactor = 0.0f;
         rasterizerInfo.depthBiasClamp = 0.0f;
@@ -1148,17 +1061,17 @@ namespace Molten
         //VkPipelineDepthStencilStateCreateInfo depthStencilStateInfo = {};
 
         auto& blendingDescriptor = descriptor.blending;
-        const auto blendOperator = GetBlendOperator(blendingDescriptor.blendOperator);
+        const auto blendOperator = GetVulkanBlendOperator(blendingDescriptor.blendOperator);
 
         VkPipelineColorBlendAttachmentState colorBlendAttachmentState = {};
         colorBlendAttachmentState.colorWriteMask =
             VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
         colorBlendAttachmentState.blendEnable = VK_TRUE;
-        colorBlendAttachmentState.srcColorBlendFactor = GetBlendFactor(blendingDescriptor.sourceColor);
-        colorBlendAttachmentState.dstColorBlendFactor = GetBlendFactor(blendingDescriptor.destinationColor);
+        colorBlendAttachmentState.srcColorBlendFactor = GetVulkanBlendFactor(blendingDescriptor.sourceColor);
+        colorBlendAttachmentState.dstColorBlendFactor = GetVulkanBlendFactor(blendingDescriptor.destinationColor);
         colorBlendAttachmentState.colorBlendOp = blendOperator;
-        colorBlendAttachmentState.srcAlphaBlendFactor = GetBlendFactor(blendingDescriptor.sourceAlpha);
-        colorBlendAttachmentState.dstAlphaBlendFactor = GetBlendFactor(blendingDescriptor.destinationAlpha);
+        colorBlendAttachmentState.srcAlphaBlendFactor = GetVulkanBlendFactor(blendingDescriptor.sourceAlpha);
+        colorBlendAttachmentState.dstAlphaBlendFactor = GetVulkanBlendFactor(blendingDescriptor.destinationAlpha);
         colorBlendAttachmentState.alphaBlendOp = blendOperator;
 
         VkPipelineColorBlendStateCreateInfo colorBlendInfo = {};
@@ -1211,7 +1124,7 @@ namespace Molten
         pipelineInfo.pDepthStencilState = nullptr;
         pipelineInfo.pDynamicState = &dynamicStateInfo;
         pipelineInfo.layout = pipelineLayout;
-        pipelineInfo.renderPass = m_renderPass;
+        pipelineInfo.renderPass = vulkanRenderPass->m_renderPass;
         pipelineInfo.subpass = 0;
         pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
         pipelineInfo.basePipelineIndex = -1;
@@ -1242,10 +1155,11 @@ namespace Molten
 
     SharedRenderResource<RenderPass> VulkanRenderer::CreateRenderPass(const RenderPassDescriptor& descriptor)
     {
-        VkCommandPool commandPool = VK_NULL_HANDLE;
-        VkRenderPass renderPass = VK_NULL_HANDLE;
+        return nullptr;
 
-        //auto& vulkanFramebuffer = static_cast<VulkanFramebuffer&>(descriptor.framebuffer);
+        /*VkCommandPool commandPool = VK_NULL_HANDLE;
+        VkRenderPass renderPass = VK_NULL_HANDLE;
+        VulkanRenderPass::Frames frames(m_swapChain.GetImages().size(), VulkanRenderPass::Frame{});
 
         // Failure cleanup function.
         SmartFunction destroyer([&]()
@@ -1257,6 +1171,14 @@ namespace Molten
             if (renderPass != VK_NULL_HANDLE)
             {
                 vkDestroyRenderPass(m_logicalDevice.GetHandle(), renderPass, nullptr);
+            }
+
+            for(auto& frame : frames)
+            {
+                if(frame.finishSemaphore)
+                {
+                    vkDestroySemaphore(m_logicalDevice.GetHandle(), frame.finishSemaphore, nullptr);
+                }
             }
         });
 
@@ -1273,8 +1195,9 @@ namespace Molten
             return {};
         }
 
+
         // Create command buffers.
-        Vulkan::CommandBuffers commandBuffers(m_swapChain.GetImageCount(), VK_NULL_HANDLE);
+        Vulkan::CommandBuffers commandBuffers(frames.size(), nullptr);
 
         VkCommandBufferAllocateInfo commandBufferInfo = {};
         commandBufferInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -1288,7 +1211,22 @@ namespace Molten
             return {};
         }
 
-        // Create render pass.
+        for(size_t i = 0; i < frames.size(); i++)
+        {
+            frames[i].commandBuffer = commandBuffers[i];
+        }
+
+
+        // Create semaphores
+        Vulkan::Semaphores semaphores;
+        Vulkan::CreateSemaphores(semaphores, m_logicalDevice.GetHandle(), frames.size());
+
+        for (size_t i = 0; i < frames.size(); i++)
+        {
+            frames[i].finishSemaphore = semaphores[i];
+        }
+
+        // Create render pass. // TODO: Temp...
         VkAttachmentDescription colorAttachment = {};
         colorAttachment.format = m_surfaceFormat.format;
         colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -1330,29 +1268,25 @@ namespace Molten
             Vulkan::Logger::WriteError(m_logger, result, "Failed to create internal render pass object");
             return {};
         }
-
+        
 
         // Finalize
         destroyer.Release();
 
-        Vulkan::Semaphores finishSemaphores;
-
         return SharedRenderResource<RenderPass>(new VulkanRenderPass{
             m_logger,
-            //vulkanFramebuffer,
-            commandPool,
-            std::move(commandBuffers),
-            std::move(finishSemaphores),
             renderPass,
+            commandPool,
+            std::move(frames),
             descriptor.recordFunction
-        }, RenderResourceDeleter{ this });
+        }, RenderResourceDeleter{ this });*/
     }
 
     SharedRenderResource<Sampler1D> VulkanRenderer::CreateSampler(const SamplerDescriptor1D& descriptor)
     {
-        const auto magFilter = GetSamplerFilter(descriptor.magFilter);
-        const auto minFilter = GetSamplerFilter(descriptor.minFilter);
-        const auto addressModeU = GetSamplerAddressMode(descriptor.wrapModes.c[0]);
+        const auto magFilter = GetVulkanSamplerFilter(descriptor.magFilter);
+        const auto minFilter = GetVulkanSamplerFilter(descriptor.minFilter);
+        const auto addressModeU = GetVulkanSamplerAddressMode(descriptor.wrapModes.c[0]);
         const auto addressModeV = VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_REPEAT;
         const auto addressModeW = VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_REPEAT;
         const bool anisotropyEnable = descriptor.maxAnisotropy > 1;
@@ -1380,10 +1314,10 @@ namespace Molten
 
     SharedRenderResource<Sampler2D> VulkanRenderer::CreateSampler(const SamplerDescriptor2D& descriptor)
     {
-        const auto magFilter = GetSamplerFilter(descriptor.magFilter);
-        const auto minFilter = GetSamplerFilter(descriptor.minFilter);
-        const auto addressModeU = GetSamplerAddressMode(descriptor.wrapModes.x);
-        const auto addressModeV = GetSamplerAddressMode(descriptor.wrapModes.y);
+        const auto magFilter = GetVulkanSamplerFilter(descriptor.magFilter);
+        const auto minFilter = GetVulkanSamplerFilter(descriptor.minFilter);
+        const auto addressModeU = GetVulkanSamplerAddressMode(descriptor.wrapModes.x);
+        const auto addressModeV = GetVulkanSamplerAddressMode(descriptor.wrapModes.y);
         const auto addressModeW = VkSamplerAddressMode::VK_SAMPLER_ADDRESS_MODE_REPEAT;
         const bool anisotropyEnable = descriptor.maxAnisotropy > 1;
         const auto maxAnisotropy = static_cast<float>(descriptor.maxAnisotropy);
@@ -1410,11 +1344,11 @@ namespace Molten
 
     SharedRenderResource<Sampler3D> VulkanRenderer::CreateSampler(const SamplerDescriptor3D& descriptor)
     {
-        const auto magFilter = GetSamplerFilter(descriptor.magFilter);
-        const auto minFilter = GetSamplerFilter(descriptor.minFilter);
-        const auto addressModeU = GetSamplerAddressMode(descriptor.wrapModes.x);
-        const auto addressModeV = GetSamplerAddressMode(descriptor.wrapModes.y);
-        const auto addressModeW = GetSamplerAddressMode(descriptor.wrapModes.x);
+        const auto magFilter = GetVulkanSamplerFilter(descriptor.magFilter);
+        const auto minFilter = GetVulkanSamplerFilter(descriptor.minFilter);
+        const auto addressModeU = GetVulkanSamplerAddressMode(descriptor.wrapModes.x);
+        const auto addressModeV = GetVulkanSamplerAddressMode(descriptor.wrapModes.y);
+        const auto addressModeW = GetVulkanSamplerAddressMode(descriptor.wrapModes.x);
         const bool anisotropyEnable = descriptor.maxAnisotropy > 1;
         const auto maxAnisotropy = static_cast<float>(descriptor.maxAnisotropy);
 
@@ -1530,7 +1464,7 @@ namespace Molten
             stageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
             stageCreateInfo.pName = "main";
             stageCreateInfo.module = shaderModule;
-            stageCreateInfo.stage = GetShaderProgramStageFlag(shaderStage);
+            stageCreateInfo.stage = GetVulkanShaderProgramStageFlag(shaderStage);
         }
 
         // Push constant information.
@@ -1574,8 +1508,8 @@ namespace Molten
     {
         uint8_t bytesPerPixel = 0;
         uint8_t internalBytesPerPixel = 0;
-        const auto imageFormat = GetImageFormat(descriptor.format, bytesPerPixel);
-        const auto internalImageFormat = GetImageFormat(descriptor.internalFormat, internalBytesPerPixel);
+        const auto imageFormat = GetVulkanImageFormat(descriptor.format, bytesPerPixel);
+        const auto internalImageFormat = GetVulkanImageFormat(descriptor.internalFormat, internalBytesPerPixel);
         if (bytesPerPixel != internalBytesPerPixel)
         {
             Logger::WriteError(m_logger, "Format and internal format of texture mismatches number of bytes per pixel: " +
@@ -1601,7 +1535,7 @@ namespace Molten
             internalImageFormat,
             VulkanImageTypeTraits<1>::type,
             VulkanImageViewTypeTraits<1>::type,
-            GetComponentMappings(descriptor.swizzleMapping)))
+            GetVulkanComponentMappings(descriptor.swizzleMapping)))
         {
             return {};
         }
@@ -1619,8 +1553,8 @@ namespace Molten
     {
         uint8_t bytesPerPixel = 0;
         uint8_t internalBytesPerPixel = 0;
-        const auto imageFormat = GetImageFormat(descriptor.format, bytesPerPixel);
-        const auto internalImageFormat = GetImageFormat(descriptor.internalFormat, internalBytesPerPixel);
+        const auto imageFormat = GetVulkanImageFormat(descriptor.format, bytesPerPixel);
+        const auto internalImageFormat = GetVulkanImageFormat(descriptor.internalFormat, internalBytesPerPixel);
         if (bytesPerPixel != internalBytesPerPixel)
         {
             Logger::WriteError(m_logger, "Format and internal format of texture mismatches number of bytes per pixel: " +
@@ -1647,7 +1581,7 @@ namespace Molten
             internalImageFormat,
             VulkanImageTypeTraits<2>::type,
             VulkanImageViewTypeTraits<2>::type,
-            GetComponentMappings(descriptor.swizzleMapping)))
+            GetVulkanComponentMappings(descriptor.swizzleMapping)))
         {
             return {};
         }
@@ -1665,8 +1599,8 @@ namespace Molten
     {
         uint8_t bytesPerPixel = 0;
         uint8_t internalBytesPerPixel = 0;
-        const auto imageFormat = GetImageFormat(descriptor.format, bytesPerPixel);
-        const auto internalImageFormat = GetImageFormat(descriptor.internalFormat, internalBytesPerPixel);
+        const auto imageFormat = GetVulkanImageFormat(descriptor.format, bytesPerPixel);
+        const auto internalImageFormat = GetVulkanImageFormat(descriptor.internalFormat, internalBytesPerPixel);
         if (bytesPerPixel != internalBytesPerPixel)
         {
             Logger::WriteError(m_logger, "Format and internal format of texture mismatches number of bytes per pixel: " +
@@ -1694,7 +1628,7 @@ namespace Molten
             internalImageFormat,
             VulkanImageTypeTraits<3>::type,
             VulkanImageViewTypeTraits<3>::type,
-            GetComponentMappings(descriptor.swizzleMapping)))
+            GetVulkanComponentMappings(descriptor.swizzleMapping)))
         {
             return {};
         }
@@ -1729,7 +1663,7 @@ namespace Molten
 
     RenderResource<FramedUniformBuffer> VulkanRenderer::CreateFramedUniformBuffer(const FramedUniformBufferDescriptor& descriptor)
     {
-        std::vector<Vulkan::DeviceBuffer> deviceBuffers(m_swapChain.GetImageCount());
+        std::vector<Vulkan::DeviceBuffer> deviceBuffers(m_swapChain.GetImages().size());
 
         SmartFunction destroyer([&]()
         {
@@ -1867,6 +1801,113 @@ namespace Molten
             descriptor.destinationOffset);
     }
 
+    void VulkanRenderer::UpdateUniformBuffer(RenderResource<UniformBuffer>& uniformBuffer, const void* data, const size_t size, const size_t offset)
+    {
+        auto* vulkanUniformBuffer = static_cast<VulkanUniformBuffer*>(uniformBuffer.get());
+        auto& deviceBuffer = vulkanUniformBuffer->deviceBuffer;
+
+        if (const auto result = Vulkan::MapMemory(m_logicalDevice, deviceBuffer, data, size, offset); !result.IsSuccessful())
+        {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to map memory of uniform buffer");
+        }
+    }
+
+    void VulkanRenderer::UpdateFramedUniformBuffer(RenderResource<FramedUniformBuffer>& framedUniformBuffer, const void* data, const size_t size, const size_t offset)
+    {
+        auto* vulkanFramedUniformBuffer = static_cast<VulkanFramedUniformBuffer*>(framedUniformBuffer.get());
+        const auto currentImageIndex = m_swapChain.GetCurrentImageIndex();
+        auto& deviceBuffer = vulkanFramedUniformBuffer->deviceBuffers[currentImageIndex];
+
+        if (const auto result = Vulkan::MapMemory(m_logicalDevice, deviceBuffer, data, size, offset); !result.IsSuccessful())
+        {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to map memory of framed uniform buffer");
+        }
+    }
+
+    bool VulkanRenderer::DrawFrame(const RenderPasses& renderPasses)
+    {
+        // Begin frame.
+        if (m_drawingFrame)
+        {
+            Logger::WriteError(m_logger, "DrawFrame(...) failed, calling DrawFrame while current frame is being rendered is not permitted.");
+            return false;
+        }
+
+        SmartFunction destroyer([&]()
+        {
+            m_drawingFrame = false;
+        });
+        m_drawingFrame = true;
+
+        if (auto result = m_swapChain.AcquireNextImage(); !result.IsSuccessful())
+        {
+            if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
+            {
+                if (result = m_logicalDevice.GetPhysicalDevice().ReloadCapabilities(); !result.IsSuccessful())
+                {
+                    Vulkan::Logger::WriteError(m_logger, result, "Failed to reload physical device capabilities.");
+                    return false;
+                }
+
+                if (!ReloadSwapChain())
+                {
+                    return false;
+                }
+
+                if (result = m_swapChain.AcquireNextImage(); !result.IsSuccessful())
+                {
+                    Vulkan::Logger::WriteError(m_logger, result, "Failed to acquire next image of swap chain after recreation.");
+                    return false;
+                }
+            }
+            else
+            {
+                Vulkan::Logger::WriteError(m_logger, result, "Failed to acquire next image of swap chain.");
+                return false;
+            }
+        }
+
+        ++m_drawFrameCount;
+
+        const auto swapChainExtent = m_swapChain.GetExtent(); /// TODO: Store default values for viewport and scissor.
+        const auto currentImageIndex = m_swapChain.GetCurrentImageIndex();
+
+        VulkanRenderPassRecordDescriptor recordDescriptor = {};
+        recordDescriptor.defaultScissorBounds = Bounds2i32{ 0, 0, static_cast<int32_t>(swapChainExtent.width), static_cast<int32_t>(swapChainExtent.height) };
+        recordDescriptor.defaultViewportBounds = recordDescriptor.defaultScissorBounds;
+
+        // Draw render passes. Recording could be multi-threaded in the future, so recording and submits are separate.
+        VkSemaphore waitSemaphore = VK_NULL_HANDLE;
+        for (auto& renderPass : renderPasses)
+        {
+            auto& vulkanRenderPass = static_cast<VulkanRenderPass&>(*renderPass);
+            if (auto result = vulkanRenderPass.Record(currentImageIndex, recordDescriptor); !result.IsSuccessful())
+            {
+                Vulkan::Logger::WriteError(m_logger, result, "Failed to record command buffer");
+                return false;
+            }
+
+            if (auto result = vulkanRenderPass.Submit(m_logicalDevice, m_swapChain.GetCurrentImageAvailableSemaphore(), m_swapChain.GetCurrentFrameFence()); !result.IsSuccessful())
+            {
+                Vulkan::Logger::WriteError(m_logger, result, "Failed to submit command buffer");
+                return false;
+            }
+
+            waitSemaphore = vulkanRenderPass.GetCurrentFrame().finishSemaphore;
+        }
+
+        if (const auto result = m_swapChain.PresentImage(waitSemaphore); !result.IsSuccessful())
+        {
+            Vulkan::Logger::WriteDebug(m_logger, result, "Failed to present next image of swap chain.");
+            //return false;
+        }
+
+        // Process destroyed resources.
+        m_resourceDestroyer.Process(m_drawFrameCount);
+
+        return true;
+    }
+
     void VulkanRenderer::Destroy(DescriptorSet& descriptorSet)
     {
         auto& vulkanDescriptorSet = static_cast<VulkanDescriptorSet&>(descriptorSet);
@@ -1877,12 +1918,6 @@ namespace Molten
     {
         auto& vulkanFramedDescriptorSet = static_cast<VulkanFramedDescriptorSet&>(framedDescriptorSet);
         m_resourceDestroyer.Add(GetNextDestroyerFrameIndex(), vulkanFramedDescriptorSet);
-    }
-
-    void VulkanRenderer::Destroy(Framebuffer& framebuffer)
-    {
-        auto& vulkanFramebuffer = static_cast<VulkanFramebuffer&>(framebuffer);
-        m_resourceDestroyer.Add(GetNextDestroyerFrameIndex(), vulkanFramebuffer);
     }
 
     void VulkanRenderer::Destroy(IndexBuffer& indexBuffer)
@@ -1963,263 +1998,9 @@ namespace Molten
         m_resourceDestroyer.Add(GetNextDestroyerFrameIndex(), vulkanVertexBuffer);
     }
 
-    void VulkanRenderer::BindDescriptorSet(DescriptorSet& descriptorSet)
-    {
-        auto& vulkanDescriptorSet = static_cast<VulkanDescriptorSet&>(descriptorSet);
-
-        vkCmdBindDescriptorSets(
-            *m_currentCommandBuffer, 
-            VK_PIPELINE_BIND_POINT_GRAPHICS, 
-            m_currentPipeline->pipelineLayout,
-            vulkanDescriptorSet.index,
-            1,
-            &vulkanDescriptorSet.descriptorSet,
-            0,
-            nullptr);
-    }
-
-    void VulkanRenderer::BindFramedDescriptorSet(FramedDescriptorSet& framedDescriptorSet)
-    {
-        auto& vulkanFramedDescriptorSet = static_cast<VulkanFramedDescriptorSet&>(framedDescriptorSet);
-
-        vkCmdBindDescriptorSets(
-            *m_currentCommandBuffer,
-            VK_PIPELINE_BIND_POINT_GRAPHICS,
-            m_currentPipeline->pipelineLayout,
-            vulkanFramedDescriptorSet.index,
-            1,
-            &vulkanFramedDescriptorSet.descriptorSets[m_swapChain.GetCurrentImageIndex()],
-            0,
-            nullptr);
-    }
-
-    void VulkanRenderer::BindPipeline(Pipeline& pipeline)
-    {
-        auto& vulkanPipeline = static_cast<VulkanPipeline&>(pipeline);
-        vkCmdBindPipeline(*m_currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkanPipeline.graphicsPipeline);
-        m_currentPipeline = &vulkanPipeline;
-    }
-
-    void VulkanRenderer::DrawFrame(const RenderPassGroup& renderPassGroup)
-    {
-        // Begin frame.
-        if (const auto result = m_swapChain.BeginDraw(); !result.IsSuccessful())
-        {
-            Vulkan::Logger::WriteError(m_logger, result, "Failed to begin drawing of swap chain.");
-            return;
-        }
-
-        const auto currentImageIndex = m_swapChain.GetCurrentImageIndex();
-
-        const auto swapChainExtent = m_swapChain.GetExtent(); /// TODO: Store default values for viewport and scissor.
-        const auto viewportScissorBounds = Bounds2i32{ 0, 0, static_cast<int32_t>(swapChainExtent.width), static_cast<int32_t>(swapChainExtent.height) };
-
-        // Draw render passes. Recording could be multi-threaded in the future, so recording and submits are separate.
-        for(auto& renderPass : renderPassGroup)
-        {
-            auto& vulkanRenderPass = static_cast<VulkanRenderPass&>(*renderPass);
-            if(auto result = vulkanRenderPass.Record(currentImageIndex, viewportScissorBounds, viewportScissorBounds); !result.IsSuccessful())
-            {
-                Vulkan::Logger::WriteError(m_logger, result, "Failed to record command buffer");
-                return;
-            }
-            vulkanRenderPass.Submit();
-        }
-
-        // End frame.
-        if (const auto result = m_swapChain.EndDraw(*m_currentCommandBuffer); !result.IsSuccessful())
-        {
-            Vulkan::Logger::WriteError(m_logger, result, "Failed to end swap chain");
-            return;
-        }
-
-        // Process destroyed resources.
-        m_resourceDestroyer.Process(m_endedDraws);
-        ++m_endedDraws;
-    }
-
-    void VulkanRenderer::BeginDraw()
-    {
-        if (m_beginDraw)
-        {
-            Logger::WriteError(m_logger, "Calling BeginDraw twice, without any previous call to EndDraw.");
-            return;
-        }
-
-        if (const auto result = m_swapChain.BeginDraw(); !result.IsSuccessful())
-        {
-            Vulkan::Logger::WriteError(m_logger, result, "Failed to begin drawing of swap chain.");
-            return;
-        }
-
-        const auto currentImageIndex = m_swapChain.GetCurrentImageIndex();
-
-        m_currentCommandBuffer = &m_commandBuffers[currentImageIndex];
-
-        VkCommandBufferBeginInfo commandBufferBeginInfo = {};
-        commandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        commandBufferBeginInfo.flags = 0;
-        commandBufferBeginInfo.pInheritanceInfo = nullptr;
-
-        if (const auto result = vkBeginCommandBuffer(*m_currentCommandBuffer, &commandBufferBeginInfo); result != VK_SUCCESS)
-        {
-            Vulkan::Logger::WriteError(m_logger, result, "Failed to begin recording command buffer.");
-            return;
-        }
-
-        const auto currentFramebuffer = m_swapChain.GetCurrentFramebuffer();
-        const auto swapChainExtent = m_swapChain.GetExtent();
-
-        VkRenderPassBeginInfo renderPassBeginInfo = {};
-        renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        renderPassBeginInfo.renderPass = m_renderPass;
-        renderPassBeginInfo.framebuffer = currentFramebuffer;
-        renderPassBeginInfo.renderArea.offset = { 0, 0 };
-        renderPassBeginInfo.renderArea.extent = swapChainExtent;
-
-        const VkClearValue clearColor = { 0.3f, 0.0f, 0.0f, 0.0f }; // TODO: Invalid initialization.
-        renderPassBeginInfo.clearValueCount = 1;
-        renderPassBeginInfo.pClearValues = &clearColor;
-
-        VkViewport viewport = {};
-        viewport.x = 0.0f;
-        viewport.y = 0.0f;
-        viewport.width = static_cast<float>(swapChainExtent.width);
-        viewport.height = static_cast<float>(swapChainExtent.height);
-        viewport.minDepth = 0.0f;
-        viewport.maxDepth = 0.0f;
-
-        VkRect2D scissor = {};
-        scissor.offset = { 0, 0 };
-        scissor.extent = swapChainExtent;
-
-        vkCmdBeginRenderPass(*m_currentCommandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-        vkCmdSetViewport(*m_currentCommandBuffer, 0, 1, &viewport);
-        vkCmdSetScissor(*m_currentCommandBuffer, 0, 1, &scissor);
-
-        m_beginDraw = true;
-    }
-
-    void VulkanRenderer::DrawVertexBuffer(VertexBuffer& vertexBuffer)
-    {
-        auto& vulkanVertexBuffer = static_cast<VulkanVertexBuffer&>(vertexBuffer);
-
-        VkBuffer vertexBuffers[] = { vulkanVertexBuffer.deviceBuffer.buffer };
-        const VkDeviceSize offsets[] = { 0 };
-
-        vkCmdBindVertexBuffers(*m_currentCommandBuffer, 0, 1, vertexBuffers, offsets);
-        vkCmdDraw(*m_currentCommandBuffer, static_cast<uint32_t>(vulkanVertexBuffer.vertexCount), 1, 0, 0);
-    }
-
-    void VulkanRenderer::DrawVertexBuffer(IndexBuffer& indexBuffer, VertexBuffer& vertexBuffer)
-    {
-        auto& vulkanIndexBuffer = static_cast<VulkanIndexBuffer&>(indexBuffer);
-        auto& vulkanVertexBuffer = static_cast<VulkanVertexBuffer&>(vertexBuffer);
-
-        VkBuffer vertexBuffers[] = { vulkanVertexBuffer.deviceBuffer.buffer };
-        const VkDeviceSize offsets[] = { 0 };
-
-        vkCmdBindVertexBuffers(*m_currentCommandBuffer, 0, 1, vertexBuffers, offsets);
-        vkCmdBindIndexBuffer(*m_currentCommandBuffer, vulkanIndexBuffer.deviceBuffer.buffer, 0, GetIndexBufferDataType(vulkanIndexBuffer.dataType));
-        vkCmdDrawIndexed(*m_currentCommandBuffer, static_cast<uint32_t>(vulkanIndexBuffer.indexCount), 1, 0, 0, 0);
-    }
-
-    void VulkanRenderer::PushConstant(const uint32_t location, const bool& value)
-    {
-        vkCmdPushConstants(
-            *m_currentCommandBuffer, m_currentPipeline->pipelineLayout,
-            VK_SHADER_STAGE_ALL, location, sizeof(value), &value);
-    }
-    void VulkanRenderer::PushConstant(const uint32_t location, const int32_t& value)
-    {
-        vkCmdPushConstants(
-            *m_currentCommandBuffer, m_currentPipeline->pipelineLayout,
-            VK_SHADER_STAGE_ALL, location, sizeof(value), &value);
-    }
-    void VulkanRenderer::PushConstant(const uint32_t location, const float& value)
-    {
-        vkCmdPushConstants(
-            *m_currentCommandBuffer, m_currentPipeline->pipelineLayout,
-            VK_SHADER_STAGE_ALL, location, sizeof(value), &value);
-    }
-    void VulkanRenderer::PushConstant(const uint32_t location, const Vector2f32& value)
-    {
-        vkCmdPushConstants(
-            *m_currentCommandBuffer, m_currentPipeline->pipelineLayout,
-            VK_SHADER_STAGE_ALL, location, sizeof(value), &value);
-    }
-    void VulkanRenderer::PushConstant(const uint32_t location, const Vector3f32& value)
-    {
-        vkCmdPushConstants(
-            *m_currentCommandBuffer, m_currentPipeline->pipelineLayout,
-            VK_SHADER_STAGE_ALL, location, sizeof(value), &value);
-    }
-    void VulkanRenderer::PushConstant(const uint32_t location, const Vector4f32& value)
-    {
-        vkCmdPushConstants(
-            *m_currentCommandBuffer, m_currentPipeline->pipelineLayout,
-            VK_SHADER_STAGE_ALL, location, sizeof(value), &value);
-    }
-    void VulkanRenderer::PushConstant(const uint32_t location, const Matrix4x4f32& value)
-    {
-        vkCmdPushConstants(
-            *m_currentCommandBuffer, m_currentPipeline->pipelineLayout,
-            VK_SHADER_STAGE_ALL, location, sizeof(value), &value);
-    }
-
-    void VulkanRenderer::EndDraw()
-    {
-        if (!m_beginDraw)
-        {
-            Logger::WriteError(m_logger, "Calling EndDraw, without any previous call to BeginDraw.");
-            return;
-        }
-
-        vkCmdEndRenderPass(*m_currentCommandBuffer);
-        if (const auto result = vkEndCommandBuffer(*m_currentCommandBuffer); result != VK_SUCCESS)
-        {
-            Vulkan::Logger::WriteError(m_logger, result, "Failed to end command buffer");
-            return;
-        }
-
-        if (const auto result = m_swapChain.EndDraw(*m_currentCommandBuffer); !result.IsSuccessful())
-        {
-            Vulkan::Logger::WriteError(m_logger, result, "Failed to end swap chain");
-            return;
-        }
-
-        m_beginDraw = false;
-
-        m_resourceDestroyer.Process(m_endedDraws);
-
-        ++m_endedDraws;
-    }
-
     void VulkanRenderer::WaitForDevice()
     {
         m_logicalDevice.WaitIdle();
-    }
-
-    void VulkanRenderer::UpdateUniformBuffer(RenderResource<UniformBuffer>& uniformBuffer, const void* data, const size_t size, const size_t offset)
-    {
-        auto* vulkanUniformBuffer = static_cast<VulkanUniformBuffer*>(uniformBuffer.get());      
-        auto& deviceBuffer = vulkanUniformBuffer->deviceBuffer;
-
-        if (const auto result = Vulkan::MapMemory(m_logicalDevice, deviceBuffer, data, size, offset); !result.IsSuccessful())
-        {
-            Vulkan::Logger::WriteError(m_logger, result, "Failed to map memory of uniform buffer");
-        }
-    }
-
-    void VulkanRenderer::UpdateFramedUniformBuffer(RenderResource<FramedUniformBuffer>& framedUniformBuffer, const void* data, const size_t size, const size_t offset)
-    {
-        auto* vulkanFramedUniformBuffer = static_cast<VulkanFramedUniformBuffer*>(framedUniformBuffer.get());
-        auto& deviceBuffer = vulkanFramedUniformBuffer->deviceBuffers[m_swapChain.GetCurrentImageIndex()];
-
-        if (const auto result = Vulkan::MapMemory(m_logicalDevice, deviceBuffer, data, size, offset); !result.IsSuccessful())
-        {
-            Vulkan::Logger::WriteError(m_logger, result, "Failed to map memory of framed uniform buffer");
-        }
     }
 
     bool VulkanRenderer::LoadRequirements()
@@ -2436,53 +2217,6 @@ namespace Molten
         return true;
     }
 
-    bool VulkanRenderer::LoadRenderPass()
-    {
-        VkAttachmentDescription colorAttachment = {};
-        colorAttachment.format = m_surfaceFormat.format;
-        colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-        colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-
-        VkAttachmentReference colorAttachmentReference = {};
-        colorAttachmentReference.attachment = 0;
-        colorAttachmentReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-        VkSubpassDescription subpass = {};
-        subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-        subpass.colorAttachmentCount = 1;
-        subpass.pColorAttachments = &colorAttachmentReference;
-
-        VkSubpassDependency dependency = {};
-        dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-        dependency.dstSubpass = 0;
-        dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        dependency.srcAccessMask = 0;
-        dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-
-        VkRenderPassCreateInfo renderPassInfo = {};
-        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-        renderPassInfo.attachmentCount = 1;
-        renderPassInfo.pAttachments = &colorAttachment;
-        renderPassInfo.subpassCount = 1;
-        renderPassInfo.pSubpasses = &subpass;
-        renderPassInfo.dependencyCount = 1;
-        renderPassInfo.pDependencies = &dependency;
-
-        if (const auto result = vkCreateRenderPass(m_logicalDevice.GetHandle(), &renderPassInfo, nullptr, &m_renderPass); result != VK_SUCCESS)
-        {
-            Vulkan::Logger::WriteError(m_logger, result, "Failed to create render pass.");
-            return false;
-        }
-
-        return true;
-    }
-
     bool VulkanRenderer::LoadSwapChain()
     {
         auto& surfaceCapabilities = m_physicalDevice.GetCapabilities().surfaceCapabilities;
@@ -2494,10 +2228,8 @@ namespace Molten
             imageCount = surfaceCapabilities.capabilities.maxImageCount;
         }
 
-        // Create swap chain.
         if (const auto result = m_swapChain.Create(
             m_logicalDevice,
-            m_renderPass,
             m_surfaceFormat,
             m_presentMode,
             imageCount); !result.IsSuccessful())
@@ -2506,6 +2238,12 @@ namespace Molten
             return false;
         }
 
+        if (const auto result = LoadSwapChainRenderPass(); !result.IsSuccessful())
+        {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to load swap chain render pass.");
+            return false;
+        }
+  
         return true;
     }
 
@@ -2522,27 +2260,332 @@ namespace Molten
             return false;
         }
 
-        m_commandBuffers.resize(m_swapChain.GetImageCount());
+        return true;
+    }
 
-        VkCommandBufferAllocateInfo commandBufferInfo = {};
-        commandBufferInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        commandBufferInfo.commandPool = m_commandPool;
-        commandBufferInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        commandBufferInfo.commandBufferCount = static_cast<uint32_t>(m_commandBuffers.size());
-
-        if (const auto result = vkAllocateCommandBuffers(m_logicalDevice.GetHandle(), &commandBufferInfo, m_commandBuffers.data()); result != VK_SUCCESS)
+    bool VulkanRenderer::ReloadSwapChain()
+    {
+        if(const auto result = m_swapChain.Recreate(); !result.IsSuccessful())
         {
-            vkDestroyCommandPool(m_logicalDevice.GetHandle(), m_commandPool, nullptr);
-            Vulkan::Logger::WriteError(m_logger, result, "Failed to allocate command buffers.");
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to recreate swap chain.");
+            return false;
+        }
+
+        if (const auto result = ReloadSwapChainRenderPass(); !result.IsSuccessful())
+        {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to reload swap chain render pass.");
             return false;
         }
 
         return true;
     }
 
+    Vulkan::Result<> VulkanRenderer::LoadSwapChainRenderPass()
+    {
+        const auto logicalDevice = m_logicalDevice.GetHandle();
+        const auto swapChainExtent = m_swapChain.GetExtent();
+        const auto& swapChainImages = m_swapChain.GetImages();
+
+        VkCommandPool commandPool = VK_NULL_HANDLE;
+        VkRenderPass renderPass = VK_NULL_HANDLE;
+        VulkanTextureFrames colorAttachmentFrames(swapChainImages.size());
+        VulkanRenderPass::Frames renderPassFrames(swapChainImages.size());
+
+        SmartFunction destroyer([&]()
+        {
+            for(auto& renderPassFrame : renderPassFrames)
+            {
+                if (renderPassFrame.framebuffer)
+                {
+                    vkDestroyFramebuffer(logicalDevice, renderPassFrame.framebuffer, nullptr);
+                }
+ 
+                if(renderPassFrame.finishSemaphore)
+                {
+                    vkDestroySemaphore(logicalDevice, renderPassFrame.finishSemaphore, nullptr);
+                }
+            }
+
+            if(commandPool)
+            {
+                vkDestroyCommandPool(logicalDevice, commandPool, nullptr);
+            }
+
+            if(renderPass)
+            {
+                vkDestroyRenderPass(logicalDevice, renderPass, nullptr);
+            }
+
+            for(auto& colorAttachmentFrame : colorAttachmentFrames)
+            {
+                if(colorAttachmentFrame.imageView)
+                {
+                    vkDestroyImageView(logicalDevice, colorAttachmentFrame.imageView, nullptr);
+                }
+            }
+        });
+
+        // Create framed color texture attachment.    
+        for (size_t i = 0; i < swapChainImages.size(); i++)
+        {
+            const auto& swapChainImage = swapChainImages[i];
+            auto& colorAttachmentFrame = colorAttachmentFrames[i];
+
+            colorAttachmentFrame.deviceImage.image = swapChainImage;
+
+            VkImageViewCreateInfo imageViewInfo = {};
+            imageViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+            imageViewInfo.image = swapChainImage;
+            imageViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+            imageViewInfo.format = m_swapChain.GetSurfaceFormat().format;
+            imageViewInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+            imageViewInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+            imageViewInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+            imageViewInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+            imageViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            imageViewInfo.subresourceRange.baseMipLevel = 0;
+            imageViewInfo.subresourceRange.levelCount = 1;
+            imageViewInfo.subresourceRange.baseArrayLayer = 0;
+            imageViewInfo.subresourceRange.layerCount = 1;
+
+            if (const auto result = vkCreateImageView(logicalDevice, &imageViewInfo, nullptr, &colorAttachmentFrame.imageView); result != VK_SUCCESS)
+            {
+                return result;
+            }
+        }
+
+        auto colorAttachmentTexture = std::make_shared<VulkanFramedTexture<2>>(std::move(colorAttachmentFrames), uint8_t{ 0 }); // TODO: Change 0 bytes per pixel.
+
+        VulkanRenderPass::Attachment colorAttachment = {
+            RenderPassAttachmentType::Color,
+            colorAttachmentTexture,
+            Vector4f32{ 0.0f, 0.0f, 0.0f, 0.0f }
+        };
+
+        // Create command pool.
+        VkCommandPoolCreateInfo commandPoolInfo = {};
+        commandPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+        commandPoolInfo.queueFamilyIndex = m_physicalDevice.GetDeviceQueueIndices().graphicsQueue.value();
+        commandPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+
+        if (const auto result = vkCreateCommandPool(logicalDevice, &commandPoolInfo, nullptr, &commandPool); result != VK_SUCCESS)
+        {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to create command pool");
+            return {};
+        }        
+
+        // Create command buffers.
+        Vulkan::CommandBuffers commandBuffers(renderPassFrames.size(), nullptr);
+
+        VkCommandBufferAllocateInfo commandBufferInfo = {};
+        commandBufferInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        commandBufferInfo.commandPool = commandPool;
+        commandBufferInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        commandBufferInfo.commandBufferCount = static_cast<uint32_t>(commandBuffers.size());
+
+        if (const auto result = vkAllocateCommandBuffers(logicalDevice, &commandBufferInfo, commandBuffers.data()); result != VK_SUCCESS)
+        {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to allocate command buffers");
+            return {};
+        }
+
+        for (size_t i = 0; i < renderPassFrames.size(); i++)
+        {
+            renderPassFrames[i].commandBuffer = commandBuffers[i];
+        }
+
+        // Create finish semaphores
+        Vulkan::Semaphores semaphores;
+        Vulkan::CreateSemaphores(semaphores, m_logicalDevice.GetHandle(), renderPassFrames.size());
+
+        for (size_t i = 0; i < renderPassFrames.size(); i++)
+        {
+            renderPassFrames[i].finishSemaphore = semaphores[i];
+        }
+
+        // Create render pass.
+        VkAttachmentDescription renderPassColorAttachmentDesc = {};
+        renderPassColorAttachmentDesc.format = m_surfaceFormat.format;
+        renderPassColorAttachmentDesc.samples = VK_SAMPLE_COUNT_1_BIT;
+        renderPassColorAttachmentDesc.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        renderPassColorAttachmentDesc.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        renderPassColorAttachmentDesc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        renderPassColorAttachmentDesc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        renderPassColorAttachmentDesc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        renderPassColorAttachmentDesc.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+        VkAttachmentReference renderPassColorAttachmentRef = {};
+        renderPassColorAttachmentRef.attachment = 0;
+        renderPassColorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        VkSubpassDescription subpass = {};
+        subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+        subpass.colorAttachmentCount = 1;
+        subpass.pColorAttachments = &renderPassColorAttachmentRef;
+
+        VkSubpassDependency subpassDependency = {};
+        subpassDependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+        subpassDependency.dstSubpass = 0;
+        subpassDependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        subpassDependency.srcAccessMask = 0;
+        subpassDependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        subpassDependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+        VkRenderPassCreateInfo renderPassInfo = {};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+        renderPassInfo.attachmentCount = 1;
+        renderPassInfo.pAttachments = &renderPassColorAttachmentDesc;
+        renderPassInfo.subpassCount = 1;
+        renderPassInfo.pSubpasses = &subpass;
+        renderPassInfo.dependencyCount = 1;
+        renderPassInfo.pDependencies = &subpassDependency;
+
+        if (const auto result = vkCreateRenderPass(m_logicalDevice.GetHandle(), &renderPassInfo, nullptr, &renderPass); result != VK_SUCCESS)
+        {
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to create internal render pass object");
+            return {};
+        }
+
+        // Create framebuffers
+        for(size_t i = 0; i < renderPassFrames.size(); i++)
+        {
+            auto& renderPassFrame = renderPassFrames[i];
+            auto& colorAttachmentFrame = colorAttachmentTexture->frames[i];
+
+            VkImageView framebufferAttachments[] = { colorAttachmentFrame.imageView };
+
+            VkFramebufferCreateInfo framebufferInfo = {};
+            framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+            framebufferInfo.renderPass = renderPass;
+            framebufferInfo.attachmentCount = 1;
+            framebufferInfo.pAttachments = framebufferAttachments;
+            framebufferInfo.width = swapChainExtent.width;
+            framebufferInfo.height = swapChainExtent.height;
+            framebufferInfo.layers = 1;
+
+            if (const auto result = vkCreateFramebuffer(m_logicalDevice.GetHandle(), &framebufferInfo, nullptr, &renderPassFrame.framebuffer); result != VK_SUCCESS)
+            {
+                Vulkan::Logger::WriteError(m_logger, result, "Failed to create framebuffer object for render pass");
+                return {};
+            }      
+        }
+
+        destroyer.Release();
+
+        // Finalize.
+        m_swapChainRenderPass = SharedRenderResource<VulkanRenderPass>(new VulkanRenderPass{
+            m_logger,
+            renderPass,
+            commandPool,
+            std::move(renderPassFrames),
+            { std::move(colorAttachment) },
+            nullptr
+            }, RenderResourceDeleter{ this });
+
+        return {};       
+    }
+
+    Vulkan::Result<> VulkanRenderer::ReloadSwapChainRenderPass()
+    {
+        const auto logicalDevice = m_logicalDevice.GetHandle();
+        const auto swapChainExtent = m_swapChain.GetExtent();
+        const auto& swapChainImages = m_swapChain.GetImages();
+
+        auto& colorAttachment = m_swapChainRenderPass->m_attachments[0];
+        auto& colorAttachmentTexture = std::get<2>(colorAttachment.texture);
+
+        // Update color attachment.
+
+        for(size_t i = 0; i < swapChainImages.size(); i++)
+        {
+            const auto swapChainImage = swapChainImages[i];
+            auto& colorAttachmentTextureFrame = colorAttachmentTexture->frames[i];
+
+            // Set new image from swapchain.
+            colorAttachmentTextureFrame.deviceImage.image = swapChainImage;
+
+            // Destroy old image view.
+            auto& imageView = colorAttachmentTextureFrame.imageView;
+            if(imageView)
+            {
+                vkDestroyImageView(logicalDevice, imageView, nullptr);
+                imageView = VK_NULL_HANDLE;
+            }
+
+            // Create new image view.
+            VkImageViewCreateInfo imageViewInfo = {};
+            imageViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+            imageViewInfo.image = swapChainImage;
+            imageViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+            imageViewInfo.format = m_swapChain.GetSurfaceFormat().format;
+            imageViewInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+            imageViewInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+            imageViewInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+            imageViewInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+            imageViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            imageViewInfo.subresourceRange.baseMipLevel = 0;
+            imageViewInfo.subresourceRange.levelCount = 1;
+            imageViewInfo.subresourceRange.baseArrayLayer = 0;
+            imageViewInfo.subresourceRange.layerCount = 1;
+
+            if (const auto result = vkCreateImageView(logicalDevice, &imageViewInfo, nullptr, &imageView); result != VK_SUCCESS)
+            {
+                return result;
+            }
+        }
+
+        // Update framebuffers
+        auto& renderPassFrames = m_swapChainRenderPass->m_frames;
+
+        for(size_t i = 0; i < renderPassFrames.size(); i++)
+        {
+            auto& renderPassFrame = renderPassFrames[i];
+            auto& framebuffer = renderPassFrame.framebuffer;
+            auto& colorAttachmentFrame = colorAttachmentTexture->frames[i];
+
+            if(framebuffer)
+            {
+                vkDestroyFramebuffer(logicalDevice, framebuffer, nullptr);
+                framebuffer = VK_NULL_HANDLE;
+            }
+
+            VkImageView framebufferAttachments[] = { colorAttachmentFrame.imageView };
+
+            VkFramebufferCreateInfo framebufferInfo = {};
+            framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+            framebufferInfo.renderPass = m_swapChainRenderPass->m_renderPass;
+            framebufferInfo.attachmentCount = 1;
+            framebufferInfo.pAttachments = framebufferAttachments;
+            framebufferInfo.width = swapChainExtent.width;
+            framebufferInfo.height = swapChainExtent.height;
+            framebufferInfo.layers = 1;
+
+            if (const auto result = vkCreateFramebuffer(m_logicalDevice.GetHandle(), &framebufferInfo, nullptr, &renderPassFrame.framebuffer); result != VK_SUCCESS)
+            {
+                Vulkan::Logger::WriteError(m_logger, result, "Failed to create framebuffer object for render pass");
+                return {};
+            }
+
+        }
+
+        return {};
+    }
+
+    //Vulkan::Result<> VulkanRenderer::ReloadRenderPassFramebuffers()
+    //{
+
+
+    //    /*if (const auto result = ReloadSwapChainTextures(); result != VK_SUCCESS)
+    //    {
+    //        return result;
+    //    }*/
+
+    //    return LoadSwapChainRenderPass();
+    //}
+
     uint32_t VulkanRenderer::GetNextDestroyerFrameIndex() const
     {
-        return m_endedDraws + m_swapChain.GetMaxFramesInFlight() + 2;
+        return m_drawFrameCount + static_cast<uint32_t>(m_swapChain.GetImages().size()) + 2;
     }
 
     bool VulkanRenderer::CreateTexture(
@@ -2711,7 +2754,7 @@ namespace Molten
         {
             VkFormat format;
             uint32_t formatSize;
-            if (!GetVertexAttributeFormatAndSize(pins->GetDataType(), format, formatSize))
+            if (!GetVulkanVertexAttributeFormat(pins->GetDataType(), format, formatSize))
             {
                 Logger::WriteError(m_logger, "Failed to find vertex input attribute format.");
                 return false;
@@ -2746,7 +2789,7 @@ namespace Molten
 
                 auto& binding = bindings[bindingIndex++];
                 binding.binding = mappedDescriptorBinding.index;
-                binding.descriptorType = GetDescriptorType(mappedDescriptorBinding.bindingType);
+                binding.descriptorType = GetVulkanDescriptorType(mappedDescriptorBinding.bindingType);
                 binding.descriptorCount = 1;
                 binding.stageFlags = VkShaderStageFlagBits::VK_SHADER_STAGE_ALL;
                 binding.pImmutableSamplers = nullptr;

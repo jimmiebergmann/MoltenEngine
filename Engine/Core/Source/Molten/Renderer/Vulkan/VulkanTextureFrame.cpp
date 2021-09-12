@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,49 +23,31 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_FRAMEBUFFER_HPP
-#define MOLTEN_CORE_RENDERER_FRAMEBUFFER_HPP
-
-#include "Molten/Math/Vector.hpp"
+#include "Molten/Renderer/Vulkan/VulkanTextureFrame.hpp"
 
 namespace Molten
 {
 
-    /** Framebuffer base class. */
-    class MOLTEN_API Framebuffer
+    // Vulkan texture frame implementations.
+    VulkanTextureFrame::VulkanTextureFrame() :
+        deviceImage{},
+        imageView(VK_NULL_HANDLE)
+    {}
+
+    VulkanTextureFrame::VulkanTextureFrame(VulkanTextureFrame&& frame) noexcept :
+        deviceImage(std::move(frame.deviceImage)),
+        imageView(std::move(frame.imageView))
     {
+        frame.imageView = VK_NULL_HANDLE;
+    }
 
-    public:
-
-        Framebuffer() = default;
-        virtual ~Framebuffer() = default;
-
-        /** Move constructor and assignment operator. */
-        /**@{*/
-        Framebuffer(Framebuffer&&) = default;
-        Framebuffer& operator = (Framebuffer&&) = default;
-        /**@}*/
-
-        /** Deleted copy constructor and assignment operator. */
-        /**@{*/
-        Framebuffer(const Framebuffer&) = delete;
-        Framebuffer& operator = (const Framebuffer&) = delete;
-        /**@}*/
-
-    };
-
-    /** Descriptor class of framebuffer class. */
-    class MOLTEN_API FramebufferDescriptor
+    VulkanTextureFrame& VulkanTextureFrame::operator = (VulkanTextureFrame&& frame) noexcept
     {
+        deviceImage = std::move(frame.deviceImage);
+        imageView = std::move(frame.imageView);
+        frame.imageView = VK_NULL_HANDLE;
 
-    public:
-
-        FramebufferDescriptor() = default;
-
-        Vector2ui32 dimensions;
-
-    };
+        return *this;
+    }
 
 }
-
-#endif

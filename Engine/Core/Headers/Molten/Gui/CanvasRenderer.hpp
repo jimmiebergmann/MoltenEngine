@@ -40,11 +40,11 @@
 namespace Molten
 {
     class Renderer;
+    class CommandBuffer;
     class Pipeline;  
     class VertexBuffer;
     class IndexBuffer;
     class DescriptorSet;
-    class RenderPass;
     class Logger;
 }
 
@@ -123,9 +123,7 @@ namespace Molten::Gui
 
         CanvasRendererFontSequence CreateFontSequence(FontGroupedSequence& fontGroupedSequence);
 
-        SharedRenderResource<RenderPass> GetRenderPass();
-
-        void BeginDraw();
+        void SetCommandBuffer(CommandBuffer& commandBuffer);
 
         void DrawRect(const Bounds2f32& bounds, const Vector4f32& color);
 
@@ -134,9 +132,6 @@ namespace Molten::Gui
         void DrawRect(const Bounds2f32& bounds, const Bounds2f32& textureCoords, CanvasRendererTexture& texture);
 
         void DrawFontSequence(const Vector2f32& position, CanvasRendererFontSequence& fontSequence);
-
-        void EndDraw();
-
 
     private:
 
@@ -188,9 +183,9 @@ namespace Molten::Gui
 
         //Logger* m_logger;
         Renderer& m_backendRenderer;
+        CommandBuffer* m_commandBuffer;
         Matrix4x4f32 m_projection;
         SharedRenderResource<Sampler2D> m_sampler2D;
-        SharedRenderResource<RenderPass> m_renderPass;
         ColoredRectData m_coloredRect;
         TexturedRectData m_texturedRect;
         FontRenderData m_fontRenderData;

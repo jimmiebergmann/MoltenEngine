@@ -23,50 +23,36 @@
 *
 */
 
+#ifndef MOLTEN_CORE_RENDERER_VULKANTEXTUREFRAME_HPP
+#define MOLTEN_CORE_RENDERER_VULKANTEXTUREFRAME_HPP
+
 #if defined(MOLTEN_ENABLE_VULKAN)
 
-#include "Molten/Renderer/Vulkan/VulkanFramebuffer.hpp"
+#include "Molten/Renderer/Vulkan/Utility/VulkanDeviceImage.hpp"
+#include <vector>
 
 namespace Molten
 {
 
-    // Vulkan framebuffer frame implementations.
-    VulkanFramebuffer::Frame::Frame() :
-        texture{},
-        framebuffer(VK_NULL_HANDLE)
-    {}
-
-    VulkanFramebuffer::Frame::Frame(Frame&& frame) noexcept :
-        texture(std::move(frame.texture)),
-        framebuffer(frame.framebuffer)
+    struct MOLTEN_API VulkanTextureFrame
     {
-        frame.framebuffer = VK_NULL_HANDLE;
-    }
+        VulkanTextureFrame();
+        ~VulkanTextureFrame() = default;
 
-    VulkanFramebuffer::Frame& VulkanFramebuffer::Frame::operator = (Frame&& frame) noexcept
-    {
-        texture = std::move(frame.texture);
-        framebuffer = frame.framebuffer;
-        frame.framebuffer = VK_NULL_HANDLE;
+        VulkanTextureFrame(VulkanTextureFrame&& frame) noexcept;
+        VulkanTextureFrame& operator = (VulkanTextureFrame&& frame) noexcept;
 
-        return *this;
-    }
+        VulkanTextureFrame(const VulkanTextureFrame&) = delete;
+        VulkanTextureFrame& operator = (const VulkanTextureFrame&) = delete;
 
+        Vulkan::DeviceImage deviceImage;
+        VkImageView imageView;
+    };
 
-    // Vulkan framebuffer implementations.
-    VulkanFramebuffer::VulkanFramebuffer(
-        Frames&& frames,
-        const Vector2ui32& dimensions,
-        VkCommandPool commandPool,
-        std::vector<VkCommandBuffer>&& commandBuffers
-    ) :
-        frames(std::move(frames)),
-        dimensions(dimensions),
-        commandPool(commandPool),
-        commandBuffers(std::move(commandBuffers))
-    {}
-
+    using VulkanTextureFrames = std::vector<VulkanTextureFrame>;
 
 }
+
+#endif
 
 #endif

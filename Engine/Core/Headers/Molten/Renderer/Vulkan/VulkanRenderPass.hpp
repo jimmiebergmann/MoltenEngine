@@ -38,9 +38,18 @@ namespace Molten
     namespace Vulkan
     {
         class ResourceDestroyer;
+        class LogicalDevice;
     }
     class VulkanRenderer;
+    template<size_t VDimensions> class VulkanFramedTexture;
     class Logger;
+
+
+    struct VulkanRenderPassRecordDescriptor
+    {
+        Bounds2i32 defaultViewportBounds;
+        Bounds2i32 defaultScissorBounds;
+    };
 
 
     /** Vulkan Render pass. */
@@ -51,13 +60,40 @@ namespace Molten
 
         using Base = RenderPass;
 
+        struct Frame
+        {
+            Frame();
+        
+            VkCommandBuffer commandBuffer;
+            VkSemaphore finishSemaphore;
+            VkFramebuffer framebuffer;
+        };
+
+        using Frames = std::vector<Frame>;
+
+        struct Attachment
+        {
+            using TextureVariant = std::variant<
+                std::monostate,
+                SharedRenderResource<VulkanFramedTexture<1>>,
+                SharedRenderResource<VulkanFramedTexture<2>>,
+                SharedRenderResource<VulkanFramedTexture<3>>
+            >;
+
+            RenderPassAttachmentType type = RenderPassAttachmentType::Color;
+            TextureVariant texture = {};
+            std::optional<Vector4f32> clearValue = {};
+        };
+
+        using Attachments = std::vector<Attachment>;
+
         VulkanRenderPass() = delete;
         VulkanRenderPass(
             Logger* logger,
-            const VkCommandPool commandPool,
-            Vulkan::CommandBuffers&& commandBuffers,
-            Vulkan::Semaphores&& finishSemaphores,
             VkRenderPass renderPass,
+            const VkCommandPool commandPool,
+            Frames&& frames,
+            Attachments&& attachments,
             RenderPassFunction recordFunction);
 
         /** Set current command buffer record function. */
@@ -77,21 +113,26 @@ namespace Molten
         friend class Vulkan::ResourceDestroyer;
 
         [[nodiscard]] Vulkan::Result<> Record(
-            const size_t commandBufferIndex,
-            const Bounds2i32& defaultViewportBounds,
-            const Bounds2i32& defaultScissorBounds);
+            const size_t frameIndex,
+            const VulkanRenderPassRecordDescriptor& descriptor);
 
-        void Submit();
+        [[nodiscard]] Frame& GetCurrentFrame();
+
+        [[nodiscard]] Vulkan::Result<> Submit(
+            Vulkan::LogicalDevice& logicalDevice,
+            const VkSemaphore waitSemaphore,
+            const VkFence submitFence);
 
     private:
 
         Logger* m_logger;
-        VkRenderPass m_renderPass;
-        RenderPassFunction m_recordFunction;
+        VkRenderPass m_renderPass;     
         VkCommandPool m_commandPool;
-        Vulkan::CommandBuffers m_commandBuffers;
-        Vulkan::Semaphores m_finishSemaphores;
         VulkanCommandBuffer m_commandBuffer;
+        Frames m_frames;
+        Attachments m_attachments;
+        size_t m_currentFrameIndex;
+        RenderPassFunction m_recordFunction;
         std::optional<Bounds2i32> m_viewportBounds;
         std::optional<Bounds2i32> m_scissorBounds;
 

@@ -30,6 +30,7 @@
 
 #include "Molten/Renderer/Vulkan/Utility/VulkanTypes.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanResult.hpp"
+#include <vector>
 
 MOLTEN_UNSCOPED_ENUM_BEGIN
 
@@ -46,9 +47,13 @@ namespace Molten::Vulkan
         SwapChain();
         ~SwapChain();
 
+        /*SwapChain(const SwapChain&) = delete;
+        SwapChain(SwapChain&&) = delete;
+        SwapChain& operator = (const SwapChain&) = delete;
+        SwapChain& operator = (SwapChain&&) = delete;*/
+
         Result<> Create(
             LogicalDevice& logicalDevice,
-            const VkRenderPass renderPass,
             const VkSurfaceFormatKHR& surfaceFormat,
             const VkPresentModeKHR presentMode,
             const uint32_t imageCount);
@@ -57,32 +62,38 @@ namespace Molten::Vulkan
 
         void Destroy();
 
-        bool IsCreated();
+        [[nodiscard]] bool IsCreated();
 
-        Result<> BeginDraw();
-        Result<> EndDraw(VkCommandBuffer& commandBuffer);
+        /** This function is blocking until next image is available.
+         *  @return Status VK_SUCCESSFUL if next image successfully was acquired.
+         *          Recreate must be called before calling AcquireNextImage again, if VK_ERROR_OUT_OF_DATE_KHR is returned.
+         *          It's also recommended call Recreate() if VK_SUBOPTIMAL_KHR is returned.
+         */
+        [[nodiscard]] Result<> AcquireNextImage();
 
-        VkSwapchainKHR GetHandle() const;
+        /** This function is blocking until waitSemaphore is signaled. */
+        [[nodiscard]] Result<> PresentImage(VkSemaphore waitSemaphore);
 
-        VkExtent2D GetExtent() const;
+        [[nodiscard]] VkSwapchainKHR GetHandle() const;
 
-        VkPresentModeKHR GetPresentMode() const;
+        [[nodiscard]] VkExtent2D GetExtent() const;
 
-        VkSurfaceFormatKHR GetSurfaceFormat() const;
+        [[nodiscard]] VkPresentModeKHR GetPresentMode() const;
 
-        uint32_t GetImageCount() const;
-        uint32_t GetMaxFramesInFlight() const;
+        [[nodiscard]] VkSurfaceFormatKHR GetSurfaceFormat() const;
 
-        uint32_t GetCurrentImageIndex() const;
-        uint32_t GetCurrentFrameIndex()  const;
-        VkFramebuffer GetCurrentFramebuffer()  const;
+        [[nodiscard]] const Images& GetImages() const;
 
-        LogicalDevice& GetLogicalDevice();
-        const LogicalDevice& GetLogicalDevice() const;
+        [[nodiscard]] uint32_t GetCurrentImageIndex() const;
 
-        bool HasLogicalDevice() const;
+        [[nodiscard]] VkFence GetCurrentFrameFence() const;
 
-        void SetExtent(VkExtent2D extent);
+        [[nodiscard]] VkSemaphore GetCurrentImageAvailableSemaphore() const;  
+
+        [[nodiscard]] LogicalDevice& GetLogicalDevice();
+        [[nodiscard]] const LogicalDevice& GetLogicalDevice() const;
+
+        [[nodiscard]] bool HasLogicalDevice() const;
 
     private:
 
@@ -91,26 +102,19 @@ namespace Molten::Vulkan
         Result<> LoadAssociatedObjects();
         void UnloadAssociatedObjects();
 
-        Result<> GetSwapchainImages(Images& images);
+        Result<> FetchwapchainImages(Images& images);
 
         VkSwapchainKHR m_handle;
         LogicalDevice* m_logicalDevice;
-        VkRenderPass m_renderPass;
         VkExtent2D m_extent;
         VkPresentModeKHR m_presentMode;
         VkSurfaceFormatKHR m_surfaceFormat;
-        Images m_images; // TODO: Group together with image view?
-        ImageViews m_imageViews;
-        FrameBuffers m_framebuffers; // TODO: Old, get rid of.
-        uint32_t m_maxFramesInFlight;
+        Images m_images;
         Semaphores m_imageAvailableSemaphores;
-        Semaphores m_renderFinishedSemaphores;
-        Fences m_inFlightFences;
-        Fences m_imagesInFlight;
-        uint32_t m_currentFrameIndex;
+        Fences m_frameFences;    
         uint32_t m_currentImageIndex;
-        bool m_resize;
-        
+        uint32_t m_currentFrameIndex;
+
     };
 
 }

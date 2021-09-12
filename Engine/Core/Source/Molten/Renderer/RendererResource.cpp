@@ -57,11 +57,6 @@ namespace Molten
         DestroyResource(m_renderer, descriptorSet);
     }
     
-    void RenderResourceDeleter::operator()(Framebuffer* framebuffer)
-    {
-        DestroyResource(m_renderer, framebuffer);
-    }
-    
     void RenderResourceDeleter::operator()(IndexBuffer* indexBuffer)
     {
         DestroyResource(m_renderer, indexBuffer);

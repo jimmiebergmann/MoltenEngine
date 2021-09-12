@@ -54,6 +54,8 @@ namespace Molten::Vulkan
            VkPhysicalDevice physicalDeviceHandle,
            Surface& surface);
 
+       Result<> ReloadCapabilities();
+
        bool IsCreated() const;
 
        VkPhysicalDevice& GetHandle();

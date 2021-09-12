@@ -34,7 +34,6 @@ namespace Molten
     class Renderer;
     class DescriptorSet;
     class FramedDescriptorSet;
-    class Framebuffer;
     class IndexBuffer;
     class Pipeline;
     class RenderPass;
@@ -60,7 +59,6 @@ namespace Molten
 
         void operator()(FramedDescriptorSet* framedDescriptorSet);
         void operator()(DescriptorSet* descriptorSet);
-        void operator()(Framebuffer* framebuffer);
         void operator()(IndexBuffer* indexBuffer);
         void operator()(Pipeline* pipeline);
         void operator()(RenderPass* renderPass);

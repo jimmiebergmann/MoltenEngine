@@ -201,17 +201,17 @@ namespace Molten
         return { };
     }
 
-    RenderResource<Framebuffer> OpenGLX11Renderer::CreateFramebuffer(const FramebufferDescriptor&)
-    {
-        return { };
-    }
-
     RenderResource<IndexBuffer> OpenGLX11Renderer::CreateIndexBuffer(const IndexBufferDescriptor& /*descriptor*/)
     {
         return { };
     }
 
     RenderResource<Pipeline> OpenGLX11Renderer::CreatePipeline(const PipelineDescriptor& /*descriptor*/)
+    {
+        return { };
+    }
+
+    SharedRenderResource<RenderPass> OpenGLX11Renderer::CreateRenderPass(const RenderPassDescriptor& /*descriptor*/)
     {
         return { };
     }
@@ -281,15 +281,24 @@ namespace Molten
         return false;
     }
 
+    void OpenGLX11Renderer::UpdateUniformBuffer(RenderResource<UniformBuffer>& /*uniformBuffer*/, const void* /*data*/, const size_t /*size*/, const size_t /*offset*/)
+    {
+    }
+
+    void OpenGLX11Renderer::UpdateFramedUniformBuffer(RenderResource<FramedUniformBuffer>& /*framedUniformBuffer*/, const void* /*data*/, const size_t /*size*/, const size_t /*offset*/)
+    {
+    }
+
+    bool OpenGLX11Renderer::DrawFrame(const RenderPasses& /*renderPasses*/)
+    {
+        return false;
+    }
+
     void OpenGLX11Renderer::Destroy(DescriptorSet& /*descriptorSet*/)
     {
     }
 
     void OpenGLX11Renderer::Destroy(FramedDescriptorSet& /*framedDescriptorSet*/)
-    {
-    }
-
-    void OpenGLX11Renderer::Destroy(Framebuffer& /*framebuffer*/)
     {
     }
 
@@ -341,65 +350,7 @@ namespace Molten
     {
     }
 
-    void OpenGLX11Renderer::BindDescriptorSet(DescriptorSet& /*descriptorSet*/)
-    {
-    }
-
-    void OpenGLX11Renderer::BindFramedDescriptorSet(FramedDescriptorSet& /*framedDescriptorSet*/)
-    {
-    }
-
-    void OpenGLX11Renderer::BindPipeline(Pipeline& /*pipeline*/)
-    {
-    }
-
-    void OpenGLX11Renderer::BeginDraw()
-    {
-    }
-
-    void OpenGLX11Renderer::DrawVertexBuffer(VertexBuffer& /*vertexBuffer*/)
-    {
-    }
-
-    void OpenGLX11Renderer::DrawVertexBuffer(IndexBuffer& /*indexBuffer*/, VertexBuffer& /*vertexBuffer*/)
-    {
-    }
-
-    void OpenGLX11Renderer::PushConstant(const uint32_t /*location*/, const bool& /*value*/)
-    {
-    }
-    void OpenGLX11Renderer::PushConstant(const uint32_t /*location*/, const int32_t& /*value*/)
-    {
-    }
-    void OpenGLX11Renderer::PushConstant(const uint32_t /*location*/, const float& /*value*/)
-    {
-    }
-    void OpenGLX11Renderer::PushConstant(const uint32_t /*location*/, const Vector2f32& /*value*/)
-    {
-    }
-    void OpenGLX11Renderer::PushConstant(const uint32_t /*location*/, const Vector3f32& /*value*/)
-    {
-    }
-    void OpenGLX11Renderer::PushConstant(const uint32_t /*location*/, const Vector4f32& /*value*/)
-    {
-    }
-    void OpenGLX11Renderer::PushConstant(const uint32_t /*location*/, const Matrix4x4f32& /*value*/)
-    {
-    }
-
-    void OpenGLX11Renderer::EndDraw()
-    {
-    }
-
     void OpenGLX11Renderer::WaitForDevice()
-    {
-    }
-
-    void OpenGLX11Renderer::UpdateUniformBuffer(RenderResource<UniformBuffer>& /*uniformBuffer*/, const void* /*data*/, const size_t /*size*/, const size_t /*offset*/)
-    {
-    }
-
-    void OpenGLX11Renderer::UpdateFramedUniformBuffer(RenderResource<FramedUniformBuffer>& /*framedUniformBuffer*/, const void* /*data*/, const size_t /*size*/, const size_t /*offset*/)
     {
     }
 

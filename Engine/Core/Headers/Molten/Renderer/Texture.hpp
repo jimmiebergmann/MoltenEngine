@@ -129,6 +129,33 @@ namespace Molten
     using TextureUpdateDescriptor2D = TextureUpdateDescriptor<2>;
     using TextureUpdateDescriptor3D = TextureUpdateDescriptor<3>;   
 
+
+    /** Framed texture resource object. */
+    template<size_t VDimensions>
+    class FramedTexture
+    {
+
+        static_assert(VDimensions >= 1 && VDimensions <= 3, "Texture must be of dimension 1-3.");
+
+    public:
+
+        FramedTexture() = default;
+        virtual ~FramedTexture() = default;
+
+        /** Move constructor and assignment operator. */
+        /**@{*/
+        FramedTexture(FramedTexture&&) = default;
+        FramedTexture& operator = (FramedTexture&&) = default;
+        /**@}*/
+
+        /** Deleted copy constructor and assignment operator. */
+        /**@{*/
+        FramedTexture(const FramedTexture&) = delete;
+        FramedTexture& operator = (const FramedTexture&) = delete;
+        /**@}*/
+
+    };
+
 }
 
 #include "Molten/Renderer/Texture.inl"

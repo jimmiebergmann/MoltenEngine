@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -146,7 +146,7 @@ namespace Molten::Editor
             return std::make_shared<Logger>(loggerSeverityFlags);
         };
 
-        auto createFileLogger = [&]() -> std::shared_ptr<Logger>
+        auto createFileLogger = [&]() -> std::shared_ptr<FileLogger>
         {
             auto fileLogger = std::make_shared<FileLogger>(*filename, FileLogger::OpenMode::Append, loggerSeverityFlags);
             if (!fileLogger->IsOpen())

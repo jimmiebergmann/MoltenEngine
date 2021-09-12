@@ -32,7 +32,7 @@
 #include "Molten/Gui/Widgets/ButtonWidget.hpp"
 #include "Molten/Gui/Widgets/PaddingWidget.hpp"
 #include "Molten/Gui/Widgets/VerticalGridWidget.hpp"
-#include "Molten/Gui/Widgets/SpacerWidget.hpp"
+//#include "Molten/Gui/Widgets/SpacerWidget.hpp"
 #include "Molten/Gui/Widgets/PaneWidget.hpp"
 #include "Molten/Gui/Widgets/DockerWidget.hpp"
 #include "Molten/Gui/Widgets/LabelWidget.hpp"
@@ -100,7 +100,7 @@ namespace Molten::Editor
     {
         if (!LoadWindow(descriptor) ||
             !LoadRenderer(descriptor) ||
-            //!LoadViewport() ||
+            !LoadRenderPasses() ||
             !LoadGui())
         {
             return false;
@@ -108,7 +108,7 @@ namespace Molten::Editor
 
         const auto windowUnfocusedSleepTime = Seconds(
             1.0 / (descriptor.windowUnfocusedFpsLimit.has_value() ?
-            static_cast<double>(descriptor.windowUnfocusedFpsLimit.value()) : 20.0)
+            static_cast<double>(descriptor.windowUnfocusedFpsLimit.value()) : 15.0)
         );
         m_unfocusedWindowFpsLimiter.SetSleepTime(windowUnfocusedSleepTime);
 
@@ -116,8 +116,7 @@ namespace Molten::Editor
         {
             const auto fpsLimit = static_cast<double>(descriptor.fpsLimit.value()) + 0.25;
             m_fpsLimiter.SetSleepTime(Seconds(1.0 / fpsLimit));
-        }      
-
+        }
 
         m_window->Show();
         return true;
@@ -209,15 +208,18 @@ namespace Molten::Editor
         return true;
     }
 
-    /*bool Editor::LoadViewport()
+    bool Editor::LoadRenderPasses()
     {
-        FramebufferDescriptor framebufferDescriptor = {};
-        framebufferDescriptor.dimensions = { 2000, 2000 };
-
-        m_viewportFramebuffer = m_renderer->CreateFramebuffer(framebufferDescriptor);
+        auto renderPass = m_renderer->GetSwapChainRenderPass();
+        renderPass->SetRecordFunction([&](auto& commandBuffer)
+        {
+            m_canvasRenderer->SetCommandBuffer(commandBuffer);
+            m_canvas->Draw();
+        });
+        m_renderPasses.push_back(std::move(renderPass));
 
         return true;
-    }*/
+    }
 
     bool Editor::LoadGui()
     {
@@ -277,18 +279,10 @@ namespace Molten::Editor
 
         UpdateCanvas();
 
-        // Experimental...
-        /*m_renderer->BeginFramebufferDraw(*m_viewportFramebuffer);
-        m_canvas->Draw();
-        m_renderer->EndFramebufferDraw(*m_viewportFramebuffer);*/
-        // Experimental...
-
-        m_renderer->Resize(m_window->GetSize());
-        m_renderer->BeginDraw();
-
-        m_canvas->Draw();
-
-        m_renderer->EndDraw();
+        if(!m_renderer->DrawFrame(m_renderPasses))
+        {
+            return false;
+        }
 
         return true;
     }
@@ -314,7 +308,7 @@ namespace Molten::Editor
     bool Editor::HandleWindowFocus()
     {
         const auto windowSize = m_window->GetSize();
-        bool isMinimized = !windowSize.x || !windowSize.y;
+        const bool isMinimized = !windowSize.x || !windowSize.y;
         if(isMinimized || !m_window->IsFocused())
         {
             m_unfocusedWindowFpsLimiter.Sleep();

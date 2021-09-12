@@ -43,7 +43,7 @@ namespace Molten::Vulkan
 
     /**Result type, returned by vulkan utility functionsand methods. */
     template<typename TCustomResult>
-    class [[nodiscard]] Result : private std::variant<VkResult, TCustomResult>
+    class [[nodiscard]] Result : std::variant<VkResult, TCustomResult>
     {
 
     public:
