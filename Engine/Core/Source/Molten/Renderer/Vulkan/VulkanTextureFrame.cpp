@@ -23,6 +23,8 @@
 *
 */
 
+#if defined(MOLTEN_ENABLE_VULKAN)
+
 #include "Molten/Renderer/Vulkan/VulkanTextureFrame.hpp"
 
 namespace Molten
@@ -51,3 +53,5 @@ namespace Molten
     }
 
 }
+
+#endif
