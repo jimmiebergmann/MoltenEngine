@@ -395,7 +395,7 @@ namespace Molten::Editor
                 {
                     {
                         colorTexture,
-                        Vector4f32{ 0.0f, 0.0f, 0.0f, 0.0f },
+                        RenderPassAttachmentColorClearValue{ { 0.0f, 0.0f, 0.0f, 0.0f} },
                         TextureType::Color,
                         TextureUsage::Attachment,
                         TextureType::Color,
@@ -403,7 +403,7 @@ namespace Molten::Editor
                     },
                     {
                         depthTexture,
-                        Vector4f32{ 1.0f },
+                        RenderPassAttachmentDepthStencilClearValue{ 1.0f, uint8_t{0} },
                         TextureType::DepthStencil,
                         TextureUsage::Attachment
                     }

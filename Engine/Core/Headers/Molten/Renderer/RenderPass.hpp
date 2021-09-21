@@ -84,10 +84,30 @@ namespace Molten
     using RenderPasses = std::vector<SharedRenderResource<RenderPass>>;
 
 
+    /** Render pass attachment clear value types. */
+    /**@{*/
+    struct RenderPassAttachmentColorClearValue
+    {
+        Vector4f32 color = { 0.0f, 0.0f, 0.0f, 0.0f };
+    };
+
+    struct RenderPassAttachmentDepthStencilClearValue
+    {
+        float depth = 1.0f;
+        uint8_t stencil = 0;
+    };
+
+    using RenderPassAttachmentClearValue = std::variant<
+        std::monostate,
+        RenderPassAttachmentColorClearValue,
+        RenderPassAttachmentDepthStencilClearValue>;
+    /**@}*/
+
+
     struct RenderPassAttachment
     {
         SharedRenderResource<FramedTexture<2>> texture = {};
-        std::optional<Vector4f32> clearValue = {};
+        RenderPassAttachmentClearValue clearValue = {};
         TextureType initialType = TextureType::Color;
         TextureUsage initialUsage = TextureUsage::Attachment;
         std::optional<TextureType> finalType = {};
@@ -95,7 +115,6 @@ namespace Molten
     };
 
     using RenderPassAttachments = std::vector<RenderPassAttachment>;
-
 
     /** Descriptor class of render pass class. */
     struct MOLTEN_API RenderPassDescriptor

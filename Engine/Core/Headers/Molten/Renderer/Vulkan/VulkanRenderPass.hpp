@@ -52,7 +52,6 @@ namespace Molten
         VulkanRenderPassAttachment();
         VulkanRenderPassAttachment(
             SharedRenderResource<VulkanFramedTexture<2>> texture,
-            std::optional<Vector4f32> clearValue,
             const TextureType initialType,
             const VkImageLayout initialLayout,
             const VkImageLayout finalLayout);
@@ -64,7 +63,6 @@ namespace Molten
         VulkanRenderPassAttachment& operator = (VulkanRenderPassAttachment&& attachment) noexcept = default;
 
         SharedRenderResource<VulkanFramedTexture<2>> texture;
-        std::optional<Vector4f32> clearValue;
         TextureType initialType;
         VkImageLayout initialLayout;
         VkImageLayout finalLayout;

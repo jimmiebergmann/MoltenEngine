@@ -23,7 +23,6 @@
 *
 */
 
-#include "Molten/Renderer/Vulkan/VulkanTexture.hpp"
 #if defined(MOLTEN_ENABLE_VULKAN)
 
 #include "Molten/Renderer/Vulkan/VulkanRenderPass.hpp"
@@ -39,7 +38,6 @@ namespace Molten
     // Vulkan render pass attachment implementations.
     VulkanRenderPassAttachment::VulkanRenderPassAttachment() :
         texture{},
-        clearValue{},
         initialType{ TextureType::Color },
         initialLayout{ VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED },
         finalLayout{ VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED }
@@ -47,13 +45,11 @@ namespace Molten
 
     VulkanRenderPassAttachment::VulkanRenderPassAttachment(
         SharedRenderResource<VulkanFramedTexture<2>> texture,
-        std::optional<Vector4f32> clearValue,
         const TextureType initialType,
         const VkImageLayout initialLayout,
         const VkImageLayout finalLayout
     ) :
         texture{ std::move(texture) },
-        clearValue{ clearValue },
         initialType{ initialType },
         initialLayout{ initialLayout },
         finalLayout{ finalLayout }

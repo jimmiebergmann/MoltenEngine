@@ -1305,7 +1305,7 @@ namespace Molten
             const auto finalUsageValue = attachment.finalUsage.value_or(attachment.initialUsage);
             const auto finalLayout = GetVulkanImageLayout(finalTypeValue, finalUsageValue);
 
-            vulkanAttachments.emplace_back(vulkanTexture, attachment.clearValue, attachment.initialType, initialLayout, finalLayout);
+            vulkanAttachments.emplace_back(vulkanTexture, attachment.initialType, initialLayout, finalLayout);
 
             for (size_t j = 0; j < framedAttachmentImageViews.size(); j++)
             {
@@ -1319,19 +1319,33 @@ namespace Molten
 
     
             VkAttachmentLoadOp loadOp;
-            if(attachment.clearValue.has_value())
+            if(attachment.clearValue.index() != 0)
             {
                 loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 
-                auto& clearValue = attachment.clearValue.value();
-
                 if(attachment.initialType == TextureType::Color)
                 {
-                    clearValues[i].color = { { clearValue.x, clearValue.y, clearValue.z, clearValue.w } };
+                    if(const auto clearValueIndex = attachment.clearValue.index(); clearValueIndex != 1)
+                    {
+                        Logger::WriteError(m_logger, "Clear value for render pass attachment is of type " + 
+                            std::to_string(clearValueIndex) + " , but expects 1");
+                        return {};
+                    }
+
+                    const auto& clearValue = std::get<1>(attachment.clearValue);
+                    clearValues[i].color = { { clearValue.color.x, clearValue.color.y, clearValue.color.z, clearValue.color.w } };
                 }
                 else
                 {
-                    clearValues[i].depthStencil = { clearValue.x, 0 };
+                    if(const auto clearValueIndex = attachment.clearValue.index(); clearValueIndex != 2)
+                    {
+                        Logger::WriteError(m_logger, "Clear value for render pass attachment is of type " +
+                            std::to_string(clearValueIndex) + " , but expects 2");
+                        return {};
+                    }
+
+                    const auto& clearValue = std::get<2>(attachment.clearValue);
+                    clearValues[i].depthStencil = { clearValue.depth, clearValue.stencil };
                 }
             }
             else
@@ -2841,7 +2855,6 @@ namespace Molten
         auto attachments = VulkanRenderPassAttachments{
             {
                 colorAttachmentTexture,
-                Vector4f32{ 0.0f, 0.0f, 0.0f, 0.0f }, // TODO: Use dynamic value here, should be passed to renderer description?
                 TextureType::Color,
                 VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
                 VkImageLayout::VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
