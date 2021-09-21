@@ -362,30 +362,53 @@ namespace Molten::Editor
 
     void Editor::OnSceneViewportResize(Gui::Viewport<Gui::EditorTheme>* viewport, const Vector2ui32 size)
     {
-        TextureDescriptor2D viewportTextureDesc = {};
-        viewportTextureDesc.dimensions = size;
-        viewportTextureDesc.type = TextureType::Color;
-        viewportTextureDesc.initialUsage = TextureUsage::Attachment;
-        viewportTextureDesc.format = ImageFormat::URed8Green8Blue8Alpha8;
-        viewportTextureDesc.internalFormat = ImageFormat::URed8Green8Blue8Alpha8;
-        auto texture = m_renderer->CreateFramedTexture(viewportTextureDesc);
+        TextureDescriptor2D colorTextureDesc = {};
+        colorTextureDesc.dimensions = size;
+        colorTextureDesc.type = TextureType::Color;
+        colorTextureDesc.initialUsage = TextureUsage::Attachment;
+        colorTextureDesc.format = ImageFormat::URed8Green8Blue8Alpha8;
+        colorTextureDesc.internalFormat = ImageFormat::URed8Green8Blue8Alpha8;
+        auto colorTexture = m_renderer->CreateFramedTexture(colorTextureDesc);
 
-        if (!texture)
+        if (!colorTexture)
+        {
+            return;
+        }
+
+        TextureDescriptor2D depthTextureDesc = {};
+        depthTextureDesc.dimensions = size;
+        depthTextureDesc.type = TextureType::DepthStencil;
+        depthTextureDesc.initialUsage = TextureUsage::Attachment;
+        depthTextureDesc.format = ImageFormat::SDepthFloat24StencilUint8;
+        depthTextureDesc.internalFormat = ImageFormat::SDepthFloat24StencilUint8;
+        auto depthTexture = m_renderer->CreateFramedTexture(depthTextureDesc);
+
+        if (!depthTexture)
         {
             return;
         }
 
         if (!m_viewportRenderPass)
         {
-            RenderPassDescriptor renderPassDesc = {};
-            renderPassDesc.dimensions = texture->GetDimensions();
-            renderPassDesc.attachments = {
-                RenderPassAttachment{
-                    RenderPassAttachmentType::Color,
-                    TextureUsage::Attachment,
-                    TextureUsage::ReadOnly,
-                    texture,
-                    Vector4f32{ 0.0f, 0.0f, 0.0f, 0.0f }
+            const RenderPassDescriptor renderPassDesc = {
+                colorTexture->GetDimensions(),
+                {
+                    {
+                        colorTexture,
+                        Vector4f32{ 0.0f, 0.0f, 0.0f, 0.0f },
+                        TextureType::Color,
+                        TextureUsage::Attachment,
+                        TextureType::Color,
+                        TextureUsage::ReadOnly
+                    },
+                    {
+                        depthTexture,
+                        Vector4f32{ 1.0f },
+                        TextureType::DepthStencil,
+                        TextureUsage::Attachment,
+                        TextureType::DepthStencil,
+                        TextureUsage::Attachment
+                    }
                 }
             };
 
@@ -409,15 +432,23 @@ namespace Molten::Editor
         }
         else
         {
-            RenderPassUpdateDescriptor renderPassUpdateDesc = {};
-            renderPassUpdateDesc.dimensions = texture->GetDimensions();
-            renderPassUpdateDesc.attachments = {
-                RenderPassAttachment{
-                    RenderPassAttachmentType::Color,
-                    TextureUsage::Attachment,
-                    TextureUsage::ReadOnly,
-                    texture,
-                    {}
+            const RenderPassUpdateDescriptor renderPassUpdateDesc = {
+                colorTexture->GetDimensions(),
+                {
+                    {
+                        colorTexture,
+                        TextureType::Color,
+                        TextureUsage::Attachment,
+                        TextureType::Color,
+                        TextureUsage::ReadOnly
+                    },
+                    {
+                        depthTexture,
+                        TextureType::DepthStencil,
+                        TextureUsage::Attachment,
+                        TextureType::DepthStencil,
+                        TextureUsage::Attachment
+                    }
                 }
             };
 
@@ -428,28 +459,42 @@ namespace Molten::Editor
             }
         }
 
-        viewport->SetTexture(std::move(texture));
+        viewport->SetTexture(std::move(colorTexture));
     }
 
     bool Editor::LoadSceneViewport()
     {
-        const std::array<Vector3f32, 4> vertexData =
+        struct Vertex
         {
-            Vector3f32{ -10.0f, 10.0f, 0.0f },
-            Vector3f32{ 10.0f, 10.0f, 0.0f },
-            Vector3f32{ 10.0f, -10.0f, 0.0f },
-            Vector3f32{ -10.0f, -10.0f, 0.0f }
+            Vector3f32 position;
+            Vector4f32 color;
         };
 
-        const std::array<uint16_t, 6> indices =
+        const std::array<Vertex, 8> vertexData =
+        {
+            Vertex{ { -10.0f, 10.0f, 0.0f }, { 1.0f, 1.0f, 0.0f, 1.0f} },
+            Vertex{ { 10.0f, 10.0f, 0.0f }, { 1.0f, 0.0f, 1.0f, 1.0f} },
+            Vertex{ { 10.0f, -10.0f, 0.0f }, { 1.0f, 0.0f, 1.0f, 1.0f} },
+            Vertex{ { -10.0f, -10.0f, 0.0f }, { 1.0f, 1.0f, 0.0f, 1.0f} },
+
+            Vertex{ { -15.0f, 10.0f, -20.0f }, { 1.0f, 0.0f, 0.0f, 1.0f} },
+            Vertex{ { 5.0f, 10.0f, -20.0f }, { 1.0f, 0.0f, 0.0f, 1.0f} },
+            Vertex{ { 5.0f, -10.0f, -20.0f }, { 1.0f, 0.0f, 0.0f, 1.0f} },
+            Vertex{ { -15.0f, -10.0f, -20.0f }, { 1.0f, 0.0f, 0.0f, 1.0f} },
+        };
+
+        const std::array<uint16_t, 12> indices =
         {
             0, 1, 2,
-            0, 2, 3
+            0, 2, 3,
+
+            4, 5, 6,
+            4, 6, 7
         };
 
         VertexBufferDescriptor vertexPositionBufferDesc;
         vertexPositionBufferDesc.vertexCount = static_cast<uint32_t>(vertexData.size());
-        vertexPositionBufferDesc.vertexSize = sizeof(Vector3f32);
+        vertexPositionBufferDesc.vertexSize = sizeof(Vertex);
         vertexPositionBufferDesc.data = static_cast<const void*>(vertexData.data());
         m_viewportSceneData.vertexBuffer = m_renderer->CreateVertexBuffer(vertexPositionBufferDesc);
         if (!m_viewportSceneData.vertexBuffer)
@@ -475,6 +520,7 @@ namespace Molten::Editor
 
             auto& inputs = script.GetInputInterface();
             auto& vertexPosition = inputs.AddMember<Vector3f32>();
+            auto& vertexColor = inputs.AddMember<Vector4f32>();
 
             auto& pushConstants = script.GetPushConstants();
             auto& projection = pushConstants.AddMember<Matrix4x4f32>(0);
@@ -489,14 +535,21 @@ namespace Molten::Editor
 
             auto* outPosition = script.GetVertexOutput();
             outPosition->GetInputPin()->ConnectBase(*projectedVertexPosition.GetOutputPin());
+
+            auto& outputs = script.GetOutputInterface();
+            auto& outColor = outputs.AddMember<Vector4f32>();
+            outColor.Connect(vertexColor);
         }
         { // Fragment
             auto& script = fragmentScript;
 
+            auto& inputs = script.GetInputInterface();
+            auto& vertexColor = inputs.AddMember<Vector4f32>();
+
             auto& outputs = script.GetOutputInterface();
             auto& outColor = outputs.AddMember<Vector4f32>();
 
-            outColor.SetDefaultValue({ 1.0, 1.0f, 0.0f, 1.0f });
+            outColor.Connect(vertexColor);
         }
 
         VisualShaderProgramDescriptor shaderProgramDesc;

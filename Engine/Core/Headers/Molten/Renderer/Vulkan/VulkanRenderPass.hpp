@@ -30,7 +30,6 @@
 
 #include "Molten/Renderer/RenderPass.hpp"
 #include "Molten/Renderer/Vulkan/VulkanRenderPassFrame.hpp"
-#include "Molten/Renderer/Vulkan/VulkanRenderPassAttachment.hpp"
 #include "Molten/Renderer/Vulkan/VulkanCommandBuffer.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanResult.hpp"
 
@@ -45,6 +44,33 @@ namespace Molten
     class VulkanRenderer;
     template<size_t VDimensions> class VulkanFramedTexture;
     class Logger;
+
+
+    /** Vulkan render pass attachment. */
+    struct MOLTEN_API VulkanRenderPassAttachment
+    {
+        VulkanRenderPassAttachment();
+        VulkanRenderPassAttachment(
+            SharedRenderResource<VulkanFramedTexture<2>> texture,
+            std::optional<Vector4f32> clearValue,
+            const TextureType initialType,
+            const VkImageLayout initialLayout,
+            const VkImageLayout finalLayout);
+        ~VulkanRenderPassAttachment() = default;
+
+        VulkanRenderPassAttachment(const VulkanRenderPassAttachment&) = default;
+        VulkanRenderPassAttachment(VulkanRenderPassAttachment&& attachment) noexcept = default;
+        VulkanRenderPassAttachment& operator = (const VulkanRenderPassAttachment&) = default;
+        VulkanRenderPassAttachment& operator = (VulkanRenderPassAttachment&& attachment) noexcept = default;
+
+        SharedRenderResource<VulkanFramedTexture<2>> texture;
+        std::optional<Vector4f32> clearValue;
+        TextureType initialType;
+        VkImageLayout initialLayout;
+        VkImageLayout finalLayout;
+    };
+
+    using VulkanRenderPassAttachments = std::vector<VulkanRenderPassAttachment>;
 
 
     /** Vulkan Render pass. */
@@ -64,6 +90,7 @@ namespace Molten
             const Vector2ui32& dimensions,
             VulkanRenderPassFrames&& frames,
             VulkanRenderPassAttachments&& attachments,
+            const bool hasDepthStencilAttachment,
             std::vector<VkClearValue>&& clearValues,
             RenderPassFunction recordFunction);
 
@@ -104,6 +131,7 @@ namespace Molten
         VulkanCommandBuffer m_commandBuffer;
         VulkanRenderPassFrames m_frames;
         VulkanRenderPassAttachments m_attachments;
+        bool m_hasDepthStencilAttachment;
         std::vector<VkClearValue> m_clearValues;
         size_t m_currentFrameIndex;
         RenderPassFunction m_recordFunction;

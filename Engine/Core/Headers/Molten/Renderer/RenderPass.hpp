@@ -84,20 +84,14 @@ namespace Molten
     using RenderPasses = std::vector<SharedRenderResource<RenderPass>>;
 
 
-    enum class RenderPassAttachmentType : uint8_t
-    {
-        Color,
-        DepthStencil
-    };
-
-
     struct RenderPassAttachment
     {
-        RenderPassAttachmentType type = RenderPassAttachmentType::Color;
-        TextureUsage initialUsage = TextureUsage::ReadOnly;
-        TextureUsage finalUsage = TextureUsage::ReadOnly;
         SharedRenderResource<FramedTexture<2>> texture = {};
         std::optional<Vector4f32> clearValue = {};
+        TextureType initialType = TextureType::Color;
+        TextureUsage initialUsage = TextureUsage::Attachment;
+        TextureType finalType = TextureType::Color;
+        TextureUsage finalUsage = TextureUsage::ReadOnly;
     };
 
     using RenderPassAttachments = std::vector<RenderPassAttachment>;
@@ -107,15 +101,27 @@ namespace Molten
     struct MOLTEN_API RenderPassDescriptor
     {
         Vector2ui32 dimensions = { 0, 0 };
-        RenderPassFunction recordFunction = nullptr;
         RenderPassAttachments attachments = {};
+        RenderPassFunction recordFunction = nullptr;
     };
+
+
+    struct RenderPassUpdateAttachment
+    {
+        SharedRenderResource<FramedTexture<2>> texture = {};
+        TextureType initialType = TextureType::Color;
+        TextureUsage initialUsage = TextureUsage::Attachment;
+        TextureType finalType = TextureType::Color;
+        TextureUsage finalUsage = TextureUsage::ReadOnly;
+    };
+
+    using RenderPassUpdateAttachments = std::vector<RenderPassUpdateAttachment>;
 
     /** Update descriptor class of render pass class. */
     struct MOLTEN_API RenderPassUpdateDescriptor
     {
         Vector2ui32 dimensions = { 0, 0 };
-        RenderPassAttachments attachments = {};
+        RenderPassUpdateAttachments attachments = {};
     };
 
 }

@@ -132,6 +132,7 @@ namespace Molten
             case ImageFormat::SRed8Green8: bytesPerPixel = 2; return VkFormat::VK_FORMAT_R8G8_SNORM;
             case ImageFormat::SRed8Green8Blue8: bytesPerPixel = 3; return VkFormat::VK_FORMAT_R8G8B8_SNORM;
             case ImageFormat::SRed8Green8Blue8Alpha8: bytesPerPixel = 4; return VkFormat::VK_FORMAT_R8G8B8A8_SNORM;
+            case ImageFormat::SDepthFloat24StencilUint8: bytesPerPixel = 4; return VkFormat::VK_FORMAT_D32_SFLOAT_S8_UINT;
 
             case ImageFormat::UBlue8Green8Red8: bytesPerPixel = 3; return VkFormat::VK_FORMAT_B8G8R8_UNORM;
             case ImageFormat::UBlue8Green8Red8Alpha8: bytesPerPixel = 4; return VkFormat::VK_FORMAT_B8G8R8A8_UNORM;
@@ -155,6 +156,7 @@ namespace Molten
             case VkFormat::VK_FORMAT_R8G8_SNORM: return ImageFormat::SRed8Green8;
             case VkFormat::VK_FORMAT_R8G8B8_SNORM: return ImageFormat::SRed8Green8Blue8;
             case VkFormat::VK_FORMAT_R8G8B8A8_SNORM: return ImageFormat::SRed8Green8Blue8Alpha8;
+            case VkFormat::VK_FORMAT_D32_SFLOAT_S8_UINT: return ImageFormat::SDepthFloat24StencilUint8;
 
             case VkFormat::VK_FORMAT_B8G8R8_UNORM: return ImageFormat::UBlue8Green8Red8;
             case VkFormat::VK_FORMAT_B8G8R8A8_UNORM: return ImageFormat::UBlue8Green8Red8Alpha8;
@@ -1103,7 +1105,16 @@ namespace Molten
         multisamplingInfo.alphaToOneEnable = VK_FALSE;
         multisamplingInfo.alphaToCoverageEnable = VK_FALSE;
                 
-        //VkPipelineDepthStencilStateCreateInfo depthStencilStateInfo = {};
+        VkPipelineDepthStencilStateCreateInfo depthStencilInfo = {};
+        if(vulkanRenderPass->m_hasDepthStencilAttachment)
+        {
+            depthStencilInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+            depthStencilInfo.depthTestEnable = VK_TRUE;
+            depthStencilInfo.depthWriteEnable = VK_TRUE;
+            depthStencilInfo.depthCompareOp = VkCompareOp::VK_COMPARE_OP_LESS;
+            depthStencilInfo.depthBoundsTestEnable = VK_FALSE;
+            depthStencilInfo.stencilTestEnable = VK_FALSE;
+        }
 
         auto& blendingDescriptor = descriptor.blending;
         const auto blendOperator = GetVulkanBlendOperator(blendingDescriptor.blendOperator);
@@ -1164,9 +1175,8 @@ namespace Molten
         pipelineInfo.pViewportState = &viewportStateInfo;
         pipelineInfo.pRasterizationState = &rasterizerInfo;
         pipelineInfo.pMultisampleState = &multisamplingInfo;
-        pipelineInfo.pDepthStencilState = nullptr;
+        pipelineInfo.pDepthStencilState = vulkanRenderPass->m_hasDepthStencilAttachment ? &depthStencilInfo : nullptr;
         pipelineInfo.pColorBlendState = &colorBlendInfo;
-        pipelineInfo.pDepthStencilState = nullptr;
         pipelineInfo.pDynamicState = &dynamicStateInfo;
         pipelineInfo.layout = pipelineLayout;
         pipelineInfo.renderPass = vulkanRenderPass->m_renderPass;
@@ -1290,10 +1300,10 @@ namespace Molten
             const auto& vulkanTexture = std::dynamic_pointer_cast<VulkanFramedTexture2D>(attachment.texture);
             const auto imageFormat = vulkanTexture->GetFormat();
 
-            const auto initialLayout = GetVulkanImageLayout(attachment.initialUsage, TextureType::Color); // TODO: Do not default to Color.
-            const auto finalLayout = GetVulkanImageLayout(attachment.finalUsage, TextureType::Color); // TODO: Do not default to Color.
+            const auto initialLayout = GetVulkanImageLayout(attachment.initialUsage, attachment.initialType);
+            const auto finalLayout = GetVulkanImageLayout(attachment.finalUsage, attachment.finalType);
 
-            vulkanAttachments.emplace_back(attachment.type, vulkanTexture, attachment.clearValue, initialLayout, finalLayout);
+            vulkanAttachments.emplace_back(vulkanTexture, attachment.clearValue, attachment.initialType, initialLayout, finalLayout);
 
             for (size_t j = 0; j < framedAttachmentImageViews.size(); j++)
             {
@@ -1305,12 +1315,26 @@ namespace Molten
             uint8_t bytesPerPixel = 0;
             const auto vulkanImageFormat = GetVulkanImageFormat(imageFormat, bytesPerPixel);
 
-            const VkAttachmentLoadOp loadOp = attachment.clearValue.has_value() ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-
+    
+            VkAttachmentLoadOp loadOp;
             if(attachment.clearValue.has_value())
             {
+                loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+
                 auto& clearValue = attachment.clearValue.value();
-                clearValues[i].color = { clearValue.x, clearValue.y, clearValue.z, clearValue.w };
+
+                if(attachment.initialType == TextureType::Color)
+                {
+                    clearValues[i].color = { { clearValue.x, clearValue.y, clearValue.z, clearValue.w } };
+                }
+                else
+                {
+                    clearValues[i].depthStencil = { clearValue.x, 0 };
+                }
+            }
+            else
+            {
+                loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
             }
 
             auto& attachmentDescriptor = attachmentDescriptors[i];
@@ -1321,7 +1345,7 @@ namespace Molten
             attachmentDescriptor.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE; // TODO: Need custom check here?
             attachmentDescriptor.initialLayout = initialLayout;
 
-            if (attachment.type == RenderPassAttachmentType::Color)
+            if (attachment.initialType == TextureType::Color)
             {
                 attachmentDescriptor.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
                 attachmentDescriptor.finalLayout = finalLayout;
@@ -1329,9 +1353,9 @@ namespace Molten
                 colorAttachmentReferences.emplace_back();
                 auto& colorAttachmentReference = colorAttachmentReferences.back();
                 colorAttachmentReference.attachment = static_cast<uint32_t>(i);
-                colorAttachmentReference.layout = VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+                colorAttachmentReference.layout = initialLayout;
             }
-            else if (attachment.type == RenderPassAttachmentType::DepthStencil)
+            else if (attachment.initialType == TextureType::DepthStencil)
             {
                 if(!depthStencilAttachmentReferences.empty())
                 {
@@ -1340,17 +1364,17 @@ namespace Molten
                 }
 
                 attachmentDescriptor.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-                attachmentDescriptor.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+                attachmentDescriptor.finalLayout = finalLayout;
 
                 depthStencilAttachmentReferences.emplace_back();
-                auto& depthStencilAttachmentReference = colorAttachmentReferences.back();
+                auto& depthStencilAttachmentReference = depthStencilAttachmentReferences.back();
                 depthStencilAttachmentReference.attachment = static_cast<uint32_t>(i);
-                depthStencilAttachmentReference.layout = VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+                depthStencilAttachmentReference.layout = initialLayout;
             }
             else
             {
-                Logger::WriteError(m_logger, "Invalid attachment type(" + 
-                    std::to_string(static_cast<size_t>(attachment.type)) + ") provided to render pass creation.");
+                Logger::WriteError(m_logger, "Invalid attachment initial type(" + 
+                    std::to_string(static_cast<size_t>(attachment.initialType)) + ") provided to render pass creation.");
                 return {};
             }
         }
@@ -1425,6 +1449,7 @@ namespace Molten
             descriptor.dimensions,
             std::move(renderPassFrames),
             std::move(vulkanAttachments),
+            !depthStencilAttachmentReferences.empty(),
             std::move(clearValues),
             nullptr
         }, RenderResourceDeleter{ this });
@@ -1831,6 +1856,7 @@ namespace Molten
             dimensions,
             descriptor.data,
             dataSize,
+            descriptor.type,
             initialLayout,
             imageFormat,
             internalImageFormat,
@@ -1882,6 +1908,7 @@ namespace Molten
             dimensions,
             descriptor.data,
             dataSize,
+            descriptor.type,
             initialLayout,
             imageFormat,
             internalImageFormat,
@@ -1934,6 +1961,7 @@ namespace Molten
             dimensions,
             descriptor.data,
             dataSize,
+            descriptor.type,
             initialLayout,
             imageFormat,
             internalImageFormat,
@@ -2080,8 +2108,8 @@ namespace Molten
             auto& oldAttachment = vulkanRenderPass.m_attachments[i];
             const auto& newAttachment = descriptor.attachments[i];
 
-            const auto initialLayout = GetVulkanImageLayout(newAttachment.initialUsage, TextureType::Color); // TODO: Do not default to Color.
-            const auto finalLayout = GetVulkanImageLayout(newAttachment.finalUsage, TextureType::Color); // TODO: Do not default to Color.
+            const auto initialLayout = GetVulkanImageLayout(newAttachment.initialUsage, newAttachment.initialType);
+            const auto finalLayout = GetVulkanImageLayout(newAttachment.finalUsage, newAttachment.finalType);
 
             if (initialLayout != oldAttachment.initialLayout)
             {
@@ -2097,8 +2125,14 @@ namespace Molten
                 return false;
             }
 
+            if (newAttachment.initialType != oldAttachment.initialType)
+            {
+                Logger::WriteError(m_logger, "Initial type of attachment(" + std::to_string(i) + ") is mismatching in update: " +
+                    std::to_string(static_cast<size_t>(newAttachment.initialType)) + " != " + std::to_string(static_cast<size_t>(oldAttachment.initialType)) + ".");
+                return false;
+            }
+
             const auto vulkanFramedTexture = std::dynamic_pointer_cast<VulkanFramedTexture2D>(newAttachment.texture);
-            oldAttachment.type = newAttachment.type;
             oldAttachment.texture = vulkanFramedTexture;
 
             for (size_t j = 0; j < framedAttachmentImageViews.size(); j++)
@@ -2800,17 +2834,17 @@ namespace Molten
         );
 
         auto attachments = VulkanRenderPassAttachments{
-            VulkanRenderPassAttachment{
-                RenderPassAttachmentType::Color,
+            {
                 colorAttachmentTexture,
                 Vector4f32{ 0.0f, 0.0f, 0.0f, 0.0f }, // TODO: Use dynamic value here, should be passed to renderer description?
+                TextureType::Color,
                 VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
                 VkImageLayout::VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
             }
         };
 
         std::vector<VkClearValue> clearValues(1);
-        clearValues[0].color = { 0.0f, 0.0f, 0.0f, 0.0f};
+        clearValues[0].color = { { 0.0f, 0.0f, 0.0f, 0.0f } };
 
         // Create command pool.
         VkCommandPoolCreateInfo commandPoolInfo = {};
@@ -2930,6 +2964,7 @@ namespace Molten
             imageDimensions,
             std::move(renderPassFrames),
             std::move(attachments),
+            false,
             std::move(clearValues),
             nullptr
             }, RenderResourceDeleter{ this });
@@ -3142,6 +3177,7 @@ namespace Molten
         const Vector3ui32& dimensions,
         const void* data,
         const VkDeviceSize dataSize,
+        const TextureType textureType,
         const VkImageLayout layout,
         const VkFormat imageFormat,
         const VkFormat internalImageFormat,
@@ -3150,6 +3186,12 @@ namespace Molten
         const VkComponentMapping& componentMapping)
     {
         frames.resize(m_swapChain.GetImages().size());
+
+        VkFlags attachmentUsage = textureType == TextureType::Color ?
+            VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT : VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+
+        VkFlags aspectMask = textureType == TextureType::Color ?
+            VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT : (VkImageAspectFlagBits::VK_IMAGE_ASPECT_DEPTH_BIT | VkImageAspectFlagBits::VK_IMAGE_ASPECT_STENCIL_BIT);
 
         for (auto& frame : frames)
         {
@@ -3166,7 +3208,7 @@ namespace Molten
             imageInfo.format = imageFormat;
             imageInfo.tiling = VkImageTiling::VK_IMAGE_TILING_OPTIMAL;
             imageInfo.initialLayout = VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
-            imageInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT; // TODO: Need check here!
+            imageInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | attachmentUsage; // TODO: Need check here!
             imageInfo.sharingMode = VkSharingMode::VK_SHARING_MODE_EXCLUSIVE;
             imageInfo.samples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
 
@@ -3185,7 +3227,7 @@ namespace Molten
             viewInfo.image = frame.deviceImage.image;
             viewInfo.viewType = imageViewType;
             viewInfo.format = internalImageFormat;
-            viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            viewInfo.subresourceRange.aspectMask = aspectMask;
             viewInfo.subresourceRange.baseMipLevel = 0;
             viewInfo.subresourceRange.levelCount = 1;
             viewInfo.subresourceRange.baseArrayLayer = 0;
@@ -3251,7 +3293,7 @@ namespace Molten
         {
             for (auto& frame : frames)
             {
-                if (!Vulkan::TransitionImageLayout(commandBuffer, frame.deviceImage, layout /*VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL*/))
+                if (!Vulkan::TransitionImageLayout(commandBuffer, frame.deviceImage, layout))
                 {
                     Logger::WriteError(m_logger, "Failed to transition image layout of framed texture to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL");
                     return false;

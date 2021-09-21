@@ -239,6 +239,7 @@ namespace Molten
             const Vector3ui32& dimensions,
             const void* data,
             const VkDeviceSize dataSize,
+            const TextureType textureType,
             const VkImageLayout layout,
             const VkFormat imageFormat,
             const VkFormat internalImageFormat,

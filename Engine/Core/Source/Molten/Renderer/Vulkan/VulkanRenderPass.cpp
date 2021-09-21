@@ -27,6 +27,7 @@
 #if defined(MOLTEN_ENABLE_VULKAN)
 
 #include "Molten/Renderer/Vulkan/VulkanRenderPass.hpp"
+#include "Molten/Renderer/Vulkan/VulkanTexture.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanResult.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanResultLogger.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanLogicalDevice.hpp"
@@ -34,6 +35,30 @@
 
 namespace Molten
 {
+
+    // Vulkan render pass attachment implementations.
+    VulkanRenderPassAttachment::VulkanRenderPassAttachment() :
+        texture{},
+        clearValue{},
+        initialType{ TextureType::Color },
+        initialLayout{ VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED },
+        finalLayout{ VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED }
+    {}
+
+    VulkanRenderPassAttachment::VulkanRenderPassAttachment(
+        SharedRenderResource<VulkanFramedTexture<2>> texture,
+        std::optional<Vector4f32> clearValue,
+        const TextureType initialType,
+        const VkImageLayout initialLayout,
+        const VkImageLayout finalLayout
+    ) :
+        texture{ std::move(texture) },
+        clearValue{ clearValue },
+        initialType{ initialType },
+        initialLayout{ initialLayout },
+        finalLayout{ finalLayout }
+    {}
+
 
     // Vulkan render pass implementations.
     VulkanRenderPass::VulkanRenderPass(
@@ -43,6 +68,7 @@ namespace Molten
         const Vector2ui32& dimensions,
         VulkanRenderPassFrames&& frames,
         VulkanRenderPassAttachments&& attachments,
+        const bool hasDepthStencilAttachment,
         std::vector<VkClearValue>&& clearValues,
         RenderPassFunction recordFunction
     ) :
@@ -52,6 +78,7 @@ namespace Molten
         m_commandPool(commandPool),
         m_frames(std::move(frames)),
         m_attachments(std::move(attachments)),
+        m_hasDepthStencilAttachment(hasDepthStencilAttachment),
         m_clearValues(std::move(clearValues)),
         m_currentFrameIndex(0),
         m_recordFunction(std::move(recordFunction))
@@ -128,7 +155,8 @@ namespace Molten
             {
                 if (!Vulkan::TransitionImageLayout(currentCommandBuffer, textureFrame.deviceImage, attachment.initialLayout))
                 {
-                    Logger::WriteError(m_logger, "Failed to transition image layout of framed texture to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL");
+                    Logger::WriteError(m_logger, "Failed to transition image layout of framed texture: " +
+                        std::to_string(static_cast<size_t>(attachment.initialLayout)) + ".");
                     return VkResult::VK_ERROR_UNKNOWN;
                 }
             }
@@ -144,7 +172,7 @@ namespace Molten
         viewport.width = static_cast<float>(viewportSize.x);
         viewport.height = static_cast<float>(viewportSize.y);
         viewport.minDepth = 0.0f;
-        viewport.maxDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
 
         const auto scissorBounds = m_scissorBounds.value_or(Bounds2i32{ bounds });
         const auto scissorSize = scissorBounds.GetSize();

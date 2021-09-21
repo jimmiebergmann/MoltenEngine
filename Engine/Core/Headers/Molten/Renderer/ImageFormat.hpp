@@ -42,6 +42,7 @@ namespace Molten
         SRed8Green8,
         SRed8Green8Blue8,
         SRed8Green8Blue8Alpha8,
+        SDepthFloat24StencilUint8,
 
         SrgbRed8Green8Blue8,
         SrgbRed8Green8Blue8Alpha8,
