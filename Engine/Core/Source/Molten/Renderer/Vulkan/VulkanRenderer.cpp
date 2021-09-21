@@ -166,26 +166,26 @@ namespace Molten
         throw Exception("Provided Culkan image format is not supported by the Vulkan renderer.");
     }
 
-    static VkImageLayout GetVulkanImageLayout(const TextureUsage usage, const TextureType type)
+    static VkImageLayout GetVulkanImageLayout(const TextureType type, const TextureUsage usage)
     {
-        switch(usage)
+        switch (type)
         {
-            case TextureUsage::ReadOnly: 
+            case TextureType::Color:
             {
-                switch(type)
+                switch (usage)
                 {
-                    case TextureType::Color: return VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                    case TextureType::DepthStencil: return VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+                    case TextureUsage::ReadOnly: return VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                    case TextureUsage::Attachment: return VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
                 }
-            } break; 
-            case TextureUsage::Attachment: 
+            }
+            case TextureType::DepthStencil:
             {
-                switch (type)
+                switch (usage)
                 {
-                    case TextureType::Color: return VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-                    case TextureType::DepthStencil: return VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+                    case TextureUsage::ReadOnly: return VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+                    case TextureUsage::Attachment: return VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
                 }
-            } break;
+            }
         }
 
         return VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
@@ -1300,8 +1300,10 @@ namespace Molten
             const auto& vulkanTexture = std::dynamic_pointer_cast<VulkanFramedTexture2D>(attachment.texture);
             const auto imageFormat = vulkanTexture->GetFormat();
 
-            const auto initialLayout = GetVulkanImageLayout(attachment.initialUsage, attachment.initialType);
-            const auto finalLayout = GetVulkanImageLayout(attachment.finalUsage, attachment.finalType);
+            const auto initialLayout = GetVulkanImageLayout(attachment.initialType, attachment.initialUsage);
+            const auto finalTypeValue = attachment.finalType.value_or(attachment.initialType);
+            const auto finalUsageValue = attachment.finalUsage.value_or(attachment.initialUsage);
+            const auto finalLayout = GetVulkanImageLayout(finalTypeValue, finalUsageValue);
 
             vulkanAttachments.emplace_back(vulkanTexture, attachment.clearValue, attachment.initialType, initialLayout, finalLayout);
 
@@ -1837,7 +1839,7 @@ namespace Molten
             return {};
         }
 
-        const VkImageLayout initialLayout = GetVulkanImageLayout(descriptor.initialUsage, descriptor.type);
+        const VkImageLayout initialLayout = GetVulkanImageLayout(descriptor.type, descriptor.initialUsage);
         if (initialLayout == VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED)
         {
             Logger::WriteError(m_logger, "Failed to find VkImageLayout for texture - initial usage: " +
@@ -1888,7 +1890,7 @@ namespace Molten
             return {};
         }
 
-        const VkImageLayout initialLayout = GetVulkanImageLayout(descriptor.initialUsage, descriptor.type);
+        const VkImageLayout initialLayout = GetVulkanImageLayout(descriptor.type, descriptor.initialUsage);
         if (initialLayout == VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED)
         {
             Logger::WriteError(m_logger, "Failed to find VkImageLayout for texture - initial usage: " +
@@ -1940,7 +1942,7 @@ namespace Molten
             return {};
         }
 
-        const VkImageLayout initialLayout = GetVulkanImageLayout(descriptor.initialUsage, descriptor.type);
+        const VkImageLayout initialLayout = GetVulkanImageLayout(descriptor.type, descriptor.initialUsage);
         if(initialLayout == VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED)
         {
             Logger::WriteError(m_logger, "Failed to find VkImageLayout for texture - initial usage: " +
@@ -2108,8 +2110,11 @@ namespace Molten
             auto& oldAttachment = vulkanRenderPass.m_attachments[i];
             const auto& newAttachment = descriptor.attachments[i];
 
-            const auto initialLayout = GetVulkanImageLayout(newAttachment.initialUsage, newAttachment.initialType);
-            const auto finalLayout = GetVulkanImageLayout(newAttachment.finalUsage, newAttachment.finalType);
+            const auto initialLayout = GetVulkanImageLayout(newAttachment.initialType, newAttachment.initialUsage);
+
+            const auto finalTypeValue = newAttachment.finalType.value_or(newAttachment.initialType);
+            const auto finalUsageValue = newAttachment.finalUsage.value_or(newAttachment.initialUsage);
+            const auto finalLayout = GetVulkanImageLayout(finalTypeValue, finalUsageValue);
 
             if (initialLayout != oldAttachment.initialLayout)
             {

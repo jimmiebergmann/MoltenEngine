@@ -90,8 +90,8 @@ namespace Molten
         std::optional<Vector4f32> clearValue = {};
         TextureType initialType = TextureType::Color;
         TextureUsage initialUsage = TextureUsage::Attachment;
-        TextureType finalType = TextureType::Color;
-        TextureUsage finalUsage = TextureUsage::ReadOnly;
+        std::optional<TextureType> finalType = {};
+        std::optional<TextureUsage> finalUsage = {};
     };
 
     using RenderPassAttachments = std::vector<RenderPassAttachment>;
@@ -111,8 +111,8 @@ namespace Molten
         SharedRenderResource<FramedTexture<2>> texture = {};
         TextureType initialType = TextureType::Color;
         TextureUsage initialUsage = TextureUsage::Attachment;
-        TextureType finalType = TextureType::Color;
-        TextureUsage finalUsage = TextureUsage::ReadOnly;
+        std::optional<TextureType> finalType = {};
+        std::optional<TextureUsage> finalUsage = {};
     };
 
     using RenderPassUpdateAttachments = std::vector<RenderPassUpdateAttachment>;

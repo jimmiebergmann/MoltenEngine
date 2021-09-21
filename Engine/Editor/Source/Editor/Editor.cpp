@@ -405,8 +405,6 @@ namespace Molten::Editor
                         depthTexture,
                         Vector4f32{ 1.0f },
                         TextureType::DepthStencil,
-                        TextureUsage::Attachment,
-                        TextureType::DepthStencil,
                         TextureUsage::Attachment
                     }
                 }
@@ -444,8 +442,6 @@ namespace Molten::Editor
                     },
                     {
                         depthTexture,
-                        TextureType::DepthStencil,
-                        TextureUsage::Attachment,
                         TextureType::DepthStencil,
                         TextureUsage::Attachment
                     }
