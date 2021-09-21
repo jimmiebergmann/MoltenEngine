@@ -139,6 +139,56 @@ namespace Molten
         throw Exception("Provided image format is not supported by the Vulkan renderer.");
     }
 
+    static ImageFormat GetImageFormat(const VkFormat imageFormat)
+    {
+        switch (imageFormat)
+        {
+            case VkFormat::VK_FORMAT_R8_UNORM: return ImageFormat::URed8;
+            case VkFormat::VK_FORMAT_R8G8_UNORM: return ImageFormat::URed8Green8;
+            case VkFormat::VK_FORMAT_R8G8B8_UNORM: return ImageFormat::URed8Green8Blue8;
+            case VkFormat::VK_FORMAT_R8G8B8A8_UNORM: return ImageFormat::URed8Green8Blue8Alpha8;
+
+            case VkFormat::VK_FORMAT_R8G8B8_SRGB: return ImageFormat::SrgbRed8Green8Blue8;
+            case VkFormat::VK_FORMAT_R8G8B8A8_SRGB: return ImageFormat::SrgbRed8Green8Blue8Alpha8;
+
+            case VkFormat::VK_FORMAT_R8_SNORM: return ImageFormat::SRed8;
+            case VkFormat::VK_FORMAT_R8G8_SNORM: return ImageFormat::SRed8Green8;
+            case VkFormat::VK_FORMAT_R8G8B8_SNORM: return ImageFormat::SRed8Green8Blue8;
+            case VkFormat::VK_FORMAT_R8G8B8A8_SNORM: return ImageFormat::SRed8Green8Blue8Alpha8;
+
+            case VkFormat::VK_FORMAT_B8G8R8_UNORM: return ImageFormat::UBlue8Green8Red8;
+            case VkFormat::VK_FORMAT_B8G8R8A8_UNORM: return ImageFormat::UBlue8Green8Red8Alpha8;
+
+            default: break;
+        }
+        throw Exception("Provided Culkan image format is not supported by the Vulkan renderer.");
+    }
+
+    static VkImageLayout GetVulkanImageLayout(const TextureUsage usage, const TextureType type)
+    {
+        switch(usage)
+        {
+            case TextureUsage::ReadOnly: 
+            {
+                switch(type)
+                {
+                    case TextureType::Color: return VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                    case TextureType::DepthStencil: return VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+                }
+            } break; 
+            case TextureUsage::Attachment: 
+            {
+                switch (type)
+                {
+                    case TextureType::Color: return VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+                    case TextureType::DepthStencil: return VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+                }
+            } break;
+        }
+
+        return VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
+    }
+
     static bool GetVulkanVertexAttributeFormat(const Shader::VariableDataType format, VkFormat & vulkanFormat, uint32_t & formatSize)
     {       
         switch (format)
@@ -363,19 +413,14 @@ namespace Molten
         m_logicalDevice{},
         m_memoryAllocator{},
         m_resourceDestroyer(m_logicalDevice, m_memoryAllocator),
-        //m_renderPass(VK_NULL_HANDLE),
         m_swapChain{},
-        //m_swapChainFramedTexture{},
         m_swapChainRenderPass{},
         m_surfaceFormat{},
         m_presentMode(VkPresentModeKHR::VK_PRESENT_MODE_IMMEDIATE_KHR),
         m_commandPool(VK_NULL_HANDLE),
-        //m_commandBuffers{},
-        //m_currentCommandBuffer(nullptr),
-        //m_beginDraw(false)//,
-        //m_currentPipeline(nullptr),
         m_drawFrameCount(0),
-        m_drawingFrame(false)
+        m_drawingFrame(false),
+        m_recordedRenderPasses{}
     {}
 
     VulkanRenderer::VulkanRenderer(RenderTarget& renderTarget, const Version& version, Logger* logger) :
@@ -420,10 +465,10 @@ namespace Molten
     {
         if(m_swapChainRenderPass)
         {
-            if(m_swapChainRenderPass->m_attachments.size())
+            if(!m_swapChainRenderPass->m_attachments.empty())
             {
                 auto& attachment = m_swapChainRenderPass->m_attachments[0];
-                auto& texture = std::get<2>(attachment.texture);
+                auto& texture = attachment.texture;
 
                 for(auto& textureFrame : texture->frames)
                 {
@@ -792,7 +837,7 @@ namespace Molten
             const size_t writesIndex,
             const uint32_t bindingIndex,
             VkSampler sampler,
-            VkImageView imageView)
+            const VulkanTextureFrames& textureFrames)
         {
             auto imageInfo = std::make_unique<VkDescriptorImageInfo[]>(swapChainImageCount);
             const VkDescriptorType descriptorType = VkDescriptorType::VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -800,7 +845,7 @@ namespace Molten
             for (size_t i = 0; i < swapChainImageCount; i++)
             {
                 imageInfo[i].sampler = sampler;
-                imageInfo[i].imageView = imageView;
+                imageInfo[i].imageView = textureFrames[i].imageView;
                 imageInfo[i].imageLayout = VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
                 auto& write = writes[i][writesIndex];
@@ -847,23 +892,23 @@ namespace Molten
 
                     writeBufferInfos(setWrites, writeIndex, bindingIndex, deviceBuffers);
                 }
-                else if constexpr (std::is_same_v<T, CombinedTextureSampler1D>)
+                else if constexpr (std::is_same_v<T, CombinedFramedTextureSampler1D>)
                 {
-                    const auto imageView = static_cast<VulkanTexture1D*>(bindingData.texture.get())->imageView;
+                    const auto texture = static_cast<VulkanFramedTexture1D*>(bindingData.framedTexture.get());
                     const auto sampler = static_cast<VulkanSampler1D*>(bindingData.sampler.get())->imageSampler.GetHandle();
-                    writeImageInfos(setWrites, writeIndex, bindingIndex, sampler, imageView);
+                    writeImageInfos(setWrites, writeIndex, bindingIndex, sampler, texture->frames);
                 }
-                else if constexpr (std::is_same_v<T, CombinedTextureSampler2D>)
+                else if constexpr (std::is_same_v<T, CombinedFramedTextureSampler2D>)
                 {
-                    const auto imageView = static_cast<VulkanTexture2D*>(bindingData.texture.get())->imageView;
+                    const auto texture = static_cast<VulkanFramedTexture2D*>(bindingData.framedTexture.get());
                     const auto sampler = static_cast<VulkanSampler2D*>(bindingData.sampler.get())->imageSampler.GetHandle();
-                    writeImageInfos(setWrites, writeIndex, bindingIndex, sampler, imageView);
+                    writeImageInfos(setWrites, writeIndex, bindingIndex, sampler, texture->frames);
                 }
-                else if constexpr (std::is_same_v<T, CombinedTextureSampler3D>)
+                else if constexpr (std::is_same_v<T, CombinedFramedTextureSampler3D>)
                 {
-                    const auto imageView = static_cast<VulkanTexture3D*>(bindingData.texture.get())->imageView;
+                    const auto texture = static_cast<VulkanFramedTexture3D*>(bindingData.framedTexture.get());
                     const auto sampler = static_cast<VulkanSampler3D*>(bindingData.sampler.get())->imageSampler.GetHandle();
-                    writeImageInfos(setWrites, writeIndex, bindingIndex, sampler, imageView);
+                    writeImageInfos(setWrites, writeIndex, bindingIndex, sampler, texture->frames);
                 }
                 else
                 {
@@ -1032,9 +1077,9 @@ namespace Molten
         VkPipelineViewportStateCreateInfo viewportStateInfo = {};
         viewportStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
         viewportStateInfo.viewportCount = 1;
-        viewportStateInfo.pViewports = nullptr; // Set view dynamic state in BeginDraw().
+        viewportStateInfo.pViewports = nullptr; // Using dynamic state, set in VulkanRenderPass::Record(...).
         viewportStateInfo.scissorCount = 1;
-        viewportStateInfo.pScissors = nullptr; // Set view dynamic state in BeginDraw().
+        viewportStateInfo.pScissors = nullptr; // Using dynamic state, set in VulkanRenderPass::Record(...).
 
         VkPipelineRasterizationStateCreateInfo rasterizerInfo = {};
         rasterizerInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
@@ -1155,33 +1200,41 @@ namespace Molten
 
     SharedRenderResource<RenderPass> VulkanRenderer::CreateRenderPass(const RenderPassDescriptor& descriptor)
     {
-        return nullptr;
+        const auto logicalDevice = m_logicalDevice.GetHandle();
+        const auto& swapChainImages = m_swapChain.GetImages();
 
-        /*VkCommandPool commandPool = VK_NULL_HANDLE;
-        VkRenderPass renderPass = VK_NULL_HANDLE;
-        VulkanRenderPass::Frames frames(m_swapChain.GetImages().size(), VulkanRenderPass::Frame{});
+        auto commandPool = VkCommandPool{ VK_NULL_HANDLE };
+        auto renderPass = VkRenderPass{ VK_NULL_HANDLE };
+        auto renderPassFrames = VulkanRenderPassFrames(swapChainImages.size());
 
-        // Failure cleanup function.
+        auto vulkanAttachments = VulkanRenderPassAttachments{};
+        vulkanAttachments.reserve(descriptor.attachments.size());
+
         SmartFunction destroyer([&]()
         {
-            if (commandPool != VK_NULL_HANDLE)
+            for (auto& renderPassFrame : renderPassFrames)
             {
-                vkDestroyCommandPool(m_logicalDevice.GetHandle(), commandPool, nullptr);
-            }
-            if (renderPass != VK_NULL_HANDLE)
-            {
-                vkDestroyRenderPass(m_logicalDevice.GetHandle(), renderPass, nullptr);
-            }
-
-            for(auto& frame : frames)
-            {
-                if(frame.finishSemaphore)
+                if (renderPassFrame.framebuffer)
                 {
-                    vkDestroySemaphore(m_logicalDevice.GetHandle(), frame.finishSemaphore, nullptr);
+                    vkDestroyFramebuffer(logicalDevice, renderPassFrame.framebuffer, nullptr);
+                }
+
+                if (renderPassFrame.finishSemaphore)
+                {
+                    vkDestroySemaphore(logicalDevice, renderPassFrame.finishSemaphore, nullptr);
                 }
             }
-        });
 
+            if (commandPool)
+            {
+                vkDestroyCommandPool(logicalDevice, commandPool, nullptr);
+            }
+
+            if (renderPass)
+            {
+                vkDestroyRenderPass(logicalDevice, renderPass, nullptr);
+            }
+        });
 
         // Create command pool.
         VkCommandPoolCreateInfo commandPoolInfo = {};
@@ -1189,15 +1242,14 @@ namespace Molten
         commandPoolInfo.queueFamilyIndex = m_physicalDevice.GetDeviceQueueIndices().graphicsQueue.value();
         commandPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
-        if (const auto result = vkCreateCommandPool(m_logicalDevice.GetHandle(), &commandPoolInfo, nullptr, &commandPool); result != VK_SUCCESS)
+        if (const auto result = vkCreateCommandPool(logicalDevice, &commandPoolInfo, nullptr, &commandPool); result != VK_SUCCESS)
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to create command pool");
             return {};
         }
 
-
         // Create command buffers.
-        Vulkan::CommandBuffers commandBuffers(frames.size(), nullptr);
+        Vulkan::CommandBuffers commandBuffers(renderPassFrames.size(), nullptr);
 
         VkCommandBufferAllocateInfo commandBufferInfo = {};
         commandBufferInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -1205,81 +1257,177 @@ namespace Molten
         commandBufferInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
         commandBufferInfo.commandBufferCount = static_cast<uint32_t>(commandBuffers.size());
 
-        if (const auto result = vkAllocateCommandBuffers(m_logicalDevice.GetHandle(), &commandBufferInfo, commandBuffers.data()); result != VK_SUCCESS)
+        if (const auto result = vkAllocateCommandBuffers(logicalDevice, &commandBufferInfo, commandBuffers.data()); result != VK_SUCCESS)
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to allocate command buffers");
             return {};
         }
 
-        for(size_t i = 0; i < frames.size(); i++)
+        for (size_t i = 0; i < renderPassFrames.size(); i++)
         {
-            frames[i].commandBuffer = commandBuffers[i];
+            renderPassFrames[i].commandBuffer = commandBuffers[i];
         }
 
-
-        // Create semaphores
+        // Create finish semaphores
         Vulkan::Semaphores semaphores;
-        Vulkan::CreateSemaphores(semaphores, m_logicalDevice.GetHandle(), frames.size());
+        Vulkan::CreateSemaphores(semaphores, m_logicalDevice.GetHandle(), renderPassFrames.size());
 
-        for (size_t i = 0; i < frames.size(); i++)
+        for (size_t i = 0; i < renderPassFrames.size(); i++)
         {
-            frames[i].finishSemaphore = semaphores[i];
+            renderPassFrames[i].finishSemaphore = semaphores[i];
         }
 
-        // Create render pass. // TODO: Temp...
-        VkAttachmentDescription colorAttachment = {};
-        colorAttachment.format = m_surfaceFormat.format;
-        colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-        colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        // Construct attachment descriptors.
+        std::vector<VkAttachmentDescription> attachmentDescriptors(descriptor.attachments.size(), VkAttachmentDescription{});
+        std::vector<VkAttachmentReference> colorAttachmentReferences;
+        std::vector<VkAttachmentReference> depthStencilAttachmentReferences;
+        std::vector<std::vector<VkImageView>> framedAttachmentImageViews(swapChainImages.size());
+        std::vector<VkClearValue> clearValues(descriptor.attachments.size(), VkClearValue{});
 
-        VkAttachmentReference colorAttachmentReference = {};
-        colorAttachmentReference.attachment = 0;
-        colorAttachmentReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        for(size_t i = 0; i < descriptor.attachments.size(); i++)
+        {
+            auto& attachment = descriptor.attachments[i];
+            const auto& vulkanTexture = std::dynamic_pointer_cast<VulkanFramedTexture2D>(attachment.texture);
+            const auto imageFormat = vulkanTexture->GetFormat();
 
+            const auto initialLayout = GetVulkanImageLayout(attachment.initialUsage, TextureType::Color); // TODO: Do not default to Color.
+            const auto finalLayout = GetVulkanImageLayout(attachment.finalUsage, TextureType::Color); // TODO: Do not default to Color.
+
+            vulkanAttachments.emplace_back(attachment.type, vulkanTexture, attachment.clearValue, initialLayout, finalLayout);
+
+            for (size_t j = 0; j < framedAttachmentImageViews.size(); j++)
+            {
+                auto& attachmentImageViews = framedAttachmentImageViews[j];
+                auto& vulkanTextureFrame = vulkanTexture->frames[j];
+                attachmentImageViews.push_back(vulkanTextureFrame.imageView);
+            }
+
+            uint8_t bytesPerPixel = 0;
+            const auto vulkanImageFormat = GetVulkanImageFormat(imageFormat, bytesPerPixel);
+
+            const VkAttachmentLoadOp loadOp = attachment.clearValue.has_value() ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+
+            if(attachment.clearValue.has_value())
+            {
+                auto& clearValue = attachment.clearValue.value();
+                clearValues[i].color = { clearValue.x, clearValue.y, clearValue.z, clearValue.w };
+            }
+
+            auto& attachmentDescriptor = attachmentDescriptors[i];
+            attachmentDescriptor.format = vulkanImageFormat;
+            attachmentDescriptor.samples = VK_SAMPLE_COUNT_1_BIT;
+            attachmentDescriptor.loadOp = loadOp;
+            attachmentDescriptor.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE; // TODO: Need custom check here?
+            attachmentDescriptor.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE; // TODO: Need custom check here?
+            attachmentDescriptor.initialLayout = initialLayout;
+
+            if (attachment.type == RenderPassAttachmentType::Color)
+            {
+                attachmentDescriptor.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+                attachmentDescriptor.finalLayout = finalLayout;
+
+                colorAttachmentReferences.emplace_back();
+                auto& colorAttachmentReference = colorAttachmentReferences.back();
+                colorAttachmentReference.attachment = static_cast<uint32_t>(i);
+                colorAttachmentReference.layout = VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+            }
+            else if (attachment.type == RenderPassAttachmentType::DepthStencil)
+            {
+                if(!depthStencilAttachmentReferences.empty())
+                {
+                    Logger::WriteError(m_logger, "Multiple depth stencil attachments(" + std::to_string(i) + ") is not supported.");
+                    return {};
+                }
+
+                attachmentDescriptor.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+                attachmentDescriptor.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+                depthStencilAttachmentReferences.emplace_back();
+                auto& depthStencilAttachmentReference = colorAttachmentReferences.back();
+                depthStencilAttachmentReference.attachment = static_cast<uint32_t>(i);
+                depthStencilAttachmentReference.layout = VkImageLayout::VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+            }
+            else
+            {
+                Logger::WriteError(m_logger, "Invalid attachment type(" + 
+                    std::to_string(static_cast<size_t>(attachment.type)) + ") provided to render pass creation.");
+                return {};
+            }
+        }
+
+        // Constructor subpass.
         VkSubpassDescription subpass = {};
         subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-        subpass.colorAttachmentCount = 1;
-        subpass.pColorAttachments = &colorAttachmentReference;
+        subpass.colorAttachmentCount = static_cast<uint32_t>(colorAttachmentReferences.size());
+        subpass.pColorAttachments = !colorAttachmentReferences.empty() ? colorAttachmentReferences.data() : nullptr;
+        subpass.pDepthStencilAttachment = !depthStencilAttachmentReferences.empty() ? depthStencilAttachmentReferences.data() : nullptr;
 
-        VkSubpassDependency dependency = {};
-        dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-        dependency.dstSubpass = 0;
-        dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        dependency.srcAccessMask = 0;
-        dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        VkSubpassDependency subpassDependency = {};
+        subpassDependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+        subpassDependency.dstSubpass = 0;
+        subpassDependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        subpassDependency.srcAccessMask = 0;
+        subpassDependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        subpassDependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
+        if(!depthStencilAttachmentReferences.empty())
+        {
+            subpassDependency.srcStageMask |= VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+            subpassDependency.dstStageMask |= VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+            subpassDependency.dstAccessMask |= VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        }
+
+        // Create render pass.
         VkRenderPassCreateInfo renderPassInfo = {};
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-        renderPassInfo.attachmentCount = 1;
-        renderPassInfo.pAttachments = &colorAttachment;
+        renderPassInfo.attachmentCount = static_cast<uint32_t>(attachmentDescriptors.size());
+        renderPassInfo.pAttachments = attachmentDescriptors.data();
         renderPassInfo.subpassCount = 1;
         renderPassInfo.pSubpasses = &subpass;
         renderPassInfo.dependencyCount = 1;
-        renderPassInfo.pDependencies = &dependency;
+        renderPassInfo.pDependencies = &subpassDependency;
 
         if (const auto result = vkCreateRenderPass(m_logicalDevice.GetHandle(), &renderPassInfo, nullptr, &renderPass); result != VK_SUCCESS)
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to create internal render pass object");
             return {};
         }
-        
 
-        // Finalize
+        // Create framebuffers
+        for (size_t i = 0; i < renderPassFrames.size(); i++)
+        {
+            auto& renderPassFrame = renderPassFrames[i];
+            auto& attachmentImageViews = framedAttachmentImageViews[i];
+
+            VkFramebufferCreateInfo framebufferInfo = {};
+            framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+            framebufferInfo.renderPass = renderPass;
+            framebufferInfo.attachmentCount = static_cast<uint32_t>(attachmentImageViews.size());
+            framebufferInfo.pAttachments = attachmentImageViews.data();
+            framebufferInfo.width = descriptor.dimensions.x;
+            framebufferInfo.height = descriptor.dimensions.y;
+            framebufferInfo.layers = 1;
+
+            if (const auto result = vkCreateFramebuffer(m_logicalDevice.GetHandle(), &framebufferInfo, nullptr, &renderPassFrame.framebuffer); result != VK_SUCCESS)
+            {
+                Vulkan::Logger::WriteError(m_logger, result, "Failed to create framebuffer object for render pass");
+                return {};
+            }
+        }
+
+        // Finalize.
         destroyer.Release();
 
-        return SharedRenderResource<RenderPass>(new VulkanRenderPass{
+        return SharedRenderResource<VulkanRenderPass>(new VulkanRenderPass{
             m_logger,
             renderPass,
             commandPool,
-            std::move(frames),
-            descriptor.recordFunction
-        }, RenderResourceDeleter{ this });*/
+            descriptor.dimensions,
+            std::move(renderPassFrames),
+            std::move(vulkanAttachments),
+            std::move(clearValues),
+            nullptr
+        }, RenderResourceDeleter{ this });
     }
 
     SharedRenderResource<Sampler1D> VulkanRenderer::CreateSampler(const SamplerDescriptor1D& descriptor)
@@ -1531,6 +1679,7 @@ namespace Molten
             dimensions,
             descriptor.data,
             dataSize,
+            VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED,
             imageFormat,
             internalImageFormat,
             VulkanImageTypeTraits<1>::type,
@@ -1545,6 +1694,8 @@ namespace Molten
         return SharedRenderResource<Texture1D>(new VulkanTexture1D{
             std::move(deviceImage),
             imageView,
+            descriptor.format,
+            descriptor.dimensions,
             bytesPerPixel
         }, RenderResourceDeleter{ this });
     }
@@ -1577,6 +1728,7 @@ namespace Molten
             dimensions,
             descriptor.data,
             dataSize,
+            VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED,
             imageFormat,
             internalImageFormat,
             VulkanImageTypeTraits<2>::type,
@@ -1591,6 +1743,8 @@ namespace Molten
         return SharedRenderResource<Texture2D>(new VulkanTexture2D{
             std::move(deviceImage),
             imageView,
+            descriptor.format,
+            descriptor.dimensions,
             bytesPerPixel
         }, RenderResourceDeleter{ this });
     }
@@ -1624,6 +1778,7 @@ namespace Molten
             dimensions,
             descriptor.data,
             dataSize,
+            VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED,
             imageFormat,
             internalImageFormat,
             VulkanImageTypeTraits<3>::type,
@@ -1638,6 +1793,161 @@ namespace Molten
         return SharedRenderResource<Texture3D>(new VulkanTexture3D{
             std::move(deviceImage),
             imageView,
+            descriptor.format,
+            descriptor.dimensions,
+            bytesPerPixel
+        }, RenderResourceDeleter{ this });
+    }
+
+    SharedRenderResource<FramedTexture1D> VulkanRenderer::CreateFramedTexture(const TextureDescriptor1D& descriptor)
+    {
+        uint8_t bytesPerPixel = 0;
+        uint8_t internalBytesPerPixel = 0;
+        const auto imageFormat = GetVulkanImageFormat(descriptor.format, bytesPerPixel);
+        const auto internalImageFormat = GetVulkanImageFormat(descriptor.internalFormat, internalBytesPerPixel);
+        if (bytesPerPixel != internalBytesPerPixel)
+        {
+            Logger::WriteError(m_logger, "Format and internal format of texture mismatches number of bytes per pixel: " +
+                std::to_string(bytesPerPixel) + " : " + std::to_string(internalBytesPerPixel));
+            return {};
+        }
+
+        const VkImageLayout initialLayout = GetVulkanImageLayout(descriptor.initialUsage, descriptor.type);
+        if (initialLayout == VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED)
+        {
+            Logger::WriteError(m_logger, "Failed to find VkImageLayout for texture - initial usage: " +
+                std::to_string(static_cast<size_t>(descriptor.initialUsage)) + ", type: " + std::to_string(static_cast<size_t>(descriptor.type)));
+            return {};
+        }
+
+        const auto dimensions = Vector3ui32{ descriptor.dimensions.c[0], 1, 1 };
+        const auto dataSize =
+            static_cast<VkDeviceSize>(descriptor.dimensions.c[0]) * static_cast<VkDeviceSize>(bytesPerPixel);
+
+        VulkanTextureFrames frames;
+
+        if (!CreateFramedTexture(
+            frames,
+            dimensions,
+            descriptor.data,
+            dataSize,
+            initialLayout,
+            imageFormat,
+            internalImageFormat,
+            VulkanImageTypeTraits<1>::type,
+            VulkanImageViewTypeTraits<1>::type,
+            GetVulkanComponentMappings(descriptor.swizzleMapping)))
+        {
+            return {};
+        }
+
+        return SharedRenderResource<FramedTexture1D>(new VulkanFramedTexture1D{
+            std::move(frames),
+            descriptor.format,
+            descriptor.dimensions,
+            bytesPerPixel
+        }, RenderResourceDeleter{ this });
+    }
+
+    SharedRenderResource<FramedTexture2D> VulkanRenderer::CreateFramedTexture(const TextureDescriptor2D& descriptor)
+    {
+        uint8_t bytesPerPixel = 0;
+        uint8_t internalBytesPerPixel = 0;
+        const auto imageFormat = GetVulkanImageFormat(descriptor.format, bytesPerPixel);
+        const auto internalImageFormat = GetVulkanImageFormat(descriptor.internalFormat, internalBytesPerPixel);
+        if (bytesPerPixel != internalBytesPerPixel)
+        {
+            Logger::WriteError(m_logger, "Format and internal format of texture mismatches number of bytes per pixel: " +
+                std::to_string(bytesPerPixel) + " : " + std::to_string(internalBytesPerPixel));
+            return {};
+        }
+
+        const VkImageLayout initialLayout = GetVulkanImageLayout(descriptor.initialUsage, descriptor.type);
+        if (initialLayout == VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED)
+        {
+            Logger::WriteError(m_logger, "Failed to find VkImageLayout for texture - initial usage: " +
+                std::to_string(static_cast<size_t>(descriptor.initialUsage)) + ", type: " + std::to_string(static_cast<size_t>(descriptor.type)));
+            return {};
+        }
+
+        const auto dimensions = Vector3ui32{ descriptor.dimensions.x, descriptor.dimensions.y, 1 };
+        const auto dataSize =
+            static_cast<VkDeviceSize>(descriptor.dimensions.x) *
+            static_cast<VkDeviceSize>(descriptor.dimensions.y) * static_cast<VkDeviceSize>(bytesPerPixel);
+
+        VulkanTextureFrames frames;
+
+        if (!CreateFramedTexture(
+            frames,
+            dimensions,
+            descriptor.data,
+            dataSize,
+            initialLayout,
+            imageFormat,
+            internalImageFormat,
+            VulkanImageTypeTraits<2>::type,
+            VulkanImageViewTypeTraits<2>::type,
+            GetVulkanComponentMappings(descriptor.swizzleMapping)))
+        {
+            return {};
+        }
+
+        return SharedRenderResource<FramedTexture2D>(new VulkanFramedTexture2D{
+            std::move(frames),
+            descriptor.format,
+            descriptor.dimensions,
+            bytesPerPixel
+        }, RenderResourceDeleter{ this });
+    }
+
+    SharedRenderResource<FramedTexture3D> VulkanRenderer::CreateFramedTexture(const TextureDescriptor3D& descriptor)
+    {
+        uint8_t bytesPerPixel = 0;
+        uint8_t internalBytesPerPixel = 0;
+        const auto imageFormat = GetVulkanImageFormat(descriptor.format, bytesPerPixel);
+        const auto internalImageFormat = GetVulkanImageFormat(descriptor.internalFormat, internalBytesPerPixel);
+        if (bytesPerPixel != internalBytesPerPixel)
+        {
+            Logger::WriteError(m_logger, "Format and internal format of texture mismatches number of bytes per pixel: " +
+                std::to_string(bytesPerPixel) + " : " + std::to_string(internalBytesPerPixel));
+            return {};
+        }
+
+        const VkImageLayout initialLayout = GetVulkanImageLayout(descriptor.initialUsage, descriptor.type);
+        if(initialLayout == VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED)
+        {
+            Logger::WriteError(m_logger, "Failed to find VkImageLayout for texture - initial usage: " +
+                std::to_string(static_cast<size_t>(descriptor.initialUsage)) + ", type: " + std::to_string(static_cast<size_t>(descriptor.type)));
+            return {};
+        }
+
+        const auto dimensions = descriptor.dimensions;
+        const auto dataSize =
+            static_cast<VkDeviceSize>(descriptor.dimensions.x) *
+            static_cast<VkDeviceSize>(descriptor.dimensions.y) *
+            static_cast<VkDeviceSize>(descriptor.dimensions.z) * static_cast<VkDeviceSize>(bytesPerPixel);
+
+        VulkanTextureFrames frames;
+
+        if (!CreateFramedTexture(
+            frames,
+            dimensions,
+            descriptor.data,
+            dataSize,
+            initialLayout,
+            imageFormat,
+            internalImageFormat,
+            VulkanImageTypeTraits<3>::type,
+            VulkanImageViewTypeTraits<3>::type,
+            GetVulkanComponentMappings(descriptor.swizzleMapping)))
+        {
+            return {};
+        }
+
+        return SharedRenderResource<FramedTexture3D>(new VulkanFramedTexture3D{
+            std::move(frames),
+            descriptor.format,
+            descriptor.dimensions,
             bytesPerPixel
         }, RenderResourceDeleter{ this });
     }
@@ -1751,6 +2061,83 @@ namespace Molten
         }, RenderResourceDeleter{ this });
     }
 
+    bool VulkanRenderer::UpdateRenderPass(RenderPass& renderPass, const RenderPassUpdateDescriptor& descriptor)
+    {
+        auto& vulkanRenderPass = static_cast<VulkanRenderPass&>(renderPass);
+
+        if(descriptor.attachments.size() != vulkanRenderPass.m_attachments.size())
+        {
+            Logger::WriteError(m_logger, "Cannot update render pass with mismatching attachment count: " +
+                std::to_string(descriptor.attachments.size()) + " != " + std::to_string(vulkanRenderPass.m_attachments.size()) + ".");
+            return false;
+        }
+
+        const auto& swapChainImages = m_swapChain.GetImages();
+        std::vector<std::vector<VkImageView>> framedAttachmentImageViews(swapChainImages.size());
+
+        for(size_t i = 0; i < vulkanRenderPass.m_attachments.size(); i++)
+        {
+            auto& oldAttachment = vulkanRenderPass.m_attachments[i];
+            const auto& newAttachment = descriptor.attachments[i];
+
+            const auto initialLayout = GetVulkanImageLayout(newAttachment.initialUsage, TextureType::Color); // TODO: Do not default to Color.
+            const auto finalLayout = GetVulkanImageLayout(newAttachment.finalUsage, TextureType::Color); // TODO: Do not default to Color.
+
+            if (initialLayout != oldAttachment.initialLayout)
+            {
+                Logger::WriteError(m_logger, "Initial layout of attachment(" + std::to_string(i) + ") is mismatching  in update: " +
+                    std::to_string(initialLayout) + " != " + std::to_string(oldAttachment.initialLayout) + ".");
+                return false;
+            }
+
+            if (finalLayout != oldAttachment.finalLayout)
+            {
+                Logger::WriteError(m_logger, "Final layout of attachment(" + std::to_string(i) + ") is mismatching in update: " +
+                    std::to_string(finalLayout) + " != " + std::to_string(oldAttachment.finalLayout) + ".");
+                return false;
+            }
+
+            const auto vulkanFramedTexture = std::dynamic_pointer_cast<VulkanFramedTexture2D>(newAttachment.texture);
+            oldAttachment.type = newAttachment.type;
+            oldAttachment.texture = vulkanFramedTexture;
+
+            for (size_t j = 0; j < framedAttachmentImageViews.size(); j++)
+            {
+                auto& attachmentImageViews = framedAttachmentImageViews[j];
+                auto& vulkanTextureFrame = vulkanFramedTexture->frames[j];
+                attachmentImageViews.push_back(vulkanTextureFrame.imageView);
+            }
+        }
+
+        // Create framebuffers
+        for (size_t i = 0; i < vulkanRenderPass.m_frames.size(); i++)
+        {
+            auto& renderPassFrame = vulkanRenderPass.m_frames[i];
+            auto& attachmentImageViews = framedAttachmentImageViews[i];
+
+            m_resourceDestroyer.Add(GetNextDestroyerFrameIndex(), renderPassFrame.framebuffer);
+
+            VkFramebufferCreateInfo framebufferInfo = {};
+            framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+            framebufferInfo.renderPass = vulkanRenderPass.m_renderPass;
+            framebufferInfo.attachmentCount = static_cast<uint32_t>(attachmentImageViews.size());
+            framebufferInfo.pAttachments = attachmentImageViews.data();
+            framebufferInfo.width = descriptor.dimensions.x;
+            framebufferInfo.height = descriptor.dimensions.y;
+            framebufferInfo.layers = 1;
+
+            if (const auto result = vkCreateFramebuffer(m_logicalDevice.GetHandle(), &framebufferInfo, nullptr, &renderPassFrame.framebuffer); result != VK_SUCCESS)
+            {
+                Vulkan::Logger::WriteError(m_logger, result, "Failed to create framebuffer object for render pass");
+                return {};
+            }
+        }
+
+        vulkanRenderPass.m_dimensions = descriptor.dimensions;
+
+        return true;
+    }
+
     bool VulkanRenderer::UpdateTexture(Texture1D& texture1D, const TextureUpdateDescriptor1D& descriptor)
     {
         auto& vulkanTexture = static_cast<VulkanTexture1D&>(texture1D);
@@ -1841,7 +2228,7 @@ namespace Molten
 
         if (auto result = m_swapChain.AcquireNextImage(); !result.IsSuccessful())
         {
-            if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
+            if (result == VkResult::VK_ERROR_OUT_OF_DATE_KHR || result == VkResult::VK_SUBOPTIMAL_KHR) // TODO: Invalid compare here?
             {
                 if (result = m_logicalDevice.GetPhysicalDevice().ReloadCapabilities(); !result.IsSuccessful())
                 {
@@ -1868,38 +2255,66 @@ namespace Molten
         }
 
         ++m_drawFrameCount;
-
-        const auto swapChainExtent = m_swapChain.GetExtent(); /// TODO: Store default values for viewport and scissor.
         const auto currentImageIndex = m_swapChain.GetCurrentImageIndex();
 
-        VulkanRenderPassRecordDescriptor recordDescriptor = {};
-        recordDescriptor.defaultScissorBounds = Bounds2i32{ 0, 0, static_cast<int32_t>(swapChainExtent.width), static_cast<int32_t>(swapChainExtent.height) };
-        recordDescriptor.defaultViewportBounds = recordDescriptor.defaultScissorBounds;
-
-        // Draw render passes. Recording could be multi-threaded in the future, so recording and submits are separate.
-        VkSemaphore waitSemaphore = VK_NULL_HANDLE;
+        // Record render passes.
+        // Multi-threaded recording is currently not supported, because attachment layouts are changed in record function,
+        // this must be taken into consideration when multi-thread support is implemented.
+        m_recordedRenderPasses.clear();
         for (auto& renderPass : renderPasses)
         {
-            auto& vulkanRenderPass = static_cast<VulkanRenderPass&>(*renderPass);
-            if (auto result = vulkanRenderPass.Record(currentImageIndex, recordDescriptor); !result.IsSuccessful())
+            auto* vulkanRenderPass = static_cast<VulkanRenderPass*>(renderPass.get());
+
+            if (auto result = vulkanRenderPass->Record(currentImageIndex); !result.IsSuccessful())
             {
                 Vulkan::Logger::WriteError(m_logger, result, "Failed to record command buffer");
                 return false;
             }
 
-            if (auto result = vulkanRenderPass.Submit(m_logicalDevice, m_swapChain.GetCurrentImageAvailableSemaphore(), m_swapChain.GetCurrentFrameFence()); !result.IsSuccessful())
+            if (vulkanRenderPass->GetCommandCount() == 0)
+            {
+                continue;
+            }
+
+            m_recordedRenderPasses.push_back(vulkanRenderPass);
+        }
+
+        // Submit all render passes except the last one.
+        auto waitSemaphore = m_swapChain.GetCurrentImageAvailableSemaphore();
+        const auto renderPassSubmitCount = static_cast<int32_t>(m_recordedRenderPasses.size());
+
+        for(int32_t i = 0; i < renderPassSubmitCount - 1; i++)
+        {
+            auto* vulkanRenderPass = m_recordedRenderPasses[i];
+
+            if (auto result = vulkanRenderPass->Submit(m_logicalDevice, waitSemaphore, VK_NULL_HANDLE); !result.IsSuccessful())
             {
                 Vulkan::Logger::WriteError(m_logger, result, "Failed to submit command buffer");
                 return false;
             }
 
-            waitSemaphore = vulkanRenderPass.GetCurrentFrame().finishSemaphore;
+            waitSemaphore = vulkanRenderPass->GetCurrentFrame().finishSemaphore;
         }
 
-        if (const auto result = m_swapChain.PresentImage(waitSemaphore); !result.IsSuccessful())
+        // Handle last render pass and present swap chain image
+        if(!m_recordedRenderPasses.empty())
         {
-            Vulkan::Logger::WriteDebug(m_logger, result, "Failed to present next image of swap chain.");
-            //return false;
+            auto* lastVulkanRenderPass = m_recordedRenderPasses.back();
+
+            auto submitFence = m_swapChain.GetCurrentFrameFence();
+            if (auto result = lastVulkanRenderPass->Submit(m_logicalDevice, waitSemaphore, submitFence); !result.IsSuccessful())
+            {
+                Vulkan::Logger::WriteError(m_logger, result, "Failed to submit command buffer");
+                return false;
+            }
+
+            waitSemaphore = lastVulkanRenderPass->GetCurrentFrame().finishSemaphore;
+
+            // Present swap chain.
+            if (const auto result = m_swapChain.PresentImage(waitSemaphore); !result.IsSuccessful())
+            {
+                Vulkan::Logger::WriteDebug(m_logger, result, "Failed to present next image of swap chain.");
+            }
         }
 
         // Process destroyed resources.
@@ -1977,6 +2392,24 @@ namespace Molten
     void VulkanRenderer::Destroy(Texture3D& texture3D)
     {
         auto& vulkanTexture = static_cast<VulkanTexture3D&>(texture3D);
+        m_resourceDestroyer.Add(GetNextDestroyerFrameIndex(), vulkanTexture);
+    }
+
+    void VulkanRenderer::Destroy(FramedTexture1D& framedTexture1D)
+    {
+        auto& vulkanTexture = static_cast<VulkanFramedTexture1D&>(framedTexture1D);
+        m_resourceDestroyer.Add(GetNextDestroyerFrameIndex(), vulkanTexture);
+    }
+
+    void VulkanRenderer::Destroy(FramedTexture2D& framedTexture2D)
+    {
+        auto& vulkanTexture = static_cast<VulkanFramedTexture2D&>(framedTexture2D);
+        m_resourceDestroyer.Add(GetNextDestroyerFrameIndex(), vulkanTexture);
+    }
+
+    void VulkanRenderer::Destroy(FramedTexture3D& framedTexture3D)
+    {
+        auto& vulkanTexture = static_cast<VulkanFramedTexture3D&>(framedTexture3D);
         m_resourceDestroyer.Add(GetNextDestroyerFrameIndex(), vulkanTexture);
     }
 
@@ -2289,7 +2722,7 @@ namespace Molten
         VkCommandPool commandPool = VK_NULL_HANDLE;
         VkRenderPass renderPass = VK_NULL_HANDLE;
         VulkanTextureFrames colorAttachmentFrames(swapChainImages.size());
-        VulkanRenderPass::Frames renderPassFrames(swapChainImages.size());
+        VulkanRenderPassFrames renderPassFrames(swapChainImages.size());
 
         SmartFunction destroyer([&]()
         {
@@ -2325,6 +2758,9 @@ namespace Molten
             }
         });
 
+        const auto vulkanImageFormat = m_swapChain.GetSurfaceFormat().format;
+        const auto imageFormat = GetImageFormat(vulkanImageFormat);
+
         // Create framed color texture attachment.    
         for (size_t i = 0; i < swapChainImages.size(); i++)
         {
@@ -2337,7 +2773,7 @@ namespace Molten
             imageViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
             imageViewInfo.image = swapChainImage;
             imageViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-            imageViewInfo.format = m_swapChain.GetSurfaceFormat().format;
+            imageViewInfo.format = vulkanImageFormat;
             imageViewInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
             imageViewInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
             imageViewInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -2354,13 +2790,27 @@ namespace Molten
             }
         }
 
-        auto colorAttachmentTexture = std::make_shared<VulkanFramedTexture<2>>(std::move(colorAttachmentFrames), uint8_t{ 0 }); // TODO: Change 0 bytes per pixel.
+        auto imageDimensions = Vector2ui32{ swapChainExtent.width, swapChainExtent.height };
 
-        VulkanRenderPass::Attachment colorAttachment = {
-            RenderPassAttachmentType::Color,
-            colorAttachmentTexture,
-            Vector4f32{ 0.0f, 0.0f, 0.0f, 0.0f }
+        auto colorAttachmentTexture = std::make_shared<VulkanFramedTexture<2>>(
+            std::move(colorAttachmentFrames),
+            imageFormat,
+            imageDimensions,
+            uint8_t{ 0 }  // TODO: Change 0 bytes per pixel.
+        );
+
+        auto attachments = VulkanRenderPassAttachments{
+            VulkanRenderPassAttachment{
+                RenderPassAttachmentType::Color,
+                colorAttachmentTexture,
+                Vector4f32{ 0.0f, 0.0f, 0.0f, 0.0f }, // TODO: Use dynamic value here, should be passed to renderer description?
+                VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+                VkImageLayout::VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
+            }
         };
+
+        std::vector<VkClearValue> clearValues(1);
+        clearValues[0].color = { 0.0f, 0.0f, 0.0f, 0.0f};
 
         // Create command pool.
         VkCommandPoolCreateInfo commandPoolInfo = {};
@@ -2470,19 +2920,21 @@ namespace Molten
             }      
         }
 
+        // Finalize.
         destroyer.Release();
 
-        // Finalize.
         m_swapChainRenderPass = SharedRenderResource<VulkanRenderPass>(new VulkanRenderPass{
             m_logger,
             renderPass,
             commandPool,
+            imageDimensions,
             std::move(renderPassFrames),
-            { std::move(colorAttachment) },
+            std::move(attachments),
+            std::move(clearValues),
             nullptr
             }, RenderResourceDeleter{ this });
 
-        return {};       
+        return {};
     }
 
     Vulkan::Result<> VulkanRenderer::ReloadSwapChainRenderPass()
@@ -2492,7 +2944,7 @@ namespace Molten
         const auto& swapChainImages = m_swapChain.GetImages();
 
         auto& colorAttachment = m_swapChainRenderPass->m_attachments[0];
-        auto& colorAttachmentTexture = std::get<2>(colorAttachment.texture);
+        auto& colorAttachmentTexture = colorAttachment.texture;
 
         // Update color attachment.
 
@@ -2503,6 +2955,7 @@ namespace Molten
 
             // Set new image from swapchain.
             colorAttachmentTextureFrame.deviceImage.image = swapChainImage;
+            colorAttachmentTextureFrame.deviceImage.layout = VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
 
             // Destroy old image view.
             auto& imageView = colorAttachmentTextureFrame.imageView;
@@ -2540,16 +2993,11 @@ namespace Molten
         for(size_t i = 0; i < renderPassFrames.size(); i++)
         {
             auto& renderPassFrame = renderPassFrames[i];
-            auto& framebuffer = renderPassFrame.framebuffer;
-            auto& colorAttachmentFrame = colorAttachmentTexture->frames[i];
 
-            if(framebuffer)
-            {
-                vkDestroyFramebuffer(logicalDevice, framebuffer, nullptr);
-                framebuffer = VK_NULL_HANDLE;
-            }
+            m_resourceDestroyer.Add(GetNextDestroyerFrameIndex(), renderPassFrame.framebuffer);
 
-            VkImageView framebufferAttachments[] = { colorAttachmentFrame.imageView };
+            const auto& colorAttachmentFrame = colorAttachmentTexture->frames[i];
+            const VkImageView framebufferAttachments[] = { colorAttachmentFrame.imageView };
 
             VkFramebufferCreateInfo framebufferInfo = {};
             framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -2562,26 +3010,15 @@ namespace Molten
 
             if (const auto result = vkCreateFramebuffer(m_logicalDevice.GetHandle(), &framebufferInfo, nullptr, &renderPassFrame.framebuffer); result != VK_SUCCESS)
             {
-                Vulkan::Logger::WriteError(m_logger, result, "Failed to create framebuffer object for render pass");
+                Vulkan::Logger::WriteError(m_logger, result, "Failed to re-create framebuffer object for swap chain render pass");
                 return {};
             }
-
         }
+
+        m_swapChainRenderPass->SetDimensions({ swapChainExtent.width, swapChainExtent.height });
 
         return {};
     }
-
-    //Vulkan::Result<> VulkanRenderer::ReloadRenderPassFramebuffers()
-    //{
-
-
-    //    /*if (const auto result = ReloadSwapChainTextures(); result != VK_SUCCESS)
-    //    {
-    //        return result;
-    //    }*/
-
-    //    return LoadSwapChainRenderPass();
-    //}
 
     uint32_t VulkanRenderer::GetNextDestroyerFrameIndex() const
     {
@@ -2594,6 +3031,7 @@ namespace Molten
         const Vector3ui32& dimensions,
         const void* data,
         const VkDeviceSize dataSize,
+        const VkImageLayout /*layout*/, // TODO: Use this!
         const VkFormat imageFormat,
         const VkFormat internalImageFormat,
         const VkImageType imageType,
@@ -2620,6 +3058,7 @@ namespace Molten
             return false;
         }
 
+
         // Create image.
         VkImageCreateInfo imageInfo = {};
         imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -2633,7 +3072,7 @@ namespace Molten
         imageInfo.format = imageFormat;
         imageInfo.tiling = VkImageTiling::VK_IMAGE_TILING_OPTIMAL;
         imageInfo.initialLayout = VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
-        imageInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+        imageInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT; // TODO: Need check here!
         imageInfo.sharingMode = VkSharingMode::VK_SHARING_MODE_EXCLUSIVE;
         imageInfo.samples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
 
@@ -2652,15 +3091,27 @@ namespace Molten
         copyRegion.imageSubresource.layerCount = 1;
         copyRegion.imageExtent = { dimensions.x, dimensions.y, dimensions.z };
 
-        if(const auto result = Vulkan::CopyDeviceBufferToDeviceImage(
+        VkCommandBuffer commandBuffer = nullptr;
+        if (const auto result = Vulkan::BeginSingleTimeCommands(commandBuffer, m_logicalDevice, m_commandPool); !result.IsSuccessful())
+        {
+            Logger::WriteError(m_logger, "Failed to begin single time command for texture creations.");
+            return false;
+        }
+
+        if(!Vulkan::CopyDeviceBufferToDeviceImage(
             stagingBuffer,
             deviceImage,
-            m_logicalDevice,
-            m_commandPool,
+            commandBuffer,
             copyRegion,
-            VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL); !result.IsSuccessful())
+            VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL))
         {
-            Vulkan::Logger::WriteError(m_logger, result, "Failed to copy staging buffer to image");
+            Logger::WriteError(m_logger, "Failed to copy staging buffer to image for texture creation.");
+            return false;
+        }
+
+        if (const auto result = Vulkan::EndSingleTimeCommands(commandBuffer, m_logicalDevice, m_commandPool); !result.IsSuccessful())
+        {
+            Logger::WriteError(m_logger, "Failed to end single time command for texture creations.");
             return false;
         }
 
@@ -2680,6 +3131,137 @@ namespace Molten
         if (const auto result = vkCreateImageView(m_logicalDevice.GetHandle(), &viewInfo, nullptr, &imageView); result != VK_SUCCESS)
         {
             Vulkan::Logger::WriteError(m_logger, result, "Failed to create image view for texture");
+            return false;
+        }
+
+        return true;
+    }
+
+    bool VulkanRenderer::CreateFramedTexture(
+        VulkanTextureFrames& frames,
+        const Vector3ui32& dimensions,
+        const void* data,
+        const VkDeviceSize dataSize,
+        const VkImageLayout layout,
+        const VkFormat imageFormat,
+        const VkFormat internalImageFormat,
+        const VkImageType imageType,
+        const VkImageViewType imageViewType,
+        const VkComponentMapping& componentMapping)
+    {
+        frames.resize(m_swapChain.GetImages().size());
+
+        for (auto& frame : frames)
+        {
+            // Create image.
+            VkImageCreateInfo imageInfo = {};
+            imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+            imageInfo.flags = 0;
+            imageInfo.imageType = imageType;
+            imageInfo.extent.width = dimensions.x;
+            imageInfo.extent.height = dimensions.y;
+            imageInfo.extent.depth = dimensions.z;
+            imageInfo.mipLevels = 1;
+            imageInfo.arrayLayers = 1;
+            imageInfo.format = imageFormat;
+            imageInfo.tiling = VkImageTiling::VK_IMAGE_TILING_OPTIMAL;
+            imageInfo.initialLayout = VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED;
+            imageInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT; // TODO: Need check here!
+            imageInfo.sharingMode = VkSharingMode::VK_SHARING_MODE_EXCLUSIVE;
+            imageInfo.samples = VkSampleCountFlagBits::VK_SAMPLE_COUNT_1_BIT;
+
+            if (const auto result = m_memoryAllocator.CreateDeviceImage(
+                frame.deviceImage,
+                imageInfo,
+                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT); !result.IsSuccessful())
+            {
+                Vulkan::Logger::WriteError(m_logger, result, "Failed to create device image from memory allocator");
+                return false;
+            }
+
+            // Create image view.
+            VkImageViewCreateInfo viewInfo = {};
+            viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+            viewInfo.image = frame.deviceImage.image;
+            viewInfo.viewType = imageViewType;
+            viewInfo.format = internalImageFormat;
+            viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            viewInfo.subresourceRange.baseMipLevel = 0;
+            viewInfo.subresourceRange.levelCount = 1;
+            viewInfo.subresourceRange.baseArrayLayer = 0;
+            viewInfo.subresourceRange.layerCount = 1;
+            viewInfo.components = componentMapping;
+
+            if (const auto result = vkCreateImageView(m_logicalDevice.GetHandle(), &viewInfo, nullptr, &frame.imageView); result != VK_SUCCESS)
+            {
+                Vulkan::Logger::WriteError(m_logger, result, "Failed to create image view for texture");
+                return false;
+            }
+        }
+
+        VkCommandBuffer commandBuffer = nullptr;
+        if (const auto result = Vulkan::BeginSingleTimeCommands(commandBuffer, m_logicalDevice, m_commandPool); !result.IsSuccessful())
+        {
+            Logger::WriteError(m_logger, "Failed to begin single time command for framed texture creations.");
+            return false;
+        }
+
+        Vulkan::DeviceBuffer stagingBuffer;
+        Vulkan::DeviceBufferGuard stagingBufferGuard(m_memoryAllocator, stagingBuffer);
+
+        if(data)
+        {
+            // Create staging buffer.
+            if (const auto result = m_memoryAllocator.CreateDeviceBuffer(
+                stagingBuffer,
+                dataSize,
+                VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT); !result.IsSuccessful())
+            {
+                Vulkan::Logger::WriteError(m_logger, result, "Failed to create staging buffer for texture");
+                return false;
+            }
+
+            if (const auto result = Vulkan::MapMemory(m_logicalDevice, stagingBuffer, data, dataSize, 0); !result.IsSuccessful())
+            {
+                Vulkan::Logger::WriteError(m_logger, result, "Failed to map staging buffer for vertex buffer");
+                return false;
+            }
+
+            VkBufferImageCopy copyRegion = {};
+            copyRegion.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            copyRegion.imageSubresource.layerCount = 1;
+            copyRegion.imageExtent = { dimensions.x, dimensions.y, dimensions.z };
+
+            for (auto& frame : frames)
+            {
+                if(!Vulkan::CopyDeviceBufferToDeviceImage(
+                    stagingBuffer,
+                    frame.deviceImage,
+                    commandBuffer,
+                    copyRegion,
+                    layout /*VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL*/))
+                {
+                    Logger::WriteError(m_logger, "Failed to copy staging buffer to image for framed texture creation.");
+                    return false;
+                }
+            }
+        }
+        else
+        {
+            for (auto& frame : frames)
+            {
+                if (!Vulkan::TransitionImageLayout(commandBuffer, frame.deviceImage, layout /*VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL*/))
+                {
+                    Logger::WriteError(m_logger, "Failed to transition image layout of framed texture to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL");
+                    return false;
+                }
+            }
+        }
+
+        if (const auto result = Vulkan::EndSingleTimeCommands(commandBuffer, m_logicalDevice, m_commandPool); !result.IsSuccessful())
+        {
+            Logger::WriteError(m_logger, "Failed to end single time command for framed texture creations.");
             return false;
         }
 
@@ -2725,15 +3307,27 @@ namespace Molten
         copyRegion.imageOffset = { static_cast<int32_t>(destinationOffset.x), static_cast<int32_t>(destinationOffset.y), static_cast<int32_t>(destinationOffset.z) };
         copyRegion.imageExtent = { destinationDimensions.x, destinationDimensions.y, destinationDimensions.z };
 
-        if (const auto result = Vulkan::CopyDeviceBufferToDeviceImage(
+        VkCommandBuffer commandBuffer = nullptr;
+        if (const auto result = Vulkan::BeginSingleTimeCommands(commandBuffer, m_logicalDevice, m_commandPool); !result.IsSuccessful())
+        {
+            Logger::WriteError(m_logger, "Failed to begin single time command for texture update.");
+            return false;
+        }
+
+        if (!Vulkan::CopyDeviceBufferToDeviceImage(
             stagingBuffer,
             deviceImage,
-            m_logicalDevice,
-            m_commandPool,
+            commandBuffer,
             copyRegion,
-            VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL); !result.IsSuccessful())
+            VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL))
         {
-            Vulkan::Logger::WriteError(m_logger, result, "Failed to copy staging buffer to image for textute update");
+            Logger::WriteError(m_logger, "Failed to copy staging buffer to image for texture update.");
+            return false;
+        }
+
+        if (const auto result = Vulkan::EndSingleTimeCommands(commandBuffer, m_logicalDevice, m_commandPool); !result.IsSuccessful())
+        {
+            Logger::WriteError(m_logger, "Failed to end single time command for texture update.");
             return false;
         }
 

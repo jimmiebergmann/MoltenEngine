@@ -23,22 +23,36 @@
 *
 */
 
-#ifndef MOLTEN_CORE_GUI_DRAGGABLEWIDGET_HPP
-#define MOLTEN_CORE_GUI_DRAGGABLEWIDGET_HPP
+#ifndef MOLTEN_CORE_UTILITY_FPSTRACKER_HPP
+#define MOLTEN_CORE_UTILITY_FPSTRACKER_HPP
 
-#include "Molten/Math/Bounds.hpp"
+#include "Molten/System/Time.hpp"
+#include <vector>
 
-namespace Molten::Gui
+namespace Molten
 {
-
-    class DraggableWidget
+    /** Utility class for tracking fps over time. */
+    class MOLTEN_API FpsTracker
     {
 
     public:
 
-        virtual ~DraggableWidget() = default;
+        explicit FpsTracker(const size_t averageSampleCount);
 
-        [[nodiscard]] virtual const Bounds2f32& GetDragBounds() const = 0;
+        void ResetFrameSamples();
+        void RegisterSampleFrame(const Time frameTime);
+
+        [[nodiscard]] Time GetMinFrameTime() const;
+        [[nodiscard]] Time GetMaxFrameTime() const;
+        [[nodiscard]] Time GetAverageFrameTime() const;
+
+    private:
+
+        Time m_minFrameTime;
+        Time m_maxFrameTime;
+        size_t m_registeredFrames;
+        size_t m_currentSample;
+        std::vector<Time> m_frameSamples;
 
     };
 

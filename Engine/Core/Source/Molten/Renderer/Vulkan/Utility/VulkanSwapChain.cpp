@@ -145,9 +145,9 @@ namespace Molten::Vulkan
         presentInfo.pImageIndices = &m_currentImageIndex;
 
         auto& deviceQueues = m_logicalDevice->GetDeviceQueues();
-        if(const Result<> result = vkQueuePresentKHR(deviceQueues.presentQueue, &presentInfo); !result.IsSuccessful())
+        if(vkQueuePresentKHR(deviceQueues.presentQueue, &presentInfo) != VkResult::VK_SUCCESS)
         {
-            return result;
+            return VkResult::VK_SUCCESS;
         }
 
         m_currentFrameIndex = (m_currentFrameIndex + 1) % static_cast<uint32_t>(m_images.size());

@@ -23,25 +23,37 @@
 *
 */
 
-#ifndef MOLTEN_CORE_GUI_DRAGGABLEWIDGET_HPP
-#define MOLTEN_CORE_GUI_DRAGGABLEWIDGET_HPP
+#ifndef MOLTEN_CORE_RENDERER_VULKANRENDERPASSFRAME_HPP
+#define MOLTEN_CORE_RENDERER_VULKANRENDERPASSFRAME_HPP
 
-#include "Molten/Math/Bounds.hpp"
+#if defined(MOLTEN_ENABLE_VULKAN)
 
-namespace Molten::Gui
+#include "Molten/Renderer/Vulkan/VulkanHeaders.hpp"
+#include <vector>
+
+namespace Molten
 {
 
-    class DraggableWidget
+    struct MOLTEN_API VulkanRenderPassFrame
     {
+        VulkanRenderPassFrame();
+        ~VulkanRenderPassFrame() = default;
 
-    public:
+        VulkanRenderPassFrame(VulkanRenderPassFrame&& frame) noexcept;
+        VulkanRenderPassFrame& operator = (VulkanRenderPassFrame&& frame) noexcept;
 
-        virtual ~DraggableWidget() = default;
+        VulkanRenderPassFrame(const VulkanRenderPassFrame&) = delete;
+        VulkanRenderPassFrame& operator = (const VulkanRenderPassFrame&) = delete;
 
-        [[nodiscard]] virtual const Bounds2f32& GetDragBounds() const = 0;
-
+        VkCommandBuffer commandBuffer;
+        VkSemaphore finishSemaphore;
+        VkFramebuffer framebuffer;
     };
 
+    using VulkanRenderPassFrames = std::vector<VulkanRenderPassFrame>;
+
 }
+
+#endif
 
 #endif

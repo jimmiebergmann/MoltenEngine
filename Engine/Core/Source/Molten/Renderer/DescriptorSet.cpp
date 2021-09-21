@@ -101,26 +101,26 @@ namespace Molten
 
     FramedDescriptorBinding::FramedDescriptorBinding(
         const uint32_t id,
-        CombinedTextureSampler1D&& combinedTextureSampler1D
+        CombinedFramedTextureSampler1D&& combinedFramedTextureSampler1D
     ) :
         id(id),
-        binding(combinedTextureSampler1D)
+        binding(std::move(combinedFramedTextureSampler1D))
     {}
 
     FramedDescriptorBinding::FramedDescriptorBinding(
         const uint32_t id,
-        CombinedTextureSampler2D&& combinedTextureSampler2D
+        CombinedFramedTextureSampler2D&& combinedFramedTextureSampler2D
     ) :
         id(id),
-        binding(combinedTextureSampler2D)
+        binding(std::move(combinedFramedTextureSampler2D))
     {}
 
     FramedDescriptorBinding::FramedDescriptorBinding(
         const uint32_t id,
-        CombinedTextureSampler3D&& combinedTextureSampler3D
+        CombinedFramedTextureSampler3D&& combinedFramedTextureSampler3D
     ) :
         id(id),
-        binding(combinedTextureSampler3D)
+        binding(std::move(combinedFramedTextureSampler3D))
     {}
 
 
@@ -128,6 +128,16 @@ namespace Molten
     FramedDescriptorSetDescriptor::FramedDescriptorSetDescriptor() :
         pipeline(nullptr),
         id(std::numeric_limits<uint32_t>::max())
+    {}
+
+    FramedDescriptorSetDescriptor::FramedDescriptorSetDescriptor(
+        RenderResource<Pipeline>* pipeline,
+        const uint32_t id,
+        FramedDescriptorBinding&& binding
+    ) :
+        pipeline(pipeline),
+        id(id),
+        bindings{ binding }
     {}
 
     FramedDescriptorSetDescriptor::FramedDescriptorSetDescriptor(

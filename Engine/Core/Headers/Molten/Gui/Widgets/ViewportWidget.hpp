@@ -23,25 +23,54 @@
 *
 */
 
-#ifndef MOLTEN_CORE_GUI_DRAGGABLEWIDGET_HPP
-#define MOLTEN_CORE_GUI_DRAGGABLEWIDGET_HPP
+#ifndef MOLTEN_CORE_GUI_WIDGETS_VIEWPORTWIDGET_HPP
+#define MOLTEN_CORE_GUI_WIDGETS_VIEWPORTWIDGET_HPP
 
-#include "Molten/Math/Bounds.hpp"
+#include "Molten/Gui/Widget.hpp"
+#include "Molten/Gui/WidgetEvent.hpp"
+#include "Molten/System/Signal.hpp"
+#include "Molten/Renderer/RenderResource.hpp"
+#include "Molten/Renderer/Texture.hpp"
+
 
 namespace Molten::Gui
 {
 
-    class DraggableWidget
+    template<typename TTheme>
+    class Viewport : public WidgetMixin<TTheme, Viewport>, public WidgetMouseEventHandler
     {
 
     public:
 
-        virtual ~DraggableWidget() = default;
+        using Mixin = WidgetMixin<TTheme, Viewport>;
 
-        [[nodiscard]] virtual const Bounds2f32& GetDragBounds() const = 0;
+        static constexpr bool handleKeyboardEvents = false;
+        static constexpr bool handleMouseEvents = true;
+
+        Signal<Vector2ui32> onResize;
+        Signal<> onIsVisible;
+
+        struct State
+        {
+            SharedRenderResource<FramedTexture2D> framedTexture;
+        };
+
+        explicit Viewport(WidgetDataMixin<TTheme, Viewport>& data);
+
+        void Update() override;
+
+        bool OnMouseEvent(const WidgetMouseEvent& widgetMouseEvent) override;
+
+        void SetTexture(SharedRenderResource<FramedTexture2D> framedTexture);
+
+    private:
+
+        Vector2f32 m_prevSize;
 
     };
 
 }
+
+#include "Molten/Gui/Widgets/ViewportWidget.inl"
 
 #endif

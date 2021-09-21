@@ -26,6 +26,7 @@
 #ifndef MOLTEN_CORE_RENDERER_RENDERPASS_HPP
 #define MOLTEN_CORE_RENDERER_RENDERPASS_HPP
 
+#include "Molten/Renderer/Texture.hpp"
 #include "Molten/Renderer/CommandBuffer.hpp"
 #include "Molten/Renderer/RenderResource.hpp"
 #include "Molten/Math/Bounds.hpp"
@@ -38,7 +39,6 @@ namespace Molten
 {
 
     class RenderPass;
-    template<size_t VDimensions> class FramedTexture;
     using RenderPassFunction = std::function<void(CommandBuffer&)>; ///< Typedef of callback function at rendering.
 
 
@@ -48,16 +48,20 @@ namespace Molten
 
     public:
 
-        RenderPass() = default;
+        explicit RenderPass(const Vector2ui32& dimensions);
+
         virtual ~RenderPass() = default;
 
         /* Deleted copy and move operations. */
         /**@{*/
         RenderPass(const RenderPass&) = delete;
         RenderPass(RenderPass&&) = delete;
-        RenderPass& operator =(const RenderPass&) = delete;
-        RenderPass& operator =(RenderPass&&) = delete;
+        RenderPass& operator = (const RenderPass&) = delete;
+        RenderPass& operator = (RenderPass&&) = delete;
         /**@}*/
+
+        /** Get dimensions of render pass. */
+        [[nodiscard]] Vector2ui32 GetDimensions() const;
 
         /** Set current command buffer record function. */
         virtual void SetRecordFunction(RenderPassFunction recordFunction) = 0;
@@ -69,6 +73,10 @@ namespace Molten
         /** Set current scissor bounds.
          *  Providing an optional without an value causes the render system to use scissor value from renderer. */
         virtual void SetScissor(std::optional<Bounds2i32> bounds) = 0;
+
+    protected:
+
+        Vector2ui32 m_dimensions;
 
     };
 
@@ -82,17 +90,13 @@ namespace Molten
         DepthStencil
     };
 
+
     struct RenderPassAttachment
     {
-        using TextureVariant = std::variant<
-            std::monostate,
-            SharedRenderResource<FramedTexture<1>>,
-            SharedRenderResource<FramedTexture<2>>,
-            SharedRenderResource<FramedTexture<3>>
-        >;
-
         RenderPassAttachmentType type = RenderPassAttachmentType::Color;
-        TextureVariant texture = {};
+        TextureUsage initialUsage = TextureUsage::ReadOnly;
+        TextureUsage finalUsage = TextureUsage::ReadOnly;
+        SharedRenderResource<FramedTexture<2>> texture = {};
         std::optional<Vector4f32> clearValue = {};
     };
 
@@ -102,7 +106,15 @@ namespace Molten
     /** Descriptor class of render pass class. */
     struct MOLTEN_API RenderPassDescriptor
     {
+        Vector2ui32 dimensions = { 0, 0 };
         RenderPassFunction recordFunction = nullptr;
+        RenderPassAttachments attachments = {};
+    };
+
+    /** Update descriptor class of render pass class. */
+    struct MOLTEN_API RenderPassUpdateDescriptor
+    {
+        Vector2ui32 dimensions = { 0, 0 };
         RenderPassAttachments attachments = {};
     };
 

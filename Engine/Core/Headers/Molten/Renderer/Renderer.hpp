@@ -144,6 +144,13 @@ namespace Molten
         [[nodiscard]] virtual SharedRenderResource<Texture3D> CreateTexture(const TextureDescriptor3D& descriptor) = 0;
         /**@}*/
 
+        /** Create framed texture object. */
+        /**@{*/
+        [[nodiscard]] virtual SharedRenderResource<FramedTexture1D> CreateFramedTexture(const TextureDescriptor1D& descriptor) = 0;
+        [[nodiscard]] virtual SharedRenderResource<FramedTexture2D> CreateFramedTexture(const TextureDescriptor2D& descriptor) = 0;
+        [[nodiscard]] virtual SharedRenderResource<FramedTexture3D> CreateFramedTexture(const TextureDescriptor3D& descriptor) = 0;
+        /**@}*/
+
         /** Create uniform buffer object. */
         [[nodiscard]] virtual RenderResource<UniformBuffer> CreateUniformBuffer(const UniformBufferDescriptor& descriptor) = 0;
 
@@ -153,6 +160,9 @@ namespace Molten
         /** Create vertex buffer object. */
         [[nodiscard]] virtual RenderResource<VertexBuffer> CreateVertexBuffer(const VertexBufferDescriptor& descriptor) = 0;
 
+
+        /** Update render pass object. */
+        [[nodiscard]] virtual bool UpdateRenderPass(RenderPass& renderPass, const RenderPassUpdateDescriptor& descriptor) = 0;
 
         /** Update texture data. */
         /**@{*/
@@ -188,6 +198,9 @@ namespace Molten
         virtual void Destroy(Texture1D& texture1D) = 0;
         virtual void Destroy(Texture2D& texture2D) = 0;
         virtual void Destroy(Texture3D& texture3D) = 0;
+        virtual void Destroy(FramedTexture1D& framedTexture1D) = 0;
+        virtual void Destroy(FramedTexture2D& framedTexture2D) = 0;
+        virtual void Destroy(FramedTexture3D& framedTexture3D) = 0;
         virtual void Destroy(UniformBuffer& uniformBuffer) = 0;
         virtual void Destroy(FramedUniformBuffer& framedUniformBuffer) = 0;
         virtual void Destroy(VertexBuffer& vertexBuffer) = 0;

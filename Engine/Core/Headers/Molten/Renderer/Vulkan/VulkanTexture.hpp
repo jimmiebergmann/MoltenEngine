@@ -48,6 +48,8 @@ namespace Molten
         VulkanTexture(
             Vulkan::DeviceImage&& deviceImage,
             VkImageView imageView,
+            const ImageFormat format,
+            const Vector<VDimensions, uint32_t>& dimensions,
             const uint8_t bytesPerPixel);
 
         ~VulkanTexture() override = default;
@@ -86,6 +88,8 @@ namespace Molten
         VulkanFramedTexture();
         VulkanFramedTexture(
             VulkanTextureFrames&& frames,
+            const ImageFormat format,
+            const Vector<VDimensions, uint32_t>& dimensions,
             const uint8_t bytesPerPixel);
 
         ~VulkanFramedTexture() override = default;

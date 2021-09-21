@@ -33,6 +33,19 @@
 namespace Molten
 {   
 
+    enum class TextureType
+    {
+        Color,          ///< Color texture.
+        DepthStencil    ///< Depth/stencil texture.
+    };
+
+    enum class TextureUsage
+    {
+        ReadOnly,    ///< Read only texture, used as shader input.
+        Attachment,  ///< Attachment of render pass.
+    };
+
+
     /** Texture resource object. */
     template<size_t VDimensions>
     class Texture
@@ -42,7 +55,12 @@ namespace Molten
 
     public:
 
-        Texture() = default;
+        static constexpr size_t Dimensions = VDimensions;
+
+        Texture(
+            const ImageFormat format,
+            const Vector<VDimensions, uint32_t>& dimensions);
+
         virtual ~Texture() = default;
 
         /** Move constructor and assignment operator. */
@@ -57,11 +75,69 @@ namespace Molten
         Texture& operator = (const Texture&) = delete;
         /**@}*/
 
+        /** Get image format of this texture. */
+        [[nodiscard]] ImageFormat GetFormat() const;
+
+        /** Get image dimensions of this texture. */
+        [[nodiscard]] Vector<VDimensions, uint32_t> GetDimensions() const;
+
+    protected:
+
+        ImageFormat m_format;
+        Vector<VDimensions, uint32_t> m_dimensions;
+
     };
 
     using Texture1D = Texture<1>;
     using Texture2D = Texture<2>;
     using Texture3D = Texture<3>;
+
+
+    /** Framed texture resource object. */
+    template<size_t VDimensions>
+    class FramedTexture
+    {
+
+        static_assert(VDimensions >= 1 && VDimensions <= 3, "Texture must be of dimension 1-3.");
+
+    public:
+
+        static constexpr size_t Dimensions = VDimensions;
+
+        FramedTexture(
+            const ImageFormat format,
+            const Vector<VDimensions, uint32_t>& dimensions);
+
+        virtual ~FramedTexture() = default;
+
+        /** Move constructor and assignment operator. */
+        /**@{*/
+        FramedTexture(FramedTexture&&) = default;
+        FramedTexture& operator = (FramedTexture&&) = default;
+        /**@}*/
+
+        /** Deleted copy constructor and assignment operator. */
+        /**@{*/
+        FramedTexture(const FramedTexture&) = delete;
+        FramedTexture& operator = (const FramedTexture&) = delete;
+        /**@}*/
+
+        /** Get image format of all texture frames. */
+        [[nodiscard]] ImageFormat GetFormat() const;
+
+        /** Get image dimensions of all texture frames. */
+        [[nodiscard]] Vector<VDimensions, uint32_t> GetDimensions() const;
+
+    protected:
+
+        ImageFormat m_format;
+        Vector<VDimensions, uint32_t> m_dimensions;
+
+    };
+
+    using FramedTexture1D = FramedTexture<1>;
+    using FramedTexture2D = FramedTexture<2>;
+    using FramedTexture3D = FramedTexture<3>;
 
 
     /** Descriptor class of texture class. */
@@ -75,11 +151,15 @@ namespace Molten
         TextureDescriptor(
             const void* data,
             const Vector<VDimensions, uint32_t>& dimensions,
+            const TextureType type,
+            const TextureUsage initialUsage,
             const ImageFormat format,
             const ImageSwizzleMapping& swizzleMapping = {});
         TextureDescriptor(
             const void* data,
             const Vector<VDimensions, uint32_t>& dimensions,
+            const TextureType type,
+            const TextureUsage initialUsage,
             const ImageFormat format,
             const ImageFormat internalFormat,
             const ImageSwizzleMapping& swizzleMapping = {});
@@ -92,6 +172,8 @@ namespace Molten
 
         const void* data;
         Vector<VDimensions, uint32_t> dimensions;
+        TextureType type;
+        TextureUsage initialUsage;
         ImageFormat format;
         ImageFormat internalFormat;
         ImageSwizzleMapping swizzleMapping;
@@ -127,34 +209,7 @@ namespace Molten
 
     using TextureUpdateDescriptor1D = TextureUpdateDescriptor<1>;
     using TextureUpdateDescriptor2D = TextureUpdateDescriptor<2>;
-    using TextureUpdateDescriptor3D = TextureUpdateDescriptor<3>;   
-
-
-    /** Framed texture resource object. */
-    template<size_t VDimensions>
-    class FramedTexture
-    {
-
-        static_assert(VDimensions >= 1 && VDimensions <= 3, "Texture must be of dimension 1-3.");
-
-    public:
-
-        FramedTexture() = default;
-        virtual ~FramedTexture() = default;
-
-        /** Move constructor and assignment operator. */
-        /**@{*/
-        FramedTexture(FramedTexture&&) = default;
-        FramedTexture& operator = (FramedTexture&&) = default;
-        /**@}*/
-
-        /** Deleted copy constructor and assignment operator. */
-        /**@{*/
-        FramedTexture(const FramedTexture&) = delete;
-        FramedTexture& operator = (const FramedTexture&) = delete;
-        /**@}*/
-
-    };
+    using TextureUpdateDescriptor3D = TextureUpdateDescriptor<3>;
 
 }
 

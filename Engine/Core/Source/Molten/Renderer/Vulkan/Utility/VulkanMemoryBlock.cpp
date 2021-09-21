@@ -42,7 +42,10 @@ namespace Molten::Vulkan
 
     MemoryBlock::~MemoryBlock()
     {
-        // Need this in order to use forward declared Memory for std::unique_ptr<>.
+        for (auto memory = std::move(firstMemory); memory;)
+        {
+            memory = std::move(memory->nextMemory);
+        }
     }
 
     MemoryBlock::MemoryBlock(MemoryBlock&& memoryBlock) noexcept :

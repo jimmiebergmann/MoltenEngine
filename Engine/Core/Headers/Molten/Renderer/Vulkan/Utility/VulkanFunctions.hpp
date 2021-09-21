@@ -125,13 +125,13 @@ namespace Molten::Vulkan
     MOLTEN_API bool TransitionImageLayout(
         VkCommandBuffer commandBuffer,
         VkImage image,
-        VkImageLayout oldLayout,
-        VkImageLayout newLayout);
+        const VkImageLayout oldLayout,
+        const VkImageLayout newLayout);
 
     MOLTEN_API bool TransitionImageLayout(
         VkCommandBuffer commandBuffer,
         DeviceImage& deviceImage,
-        VkImageLayout newLayout);
+        const VkImageLayout newLayout);
     /**@}*/
 
 }

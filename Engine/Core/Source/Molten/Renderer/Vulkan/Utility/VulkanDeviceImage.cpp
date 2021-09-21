@@ -92,23 +92,16 @@ namespace Molten::Vulkan
 
 
     // Global functions implementations.
-    Result<> CopyDeviceBufferToDeviceImage(
+    bool CopyDeviceBufferToDeviceImage(
         DeviceBuffer& deviceBuffer,
         DeviceImage& deviceImage,
-        LogicalDevice& logicalDevice,
-        VkCommandPool commandPool,
+        VkCommandBuffer commandBuffer,
         const VkBufferImageCopy& bufferImageCopy,
         const VkImageLayout finalImageLayout)
     {
-        VkCommandBuffer commandBuffer = nullptr;
-        if (const auto result = BeginSingleTimeCommands(commandBuffer, logicalDevice, commandPool); !result.IsSuccessful())
+        if (!TransitionImageLayout(commandBuffer, deviceImage, VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL))
         {
-            return result;
-        }
-
-        if(!TransitionImageLayout(commandBuffer, deviceImage, VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL))
-        {
-            return VkResult::VK_ERROR_UNKNOWN;
+            return false;
         }
 
         vkCmdCopyBufferToImage(
@@ -119,20 +112,15 @@ namespace Molten::Vulkan
             1,
             &bufferImageCopy);
 
-        if(deviceImage.layout != finalImageLayout)
+        if (deviceImage.layout != finalImageLayout)
         {
             if (!TransitionImageLayout(commandBuffer, deviceImage, finalImageLayout))
             {
-                return VkResult::VK_ERROR_UNKNOWN;
+                return false;
             }
         }
 
-        if (const auto result = Vulkan::EndSingleTimeCommands(commandBuffer, logicalDevice, commandPool); !result.IsSuccessful())
-        {
-            return result;
-        }
-
-        return {};
+        return true;
     }
 
 }

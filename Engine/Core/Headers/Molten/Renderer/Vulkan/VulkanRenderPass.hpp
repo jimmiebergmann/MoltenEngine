@@ -29,6 +29,8 @@
 #if defined(MOLTEN_ENABLE_VULKAN)
 
 #include "Molten/Renderer/RenderPass.hpp"
+#include "Molten/Renderer/Vulkan/VulkanRenderPassFrame.hpp"
+#include "Molten/Renderer/Vulkan/VulkanRenderPassAttachment.hpp"
 #include "Molten/Renderer/Vulkan/VulkanCommandBuffer.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanResult.hpp"
 
@@ -45,13 +47,6 @@ namespace Molten
     class Logger;
 
 
-    struct VulkanRenderPassRecordDescriptor
-    {
-        Bounds2i32 defaultViewportBounds;
-        Bounds2i32 defaultScissorBounds;
-    };
-
-
     /** Vulkan Render pass. */
     class MOLTEN_API VulkanRenderPass : public RenderPass
     {
@@ -60,40 +55,16 @@ namespace Molten
 
         using Base = RenderPass;
 
-        struct Frame
-        {
-            Frame();
-        
-            VkCommandBuffer commandBuffer;
-            VkSemaphore finishSemaphore;
-            VkFramebuffer framebuffer;
-        };
-
-        using Frames = std::vector<Frame>;
-
-        struct Attachment
-        {
-            using TextureVariant = std::variant<
-                std::monostate,
-                SharedRenderResource<VulkanFramedTexture<1>>,
-                SharedRenderResource<VulkanFramedTexture<2>>,
-                SharedRenderResource<VulkanFramedTexture<3>>
-            >;
-
-            RenderPassAttachmentType type = RenderPassAttachmentType::Color;
-            TextureVariant texture = {};
-            std::optional<Vector4f32> clearValue = {};
-        };
-
-        using Attachments = std::vector<Attachment>;
 
         VulkanRenderPass() = delete;
         VulkanRenderPass(
             Logger* logger,
             VkRenderPass renderPass,
             const VkCommandPool commandPool,
-            Frames&& frames,
-            Attachments&& attachments,
+            const Vector2ui32& dimensions,
+            VulkanRenderPassFrames&& frames,
+            VulkanRenderPassAttachments&& attachments,
+            std::vector<VkClearValue>&& clearValues,
             RenderPassFunction recordFunction);
 
         /** Set current command buffer record function. */
@@ -112,11 +83,13 @@ namespace Molten
         friend class VulkanRenderer;
         friend class Vulkan::ResourceDestroyer;
 
-        [[nodiscard]] Vulkan::Result<> Record(
-            const size_t frameIndex,
-            const VulkanRenderPassRecordDescriptor& descriptor);
+        [[nodiscard]] VulkanRenderPassFrame& GetCurrentFrame();
 
-        [[nodiscard]] Frame& GetCurrentFrame();
+        [[nodiscard]] size_t GetCommandCount() const;
+
+        void SetDimensions(const Vector2ui32& dimensions);
+
+        [[nodiscard]] Vulkan::Result<> Record(const size_t frameIndex);
 
         [[nodiscard]] Vulkan::Result<> Submit(
             Vulkan::LogicalDevice& logicalDevice,
@@ -129,8 +102,9 @@ namespace Molten
         VkRenderPass m_renderPass;     
         VkCommandPool m_commandPool;
         VulkanCommandBuffer m_commandBuffer;
-        Frames m_frames;
-        Attachments m_attachments;
+        VulkanRenderPassFrames m_frames;
+        VulkanRenderPassAttachments m_attachments;
+        std::vector<VkClearValue> m_clearValues;
         size_t m_currentFrameIndex;
         RenderPassFunction m_recordFunction;
         std::optional<Bounds2i32> m_viewportBounds;

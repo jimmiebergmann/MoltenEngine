@@ -47,14 +47,14 @@ namespace Molten
         m_renderer(renderer)
     {}
 
-    void RenderResourceDeleter::operator()(FramedDescriptorSet* framedDescriptorSet)
-    {
-        DestroyResource(m_renderer, framedDescriptorSet);
-    }
-
     void RenderResourceDeleter::operator()(DescriptorSet* descriptorSet)
     {
         DestroyResource(m_renderer, descriptorSet);
+    }
+
+    void RenderResourceDeleter::operator()(FramedDescriptorSet* framedDescriptorSet)
+    {
+        DestroyResource(m_renderer, framedDescriptorSet);
     }
     
     void RenderResourceDeleter::operator()(IndexBuffer* indexBuffer)
@@ -105,6 +105,21 @@ namespace Molten
     void RenderResourceDeleter::operator()(Texture<3>* texture3D)
     {
         DestroyResource(m_renderer, texture3D);
+    }
+
+    void RenderResourceDeleter::operator()(FramedTexture<1>* framedTexture1D)
+    {
+        DestroyResource(m_renderer, framedTexture1D);
+    }
+
+    void RenderResourceDeleter::operator()(FramedTexture<2>* framedTexture2D)
+    {
+        DestroyResource(m_renderer, framedTexture2D);
+    }
+
+    void RenderResourceDeleter::operator()(FramedTexture<3>* framedTexture3D)
+    {
+        DestroyResource(m_renderer, framedTexture3D);
     }
     
     void RenderResourceDeleter::operator()(UniformBuffer* uniformBuffer)

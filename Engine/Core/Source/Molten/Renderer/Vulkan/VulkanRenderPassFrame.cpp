@@ -23,25 +23,39 @@
 *
 */
 
-#ifndef MOLTEN_CORE_GUI_DRAGGABLEWIDGET_HPP
-#define MOLTEN_CORE_GUI_DRAGGABLEWIDGET_HPP
+#include "Molten/Renderer/Vulkan/VulkanRenderPassFrame.hpp"
 
-#include "Molten/Math/Bounds.hpp"
-
-namespace Molten::Gui
+namespace Molten
 {
 
-    class DraggableWidget
+    // Vulkan render pass frame implementations.
+    VulkanRenderPassFrame::VulkanRenderPassFrame() :
+        commandBuffer(VK_NULL_HANDLE),
+        finishSemaphore(VK_NULL_HANDLE),
+        framebuffer(VK_NULL_HANDLE)
+    {}
+
+    VulkanRenderPassFrame::VulkanRenderPassFrame(VulkanRenderPassFrame&& frame) noexcept :
+        commandBuffer(frame.commandBuffer),
+        finishSemaphore(frame.finishSemaphore),
+        framebuffer(frame.framebuffer)
     {
+        frame.commandBuffer = VK_NULL_HANDLE;
+        frame.finishSemaphore = VK_NULL_HANDLE;
+        frame.framebuffer = VK_NULL_HANDLE;
+    }
 
-    public:
+    VulkanRenderPassFrame& VulkanRenderPassFrame::operator = (VulkanRenderPassFrame&& frame) noexcept
+    {
+        commandBuffer = frame.commandBuffer;
+        finishSemaphore = frame.finishSemaphore;
+        framebuffer = frame.framebuffer;
+        
+        frame.commandBuffer = VK_NULL_HANDLE;
+        frame.finishSemaphore = VK_NULL_HANDLE;
+        frame.framebuffer = VK_NULL_HANDLE;
 
-        virtual ~DraggableWidget() = default;
-
-        [[nodiscard]] virtual const Bounds2f32& GetDragBounds() const = 0;
-
-    };
+        return *this;
+    }
 
 }
-
-#endif

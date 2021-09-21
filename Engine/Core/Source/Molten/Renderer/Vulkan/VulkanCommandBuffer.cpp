@@ -51,8 +51,14 @@ namespace Molten
     VulkanCommandBuffer::VulkanCommandBuffer() :
         m_currentFrameIndex(0),
         m_currentCommandBuffer(nullptr),
-        m_currentPipeline(nullptr)
+        m_currentPipeline(nullptr),
+        m_commandCount(0)
     {}
+
+    size_t VulkanCommandBuffer::GetCommandCount() const
+    {
+        return m_commandCount;
+    }
 
     void VulkanCommandBuffer::BindDescriptorSet(DescriptorSet& descriptorSet)
     {
@@ -67,6 +73,8 @@ namespace Molten
             &vulkanDescriptorSet.descriptorSet,
             0,
             nullptr);
+
+        ++m_commandCount;
     }
 
     void VulkanCommandBuffer::BindFramedDescriptorSet(FramedDescriptorSet& framedDescriptorSet)
@@ -82,6 +90,8 @@ namespace Molten
             &vulkanFramedDescriptorSet.descriptorSets[m_currentFrameIndex],
             0,
             nullptr);
+
+        ++m_commandCount;
     }
 
     void VulkanCommandBuffer::BindPipeline(Pipeline& pipeline)
@@ -89,6 +99,8 @@ namespace Molten
         auto& vulkanPipeline = static_cast<VulkanPipeline&>(pipeline);
         vkCmdBindPipeline(m_currentCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkanPipeline.graphicsPipeline);
         m_currentPipeline = &vulkanPipeline;
+
+        ++m_commandCount;
     }
  
     void VulkanCommandBuffer::DrawVertexBuffer(VertexBuffer& vertexBuffer)
@@ -100,6 +112,8 @@ namespace Molten
 
         vkCmdBindVertexBuffers(m_currentCommandBuffer, 0, 1, vertexBuffers, offsets);
         vkCmdDraw(m_currentCommandBuffer, vulkanVertexBuffer.vertexCount, 1, 0, 0);
+
+        m_commandCount += 2;
     }
 
     void VulkanCommandBuffer::DrawVertexBuffer(IndexBuffer& indexBuffer, VertexBuffer& vertexBuffer)
@@ -113,6 +127,8 @@ namespace Molten
         vkCmdBindVertexBuffers(m_currentCommandBuffer, 0, 1, vertexBuffers, offsets);
         vkCmdBindIndexBuffer(m_currentCommandBuffer, vulkanIndexBuffer.deviceBuffer.buffer, 0, GetIndexBufferDataType(vulkanIndexBuffer.dataType));
         vkCmdDrawIndexed(m_currentCommandBuffer, static_cast<uint32_t>(vulkanIndexBuffer.indexCount), 1, 0, 0, 0);
+
+        m_commandCount += 3;
     }
 
     void VulkanCommandBuffer::PushConstant(const uint32_t location, const bool value)
@@ -120,42 +136,56 @@ namespace Molten
         vkCmdPushConstants(
             m_currentCommandBuffer, m_currentPipeline->pipelineLayout,
             VK_SHADER_STAGE_ALL, location, sizeof(value), &value);
+
+        ++m_commandCount;
     }
     void VulkanCommandBuffer::PushConstant(const uint32_t location, const int32_t value)
     {
         vkCmdPushConstants(
             m_currentCommandBuffer, m_currentPipeline->pipelineLayout,
             VK_SHADER_STAGE_ALL, location, sizeof(value), &value);
+
+        ++m_commandCount;
     }
     void VulkanCommandBuffer::PushConstant(const uint32_t location, const float value)
     {
         vkCmdPushConstants(
             m_currentCommandBuffer, m_currentPipeline->pipelineLayout,
             VK_SHADER_STAGE_ALL, location, sizeof(value), &value);
+
+        ++m_commandCount;
     }
     void VulkanCommandBuffer::PushConstant(const uint32_t location, const Vector2f32& value)
     {
         vkCmdPushConstants(
             m_currentCommandBuffer, m_currentPipeline->pipelineLayout,
             VK_SHADER_STAGE_ALL, location, sizeof(value), &value);
+
+        ++m_commandCount;
     }
     void VulkanCommandBuffer::PushConstant(const uint32_t location, const Vector3f32& value)
     {
         vkCmdPushConstants(
             m_currentCommandBuffer, m_currentPipeline->pipelineLayout,
             VK_SHADER_STAGE_ALL, location, sizeof(value), &value);
+
+        ++m_commandCount;
     }
     void VulkanCommandBuffer::PushConstant(const uint32_t location, const Vector4f32& value)
     {
         vkCmdPushConstants(
             m_currentCommandBuffer, m_currentPipeline->pipelineLayout,
             VK_SHADER_STAGE_ALL, location, sizeof(value), &value);
+
+        ++m_commandCount;
     }
     void VulkanCommandBuffer::PushConstant(const uint32_t location, const Matrix4x4f32& value)
     {
         vkCmdPushConstants(
             m_currentCommandBuffer, m_currentPipeline->pipelineLayout,
             VK_SHADER_STAGE_ALL, location, sizeof(value), &value);
+
+        ++m_commandCount;
     }
 
     void VulkanCommandBuffer::UpdateUniformBuffer(UniformBuffer& uniformBuffer, const void* data, const size_t size, const size_t offset)
@@ -188,7 +218,8 @@ namespace Molten
     {
         m_currentFrameIndex = frameIndex;
         m_currentCommandBuffer = commandBuffer;
-        m_currentPipeline = nullptr;   
+        m_currentPipeline = nullptr;
+        m_commandCount = 0;
     }
 
     VkCommandBuffer VulkanCommandBuffer::GetCurrentCommandBuffer() const

@@ -271,6 +271,13 @@ namespace Molten::Vulkan
         vertexBuffer.vertexSize = 0;
     }
 
+    void ResourceDestroyer::Add(const uint32_t cleanupFrameIndex, VkFramebuffer& vulkanFramebuffer)
+    {
+        m_cleanupQueue.emplace<CleanupData>({ cleanupFrameIndex, VulkanFramebufferCleanup{
+            vulkanFramebuffer
+        } });
+    }
+
     void ResourceDestroyer::Process(CleanupVariant& cleanupVariant)
     {
         std::visit([&](auto& data)
@@ -367,6 +374,11 @@ namespace Molten::Vulkan
     void ResourceDestroyer::Process(VertexBufferCleanup& data)
     {
         m_memoryAllocator.FreeDeviceBuffer(data.deviceBuffer);
+    }
+
+    void ResourceDestroyer::Process(VulkanFramebufferCleanup& data)
+    {
+        vkDestroyFramebuffer(m_logicalDevice.GetHandle(), data.framebuffer, nullptr);
     }
 
 }

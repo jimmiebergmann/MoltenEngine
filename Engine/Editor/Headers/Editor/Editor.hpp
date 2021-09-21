@@ -33,6 +33,7 @@
 #include "Editor/Gui/Themes/EditorTheme.hpp"
 #include "Molten/System/Semaphore.hpp"
 #include "Molten/System/Clock.hpp"
+#include "Molten/Utility/FpsTracker.hpp"
 #include <optional>
 #include <thread>
 #include <atomic>
@@ -80,11 +81,11 @@ namespace Molten::Editor
 
     private:
 
-        bool Load(const EditorDescriptor& descriptor);
-        bool LoadWindow(const EditorDescriptor& descriptor);
-        bool LoadRenderer(const EditorDescriptor& descriptor);
-        bool LoadRenderPasses();
-        bool LoadGui();
+        [[nodiscard]] bool Load(const EditorDescriptor& descriptor);
+        [[nodiscard]] bool LoadWindow(const EditorDescriptor& descriptor);
+        [[nodiscard]] bool LoadRenderer(const EditorDescriptor& descriptor);
+        [[nodiscard]] bool LoadRenderPasses();
+        [[nodiscard]] bool LoadGui();
 
         void Exit();
 
@@ -92,6 +93,10 @@ namespace Molten::Editor
         bool UpdateWindow();
         bool HandleWindowFocus();
         void UpdateCanvas();
+
+        void OnSceneViewportResize(Gui::Viewport<Gui::EditorTheme>* viewport, const Vector2ui32 size);
+        bool LoadSceneViewport();
+        void DrawSceneViewport(CommandBuffer& commandBuffer);
 
         std::atomic_bool m_isRunning;
         Semaphore& m_cancellationSemaphore;
@@ -106,11 +111,27 @@ namespace Molten::Editor
         Gui::FontNameRepository m_fontNameRepository;
         Gui::CanvasPointer<Gui::EditorTheme> m_canvas;
 
+        SharedRenderResource<RenderPass> m_viewportRenderPass;
+        SharedRenderResource<Pipeline> m_viewportPipeline;
+        SharedRenderResource<VertexBuffer> m_viewportVertexBuffer;
+
         SleepClock m_fpsLimiter;
         SleepClock m_unfocusedWindowFpsLimiter;
+        FpsTracker m_fpsTracker;
 
         Time m_deltaTime;
         Clock m_windowTitleUpdateClock;
+
+        struct ViewportSceneData
+        {
+            RenderResource<Pipeline> pipeline;
+            RenderResource<VertexBuffer> vertexBuffer;
+            RenderResource<IndexBuffer> indexBuffer;
+
+            uint32_t projectionLocation = 0;
+        };
+
+        ViewportSceneData m_viewportSceneData;
 
     };
 

@@ -26,11 +26,59 @@
 namespace Molten
 {
 
+    // Texture implementations.
+    template<size_t VDimensions>
+    Texture<VDimensions>::Texture(
+        const ImageFormat format,
+        const Vector<VDimensions, uint32_t>& dimensions
+    ) :
+        m_format(format),
+        m_dimensions(dimensions)
+    {}
+
+    template<size_t VDimensions>
+    ImageFormat Texture<VDimensions>::GetFormat() const
+    {
+        return m_format;
+    }
+
+    template<size_t VDimensions>
+    Vector<VDimensions, uint32_t> Texture<VDimensions>::GetDimensions() const
+    {
+        return m_dimensions;
+    }
+
+
+    // Framed texture implementations.
+    template<size_t VDimensions>
+    FramedTexture<VDimensions>::FramedTexture(
+        const ImageFormat format,
+        const Vector<VDimensions, uint32_t>& dimensions
+    ) :
+        m_format(format),
+        m_dimensions(dimensions)
+    {}
+
+    template<size_t VDimensions>
+    ImageFormat FramedTexture<VDimensions>::GetFormat() const
+    {
+        return m_format;
+    }
+
+    template<size_t VDimensions>
+    Vector<VDimensions, uint32_t> FramedTexture<VDimensions>::GetDimensions() const
+    {
+        return m_dimensions;
+    }
+
+
     // Texture descriptor implementations.
     template<size_t VDimensions>
     TextureDescriptor<VDimensions>::TextureDescriptor() :
         data(nullptr),
         dimensions(0),
+        type(TextureType::Color),
+        initialUsage(TextureUsage::ReadOnly),
         format(ImageFormat::URed8Green8Blue8),
         internalFormat(ImageFormat::URed8Green8Blue8),
         swizzleMapping{}
@@ -40,11 +88,15 @@ namespace Molten
     TextureDescriptor<VDimensions>::TextureDescriptor(
         const void* data,
         const Vector<VDimensions, uint32_t>& dimensions,
+        const TextureType type,
+        const TextureUsage initialUsage,
         const ImageFormat format,
         const ImageSwizzleMapping& swizzleMapping
     ) :
         data(data),
         dimensions(dimensions),
+        type(type),
+        initialUsage(initialUsage),
         format(format),
         internalFormat(format),
         swizzleMapping(swizzleMapping)
@@ -54,12 +106,16 @@ namespace Molten
     TextureDescriptor<VDimensions>::TextureDescriptor(
         const void* data,
         const Vector<VDimensions, uint32_t>& dimensions,
+        const TextureType type,
+        const TextureUsage initialUsage,
         const ImageFormat format,
         const ImageFormat internalFormat,
         const ImageSwizzleMapping& swizzleMapping
     ) :
         data(data),
         dimensions(dimensions),
+        type(type),
+        initialUsage(initialUsage),
         format(format),
         internalFormat(internalFormat),
         swizzleMapping(swizzleMapping)

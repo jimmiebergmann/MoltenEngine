@@ -29,6 +29,7 @@ namespace Molten
 {
 
     const Time Time::Zero;
+    const Time Time::Infinite = Nanoseconds(std::chrono::nanoseconds::max().count());
 
     Time::Time() :
         m_duration(0)

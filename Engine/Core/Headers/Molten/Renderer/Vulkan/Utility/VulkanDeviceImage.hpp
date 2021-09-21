@@ -95,11 +95,10 @@ namespace Molten::Vulkan
      *  Image layout is transitioned to finalImageLayout at completion.
      *  Provide deviceImage.layout to restore it at completion.
      */
-    MOLTEN_API Result<> CopyDeviceBufferToDeviceImage(
+    MOLTEN_API bool CopyDeviceBufferToDeviceImage(
         DeviceBuffer& deviceBuffer,
         DeviceImage& deviceImage,
-        LogicalDevice& logicalDevice,
-        VkCommandPool commandPool,
+        VkCommandBuffer commandBuffer,
         const VkBufferImageCopy& bufferImageCopy,
         const VkImageLayout finalImageLayout);
 

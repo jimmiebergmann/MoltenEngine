@@ -23,25 +23,44 @@
 *
 */
 
-#ifndef MOLTEN_CORE_GUI_DRAGGABLEWIDGET_HPP
-#define MOLTEN_CORE_GUI_DRAGGABLEWIDGET_HPP
-
-#include "Molten/Math/Bounds.hpp"
-
 namespace Molten::Gui
 {
+    template<typename TTheme>
+    Viewport<TTheme>::Viewport(WidgetDataMixin<TTheme, Viewport>& data) :
+        WidgetMixin<TTheme, Viewport>(data),
+        m_prevSize{ 0.0f, 0.0f }
+    {}
 
-    class DraggableWidget
+    template<typename TTheme>
+    void Viewport<TTheme>::Update()
     {
+        this->ApplyMarginsToGrantedBounds();
 
-    public:
+        const auto contentBounds = this->GetGrantedBounds().WithoutMargins(this->padding).ClampHighToLow();
+        const auto contentSize = contentBounds.GetSize();
 
-        virtual ~DraggableWidget() = default;
+        if(contentSize != m_prevSize)
+        {
+            m_prevSize = contentSize;
+            onResize(contentSize);
+        }
 
-        [[nodiscard]] virtual const Bounds2f32& GetDragBounds() const = 0;
+        if(contentSize.x != 0.0f && contentSize.y != 0.0f)
+        {
+            onIsVisible();
+        }
+    }
 
-    };
+    template<typename TTheme>
+    bool Viewport<TTheme>::OnMouseEvent(const WidgetMouseEvent&)
+    {
+        return false;
+    }
+
+    template<typename TTheme>
+    void Viewport<TTheme>::SetTexture(SharedRenderResource<FramedTexture2D> framedTexture)
+    {
+        Mixin::SetSkinState(State{ std::move(framedTexture) });
+    }
 
 }
-
-#endif

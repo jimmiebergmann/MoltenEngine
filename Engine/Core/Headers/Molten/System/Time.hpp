@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -38,8 +38,8 @@ namespace Molten
 
     public:
 
-        /** Constant representation of zero time. */
-        static const Time Zero;
+        static const Time Zero;     ///< Constant representation of zero time.
+        static const Time Infinite; ///< Constant representation of infinite time.
 
 
         /** Constructor. Time is initialized as 0. */

@@ -293,8 +293,8 @@ namespace Molten::Vulkan
     bool TransitionImageLayout(
         VkCommandBuffer commandBuffer,
         VkImage image,
-        VkImageLayout oldLayout,
-        VkImageLayout newLayout)
+        const VkImageLayout oldLayout,
+        const VkImageLayout newLayout)
     {
         VkImageMemoryBarrier barrier = {};
         barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -312,38 +312,83 @@ namespace Molten::Vulkan
         VkPipelineStageFlags sourceStageMask;
         VkPipelineStageFlags destStageMask;
 
-        if (oldLayout == VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED && 
-            newLayout == VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
+        // TODO: Need to take attachment type(color/depth/stencil) into consideration here.
+        switch(oldLayout)
         {
-            barrier.srcAccessMask = 0;
-            barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            case VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED:
+            {
+                switch (newLayout)
+                {
+                    case VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
+                    {
+                        barrier.srcAccessMask = 0;
+                        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+                        sourceStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+                        destStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+                    } break;
+                    case VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
+                    {
+                        barrier.srcAccessMask = 0;
+                        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+                        sourceStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+                        destStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+                    } break;
+                    case VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL:
+                    {
+                        barrier.srcAccessMask = 0;
+                        barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+                        sourceStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+                        destStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+                    } break;
+                    default: return false;
+                }
+            } break;
+            case VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
+            {
+                if(newLayout != VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+                {
+                    return false;
+                }
 
-            sourceStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-            destStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT;
-        }
-        else if (
-            oldLayout == VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL &&
-            newLayout == VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
-        {
-            barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-            barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+                barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+                barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+                sourceStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT;
+                destStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+            } break;
+            case VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
+            {
+                switch (newLayout)
+                {
+                    case VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
+                    {
+                        barrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+                        barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+                        sourceStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+                        destStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT;
+                    } break;
+                    case VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL:
+                    {
+                        barrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+                        barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+                        sourceStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+                        destStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+                    } break;
+                    default: return false;
+                }
+            } break;
+            case VkImageLayout::VK_IMAGE_LAYOUT_PRESENT_SRC_KHR:
+            {
+                if (newLayout != VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
+                {
+                    return false;
+                }
 
-            sourceStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT;
-            destStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-        }
-        else if(
-            oldLayout == VkImageLayout::VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL &&
-            newLayout == VkImageLayout::VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
-        {
-            barrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
-            barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-
-            sourceStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-            destStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TRANSFER_BIT;
-        }
-        else
-        {
-            return false;
+                barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT;
+                barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+                sourceStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+                destStageMask = VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+            } break;
+            default: return false;
         }
 
         vkCmdPipelineBarrier(
@@ -365,7 +410,7 @@ namespace Molten::Vulkan
     bool TransitionImageLayout(
         VkCommandBuffer commandBuffer,
         DeviceImage& deviceImage,
-        VkImageLayout newLayout)
+        const VkImageLayout newLayout)
     {
         if(!TransitionImageLayout(commandBuffer, deviceImage.image, deviceImage.layout, newLayout))
         {

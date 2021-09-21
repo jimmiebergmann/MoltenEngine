@@ -29,6 +29,7 @@ namespace Molten
     // Vulkan texture implementations.
     template<size_t VDimensions>
     VulkanTexture<VDimensions>::VulkanTexture() :
+        Texture<VDimensions>(ImageFormat::URed8, { 0, 0 }),
         deviceImage{},
         imageView(VK_NULL_HANDLE),
         bytesPerPixel(0)
@@ -38,8 +39,11 @@ namespace Molten
     VulkanTexture<VDimensions>::VulkanTexture(
         Vulkan::DeviceImage&& deviceImage,
         VkImageView imageView,
+        const ImageFormat format,
+        const Vector<VDimensions, uint32_t>& dimensions,
         const uint8_t bytesPerPixel
     ) :
+        Texture<VDimensions>(format, dimensions),
         deviceImage(std::move(deviceImage)),
         imageView(imageView),
         bytesPerPixel(bytesPerPixel)
@@ -48,6 +52,7 @@ namespace Molten
 
     template<size_t VDimensions>
     VulkanTexture<VDimensions>::VulkanTexture(VulkanTexture&& vulkanTexture) noexcept :
+        Texture<VDimensions>(std::move(vulkanTexture)),
         deviceImage(std::move(vulkanTexture.deviceImage)),
         imageView(vulkanTexture.imageView),
         bytesPerPixel(vulkanTexture.bytesPerPixel)
@@ -59,6 +64,8 @@ namespace Molten
     template<size_t VDimensions>
     VulkanTexture<VDimensions>& VulkanTexture<VDimensions>::operator = (VulkanTexture&& vulkanTexture) noexcept
     {
+        Texture<VDimensions>::operator = (std::move(vulkanTexture));
+
         deviceImage = std::move(vulkanTexture.deviceImage);
         imageView = vulkanTexture.imageView;
         bytesPerPixel = vulkanTexture.bytesPerPixel;
@@ -72,6 +79,7 @@ namespace Molten
     // Vulkan framed texture implementations.
     template<size_t VDimensions>
     VulkanFramedTexture<VDimensions>::VulkanFramedTexture() :
+        FramedTexture<VDimensions>(ImageFormat::URed8, { 0, 0 }),
         frames{},
         bytesPerPixel(0)
     {}
@@ -79,14 +87,18 @@ namespace Molten
     template<size_t VDimensions>
     VulkanFramedTexture<VDimensions>::VulkanFramedTexture(
         VulkanTextureFrames&& frames,
+        const ImageFormat format,
+        const Vector<VDimensions, uint32_t>& dimensions,
         const uint8_t bytesPerPixel
     ) :
+        FramedTexture<VDimensions>(format, dimensions),
         frames(std::move(frames)),
         bytesPerPixel(bytesPerPixel)
     {}
 
     template<size_t VDimensions>
     VulkanFramedTexture<VDimensions>::VulkanFramedTexture(VulkanFramedTexture && vulkanTexture) noexcept :
+        FramedTexture<VDimensions>(std::move(vulkanTexture)),
         frames(std::move(vulkanTexture.frames)),
         bytesPerPixel(std::move(vulkanTexture.bytesPerPixel))
     {
@@ -96,6 +108,8 @@ namespace Molten
     template<size_t VDimensions>
     VulkanFramedTexture<VDimensions>& VulkanFramedTexture<VDimensions>::operator = (VulkanFramedTexture && vulkanTexture) noexcept
     {
+        FramedTexture<VDimensions>::operator = (std::move(vulkanTexture));
+
         frames = std::move(vulkanTexture.frames);
         bytesPerPixel = std::move(vulkanTexture.bytesPerPixel);
         vulkanTexture.bytesPerPixel = 0;

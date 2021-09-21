@@ -33,6 +33,7 @@ namespace Molten
 
     template<size_t VDimensions> class Sampler;
     template<size_t VDimensions> class Texture;
+    template<size_t VDimensions> class FramedTexture;
 
     template<size_t VDimensions>
     struct CombinedTextureSampler
@@ -58,6 +59,32 @@ namespace Molten
     using CombinedTextureSampler1D = CombinedTextureSampler<1>;
     using CombinedTextureSampler2D = CombinedTextureSampler<2>;
     using CombinedTextureSampler3D = CombinedTextureSampler<3>;
+
+
+    template<size_t VDimensions>
+    struct CombinedFramedTextureSampler
+    {
+
+        CombinedFramedTextureSampler() = default;
+        CombinedFramedTextureSampler(
+            SharedRenderResource<FramedTexture<VDimensions>> framedTexture,
+            SharedRenderResource<Sampler<VDimensions>> sampler);
+
+        ~CombinedFramedTextureSampler() = default;
+
+        CombinedFramedTextureSampler(const CombinedFramedTextureSampler&) = default;
+        CombinedFramedTextureSampler(CombinedFramedTextureSampler&&) = default;
+        CombinedFramedTextureSampler& operator =(const CombinedFramedTextureSampler&) = default;
+        CombinedFramedTextureSampler& operator =(CombinedFramedTextureSampler&&) = default;
+
+        SharedRenderResource<FramedTexture<VDimensions>> framedTexture;
+        SharedRenderResource<Sampler<VDimensions>> sampler;
+
+    };
+
+    using CombinedFramedTextureSampler1D = CombinedFramedTextureSampler<1>;
+    using CombinedFramedTextureSampler2D = CombinedFramedTextureSampler<2>;
+    using CombinedFramedTextureSampler3D = CombinedFramedTextureSampler<3>;
 
 }
 

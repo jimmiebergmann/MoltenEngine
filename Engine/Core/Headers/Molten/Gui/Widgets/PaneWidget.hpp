@@ -46,7 +46,7 @@ namespace Molten::Gui
         static constexpr bool handleKeyboardEvents = false;
         static constexpr bool handleMouseEvents = true;
 
-        explicit Pane(
+        Pane(
             WidgetDataMixin<TTheme, Pane>& data,
             const std::string& label,
             const WidgetSize& size);
@@ -55,14 +55,14 @@ namespace Molten::Gui
 
         bool OnMouseEvent(const WidgetMouseEvent& widgetMouseEvent) override;
 
-        const Bounds2f32& GetDragBounds() const override;
+        [[nodiscard]] const Bounds2f32& GetDragBounds() const override;
 
     private:
 
         void OnCreate() override;
 
         std::string m_label;
-        Widget<TTheme>* labelWidget;
+        Widget<TTheme>* m_labelWidget;
         Bounds2f32 m_dragBounds;
 
     };

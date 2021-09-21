@@ -129,6 +129,13 @@ namespace Molten
         [[nodiscard]] SharedRenderResource<Texture3D> CreateTexture(const TextureDescriptor3D& descriptor) override;
         /**@}*/
 
+        /** Create framed texture object. */
+        /**@{*/
+        [[nodiscard]] SharedRenderResource<FramedTexture1D> CreateFramedTexture(const TextureDescriptor1D& descriptor) override;
+        [[nodiscard]] SharedRenderResource<FramedTexture2D> CreateFramedTexture(const TextureDescriptor2D& descriptor) override;
+        [[nodiscard]] SharedRenderResource<FramedTexture3D> CreateFramedTexture(const TextureDescriptor3D& descriptor) override;
+        /**@}*/
+
         /** Create uniform buffer object. */
         [[nodiscard]] RenderResource<UniformBuffer> CreateUniformBuffer(const UniformBufferDescriptor& descriptor) override;
 
@@ -138,6 +145,9 @@ namespace Molten
         /** Create vertex buffer object. */
         [[nodiscard]] RenderResource<VertexBuffer> CreateVertexBuffer(const VertexBufferDescriptor& descriptor) override;
 
+
+        /** Update render pass object. */
+        [[nodiscard]] bool UpdateRenderPass(RenderPass& renderPass, const RenderPassUpdateDescriptor& descriptor) override;
 
         /** Update texture data. */
         /**@{*/
@@ -173,6 +183,9 @@ namespace Molten
         void Destroy(Texture1D& texture1D) override;
         void Destroy(Texture2D& texture2D) override;
         void Destroy(Texture3D& texture3D) override;
+        void Destroy(FramedTexture1D& framedTexture1D) override;
+        void Destroy(FramedTexture2D& framedTexture2D) override;
+        void Destroy(FramedTexture3D& framedTexture3D) override;
         void Destroy(UniformBuffer& uniformBuffer) override;
         void Destroy(FramedUniformBuffer& framedUniformBuffer) override;
         void Destroy(VertexBuffer& vertexBuffer) override;
@@ -214,6 +227,19 @@ namespace Molten
             const Vector3ui32& dimensions,
             const void* data,
             const VkDeviceSize dataSize,
+            const VkImageLayout layout,
+            const VkFormat imageFormat,
+            const VkFormat internalImageFormat,
+            const VkImageType imageType,
+            const VkImageViewType imageViewType,
+            const VkComponentMapping& componentMapping);
+
+        [[nodiscard]] bool CreateFramedTexture(
+            VulkanTextureFrames & frames,
+            const Vector3ui32& dimensions,
+            const void* data,
+            const VkDeviceSize dataSize,
+            const VkImageLayout layout,
             const VkFormat imageFormat,
             const VkFormat internalImageFormat,
             const VkImageType imageType,
@@ -275,6 +301,7 @@ namespace Molten
         VkCommandPool m_commandPool;
         uint32_t m_drawFrameCount;
         bool m_drawingFrame;
+        std::vector<VulkanRenderPass*> m_recordedRenderPasses;
            
     };
 

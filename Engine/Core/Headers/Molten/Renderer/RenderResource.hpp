@@ -40,11 +40,12 @@ namespace Molten
     template<size_t VDimensions> class Sampler;
     class ShaderProgram;
     template<size_t VDimensions> class Texture;
+    template<size_t VDimensions> class FramedTexture;
     class UniformBuffer;
     class FramedUniformBuffer;
     class VertexBuffer;
 
-    class RenderResourceDeleter
+    class MOLTEN_API RenderResourceDeleter
     {
 
     public:
@@ -56,9 +57,9 @@ namespace Molten
         RenderResourceDeleter(RenderResourceDeleter&&) = default;
         RenderResourceDeleter& operator =(const RenderResourceDeleter& renderResourceDeleter) = default;
         RenderResourceDeleter& operator =(RenderResourceDeleter &&) = default;
-
-        void operator()(FramedDescriptorSet* framedDescriptorSet);
+      
         void operator()(DescriptorSet* descriptorSet);
+        void operator()(FramedDescriptorSet* framedDescriptorSet);
         void operator()(IndexBuffer* indexBuffer);
         void operator()(Pipeline* pipeline);
         void operator()(RenderPass* renderPass);
@@ -69,6 +70,9 @@ namespace Molten
         void operator()(Texture<1>* texture1D);
         void operator()(Texture<2>* texture2D);
         void operator()(Texture<3>* texture3D);
+        void operator()(FramedTexture<1>* framedTexture1D);
+        void operator()(FramedTexture<2>* framedTexture2D);
+        void operator()(FramedTexture<3>* framedTexture3D);
         void operator()(UniformBuffer* uniformBuffer);
         void operator()(FramedUniformBuffer* framedUniformBuffer);
         void operator()(VertexBuffer* vertexBuffer);

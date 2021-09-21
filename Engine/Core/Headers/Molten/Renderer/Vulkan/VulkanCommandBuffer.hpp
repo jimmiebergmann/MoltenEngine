@@ -54,6 +54,10 @@ namespace Molten
 
         VulkanCommandBuffer();
 
+        /** Get number of recorded commands of this buffer. */
+        [[nodiscard]] size_t GetCommandCount() const;
+
+
         /** Bind descriptor set to draw queue. */
         void BindDescriptorSet(DescriptorSet& descriptorSet) override;
 
@@ -106,7 +110,8 @@ namespace Molten
 
         size_t m_currentFrameIndex;
         VkCommandBuffer m_currentCommandBuffer;
-        VulkanPipeline* m_currentPipeline;       
+        VulkanPipeline* m_currentPipeline;
+        size_t m_commandCount;
 
     };
 

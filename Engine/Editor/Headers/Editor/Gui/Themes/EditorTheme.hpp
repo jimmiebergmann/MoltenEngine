@@ -27,16 +27,15 @@
 #define MOLTEN_EDITOR_GUI_THEME_EDITORTHEME_HPP
 
 #include "Molten/Gui/WidgetSkin.hpp"
-#include "Molten/Gui/CanvasRenderer.hpp"
 #include "Molten/Gui/WidgetData.hpp"
-#include "Molten/Renderer/Renderer.hpp"
-
+#include "Molten/Gui/CanvasRenderer.hpp"
 #include "Molten/Gui/Widgets/ButtonWidget.hpp"
 #include "Molten/Gui/Widgets/DockerWidget.hpp"
 #include "Molten/Gui/Widgets/PaneWidget.hpp"
 #include "Molten/Gui/Widgets/SpacerWidget.hpp"
 #include "Molten/Gui/Widgets/VerticalGridWidget.hpp"
 #include "Molten/Gui/Widgets/LabelWidget.hpp"
+#include "Molten/Gui/Widgets/ViewportWidget.hpp"
 
 #include <memory>
 
@@ -75,6 +74,8 @@ namespace Molten::Gui
                     const TextureDescriptor2D textureDesc = {
                         fontAtlas->GetBuffer(),
                         fontAtlas->GetImageDimensions(),
+                        TextureType::Color,
+                        TextureUsage::ReadOnly,
                         fontAtlas->GetImageFormat() == FontAtlasImageFormat::Gray ? ImageFormat::URed8 : ImageFormat::UBlue8Green8Red8Alpha8,
                         swizzleMapping
                     };
@@ -244,6 +245,42 @@ namespace Molten::Gui
                 grantedBounds.WithoutMargins({ 0.0f, headerBarHeight, 0.0f, 0.0f }),
                 Vector4f32{ 0.24f, 0.25f, 0.27f, 1.0f });
         }
+
+    };
+
+    template<>
+    struct WidgetSkin<EditorTheme, Viewport> : WidgetSkinMixin<EditorTheme, Viewport>
+    {
+
+        WidgetSkin(const WidgetSkinDescriptor<EditorTheme, Viewport>& descriptor) :
+            WidgetSkinMixin<EditorTheme, Viewport>(descriptor)
+        {}
+
+        void Draw() override
+        {
+            if (!m_framedTexture.framedTexture)
+            {
+                return;
+            }
+
+            const auto grantedBounds = widgetData.GetGrantedBounds();
+            const auto textureBounds = Bounds2f32{ 0.0f, 0.0f, 1.0f, 1.0f };
+            theme.m_canvasRenderer.DrawRect(grantedBounds, textureBounds, m_framedTexture);
+        }
+
+        void OnStateChange(const State& state) override
+        {
+            if(m_framedTexture.framedTexture == state.framedTexture)
+            {
+                return;
+            }
+
+            m_framedTexture = theme.m_canvasRenderer.CreateFramedTexture(state.framedTexture);
+        }
+
+    private:
+
+        CanvasRendererFramedTexture m_framedTexture;
 
     };
 

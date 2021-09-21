@@ -23,25 +23,33 @@
 *
 */
 
-#ifndef MOLTEN_CORE_GUI_DRAGGABLEWIDGET_HPP
-#define MOLTEN_CORE_GUI_DRAGGABLEWIDGET_HPP
+#include "Molten/Renderer/Vulkan/VulkanRenderPassAttachment.hpp"
 
-#include "Molten/Math/Bounds.hpp"
 
-namespace Molten::Gui
+namespace Molten
 {
 
-    class DraggableWidget
-    {
+    // Vulkan render pass attachment implementations.
+    VulkanRenderPassAttachment::VulkanRenderPassAttachment() :
+        type{ RenderPassAttachmentType::Color },
+        texture{},
+        clearValue{},
+        initialLayout{ VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED },
+        finalLayout{ VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED }
+    {}
 
-    public:
-
-        virtual ~DraggableWidget() = default;
-
-        [[nodiscard]] virtual const Bounds2f32& GetDragBounds() const = 0;
-
-    };
+    VulkanRenderPassAttachment::VulkanRenderPassAttachment(
+        const RenderPassAttachmentType type,
+        SharedRenderResource<VulkanFramedTexture<2>> texture,
+        std::optional<Vector4f32> clearValue,
+        const VkImageLayout initialLayout,
+        const VkImageLayout finalLayout
+    ) :
+        type{ type },
+        texture{ std::move(texture) },
+        clearValue{ clearValue },
+        initialLayout{ initialLayout },
+        finalLayout{ finalLayout }
+    {}
 
 }
-
-#endif

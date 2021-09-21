@@ -251,6 +251,21 @@ namespace Molten
         return { };
     }
 
+    SharedRenderResource<FramedTexture1D> OpenGLX11Renderer::CreateFramedTexture(const TextureDescriptor1D& /*descriptor*/)
+    {
+        return { };
+    }
+
+    SharedRenderResource<FramedTexture2D> OpenGLX11Renderer::CreateFramedTexture(const TextureDescriptor2D& /*descriptor*/)
+    {
+        return { };
+    }
+
+    SharedRenderResource<FramedTexture3D> OpenGLX11Renderer::CreateFramedTexture(const TextureDescriptor3D& /*descriptor*/)
+    {
+        return { };
+    }
+
     RenderResource<UniformBuffer> OpenGLX11Renderer::CreateUniformBuffer(const UniformBufferDescriptor&)
     {
         return { };
@@ -264,6 +279,11 @@ namespace Molten
     RenderResource<VertexBuffer> OpenGLX11Renderer::CreateVertexBuffer(const VertexBufferDescriptor&)
     {
         return { };
+    }
+
+    bool OpenGLX11Renderer::UpdateRenderPass(RenderPass& /*renderPass*/, const RenderPassUpdateDescriptor& /*descriptor*/)
+    {
+        return false;
     }
 
     bool OpenGLX11Renderer::UpdateTexture(Texture1D& /*texture1D*/, const TextureUpdateDescriptor1D& /*descriptor*/)
@@ -335,6 +355,18 @@ namespace Molten
     }
 
     void OpenGLX11Renderer::Destroy(Texture3D& /*texture3D*/)
+    {
+    }
+
+    void OpenGLX11Renderer::Destroy(FramedTexture1D& /*framedTexture1D*/)
+    {
+    }
+
+    void OpenGLX11Renderer::Destroy(FramedTexture2D& /*framedTexture2D*/)
+    {
+    }
+
+    void OpenGLX11Renderer::Destroy(FramedTexture3D& /*framedTexture3D*/)
     {
     }
 

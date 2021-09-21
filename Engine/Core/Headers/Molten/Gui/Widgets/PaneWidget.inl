@@ -25,7 +25,6 @@
 
 namespace Molten::Gui
 {
-
     template<typename TTheme>
     Pane<TTheme>::Pane(
         WidgetDataMixin<TTheme, Pane>& data,
@@ -34,8 +33,8 @@ namespace Molten::Gui
     ) :
         WidgetMixin<TTheme, Pane>(data, size),
         m_label(label),
-        labelWidget(nullptr)
-    { }
+        m_labelWidget(nullptr)
+    {}
 
     template<typename TTheme>
     void Pane<TTheme>::Update()
@@ -51,7 +50,7 @@ namespace Molten::Gui
 
         if (auto it = childLane.begin(); it != childLane.end())
         {
-            if(auto& childData = (*it).GetValue(); childData->GetWidget() == labelWidget)
+            if(auto& childData = (*it).GetValue(); childData->GetWidget() == m_labelWidget)
             {
                 const auto labelBounds = m_dragBounds
                     .WithoutMargins({2, 2, 2, 2})
@@ -71,7 +70,6 @@ namespace Molten::Gui
                 childData->SetGrantedBounds(contentBounds);
             }
         }
-
     }
 
     template<typename TTheme>
@@ -91,7 +89,7 @@ namespace Molten::Gui
     {
         if(m_label.size())
         {
-            labelWidget = this->template CreateChild<Label>(m_label, 16);
+            m_labelWidget = this->template CreateChild<Label>(m_label, 16);
         }
     }
 

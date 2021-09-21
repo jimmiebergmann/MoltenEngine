@@ -26,12 +26,24 @@
 namespace Molten
 {
 
+    // Combined texture sampler implementations.
     template<size_t VDimensions>
     CombinedTextureSampler<VDimensions>::CombinedTextureSampler(
         SharedRenderResource<Texture<VDimensions>> texture,
         SharedRenderResource<Sampler<VDimensions>> sampler
-    ):
+    ) :
         texture(std::move(texture)),
+        sampler(std::move(sampler))
+    {}
+
+
+    // Combined framed texture sampler implementations.
+    template<size_t VDimensions>
+    CombinedFramedTextureSampler<VDimensions>::CombinedFramedTextureSampler(
+        SharedRenderResource<FramedTexture<VDimensions>> framedTexture,
+        SharedRenderResource<Sampler<VDimensions>> sampler
+    ) :
+        framedTexture(std::move(framedTexture)),
         sampler(std::move(sampler))
     {}
 

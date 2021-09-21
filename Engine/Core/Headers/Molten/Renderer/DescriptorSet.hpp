@@ -72,7 +72,7 @@ namespace Molten
     {
 
         using BindingVariant = std::variant< 
-            RenderResource<UniformBuffer>*,
+            RenderResource<UniformBuffer>*, // TODO: Do not use raw pointer.
             CombinedTextureSampler1D,
             CombinedTextureSampler2D,
             CombinedTextureSampler3D
@@ -102,8 +102,8 @@ namespace Molten
 
         DescriptorSetDescriptor();
         DescriptorSetDescriptor(
-            RenderResource<Pipeline>* pipeline,
-            const uint32_t setId,
+            RenderResource<Pipeline>* pipeline, // TODO: Do not use raw pointer.
+            const uint32_t id,
             DescriptorBinding&& binding
         );
         DescriptorSetDescriptor(
@@ -112,7 +112,7 @@ namespace Molten
             std::vector<DescriptorBinding>&& bindings
         );
 
-        RenderResource<Pipeline>* pipeline;
+        RenderResource<Pipeline>* pipeline; // TODO: Do not use raw pointer.
         uint32_t id;
         std::vector<DescriptorBinding> bindings;
 
@@ -142,10 +142,10 @@ namespace Molten
     {
 
         using BindingVariant = std::variant<
-            RenderResource<FramedUniformBuffer>*,
-            CombinedTextureSampler<1>,
-            CombinedTextureSampler<2>,
-            CombinedTextureSampler<3>
+            RenderResource<FramedUniformBuffer>*, // TODO: Do not use raw pointer.
+            CombinedFramedTextureSampler1D,
+            CombinedFramedTextureSampler2D,
+            CombinedFramedTextureSampler3D
         >;
 
         FramedDescriptorBinding(
@@ -153,13 +153,13 @@ namespace Molten
             RenderResource<FramedUniformBuffer>& framedUniformBuffer);
         FramedDescriptorBinding(
             const uint32_t id,
-            CombinedTextureSampler1D&& combinedTextureSampler1D);
+            CombinedFramedTextureSampler1D&& combinedFramedTextureSampler1D);
         FramedDescriptorBinding(
             const uint32_t id,
-            CombinedTextureSampler2D&& combinedTextureSampler2D);
+            CombinedFramedTextureSampler2D&& combinedFramedTextureSampler2D);
         FramedDescriptorBinding(
             const uint32_t id,
-            CombinedTextureSampler3D&& combinedTextureSampler3D);
+            CombinedFramedTextureSampler3D&& combinedFramedTextureSampler3D);
 
         uint32_t id;
         BindingVariant binding;
@@ -172,12 +172,17 @@ namespace Molten
 
         FramedDescriptorSetDescriptor();
         FramedDescriptorSetDescriptor(
-            RenderResource<Pipeline>* pipeline,
+            RenderResource<Pipeline>* pipeline, // TODO: Do not use raw pointer.
+            const uint32_t id,
+            FramedDescriptorBinding&& binding
+        );
+        FramedDescriptorSetDescriptor(
+            RenderResource<Pipeline>* pipeline, // TODO: Do not use raw pointer.
             const uint32_t id,
             std::vector<FramedDescriptorBinding>&& bindings
         );
 
-        RenderResource<Pipeline>* pipeline;
+        RenderResource<Pipeline>* pipeline; // TODO: Do not use raw pointer.
         uint32_t id;
         std::vector<FramedDescriptorBinding> bindings;
 

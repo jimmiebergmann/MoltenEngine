@@ -35,11 +35,9 @@
 #include "Molten/Renderer/Vulkan/Utility/VulkanDeviceImage.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanImageSampler.hpp"
 #include "Molten/Renderer/Vulkan/VulkanTextureFrame.hpp"
+#include "Molten/Renderer/Vulkan/VulkanRenderPassFrame.hpp"
 #include <variant>
 #include <queue>
-
-// TODO: TEMP!
-#include "Molten/Renderer/Vulkan/VulkanRenderPass.hpp" 
 
 namespace Molten
 {
@@ -100,6 +98,7 @@ namespace Molten::Vulkan
         void Add(const uint32_t cleanupFrameIndex, VulkanUniformBuffer& uniformBuffer);
         void Add(const uint32_t cleanupFrameIndex, VulkanFramedUniformBuffer& framedUniformBuffer);
         void Add(const uint32_t cleanupFrameIndex, VulkanVertexBuffer& vertexBuffer);
+        void Add(const uint32_t cleanupFrameIndex, VkFramebuffer& vulkanFramebuffer);
 
     private:
 
@@ -131,7 +130,7 @@ namespace Molten::Vulkan
         {
             VkCommandPool commandPool;
             VkRenderPass renderPass;
-            VulkanRenderPass::Frames frames;
+            VulkanRenderPassFrames frames;
         };
 
         struct SamplerCleanup
@@ -170,6 +169,11 @@ namespace Molten::Vulkan
             DeviceBuffer deviceBuffer;
         };
 
+        struct VulkanFramebufferCleanup
+        {
+            VkFramebuffer framebuffer;
+        };
+
         using CleanupVariant = std::variant <
             DescriptorSetCleanup,
             FramedDescriptorSetCleanup,
@@ -182,7 +186,8 @@ namespace Molten::Vulkan
             FramedTextureCleanup,
             UniformBufferCleanup,
             FramedUniformBufferCleanup,
-            VertexBufferCleanup
+            VertexBufferCleanup,
+            VulkanFramebufferCleanup
         >;
 
         struct CleanupData
@@ -207,6 +212,7 @@ namespace Molten::Vulkan
         void Process(UniformBufferCleanup& data);
         void Process(FramedUniformBufferCleanup& data);
         void Process(VertexBufferCleanup& data);
+        void Process(VulkanFramebufferCleanup& data);
 
         LogicalDevice& m_logicalDevice;
         MemoryAllocator& m_memoryAllocator;

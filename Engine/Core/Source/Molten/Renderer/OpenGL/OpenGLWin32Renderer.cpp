@@ -253,6 +253,21 @@ namespace Molten
         return { };
     }
 
+    SharedRenderResource<FramedTexture1D> OpenGLWin32Renderer::CreateFramedTexture(const TextureDescriptor1D& /*descriptor*/)
+    {
+        return { };
+    }
+
+    SharedRenderResource<FramedTexture2D> OpenGLWin32Renderer::CreateFramedTexture(const TextureDescriptor2D& /*descriptor*/)
+    {
+        return { };
+    }
+
+    SharedRenderResource<FramedTexture3D> OpenGLWin32Renderer::CreateFramedTexture(const TextureDescriptor3D& /*descriptor*/)
+    {
+        return { };
+    }
+
     RenderResource<UniformBuffer> OpenGLWin32Renderer::CreateUniformBuffer(const UniformBufferDescriptor&)
     {
         return { };
@@ -266,6 +281,11 @@ namespace Molten
     RenderResource<VertexBuffer> OpenGLWin32Renderer::CreateVertexBuffer(const VertexBufferDescriptor&)
     {
         return { };
+    }
+
+    bool OpenGLWin32Renderer::UpdateRenderPass(RenderPass& /*renderPass*/, const RenderPassUpdateDescriptor& /*descriptor*/)
+    {
+        return false;
     }
 
     bool OpenGLWin32Renderer::UpdateTexture(Texture1D& /*texture1D*/, const TextureUpdateDescriptor1D& /*descriptor*/)
@@ -337,6 +357,18 @@ namespace Molten
     }
 
     void OpenGLWin32Renderer::Destroy(Texture3D& /*texture3D*/)
+    {
+    }
+
+    void OpenGLWin32Renderer::Destroy(FramedTexture1D& /*framedTexture1D*/)
+    {
+    }
+
+    void OpenGLWin32Renderer::Destroy(FramedTexture2D& /*framedTexture2D*/)
+    {
+    }
+
+    void OpenGLWin32Renderer::Destroy(FramedTexture3D& /*framedTexture3D*/)
     {
     }
 

@@ -113,6 +113,31 @@ namespace Molten::Gui
         return m_backendRenderer.UpdateTexture(*texture.texture, textureUpdateDescriptor);
     }
 
+    CanvasRendererFramedTexture CanvasRenderer::CreateFramedTexture(SharedRenderResource<FramedTexture2D> framedTexture)
+    {
+        if(!framedTexture)
+        {
+            return {};
+        }
+
+        const auto descriptorSetDescriptor = FramedDescriptorSetDescriptor{
+           &m_texturedRect.pipeline, 0,
+           { 0,  CombinedFramedTextureSampler2D{ framedTexture, m_sampler2D } }
+        };
+
+        auto framedDescriptorSet = m_backendRenderer.CreateFramedDescriptorSet(descriptorSetDescriptor);
+        if (!framedDescriptorSet)
+        {
+            return {};
+        }
+
+        CanvasRendererFramedTexture result;
+        result.framedTexture = std::move(framedTexture);
+        result.framedDescriptorSet = std::move(framedDescriptorSet);
+
+        return result;
+    }
+
     CanvasRendererFontSequence CanvasRenderer::CreateFontSequence(FontGroupedSequence& fontGroupedSequence)
     {
         struct Vertex
@@ -234,6 +259,22 @@ namespace Molten::Gui
         m_commandBuffer->PushConstant(m_texturedRect.positionLocation, bounds.low);
         m_commandBuffer->PushConstant(m_texturedRect.sizeLocation, bounds.high - bounds.low);
         m_commandBuffer->PushConstant(m_texturedRect.uvPositionLocation, uvPosition);
+        m_commandBuffer->PushConstant(m_texturedRect.uvSizeLocation, uvSize);
+
+        m_commandBuffer->DrawVertexBuffer(*m_texturedRect.indexBuffer, *m_texturedRect.vertexBuffer);
+    }
+
+    void CanvasRenderer::DrawRect(const Bounds2f32& bounds, const Bounds2f32& textureCoords, CanvasRendererFramedTexture& framedtexture)
+    {
+        const auto uvSize = textureCoords.GetSize();
+
+        m_commandBuffer->BindPipeline(*m_texturedRect.pipeline);
+        m_commandBuffer->BindFramedDescriptorSet(*framedtexture.framedDescriptorSet);
+
+        m_commandBuffer->PushConstant(m_texturedRect.projectionLocation, m_projection);
+        m_commandBuffer->PushConstant(m_texturedRect.positionLocation, bounds.low);
+        m_commandBuffer->PushConstant(m_texturedRect.sizeLocation, bounds.high - bounds.low);
+        m_commandBuffer->PushConstant(m_texturedRect.uvPositionLocation, textureCoords.low);
         m_commandBuffer->PushConstant(m_texturedRect.uvSizeLocation, uvSize);
 
         m_commandBuffer->DrawVertexBuffer(*m_texturedRect.indexBuffer, *m_texturedRect.vertexBuffer);

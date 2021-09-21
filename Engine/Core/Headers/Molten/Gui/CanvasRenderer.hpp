@@ -45,6 +45,7 @@ namespace Molten
     class VertexBuffer;
     class IndexBuffer;
     class DescriptorSet;
+    class FramedDescriptorSet;
     class Logger;
 }
 
@@ -73,6 +74,22 @@ namespace Molten::Gui
         SharedRenderResource<Texture2D> texture;
         Vector2ui32 dimensions;
         RenderResource<DescriptorSet> descriptorSet;
+
+    };
+
+    struct MOLTEN_API CanvasRendererFramedTexture
+    {
+
+        CanvasRendererFramedTexture() = default;
+        ~CanvasRendererFramedTexture() = default;
+        CanvasRendererFramedTexture(const CanvasRendererTexture&) = delete;
+        CanvasRendererFramedTexture(CanvasRendererFramedTexture&&) noexcept = default;
+
+        CanvasRendererFramedTexture& operator =(const CanvasRendererFramedTexture&) = delete;
+        CanvasRendererFramedTexture& operator =(CanvasRendererFramedTexture&&) noexcept = default;
+
+        SharedRenderResource<FramedTexture2D> framedTexture;
+        RenderResource<FramedDescriptorSet> framedDescriptorSet;
 
     };
 
@@ -121,6 +138,8 @@ namespace Molten::Gui
         CanvasRendererTexture CreateTexture(const TextureDescriptor2D& textureDescriptor);
         bool UpdateTexture(CanvasRendererTexture& texture, const TextureUpdateDescriptor2D& textureUpdateDescriptor);
 
+        CanvasRendererFramedTexture CreateFramedTexture(SharedRenderResource<FramedTexture2D> framedTexture);
+
         CanvasRendererFontSequence CreateFontSequence(FontGroupedSequence& fontGroupedSequence);
 
         void SetCommandBuffer(CommandBuffer& commandBuffer);
@@ -130,6 +149,8 @@ namespace Molten::Gui
         void DrawRect(const Bounds2f32& bounds, CanvasRendererTexture& texture);
 
         void DrawRect(const Bounds2f32& bounds, const Bounds2f32& textureCoords, CanvasRendererTexture& texture);
+
+        void DrawRect(const Bounds2f32& bounds, const Bounds2f32& textureCoords, CanvasRendererFramedTexture& framedtexture);
 
         void DrawFontSequence(const Vector2f32& position, CanvasRendererFontSequence& fontSequence);
 

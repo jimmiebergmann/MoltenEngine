@@ -23,36 +23,36 @@
 *
 */
 
+#include "Molten/Renderer/Vulkan/VulkanTexture.hpp"
 #if defined(MOLTEN_ENABLE_VULKAN)
 
 #include "Molten/Renderer/Vulkan/VulkanRenderPass.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanResult.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanResultLogger.hpp"
 #include "Molten/Renderer/Vulkan/Utility/VulkanLogicalDevice.hpp"
+#include "Molten/Renderer/Vulkan/Utility/VulkanFunctions.hpp"
 
 namespace Molten
 {
 
     // Vulkan render pass implementations.
-    VulkanRenderPass::Frame::Frame() :
-        commandBuffer(VK_NULL_HANDLE),
-        finishSemaphore(VK_NULL_HANDLE),
-        framebuffer(VK_NULL_HANDLE)
-    {}
-
     VulkanRenderPass::VulkanRenderPass(
         Logger* logger,
         VkRenderPass renderPass,
         const VkCommandPool commandPool,
-        Frames&& frames,
-        Attachments&& attachments,
+        const Vector2ui32& dimensions,
+        VulkanRenderPassFrames&& frames,
+        VulkanRenderPassAttachments&& attachments,
+        std::vector<VkClearValue>&& clearValues,
         RenderPassFunction recordFunction
     ) :
+        RenderPass(dimensions),
         m_logger(logger),
         m_renderPass(renderPass),
         m_commandPool(commandPool),
         m_frames(std::move(frames)),
         m_attachments(std::move(attachments)),
+        m_clearValues(std::move(clearValues)),
         m_currentFrameIndex(0),
         m_recordFunction(std::move(recordFunction))
     {}
@@ -72,9 +72,22 @@ namespace Molten
         m_scissorBounds = bounds;
     }
 
-    Vulkan::Result<> VulkanRenderPass::Record(
-        const size_t frameIndex,
-        const VulkanRenderPassRecordDescriptor& descriptor)
+    VulkanRenderPassFrame& VulkanRenderPass::GetCurrentFrame()
+    {
+        return m_frames[m_currentFrameIndex];
+    }
+
+    size_t VulkanRenderPass::GetCommandCount() const
+    {
+        return m_commandBuffer.GetCommandCount();
+    }
+
+    void VulkanRenderPass::SetDimensions(const Vector2ui32& dimensions)
+    {
+        m_dimensions = dimensions;
+    }
+
+    Vulkan::Result<> VulkanRenderPass::Record(const size_t frameIndex)
     {
         if(frameIndex >= m_frames.size())
         {
@@ -87,7 +100,7 @@ namespace Molten
             return {};
         }
 
-        const auto currentFrame = m_frames[m_currentFrameIndex];
+        const auto& currentFrame = m_frames[m_currentFrameIndex];
         auto currentCommandBuffer = currentFrame.commandBuffer;
         auto currentFramebuffer = currentFrame.framebuffer;
 
@@ -106,7 +119,24 @@ namespace Molten
             return result;
         }
 
-        const auto viewportBounds = m_viewportBounds.value_or(descriptor.defaultViewportBounds);
+        for(auto& attachment : m_attachments)
+        {
+            auto& texture = attachment.texture;
+            auto& textureFrame = texture->frames[m_currentFrameIndex];
+
+            if(textureFrame.deviceImage.layout != attachment.initialLayout)
+            {
+                if (!Vulkan::TransitionImageLayout(currentCommandBuffer, textureFrame.deviceImage, attachment.initialLayout))
+                {
+                    Logger::WriteError(m_logger, "Failed to transition image layout of framed texture to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL");
+                    return VkResult::VK_ERROR_UNKNOWN;
+                }
+            }
+        }
+
+        const auto bounds = Bounds2i32{ { 0.0f, 0.0f }, m_dimensions };
+
+        const auto viewportBounds = m_viewportBounds.value_or(Bounds2i32{ bounds });
         const auto viewportSize = viewportBounds.GetSize();     
         VkViewport viewport = {};
         viewport.x = static_cast<float>(viewportBounds.low.x);
@@ -116,7 +146,7 @@ namespace Molten
         viewport.minDepth = 0.0f;
         viewport.maxDepth = 0.0f;
 
-        const auto scissorBounds = m_scissorBounds.value_or(descriptor.defaultScissorBounds);
+        const auto scissorBounds = m_scissorBounds.value_or(Bounds2i32{ bounds });
         const auto scissorSize = scissorBounds.GetSize();
         VkRect2D scissor = {};
         scissor.offset.x = scissorBounds.low.x;
@@ -131,10 +161,8 @@ namespace Molten
         renderPassBeginInfo.framebuffer = currentFramebuffer;
         renderPassBeginInfo.renderArea.offset = scissor.offset;
         renderPassBeginInfo.renderArea.extent = scissor.extent;
-
-        const VkClearValue clearColor = { 0.3f, 0.0f, 0.0f, 0.0f }; // TODO: Invalid initialization / use from attachments.
-        renderPassBeginInfo.clearValueCount = 1;
-        renderPassBeginInfo.pClearValues = &clearColor;
+        renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(m_clearValues.size());
+        renderPassBeginInfo.pClearValues = m_clearValues.data();
 
         vkCmdBeginRenderPass(currentCommandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
         vkCmdSetViewport(currentCommandBuffer, 0, 1, &viewport);
@@ -155,56 +183,41 @@ namespace Molten
         return {};
     }
 
-    VulkanRenderPass::Frame& VulkanRenderPass::GetCurrentFrame()
-    {
-        return m_frames[m_currentFrameIndex];
-    }
-
     Vulkan::Result<> VulkanRenderPass::Submit(
         Vulkan::LogicalDevice& logicalDevice,
         const VkSemaphore waitSemaphore,
         const VkFence submitFence)
     {
-        const auto currentFrame = m_frames[m_currentFrameIndex];
+        const auto& currentFrame = m_frames[m_currentFrameIndex];
         auto currentCommandBuffer = currentFrame.commandBuffer;
 
         VkSubmitInfo submitInfo = {};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-        //VkSemaphore waitSemaphores[] = { VK_NULL_HANDLE /*m_imageAvailableSemaphores[m_currentFrameIndex]*/ };
         VkPipelineStageFlags pipelineWaitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-        submitInfo.waitSemaphoreCount = 1; //1;
-        submitInfo.pWaitSemaphores = &waitSemaphore; //waitSemaphores;
+        submitInfo.waitSemaphoreCount = waitSemaphore != VK_NULL_HANDLE ? 1 : 0;
+        submitInfo.pWaitSemaphores = waitSemaphore != VK_NULL_HANDLE ? &waitSemaphore : nullptr;
         submitInfo.pWaitDstStageMask = pipelineWaitStages;
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = &currentCommandBuffer;
 
-        //VkSemaphore finishSemaphores[] = { VK_NULL_HANDLE /*m_renderFinishedSemaphores[m_currentFrameIndex]*/ };
-        submitInfo.signalSemaphoreCount = 1; //1;
-        submitInfo.pSignalSemaphores = &currentFrame.finishSemaphore; //finishSemaphores;
-
-        /*if (const auto result = vkResetFences(logicalDeviceHandle, 1, &m_inFlightFences[m_currentFrameIndex]); result != VK_SUCCESS)
-        {
-            return result;
-        }*/
+        submitInfo.signalSemaphoreCount = 1;
+        submitInfo.pSignalSemaphores = &currentFrame.finishSemaphore;
 
         auto& deviceQueues = logicalDevice.GetDeviceQueues();
-        if (const auto result = vkQueueSubmit(deviceQueues.graphicsQueue, 1, &submitInfo, submitFence/*m_inFlightFences[m_currentFrameIndex]*/); result != VK_SUCCESS)
+        if (const auto result = vkQueueSubmit(deviceQueues.graphicsQueue, 1, &submitInfo, submitFence); result != VK_SUCCESS)
         {
             return result;
+        }
+
+        for (auto& attachment : m_attachments)
+        {
+            auto& texture = attachment.texture;
+            auto& textureFrame = texture->frames[m_currentFrameIndex];
+            textureFrame.deviceImage.layout = attachment.finalLayout;
         }
 
         return {};
-/*
-
-
-        /*
-        auto& deviceQueues = m_logicalDevice->GetDeviceQueues();
-        if (!(result = vkQueueSubmit(deviceQueues.graphicsQueue, 1, &submitInfo, m_inFlightFences[m_currentFrameIndex])))
-        {
-            return result;
-        }
-        */
     }
 
 }

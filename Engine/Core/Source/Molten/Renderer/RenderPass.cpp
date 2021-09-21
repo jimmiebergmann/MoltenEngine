@@ -23,25 +23,19 @@
 *
 */
 
-#ifndef MOLTEN_CORE_GUI_DRAGGABLEWIDGET_HPP
-#define MOLTEN_CORE_GUI_DRAGGABLEWIDGET_HPP
 
-#include "Molten/Math/Bounds.hpp"
+#include "Molten/Renderer/RenderPass.hpp"
 
-namespace Molten::Gui
+namespace Molten
 {
 
-    class DraggableWidget
+    RenderPass::RenderPass(const Vector2ui32& dimensions) :
+        m_dimensions(dimensions)
+    {}
+
+    Vector2ui32 RenderPass::GetDimensions() const
     {
-
-    public:
-
-        virtual ~DraggableWidget() = default;
-
-        [[nodiscard]] virtual const Bounds2f32& GetDragBounds() const = 0;
-
-    };
+        return m_dimensions;
+    }
 
 }
-
-#endif
