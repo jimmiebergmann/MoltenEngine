@@ -23,6 +23,8 @@
 *
 */
 
+#if defined(MOLTEN_ENABLE_VULKAN)
+
 #include "Molten/Renderer/Vulkan/VulkanRenderPassFrame.hpp"
 
 namespace Molten
@@ -59,3 +61,5 @@ namespace Molten
     }
 
 }
+
+#endif
