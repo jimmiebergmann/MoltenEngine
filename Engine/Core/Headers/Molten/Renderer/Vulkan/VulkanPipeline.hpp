@@ -37,7 +37,7 @@ namespace Molten
     class VulkanShaderProgram;
 
 
-    class MOLTEN_API VulkanPipeline : public Pipeline
+    class MOLTEN_API VulkanPipeline final : public Pipeline
     {
 
     public:

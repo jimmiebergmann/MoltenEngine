@@ -34,7 +34,7 @@
 namespace Molten
 {
 
-    class MOLTEN_API VulkanIndexBuffer : public IndexBuffer
+    class MOLTEN_API VulkanIndexBuffer final : public IndexBuffer
     {
 
     public:

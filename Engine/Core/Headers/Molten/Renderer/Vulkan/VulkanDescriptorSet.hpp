@@ -35,7 +35,7 @@ namespace Molten
 {
 
     /** Vulkan descriptor set. */
-    class MOLTEN_API VulkanDescriptorSet : public DescriptorSet
+    class MOLTEN_API VulkanDescriptorSet final : public DescriptorSet
     {
 
     public:

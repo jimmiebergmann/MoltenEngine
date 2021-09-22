@@ -40,7 +40,7 @@ namespace Molten
     /**
     * @brief OpenGL renderer class for Win32.
     */
-    class MOLTEN_API OpenGLX11Renderer : public Renderer
+    class MOLTEN_API OpenGLX11Renderer final : public Renderer
     {
 
     public:

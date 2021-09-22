@@ -72,7 +72,7 @@ namespace Molten
 
 
     /** Vulkan Render pass. */
-    class MOLTEN_API VulkanRenderPass : public RenderPass
+    class MOLTEN_API VulkanRenderPass final : public RenderPass
     {
 
     public:

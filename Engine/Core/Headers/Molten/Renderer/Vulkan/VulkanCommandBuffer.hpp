@@ -45,7 +45,7 @@ namespace Molten
      
 
     /** Vulkan command buffer. */
-    class MOLTEN_API VulkanCommandBuffer : public CommandBuffer
+    class MOLTEN_API VulkanCommandBuffer final : public CommandBuffer
     {
 
     public:

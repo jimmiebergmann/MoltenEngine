@@ -34,7 +34,7 @@
 namespace Molten
 {
 
-    class MOLTEN_API VulkanVertexBuffer : public VertexBuffer
+    class MOLTEN_API VulkanVertexBuffer final : public VertexBuffer
     {
 
     public:

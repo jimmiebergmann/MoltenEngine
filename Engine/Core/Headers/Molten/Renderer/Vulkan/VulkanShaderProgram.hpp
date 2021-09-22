@@ -36,7 +36,7 @@
 namespace Molten
 {
 
-    class MOLTEN_API VulkanShaderProgram : public ShaderProgram
+    class MOLTEN_API VulkanShaderProgram final : public ShaderProgram
     {
 
     public:

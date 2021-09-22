@@ -54,7 +54,7 @@ namespace Molten
     /**
     * @brief Vulkan renderer class.
     */
-    class MOLTEN_API VulkanRenderer : public Renderer
+    class MOLTEN_API VulkanRenderer final : public Renderer
     {
 
     public:

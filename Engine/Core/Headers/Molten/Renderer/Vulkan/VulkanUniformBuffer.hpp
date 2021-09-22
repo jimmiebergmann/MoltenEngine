@@ -36,7 +36,7 @@ namespace Molten
 {
 
     /** Vulkan uniform buffer. */
-    class MOLTEN_API VulkanUniformBuffer : public UniformBuffer
+    class MOLTEN_API VulkanUniformBuffer final : public UniformBuffer
     {
 
     public:
@@ -52,7 +52,7 @@ namespace Molten
 
 
     /** Vulkan framed uniform buffer. */
-    class MOLTEN_API VulkanFramedUniformBuffer : public FramedUniformBuffer
+    class MOLTEN_API VulkanFramedUniformBuffer final : public FramedUniformBuffer
     {
 
     public:

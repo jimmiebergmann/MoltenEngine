@@ -35,7 +35,7 @@ namespace Molten
 {
 
     template<size_t VDimensions>
-    class VulkanSampler : public Sampler<VDimensions>
+    class VulkanSampler final : public Sampler<VDimensions>
     {
 
     public:

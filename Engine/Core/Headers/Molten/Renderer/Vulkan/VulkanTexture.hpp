@@ -37,7 +37,7 @@ namespace Molten
 {
 
     template<size_t VDimensions>
-    class VulkanTexture : public Texture<VDimensions>
+    class VulkanTexture final : public Texture<VDimensions>
     {
 
     public:
@@ -78,7 +78,7 @@ namespace Molten
 
 
     template<size_t VDimensions>
-    class VulkanFramedTexture : public FramedTexture<VDimensions>
+    class VulkanFramedTexture final : public FramedTexture<VDimensions>
     {
 
     public:
