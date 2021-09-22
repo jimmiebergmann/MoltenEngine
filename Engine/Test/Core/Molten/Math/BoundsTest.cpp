@@ -323,13 +323,13 @@ namespace Molten
         {
             Bounds2i32 bounds({ 30, 20 }, { -10, 40 });
             bounds.ClampHighToLow();
-            EXPECT_EQ(bounds, Bounds2i32({ -10, 20 }, { -10, 40 }));
+            EXPECT_EQ(bounds, Bounds2i32({ 30, 20 }, { 30, 40 }));
         }
         // Bounds 3
         {
             Bounds3i32 bounds({ 30, 20, 30 }, { -10, 40, 50 });
             bounds.ClampHighToLow();
-            EXPECT_EQ(bounds, Bounds3i32({ -10, 20, 40 }, { -10, 40, 50 }));
+            EXPECT_EQ(bounds, Bounds3i32({ 30, 20, 30 }, { 30, 40, 50 }));
         }
     }
 
