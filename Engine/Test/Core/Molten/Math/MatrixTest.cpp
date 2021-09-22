@@ -32,10 +32,10 @@ namespace Molten
     TEST(Math, Matrix_Typedefs)
     {
         {
-            EXPECT_TRUE((std::is_same<Matrix4x4i32::Type, int32_t>::value));
-            EXPECT_TRUE((std::is_same<Matrix4x4i64::Type, int64_t>::value));
-            EXPECT_TRUE((std::is_same<Matrix4x4f32::Type, float>::value));
-            EXPECT_TRUE((std::is_same<Matrix4x4f64::Type, double>::value));
+            EXPECT_TRUE((std::is_same_v<Matrix4x4i32::Type, int32_t>));
+            EXPECT_TRUE((std::is_same_v<Matrix4x4i64::Type, int64_t>));
+            EXPECT_TRUE((std::is_same_v<Matrix4x4f32::Type, float>));
+            EXPECT_TRUE((std::is_same_v<Matrix4x4f64::Type, double>));
         }
         {
             EXPECT_EQ(Matrix4x4<int32_t>::Rows, size_t{ 4 });

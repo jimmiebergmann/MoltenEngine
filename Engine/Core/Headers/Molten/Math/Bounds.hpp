@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -39,8 +39,8 @@ namespace Molten
 
     public:
 
-        static constexpr size_t Dimensions = VDimensions; //< Number of componenets.
-        using Type = T; //< Data type of vector components.
+        static constexpr size_t Dimensions = VDimensions; ///< Number of componenets.
+        using Type = T; ///< Data type of vector components.
 
         /** Constructor. lower and higher bounds components are initialized as 0. */
         constexpr Bounds();
@@ -49,6 +49,11 @@ namespace Molten
         constexpr Bounds(
             const Vector<VDimensions, T>& low,
             const Vector<VDimensions, T>& high);
+
+        constexpr Bounds(const Bounds&) = default;
+        constexpr Bounds(Bounds&&) = default;
+        constexpr Bounds& operator = (const Bounds&) = default;
+        constexpr Bounds& operator = (Bounds&&) = default;
 
         Vector<VDimensions, T> low;
         Vector<VDimensions, T> high;
@@ -62,8 +67,9 @@ namespace Molten
 
     public:
 
-        static constexpr size_t Dimensions = 2; //< Number of componenets.
-        using Type = T; //< Data type of vector components.
+        static constexpr size_t Dimensions = 2; ///< Number of componenets.
+        using Type = T; ///< Data type of vector components.
+
 
         /** Constructor. lower and higher bounds components are initialized as 0. */
         constexpr Bounds();
@@ -84,23 +90,26 @@ namespace Molten
         template<typename U>
         explicit constexpr Bounds(const Bounds<2, U>& bounds);
 
+
+        /** Creates a bounds objects that represent the union of two bounds. */
+        template<typename U1, typename U2>
+        [[nodiscard]] static constexpr Bounds<2, T> Union(const Bounds<2, U1>& first, const Bounds<2, U2>& second);
+
+
         /** Get size of bounds */
-        constexpr Vector<2, T> GetSize() const;
+        [[nodiscard]] constexpr Vector<2, T> GetSize() const;
 
         /** Checks if point is inside of bounds. */
-        constexpr bool Intersects(const Vector2<T>& point) const;
+        [[nodiscard]] constexpr bool Intersects(const Vector2<T>& point) const;
 
-        /** Returns a new bounds that represent the union of two(this and another) bounds. */
-        constexpr Bounds<2, T> Union(const Bounds<2, T>& bounds) const;
-
-        /** Move lower and highter value by a given distance. */
-        constexpr Bounds<2, T>& Move(const Vector2f32& distance);
+        /** Move lower and higher value by a given distance. */
+        constexpr Bounds<2, T>& Move(const Vector2<T>& distance);
 
         /** Creates bounds by growing current bounds by margins. */
-        constexpr Bounds<2, T> WithMargins(const Bounds<2, T>& margins) const;
+        [[nodiscard]] constexpr Bounds<2, T> WithMargins(const Bounds<2, T>& margins) const;
 
         /** Creates bounds by shrinking current bounds by margins. */
-        constexpr Bounds<2, T> WithoutMargins(const Bounds<2, T>& margins) const;
+        [[nodiscard]] constexpr Bounds<2, T> WithoutMargins(const Bounds<2, T>& margins) const;
 
         /** Adds margins to bounds and causing the bounds to grow. */
         constexpr Bounds<2, T>& AddMargins(const Bounds<2, T>& margins);
@@ -112,7 +121,7 @@ namespace Molten
         constexpr Bounds<2, T>& ClampHighToLow();
 
         /** Checks if area of bounds are < 0. */
-        constexpr bool IsEmpty() const;
+        [[nodiscard]] constexpr bool IsEmpty() const;
 
         /** Operators. */
         /**@{*/
@@ -150,8 +159,8 @@ namespace Molten
 
     public:
 
-        static constexpr size_t Dimensions = 3; //< Number of componenets.
-        using Type = T; //< Data type of vector components.
+        static constexpr size_t Dimensions = 3; ///< Number of componenets.
+        using Type = T; ///< Data type of vector components.
 
         /** Constructor. lower and higher bounds components are initialized as 0. */
         constexpr Bounds();
@@ -174,23 +183,38 @@ namespace Molten
         template<typename U>
         explicit constexpr Bounds(const Bounds<3, U>& bounds);
 
+
+        /** Creates a bounds objects that represent the union of two bounds. */
+        template<typename U1, typename U2>
+        [[nodiscard]] static constexpr Bounds<3, T> Union(const Bounds<3, U1>& first, const Bounds<3, U2>& second);
+
+
         /** Get size of bounds */
-        constexpr Vector<3, T> GetSize() const;
+        [[nodiscard]] constexpr Vector<3, T> GetSize() const;
 
         /** Checks if point is inside of bounds. */
-        constexpr bool Intersects(const Vector3<T>& point) const;
+        [[nodiscard]] constexpr bool Intersects(const Vector3<T>& point) const;
 
-        /** Returns a new bounds that represent the union of two(this and another) bounds. */
-        constexpr Bounds<3, T> Union(const Bounds<3, T>& bounds) const;
+        /** Move lower and higher value by a given distance. */
+        constexpr Bounds<3, T>& Move(const Vector3<T>& distance);
 
-        /** Move lower and highter value by a given distance. */
-        constexpr Bounds<3, T>& Move(const Vector3f32& distance);
+        /** Creates bounds by growing current bounds by margins. */
+        [[nodiscard]] constexpr Bounds<3, T> WithMargins(const Bounds<3, T>& margins) const;
+
+        /** Creates bounds by shrinking current bounds by margins. */
+        [[nodiscard]] constexpr Bounds<3, T> WithoutMargins(const Bounds<3, T>& margins) const;
+
+        /** Adds margins to bounds and causing the bounds to grow. */
+        constexpr Bounds<3, T>& AddMargins(const Bounds<3, T>& margins);
+
+        /** Removes margins from bounds and causing the bounds to shrink. */
+        constexpr Bounds<3, T>& RemoveMargins(const Bounds<3, T>& margins);
 
         /** Clamps high values to low values if high < low. */
         constexpr Bounds<3, T>& ClampHighToLow();
 
         /** Checks if area of bounds are < 0. */
-        constexpr bool IsEmpty() const;
+        [[nodiscard]] constexpr bool IsEmpty() const;
 
         /** Operators. */
         /**@{*/

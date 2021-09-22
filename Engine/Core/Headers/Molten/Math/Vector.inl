@@ -23,8 +23,6 @@
 *
 */
 
-#include <cmath>
-
 namespace Molten
 {
 
@@ -33,6 +31,24 @@ namespace Molten
     constexpr Vector<D, T>::Vector() :
         c{}
     {}
+
+    template<size_t D, typename T>
+    template<typename U, typename ... Us>
+    constexpr Vector<D, T>::Vector(const U element, const Us ... elements) :
+        c{ static_cast<T>(element), static_cast<T>(elements)... }
+    {}
+
+    template<size_t D, typename T>
+    bool Vector<D, T>::operator == (const Vector<D, T>& vector) const
+    {
+        return std::memcmp(c, vector.c, D) == 0;
+    }
+
+    template<size_t D, typename T>
+    bool Vector<D, T>::operator != (const Vector<D, T>& vector) const
+    {
+        return std::memcmp(c, vector.c, D) != 0;
+    }
 
     template<size_t D, typename T>
     T Vector<D, T>::operator[](const size_t index) const

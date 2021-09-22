@@ -29,36 +29,35 @@
 namespace Molten
 {
 
-    // Vector tests.
     TEST(Math, Vector_Typedefs)
     {
         {
-            EXPECT_TRUE((std::is_same<Vector<11, bool>::Type, bool>::value));
-            EXPECT_TRUE((std::is_same<Vector<11, float>::Type, float>::value));
+            EXPECT_TRUE((std::is_same_v<Vector<11, bool>::Type, bool>));
+            EXPECT_TRUE((std::is_same_v<Vector<11, float>::Type, float>));
 
-            EXPECT_TRUE((std::is_same<Vector2b::Type, bool>::value));
-            EXPECT_TRUE((std::is_same<Vector2i32::Type, int32_t>::value));
-            EXPECT_TRUE((std::is_same<Vector2ui32::Type, uint32_t>::value));
-            EXPECT_TRUE((std::is_same<Vector2i64::Type, int64_t>::value));
-            EXPECT_TRUE((std::is_same<Vector2ui64::Type, uint64_t>::value));
-            EXPECT_TRUE((std::is_same<Vector2f32::Type, float>::value));
-            EXPECT_TRUE((std::is_same<Vector2f64::Type, double>::value));
+            EXPECT_TRUE((std::is_same_v<Vector2b::Type, bool>));
+            EXPECT_TRUE((std::is_same_v<Vector2i32::Type, int32_t>));
+            EXPECT_TRUE((std::is_same_v<Vector2ui32::Type, uint32_t>));
+            EXPECT_TRUE((std::is_same_v<Vector2i64::Type, int64_t>));
+            EXPECT_TRUE((std::is_same_v<Vector2ui64::Type, uint64_t>));
+            EXPECT_TRUE((std::is_same_v<Vector2f32::Type, float>));
+            EXPECT_TRUE((std::is_same_v<Vector2f64::Type, double>));
 
-            EXPECT_TRUE((std::is_same<Vector3b::Type, bool>::value));
-            EXPECT_TRUE((std::is_same<Vector3i32::Type, int32_t>::value));
-            EXPECT_TRUE((std::is_same<Vector3ui32::Type, uint32_t>::value));
-            EXPECT_TRUE((std::is_same<Vector3i64::Type, int64_t>::value));
-            EXPECT_TRUE((std::is_same<Vector3ui64::Type, uint64_t>::value));
-            EXPECT_TRUE((std::is_same<Vector3f32::Type, float>::value));
-            EXPECT_TRUE((std::is_same<Vector3f64::Type, double>::value));
+            EXPECT_TRUE((std::is_same_v<Vector3b::Type, bool>));
+            EXPECT_TRUE((std::is_same_v<Vector3i32::Type, int32_t>));
+            EXPECT_TRUE((std::is_same_v<Vector3ui32::Type, uint32_t>));
+            EXPECT_TRUE((std::is_same_v<Vector3i64::Type, int64_t>));
+            EXPECT_TRUE((std::is_same_v<Vector3ui64::Type, uint64_t>));
+            EXPECT_TRUE((std::is_same_v<Vector3f32::Type, float>));
+            EXPECT_TRUE((std::is_same_v<Vector3f64::Type, double>));
 
-            EXPECT_TRUE((std::is_same<Vector4b::Type, bool>::value));
-            EXPECT_TRUE((std::is_same<Vector4i32::Type, int32_t>::value));
-            EXPECT_TRUE((std::is_same<Vector4ui32::Type, uint32_t>::value));
-            EXPECT_TRUE((std::is_same<Vector4i64::Type, int64_t>::value));
-            EXPECT_TRUE((std::is_same<Vector4ui64::Type, uint64_t>::value));
-            EXPECT_TRUE((std::is_same<Vector4f32::Type, float>::value));
-            EXPECT_TRUE((std::is_same<Vector4f64::Type, double>::value));
+            EXPECT_TRUE((std::is_same_v<Vector4b::Type, bool>));
+            EXPECT_TRUE((std::is_same_v<Vector4i32::Type, int32_t>));
+            EXPECT_TRUE((std::is_same_v<Vector4ui32::Type, uint32_t>));
+            EXPECT_TRUE((std::is_same_v<Vector4i64::Type, int64_t>));
+            EXPECT_TRUE((std::is_same_v<Vector4ui64::Type, uint64_t>));
+            EXPECT_TRUE((std::is_same_v<Vector4f32::Type, float>));
+            EXPECT_TRUE((std::is_same_v<Vector4f64::Type, double>));
         }
         {
             EXPECT_EQ((Vector<5, int32_t>::Dimensions), size_t{ 5 });
@@ -115,20 +114,31 @@ namespace Molten
 
     TEST(Math, VectorD)
     {
-        Vector<5, int32_t> vec5i;
-        EXPECT_EQ(vec5i.Dimensions, size_t{ 5 });
-        EXPECT_TRUE((std::is_same<Vector<5, int32_t>::Type, int32_t>::value));
-
-        for (size_t i = 0; i < Vector<5, int32_t>::Dimensions; i++)
         {
-            vec5i.c[i] = static_cast<int>(i);
-        }
+            Vector<5, int32_t> vec5i;
+            EXPECT_EQ(vec5i.Dimensions, size_t{ 5 });
+            EXPECT_TRUE((std::is_same_v<Vector<5, int32_t>::Type, int32_t>));
 
-        EXPECT_EQ(vec5i.c[0], int32_t{ 0 });
-        EXPECT_EQ(vec5i.c[1], int32_t{ 1 });
-        EXPECT_EQ(vec5i.c[2], int32_t{ 2 });
-        EXPECT_EQ(vec5i.c[3], int32_t{ 3 });
-        EXPECT_EQ(vec5i.c[4], int32_t{ 4 });
+            for (size_t i = 0; i < Vector<5, int32_t>::Dimensions; i++)
+            {
+                vec5i.c[i] = static_cast<int32_t>(i);
+            }
+
+            EXPECT_EQ(vec5i.c[0], int32_t{ 0 });
+            EXPECT_EQ(vec5i.c[1], int32_t{ 1 });
+            EXPECT_EQ(vec5i.c[2], int32_t{ 2 });
+            EXPECT_EQ(vec5i.c[3], int32_t{ 3 });
+            EXPECT_EQ(vec5i.c[4], int32_t{ 4 });
+        }
+        {
+            const Vector<6, int32_t> vec5i = { 2, 4, 5, 7, 8, 9 };
+            EXPECT_EQ(vec5i.c[0], int32_t{ 2 });
+            EXPECT_EQ(vec5i.c[1], int32_t{ 4 });
+            EXPECT_EQ(vec5i.c[2], int32_t{ 5 });
+            EXPECT_EQ(vec5i.c[3], int32_t{ 7 });
+            EXPECT_EQ(vec5i.c[4], int32_t{ 8 });
+            EXPECT_EQ(vec5i.c[5], int32_t{ 9 });
+        }
     }
 
 
@@ -138,7 +148,7 @@ namespace Molten
         {
             Vector<2, int32_t> vec2i;
             EXPECT_EQ(vec2i.Dimensions, size_t{ 2 });
-            EXPECT_TRUE((std::is_same<Vector<2, int32_t>::Type, int32_t>::value));
+            EXPECT_TRUE((std::is_same_v<Vector<2, int32_t>::Type, int32_t>));
         }
         {
             Vector<2, int32_t> vec2i(int32_t{ 100 });
@@ -273,8 +283,8 @@ namespace Molten
             EXPECT_EQ(vec2.y, int32_t{ 2 });
 
             const Vector2f32 vec3(vec2);
-            EXPECT_EQ(vec3.x, float{ 1.0f });
-            EXPECT_EQ(vec3.y, float{ 2.0f });
+            EXPECT_EQ(vec3.x, 1.0f);
+            EXPECT_EQ(vec3.y, 2.0f);
         }
         {
             const Vector2f32 vec1(1.5f, 2.5f);
@@ -285,8 +295,8 @@ namespace Molten
 
             Vector2f32 vec3;
             vec3 = vec2;
-            EXPECT_EQ(vec3.x, float{ 1.0f });
-            EXPECT_EQ(vec3.y, float{ 2.0f });
+            EXPECT_EQ(vec3.x, 1.0f);
+            EXPECT_EQ(vec3.y, 2.0f);
         }
     }
 
@@ -298,11 +308,11 @@ namespace Molten
         }
         {
             const Vector2f32 vec(50.0f, 0.0f);
-            EXPECT_NEAR(vec.Length(), float{ 50.0f }, 1e-5);
+            EXPECT_NEAR(vec.Length(), 50.0f, 1e-5f);
         }
         {
             const Vector2f32 vec(0.0f, -60.0f);
-            EXPECT_NEAR(vec.Length(), float{ 60.0f }, 1e-5);
+            EXPECT_NEAR(vec.Length(), 60.0f, 1e-5f);
         }
     }
     TEST(Math, Vector2_Normal)
@@ -390,23 +400,23 @@ namespace Molten
         {
             const Vector2f32 vec1(1.0f, 0.0f);
             const Vector2f32 vec2(1.0f, 0.0f);
-            EXPECT_NEAR(vec1.Dot(vec2), float{ 1.0f }, 1e-3);
-            EXPECT_NEAR(vec1.Dot<double>(vec2), double{ 1.0 }, 1e-3);
+            EXPECT_NEAR(vec1.Dot(vec2), 1.0f, 1e-3f);
+            EXPECT_NEAR(vec1.Dot<double>(vec2), 1.0, 1e-3);
         }
         {
             const Vector2f32 vec1(1.0f, 0.0f);
             const Vector2f32 vec2(-1.0f, 0.0f);
-            EXPECT_NEAR(vec1.Dot(vec2), float{ -1.0f }, 1e-3);
-            EXPECT_NEAR(vec1.Dot<double>(vec2), double{ -1.0 }, 1e-3);
+            EXPECT_NEAR(vec1.Dot(vec2), -1.0f, 1e-3f);
+            EXPECT_NEAR(vec1.Dot<double>(vec2), -1.0, 1e-3);
         }
         {
             const Vector2f32 vec1(1.0f, 0.0f);
             const Vector2f32 vec2(0.0f, 1.0f);
             const Vector2f32 vec3(0.0f, -1.0f);
-            EXPECT_NEAR(vec1.Dot(vec2), float{ 0.0f }, 1e-3);
-            EXPECT_NEAR(vec1.Dot<double>(vec2), double{ 0.0 }, 1e-3);
-            EXPECT_NEAR(vec1.Dot(vec3), float{ 0.0f }, 1e-3);
-            EXPECT_NEAR(vec1.Dot<double>(vec3), double{ 0.0 }, 1e-3);
+            EXPECT_NEAR(vec1.Dot(vec2), 0.0f, 1e-3f);
+            EXPECT_NEAR(vec1.Dot<double>(vec2), 0.0, 1e-3);
+            EXPECT_NEAR(vec1.Dot(vec3), 0.0f, 1e-3f);
+            EXPECT_NEAR(vec1.Dot<double>(vec3), 0.0, 1e-3);
         }
     }
 
@@ -417,7 +427,7 @@ namespace Molten
         {
             Vector<3, int32_t> vec3i;
             EXPECT_EQ(vec3i.Dimensions, size_t{ 3 });
-            EXPECT_TRUE((std::is_same<Vector<3, int32_t>::Type, int32_t>::value));
+            EXPECT_TRUE((std::is_same_v<Vector<3, int32_t>::Type, int32_t>));
         }
         {
             Vector<3, int32_t> vec3i(int32_t{ 100 });
@@ -485,9 +495,9 @@ namespace Molten
             EXPECT_EQ(vec2.z, int32_t{ 3 });
 
             Vector3f32 vec3(vec2);
-            EXPECT_EQ(vec3.x, float{ 1.0f });
-            EXPECT_EQ(vec3.y, float{ 2.0f });
-            EXPECT_EQ(vec3.z, float{ 3.0f });
+            EXPECT_EQ(vec3.x, 1.0f);
+            EXPECT_EQ(vec3.y, 2.0f);
+            EXPECT_EQ(vec3.z, 3.0f);
         }
         {
             Vector3f32 vec1(1.5f, 2.5f, 3.5f);
@@ -499,9 +509,9 @@ namespace Molten
 
             Vector3f32 vec3;
             vec3 = Vector3f32{ vec2 };
-            EXPECT_EQ(vec3.x, float{ 1.0f });
-            EXPECT_EQ(vec3.y, float{ 2.0f });
-            EXPECT_EQ(vec3.z, float{ 3.0f });
+            EXPECT_EQ(vec3.x, 1.0f);
+            EXPECT_EQ(vec3.y, 2.0f);
+            EXPECT_EQ(vec3.z, 3.0f);
         }
     }
 
@@ -509,19 +519,19 @@ namespace Molten
     {
         {
             const Vector3f32 vec(1, 2, 3);
-            EXPECT_NEAR(vec.Length(), float(3.74165), 1e-3);
+            EXPECT_NEAR(vec.Length(), 3.74165f, 1e-3f);
         }
         {
             const Vector3f32 vec(50.0f, 0.0f, 0.0f);
-            EXPECT_NEAR(vec.Length(), float{ 50.0f }, 1e-5);
+            EXPECT_NEAR(vec.Length(), 50.0f, 1e-5f);
         }
         {
             const Vector3f32 vec(0.0f, -60.0f, 0.0f);
-            EXPECT_NEAR(vec.Length(), float{ 60.0f }, 1e-5);
+            EXPECT_NEAR(vec.Length(), 60.0f, 1e-5f);
         }
         {
             const Vector3f32 vec(0.0f, 0.0f, 125.0f);
-            EXPECT_NEAR(vec.Length(), float{ 125.0f }, 1e-5);
+            EXPECT_NEAR(vec.Length(), 125.0f, 1e-5f);
         }
     }
     TEST(Math, Vector3_Normal)
@@ -566,45 +576,45 @@ namespace Molten
             {
                 Vector3f64 vec1(100.0f, 0.0f, 0.0f);
                 vec1 = vec1.Normal();
-                EXPECT_NEAR(vec1.x, double{ 1.0 }, 1e-3);
-                EXPECT_NEAR(vec1.y, double{ 0.0 }, 1e-3);
-                EXPECT_NEAR(vec1.z, double{ 0.0 }, 1e-3);
+                EXPECT_NEAR(vec1.x, 1.0, 1e-3);
+                EXPECT_NEAR(vec1.y, 0.0, 1e-3);
+                EXPECT_NEAR(vec1.z, 0.0, 1e-3);
                 
                 Vector3f64 vec2(-200.0f, 0.0f, 0.0f);
                 vec2 = vec2.Normal();
-                EXPECT_NEAR(vec2.x, double{ -1.0 }, 1e-3);
-                EXPECT_NEAR(vec2.y, double{ 0.0 }, 1e-3);
-                EXPECT_NEAR(vec2.z, double{ 0.0 }, 1e-3);
+                EXPECT_NEAR(vec2.x, -1.0, 1e-3);
+                EXPECT_NEAR(vec2.y, 0.0, 1e-3);
+                EXPECT_NEAR(vec2.z, 0.0, 1e-3);
                 
                 Vector3f64 vec3(0.0f, 300.0f, 0.0f);
                 vec3 = vec3.Normal();
-                EXPECT_NEAR(vec3.x, double{ 0.0 }, 1e-3);
-                EXPECT_NEAR(vec3.y, double{ 1.0 }, 1e-3);
-                EXPECT_NEAR(vec3.z, double{ 0.0 }, 1e-3);
+                EXPECT_NEAR(vec3.x, 0.0, 1e-3);
+                EXPECT_NEAR(vec3.y, 1.0, 1e-3);
+                EXPECT_NEAR(vec3.z, 0.0, 1e-3);
                 
                 Vector3f64 vec4(0.0f, -400.0f, 0.0f);
                 vec4 = vec4.Normal();
-                EXPECT_NEAR(vec4.x, double{ 0.0 }, 1e-3);
-                EXPECT_NEAR(vec4.y, double{ -1.0 }, 1e-3);
-                EXPECT_NEAR(vec3.z, double{ 0.0 }, 1e-3);
+                EXPECT_NEAR(vec4.x, 0.0, 1e-3);
+                EXPECT_NEAR(vec4.y, -1.0, 1e-3);
+                EXPECT_NEAR(vec3.z, 0.0, 1e-3);
 
                 Vector3f64 vec5(0.0f, 0.0f, 500.0f);
                 vec5 = vec5.Normal();
-                EXPECT_NEAR(vec5.x, double{ 0.0 }, 1e-3);
-                EXPECT_NEAR(vec5.y, double{ 0.0 }, 1e-3);
-                EXPECT_NEAR(vec5.z, double{ 1.0 }, 1e-3);
+                EXPECT_NEAR(vec5.x, 0.0, 1e-3);
+                EXPECT_NEAR(vec5.y, 0.0, 1e-3);
+                EXPECT_NEAR(vec5.z, 1.0, 1e-3);
                 
                 Vector3f64 vec6(0.0f, 0.0f, -600.0f);
                 vec6 = vec6.Normal();
-                EXPECT_NEAR(vec6.x, double{ 0.0 }, 1e-3);
-                EXPECT_NEAR(vec6.y, double{ 0.0 }, 1e-3);
-                EXPECT_NEAR(vec6.z, double{ -1.0 }, 1e-3);
+                EXPECT_NEAR(vec6.x, 0.0, 1e-3);
+                EXPECT_NEAR(vec6.y, 0.0, 1e-3);
+                EXPECT_NEAR(vec6.z, -1.0, 1e-3);
 
                 Vector3f64 vec_zero(0.0f, 0.0f, 0.0f);
                 vec_zero = vec_zero.Normal();
-                EXPECT_NEAR(vec_zero.x, double{ 0.0 }, 1e-3);
-                EXPECT_NEAR(vec_zero.y, double{ 0.0 }, 1e-3);
-                EXPECT_NEAR(vec_zero.z, double{ 0.0 }, 1e-3);
+                EXPECT_NEAR(vec_zero.x, 0.0, 1e-3);
+                EXPECT_NEAR(vec_zero.y, 0.0, 1e-3);
+                EXPECT_NEAR(vec_zero.z, 0.0, 1e-3);
             }
         }
         {
@@ -646,23 +656,23 @@ namespace Molten
         {
             const Vector3f32 vec1(1.0f, 0.0f, 0.0f);
             const Vector3f32 vec2(1.0f, 0.0f, 0.0f);
-            EXPECT_NEAR(vec1.Dot(vec2), float{ 1.0f }, 1e-3);
-            EXPECT_NEAR(vec1.Dot<double>(vec2), double{ 1.0 }, 1e-3);
+            EXPECT_NEAR(vec1.Dot(vec2), 1.0f, 1e-3f);
+            EXPECT_NEAR(vec1.Dot<double>(vec2), 1.0, 1e-3);
         }
         {
             const Vector3f32 vec1(1.0f, 0.0f, 0.0f);
             const Vector3f32 vec2(-1.0f, 0.0f, 0.0f);
-            EXPECT_NEAR(vec1.Dot(vec2), float{ -1.0f }, 1e-3);
-            EXPECT_NEAR(vec1.Dot<double>(vec2), double{ -1.0 }, 1e-3);
+            EXPECT_NEAR(vec1.Dot(vec2), -1.0f, 1e-3f);
+            EXPECT_NEAR(vec1.Dot<double>(vec2), -1.0, 1e-3);
         }
         {
             const Vector3f32 vec1(1.0f, 0.0f, 0.0f);
             const Vector3f32 vec2(0.0f, 1.0f, 0.0f);
             const Vector3f32 vec3(0.0f, -1.0f, 0.0f);
-            EXPECT_NEAR(vec1.Dot(vec2), float{ 0.0f }, 1e-3);
-            EXPECT_NEAR(vec1.Dot<double>(vec2), double{ 0.0 }, 1e-3);
-            EXPECT_NEAR(vec1.Dot(vec3), float{ 0.0f }, 1e-3);
-            EXPECT_NEAR(vec1.Dot<double>(vec3), double{ 0.0 }, 1e-3);
+            EXPECT_NEAR(vec1.Dot(vec2), 0.0f, 1e-3f);
+            EXPECT_NEAR(vec1.Dot<double>(vec2), 0.0, 1e-3);
+            EXPECT_NEAR(vec1.Dot(vec3), 0.0f, 1e-3f);
+            EXPECT_NEAR(vec1.Dot<double>(vec3), 0.0, 1e-3);
         }
     }
 
@@ -673,18 +683,18 @@ namespace Molten
             const Vector3f32 vec2(100.0f, 200.0f, 300.0f);
             const Vector3f32 cross = vec1.Cross(vec2);
 
-            EXPECT_NEAR(cross.x, float{ 0.0f }, 1e-5);
-            EXPECT_NEAR(cross.y, float{ 0.0f }, 1e-5);
-            EXPECT_NEAR(cross.z, float{ 0.0f }, 1e-5);
+            EXPECT_NEAR(cross.x, 0.0f, 1e-5f);
+            EXPECT_NEAR(cross.y, 0.0f, 1e-5f);
+            EXPECT_NEAR(cross.z, 0.0f, 1e-5f);
         }
         {
             const Vector3f32 vec1(0.0f, 100.0f, 0.0f);
             const Vector3f32 vec2(0.0f, 0.0f, 200.0f);
             const Vector3f32 cross = vec1.Cross(vec2);
 
-            EXPECT_NEAR(cross.x, float(20000.0f), 1e-5);
-            EXPECT_NEAR(cross.y, float{ 0.0f }, 1e-5);
-            EXPECT_NEAR(cross.z, float{ 0.0f }, 1e-5);
+            EXPECT_NEAR(cross.x, 20000.0f, 1e-5f);
+            EXPECT_NEAR(cross.y, 0.0f, 1e-5f);
+            EXPECT_NEAR(cross.z, 0.0f, 1e-5f);
         }
     }
 }

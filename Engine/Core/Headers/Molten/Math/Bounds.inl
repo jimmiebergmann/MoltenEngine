@@ -76,6 +76,18 @@ namespace Molten
     {}
 
     template<typename T>
+    template<typename U1, typename U2>
+    constexpr Bounds<2, T> Bounds<2, T>::Union(const Bounds<2, U1>& first, const Bounds<2, U2>& second)
+    {
+        return {
+            std::min(static_cast<T>(first.left), static_cast<T>(second.left)),
+            std::min(static_cast<T>(first.top), static_cast<T>(second.top)),
+            std::max(static_cast<T>(first.right), static_cast<T>(second.right)),
+            std::max(static_cast<T>(first.bottom), static_cast<T>(second.bottom))
+        };
+    }
+
+    template<typename T>
     constexpr Vector<2, T> Bounds<2, T>::GetSize() const
     {
         return high - low;
@@ -90,18 +102,7 @@ namespace Molten
     }
 
     template<typename T>
-    constexpr Bounds<2, T> Bounds<2, T>::Union(const Bounds<2, T>& bounds) const
-    {
-        return {
-            std::max(low.x, bounds.low.x),
-            std::max(low.y, bounds.low.y),
-            std::min(high.x, bounds.high.x),
-            std::min(high.y, bounds.high.y)
-        };
-    }
-
-    template<typename T>
-    constexpr Bounds<2, T>& Bounds<2, T>::Move(const Vector2f32& distance)
+    constexpr Bounds<2, T>& Bounds<2, T>::Move(const Vector2<T>& distance)
     {
         low += distance;
         high += distance;
@@ -200,6 +201,20 @@ namespace Molten
     {}
 
     template<typename T>
+    template<typename U1, typename U2>
+    constexpr Bounds<3, T> Bounds<3, T>::Union(const Bounds<3, U1>& first, const Bounds<3, U2>& second)
+    {
+        return {
+            std::min(static_cast<T>(first.left), static_cast<T>(second.left)),
+            std::min(static_cast<T>(first.top), static_cast<T>(second.top)),
+            std::min(static_cast<T>(first.near), static_cast<T>(second.near)),
+            std::max(static_cast<T>(first.right), static_cast<T>(second.right)),
+            std::max(static_cast<T>(first.bottom), static_cast<T>(second.bottom)),
+            std::max(static_cast<T>(first.far), static_cast<T>(second.far))
+        };
+    }
+
+    template<typename T>
     constexpr Vector<3, T> Bounds<3, T>::GetSize() const
     {
         return high - low;
@@ -215,23 +230,38 @@ namespace Molten
     }
 
     template<typename T>
-    constexpr Bounds<3, T> Bounds<3, T>::Union(const Bounds<3, T>& bounds) const
-    {
-        return {
-            std::max(low.x, bounds.low.x),
-            std::max(low.y, bounds.low.y),
-            std::max(low.z, bounds.low.z),
-            std::min(high.x, bounds.high.x),
-            std::min(high.y, bounds.high.y),
-            std::min(high.z, bounds.high.z)
-        };
-    }
-
-    template<typename T>
-    constexpr Bounds<3, T>& Bounds<3, T>::Move(const Vector3f32& distance)
+    constexpr Bounds<3, T>& Bounds<3, T>::Move(const Vector3<T>& distance)
     {
         low += distance;
         high += distance;
+        return *this;
+    }
+
+    template<typename T>
+    constexpr Bounds<3, T> Bounds<3, T>::WithMargins(const Bounds<3, T>& margins) const
+    {
+        return { low - margins.low, high + margins.high };
+    }
+
+    template<typename T>
+    constexpr Bounds<3, T> Bounds<3, T>::WithoutMargins(const Bounds<3, T>& margins) const
+    {
+        return { low + margins.low, high - margins.high };
+    }
+
+    template<typename T>
+    constexpr Bounds<3, T>& Bounds<3, T>::AddMargins(const Bounds<3, T>& margins)
+    {
+        low -= margins.low;
+        high += margins.high;
+        return *this;
+    }
+
+    template<typename T>
+    constexpr Bounds<3, T>& Bounds<3, T>::RemoveMargins(const Bounds<3, T>& margins)
+    {
+        low += margins.low;
+        high -= margins.high;
         return *this;
     }
 

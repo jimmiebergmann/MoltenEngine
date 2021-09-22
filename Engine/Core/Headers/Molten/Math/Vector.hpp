@@ -27,6 +27,8 @@
 #define MOLTEN_CORE_MATH_VECTOR_HPP
 
 #include "Molten/Types.hpp"
+#include <cmath>
+#include <cstring>
 
 namespace Molten
 {
@@ -43,6 +45,22 @@ namespace Molten
 
         /** Constructor. Vector's components are uninitialized. */
         constexpr Vector();
+
+        /**Constructor. Vector's components are initialized by initializer list. */
+        template<typename U, typename ... Us>
+        constexpr explicit Vector(const U element, const Us ... elements);
+
+        constexpr Vector(const Vector&) = default;
+        constexpr Vector(Vector&&) = default;
+        constexpr Vector& operator = (const Vector&) = default;
+        constexpr Vector& operator = (Vector&&) = default;
+
+        /** Comparison operators. */
+        /**@{*/
+        bool operator == (const Vector<D, T>& vector) const;
+
+        bool operator != (const Vector<D, T>& vector) const;
+        /**@}*/
 
         /** Access vector component by index. */
         T operator[](const size_t index) const;
