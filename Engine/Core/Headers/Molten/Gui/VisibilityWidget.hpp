@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,47 +23,47 @@
 *
 */
 
-#ifndef MOLTEN_CORE_GUI_RENDEROBJECT_HPP
-#define MOLTEN_CORE_GUI_RENDEROBJECT_HPP
+#ifndef MOLTEN_CORE_GUI_VISIBILITYWIDGET_HPP
+#define MOLTEN_CORE_GUI_VISIBILITYWIDGET_HPP
 
-//#include "Molten/Math/Vector.hpp"
-//#include <memory>
-
+#include "Molten/Math/Bounds.hpp"
+#include "Molten/System/Signal.hpp"
 
 namespace Molten::Gui
 {
-        
-    /*class Renderer;
 
-    class MOLTEN_API RenderObject
+    template<typename TTheme> class Layer;
+
+    class MOLTEN_API VisibilityWidget
     {
 
     public:
 
-        explicit RenderObject(Renderer* renderer);
+        Signal<> onIsVisible;
+        Signal<> onShow;
+        Signal<> onHide;
 
-        ~RenderObject();
+        VisibilityWidget();
+        virtual ~VisibilityWidget() = default;
 
-        void Draw();
+        VisibilityWidget(const VisibilityWidget&) = delete;
+        VisibilityWidget(VisibilityWidget&&) = delete;
+        VisibilityWidget& operator = (const VisibilityWidget&) = delete;
+        VisibilityWidget& operator = (VisibilityWidget&&) = delete;
 
-        void AddRect(const Vector2f32& relativePosition, const Vector2f32& size);
+        [[nodiscard]] bool IsVisible() const;
 
-        const Vector2f32& GetPosition() const;
-        void SetPosition(const Vector2f32& position);
+    protected:
+
+        void Update(const Bounds2f32& bounds = { 0.0f, 0.0f, 1.0f, 1.0f });
 
     private:
 
-        struct SubObject
-        {
-            Vector2f32 position;
-            Vector2f32 size;
-        };
+        template<typename TTheme> friend class Layer;
 
-        Renderer* m_renderer;
-        Vector2f32 m_position;
-        std::vector<SubObject> m_objects;
+        bool m_isVisible;
 
-    };*/
+    };
 
 }
 

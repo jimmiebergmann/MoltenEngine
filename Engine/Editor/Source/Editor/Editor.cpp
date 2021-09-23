@@ -184,7 +184,6 @@ namespace Molten::Editor
             }
         };
 
-
         return true;
     }
 
@@ -250,7 +249,6 @@ namespace Molten::Editor
         {
             OnSceneViewportResize(viewport, size);
         });
-
         sceneViewport->onIsVisible.Connect([&]()
         {
             m_renderPasses.push_back(m_viewportRenderPass);
@@ -267,7 +265,6 @@ namespace Molten::Editor
             Logger::WriteInfo(m_logger.get(), "You pressed me!");
         });
         button->CreateChild<Gui::Label>("Click me!", 18);
-    
 
         return true;
     }

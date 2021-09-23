@@ -33,7 +33,7 @@ namespace Molten
     {
         // Bounds 6
         {
-            const Vector<6, int32_t> low = Vector<6, int32_t>{ 1, 2, 3, 4, 5, 6 };
+            const Vector<6, int32_t> low = { 1, 2, 3, 4, 5, 6 };
             const Vector<6, int32_t> high = Vector<6, int32_t>{ -1, -2, -3, -4, -5, -6 };
             const Bounds<6, int32_t> bounds = Bounds<6, int32_t>{ low, high };
 

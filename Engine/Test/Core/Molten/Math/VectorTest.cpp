@@ -131,7 +131,7 @@ namespace Molten
             EXPECT_EQ(vec5i.c[4], int32_t{ 4 });
         }
         {
-            const Vector<6, int32_t> vec5i = { 2, 4, 5, 7, 8, 9 };
+            const Vector<6, int32_t> vec5i(2, 4, 5, 7, 8, 9);
             EXPECT_EQ(vec5i.c[0], int32_t{ 2 });
             EXPECT_EQ(vec5i.c[1], int32_t{ 4 });
             EXPECT_EQ(vec5i.c[2], int32_t{ 5 });

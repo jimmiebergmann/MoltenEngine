@@ -39,15 +39,12 @@ namespace Molten::Gui
         const auto contentBounds = this->GetGrantedBounds().WithoutMargins(this->padding).ClampHighToLow();
         const auto contentSize = contentBounds.GetSize();
 
+        VisibilityWidget::Update(contentBounds);
+
         if(contentSize != m_prevSize)
         {
             m_prevSize = contentSize;
             onResize(contentSize);
-        }
-
-        if(contentSize.x != 0.0f && contentSize.y != 0.0f)
-        {
-            onIsVisible();
         }
     }
 

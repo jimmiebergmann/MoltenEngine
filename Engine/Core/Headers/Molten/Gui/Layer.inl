@@ -182,7 +182,8 @@ namespace Molten::Gui
         m_theme(theme),
         m_data(data),
         m_size(0.0f, 0.0f),
-        m_scale(1.0f, 1.0f)
+        m_scale(1.0f, 1.0f),
+        m_currentVisibleWidgetsContainer(&m_visibleWidgets[0])
     {}
 
     template<typename TTheme>
@@ -218,6 +219,8 @@ namespace Molten::Gui
         {
             widgetData->GetWidget()->Update();
         });
+
+        VisibilityUpdate();
     }
 
     template<typename TTheme>
@@ -226,7 +229,6 @@ namespace Molten::Gui
         m_widgetTree.template ForEachPreorder<typename WidgetData<TTheme>::TreePartialLaneType>(
             [&](auto& widgetData)
         {
-            //renderer.MaskArea(renderData.position, renderData.size);
             widgetData->GetWidgetSkin()->Draw();
         });
     }
@@ -354,6 +356,11 @@ namespace Molten::Gui
             parentWidgetData.GetWidget()->OnAddChild(*widgetDataMixinPointer);
         }
 
+        if constexpr(std::is_base_of_v<VisibilityWidget, TWidget<TTheme>>)
+        {
+            m_visibilityWidgets.push_back(widgetPointer);
+        }
+
         return widgetPointer;
     }
 
@@ -419,6 +426,41 @@ namespace Molten::Gui
         {
             return nullptr;
         }
+    }
+
+    template<typename TTheme>
+    void Layer<TTheme>::VisibilityUpdate()
+    {
+        auto* nextVisibilityWidgetsContainer = m_currentVisibleWidgetsContainer == &m_visibleWidgets[0] ?
+            &m_visibleWidgets[1] : &m_visibleWidgets[0];
+
+        for (auto* visibilityWidget : m_visibilityWidgets)
+        {
+            if (visibilityWidget->m_isVisible)
+            {
+                nextVisibilityWidgetsContainer->push_back(visibilityWidget);
+
+                const auto it = std::find(m_currentVisibleWidgetsContainer->begin(), m_currentVisibleWidgetsContainer->end(), visibilityWidget);
+                if (it == m_currentVisibleWidgetsContainer->end())
+                {
+                    visibilityWidget->onShow();
+                }
+
+                visibilityWidget->onIsVisible();
+            }
+            else
+            {
+                const auto it = std::find(m_currentVisibleWidgetsContainer->begin(), m_currentVisibleWidgetsContainer->end(), visibilityWidget);
+                if (it != m_currentVisibleWidgetsContainer->end())
+                {
+                    visibilityWidget->onHide();
+                }
+            }
+        }
+
+        m_currentVisibleWidgetsContainer->clear();
+        m_currentVisibleWidgetsContainer = m_currentVisibleWidgetsContainer == &m_visibleWidgets[0] ?
+            &m_visibleWidgets[1] : &m_visibleWidgets[0];
     }
 
     template<typename TTheme>

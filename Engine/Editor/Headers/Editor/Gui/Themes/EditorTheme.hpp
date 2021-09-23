@@ -258,7 +258,7 @@ namespace Molten::Gui
 
         void Draw() override
         {
-            if (!m_framedTexture.framedTexture)
+            if (!m_framedTexture.framedTexture || !widget.IsVisible())
             {
                 return;
             }

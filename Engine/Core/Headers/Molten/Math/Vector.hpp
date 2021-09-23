@@ -48,7 +48,7 @@ namespace Molten
 
         /**Constructor. Vector's components are initialized by initializer list. */
         template<typename U, typename ... Us>
-        constexpr explicit Vector(const U element, const Us ... elements);
+        constexpr Vector(const U element, const Us ... elements);
 
         constexpr Vector(const Vector&) = default;
         constexpr Vector(Vector&&) = default;

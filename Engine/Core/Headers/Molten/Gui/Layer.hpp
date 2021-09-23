@@ -28,6 +28,7 @@
 
 #include "Molten/Gui/LayerData.hpp"
 #include "Molten/Gui/WidgetData.hpp"
+#include "Molten/Gui/VisibilityWidget.hpp"
 #include "Molten/Math/Vector.hpp"
 #include "Molten/System/Time.hpp"
 #include "Molten/System/UserInput.hpp"
@@ -147,21 +148,29 @@ namespace Molten::Gui
             TWidget<TTheme>* child,
             Widget<TTheme>* parent);
 
-        bool HandleMouseMoveEvent(
+        void VisibilityUpdate();
+
+        [[nodiscard]] bool HandleMouseMoveEvent(
             const UserInput::MouseMoveEvent& mouseMoveEvent,
             MultiLayerRepository<TTheme>& multiLayerRepository);
-        bool HandleMouseButtonPressedEvent(
+        [[nodiscard]] bool HandleMouseButtonPressedEvent(
             const UserInput::MouseButtonEvent& mouseButtonEvent,
             MultiLayerRepository<TTheme>& multiLayerRepository);
-        bool HandleMouseButtonReleasedEvent(
+        [[nodiscard]] bool HandleMouseButtonReleasedEvent(
             const UserInput::MouseButtonEvent& mouseButtonEvent,
             MultiLayerRepository<TTheme>& multiLayerRepository);
+
+        using VisibilityWidgetPointers = std::vector<VisibilityWidget*>;
 
         TTheme& m_theme;
         LayerData<TTheme>& m_data;       
         typename WidgetData<TTheme>::Tree m_widgetTree;
         Vector2f32 m_size;
         Vector2f32 m_scale;
+
+        VisibilityWidgetPointers m_visibilityWidgets;
+        std::array<VisibilityWidgetPointers, 2> m_visibleWidgets;
+        VisibilityWidgetPointers* m_currentVisibleWidgetsContainer;
 
     };
 

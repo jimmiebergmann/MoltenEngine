@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -22,42 +22,24 @@
 * SOFTWARE.
 *
 */
-/*
-#include "Molten/Gui/RenderObject.hpp"
-#include "Molten/Gui/GuiRenderer.hpp"
-*/
+
+#include "Molten/Gui/VisibilityWidget.hpp"
+
 namespace Molten::Gui
 {
 
-    /*RenderObject::RenderObject(Renderer * renderer) :
-        m_renderer(renderer)
-    { }
+    VisibilityWidget::VisibilityWidget() :
+        m_isVisible(false)
+    {}
 
-    RenderObject::~RenderObject()
+    bool VisibilityWidget::IsVisible() const
     {
+        return m_isVisible;
     }
 
-    void RenderObject::Draw()
+    void VisibilityWidget::Update(const Bounds2f32& bounds)
     {
-        for (auto& object : m_objects)
-        {
-            m_renderer->DrawRect(m_position + object.position, object.size, Vector4f32(1.0f, 0.0f, 0.0f, 1.0f));
-        }
+        m_isVisible = !bounds.IsEmpty();
     }
-
-    void RenderObject::AddRect(const Vector2f32& relativePosition, const Vector2f32& size)
-    {
-        m_objects.push_back({ relativePosition , size});
-    }
-
-    const Vector2f32& RenderObject::GetPosition() const
-    {
-        return m_position;
-    }
-
-    void RenderObject::SetPosition(const Vector2f32& position)
-    {
-        m_position = position;
-    }*/
 
 }

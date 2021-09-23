@@ -28,6 +28,7 @@
 
 #include "Molten/Gui/Widget.hpp"
 #include "Molten/Gui/WidgetEvent.hpp"
+#include "Molten/Gui/VisibilityWidget.hpp"
 #include "Molten/System/Signal.hpp"
 #include "Molten/Renderer/RenderResource.hpp"
 #include "Molten/Renderer/Texture.hpp"
@@ -37,7 +38,7 @@ namespace Molten::Gui
 {
 
     template<typename TTheme>
-    class Viewport : public WidgetMixin<TTheme, Viewport>, public WidgetMouseEventHandler
+    class Viewport : public WidgetMixin<TTheme, Viewport>, public WidgetMouseEventHandler, public VisibilityWidget
     {
 
     public:
@@ -48,7 +49,6 @@ namespace Molten::Gui
         static constexpr bool handleMouseEvents = true;
 
         Signal<Vector2ui32> onResize;
-        Signal<> onIsVisible;
 
         struct State
         {
