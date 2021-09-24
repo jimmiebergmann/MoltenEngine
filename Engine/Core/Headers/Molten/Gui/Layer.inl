@@ -459,8 +459,7 @@ namespace Molten::Gui
         }
 
         m_currentVisibleWidgetsContainer->clear();
-        m_currentVisibleWidgetsContainer = m_currentVisibleWidgetsContainer == &m_visibleWidgets[0] ?
-            &m_visibleWidgets[1] : &m_visibleWidgets[0];
+        m_currentVisibleWidgetsContainer = nextVisibilityWidgetsContainer;
     }
 
     template<typename TTheme>

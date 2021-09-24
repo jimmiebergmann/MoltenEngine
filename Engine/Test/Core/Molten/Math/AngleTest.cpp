@@ -82,6 +82,14 @@ namespace Molten
     {
         {
             {
+                const Angle angle = Degrees(-1000).Normal();
+                EXPECT_NEAR(angle.AsDegrees<double>(), 80.0, 1e-08);
+            }
+            {
+                const Angle angle = Degrees(-360).Normal();
+                EXPECT_NEAR(angle.AsDegrees<double>(), 0.0, 1e-08);
+            }
+            {
                 const Angle angle = Degrees(0).Normal();
                 EXPECT_NEAR(angle.AsDegrees<double>(), 0.0, 1e-08);
             }
@@ -103,6 +111,16 @@ namespace Molten
             }
         }
         {
+            {
+                Angle angle = Degrees(-1000);
+                angle.Normalize();
+                EXPECT_NEAR(angle.AsDegrees<double>(), 80.0, 1e-08);
+            }
+            {
+                Angle angle = Degrees(-360);
+                angle.Normalize();
+                EXPECT_NEAR(angle.AsDegrees<double>(), 0.0, 1e-08);
+            }
             {
                 Angle angle = Degrees(0);
                 angle.Normalize();

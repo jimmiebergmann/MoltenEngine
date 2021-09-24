@@ -31,6 +31,22 @@ namespace Molten
 
     TEST(Math, Bounds_Constructor)
     {
+        // Empty construction.
+        {
+            Bounds<2, int32_t> bounds1;
+            EXPECT_TRUE(bounds1.IsEmpty());
+            EXPECT_EQ(bounds1.low, Vector2i32(0, 0));
+            EXPECT_EQ(bounds1.high, Vector2i32(0, 0));
+
+            Bounds<3, int32_t> bounds2;
+            EXPECT_TRUE(bounds2.IsEmpty());
+            EXPECT_EQ(bounds2.low, Vector3i32(0, 0, 0));
+            EXPECT_EQ(bounds2.high, Vector3i32(0, 0, 0));
+
+            Bounds<6, int32_t> bounds3;
+            EXPECT_EQ(bounds3.low, (Vector<6, int32_t>(0, 0, 0, 0, 0, 0)));
+            EXPECT_EQ(bounds3.high, (Vector<6, int32_t>(0, 0, 0, 0, 0, 0)));
+        }
         // Bounds 6
         {
             const Vector<6, int32_t> low = { 1, 2, 3, 4, 5, 6 };
