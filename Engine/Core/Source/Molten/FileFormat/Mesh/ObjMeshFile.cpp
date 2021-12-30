@@ -42,20 +42,18 @@ namespace Molten
     template<typename T>
     static bool ParseVector(std::string_view lineView, T& value)
     {
-        auto currentLineView = lineView;
-
         size_t index = 0;
-        while (!currentLineView.empty())
+        while (!lineView.empty())
         {
             if(index > T::Dimensions)
             {
                 return false;
             }
 
-            StringUtility::TrimFront(currentLineView);
-            const auto end = currentLineView.find_first_of(" \t");
-            auto element = currentLineView.substr(0, end);
-            currentLineView = std::string_view{ currentLineView.data() + element.size(), currentLineView.size() - element.size() };
+            StringUtility::TrimFront(lineView);
+            const auto end = lineView.find_first_of(" \t");
+            auto element = lineView.substr(0, end);
+            lineView = lineView.substr(element.size());
 
             if(std::from_chars(element.data(), element.data() + element.size(), value.c[index]).ec != std::errc())
             {
@@ -68,7 +66,7 @@ namespace Molten
     }
 
 
-    // Trianble implementations.
+    // Triangle implementations.
     ObjMeshFile::Triangle::Triangle() :
         vertexIndices{ std::numeric_limits<uint32_t>::max(), std::numeric_limits<uint32_t>::max(), std::numeric_limits<uint32_t>::max() },
         textureCoordinateIndices{ std::numeric_limits<uint32_t>::max(), std::numeric_limits<uint32_t>::max(), std::numeric_limits<uint32_t>::max() },
@@ -224,6 +222,8 @@ namespace Molten
         BufferedFileLineReader lineReader(file, 2048, 1048576);
         BufferedFileLineReader::LineReadResult readResult = BufferedFileLineReader::LineReadResult::Successful;
 
+        onProgress(0.0);
+
         while(readResult == BufferedFileLineReader::LineReadResult::Successful)
         {
             std::string_view line;
@@ -264,7 +264,6 @@ namespace Molten
                 } break;
                 case 'o': // Object
                 {
-
                     if (!IsWhitespace(1, line))
                     {
                         return createMissingCommandDataError();
@@ -272,6 +271,10 @@ namespace Molten
 
                     if (!currentObjectBuffer->commands.empty())
                     {
+                        const auto progress = (1.0 - (static_cast<double>(lineReader.GetSizeLeft()) / static_cast<double>(lineReader.GetStreamSize()))) * 100.0;
+                        onProgress(progress);
+
+
                         // Send current line buffer to new thread and process object lines.
                         if (auto result = ExecuteProcessObject(currentObjectBuffer); !result)
                         {
@@ -400,7 +403,7 @@ namespace Molten
             return result;
         }
 
-        // Parse filenames.
+        // Parse file names.
         auto lineView = std::string_view{ materialCommand.line.data() + 7, materialCommand.line.size() - 7 };
         StringUtility::TrimFront(lineView);
 
@@ -567,12 +570,7 @@ namespace Molten
                 {
                     StringUtility::TrimFront(lineView);
 
-                    auto it = std::find_if(lineView.begin(), lineView.end(), [](auto& c)
-                    {
-                        return !std::isdigit(c);
-                    });
-
-                    const size_t endPos = it == lineView.end() ? std::string_view::npos : it - lineView.begin();
+                    const size_t endPos = lineView.find_first_of(" /\t");
 
                     auto element = lineView.substr(0, endPos);
                     lineView = std::string_view{ lineView.data() + element.size(), lineView.size() - element.size() };

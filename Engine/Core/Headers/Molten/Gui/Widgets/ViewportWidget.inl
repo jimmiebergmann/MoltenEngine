@@ -26,22 +26,26 @@
 namespace Molten::Gui
 {
     template<typename TTheme>
-    Viewport<TTheme>::Viewport(WidgetDataMixin<TTheme, Viewport>& data) :
-        WidgetMixin<TTheme, Viewport>(data),
+    Viewport<TTheme>::Viewport(WidgetMixinDescriptor<TTheme, Viewport>& desc) :
+        WidgetMixin<TTheme, Viewport>(desc),
+        VisibilityWidget(desc.visibilityTracker),
         m_prevSize{ 0.0f, 0.0f }
     {}
 
     template<typename TTheme>
-    void Viewport<TTheme>::Update()
+    void Viewport<TTheme>::PreUpdate()
     {
-        this->ApplyMarginsToGrantedBounds();
+        this->PreCalculateBounds();
+    }
 
-        const auto contentBounds = this->GetGrantedBounds().WithoutMargins(this->padding).ClampHighToLow();
-        const auto contentSize = contentBounds.GetSize();
+    template<typename TTheme>
+    void Viewport<TTheme>::PostUpdate()
+    {
+        const auto contentSize = this->GetBounds().size;
 
-        VisibilityWidget::Update(contentBounds);
+        VisibilityWidget::PostUpdate(contentSize);
 
-        if(contentSize != m_prevSize)
+        if (contentSize != m_prevSize)
         {
             m_prevSize = contentSize;
             onResize(contentSize);
@@ -49,15 +53,15 @@ namespace Molten::Gui
     }
 
     template<typename TTheme>
-    bool Viewport<TTheme>::OnMouseEvent(const WidgetMouseEvent&)
-    {
-        return false;
-    }
-
-    template<typename TTheme>
     void Viewport<TTheme>::SetTexture(SharedRenderResource<FramedTexture2D> framedTexture)
     {
         Mixin::SetSkinState(State{ std::move(framedTexture) });
+    }
+
+    template<typename TTheme>
+    bool Viewport<TTheme>::OnMouseEvent(const WidgetMouseEvent&)
+    {
+        return false;
     }
 
 }

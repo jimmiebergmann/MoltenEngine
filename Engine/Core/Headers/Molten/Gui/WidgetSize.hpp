@@ -27,36 +27,46 @@
 #define MOLTEN_CORE_GUI_WIDGETSIZE_HPP
 
 #include "Molten/Math/Vector.hpp"
+#include <variant>
+
+namespace Molten::Gui::Size
+{
+
+    /** Fixed size in pixels. DPI affects scale of pixel value. */
+    struct Pixels
+    {
+        float value;
+
+        bool operator == (const Pixels& rhs) const;
+        bool operator != (const Pixels& rhs) const;
+    };
+
+    /** Fixed size in percent of available space from parent. */
+    struct Percent
+    {
+        float value;
+
+        bool operator == (const Percent& rhs) const;
+        bool operator != (const Percent& rhs) const;
+    };
+
+    /** Fit size to child elements. */
+    enum class Fit
+    {
+        Parent,
+        Content
+    };
+
+}
 
 namespace Molten::Gui
 {
 
-    enum class WidgetSizeType
-    {
-        Fixed,
-        Fit,
-        Occupy
-    };
+    /** Variant of single size element of XY coordinate system. */
+    using WidgetElementSize = std::variant<Size::Pixels, Size::Percent, Size::Fit>;
 
-    class WidgetSize
-    {
-
-    public:
-
-        using ValueType = Vector2f32;
-
-        constexpr WidgetSize();
-        ~WidgetSize() = default;
-        constexpr explicit WidgetSize(const ValueType& value);
-        constexpr WidgetSize(const float x, const float y);
-        constexpr explicit WidgetSize(const WidgetSizeType type, const ValueType& value = {});
-
-        ValueType CalculateValue(const ValueType& fitSize, const ValueType& occupySize) const;
-
-        WidgetSizeType type;
-        ValueType value;
-
-    };
+    /** Vector of size variants. It is possible to mix size variants for X and Y coordinates. */
+    using WidgetSize = Vector2<WidgetElementSize>;
 
 }
 

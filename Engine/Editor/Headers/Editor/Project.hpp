@@ -32,12 +32,24 @@ namespace MoltenEditor
     /**
     * @brief Editor project class.
     */
+    template<typename TTarget>
     class Project
     {
 
     public:
 
-        Project();
+        Project() = default;
+        ~Project() = default;
+
+        Project(const Project&) = delete;
+        Project(Project&&) = delete;
+        Project& operator = (const Project&) = delete;
+        Project& operator = (Project&&) = delete;
+
+    private:
+
+
+
 
     };
 

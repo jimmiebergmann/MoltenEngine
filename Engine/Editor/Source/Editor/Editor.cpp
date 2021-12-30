@@ -30,14 +30,13 @@
 #include "Molten/Gui/CanvasRenderer.hpp"
 #include "Molten/Gui/Layers/SingleRootLayer.hpp"
 #include "Molten/Gui/Widgets/ButtonWidget.hpp"
-#include "Molten/Gui/Widgets/PaddingWidget.hpp"
-#include "Molten/Gui/Widgets/VerticalGridWidget.hpp"
-//#include "Molten/Gui/Widgets/SpacerWidget.hpp"
+#include "Molten/Gui/Widgets/GridWidget.hpp"
 #include "Molten/Gui/Widgets/PaneWidget.hpp"
 #include "Molten/Gui/Widgets/DockerWidget.hpp"
 #include "Molten/Gui/Widgets/LabelWidget.hpp"
 #include "Molten/Gui/Widgets/ViewportWidget.hpp"
 
+#include "Molten/FileFormat/Mesh/ObjMeshFile.hpp"
 
 namespace Molten::Editor
 {
@@ -47,7 +46,8 @@ namespace Molten::Editor
         m_isRunning(false),
         m_cancellationSemaphore(cancellationSemaphore),
         m_windowTitle("Molten Editor"),
-        m_fpsTracker(8)
+        m_fpsTracker(8),
+        m_threadPool(0, 2, 0)
     {}
 
     Editor::~Editor()
@@ -129,7 +129,7 @@ namespace Molten::Editor
     bool Editor::LoadWindow(const EditorDescriptor&)
     {
         WindowDescriptor windowDescriptor;
-        windowDescriptor.size = { 800, 600 };
+        windowDescriptor.size = { 1600, 1200 };
         windowDescriptor.title = m_windowTitle;
         windowDescriptor.enableDragAndDrop = true;
         windowDescriptor.logger = m_logger.get();
@@ -157,31 +157,74 @@ namespace Molten::Editor
         });
 
 
-        m_window->OnFilesDropEnter = [&](std::vector<std::filesystem::path>& files) -> bool
+        m_window->OnFilesDropEnter = [&](const std::vector<std::filesystem::path>& files) -> bool
         {
-            Logger::WriteInfo(m_logger.get(), "Drag and drop: Entering files:");
-            for (const auto& file : files)
+            if(files.size() != 1)
             {
-                Logger::WriteInfo(m_logger.get(), "   " + file.string());
+                return false;
             }
+
+            const auto& file = files.front();
+            if(file.extension() != ".obj")
+            {
+                return false;
+            }
+
+            Logger::WriteInfo(m_logger.get(), "Dragging obj file: " + file.string());
 
             return true;
         };
-        m_window->OnFilesDropMove = [&](const Vector2i32& position)
+        m_window->OnFilesDrop = [&](const std::vector<std::filesystem::path>& files)
         {
-            Logger::WriteInfo(m_logger.get(), "Drag and drop: Move: " + std::to_string(position.x) + ", " + std::to_string(position.y));
-        };
-        m_window->OnFilesDropLeave = [&]()
-        {
-            Logger::WriteInfo(m_logger.get(), "Drag and drop: Leave.");
-        };
-        m_window->OnFilesDrop = [&](std::vector<std::filesystem::path>& files)
-        {
-            Logger::WriteInfo(m_logger.get(), "Drag and drop: Dropping files:");
-            for(const auto& file : files)
+            if (files.size() != 1)
             {
-                Logger::WriteInfo(m_logger.get(), "   " + file.string());
+                return false;
             }
+
+            const auto& file = files.front();
+            Logger::WriteInfo(m_logger.get(), "Dropping obj file: " + file.string());
+
+            [[maybe_unused]] auto dummy = m_threadPool.Execute([&, filename = file]()
+                {
+                    ObjMeshFile objFile;
+                    ObjMeshFileReader objFileReader;
+
+                    m_preUpdateCallbacks.Add([&]()
+                        {
+                            m_loadingProgressBar->value = 0.0;
+                        });
+
+                    auto onProgressConnection = objFileReader.onProgress.Connect([&](const double progress)
+                        {
+                            m_postUpdateCallbacks.Add([this, progress]()
+                                {
+                                    m_loadingProgressBar->value = progress;
+                                });
+                        });
+
+                    const Clock clock;
+                    const auto result = objFileReader.ReadFromFile(objFile, filename, m_threadPool);
+                    const auto readTime = clock.GetTime();
+
+                    onProgressConnection.Disconnect();
+                    
+
+                    if(!result.IsSuccessful())
+                    {
+                        Logger::WriteError(m_logger.get(), "Model loading failed:" + result.GetError().message);
+                        return;
+                    }
+
+                    Logger::WriteInfo(m_logger.get(), "Read file in: " + std::to_string(readTime.AsSeconds<float>()) + "s.");
+                    Logger::WriteInfo(m_logger.get(), "Objects: " + std::to_string(objFile.objects.size()));
+
+                    m_postUpdateCallbacks.Add([&]()
+                        {
+                            Logger::WriteInfo(m_logger.get(), "Model successfully loaded!");
+                        });
+                });
+
+            return true;
         };
 
         return true;
@@ -202,7 +245,9 @@ namespace Molten::Editor
         const auto version = descriptor.backendRendererApiVersion.has_value() ?
             descriptor.backendRendererApiVersion.value() : Version(1, 0);
 
-        if (!m_renderer->Open(*m_window, version, m_logger.get()))
+        auto* logger = descriptor.enableGpuLogging ? m_logger.get() : nullptr;
+
+        if (!m_renderer->Open(*m_window, version, logger))
         {
             Logger::WriteError(m_logger.get(), "Failed to open renderer.");
             return false;
@@ -227,44 +272,58 @@ namespace Molten::Editor
     bool Editor::LoadGui()
     {
         m_fontNameRepository.AddSystemDirectories();
+        m_fontNameRepository.AddDirectory("C:/Users/sours/AppData/Local/Microsoft/Windows/Fonts");
 
         m_canvasRenderer = Gui::CanvasRenderer::Create(*m_renderer, m_logger.get());
         m_canvas = std::make_shared<Gui::Canvas<Gui::EditorTheme>>(*m_canvasRenderer, m_fontNameRepository);
 
-        auto* layer = m_canvas->CreateLayer<Gui::SingleRootLayer>(Gui::LayerPosition::Top);
-
-        auto* docker = layer->CreateChild<Gui::Docker>();
-
-        docker->margin = { 4.0f, 4.0f, 4.0f, 4.0f };
-
-        docker->onCursorChange.Connect([&](Mouse::Cursor cursor)
         {
-            m_window->SetCursor(cursor);
-        });
+	        auto* layer = m_canvas->CreateLayer<Gui::SingleRootLayer>(Gui::LayerPosition::Top);
+	        
+	        auto* docker = layer->CreateChild<Gui::Docker>();
 
-        docker->CreateChild<Gui::Pane>(Gui::DockingPosition::Left, false, "Tools", Gui::WidgetSize{ 200.0f, 200.0f });
+	        docker->margin = { 4.0f, 4.0f, 4.0f, 4.0f };
 
-        auto sceneViewport = docker->CreateChild<Gui::Viewport>(Gui::DockingPosition::Right, true);
-        sceneViewport->onResize.Connect([&, viewport = sceneViewport](const auto size)
-        {
-            OnSceneViewportResize(viewport, size);
-        });
-        sceneViewport->onIsVisible.Connect([&]()
-        {
-            m_renderPasses.push_back(m_viewportRenderPass);
-        });
+	        docker->onCursorChange.Connect([&](Mouse::Cursor cursor)
+	        {
+	            m_window->SetCursor(cursor);
+	        });
 
-        docker->CreateChild<Gui::Pane>(Gui::DockingPosition::Bottom, false, "Assets", Gui::WidgetSize{ 250.0f, 250.0f });
+	        auto sceneViewport = docker->CreateChild<Gui::Viewport>(Gui::DockingPosition::Right);
+	        sceneViewport->onResize.Connect([&, viewport = sceneViewport](const auto size)
+	        {
+	            OnSceneViewportResize(viewport, size);
+	        });
+	        sceneViewport->onIsVisible.Connect([&]()
+	        {
+	            m_renderPasses.push_back(m_viewportRenderPass);
+	        });
 
-        auto inspector = docker->CreateChild<Gui::Pane>(Gui::DockingPosition::Right, false, "Inspector", Gui::WidgetSize{ 300.0f, 200.0f });
-        auto vertGrid = inspector->CreateChild<Gui::VerticalGrid>();
-        vertGrid->CreateChild<Gui::Label>("Location:", 18);
-        auto button = vertGrid->CreateChild<Gui::Button>();
-        button->onPress.Connect([&](int)
-        {
-            Logger::WriteInfo(m_logger.get(), "You pressed me!");
-        });
-        button->CreateChild<Gui::Label>("Click me!", 18);
+	        docker->CreateChild<Gui::Pane>(Gui::DockingPosition::Bottom, "Assets")->size = { Gui::Size::Pixels{ 250.0f }, Gui::Size::Pixels{ 300.0f } };
+
+	        auto inspector = docker->CreateChild<Gui::Pane>(Gui::DockingPosition::Right, "Inspector");
+    		inspector->size = { Gui::Size::Pixels{ 350.0f }, Gui::Size::Pixels{ 200.0f } };
+	        inspector->padding = { 3.0f, 3.0f, 3.0f, 3.0f };
+
+    		auto vertGrid = inspector->CreateChild<Gui::Grid>(Gui::GridDirection::Vertical);
+	        vertGrid->CreateChild<Gui::Label>("Location:", 18)->position = { Gui::Position::Fixed::Center, Gui::Position::Fixed::Center };
+
+    		auto button = vertGrid->CreateChild<Gui::Button>();
+	        button->size.x = Gui::Size::Fit::Parent;
+	        button->onPress.Connect([&](auto)
+	        {
+	            Logger::WriteInfo(m_logger.get(), "You pressed me!");
+	        });
+	        button->CreateChild<Gui::Label>("Click me!", 18);
+
+            m_avgFpsLabel = vertGrid->CreateChild<Gui::Label>("", 18);
+            m_minFpsLabel = vertGrid->CreateChild<Gui::Label>("", 18);
+            m_maxFpsLabel = vertGrid->CreateChild<Gui::Label>("", 18);
+
+            m_loadingProgressBar = vertGrid->CreateChild<Gui::ProgressBar>();
+            m_loadingProgressBar->position = { Gui::Position::Pixels{ 0.0f }, Gui::Position::Pixels{ 100.0f } };
+
+        }
 
         return true;
     }
@@ -279,6 +338,8 @@ namespace Molten::Editor
 
     bool Editor::Tick()
     {
+        m_preUpdateCallbacks.Dispatch();
+
         if(!UpdateWindow())
         {
             return false;
@@ -291,6 +352,13 @@ namespace Molten::Editor
         m_renderPasses.clear();
 
         UpdateCanvas();
+
+        m_postUpdateCallbacks.Dispatch();
+
+        /*if (m_modelLoaded)
+        {
+            Logger::WriteInfo(m_logger.get(), "Model successfully loaded!");
+        }*/
 
         m_renderPasses.push_back(m_renderer->GetSwapChainRenderPass());
 
@@ -310,10 +378,18 @@ namespace Molten::Editor
             const auto minFps = static_cast<int64_t>(1.0 / m_fpsTracker.GetMaxFrameTime().AsSeconds<double>());
             const auto maxFps = static_cast<int64_t>(1.0 / m_fpsTracker.GetMinFrameTime().AsSeconds<double>());
 
-            m_window->SetTitle(
+            /*m_window->SetTitle(
                 m_windowTitle + " - avg FPS: " + std::to_string(averageFps) + 
                 " | min FPS: " + std::to_string(minFps) +
-                " | max FPS: " + std::to_string(maxFps));
+                " | max FPS: " + std::to_string(maxFps));*/
+
+            m_avgFpsLabel->text.Set("Avg FPS : " + std::to_string(averageFps));
+            m_minFpsLabel->text.Set("Min FPS : " + std::to_string(minFps));
+            m_maxFpsLabel->text.Set("Max FPS : " + std::to_string(maxFps));
+
+          /*  m_avgFpsLabel = vertGrid->CreateChild<Gui::Label>("", 18);
+            m_minFpsLabel = vertGrid->CreateChild<Gui::Label>("", 18);
+            m_maxFpsLabel =*/
 
             m_fpsTracker.ResetFrameSamples();
 

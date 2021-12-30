@@ -53,10 +53,11 @@ namespace Molten
         *  Launching maximum number of possible concurrent threads if threadCount == 0.
         *  Provided reservedThreads is subtracted from number of launched threads,
         *  this is useful if other threads are running in the same application and you want to run maximum number of threads - some reserved ones.
-        *  Number of launched threads is always at least 1.
+        *  Number of launched threads is always at least minThreadCount.
         */
         explicit ThreadPool(
             const size_t threadCount = 0,
+            const size_t minThreadCount = 1,
             const size_t reservedThreads = 0);
 
         /** Destructor. All workers are stopped. */

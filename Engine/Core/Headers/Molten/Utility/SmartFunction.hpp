@@ -69,7 +69,7 @@ namespace Molten
 
         /**
         * @brief Destructor.
-        *        Passed function is being called if Release hasn't been called once.
+        *        Passed function is being called if Release have not been called.
         */
         ~SmartFunction();
 

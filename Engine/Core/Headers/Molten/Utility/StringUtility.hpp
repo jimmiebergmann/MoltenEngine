@@ -34,57 +34,57 @@ namespace Molten::StringUtility
 
     /** String view trim functions.*/
     /**@{*/
-    template<typename T, typename TTrimChars = std::basic_string<T>>
+    template<typename T, typename TTrimChars = std::basic_string_view<T>>
     void Trim(std::basic_string_view<T>& string, const TTrimChars& trimChars = " \t");
 
-    template<typename T, typename TTrimChars = std::basic_string<T>>
+    template<typename T, typename TTrimChars = std::basic_string_view<T>>
     [[nodiscard]] std::basic_string_view<T> Trim(const std::basic_string_view<T>& string, const TTrimChars& trimChars = " \t");
     /**@}*/
 
     /** String trim functions.*/
     /**@{*/
-    template<typename T, typename TTrimChars = std::basic_string<T>>
+    template<typename T, typename TTrimChars = std::basic_string_view<T>>
     void Trim(std::basic_string<T>& string, const TTrimChars& trimChars = " \t");
 
-    template<typename T, typename TTrimChars = std::basic_string<T>>
+    template<typename T, typename TTrimChars = std::basic_string_view<T>>
     [[nodiscard]] std::basic_string<T> Trim(const std::basic_string<T>& string, const TTrimChars& trimChars = " \t");
     /**@}*/
 
 
     /** String view trim front functions.*/
     /**@{*/
-    template<typename T, typename TTrimChars = std::basic_string<T>>
+    template<typename T, typename TTrimChars = std::basic_string_view<T>>
     void TrimFront(std::basic_string_view<T>& string, const TTrimChars& trimChars = " \t");
 
-    template<typename T, typename TTrimChars = std::basic_string<T>>
+    template<typename T, typename TTrimChars = std::basic_string_view<T>>
     [[nodiscard]] std::basic_string_view<T> TrimFront(const std::basic_string_view<T>& string, const TTrimChars& trimChars = " \t");
     /**@}*/
 
     /** String trim front functions.*/
     /**@{*/
-    template<typename T, typename TTrimChars = std::basic_string<T>>
+    template<typename T, typename TTrimChars = std::basic_string_view<T>>
     void TrimFront(std::basic_string<T>& string, const TTrimChars& trimChars = " \t");
 
-    template<typename T, typename TTrimChars = std::basic_string<T>>
+    template<typename T, typename TTrimChars = std::basic_string_view<T>>
     [[nodiscard]] std::basic_string<T> TrimFront(const std::basic_string<T>& string, const TTrimChars& trimChars = " \t");
     /**@}*/
 
 
     /** String view trim back functions.*/
     /**@{*/
-    template<typename T, typename TTrimChars = std::basic_string<T>>
+    template<typename T, typename TTrimChars = std::basic_string_view<T>>
     void TrimBack(std::basic_string_view<T>& string, const TTrimChars& trimChars = " \t");
 
-    template<typename T, typename TTrimChars = std::basic_string<T>>
+    template<typename T, typename TTrimChars = std::basic_string_view<T>>
     [[nodiscard]] std::basic_string_view<T> TrimBack(const std::basic_string_view<T>& string, const TTrimChars& trimChars = " \t");
     /**@}*/
 
     /** String trim back functions.*/
     /**@{*/
-    template<typename T, typename TTrimChars = std::basic_string<T>>
+    template<typename T, typename TTrimChars = std::basic_string_view<T>>
     void TrimBack(std::basic_string<T>& string, const TTrimChars& trimChars = " \t");
 
-    template<typename T, typename TTrimChars = std::basic_string<T>>
+    template<typename T, typename TTrimChars = std::basic_string_view<T>>
     [[nodiscard]] std::basic_string<T> TrimBack(const std::basic_string<T>& string, const TTrimChars& trimChars = " \t");
     /**@}*/
 

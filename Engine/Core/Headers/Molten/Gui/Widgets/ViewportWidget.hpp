@@ -43,11 +43,6 @@ namespace Molten::Gui
 
     public:
 
-        using Mixin = WidgetMixin<TTheme, Viewport>;
-
-        static constexpr bool handleKeyboardEvents = false;
-        static constexpr bool handleMouseEvents = true;
-
         Signal<Vector2ui32> onResize;
 
         struct State
@@ -55,15 +50,17 @@ namespace Molten::Gui
             SharedRenderResource<FramedTexture2D> framedTexture;
         };
 
-        explicit Viewport(WidgetDataMixin<TTheme, Viewport>& data);
-
-        void Update() override;
-
-        bool OnMouseEvent(const WidgetMouseEvent& widgetMouseEvent) override;
+        explicit Viewport(WidgetMixinDescriptor<TTheme, Viewport>& desc);
 
         void SetTexture(SharedRenderResource<FramedTexture2D> framedTexture);
 
     private:
+
+        void PreUpdate() override;
+        void PostUpdate() override;
+        bool OnMouseEvent(const WidgetMouseEvent& widgetMouseEvent) override;
+
+        using Mixin = WidgetMixin<TTheme, Viewport>;
 
         Vector2f32 m_prevSize;
 

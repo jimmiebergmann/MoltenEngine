@@ -27,43 +27,31 @@
 #define MOLTEN_CORE_GUI_WIDGETS_PANEWIDGET_HPP
 
 #include "Molten/Gui/Widget.hpp"
+#include "Molten/Gui/WidgetProperty.hpp"
 #include "Molten/Gui/DraggableWidget.hpp"
-#include "Molten/Gui/WidgetEvent.hpp"
-#include "Molten/Gui/Widgets/LabelWidget.hpp"
 #include <string>
 
 namespace Molten::Gui
 {
 
     template<typename TTheme>
-    class Pane : public WidgetMixin<TTheme, Pane>, public WidgetMouseEventHandler, public DraggableWidget
+    class Pane : public WidgetMixin<TTheme, Pane>, public DraggableWidget
     {
 
     public:
-    
-        using Mixin = WidgetMixin<TTheme, Pane>;
 
-        static constexpr bool handleKeyboardEvents = false;
-        static constexpr bool handleMouseEvents = true;
+        WidgetProperty<std::string> label;
 
         Pane(
-            WidgetDataMixin<TTheme, Pane>& data,
-            const std::string& label,
-            const WidgetSize& size);
-
-        void Update() override;
-
-        bool OnMouseEvent(const WidgetMouseEvent& widgetMouseEvent) override;
-
-        [[nodiscard]] const Bounds2f32& GetDragBounds() const override;
+            WidgetMixinDescriptor<TTheme, Pane>& desc,
+            const std::string& label);
 
     private:
 
-        void OnCreate() override;
-
-        std::string m_label;
-        Widget<TTheme>* m_labelWidget;
-        Bounds2f32 m_dragBounds;
+        void PreUpdate() override;
+        void PostUpdate() override;
+        PreChildUpdateResult PreChildUpdate(Widget<TTheme>& child);
+        void PostChildUpdate(Widget<TTheme>& child) override;
 
     };
 

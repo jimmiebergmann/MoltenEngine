@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -44,18 +44,7 @@ namespace Molten::Gui
     class Layer;
 
     template<typename TTheme>
-    using LayerPointer = std::shared_ptr<Layer<TTheme>>;
-    
-    template<typename TLayerType>
-    using LayerTypePointer = std::shared_ptr<TLayerType>;
-
-    template<typename TTheme>
     class Widget;
-    template<typename TTheme>
-    using WidgetPointer = std::shared_ptr<Widget<TTheme>>;
-
-    template<typename TWidget>
-    using WidgetTypePointer = std::shared_ptr<TWidget>;
 
     class WidgetEventHandler;
 

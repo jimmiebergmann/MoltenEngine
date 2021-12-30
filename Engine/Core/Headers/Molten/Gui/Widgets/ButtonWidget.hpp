@@ -39,12 +39,7 @@ namespace Molten::Gui
 
     public:
 
-        using Mixin = WidgetMixin<TTheme, Button>;
-
-        static constexpr bool handleKeyboardEvents = false;
-        static constexpr bool handleMouseEvents = true;
-
-        Signal<int> onPress;
+        Signal<Mouse::Button> onPress;
 
         enum class State
         {
@@ -54,13 +49,14 @@ namespace Molten::Gui
             Pressed
         };
 
-        explicit Button(WidgetDataMixin<TTheme, Button>& data);
-
-        void Update() override;
-
-        bool OnMouseEvent(const WidgetMouseEvent& widgetMouseEvent) override;
+        explicit Button(WidgetMixinDescriptor<TTheme, Button>& desc);
 
     private:
+
+        void PreUpdate() override;
+        PreChildUpdateResult PreChildUpdate(Widget<TTheme>& child) override;
+        void PostChildUpdate(Widget<TTheme>& child) override;
+        bool OnMouseEvent(const WidgetMouseEvent& widgetMouseEvent) override;
 
         bool m_pressed;
 

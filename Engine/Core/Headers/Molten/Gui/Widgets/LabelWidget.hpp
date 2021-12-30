@@ -27,6 +27,7 @@
 #define MOLTEN_CORE_GUI_WIDGETS_LABELWIDGET_HPP
 
 #include "Molten/Gui/Widget.hpp"
+#include "Molten/Gui/WidgetProperty.hpp"
 #include <string>
 
 namespace Molten::Gui
@@ -38,18 +39,18 @@ namespace Molten::Gui
 
     public:
 
-        std::string text;
-        std::string fontFamily;
-        uint32_t height;
+        WidgetProperty<std::string> text;
+        WidgetProperty<std::string> fontFamily;
+        WidgetProperty<uint32_t> height;
 
-        explicit Label(
-            WidgetDataMixin<TTheme, Label>& data,
+        Label(
+            WidgetMixinDescriptor<TTheme, Label>& desc,
             const std::string& text,
             const uint32_t height);
 
     private:
 
-        void Update() override;
+        void PreUpdate() override;
 
     };
 

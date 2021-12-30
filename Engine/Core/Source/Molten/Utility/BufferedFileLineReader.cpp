@@ -46,6 +46,11 @@ namespace Molten
         m_inStream.seekg(startPos, std::istream::beg);
     }
 
+    size_t BufferedFileLineReader::GetStreamSize() const
+    {
+        return m_fileSize;
+    }
+
     size_t BufferedFileLineReader::GetSizeLeft() const
     {
         return m_fileSize - m_currentReadPosition + (m_currentBufferSize - m_currentBufferPosition);

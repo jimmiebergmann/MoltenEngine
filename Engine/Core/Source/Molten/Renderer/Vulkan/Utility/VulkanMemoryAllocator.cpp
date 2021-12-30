@@ -237,7 +237,7 @@ namespace Molten::Vulkan
     }
 
 
-    // Memory pool of memory allocator implemenations.
+    // Memory pool of memory allocator implementations.
     MemoryAllocator::MemoryPool::MemoryPool(uint32_t physicalDeviceMemoryTypeIndex) :
         physicalDeviceMemoryTypeIndex(physicalDeviceMemoryTypeIndex),
         memoryBlocks{}

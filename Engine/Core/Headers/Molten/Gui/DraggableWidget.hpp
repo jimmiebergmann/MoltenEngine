@@ -26,7 +26,7 @@
 #ifndef MOLTEN_CORE_GUI_DRAGGABLEWIDGET_HPP
 #define MOLTEN_CORE_GUI_DRAGGABLEWIDGET_HPP
 
-#include "Molten/Math/Bounds.hpp"
+#include "Molten/Math/AABB.hpp"
 
 namespace Molten::Gui
 {
@@ -38,8 +38,14 @@ namespace Molten::Gui
 
         virtual ~DraggableWidget() = default;
 
-        [[nodiscard]] virtual const Bounds2f32& GetDragBounds() const = 0;
+        [[nodiscard]] const AABB2f32& GetDragBounds() const
+        {
+            return m_dragBounds;
+        }
 
+    protected:
+
+        AABB2f32 m_dragBounds;
     };
 
 }

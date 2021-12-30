@@ -30,10 +30,13 @@
 #include "Molten/Renderer/Renderer.hpp"
 #include "Molten/Renderer/Font.hpp"
 #include "Molten/Gui/Canvas.hpp"
+#include "Molten/Gui/Layers/FloatingWidgetLayer.hpp"
 #include "Editor/Gui/Themes/EditorTheme.hpp"
 #include "Molten/System/Semaphore.hpp"
 #include "Molten/System/Clock.hpp"
 #include "Molten/Utility/FpsTracker.hpp"
+#include "Molten/System/ThreadPool.hpp"
+#include "Molten/Utility/FunctionDispatcher.hpp"
 #include <optional>
 #include <thread>
 #include <atomic>
@@ -50,6 +53,7 @@ namespace Molten::Editor
     struct EditorDescriptor
     {
         std::shared_ptr<Logger> logger;
+        bool enableGpuLogging = false;
         std::optional<Renderer::BackendApi> backendRendererApi;
         std::optional<Version> backendRendererApiVersion;
         std::optional<uint32_t> fpsLimit;
@@ -86,6 +90,7 @@ namespace Molten::Editor
         [[nodiscard]] bool LoadRenderer(const EditorDescriptor& descriptor);
         [[nodiscard]] bool LoadRenderPasses();
         [[nodiscard]] bool LoadGui();
+        //void ShowImportProgress(std::function<void()> )
 
         void Exit();
 
@@ -110,6 +115,8 @@ namespace Molten::Editor
         Gui::CanvasRendererPointer m_canvasRenderer;
         Gui::FontNameRepository m_fontNameRepository;
         Gui::CanvasPointer<Gui::EditorTheme> m_canvas;
+        Gui::ProgressBar<Gui::EditorTheme>* m_loadingProgressBar;
+        //Gui::FloatingWidgetLayer<Gui::EditorTheme>* m_loadingLayer;
 
         SharedRenderResource<RenderPass> m_viewportRenderPass;
         SharedRenderResource<Pipeline> m_viewportPipeline;
@@ -132,6 +139,14 @@ namespace Molten::Editor
         };
 
         ViewportSceneData m_viewportSceneData;
+
+        Gui::Label<Gui::EditorTheme>* m_avgFpsLabel;
+        Gui::Label<Gui::EditorTheme>* m_minFpsLabel;
+        Gui::Label<Gui::EditorTheme>* m_maxFpsLabel;
+
+        ThreadPool m_threadPool;
+        FunctionDispatcher m_preUpdateCallbacks;
+        FunctionDispatcher m_postUpdateCallbacks;
 
     };
 

@@ -41,12 +41,14 @@ namespace Molten::Gui
         MouseButtonReleasedOut  ///< Mouse button was released while not hovering widget. This event can only occur after a MousePressed event.
     };
 
+
     enum class WidgetKeyboardEventType : uint8_t
     {
         KeyDown,             ///< Key is held down while widget is active.
         KeyPressed,          ///< Key is initially pressed down while widget is active.
         KeyReleased,         ///< Key is released while widget is active.
     };
+
 
     struct WidgetMouseEvent
     {
@@ -60,6 +62,7 @@ namespace Molten::Gui
         Mouse::Button button;
     };
 
+
     struct WidgetKeyboardEvent
     {
         WidgetKeyboardEvent(
@@ -69,6 +72,7 @@ namespace Molten::Gui
         WidgetKeyboardEventType type;
         Keyboard::Key key;
     };
+
 
     class WidgetMouseEventHandler
     {
@@ -87,6 +91,7 @@ namespace Molten::Gui
 
     };
 
+
     class WidgetKeyboardEventHandler
     {
 
@@ -103,6 +108,10 @@ namespace Molten::Gui
         virtual bool OnKeyboardEvent(const WidgetKeyboardEvent& widgetKeyboardEvent) = 0;
 
     };
+
+
+    struct OverrideChildMouseEvents {};
+
 
 }
 

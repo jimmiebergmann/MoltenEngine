@@ -141,12 +141,12 @@ namespace Molten
             return S_OK;
         }
 
-        if (!m_window.OnFilesDropEnter(files))
+        if (!m_window.OnFilesDropEnter || !m_window.OnFilesDropEnter(files))
         {
             return S_OK;
         }
 
-        *effect &= DROPEFFECT_COPY;
+        *effect |= DROPEFFECT_COPY;
         m_lastDataObject = dataObject;
         return S_OK;
     }
@@ -166,11 +166,14 @@ namespace Molten
         const auto newPosition = Vector2i32{ cursorPosition.x, cursorPosition.y };
         if(newPosition != m_lastPosition)
         {
-            m_window.OnFilesDropMove(newPosition);
+            if (m_window.OnFilesDropMove)
+            {
+                m_window.OnFilesDropMove(newPosition);
+            }
             m_lastPosition = newPosition;
         }
 
-        *effect &= DROPEFFECT_COPY;
+        *effect |= DROPEFFECT_COPY;
         return S_OK;
     }
 
@@ -181,7 +184,11 @@ namespace Molten
             return S_OK;
         }
 
-        m_window.OnFilesDropLeave();
+        if (m_window.OnFilesDropLeave)
+        {
+            m_window.OnFilesDropLeave();
+        }
+
         m_lastDataObject = nullptr;
         return S_OK;
     }
@@ -210,7 +217,10 @@ namespace Molten
             return S_OK;          
         }
 
-        m_window.OnFilesDrop(files);
+        if (m_window.OnFilesDrop)
+        {
+            m_window.OnFilesDrop(files);
+        }
 
         *effect &= DROPEFFECT_COPY;
         m_lastDataObject = nullptr;

@@ -40,7 +40,8 @@ namespace Molten::Gui
 
         MultiRootLayer(
             TTheme& theme,
-            LayerData<TTheme>& data);
+            LayerData<TTheme>& data,
+            SignalDispatcher& widgetPropertyDispatcher);
         ~MultiRootLayer() override = default;
 
         MultiRootLayer(MultiRootLayer&&) = delete;

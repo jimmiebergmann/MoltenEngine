@@ -28,57 +28,91 @@ namespace Molten::Gui
 
     // Widget base class implementations.
     template<typename TTheme>
-    Widget<TTheme>::Widget(WidgetData<TTheme>& data) :
-        m_data(data)
-    {}
-
-    template<typename TTheme>
-    Widget<TTheme>::Widget(
-        WidgetData<TTheme>& data,
-        const WidgetSize& size
-    ) :
-        size(size),
-        m_data(data)
-    {}
-
-    template<typename TTheme>
-    bool Widget<TTheme>::GetOverrideChildrenMouseEvents() const
-    {
-        return overrideChildrenMouseEvents;
-    }
-
-    template<typename TTheme>
-    void Widget<TTheme>::Update()
-    {}
-
-    template<typename TTheme>
     template<template<typename> typename TWidget, typename ... TArgs>
     TWidget<TTheme>* Widget<TTheme>::CreateChild(TArgs ... args)
     {
-        return m_data.GetLayer()->template CreateChild<TWidget>(*this, std::forward<TArgs>(args)...);
+        return m_layer->template CreateChildFor<TWidget>(this, std::forward<TArgs>(args)...);
+    }
+
+    template<typename TTheme>
+    Widget<TTheme>* Widget<TTheme>::GetParent()
+    {
+        return m_parent;
+    }
+    template<typename TTheme>
+    const Widget<TTheme>* Widget<TTheme>::GetParent() const
+    {
+        return m_parent;
     }
 
     template<typename TTheme>
     Canvas<TTheme>* Widget<TTheme>::GetCanvas()
     {
-        return m_data.GetCanvas();
+        return m_canvas;
     }
     template<typename TTheme>
     const Canvas<TTheme>* Widget<TTheme>::GetCanvas() const
     {
-        return m_data.GetCanvas();
+        return m_canvas;
     }
 
     template<typename TTheme>
     Layer<TTheme>* Widget<TTheme>::GetLayer()
     {
-        return m_data.GetLayer();
+        return m_layer;
     }
     template<typename TTheme>
     const Layer<TTheme>* Widget<TTheme>::GetLayer() const
     {
-        return m_data.GetLayer();
+        return m_layer;
     }
+
+    template<typename TTheme>
+    const AABB2f32& Widget<TTheme>::GetBounds() const
+    {
+        return m_bounds;
+    }
+
+    template<typename TTheme>
+    bool Widget<TTheme>::IsDestroyed() const
+    {
+        return m_destroyed;
+    }
+
+    template<typename TTheme>
+    Widget<TTheme>::Widget(
+        WidgetDescriptor<TTheme>& desc,
+        const WidgetPosition& position,
+        const WidgetSize& size
+    ) :
+		position(position),
+		size(size),
+        m_parent(desc.parent),
+        m_canvas(desc.canvas),
+        m_layer(desc.layer),
+        m_skinBase(nullptr),
+        m_destroyed(false)
+    {}
+
+    template<typename TTheme>
+    void Widget<TTheme>::PreUpdate()
+    {
+        this->PreCalculateBounds();
+    }
+
+    template<typename TTheme>
+    void Widget<TTheme>::PostUpdate()
+    {}
+
+    template<typename TTheme>
+    PreChildUpdateResult Widget<TTheme>::PreChildUpdate(Widget<TTheme>&)
+    {
+        return PreChildUpdateResult::Visit;
+    }
+
+    template<typename TTheme>
+    void Widget<TTheme>::PostChildUpdate(Widget<TTheme>&)
+    {}
 
     template<typename TTheme>
     void Widget<TTheme>::OnCreate()
@@ -86,89 +120,240 @@ namespace Molten::Gui
     }
 
     template<typename TTheme>
-    void Widget<TTheme>::OnAddChild(WidgetData<TTheme>&)
+    void Widget<TTheme>::OnAddChild(Widget<TTheme>&)
+    {}
+
+    template<typename TTheme>
+    void Widget<TTheme>::OnRemoveChild(Widget<TTheme>&)
+    {}
+
+    template<typename TTheme>
+    typename WidgetChildren<TTheme>::iterator Widget<TTheme>::GetChildrenBegin()
     {
+        return m_children.begin();
     }
 
     template<typename TTheme>
-    void Widget<TTheme>::OnRemoveChild(WidgetData<TTheme>&)
+    typename WidgetChildren<TTheme>::iterator Widget<TTheme>::GetChildrenEnd()
     {
+        return m_children.end();
     }
 
     template<typename TTheme>
-    WidgetData<TTheme>& Widget<TTheme>::GetData()
+    bool Widget<TTheme>::PreCalculateBounds()
     {
-        return m_data;
-    }
-    template<typename TTheme>
-    const WidgetData<TTheme>& Widget<TTheme>::GetData() const
-    {
-        return m_data;
+        m_bounds.position += this->margin.low;
+
+        std::visit([&](const auto& element)
+        {
+            using T = std::decay_t<decltype(element)>;
+
+            if constexpr (std::is_same_v<T, Size::Pixels>)
+            {
+                m_bounds.size.x = element.value;
+            }
+            else if constexpr (std::is_same_v<T, Size::Percent>)
+            {
+                m_bounds.size.x = m_grantedSize.x * (element.value / 100.0f);
+            }
+            else if constexpr (std::is_same_v<T, Size::Fit>)
+            {
+                m_bounds.size.x = m_grantedSize.x - this->margin.left - this->margin.right;
+            }
+        }, this->size.x);
+
+        std::visit([&](const auto& element)
+        {
+            using T = std::decay_t<decltype(element)>;
+
+            if constexpr (std::is_same_v<T, Size::Pixels>)
+            {
+                m_bounds.size.y = element.value;
+            }
+            else if constexpr (std::is_same_v<T, Size::Percent>)
+            {
+                m_bounds.size.y = m_grantedSize.y * (element.value / 100.0f);
+            }
+            else if constexpr (std::is_same_v<T, Size::Fit>)
+            {
+                m_bounds.size.y = m_grantedSize.y - this->margin.top - this->margin.bottom;
+            }
+        }, this->size.y);
+
+        if (m_bounds.IsEmpty())
+        {
+            if (!(VariantEqualsType<Size::Fit>(this->size.x) && std::get<Size::Fit>(this->size.x) == Size::Fit::Content) &&
+                !(VariantEqualsType<Size::Fit>(this->size.y) && std::get<Size::Fit>(this->size.y) == Size::Fit::Content))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     template<typename TTheme>
-    typename WidgetData<TTheme>::TreeNormalLane Widget<TTheme>::GetChildrenNormalLane()
+    bool Widget<TTheme>::PostCalculateBounds(Widget<TTheme>& child)
     {
-        return m_data.GetChildrenNormalLane();
+        std::visit([&](const auto& element)
+        {
+            using T = std::decay_t<decltype(element)>;
+
+            if constexpr (std::is_same_v<T, Size::Fit>)
+            {
+                if (element == Size::Fit::Content)
+                {
+                    m_bounds.size.x = child.m_bounds.size.x + this->padding.left + this->padding.right;
+                }
+            }
+        }, this->size.x);
+
+        std::visit([&](const auto& element)
+        {
+            using T = std::decay_t<decltype(element)>;
+
+            if constexpr (std::is_same_v<T, Size::Fit>)
+            {
+                if (element == Size::Fit::Content)
+                {
+                    m_bounds.size.y = child.m_bounds.size.y + this->padding.top + this->padding.bottom;
+                }
+            }
+        }, this->size.y);
+
+        return m_bounds.size.x > 0.0f && m_bounds.size.y > 0.0f;
     }
 
     template<typename TTheme>
-    typename WidgetData<TTheme>::TreePartialLane Widget<TTheme>::GetChildrenPartialLane()
+    bool Widget<TTheme>::PreCalculateBounds(Widget<TTheme>& child)
     {
-        return m_data.GetChildrenPartialLane();
+        const auto grantedChildSize = m_bounds.size - this->padding.low - this->padding.high;
+        if (grantedChildSize.x <= 0.0f || grantedChildSize.y <= 0.0f)
+        {
+            if (!(VariantEqualsType<Size::Fit>(this->size.x) && std::get<Size::Fit>(this->size.x) == Size::Fit::Content) &&
+                !(VariantEqualsType<Size::Fit>(this->size.y) && std::get<Size::Fit>(this->size.y) == Size::Fit::Content))
+            {
+                return false;
+            }
+        }
+
+        const auto childPosition = m_bounds.position + this->padding.low;
+
+        child.m_bounds.position = childPosition;
+        child.m_grantedSize = grantedChildSize;
+        return true;
     }
 
     template<typename TTheme>
-    const Bounds2f32& Widget<TTheme>::GetGrantedBounds() const
+    Vector2f32 Widget<TTheme>::GetGrantedSize()
     {
-        return m_data.GetGrantedBounds();
+        return m_grantedSize;
     }
 
     template<typename TTheme>
-    void Widget<TTheme>::SetGrantedBounds(const Bounds2f32& grantedBounds)
+    void Widget<TTheme>::SetPosition(const Vector2f32& newPosition)
     {
-        m_data.SetGrantedBounds(grantedBounds);
+        m_bounds.position = newPosition;
     }
 
     template<typename TTheme>
-    void Widget<TTheme>::ApplyMarginsToGrantedBounds()
+    void Widget<TTheme>::SetPosition(Widget<TTheme>& child, const Vector2f32& childPosition)
     {
-        auto grantedBounds = m_data.GetGrantedBounds().WithoutMargins(margin).ClampHighToLow();
-        m_data.SetGrantedBounds(grantedBounds);
+        child.m_bounds.position = childPosition;
+    }
+
+    template<typename TTheme>
+    void Widget<TTheme>::SetSize(const Vector2f32& newSize)
+    {
+        m_bounds.size = newSize;
+    }
+
+    template<typename TTheme>
+    void Widget<TTheme>::SetGrantedSize(Widget<TTheme>& child, const Vector2f32& childGrantedSize)
+    {
+        child.m_grantedSize = childGrantedSize;
     }
 
 
-    // Widget mixin implementations.
+    template<typename TTheme>
+    void Widget<TTheme>::UpdateChildRange(WidgetChildIteratorPair<TTheme> iteratorRange)
+    {
+        m_updateChildren = iteratorRange;
+    }
+
+    template<typename TTheme>
+    void Widget<TTheme>::UpdateFirstChild()
+    {
+        if (auto it = m_children.begin(); it != m_children.end())
+        {
+            m_updateChildren = { it, std::next(it) };
+        }
+    }
+
+    template<typename TTheme>
+    void Widget<TTheme>::UpdateAllChildren()
+    {
+        m_updateChildren = { m_children.begin(), m_children.end() };
+    }
+
+    /*template<typename TTheme>
+    void Widget<TTheme>::PostCalculateSingleChildBounds(Widget<TTheme>& child)
+    {
+        std::visit([&](const auto& element)
+        {
+            using T = std::decay_t<decltype(element)>;
+
+            if constexpr (std::is_same_v<T, Size::Fit>)
+            {
+                if (element == Size::Fit::Content)
+                {
+                    m_bounds.size.x = child.m_bounds.size.x + this->padding.left + this->padding.right;
+                }
+            }
+        }, this->size.x);
+
+        std::visit([&](const auto& element)
+        {
+            using T = std::decay_t<decltype(element)>;
+
+            if constexpr (std::is_same_v<T, Size::Fit>)
+            {
+                if (element == Size::Fit::Content)
+                {
+                    m_bounds.size.y = child.m_bounds.size.y + this->padding.top + this->padding.bottom;
+                }
+            }
+        }, this->size.y);
+    }*/
+
+    template<typename TTheme>
+    void Widget<TTheme>::DrawChild(Widget<TTheme>& child)
+    {
+        m_drawChildren.push_back(&child);
+    }
+
+    template<typename TTheme>
+    void Widget<TTheme>::PrepareUpdate()
+    {
+        m_updateChildren = { m_children.end(), m_children.end() };
+        m_drawChildren.clear();
+    }
+
+
     template<typename TTheme, template<typename> typename TWidget>
-    bool WidgetMixin<TTheme, TWidget>::GetOverrideChildrenMouseEvents() const
-    {
-        return TWidget<TTheme>::overrideChildrenMouseEvents;
-    }
-
-    template<typename TTheme, template<typename> typename TWidget>
-    WidgetMixin<TTheme, TWidget>::WidgetMixin(WidgetDataMixin<TTheme, TWidget>& data) :
-        Widget<TTheme>(data),
-        m_dataMixin(data)
+    WidgetMixin<TTheme, TWidget>::WidgetMixin(WidgetMixinDescriptor<TTheme, TWidget>& desc) :
+        Widget<TTheme>(desc, WidgetSkin<TTheme, TWidget>::defaultPosition, WidgetSkin<TTheme, TWidget>::defaultSize)
     {}
 
     template<typename TTheme, template<typename> typename TWidget>
-    WidgetMixin<TTheme, TWidget>::WidgetMixin(
-        WidgetDataMixin<TTheme, TWidget>& data,
-        const WidgetSize& size
-    ) :
-        Widget<TTheme>(data, size),
-        m_dataMixin(data)
-    {}
-
-    template<typename TTheme, template<typename> typename TWidget>
-    WidgetDataMixin<TTheme, TWidget>& WidgetMixin<TTheme, TWidget>::GetDataMixin()
+    typename WidgetMixin<TTheme, TWidget>::WidgetSkinType* WidgetMixin<TTheme, TWidget>::GetWidgetSkin()
     {
-        return m_dataMixin;
+        return m_skin.get();
     }
     template<typename TTheme, template<typename> typename TWidget>
-    const WidgetDataMixin<TTheme, TWidget>& WidgetMixin<TTheme, TWidget>::GetDataMixin() const
+    const typename WidgetMixin<TTheme, TWidget>::WidgetSkinType* WidgetMixin<TTheme, TWidget>::GetWidgetSkin() const
     {
-        return m_dataMixin;
+        return m_skin.get();
     }
 
     template<typename TTheme, template<typename> typename TWidget>
@@ -178,7 +363,7 @@ namespace Molten::Gui
         static_assert(std::is_same_v<TState, typename TWidget<TTheme>::State>,
             "Passed invalid widget state type to WidgetMixin<TTheme, TWidget>::GetSkinState.");
 
-        return m_dataMixin.GetWidgetSkinMixin->GetState();
+        return m_skin->GetState();
     }
     template<typename TTheme, template<typename> typename TWidget>
     template<typename TState>
@@ -187,11 +372,11 @@ namespace Molten::Gui
         static_assert(std::is_same_v<TState, typename TWidget<TTheme>::State>,
             "Passed invalid widget state type to WidgetMixin<TTheme, TWidget>::SetSkinState.");
 
-        m_dataMixin.GetWidgetSkinMixin()->SetState(state);
+        m_skin->SetState(state);
     }
 
     // Managed widget implementations.
-    template<typename TTheme, template<typename> typename TWidget>
+  /*  template<typename TTheme, template<typename> typename TWidget>
     ManagedWidget<TTheme, TWidget>::ManagedWidget() :
         m_layer(nullptr),
         m_widget(nullptr)
@@ -248,6 +433,13 @@ namespace Molten::Gui
         return m_widget;
     }
 
+
+    template<typename TTheme, template<typename> typename TWidget>
+    ManagedWidget<TTheme, TWidget>::operator bool() const
+    {
+        return m_widget != nullptr;
+    }
+
     template<typename TTheme, template<typename> typename TWidget>
     void ManagedWidget<TTheme, TWidget>::Reset()
     {
@@ -255,6 +447,6 @@ namespace Molten::Gui
         {
             m_widget->GetCanvas()->DestroyWidget(m_widget);
         }
-    }
+    }*/
 
 }

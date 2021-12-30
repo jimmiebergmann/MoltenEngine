@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -26,7 +26,9 @@
 #ifndef MOLTEN_CORE_UTILITY_TEMPLATE_HPP
 #define MOLTEN_CORE_UTILITY_TEMPLATE_HPP
 
+#include <type_traits>
 #include <tuple>
+#include <variant>
 
 namespace Molten
 {
@@ -80,6 +82,11 @@ namespace Molten
 
     template<size_t VIndex, typename ... TTypes>
     using GetTemplateArgumentTypeAt = typename GetTemplateArgumentAt <VIndex, TTypes...>::Type;
+
+
+    /** Checks if currently held value of variant is of type T. */
+    template<typename T, typename ... TVariantTypes>
+    [[nodiscard]] constexpr bool VariantEqualsType(const std::variant<TVariantTypes...>& variant);
 
 }
 

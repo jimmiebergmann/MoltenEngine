@@ -26,36 +26,51 @@
 namespace Molten::Gui
 {
     template<typename TTheme>
-    Button<TTheme>::Button(WidgetDataMixin<TTheme, Button>& data) :
-        WidgetMixin<TTheme, Button>(data),
+    Button<TTheme>::Button(WidgetMixinDescriptor<TTheme, Button>& desc) :
+        WidgetMixin<TTheme, Button>(desc),
         m_pressed(false)
     {}
 
     template<typename TTheme>
-    void Button<TTheme>::Update()
+    void Button<TTheme>::PreUpdate()
     {
-        this->ApplyMarginsToGrantedBounds();
-
-        auto childLane = this->GetChildrenPartialLane();
-
-        if (childLane.GetSize() > 0)
+        if (this->PreCalculateBounds())
         {
-            auto& childData = (*childLane.begin()).GetValue();
-            auto contentBounds = this->GetGrantedBounds().WithoutMargins(this->padding).ClampHighToLow();
-            childData->SetGrantedBounds(contentBounds);
+            this->UpdateFirstChild();
+        }
+    }
+
+    template<typename TTheme>
+    PreChildUpdateResult Button<TTheme>::PreChildUpdate(Widget<TTheme>& child)
+    {
+        if(this->PreCalculateBounds(child))
+        {
+            return PreChildUpdateResult::Visit;
+        }
+        return PreChildUpdateResult::Skip;
+    }
+
+    template<typename TTheme>
+    void Button<TTheme>::PostChildUpdate(Widget<TTheme>& child)
+    {
+        if(this->PostCalculateBounds(child))
+        {
+            this->DrawChild(child);
         }
     }
 
     template<typename TTheme>
     bool Button<TTheme>::OnMouseEvent(const WidgetMouseEvent& widgetMouseEvent)
     {
+        using Mixin = WidgetMixin<TTheme, Button>;
+
         switch (widgetMouseEvent.type)
         {
             case WidgetMouseEventType::MouseMove: break;
             case WidgetMouseEventType::MouseEnter: Mixin::SetSkinState(m_pressed ? State::Pressed : State::Hovered); break;
             case WidgetMouseEventType::MouseLeave: Mixin::SetSkinState(m_pressed ? State::Pressed : State::Normal); break;
             case WidgetMouseEventType::MouseButtonPressed: Mixin::SetSkinState(State::Pressed); m_pressed = true; break;
-            case WidgetMouseEventType::MouseButtonReleasedIn: Mixin::SetSkinState(State::Hovered); onPress(0); m_pressed = false; break;
+            case WidgetMouseEventType::MouseButtonReleasedIn: Mixin::SetSkinState(State::Hovered); onPress(widgetMouseEvent.button); m_pressed = false; break;
             case WidgetMouseEventType::MouseButtonReleasedOut: Mixin::SetSkinState(State::Normal); m_pressed = false; break;
         }
         return true;

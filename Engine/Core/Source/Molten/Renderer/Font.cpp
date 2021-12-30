@@ -997,7 +997,7 @@ namespace Molten::Gui
         return m_impl->CreateGroupedSequence(text, dpi, height);
     }
 
-    float Font::CalculateHeightOffset(const Bounds2f32& bounds)
+    float Font::CalculateHeightOffset(const Bounds2f32& bounds) const
     {
         const float ascender = static_cast<float>(m_impl->ascender);
         const float descender = static_cast<float>(m_impl->descender);

@@ -37,7 +37,6 @@ namespace Molten::Gui
     WidgetSkinMixin<TTheme, TWidget>::WidgetSkinMixin(const WidgetSkinDescriptor<TTheme, TWidget>& descriptor) :
         theme(descriptor.theme),
         widget(descriptor.widget),
-        widgetData(descriptor.widgetData),
         m_state{}
     {}
      

@@ -28,12 +28,14 @@
 
 #include "Molten/Gui/Layers/MultiRootLayer.hpp"
 #include "Molten/Gui/Widget.hpp"
-#include "Molten/Gui/WidgetEvent.hpp"
+#include "Molten/Gui/WidgetEventTracker.hpp"
 #include "Molten/Gui/CanvasRenderer.hpp"
 #include "Molten/Math/Vector.hpp"
 #include "Molten/System/Time.hpp"
 #include "Molten/System/UserInput.hpp"
+#include "Molten/System/Signal.hpp"
 #include <vector>
+#include <type_traits>
 
 namespace Molten
 {
@@ -82,17 +84,17 @@ namespace Molten::Gui
         /** Creates a new widget in the overlay layer.
          * ManagedWidget is automatically destroy and removed from overlay at destruction.
          */
-        template<template<typename> typename TWidget, typename ... TArgs>
-        [[nodiscard]] ManagedWidget<TTheme, TWidget> CreateOverlayChild(TArgs ... args);
+        /*template<template<typename> typename TWidget, typename ... TArgs>
+        [[nodiscard]] ManagedWidget<TTheme, TWidget> CreateOverlayChild(TArgs ... args);*/
 
         /** This function call makes the provided widget to receive all mouse events, 
-         * regardless of child widgets on top being hovered or pressed, until the mouse button is released.
+         * regardless of layers above or child widgets on top being hovered or pressed, until the mouse button is released.
          */
         void OverrideMouseEventsUntilMouseRelease(
             Widget<TTheme>& widget,
             Mouse::Button button);
 
-        void OverrideMouseEventsReset();
+        //void OverrideMouseEventsReset();
 
     private:
 
@@ -123,13 +125,16 @@ namespace Molten::Gui
 
         TTheme m_theme;
         typename LayerData<TTheme>::List m_layers;
-        MultiRootLayer<TTheme>* m_overlayLayer;
+        //MultiRootLayer<TTheme>* m_overlayLayer;
 
-        std::vector<UserInput::Event> m_userInputEvents;
-        MultiLayerRepository<TTheme> m_multiLayerRepository;
-        Widget<TTheme>* m_widgetOverrideMouseEvents;
-        Mouse::Button m_buttonOverrideMouseEvents;
+        SignalDispatcher m_propertyChangeDispatcher;
+
         void(Canvas<TTheme>::* m_mouseInputUpdate)(const UserInput::Event&);
+        std::vector<UserInput::Event> m_userInputEvents;
+        WidgetMouseEventTracker<TTheme> m_mouseEventTracker;
+
+        Widget<TTheme>* m_overrideWidgetMouseEventWidget;
+        Mouse::Button m_overrideWidgetMouseEventButton;
 
     };
 

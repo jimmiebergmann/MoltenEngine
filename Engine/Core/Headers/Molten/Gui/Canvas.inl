@@ -23,8 +23,6 @@
 *
 */
 
-#include <type_traits>
-
 namespace Molten::Gui
 {
 
@@ -35,13 +33,13 @@ namespace Molten::Gui
         m_size(0.0f, 0.0f),
         m_scale(1.0f, 1.0f),
         m_theme(m_canvasRenderer, std::forward<TThemeArgs>(themeArgs)...),
-        m_overlayLayer(nullptr),
-        m_widgetOverrideMouseEvents(nullptr),
-        m_buttonOverrideMouseEvents(Mouse::Button::Left),
-        m_mouseInputUpdate(&Canvas<TTheme>::UpdateNormalMouseInputs)     
+        m_mouseInputUpdate(&Canvas<TTheme>::UpdateNormalMouseInputs),
+        m_overrideWidgetMouseEventWidget(nullptr),
+        m_overrideWidgetMouseEventButton(Mouse::Button::Left)
+        //m_overlayLayer(nullptr)
     {
-        auto normalLane = m_layers.template GetLane<typename LayerData<TTheme>::ListNormalLaneType>();
-        m_overlayLayer = InternalCreateLayer<MultiRootLayer>(normalLane.end());
+        //auto normalLane = m_layers.template GetLane<typename LayerData<TTheme>::ListNormalLaneType>();
+        //m_overlayLayer = InternalCreateLayer<MultiRootLayer>(normalLane.end());
     }
 
     template<typename TTheme>
@@ -53,6 +51,8 @@ namespace Molten::Gui
     template<typename TTheme>
     void Canvas<TTheme>::Update(const Time& /*deltaTime*/)
     {
+        m_propertyChangeDispatcher.Execute();
+
         UpdateUserInputs();
 
         auto layerPartialLane = m_layers.template GetLane<typename LayerData<TTheme>::ListPartialLaneType>();
@@ -69,7 +69,7 @@ namespace Molten::Gui
     template<typename TTheme>
     void Canvas<TTheme>::Draw()
     {
-        m_canvasRenderer.DrawRect({ { 0.0f, 0.0f }, m_size }, m_theme.backgroundColor);
+        m_canvasRenderer.DrawRect(AABB2f32{ { 0.0f, 0.0f }, m_size }, m_theme.backgroundColor);
 
         auto layerPartialLane = m_layers.template GetLane<typename LayerData<TTheme>::ListPartialLaneType>();
         for(auto& layer : layerPartialLane)
@@ -126,24 +126,23 @@ namespace Molten::Gui
 
         auto& widgetData = widget->GetData();
 
-        auto* parentWidget = widgetData.GetParentWidget();
-        if(parentWidget)
+        if(auto* parentWidget = widgetData.GetParentWidget(); parentWidget)
         {
             parentWidget->OnRemoveChild(widgetData);
         }
 
-        auto it = widgetData.GetTreeNormalIterator();
+        auto it = widgetData.GetTreeIterator();
         widgetData.GetTree()->Erase(it);
         return true;
     }
 
-    template<typename TTheme>
-    template<template<typename> typename TWidget, typename ... TArgs>
-    ManagedWidget<TTheme, TWidget> Canvas<TTheme>::CreateOverlayChild(TArgs ... args)
-    {
-        auto* widget = m_overlayLayer->template CreateChild<TWidget>(std::forward<TArgs>(args)...);
-        return { *m_overlayLayer, *widget };
-    }
+    //template<typename TTheme>
+    //template<template<typename> typename TWidget, typename ... TArgs>
+    //ManagedWidget<TTheme, TWidget> Canvas<TTheme>::CreateOverlayChild(TArgs ... args)
+    //{
+    //    auto* widget = m_overlayLayer->template CreateChild<TWidget>(std::forward<TArgs>(args)...);
+    //    return { *m_overlayLayer, *widget };
+    //}
 
     template<typename TTheme>
     void Canvas<TTheme>::OverrideMouseEventsUntilMouseRelease(
@@ -151,15 +150,8 @@ namespace Molten::Gui
         Mouse::Button button)
     {
         m_mouseInputUpdate = &Canvas<TTheme>::UpdateModalMouseInputs;
-        m_widgetOverrideMouseEvents = &widget;
-        m_buttonOverrideMouseEvents = button;
-    }
-
-    template<typename TTheme>
-    void Canvas<TTheme>::OverrideMouseEventsReset()
-    {
-        m_mouseInputUpdate = &Canvas<TTheme>::UpdateNormalMouseInputs;
-        m_widgetOverrideMouseEvents = nullptr;
+        m_overrideWidgetMouseEventWidget = &widget;
+        m_overrideWidgetMouseEventButton = button;
     }
 
     template<typename TTheme>
@@ -176,7 +168,7 @@ namespace Molten::Gui
         auto partialLane = m_layers.template GetLane<typename LayerData<TTheme>::ListPartialLaneType>();
         auto layerDataIt = partialLane.Insert(position, std::move(layerData));
 
-        auto layer = std::make_unique<TLayer<TTheme>>(m_theme, *layerDataPointer, args...);
+        auto layer = std::make_unique<TLayer<TTheme>>(m_theme, *layerDataPointer, m_propertyChangeDispatcher, args...);
         auto* layerPointer = layer.get();
 
         layerDataPointer->Initialize(
@@ -219,18 +211,18 @@ namespace Molten::Gui
     void Canvas<TTheme>::HandleNormalMouseMove(const UserInput::Event& mouseEvent)
     {
         auto layerPartialLane = m_layers.template GetLane<typename LayerData<TTheme>::ListPartialLaneType>();
-        for (auto it = layerPartialLane.rbegin(); it != layerPartialLane.rend(); it++)
+        for (auto it = layerPartialLane.rbegin(); it != layerPartialLane.rend(); ++it)
         {
             auto& layerData = *it;
-            if(layerData->GetLayer()->HandleUserInput(mouseEvent, m_multiLayerRepository))
+            if(layerData->GetLayer()->HandleUserInput(mouseEvent, m_mouseEventTracker))
             {
                 return;
             }
         }
 
-        if(m_multiLayerRepository.hoveredWidgetData)
+        if (m_mouseEventTracker.IsHoveringWidget())
         {
-            m_multiLayerRepository.ResetHoveredWidget(mouseEvent.mouseMoveEvent.position);
+            m_mouseEventTracker.ResetHoveredWidget(mouseEvent.mouseMoveEvent.position);
         }
     }
 
@@ -238,10 +230,10 @@ namespace Molten::Gui
     void Canvas<TTheme>::HandleNormalMouseButtonPressed(const UserInput::Event& mouseEvent)
     {
         auto layerPartialLane = m_layers.template GetLane<typename LayerData<TTheme>::ListPartialLaneType>();
-        for (auto it = layerPartialLane.rbegin(); it != layerPartialLane.rend(); it++)
+        for (auto it = layerPartialLane.rbegin(); it != layerPartialLane.rend(); ++it)
         {
             auto& layerData = *it;
-            if (layerData->GetLayer()->HandleUserInput(mouseEvent, m_multiLayerRepository))
+            if (layerData->GetLayer()->HandleUserInput(mouseEvent, m_mouseEventTracker))
             {
                 return;
             }
@@ -252,10 +244,10 @@ namespace Molten::Gui
     void Canvas<TTheme>::HandleNormalMouseButtonReleased(const UserInput::Event& mouseEvent)
     {
         auto layerPartialLane = m_layers.template GetLane<typename LayerData<TTheme>::ListPartialLaneType>();
-        for (auto it = layerPartialLane.rbegin(); it != layerPartialLane.rend(); it++)
+        for (auto it = layerPartialLane.rbegin(); it != layerPartialLane.rend(); ++it)
         {
             auto& layerData = *it;
-            if (layerData->GetLayer()->HandleUserInput(mouseEvent, m_multiLayerRepository))
+            if (layerData->GetLayer()->HandleUserInput(mouseEvent, m_mouseEventTracker))
             {
                 return;
             }
@@ -265,10 +257,11 @@ namespace Molten::Gui
     template<typename TTheme>
     void Canvas<TTheme>::UpdateModalMouseInputs(const UserInput::Event& mouseEvent)
     {
-        if (m_widgetOverrideMouseEvents == nullptr)
+        if (m_overrideWidgetMouseEventWidget == nullptr)
         {
-            m_mouseInputUpdate = &Canvas<TTheme>::UpdateModalMouseInputs;
-            UpdateNormalMouseInputs(mouseEvent);
+            m_mouseInputUpdate = &Canvas<TTheme>::UpdateNormalMouseInputs;
+            (*this.*m_mouseInputUpdate)(mouseEvent);
+            return;
         }
 
         switch (mouseEvent.subType)
@@ -284,27 +277,27 @@ namespace Molten::Gui
     void Canvas<TTheme>::HandleModalMouseMove(const UserInput::Event& mouseEvent)
     {
         auto& mouseMoveEvent = mouseEvent.mouseMoveEvent;
-        m_multiLayerRepository.HandleMouseMove(&m_widgetOverrideMouseEvents->GetData(), mouseMoveEvent.position);
+        m_mouseEventTracker.HandleMouseMove(m_overrideWidgetMouseEventWidget, mouseMoveEvent.position);
     }
 
     template<typename TTheme>
     void Canvas<TTheme>::HandleModalMouseButtonPressed(const UserInput::Event& mouseEvent)
     {
         auto& mouseButtonEvent = mouseEvent.mouseButtonEvent;
-        m_multiLayerRepository.HandleMouseButtonPress(&m_widgetOverrideMouseEvents->GetData(), mouseButtonEvent.position, mouseButtonEvent.button);
+        m_mouseEventTracker.HandleMouseButtonPress(m_overrideWidgetMouseEventWidget, mouseButtonEvent.position, mouseButtonEvent.button);
     }
 
     template<typename TTheme>
     void Canvas<TTheme>::HandleModalMouseButtonReleased(const UserInput::Event& mouseEvent)
     {
         auto& mouseButtonEvent = mouseEvent.mouseButtonEvent;
-        m_multiLayerRepository.HandleMouseButtonRelease(mouseButtonEvent.position, mouseButtonEvent.button);
+        m_mouseEventTracker.HandleMouseButtonRelease(mouseButtonEvent.position, mouseButtonEvent.button);
         
-        if (mouseEvent.mouseButtonEvent.button == m_buttonOverrideMouseEvents)
+        if (mouseEvent.mouseButtonEvent.button == m_overrideWidgetMouseEventButton)
         {
-            OverrideMouseEventsReset();
+            m_mouseInputUpdate = &Canvas<TTheme>::UpdateNormalMouseInputs;
+            m_overrideWidgetMouseEventWidget = nullptr;
         }
-
     }
 
 }

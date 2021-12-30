@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,32 +23,39 @@
 *
 */
 
+#ifndef MOLTEN_CORE_GUI_WIDGETVISIBILITYTRACKER_HPP
+#define MOLTEN_CORE_GUI_WIDGETVISIBILITYTRACKER_HPP
+
+#include <array>
+#include <vector>
+
 namespace Molten::Gui
 {
 
-    //template<typename TSkin>
-    //inline Padding<TSkin>::Padding(
-    //    TSkin& skin,
-    //    const float left,
-    //    const float top,
-    //    const float right,
-    //    const float bottom
-    //) :
-    //    PaddingData(left, top, right, bottom)
-    //{
-    //    //skin.template Create<Padding>(*this);
-    //}
+    class VisibilityWidget;
 
-    //template<typename TSkin>
-    //inline void Padding<TSkin>::Update(const Time& /*deltaTime*/)
-    //{
-    //}
+    class WidgetVisibilityTracker
+    {
 
+    public:
 
-    //template<typename TSkin>
-    //inline bool Padding<TSkin>::OnAddChild(WidgetPointer<TSkin> /*widget*/)
-    //{
-    //    return true;
-    //}
+        WidgetVisibilityTracker();
+
+        void RegisterVisibleWidget(VisibilityWidget* widget);
+
+        void Update();
+
+    private:
+
+        using Container = std::vector<VisibilityWidget*>;
+        using Containers = std::array<Container, 2>;
+
+        Containers m_containers;
+        Container* m_currentContainer;
+    };
 
 }
+
+#include "Molten/Gui/WidgetVisibilityTracker.inl"
+
+#endif

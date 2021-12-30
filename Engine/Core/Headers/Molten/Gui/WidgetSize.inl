@@ -23,38 +23,25 @@
 *
 */
 
-namespace Molten::Gui
+namespace Molten::Gui::Size
 {
 
-    // Widget size implementations.
-    constexpr WidgetSize::WidgetSize() :
-        type(WidgetSizeType::Fixed)
-    {}
-
-    constexpr WidgetSize::WidgetSize(const ValueType& value) :
-        type(WidgetSizeType::Fixed),
-        value(value)
-    {}
-
-    constexpr WidgetSize::WidgetSize(const float x, const float y) :
-        type(WidgetSizeType::Fixed),
-        value(x, y)
-    {}
-
-    constexpr WidgetSize::WidgetSize(const WidgetSizeType type, const ValueType & value) :
-        type(type),
-        value(value)
-    {}
-
-    inline WidgetSize::ValueType WidgetSize::CalculateValue(const ValueType & fitSize, const ValueType & occupySize) const
+    inline bool Pixels::operator == (const Pixels& rhs) const
     {
-        switch(type)
-        {
-            case WidgetSizeType::Fit: return fitSize;
-            case WidgetSizeType::Occupy: return occupySize;
-            default: break;
-        }
-        return value;
+        return value == rhs.value;
+    }
+    inline bool Pixels::operator != (const Pixels& rhs) const
+    {
+        return value != rhs.value;
+    }
+
+    inline bool Percent::operator == (const Percent& rhs) const
+    {
+        return value == rhs.value;
+    }
+    inline bool Percent::operator != (const Percent& rhs) const
+    {
+        return value != rhs.value;
     }
 
 }

@@ -27,70 +27,59 @@ namespace Molten::Gui
 {
     template<typename TTheme>
     Pane<TTheme>::Pane(
-        WidgetDataMixin<TTheme, Pane>& data,
-        const std::string& label,
-        const WidgetSize& size
+        WidgetMixinDescriptor<TTheme, Pane>& desc,
+        const std::string& label
     ) :
-        WidgetMixin<TTheme, Pane>(data, size),
-        m_label(label),
-        m_labelWidget(nullptr)
+        WidgetMixin<TTheme, Pane>(desc),
+        label(desc.propertyDispatcher, label)
     {}
 
     template<typename TTheme>
-    void Pane<TTheme>::Update()
+    void Pane<TTheme>::PreUpdate()
     {
-        this->ApplyMarginsToGrantedBounds();
-
-        auto& grantedBounds = this->GetGrantedBounds();
-
-        m_dragBounds = grantedBounds;
-        m_dragBounds.bottom = m_dragBounds.top + Mixin::WidgetSkinType::headerBarHeight;
-
-        auto childLane = this->GetChildrenPartialLane();
-
-        if (auto it = childLane.begin(); it != childLane.end())
+        if (this->PreCalculateBounds())
         {
-            if(auto& childData = (*it).GetValue(); childData->GetWidget() == m_labelWidget)
-            {
-                const auto labelBounds = m_dragBounds
-                    .WithoutMargins({2, 2, 2, 2})
-                    .ClampHighToLow();
-                childData->SetGrantedBounds(labelBounds);
-                ++it;
-            }
-
-            if(it != childLane.end())
-            {
-                auto& childData = (*it).GetValue();
-
-                const auto contentBounds = grantedBounds
-                    .WithoutMargins({ 0.0f, Mixin::WidgetSkinType::headerBarHeight, 0.0f, 0.0f })
-                    .WithoutMargins(this->padding)
-                    .ClampHighToLow();
-                childData->SetGrantedBounds(contentBounds);
-            }
+            this->UpdateFirstChild();
         }
     }
 
     template<typename TTheme>
-    bool Pane<TTheme>::OnMouseEvent(const WidgetMouseEvent&)
+    void Pane<TTheme>::PostUpdate()
     {
-        return false;
+        const auto& bounds = this->GetBounds();
+
+        m_dragBounds = {
+            bounds.position,
+            { bounds.size.x, WidgetMixin<TTheme, Pane>::WidgetSkinType::headerBarHeight }
+        };
     }
 
-    template<typename TTheme>
-    const Bounds2f32& Pane<TTheme>::GetDragBounds() const
-    {
-        return m_dragBounds;
-    }
 
     template<typename TTheme>
-    void Pane<TTheme>::OnCreate()
+    PreChildUpdateResult Pane<TTheme>::PreChildUpdate(Widget<TTheme>& child)
     {
-        if(m_label.size())
+
+        auto childBounds = this->GetBounds();
+
+        childBounds.size -= this->padding.low + this->padding.high + Vector2f32{ 0.0f, WidgetMixin<TTheme, Pane>::WidgetSkinType::headerBarHeight };
+
+        if(childBounds.IsEmpty())
         {
-            m_labelWidget = this->template CreateChild<Label>(m_label, 16);
+            return PreChildUpdateResult::Skip;
         }
+
+        childBounds.position += this->padding.low + Vector2f32{ 0.0f, WidgetMixin<TTheme, Pane>::WidgetSkinType::headerBarHeight };
+
+        this->SetPosition(child, childBounds.position);
+        this->SetGrantedSize(child, childBounds.size);
+
+        return PreChildUpdateResult::Visit;
+    }
+
+    template<typename TTheme>
+    void Pane<TTheme>::PostChildUpdate(Widget<TTheme>& child)
+    {
+        this->DrawChild(child);
     }
 
 }

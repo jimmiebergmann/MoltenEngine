@@ -31,11 +31,13 @@
 #include "Molten/Gui/CanvasRenderer.hpp"
 #include "Molten/Gui/Widgets/ButtonWidget.hpp"
 #include "Molten/Gui/Widgets/DockerWidget.hpp"
-#include "Molten/Gui/Widgets/PaneWidget.hpp"
-#include "Molten/Gui/Widgets/SpacerWidget.hpp"
-#include "Molten/Gui/Widgets/VerticalGridWidget.hpp"
+#include "Molten/Gui/Widgets/DockerOverlayWidget.hpp"
+#include "Molten/Gui/Widgets/GridWidget.hpp"
 #include "Molten/Gui/Widgets/LabelWidget.hpp"
+#include "Molten/Gui/Widgets/PaneWidget.hpp"
+#include "Molten/Gui/Widgets/ProgressBarWidget.hpp"
 #include "Molten/Gui/Widgets/ViewportWidget.hpp"
+#include "Molten/Gui/Widgets/WindowWidget.hpp"
 
 #include <memory>
 
@@ -46,12 +48,12 @@ namespace Molten::Gui
     {
 
     public:
-
-        Vector4f32 backgroundColor = { 0.11f, 0.11f, 0.13f, 1.0f};
+        
+        Vector4f32 backgroundColor = {  35.0f / 255.0f, 35.0f / 255.0f, 35.0f / 255.0f, 1.0f };
 
         EditorTheme(CanvasRenderer& canvasRenderer, FontNameRepository& fontNameRepository) :
             m_canvasRenderer(canvasRenderer),
-            m_fontRepository(fontNameRepository, {512, 512})
+            m_fontRepository(fontNameRepository, { 512, 512 })
         {}
 
         void Update()
@@ -99,15 +101,16 @@ namespace Molten::Gui
         }
 
         template<template<typename> typename TWidget>
-        std::unique_ptr<WidgetSkin<EditorTheme, TWidget>> Create(TWidget<EditorTheme>& widget, WidgetData<EditorTheme>& widgetData)
+        std::unique_ptr<WidgetSkin<EditorTheme, TWidget>> Create(TWidget<EditorTheme>& widget)
         {
-            return std::make_unique<WidgetSkin<EditorTheme, TWidget>>(WidgetSkinDescriptor<EditorTheme, TWidget>{ *this, widget, widgetData});
+            return std::make_unique<WidgetSkin<EditorTheme, TWidget>>(WidgetSkinDescriptor<EditorTheme, TWidget>{ *this, widget });
         }
 
     private:
 
         template<typename TTheme, template<typename> typename TWidget>
         friend struct WidgetSkin;
+        friend struct WidgetSkinLabel;
 
         CanvasRenderer& m_canvasRenderer;
         FontRepository m_fontRepository;
@@ -115,20 +118,52 @@ namespace Molten::Gui
 
     };
 
+
+    struct WidgetSkinLabel
+    {
+        explicit WidgetSkinLabel(EditorTheme& theme) :
+            m_theme(theme)
+        {}
+
+        void Load(const std::string& text, const std::string& fontFamily, const uint32_t height)
+        {
+            auto* font = m_theme.m_fontRepository.GetOrCreateFont(fontFamily);
+            m_fontSequence = font->CreateGroupedSequence(text, 96, height);
+
+            m_theme.UpdateFontRepository();
+            m_canvasFontSequence = m_theme.m_canvasRenderer.CreateFontSequence(m_fontSequence);
+        }
+
+        [[nodiscard]] AABB2f32 GetBounds() const
+        {
+            return { m_fontSequence.bounds.low, m_fontSequence.bounds.GetSize() };
+        }
+
+        void Draw(const Vector2f32& position)
+        {
+            m_theme.m_canvasRenderer.DrawFontSequence(position + Vector2f32{ 0.0f, m_fontSequence.bounds.bottom }, m_canvasFontSequence);
+        }
+
+        EditorTheme& m_theme;
+        FontGroupedSequence m_fontSequence;
+        CanvasRendererFontSequence m_canvasFontSequence;
+    };
+
+
     template<>
     struct WidgetSkin<EditorTheme, Button> : WidgetSkinMixin<EditorTheme, Button>
     {
+        static constexpr auto defaultPosition = WidgetPosition{ Position::Pixels{ 0.0f }, Position::Pixels{ 0.0f } };
+        static constexpr auto defaultSize = WidgetSize{ Size::Pixels{ 100.0f }, Size::Pixels{ 30.0f } };
 
-        //static constexpr WidgetSize defaultSize = WidgetSize{ 100.0f, 20.0f };
-
-        WidgetSkin(const WidgetSkinDescriptor<EditorTheme, Button>& descriptor) :
+        explicit WidgetSkin(const WidgetSkinDescriptor<EditorTheme, Button>& descriptor) :
             WidgetSkinMixin<EditorTheme, Button>(descriptor),
             color{ 1.0f, 0.0f, 0.0f, 1.0f }
         {}
 
         void Draw() override
         {
-            theme.m_canvasRenderer.DrawRect(widgetData.GetGrantedBounds(), color);
+            theme.m_canvasRenderer.DrawRect(widget.GetBounds(), color);
         }
 
         void OnStateChange(const State& state) override
@@ -148,102 +183,169 @@ namespace Molten::Gui
     template<>
     struct WidgetSkin<EditorTheme, Docker> : WidgetSkinMixin<EditorTheme, Docker>
     {
+        static constexpr auto defaultPosition = WidgetPosition{ Position::Pixels{ 0.0f }, Position::Pixels{ 0.0f } };
+        static constexpr auto defaultSize = WidgetSize{ Size::Fit::Parent, Size::Fit::Parent };
 
-        static constexpr float edgeWidth = 6.0f;
-        static constexpr float spacing = 6.0f;
-        static constexpr float widgetDragActivationDistance = 5.0f;
+        static constexpr auto edgeWidth = 6.0f;
+        static constexpr auto cellSpacing = 6.0f;
+        static constexpr auto minCellSize = Vector2f32{ 30.0f, 30.0f };
+        static constexpr auto defaultCellSize = Vector2f32{ 100.0f, 100.0f };
 
-        WidgetSkin(const WidgetSkinDescriptor<EditorTheme, Docker>& descriptor) :
+        //static constexpr auto widgetDragActivationDistance = 5.0f;
+
+        explicit WidgetSkin(const WidgetSkinDescriptor<EditorTheme, Docker>& descriptor) :
             WidgetSkinMixin<EditorTheme, Docker>(descriptor)
         {}
 
     };
 
+    //template<>
+    //struct WidgetSkin<EditorTheme, DockerOverlay> : WidgetSkinMixin<EditorTheme, DockerOverlay>
+    //{
+    //    static constexpr auto backgroundColor = Vector4f32{ 0.4f, 0.4f, 1.0f, 0.4f };
+
+    //    explicit WidgetSkin(const WidgetSkinDescriptor<EditorTheme, DockerOverlay>& descriptor) :
+    //        WidgetSkinMixin<EditorTheme, DockerOverlay>(descriptor)
+    //    {}
+
+    //    void Draw() override
+    //    {
+    //        theme.m_canvasRenderer.DrawRect(widgetData.GetBounds(), backgroundColor);
+    //    }
+    //};
+
     template<>
-    struct WidgetSkin<EditorTheme, DockerOverlay> : WidgetSkinMixin<EditorTheme, DockerOverlay>
+    struct WidgetSkin<EditorTheme, Grid> : WidgetSkinMixin<EditorTheme, Grid>
     {
-        WidgetSkin(const WidgetSkinDescriptor<EditorTheme, DockerOverlay>& descriptor) :
-            WidgetSkinMixin<EditorTheme, DockerOverlay>(descriptor)
+        static constexpr auto defaultPosition = WidgetPosition{ Position::Pixels{ 0.0f }, Position::Pixels{ 0.0f } };
+        static constexpr auto defaultSize = WidgetSize{ Size::Fit::Parent, Size::Fit::Parent };
+
+        static constexpr auto cellSpacing = 6.0f;
+
+        explicit WidgetSkin(const WidgetSkinDescriptor<EditorTheme, Grid>& descriptor) :
+            WidgetSkinMixin<EditorTheme, Grid>(descriptor)
         {}
 
         void Draw() override
         {
-            const Bounds2f32 overlayBounds = { widget.position, widget.position + widget.size.value };
-            theme.m_canvasRenderer.DrawRect(overlayBounds, Vector4f32{ 0.4f, 0.4f, 1.0f, 0.4f });
+            //theme.m_canvasRenderer.DrawRect(widgetData.GetBounds(), Vector4f32{ 1.0f, 1.0f, 0.0f, 1.0f });
         }
-    };
-
-    template<>
-    struct WidgetSkin<EditorTheme, Spacer> : WidgetSkinMixin<EditorTheme, Spacer>
-    {
-        WidgetSkin(const WidgetSkinDescriptor<EditorTheme, Spacer>& descriptor) :
-            WidgetSkinMixin<EditorTheme, Spacer>(descriptor)
-        {}
-
-    };
-
-    template<>
-    struct WidgetSkin<EditorTheme, VerticalGrid> : WidgetSkinMixin<EditorTheme, VerticalGrid>
-    {
-        WidgetSkin(const WidgetSkinDescriptor<EditorTheme, VerticalGrid>& descriptor) :
-            WidgetSkinMixin<EditorTheme, VerticalGrid>(descriptor)
-        {}
 
     };
 
     template<>
     struct WidgetSkin<EditorTheme, Label> : WidgetSkinMixin<EditorTheme, Label>
     {
-        WidgetSkin(const WidgetSkinDescriptor<EditorTheme, Label>& descriptor) :
-            WidgetSkinMixin<EditorTheme, Label>(descriptor)
+        static constexpr auto defaultPosition = WidgetPosition{ Position::Pixels{ 0.0f }, Position::Pixels{ 0.0f } };
+        static constexpr auto defaultSize = WidgetSize{ Size::Fit::Parent, Size::Fit::Parent };
+
+        explicit WidgetSkin(const WidgetSkinDescriptor<EditorTheme, Label>& descriptor) :
+            WidgetSkinMixin<EditorTheme, Label>(descriptor),
+            m_label(descriptor.theme)
         {
-            // arial.ttf
-            // seguiemj.ttf
-
-            const auto fontFamily = widget.fontFamily.empty() ? "arial" : widget.fontFamily;
-            const auto height = widget.height == 0 ? 16 : widget.height;
-            m_font = theme.m_fontRepository.GetOrCreateFont(fontFamily);
-            m_fontSequence = m_font->CreateGroupedSequence(widget.text, 96, height);
-
-            theme.UpdateFontRepository();
-            m_canvasFontSequence = theme.m_canvasRenderer.CreateFontSequence(m_fontSequence);
+            Load();
+            widget.text.onChange.Connect([&]()
+            {
+               Load();
+            });
         }
 
         void Draw() override
         {
-            auto grantedBounds = widgetData.GetGrantedBounds();
-            grantedBounds.low.x -= static_cast<float>(m_fontSequence.bounds.low.x);
-            grantedBounds.low.y += m_font->CalculateHeightOffset(grantedBounds);
-            
-            theme.m_canvasRenderer.DrawFontSequence(grantedBounds.low, m_canvasFontSequence);
+            m_label.Draw(widget.GetBounds().position);
+        }
+
+        [[nodiscard]] AABB2f32 GetTextBounds() const
+        {
+            return m_label.GetBounds();
         }
 
     private:
 
-        Font* m_font;
-        FontGroupedSequence m_fontSequence;
-        CanvasRendererFontSequence m_canvasFontSequence;
+        void Load()
+        {
+            // arial.ttf
+            // seguiemj.ttf
+
+            const auto fontFamily = widget.fontFamily().empty() ? "OpenSans-VariableFont_wdth,wght" : widget.fontFamily();
+            const auto height = widget.height() == 0 ? 16 : widget.height();
+
+            m_label.Load(widget.text(), fontFamily, height);
+        }
+
+    public:
+
+        WidgetSkinLabel m_label;
 
     };
 
     template<>
     struct WidgetSkin<EditorTheme, Pane> : WidgetSkinMixin<EditorTheme, Pane>
     {
+        static constexpr auto defaultPosition = WidgetPosition{ Position::Pixels{ 0.0f }, Position::Pixels{ 0.0f } };
+        static constexpr auto defaultSize = WidgetSize{ Size::Fit::Parent, Size::Fit::Parent };
 
-        static constexpr float headerBarHeight = 30.0f;
+        static constexpr auto headerBarHeight = 30.0f;
+        static constexpr auto headerColor = Vector4f32{ 50.0f / 255.0f, 50.0f / 255.0f, 50.0f / 255.0f, 1.0f };
+        static constexpr auto backgroundColor = Vector4f32{ 60.0f / 255.0f, 60.0f / 255.0f, 60.0f / 255.0f, 1.0f };
 
-        WidgetSkin(const WidgetSkinDescriptor<EditorTheme, Pane>& descriptor) :
-            WidgetSkinMixin<EditorTheme, Pane>(descriptor)
+        explicit WidgetSkin(const WidgetSkinDescriptor<EditorTheme, Pane>& descriptor) :
+            WidgetSkinMixin<EditorTheme, Pane>(descriptor),
+            m_label(descriptor.theme)
+        {
+            LoadLabel();
+            widget.label.onChange.Connect([&]()
+            {
+				LoadLabel();
+            });
+        }
+
+        void Draw() override
+        {
+            theme.m_canvasRenderer.DrawRect(widget.GetBounds(), backgroundColor);
+
+            auto headerBounds = widget.GetBounds();
+            headerBounds.size.y = std::min(headerBarHeight, headerBounds.size.y);
+            theme.m_canvasRenderer.DrawRect(headerBounds, headerColor);
+
+            m_label.Draw(widget.GetBounds().position + Vector2f32{ 0.0f, 16.0f });
+        }
+
+    private:
+
+        void LoadLabel()
+        {
+            m_label.Load(widget.label(), "OpenSans-VariableFont_wdth,wght", 16);
+        }
+
+        WidgetSkinLabel m_label;
+    };
+
+    template<>
+    struct WidgetSkin<EditorTheme, ProgressBar> : WidgetSkinMixin<EditorTheme, ProgressBar>
+    {
+        static constexpr auto defaultPosition = WidgetPosition{ Position::Pixels{ 0.0f }, Position::Pixels{ 0.0f } };
+        static constexpr auto defaultSize = WidgetSize{ Size::Fit::Parent, Size::Pixels{ 30.0f } };
+
+        static constexpr auto backgroundColor = Vector4f32{ 1.0f, 1.0f, 1.0f, 1.0f };
+        static constexpr auto progressColor = Vector4f32{ 0.2f, 1.0f, 0.2f, 1.0f };
+
+        explicit WidgetSkin(const WidgetSkinDescriptor<EditorTheme, ProgressBar>& descriptor) :
+            WidgetSkinMixin<EditorTheme, ProgressBar>(descriptor)
         {}
 
         void Draw() override
         {
-            auto& grantedBounds = widgetData.GetGrantedBounds();
+            theme.m_canvasRenderer.DrawRect(widget.GetBounds(), backgroundColor);
 
-            theme.m_canvasRenderer.DrawRect(grantedBounds, Vector4f32{ 0.43f, 0.45f, 0.49f, 1.0f });                
-            theme.m_canvasRenderer.DrawRect(
-                grantedBounds.WithoutMargins({ 0.0f, headerBarHeight, 0.0f, 0.0f }),
-                Vector4f32{ 0.24f, 0.25f, 0.27f, 1.0f });
+            const auto value = static_cast<float>(std::min(std::max(widget.value, 0.0), 100.0));
+            auto progressBounds = widget.GetBounds();
+            progressBounds.size.x *= value / 100.0f;
+            theme.m_canvasRenderer.DrawRect(progressBounds, progressColor);
+
+            auto tintBounds = progressBounds;
+            tintBounds.size.y *= 0.3f;
+            theme.m_canvasRenderer.DrawRect(tintBounds, { 1.0f, 1.0f, 1.0f, 0.5f });
         }
 
     };
@@ -251,26 +353,27 @@ namespace Molten::Gui
     template<>
     struct WidgetSkin<EditorTheme, Viewport> : WidgetSkinMixin<EditorTheme, Viewport>
     {
+        static constexpr auto defaultPosition = WidgetPosition{ Position::Pixels{ 0.0f }, Position::Pixels{ 0.0f } };
+        static constexpr auto defaultSize = WidgetSize{ Size::Fit::Parent, Size::Fit::Parent  };
 
-        WidgetSkin(const WidgetSkinDescriptor<EditorTheme, Viewport>& descriptor) :
+        explicit WidgetSkin(const WidgetSkinDescriptor<EditorTheme, Viewport>& descriptor) :
             WidgetSkinMixin<EditorTheme, Viewport>(descriptor)
         {}
 
         void Draw() override
         {
-            if (!m_framedTexture.framedTexture || !widget.IsVisible())
-            {
-                return;
-            }
+             if (!m_framedTexture.framedTexture /* || !widget.IsVisible() */ )
+             {
+                 return;
+             }
 
-            const auto grantedBounds = widgetData.GetGrantedBounds();
-            const auto textureBounds = Bounds2f32{ 0.0f, 0.0f, 1.0f, 1.0f };
-            theme.m_canvasRenderer.DrawRect(grantedBounds, textureBounds, m_framedTexture);
+             constexpr auto textureBounds = Bounds2f32{ 0.0f, 0.0f, 1.0f, 1.0f };
+             theme.m_canvasRenderer.DrawRect(widget.GetBounds(), textureBounds, m_framedTexture);
         }
 
         void OnStateChange(const State& state) override
         {
-            if(m_framedTexture.framedTexture == state.framedTexture)
+            if (m_framedTexture.framedTexture == state.framedTexture)
             {
                 return;
             }
@@ -281,6 +384,29 @@ namespace Molten::Gui
     private:
 
         CanvasRendererFramedTexture m_framedTexture;
+
+    };
+
+    template<>
+    struct WidgetSkin<EditorTheme, Window> : WidgetSkinMixin<EditorTheme, Window>
+    {
+        static constexpr float headerBarHeight = 30.0f;
+
+        explicit WidgetSkin(const WidgetSkinDescriptor<EditorTheme, Window>& descriptor) :
+            WidgetSkinMixin<EditorTheme, Window>(descriptor)
+        {}
+
+        void Draw() override
+        {
+            /*auto& grantedBounds = widgetData.GetGrantedBounds();
+
+            theme.m_canvasRenderer.DrawRect(grantedBounds, Vector4f32{ 0.43f, 0.45f, 0.49f, 1.0f });
+            theme.m_canvasRenderer.DrawRect(
+                grantedBounds.WithoutMargins({ 0.0f, headerBarHeight, 0.0f, 0.0f }),
+                Vector4f32{ 0.24f, 0.25f, 0.27f, 1.0f });
+            */
+
+        }
 
     };
 

@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -26,17 +26,27 @@
 #ifndef MOLTEN_CORE_SYSTEM_SIGNAL_HPP
 #define MOLTEN_CORE_SYSTEM_SIGNAL_HPP
 
-#include <functional>
+#include "Molten/Types.hpp"
+#include <vector>
 #include <map>
+#include <functional>
 
 namespace Molten
 {
 
-    /**
-    * @brief Signal class.
-    *        Supporting multiple callback connections for a single signal.
-    *        All connections are destroyed at destruction, making any stored Connection object useless.
-    *        Signals are not thread safe. Signaled callbacks are executed at the emitter's thread.
+    /** Forward declarations. */
+    /**@{*/
+    template<typename ... Args> class Signal;
+    class DispatchSignalBase;
+    template<typename ... Args> class DispatchSignal;
+    class SignalDispatcher;
+    /**@}*/
+
+
+    /** Signal class.
+    *   Supporting multiple callback connections for a single signal.
+    *   All connections are destroyed at destruction, making any stored Connection object useless.
+    *   Signals are not thread safe. Signaled callbacks are executed at the emitter's thread.
     */
     template<typename ... Args>
     class Signal
@@ -44,47 +54,28 @@ namespace Molten
 
     public:
 
-        /**
-        * @brief Callback function type.
-        */
+        /** Callback function type. */
         using Callback = std::function<void(Args...)>;
 
-        /**
-        * @brief Connection class.
-        *        Used for disconnecting existing connection of signal.
-        */
+        /** Connection class.  Used for disconnecting existing connection of signal. */
         class Connection
         {
 
         public:
 
-            /**
-            * @brief Constructor.
-            */
             Connection();
+            ~Connection() = default;
 
-            /**
-            * @brief Copy constructor.
-            */
+            /** Copy and move constructor/assignment operators. */
+            /**@{*/
             Connection(const Connection& connection);
-
-            /**
-            * @brief Move constructor.
-            */
             Connection(Connection&& connection) noexcept;
 
-            /**
-            * @brief Copy assignment operator.
-            */
-            Connection& operator =(const Connection&);
+            Connection& operator =(const Connection& connection);
+            Connection& operator =(Connection&& connection) noexcept;
+            /**@}*/
 
-            /**
-            * @brief Move assignment operator.
-            */
-            Connection& operator =(Connection&&);
-
-            /**
-            * @brief Disconnect this connection for signal.
+            /** Disconnect this connection for signal.
             */
             void Disconnect();
 
@@ -102,41 +93,25 @@ namespace Molten
 
         };
 
-        /**
-        * @brief Constructor.
-        */
-        Signal();
-
-        /**
-        * @brief Destructor.
-        */
+        Signal() = default;
         ~Signal();
 
-        /**
-        * @brief Connect signal to callback function.
+        /** Connect signal to callback function.
         *
         * @return Connection object, used for disconnecting from signal at any time.
         */
         Connection Connect(const Callback & callback);
 
-        /**
-        * @brief Disconnect existing connection.
-        */
+        /** Disconnect existing connection. */
         void Disconnect(Connection& connection);
 
-        /**
-        * @brief Disconnect all connections.
-        */
+        /**  Disconnect all connections. */
         void DisconnectAll();
 
-        /**
-        * @brief Get number of connections.
-        */
-        size_t GetConnectionCount() const;
+        /**  Get number of connections. */
+        [[nodiscard]] size_t GetConnectionCount() const;
 
-        /**
-        * @brief Operator for executing all connected callback functions, with input parameters.
-        */
+        /** Operator for executing all connected callback functions, with input parameters. */
         void operator ()(Args ... args) const;
 
     private:
@@ -153,6 +128,102 @@ namespace Molten
         friend class Connection;
 
     };
+
+
+    class MOLTEN_API SignalDispatcher
+    {
+
+    public:
+
+        SignalDispatcher() = default;
+        ~SignalDispatcher() = default;
+
+        /** Deleted copy and move constructor/assignment operators. */
+        /**@{*/
+        SignalDispatcher(const SignalDispatcher&) = delete;
+        SignalDispatcher(SignalDispatcher&&) = delete;
+
+        SignalDispatcher& operator =(const SignalDispatcher&) = delete;
+        SignalDispatcher& operator =(SignalDispatcher&&) = delete;
+        /**@}*/
+
+        /** Execute all signals. */
+        void Execute();
+
+    private:
+
+        template<typename ... Args> friend class DispatchSignal;
+
+        void QueueSignal(DispatchSignalBase& dispatchSignalBase);
+
+        using DispatchSignalBases = std::vector<DispatchSignalBase*>;
+
+        DispatchSignalBases m_queuedSignals;
+
+    };
+
+
+    class MOLTEN_API DispatchSignalBase
+    {
+
+    protected:
+
+        DispatchSignalBase() = default;
+
+        using GenericCallback = std::function<void()>;
+        using GenericCallbacks = std::vector<GenericCallback>;
+
+        GenericCallbacks m_genericCallbacks;
+
+    private:
+
+        friend class SignalDispatcher;
+
+    };
+
+
+    /** Dispatch signal class.
+    *   Supporting multiple callback connections for a single signal.
+    *   All connections are destroyed at destruction, making any stored Connection object useless.
+    *   Signaled callbacks are executed by provided signal dispatcher.
+    */
+    template<typename ... Args>
+    class DispatchSignal : public DispatchSignalBase
+    {
+
+    public:
+
+        /** Callback function type. */
+        using Callback = std::function<void(Args...)>;
+
+        explicit DispatchSignal(SignalDispatcher& dispatcher);
+        ~DispatchSignal() = default;
+
+        /** Deleted copy and move constructor/assignment operators. */
+        /**@{*/
+        DispatchSignal(const DispatchSignal&) = delete;
+        DispatchSignal(DispatchSignal&&) = delete;
+
+        DispatchSignal& operator =(const DispatchSignal&) = delete;
+        DispatchSignal& operator =(DispatchSignal&&) = delete;
+        /**@}*/
+
+        /** Connect signal to callback function. */
+        void Connect(const Callback& callback);
+        void Connect(Callback&& callback);
+
+        /** Operator for signaling callback. Callback function is not executed immediately, but when the dispatcher is executed. */
+        void operator ()(Args&& ... args);
+
+    private:
+
+        using Callbacks = std::vector<Callback>;
+
+        SignalDispatcher& m_dispatcher;
+        Callbacks m_callbacks;
+
+    };
+
 
 }
 

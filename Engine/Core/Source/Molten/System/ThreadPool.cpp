@@ -31,6 +31,7 @@ namespace Molten
     // Global implementations.
     static size_t CalculateWorkerCount(
         const size_t threadCount,
+        const size_t minThreadCount,
         const size_t reservedThreads)
     {
         size_t count = threadCount;
@@ -41,19 +42,20 @@ namespace Molten
 
         if (reservedThreads >= count)
         {
-            return 1;
+            return minThreadCount;
         }
 
-        return count - reservedThreads;
+        return std::max(count - reservedThreads, minThreadCount);
     }
 
 
     // Thread pool implementations.
     ThreadPool::ThreadPool(
         const size_t threadCount,
+        const size_t minThreadCount,
         const size_t reservedThreads)
     {
-        const auto workerCount = CalculateWorkerCount(threadCount, reservedThreads);
+        const auto workerCount = CalculateWorkerCount(threadCount, minThreadCount, reservedThreads);
 
         m_workers.reserve(workerCount);
         m_freeWorkers.reserve(workerCount);

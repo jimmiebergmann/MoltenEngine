@@ -27,8 +27,10 @@
 #define MOLTEN_CORE_GUI_WIDGETDATA_HPP
 
 #include "Molten/Gui/WidgetEvent.hpp"
-#include "Molten/Utility/BypassTree.hpp"
-#include "Molten/Math/Bounds.hpp"
+//#include "Molten/Utility/BypassTree.hpp"
+#include "Molten/Utility/Tree.hpp"
+#include "Molten/Math/Bounds.hpp" // ??
+#include "Molten/Math/AABB.hpp"
 #include <memory>
 #include <functional>
 
@@ -45,6 +47,9 @@ namespace Molten::Gui
     class LayerMixin;
 
     class WidgetSkinBase; // DELETE
+
+    template<typename TTheme, template<typename> typename TWidget>
+    struct WidgetSkin;
     template<typename TTheme, template<typename> typename TWidget>
     class WidgetSkinMixin;
 
@@ -65,17 +70,9 @@ namespace Molten::Gui
 
     public:
 
-        using Tree = BypassTree<std::unique_ptr<WidgetData<TTheme>>>;
-        using TreeNormalLaneType = typename Tree::NormalLaneType;
-        using TreePartialLaneType = typename Tree::PartialLaneType;
-        using TreePartialLane = typename Tree::template Lane<TreePartialLaneType>;
-        using TreePartialConstLane = typename Tree::template ConstLane<TreePartialLaneType>;
-        using TreeNormalLane = typename Tree::template Lane<TreeNormalLaneType>;
-        using TreeNormalConstLane = typename Tree::template ConstLane<TreeNormalLaneType>;
-        using TreeNormalIterator = typename Tree::template Iterator<TreeNormalLaneType>;
-        using TreeNormalConstIterator = typename Tree::template ConstIterator<TreeNormalLaneType>;
-        using TreePartialIterator = typename Tree::template Iterator<TreePartialLaneType>;
-        using TreePartialConstIterator = typename Tree::template ConstIterator<TreePartialLaneType>;
+        using Tree = Tree<std::unique_ptr<WidgetData<TTheme>>>;
+        using TreeIterator = typename Tree::Iterator;
+        using TreeLane = typename Tree::Lane;
         using MouseEventFunction = std::function<Widget<TTheme>* (const WidgetMouseEvent&)>;
 
         WidgetData(
@@ -97,17 +94,10 @@ namespace Molten::Gui
         [[nodiscard]] Tree* GetTree();
         [[nodiscard]] const Tree* GetTree() const;
 
-        [[nodiscard]] TreeNormalIterator GetTreeNormalIterator();
-        [[nodiscard]] TreeNormalConstIterator GetTreeNormalIterator() const;
+        [[nodiscard]] TreeIterator GetTreeIterator();
 
-        [[nodiscard]] TreePartialIterator GetTreePartialIterator();
-        [[nodiscard]] TreePartialConstIterator GetTreePartialIterator() const;
-
-        [[nodiscard]] TreeNormalLane GetChildrenNormalLane();
-        [[nodiscard]] TreeNormalConstLane GetChildrenNormalLane() const;
-
-        [[nodiscard]] TreePartialLane GetChildrenPartialLane();
-        [[nodiscard]] TreePartialConstLane GetChildrenPartialLane() const;
+        [[nodiscard]] TreeLane& GetChildren();
+        [[nodiscard]] const TreeLane& GetChildren() const;
 
         [[nodiscard]] Widget<TTheme>* GetParentWidget();
         [[nodiscard]] const Widget<TTheme>* GetParentWidget() const;
@@ -115,39 +105,55 @@ namespace Molten::Gui
         [[nodiscard]] Widget<TTheme>* GetWidget();
         [[nodiscard]] const Widget<TTheme>* GetWidget() const;
 
-        [[nodiscard]] WidgetSkinBase* GetWidgetSkin();
-        [[nodiscard]] const WidgetSkinBase* GetWidgetSkin() const;
+        [[nodiscard]] WidgetSkinBase* GetWidgetSkinBase();
+        [[nodiscard]] const WidgetSkinBase* GetWidgetSkinBase() const;
 
         [[nodiscard]] const MouseEventFunction& GetMouseEventFunction() const;
 
-        [[nodiscard]] const Bounds2f32& GetGrantedBounds() const;
-        void SetGrantedBounds(const Bounds2f32& grantedBounds);
+        [[nodiscard]] const AABB2f32& GetBounds() const;
+        void SetBounds(const AABB2f32& bounds);
 
-        void ShowWidget();
-        void HideWidget();
+        void SetGrantedSize(const Vector2f32& size);
+        void SetSize(const Vector2f32& size);
+        void SetPosition(const Vector2f32& position);
+
+        [[nodiscard]] Vector2f32 GetGrantedSize() const;
+        [[nodiscard]] Vector2f32 GetSize() const;
+        [[nodiscard]] Vector2f32 GetPosition() const; 
+
+        /*void ShowWidget();
+        void HideWidget();*/
+
+        void ClearVisibleChildren();
+        void AddVisibleChild(WidgetData<TTheme>* childData);
+        std::vector<WidgetData<TTheme>*>& GetVisibleChildren();
 
     protected:
 
         void Initialize(
             Tree* tree,
-            TreeNormalIterator iterator,
+            TreeIterator iterator,
             Widget<TTheme>* parentWidget,
             std::unique_ptr<Widget<TTheme>>&& widget,
-            WidgetSkinBase* widgetSkin,
+            WidgetSkinBase* widgetSkinBase,
             MouseEventFunction&& mouseEventFunction);
 
     private:
 
+        template<typename TOtherTheme> friend class Widget;
+
         Canvas<TTheme>* m_canvas;
         Layer<TTheme>* m_layer;
         Tree* m_tree;
-        TreeNormalIterator m_treeIterator;
+        TreeIterator m_treeIterator;
         Widget<TTheme>* m_parentWidget;
         std::unique_ptr<Widget<TTheme>> m_widget;
-        WidgetSkinBase* m_widgetSkin;
+        WidgetSkinBase* m_widgetSkinBase;
         MouseEventFunction m_mouseEventFunction;
 
-        Bounds2f32 m_grantedBounds;
+        Vector2f32 m_grantedSize;
+        AABB2f32 m_bounds;
+        std::vector<WidgetData<TTheme>*> m_visibleChildren;
 
     };
 
@@ -171,8 +177,8 @@ namespace Molten::Gui
         [[nodiscard]] WidgetMixin<TTheme, TWidget>* GetWidgetMixin();
         [[nodiscard]] const WidgetMixin<TTheme, TWidget>* GetWidgetMixin() const;
 
-        [[nodiscard]] WidgetSkinMixin<TTheme, TWidget>* GetWidgetSkinMixin();
-        [[nodiscard]] const WidgetSkinMixin<TTheme, TWidget>* GetWidgetSkinMixin() const;
+        [[nodiscard]] WidgetSkin<TTheme, TWidget>* GetWidgetSkin();
+        [[nodiscard]] const WidgetSkin<TTheme, TWidget>* GetWidgetSkin() const;
 
     protected:
 
@@ -181,16 +187,16 @@ namespace Molten::Gui
 
         void InitializeMixin(
             typename WidgetData<TTheme>::Tree* tree,
-            typename WidgetData<TTheme>::TreeNormalIterator iterator,
+            typename WidgetData<TTheme>::TreeIterator iterator,
             Widget<TTheme>* parentWidget,
             std::unique_ptr<WidgetMixin<TTheme, TWidget>>&& widget,
-            std::unique_ptr<WidgetSkinMixin<TTheme, TWidget>>&& widgetSkinMixin,
+            std::unique_ptr<WidgetSkin<TTheme, TWidget>>&& widgetSkin,
             typename WidgetData<TTheme>::MouseEventFunction&& mouseEventFunction);
 
     private:
 
         WidgetMixin<TTheme, TWidget>* m_widgetMixin;
-        std::unique_ptr<WidgetSkinMixin<TTheme, TWidget>> m_widgetSkinMixin;
+        std::unique_ptr<WidgetSkin<TTheme, TWidget>> m_widgetSkin;
 
     };
 

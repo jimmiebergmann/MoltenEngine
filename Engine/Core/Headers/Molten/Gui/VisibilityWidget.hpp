@@ -26,13 +26,14 @@
 #ifndef MOLTEN_CORE_GUI_VISIBILITYWIDGET_HPP
 #define MOLTEN_CORE_GUI_VISIBILITYWIDGET_HPP
 
-#include "Molten/Math/Bounds.hpp"
+#include "Molten/Math/AABB.hpp"
 #include "Molten/System/Signal.hpp"
 
 namespace Molten::Gui
 {
 
-    template<typename TTheme> class Layer;
+    class WidgetVisibilityTracker;
+
 
     class MOLTEN_API VisibilityWidget
     {
@@ -43,7 +44,7 @@ namespace Molten::Gui
         Signal<> onShow;
         Signal<> onHide;
 
-        VisibilityWidget();
+        VisibilityWidget(WidgetVisibilityTracker& visibilityTracker);
         virtual ~VisibilityWidget() = default;
 
         VisibilityWidget(const VisibilityWidget&) = delete;
@@ -51,17 +52,14 @@ namespace Molten::Gui
         VisibilityWidget& operator = (const VisibilityWidget&) = delete;
         VisibilityWidget& operator = (VisibilityWidget&&) = delete;
 
-        [[nodiscard]] bool IsVisible() const;
 
     protected:
 
-        void Update(const Bounds2f32& bounds = { 0.0f, 0.0f, 1.0f, 1.0f });
+        void PostUpdate(const Vector2f32& size);
 
     private:
 
-        template<typename TTheme> friend class Layer;
-
-        bool m_isVisible;
+        WidgetVisibilityTracker& m_visibilityTracker;
 
     };
 

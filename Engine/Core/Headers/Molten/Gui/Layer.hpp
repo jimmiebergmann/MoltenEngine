@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -27,13 +27,14 @@
 #define MOLTEN_CORE_GUI_LAYER_HPP
 
 #include "Molten/Gui/LayerData.hpp"
-#include "Molten/Gui/WidgetData.hpp"
-#include "Molten/Gui/VisibilityWidget.hpp"
+#include "Molten/Gui/Widget.hpp"
+#include "Molten/Gui/WidgetEventTracker.hpp"
+#include "Molten/Gui/WidgetVisibilityTracker.hpp"
 #include "Molten/Math/Vector.hpp"
 #include "Molten/System/Time.hpp"
 #include "Molten/System/UserInput.hpp"
+#include "Molten/System/Signal.hpp"
 #include <vector>
-#include <algorithm>
 
 namespace Molten::Gui
 {
@@ -44,40 +45,6 @@ namespace Molten::Gui
         Bottom
     };
 
-    /** Repository sent to multiple layers, for tracking widget states over multiple layers.*/
-    template<typename TTheme>
-    struct MultiLayerRepository
-    {
-        struct PressedWidget
-        {
-            PressedWidget(
-                WidgetData<TTheme>* widgetData,
-                Mouse::Button button);
-
-            WidgetData<TTheme>* widgetData;
-            Mouse::Button button;
-        };
-
-        MultiLayerRepository();
-
-        bool HandleMouseMove(
-            WidgetData<TTheme>* widgetData,
-            const Vector2f32& position);
-
-        bool HandleMouseButtonPress(
-            WidgetData<TTheme>* widgetData,
-            const Vector2f32& position,
-            const Mouse::Button button);
-
-        bool HandleMouseButtonRelease(
-            const Vector2f32& position,
-            const Mouse::Button button);
-
-        void ResetHoveredWidget(const Vector2f32& position);
-
-        WidgetData<TTheme>* hoveredWidgetData;
-        std::vector<PressedWidget> pressedWidgets;
-    };
 
     /** Layer base class. Layers should inherit from LayerMixin instead of this class template.*/
     template<typename TTheme>
@@ -88,7 +55,8 @@ namespace Molten::Gui
 
         Layer(
             TTheme& theme,
-            LayerData<TTheme>& data);
+            LayerData<TTheme>& data,
+            SignalDispatcher& widgetPropertyDispatcher);
         virtual ~Layer() = default;
 
         Layer(Layer&&) = delete;
@@ -98,7 +66,7 @@ namespace Molten::Gui
 
         virtual bool HandleUserInput(
             const UserInput::Event& userInputEvent,
-            MultiLayerRepository<TTheme>& multiLayerRepository);
+            WidgetMouseEventTracker<TTheme>& mouseEventTracker);
 
         virtual void Update(const Time& deltaTime);
 
@@ -114,63 +82,45 @@ namespace Molten::Gui
         TWidget<TTheme>* CreateChild(TArgs ... args);
 
         template<template<typename> typename TWidget, typename ... TArgs>
-        TWidget<TTheme>* CreateChild(
-            Widget<TTheme>& parent,
-            TArgs ... args);
+        TWidget<TTheme>* CreateChildFor(Widget<TTheme>* parent, TArgs ... args);
 
     protected:
 
-        [[nodiscard]] TTheme& GetTheme();
-        [[nodiscard]] const TTheme& GetTheme() const;
+        [[nodiscard]] bool HandleMouseMoveEvent(
+            const UserInput::MouseMoveEvent& mouseMoveEvent,
+            WidgetMouseEventTracker<TTheme>& mouseEventTracker);
+        [[nodiscard]] bool HandleMouseButtonPressedEvent(
+            const UserInput::MouseButtonEvent& mouseButtonEvent,
+            WidgetMouseEventTracker<TTheme>& mouseEventTracker);
+        [[nodiscard]] bool HandleMouseButtonReleasedEvent(
+            const UserInput::MouseButtonEvent& mouseButtonEvent,
+            WidgetMouseEventTracker<TTheme>& mouseEventTracker);
 
-        [[nodiscard]] LayerData<TTheme>& GetData();
-        [[nodiscard]] const LayerData<TTheme>& GetData() const;
+        void TraverseVisibleWidgetsReversePreorder(std::function<bool(Widget<TTheme>*)>&& callback);
 
-        [[nodiscard]] typename WidgetData<TTheme>::Tree& GetWidgetTree();
-        [[nodiscard]] const typename WidgetData<TTheme>::Tree& GetWidgetTree() const;
 
-        template<template<typename> typename TWidget>
-        [[nodiscard]] static WidgetData<TTheme>& GetWidgetData(TWidget<TTheme>& widget);
-        template<template<typename> typename TWidget>
-        [[nodiscard]] static const WidgetData<TTheme>& GetWidgetData(const Widget<TTheme>& widget);
+        TTheme& m_theme;
+        LayerData<TTheme>& m_data;
+        SignalDispatcher& m_widgetPropertyDispatcher;
+        WidgetChildren<TTheme> m_children;
+        WidgetVisibilityTracker m_visibilityTracker;
+        Vector2f32 m_size;
+        Vector2f32 m_scale;
+
+        std::vector<Widget<TTheme>*> m_drawChildren;
 
     private:
 
-        template<template<typename> typename TWidget, typename ... TArgs, typename TLane, typename TTreeIterator>
-        [[nodiscard]] TWidget<TTheme>* InternalCreateChild(
-            TLane& lane,
-            TTreeIterator iterator,
+        template<template<typename> typename TWidget, typename ... TArgs>
+        [[nodiscard]] TWidget<TTheme>* CreateChildInternal(
+            WidgetChildren<TTheme>& childContainer,
             Widget<TTheme>* parent,
             TArgs ... args);
 
         template<template<typename> typename TWidget>
-        [[nodiscard]] typename WidgetData<TTheme>::MouseEventFunction CreateChildMouseEventFunction(
-            TWidget<TTheme>* child,
-            Widget<TTheme>* parent);
-
-        void VisibilityUpdate();
-
-        [[nodiscard]] bool HandleMouseMoveEvent(
-            const UserInput::MouseMoveEvent& mouseMoveEvent,
-            MultiLayerRepository<TTheme>& multiLayerRepository);
-        [[nodiscard]] bool HandleMouseButtonPressedEvent(
-            const UserInput::MouseButtonEvent& mouseButtonEvent,
-            MultiLayerRepository<TTheme>& multiLayerRepository);
-        [[nodiscard]] bool HandleMouseButtonReleasedEvent(
-            const UserInput::MouseButtonEvent& mouseButtonEvent,
-            MultiLayerRepository<TTheme>& multiLayerRepository);
-
-        using VisibilityWidgetPointers = std::vector<VisibilityWidget*>;
-
-        TTheme& m_theme;
-        LayerData<TTheme>& m_data;       
-        typename WidgetData<TTheme>::Tree m_widgetTree;
-        Vector2f32 m_size;
-        Vector2f32 m_scale;
-
-        VisibilityWidgetPointers m_visibilityWidgets;
-        std::array<VisibilityWidgetPointers, 2> m_visibleWidgets;
-        VisibilityWidgetPointers* m_currentVisibleWidgetsContainer;
+        [[nodiscard]] WidgetMouseEventFunction<TTheme> CreateChildMouseEventFunction(
+            Widget<TTheme>* parent,
+            TWidget<TTheme>* widget);
 
     };
 

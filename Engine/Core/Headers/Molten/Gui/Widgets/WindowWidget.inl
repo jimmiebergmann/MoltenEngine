@@ -25,10 +25,26 @@
 
 namespace Molten::Gui
 {
+    template<typename TTheme>
+    Window<TTheme>::Window(
+        WidgetMixinDescriptor<TTheme, Window>& desc,
+        const std::string& label
+    ) :
+        WidgetMixin<TTheme, Window>(desc),
+        m_label(label),
+        m_labelWidget(nullptr)
+    {}
+
 
     template<typename TTheme>
-    Spacer<TTheme>::Spacer(WidgetData<TTheme>& data) :
-        Widget<TTheme>(data)
-    {}
+    void Window<TTheme>::OnCreate()
+    {
+    }
+
+    template<typename TTheme>
+    bool Window<TTheme>::OnMouseEvent(const WidgetMouseEvent&)
+    {
+        return true;
+    }
 
 }

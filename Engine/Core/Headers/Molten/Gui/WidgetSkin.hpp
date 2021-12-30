@@ -41,7 +41,6 @@ namespace Molten::Gui
     {
         TTheme& theme;
         TWidget<TTheme>& widget;
-        WidgetData<TTheme>& widgetData;
     };
 
 
@@ -73,7 +72,7 @@ namespace Molten::Gui
 
         using State = typename TWidget<TTheme>::State;
 
-        WidgetSkinMixin(const WidgetSkinDescriptor<TTheme, TWidget>& descriptor);
+        explicit WidgetSkinMixin(const WidgetSkinDescriptor<TTheme, TWidget>& descriptor);
         ~WidgetSkinMixin() override = default;
 
         WidgetSkinMixin(const WidgetSkinMixin&) = delete;
@@ -83,15 +82,14 @@ namespace Molten::Gui
 
         void SetState(const State& state);
 
-        const State& GetState() const;
+        [[nodiscard]] const State& GetState() const;
 
         virtual void OnStateChange(const State& state);
 
     protected:
 
-        TTheme& theme; // Private plz
-        TWidget<TTheme>& widget; // Private plz
-        WidgetData<TTheme>& widgetData; // Private plz
+        TTheme& theme;
+        TWidget<TTheme>& widget;
 
     private:
 

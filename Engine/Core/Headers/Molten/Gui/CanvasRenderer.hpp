@@ -30,6 +30,7 @@
 #include "Molten/Math/Vector.hpp"
 #include "Molten/Math/Matrix.hpp"
 #include "Molten/Math/Bounds.hpp"
+#include "Molten/Math/AABB.hpp"
 #include "Molten/Renderer/RenderResource.hpp"
 #include "Molten/Renderer/Sampler.hpp"
 #include "Molten/Renderer/ShaderProgram.hpp"
@@ -144,13 +145,16 @@ namespace Molten::Gui
 
         void SetCommandBuffer(CommandBuffer& commandBuffer);
 
-        void DrawRect(const Bounds2f32& bounds, const Vector4f32& color);
+        void DrawRect(const AABB2f32& bounds, const Vector4f32& color);
+        void DrawRect(const AABB2f32& bounds, CanvasRendererTexture& texture);
+        void DrawRect(const AABB2f32& bounds, const Bounds2f32& textureCoords, CanvasRendererTexture& texture);
+        void DrawRect(const AABB2f32& bounds, const Bounds2f32& textureCoords, CanvasRendererFramedTexture& framedtexture);
 
-        void DrawRect(const Bounds2f32& bounds, CanvasRendererTexture& texture);
 
-        void DrawRect(const Bounds2f32& bounds, const Bounds2f32& textureCoords, CanvasRendererTexture& texture);
-
-        void DrawRect(const Bounds2f32& bounds, const Bounds2f32& textureCoords, CanvasRendererFramedTexture& framedtexture);
+        void DrawRect(const Bounds2f32& bounds, const Vector4f32& color); // ??
+        void DrawRect(const Bounds2f32& bounds, CanvasRendererTexture& texture); // ??
+        void DrawRect(const Bounds2f32& bounds, const Bounds2f32& textureCoords, CanvasRendererTexture& texture); // ??
+        void DrawRect(const Bounds2f32& bounds, const Bounds2f32& textureCoords, CanvasRendererFramedTexture& framedtexture); // ??
 
         void DrawFontSequence(const Vector2f32& position, CanvasRendererFontSequence& fontSequence);
 

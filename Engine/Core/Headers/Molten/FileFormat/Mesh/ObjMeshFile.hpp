@@ -28,6 +28,7 @@
 
 #include "Molten/Math/Vector.hpp"
 #include "Molten/FileFormat/TextFileFormatResult.hpp"
+#include "Molten/System/Signal.hpp"
 #include <string>
 #include <string_view>
 #include <filesystem>
@@ -110,7 +111,7 @@ namespace Molten
             std::optional<float> transparency; ///< d = 0.0 - 1.0 or Tr = (1.0 - d)
             std::optional<float> opticalDensity; ///< Ni = Refractive index
             std::optional<MaterialTexture> ambientTexture; ///< map_Ka
-            std::optional<MaterialTexture> adiffuseTexture; ///< map_Kd - Often same as map_Ka
+            std::optional<MaterialTexture> diffuseTexture; ///< map_Kd - Often same as map_Ka
             std::optional<MaterialTexture> specularTexture; ///< map_Ks
             std::optional<MaterialTexture> specularWeightTexture; ///< map_Ns
             std::optional<MaterialTexture> alphaTexture; ///< map_d
@@ -229,6 +230,8 @@ namespace Molten
     {
 
     public:
+
+        Signal<double> onProgress;
 
         ObjMeshFileReader();       
         ~ObjMeshFileReader() = default;

@@ -203,4 +203,76 @@ namespace Molten
         EXPECT_EQ(sig.GetConnectionCount(), size_t(0));
     }
 
+    TEST(System, DispatchSignal)
+    {
+        {
+            SignalDispatcher dispatcher;
+
+            bool value = false;
+
+            DispatchSignal<> s1(dispatcher);
+            s1.Connect([&]() { value = true;  });
+
+            EXPECT_EQ(value, false);
+
+            s1();
+
+            EXPECT_EQ(value, false);
+
+            dispatcher.Execute();
+
+            EXPECT_EQ(value, true);
+        }
+        {
+            SignalDispatcher dispatcher;
+
+            int32_t ints[2] = { 0, 0 };
+            float floats[2] = { 0.0f, 0.0f};
+
+            DispatchSignal<int32_t, float> s1(dispatcher);
+            s1.Connect([&](const int32_t v1, const float v2)
+            {
+                ints[0] = v1; floats[0] = v2;
+            });
+            s1.Connect([&](const int32_t v1, const float v2)
+            {
+                ints[1] = v1; floats[1] = v2;
+            });
+
+            EXPECT_EQ(ints[0], int32_t{ 0 });
+            EXPECT_EQ(ints[1], int32_t{ 0 });
+            EXPECT_EQ(floats[0], float{ 0.0f });
+            EXPECT_EQ(floats[1], float{ 0.0f });
+
+            s1(123, 1.0f);
+
+            EXPECT_EQ(ints[0], int32_t{ 0 });
+            EXPECT_EQ(ints[1], int32_t{ 0 });
+            EXPECT_EQ(floats[0], float{ 0.0f });
+            EXPECT_EQ(floats[1], float{ 0.0f });
+
+            dispatcher.Execute();
+
+            EXPECT_EQ(ints[0], int32_t{ 123 });
+            EXPECT_EQ(ints[1], int32_t{ 123 });
+            EXPECT_EQ(floats[0], float{ 1.0f });
+            EXPECT_EQ(floats[1], float{ 1.0f });
+
+            s1(1234, 2.0f);
+            s1(1236, 4.0f);
+
+            EXPECT_EQ(ints[0], int32_t{ 123 });
+            EXPECT_EQ(ints[1], int32_t{ 123 });
+            EXPECT_EQ(floats[0], float{ 1.0f });
+            EXPECT_EQ(floats[1], float{ 1.0f });
+
+            dispatcher.Execute();
+
+            EXPECT_EQ(ints[0], int32_t{ 1236 });
+            EXPECT_EQ(ints[1], int32_t{ 1236 });
+            EXPECT_EQ(floats[0], float{ 4.0f });
+            EXPECT_EQ(floats[1], float{ 4.0f });
+        }
+    }
+
 }

@@ -27,19 +27,22 @@ namespace Molten::Gui
 {
     template<typename TTheme>
     Label<TTheme>::Label(
-        WidgetDataMixin<TTheme, Label>& data,
+        WidgetMixinDescriptor<TTheme, Label>& desc,
         const std::string& text,
         const uint32_t height
     ) :
-        WidgetMixin<TTheme, Label>(data),
-        text(text),
-        height(height)
+        WidgetMixin<TTheme, Label>(desc),
+        text(desc.propertyDispatcher, text),
+        fontFamily(desc.propertyDispatcher),
+        height(desc.propertyDispatcher, height)
     {}
 
     template<typename TTheme>
-    void Label<TTheme>::Update()
+    void Label<TTheme>::PreUpdate()
     {
-        
+        const auto textBounds = this->GetWidgetSkin()->GetTextBounds();
+        this->SetPosition(this->GetBounds().position + Vector2f32{ textBounds.position.x, -textBounds.position.y });
+        this->SetSize(textBounds.size);
     }
 
 }

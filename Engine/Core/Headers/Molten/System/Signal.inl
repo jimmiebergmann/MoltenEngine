@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,26 +23,25 @@
 *
 */
 
-#include "Molten/Types.hpp"
 
 namespace Molten
 {
 
     // Connection implementations.
     template<typename ... Args>
-    inline Signal<Args...>::Connection::Connection() :
+    Signal<Args...>::Connection::Connection() :
         m_signal(nullptr),
         m_controller(nullptr)
     { }
 
     template<typename ... Args>
-    inline Signal<Args...>::Connection::Connection(const Connection& connection) :
+    Signal<Args...>::Connection::Connection(const Connection& connection) :
         m_signal(connection.m_signal),
         m_controller(connection.m_controller)
     { }
 
     template<typename ... Args>
-    inline Signal<Args...>::Connection::Connection(Connection&& connection) noexcept :
+    Signal<Args...>::Connection::Connection(Connection&& connection) noexcept :
         m_signal(connection.m_signal),
         m_controller(connection.m_controller)
     {
@@ -51,7 +50,7 @@ namespace Molten
     }
 
     template<typename ... Args>
-    inline typename Signal<Args...>::Connection& Signal<Args...>::Connection::operator =(const Connection& connection)
+    typename Signal<Args...>::Connection& Signal<Args...>::Connection::operator =(const Connection& connection)
     {
         m_signal = connection.m_signal;
         m_controller = connection.m_controller;
@@ -59,7 +58,7 @@ namespace Molten
     }
 
     template<typename ... Args>
-    inline typename Signal<Args...>::Connection& Signal<Args...>::Connection::operator =(Connection&& connection)
+    typename Signal<Args...>::Connection& Signal<Args...>::Connection::operator =(Connection&& connection) noexcept
     {
         m_signal = connection.m_signal;
         m_controller = connection.m_controller;
@@ -69,7 +68,7 @@ namespace Molten
     }
 
     template<typename ... Args>
-    inline void Signal<Args...>::Connection::Disconnect()
+    void Signal<Args...>::Connection::Disconnect()
     {
         if (!m_signal)
         {
@@ -79,19 +78,16 @@ namespace Molten
         m_signal->Disconnect(*this);
     }
 
+
     // Signal implementations.
     template<typename ... Args>
-    inline Signal<Args...>::Signal()
-    { }
-
-    template<typename ... Args>
-    inline Signal<Args...>::~Signal()
+    Signal<Args...>::~Signal()
     {
         DisconnectAll();
     }
 
     template<typename ... Args>
-    inline typename Signal<Args...>::Connection Signal<Args...>::Connect(const Callback & callback)
+    typename Signal<Args...>::Connection Signal<Args...>::Connect(const Callback& callback)
     {
         Connection connection;
         connection.m_signal = this;
@@ -103,7 +99,7 @@ namespace Molten
     }
 
     template<typename ... Args>
-    inline void Signal<Args...>::Disconnect(Connection& connection)
+    void Signal<Args...>::Disconnect(Connection& connection)
     {
         if (!connection.m_controller)
         {
@@ -121,7 +117,7 @@ namespace Molten
     }
 
     template<typename ... Args>
-    inline void Signal<Args...>::DisconnectAll()
+    void Signal<Args...>::DisconnectAll()
     {
         for (auto& connection : m_connections)
         {
@@ -131,9 +127,18 @@ namespace Molten
     }
 
     template<typename ... Args>
-    inline size_t Signal<Args...>::GetConnectionCount() const
+    size_t Signal<Args...>::GetConnectionCount() const
     {
         return m_connections.size();
+    }
+
+    template<typename ... Args>
+    void Signal<Args...>::operator ()(Args ... args) const
+    {
+        for (auto& connection : m_connections)
+        {
+            connection.second(std::forward<Args...>(args...));
+        }
     }
 
     template<>
@@ -145,14 +150,72 @@ namespace Molten
         }
     }
 
-    template<typename ... Args>
-    inline void Signal<Args...>::operator ()(Args ... args) const
-    {
-        for (auto& connection : m_connections)
-        {
 
-            connection.second(std::forward<Args...>(args...));
+    // Signal dispatcher implementations.
+    inline void SignalDispatcher::Execute()
+    {
+        for(auto* queuedSignal : m_queuedSignals)
+        {
+            for(auto& genericCallback : queuedSignal->m_genericCallbacks)
+            {
+                genericCallback();
+            }
+
+            queuedSignal->m_genericCallbacks.clear();
         }
+
+        m_queuedSignals.clear();
+    }
+
+    inline void SignalDispatcher::QueueSignal(DispatchSignalBase& dispatchSignalBase)
+    {
+        m_queuedSignals.push_back(&dispatchSignalBase);
+    }
+
+
+    // Dispatch signal implementations.
+    template<typename ... Args>
+    DispatchSignal<Args...>::DispatchSignal(SignalDispatcher& dispatcher) :
+        m_dispatcher(dispatcher)
+    {}
+
+    template<typename ... Args>
+    void DispatchSignal<Args...>::Connect(const Callback& callback)
+    {
+        m_callbacks.push_back(callback);
+    }
+
+    template<typename ... Args>
+    void DispatchSignal<Args...>::Connect(Callback&& callback)
+    {
+        m_callbacks.push_back(std::move(callback));
+    }
+
+    template<typename ... Args>
+    void DispatchSignal<Args...>::operator ()(Args&& ... args)
+    {
+        if(m_callbacks.empty())
+        {
+            return;
+        }
+
+        if(m_genericCallbacks.empty())
+        {
+            m_dispatcher.QueueSignal(*this);
+        }
+        else
+        {
+            m_genericCallbacks.clear();
+        }
+
+        for(auto& callback : m_callbacks)
+        {
+            m_genericCallbacks.push_back([&]()
+            {
+                callback(std::forward<Args>(args)...);
+            });
+        }
+
     }
 
 }

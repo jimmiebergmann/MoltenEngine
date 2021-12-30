@@ -24,22 +24,23 @@
 */
 
 #include "Molten/Gui/VisibilityWidget.hpp"
+#include "Molten/Gui/WidgetVisibilityTracker.hpp"
 
 namespace Molten::Gui
 {
 
-    VisibilityWidget::VisibilityWidget() :
-        m_isVisible(false)
+    VisibilityWidget::VisibilityWidget(WidgetVisibilityTracker& visibilityTracker) :
+		m_visibilityTracker(visibilityTracker)
     {}
 
-    bool VisibilityWidget::IsVisible() const
+    void VisibilityWidget::PostUpdate(const Vector2f32& size)
     {
-        return m_isVisible;
-    }
+        if(size.x <= 0.0f || size.y <= 0.0f)
+        {
+            return;
+        }
 
-    void VisibilityWidget::Update(const Bounds2f32& bounds)
-    {
-        m_isVisible = !bounds.IsEmpty();
+        m_visibilityTracker.RegisterVisibleWidget(this);
     }
 
 }

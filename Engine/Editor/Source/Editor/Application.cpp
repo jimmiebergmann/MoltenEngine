@@ -78,11 +78,13 @@ namespace Molten::Editor
         EditorDescriptor& editorDescriptor)
     {
         std::optional<std::string> loggerFilename;
+        std::optional<bool> enableGpuLogging;
         std::optional<std::string> backendRendererApiName;
         std::optional<std::string> backendRendererApiVersionString;
 
         const CliParser parser{
             CliValue{ { "logger.filename" }, loggerFilename },
+            CliValue{ { "logger.gpu" }, enableGpuLogging },
             CliValue{ { "backend.renderer.api.name" }, backendRendererApiName },
             CliValue{ { "backend.renderer.api.version" }, backendRendererApiVersionString },
             CliValue{ { "fps.max" }, editorDescriptor.fpsLimit }
@@ -96,6 +98,12 @@ namespace Molten::Editor
         // Logger settings.
         LoadLogger(loggerFilename);
         editorDescriptor.logger = m_logger;
+
+        // Gpu logging
+        if (enableGpuLogging.has_value())
+        {
+            editorDescriptor.enableGpuLogging = enableGpuLogging.value();
+        }
 
         // Renderer settings.
         if(backendRendererApiName.has_value())
@@ -136,7 +144,8 @@ namespace Molten::Editor
 #if MOLTEN_BUILD == MOLTEN_BUILD_RELEASE
         const uint32_t loggerSeverityFlags = 
             static_cast<uint32_t>(Logger::Severity::Error) |
-            static_cast<uint32_t>(Logger::Severity::Warning);
+            static_cast<uint32_t>(Logger::Severity::Warning) |
+            static_cast<uint32_t>(Logger::Severity::Info);
 #else
         const uint32_t loggerSeverityFlags = Logger::SeverityAllFlags;
 #endif

@@ -287,7 +287,7 @@ namespace Molten::Gui
             const uint32_t dpi,
             const uint32_t height);
 
-        [[nodiscard]] float CalculateHeightOffset(const Bounds2f32& bounds);
+        [[nodiscard]] float CalculateHeightOffset(const Bounds2f32& bounds) const;
 
     private:
 

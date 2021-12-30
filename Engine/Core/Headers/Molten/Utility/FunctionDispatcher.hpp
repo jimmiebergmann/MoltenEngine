@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,46 +23,46 @@
 *
 */
 
-#ifndef MOLTEN_CORE_GUI_WIDGETS_PADDINGWIDGET_HPP
-#define MOLTEN_CORE_GUI_WIDGETS_PADDINGWIDGET_HPP
+#ifndef MOLTEN_CORE_UTILITY_FUNCTIONDISPATCHER_HPP
+#define MOLTEN_CORE_UTILITY_FUNCTIONDISPATCHER_HPP
 
-#include "Molten/Gui/Widget.hpp"
+#include "Molten/Types.hpp"
+#include <functional>
+#include <vector>
+#include <mutex>
 
-namespace Molten::Gui
+namespace Molten
 {
 
-    /*template<typename TSkin>
-    class Padding : public Widget<TSkin>, public PaddingData
+    class MOLTEN_API FunctionDispatcher
     {
 
     public:
 
-        static constexpr bool handleKeyboardEvents = false;
-        static constexpr bool handleMouseEvents = false;
+        using Function = std::function<void()>; ///< Function data type.
 
-        explicit Padding(
-            TSkin& skin,
-            const float left = 0.0f,
-            const float top = 0.0f,
-            const float right = 0.0f,
-            const float bottom = 0.0f);
+        FunctionDispatcher() = default;
+        ~FunctionDispatcher();
 
-        void Update(const Time& deltaTime) override;
+        FunctionDispatcher(const FunctionDispatcher&) = delete;
+        FunctionDispatcher(FunctionDispatcher&&) = delete;
+        FunctionDispatcher& operator = (const FunctionDispatcher&) = delete;
+        FunctionDispatcher& operator = (FunctionDispatcher&&) = delete;
 
-        //void Draw(CanvasRenderer& renderer) override;
-
-        //Vector2f32 CalculateSize(const Vector2f32& grantedSize) override;
-
-       // void CalculateChildrenGrantedSize(typename WidgetTreeData<TSkin>::Tree::template ConstLane<typename WidgetTreeData<TSkin>::Tree::PartialLaneType> children) override;
+        void Add(Function&& function);
+        void Dispatch();
 
     private:
 
-        bool OnAddChild(WidgetPointer<TSkin>) override;
+        [[nodiscard]] size_t LockGetFunctionCount();
+        [[nodiscard]] Function LockMoveFunction(const size_t index);
+        void LockRemoveFunctions(const size_t count);
 
-    };*/
+        std::vector<Function> m_functions;
+        std::mutex m_mutex;
+
+    };
 
 }
-
-#include "Molten/Gui/Widgets/PaddingWidget.inl"
 
 #endif

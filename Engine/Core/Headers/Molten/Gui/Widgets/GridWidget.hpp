@@ -23,33 +23,47 @@
 *
 */
 
-#ifndef MOLTEN_CORE_GUI_WIDGETS_VERTICALGRIDWIDGET_HPP
-#define MOLTEN_CORE_GUI_WIDGETS_VERTICALGRIDWIDGET_HPP
+#ifndef MOLTEN_CORE_GUI_WIDGETS_GRIDWIDGET_HPP
+#define MOLTEN_CORE_GUI_WIDGETS_GRIDWIDGET_HPP
 
 #include "Molten/Gui/Widget.hpp"
 
 namespace Molten::Gui
 {
 
+    enum class GridDirection
+    {
+        Horizontal,
+        Vertical
+    };
+
     template<typename TTheme>
-    class VerticalGrid : public WidgetMixin<TTheme, VerticalGrid>
+    class Grid : public WidgetMixin<TTheme, Grid>
     {
 
     public:
 
-        static constexpr bool handleKeyboardEvents = false;
-        static constexpr bool handleMouseEvents = false;
-
+        GridDirection direction;
         float cellSpacing;
 
-        explicit VerticalGrid(WidgetDataMixin<TTheme, VerticalGrid>& data);
+        explicit Grid(
+            WidgetMixinDescriptor<TTheme, Grid>& desc,
+            const GridDirection direction);
 
-        void Update() override;
+    private:
+
+        void PreUpdate() override;
+        void PostUpdate() override;
+        PreChildUpdateResult PreChildUpdate(Widget<TTheme>& child) override;
+        void PostChildUpdate(Widget<TTheme>& child) override;
+
+        AABB2f32 m_contentBounds;
+        Vector2f32 m_maxContentSize;
 
     };
 
 }
 
-#include "Molten/Gui/Widgets/VerticalGridWidget.inl"
+#include "Molten/Gui/Widgets/GridWidget.inl"
 
 #endif

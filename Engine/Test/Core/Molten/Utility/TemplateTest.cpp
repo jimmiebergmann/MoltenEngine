@@ -23,29 +23,31 @@
 *
 */
 
-#ifndef MOLTEN_CORE_GUI_WIDGETS_SPACERWIDGET_HPP
-#define MOLTEN_CORE_GUI_WIDGETS_SPACERWIDGET_HPP
+#include "Test.hpp"
+#include "Molten/Utility/Template.hpp"
 
-#include "Molten/Gui/Widget.hpp"
 
-namespace Molten::Gui
+namespace Molten
 {
-
-    template<typename TTheme>
-    class Spacer : public Widget<TTheme>
+    TEST(Utility, Template_VariantIndexByType)
     {
+        {
+            constexpr std::variant<int, float> var1(int{ 3 });
+            EXPECT_TRUE(VariantEqualsType<int>(var1));
+            EXPECT_FALSE(VariantEqualsType<float>(var1));
 
-    public:
+            constexpr std::variant<int, float> var2(float{ 2.0f });
+            EXPECT_FALSE(VariantEqualsType<int>(var2));
+            EXPECT_TRUE(VariantEqualsType<float>(var2));
+            
+            constexpr std::variant<float, int> var3(int{ 3 });
+            EXPECT_TRUE(VariantEqualsType<int>(var3));
+            EXPECT_FALSE(VariantEqualsType<float>(var3));
 
-        static constexpr bool handleKeyboardEvents = false;
-        static constexpr bool handleMouseEvents = false;
-
-        explicit Spacer(WidgetData<TTheme>& data);
-
-    };
+            constexpr std::variant<float, int> var4(float{ 2.0f });
+            EXPECT_FALSE(VariantEqualsType<int>(var4));
+            EXPECT_TRUE(VariantEqualsType<float>(var4));
+        }
+    }
 
 }
-
-#include "Molten/Gui/Widgets/SpacerWidget.inl"
-
-#endif

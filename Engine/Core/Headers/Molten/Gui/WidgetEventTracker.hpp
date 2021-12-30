@@ -23,38 +23,60 @@
 *
 */
 
+#ifndef MOLTEN_CORE_GUI_WIDGETEVENTTRACKER_HPP
+#define MOLTEN_CORE_GUI_WIDGETEVENTTRACKER_HPP
+
+#include <vector>
+
 namespace Molten::Gui
 {
 
-    template<typename TTheme>
-    VerticalGrid<TTheme>::VerticalGrid(WidgetDataMixin<TTheme, VerticalGrid>& data) :
-        WidgetMixin<TTheme, VerticalGrid>(data),
-        cellSpacing(0.0f)
-    {}
+    template<typename TTheme> class Widget;
+
 
     template<typename TTheme>
-    void VerticalGrid<TTheme>::Update()
+    class WidgetMouseEventTracker
     {
-        this->ApplyMarginsToGrantedBounds();
-        auto contentBounds = this->GetGrantedBounds().WithoutMargins(this->padding).ClampHighToLow();
 
-        auto childLane = this->GetData().GetChildrenPartialLane();
+    public:
 
-        const float halfChildSpacing = childLane.GetSize() > 1 ? cellSpacing * 0.5f : 0.0f;
-        const float verticalIncrease = (contentBounds.right - contentBounds.left) / static_cast<float>(childLane.GetSize()) - halfChildSpacing;
-        Bounds2f32 childBounds = { contentBounds.left, contentBounds.top, contentBounds.left, contentBounds.bottom }; 
-            
-        for (auto& child : childLane)
+        WidgetMouseEventTracker();
+
+        [[nodiscard]] bool IsHoveringWidget() const;
+
+        bool HandleMouseMove(
+            Widget<TTheme>* widget,
+            const Vector2f32& position);
+
+        bool HandleMouseButtonPress(
+            Widget<TTheme>* widget,
+            const Vector2f32& position,
+            const Mouse::Button button);
+
+        void HandleMouseButtonRelease(
+            const Vector2f32& position,
+            const Mouse::Button button);
+
+        void ResetHoveredWidget(const Vector2f32& position);
+
+    private:
+
+        struct PressedWidget
         {
-            childBounds.left = childBounds.right;
-            childBounds.right += verticalIncrease;
+            PressedWidget(
+                Widget<TTheme>* widget,
+                const Mouse::Button button);
 
-            auto& childData = child.GetValue();
-            auto childGrantedBounds = childBounds;
-            childData->SetGrantedBounds(childGrantedBounds);
+            Widget<TTheme>* widget;
+            Mouse::Button button;
+        };
 
-            childBounds.right += cellSpacing;
-        }
-    }
+        Widget<TTheme>* m_hoveredWidget;
+        std::vector<PressedWidget> m_pressedWidgets;
+    };
 
 }
+
+#include "Molten/Gui/WidgetEventTracker.inl"
+
+#endif

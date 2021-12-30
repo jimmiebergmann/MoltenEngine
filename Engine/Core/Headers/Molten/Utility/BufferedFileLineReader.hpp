@@ -82,9 +82,11 @@ namespace Molten
         template<typename TBufferCreationCallback>
         [[nodiscard]] LineReadResult ReadLine(std::string_view& line, TBufferCreationCallback&& bufferCreationCallback);
 
-    private:
+        [[nodiscard]] size_t GetStreamSize() const;
 
         [[nodiscard]] size_t GetSizeLeft() const;
+
+    private:
 
         template<typename TBufferCreationCallback>
         [[nodiscard]] LineReadResult CreateNewBuffer(TBufferCreationCallback&& bufferCreationCallback);

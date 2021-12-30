@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2021 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,8 +23,6 @@
 *
 */
 
-#include <type_traits>
-
 namespace Molten
 {
 
@@ -36,6 +34,14 @@ namespace Molten
         {
             using Type = T;
         };
+
+        template <typename>
+        struct VariantTypeTag {};
+
+        template <typename T, typename... TVariantTypes>
+        struct VariantGetIndex
+            : std::integral_constant<size_t, std::variant<VariantTypeTag<TVariantTypes>...>(VariantTypeTag<T>()).index()>
+        { };
 
     }
 
@@ -63,6 +69,12 @@ namespace Molten
     {
         static_assert(VIndex < sizeof...(TTypes), "Molten::GetTemplateArgumentAt failed due to index out of bounds.");
         return VIndex;
+    }
+
+    template<typename T, typename ... TVariantTypes>
+    constexpr bool VariantEqualsType(const std::variant<TVariantTypes...>& variant)
+    {
+        return Private::VariantGetIndex<T, TVariantTypes...>::value == variant.index();
     }
 
 }
