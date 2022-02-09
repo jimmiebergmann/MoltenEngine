@@ -94,8 +94,6 @@ namespace Molten::Gui
             }
         }
 
-        const auto childPosition = this->GetBounds().position + this->padding.low;
-
         this->SetPosition(child, m_contentBounds.position);
         this->SetGrantedSize(child, m_contentBounds.size);
 

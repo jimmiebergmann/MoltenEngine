@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -30,7 +30,7 @@
 #include "Molten/Gui/WidgetDescriptor.hpp"
 #include "Molten/Gui/WidgetEvent.hpp"
 #include "Molten/Gui/DraggableWidget.hpp"
-#include "Molten/Gui/Widgets/DockerOverlayWidget.hpp"
+#include "Molten/Gui/Widgets/Overlays/DockerOverlayWidget.hpp"
 #include "Molten/System/Signal.hpp"
 #include "Molten/Math/Triangle.hpp"
 #include "Molten/Utility/Template.hpp"

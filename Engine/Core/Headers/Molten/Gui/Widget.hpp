@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -204,9 +204,7 @@ namespace Molten::Gui
         [[nodiscard]] WidgetSkinType* GetWidgetSkin();
         [[nodiscard]] const WidgetSkinType* GetWidgetSkin() const;
 
-        template<typename TState>
-        [[nodiscard]] const TState& GetSkinState() const;
-
+        [[nodiscard]] const auto& GetSkinState() const;
         template<typename TState>
         void SetSkinState(const TState& state);
 
@@ -220,7 +218,7 @@ namespace Molten::Gui
     };
 
 
-   /* template<typename TTheme, template<typename> typename TWidget>
+    template<typename TTheme, template<typename> typename TWidget>
     class ManagedWidget
     {
 
@@ -228,8 +226,8 @@ namespace Molten::Gui
 
         ManagedWidget();
         ManagedWidget(
-            Layer<TTheme>& layer,
-            TWidget<TTheme>& widget);
+            Layer<TTheme>* layer,
+            TWidget<TTheme>* widget);
         ~ManagedWidget();
 
         ManagedWidget(ManagedWidget&& managedWidget) noexcept;
@@ -247,10 +245,12 @@ namespace Molten::Gui
 
     private:
 
+        friend class Layer<TTheme>;
+
         Layer<TTheme>* m_layer;
         TWidget<TTheme>* m_widget;
 
-    };*/
+    };
 
 }
 

@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -37,7 +37,7 @@ namespace Molten::Gui
         m_data(data),
         m_widgetPropertyDispatcher(widgetPropertyDispatcher),
         m_size(0.0f, 0.0f),
-        m_scale(1.0f, 1.0f)//,
+        m_scale(1.0f, 1.0f)
     {}
 
     template<typename TTheme>
@@ -64,8 +64,8 @@ namespace Molten::Gui
     {
         m_drawChildren.clear();
 
-        std::function<void(Widget<TTheme>&)> traverseWidget;
-        traverseWidget = [&](Widget<TTheme>& widget)
+        std::function<void(Widget<TTheme>&)> traverseUpdateWidget;
+        traverseUpdateWidget = [&](Widget<TTheme>& widget)
         {
             widget.PrepareUpdate();
             widget.PreUpdate();
@@ -81,7 +81,7 @@ namespace Molten::Gui
 
                 if(preChildResult != PreChildUpdateResult::Skip)
                 {
-                    traverseWidget(child);
+                    traverseUpdateWidget(child);
                 }
 
                 widget.PostChildUpdate(child);
@@ -94,7 +94,14 @@ namespace Molten::Gui
         {
             child->m_bounds.position = { 0.0f, 0.0f };
             child->m_grantedSize = m_size;
-            traverseWidget(*child);
+            traverseUpdateWidget(*child);
+        }
+
+        for (auto& overlayChild : m_overlayChildren)
+        {
+            overlayChild->m_bounds.position = { 0.0f, 0.0f };
+            overlayChild->m_grantedSize = m_size;
+            traverseUpdateWidget(*overlayChild);
         }
 
         m_visibilityTracker.Update();
@@ -103,23 +110,26 @@ namespace Molten::Gui
     template<typename TTheme>
     void Layer<TTheme>::Draw()
     {
-        std::function<void(Widget<TTheme>*)> traverseWidget;
-        traverseWidget = [&](Widget<TTheme>* widget)
+        std::function<void(Widget<TTheme>*)> traverseDrawWidget;
+        traverseDrawWidget = [&](Widget<TTheme>* widget)
         {
             widget->m_skinBase->Draw();
 
             for(auto* child : widget->m_drawChildren)
             {
-                traverseWidget(child);
+                traverseDrawWidget(child);
             }
-
-            //widget
         };
-        for (auto& child : m_children)
+
+    	for (auto& child : m_children)
         {
-            traverseWidget(child.get());
+            traverseDrawWidget(child.get());
         }
 
+        for (auto& overlayChild : m_overlayChildren)
+        {
+            traverseDrawWidget(overlayChild.get());
+        }
     }
 
     template<typename TTheme>
@@ -149,12 +159,42 @@ namespace Molten::Gui
     }
 
     template<typename TTheme>
+    template<template<typename> typename TWidget, typename ... TArgs>
+    ManagedWidget<TTheme, TWidget> Layer<TTheme>::CreateOverlayChild(TArgs ... args)
+    {
+        auto* widget = CreateChildInternal<TWidget>(m_overlayChildren, nullptr, std::forward<TArgs>(args)...);
+        return ManagedWidget<TTheme, TWidget>(this, widget);
+    }
+
+    template<typename TTheme>
+    template<template<typename> typename TWidget>
+    void Layer<TTheme>::DestroyOverlayChild(ManagedWidget<TTheme, TWidget>& managedWidget)
+    {
+        auto* widget = managedWidget.m_widget;
+        managedWidget.m_widget = nullptr;
+        managedWidget.m_layer = nullptr;
+        
+        if (auto it = std::find_if(m_overlayChildren.begin(), m_overlayChildren.end(), [&widget](const auto& rhs) {
+            return rhs.get() == widget; }); it != m_overlayChildren.end())
+        {
+            m_overlayChildren.erase(it);
+        }
+    }
+
+    template<typename TTheme>
     bool Layer<TTheme>::HandleMouseMoveEvent(
         const UserInput::MouseMoveEvent& mouseMoveEvent,
         WidgetMouseEventTracker<TTheme>& mouseEventTracker)
     {
-        bool handledEvent = false;
+        for(auto it = m_overlayChildren.rbegin(); it != m_overlayChildren.rend(); ++it)
+        {
+            if (mouseEventTracker.HandleMouseMove(it->get(), mouseMoveEvent.position))
+            {
+                return true;
+            }
+        }
 
+        bool handledEvent = false;
         TraverseVisibleWidgetsReversePreorder([&](auto* widget)
         {
             if (mouseEventTracker.HandleMouseMove(widget, mouseMoveEvent.position))

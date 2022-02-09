@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -31,13 +31,14 @@
 #include "Molten/Gui/CanvasRenderer.hpp"
 #include "Molten/Gui/Widgets/ButtonWidget.hpp"
 #include "Molten/Gui/Widgets/DockerWidget.hpp"
-#include "Molten/Gui/Widgets/DockerOverlayWidget.hpp"
 #include "Molten/Gui/Widgets/GridWidget.hpp"
 #include "Molten/Gui/Widgets/LabelWidget.hpp"
+#include "Molten/Gui/Widgets/MenuBarWidget.hpp"
 #include "Molten/Gui/Widgets/PaneWidget.hpp"
 #include "Molten/Gui/Widgets/ProgressBarWidget.hpp"
 #include "Molten/Gui/Widgets/ViewportWidget.hpp"
 #include "Molten/Gui/Widgets/WindowWidget.hpp"
+#include "Molten/Gui/Widgets/Overlays/DockerOverlayWidget.hpp"
 
 #include <memory>
 
@@ -150,6 +151,7 @@ namespace Molten::Gui
     };
 
 
+    // Widget skin implementations.
     template<>
     struct WidgetSkin<EditorTheme, Button> : WidgetSkinMixin<EditorTheme, Button>
     {
@@ -198,21 +200,6 @@ namespace Molten::Gui
         {}
 
     };
-
-    //template<>
-    //struct WidgetSkin<EditorTheme, DockerOverlay> : WidgetSkinMixin<EditorTheme, DockerOverlay>
-    //{
-    //    static constexpr auto backgroundColor = Vector4f32{ 0.4f, 0.4f, 1.0f, 0.4f };
-
-    //    explicit WidgetSkin(const WidgetSkinDescriptor<EditorTheme, DockerOverlay>& descriptor) :
-    //        WidgetSkinMixin<EditorTheme, DockerOverlay>(descriptor)
-    //    {}
-
-    //    void Draw() override
-    //    {
-    //        theme.m_canvasRenderer.DrawRect(widgetData.GetBounds(), backgroundColor);
-    //    }
-    //};
 
     template<>
     struct WidgetSkin<EditorTheme, Grid> : WidgetSkinMixin<EditorTheme, Grid>
@@ -277,6 +264,34 @@ namespace Molten::Gui
 
         WidgetSkinLabel m_label;
 
+    };
+
+    template<>
+    struct WidgetSkin<EditorTheme, MenuBar> : WidgetSkinMixin<EditorTheme, MenuBar>
+    {
+        static constexpr auto defaultPosition = WidgetPosition{ Position::Pixels{ 0.0f }, Position::Pixels{ 0.0f } };
+        static constexpr auto defaultSize = WidgetSize{ Size::Fit::Parent, Size::Pixels{ 30.0f } };
+
+        static constexpr auto backgroundColor = Vector4f32{ 60.0f / 255.0f, 60.0f / 255.0f, 60.0f / 255.0f, 1.0f };
+        static constexpr auto hoverColor = Vector4f32{ 1.0f, 60.0f / 255.0f, 60.0f / 255.0f, 1.0f };
+        static constexpr auto pressColor = Vector4f32{ 60.0f / 255.0f, 1.0f, 60.0f / 255.0f, 1.0f };
+        static constexpr auto menuSpacing = 6.0f;
+
+        explicit WidgetSkin(const WidgetSkinDescriptor<EditorTheme, MenuBar>& descriptor) :
+            WidgetSkinMixin<EditorTheme, MenuBar>(descriptor)
+        {}
+
+        void Draw() override
+        {
+            theme.m_canvasRenderer.DrawRect(widget.GetBounds(), backgroundColor);
+
+            switch (const auto& state = this->GetState(); state.type)
+            {
+	            case State::Type::HoverMenu: theme.m_canvasRenderer.DrawRect(state.typeBounds, hoverColor); break;
+	            case State::Type::PressedMenu: theme.m_canvasRenderer.DrawRect(state.typeBounds, pressColor); break;
+                default: break;
+            }
+        }
     };
 
     template<>
@@ -410,6 +425,50 @@ namespace Molten::Gui
 
     };
 
+
+	// Widget overlay skin implementations.
+    template<>
+    struct WidgetSkin<EditorTheme, DockerOverlay> : WidgetSkinMixin<EditorTheme, DockerOverlay>
+    {
+        static constexpr auto defaultPosition = WidgetPosition{ Position::Pixels{ 0.0f }, Position::Pixels{ 0.0f } };
+        static constexpr auto defaultSize = WidgetSize{ Size::Pixels{ 0.0f }, Size::Pixels{ 0.0f } };
+        static constexpr auto backgroundColor = Vector4f32{ 0.4f, 0.4f, 1.0f, 0.4f };
+
+        explicit WidgetSkin(const WidgetSkinDescriptor<EditorTheme, DockerOverlay>& descriptor) :
+            WidgetSkinMixin<EditorTheme, DockerOverlay>(descriptor)
+        {}
+
+        void Draw() override
+        {
+            theme.m_canvasRenderer.DrawRect(widget.GetBounds(), backgroundColor);
+        }
+    };
+
+    template<>
+    struct WidgetSkin<EditorTheme, MenuOverlay> : WidgetSkinMixin<EditorTheme, MenuOverlay>
+    {
+        static constexpr auto defaultPosition = WidgetPosition{ Position::Pixels{ 0.0f }, Position::Pixels{ 0.0f } };
+        static constexpr auto defaultSize = WidgetSize{ Size::Pixels{ 0.0f }, Size::Pixels{ 0.0f } };
+
+        static constexpr auto borderColor = Vector4f32{ 60.0f / 255.0f, 60.0f / 255.0f, 60.0f / 255.0f, 1.0f };
+        static constexpr auto backgroundColor = Vector4f32{ 60.0f / 255.0f, 60.0f / 255.0f, 60.0f / 255.0f, 1.0f };
+
+        explicit WidgetSkin(const WidgetSkinDescriptor<EditorTheme, MenuOverlay>& descriptor) :
+            WidgetSkinMixin<EditorTheme, MenuOverlay>(descriptor)
+        {}
+
+        void Draw() override
+        {
+            // So much overdraw...
+
+            auto bounds = widget.GetBounds();
+            theme.m_canvasRenderer.DrawRect(bounds, borderColor);
+
+            bounds.position += Vector2f32{ 1.0f, 1.0f };
+            bounds.size -= Vector2f32{ 2.0f, 2.0f };
+            theme.m_canvasRenderer.DrawRect(bounds, backgroundColor);
+        }
+    };
 
 }
 

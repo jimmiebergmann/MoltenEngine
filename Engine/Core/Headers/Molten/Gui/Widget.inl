@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -357,26 +357,20 @@ namespace Molten::Gui
     }
 
     template<typename TTheme, template<typename> typename TWidget>
-    template<typename TState>
-    const TState& WidgetMixin<TTheme, TWidget>::GetSkinState() const
+    const auto& WidgetMixin<TTheme, TWidget>::GetSkinState() const
     {
-        static_assert(std::is_same_v<TState, typename TWidget<TTheme>::State>,
-            "Passed invalid widget state type to WidgetMixin<TTheme, TWidget>::GetSkinState.");
-
         return m_skin->GetState();
     }
     template<typename TTheme, template<typename> typename TWidget>
     template<typename TState>
     void WidgetMixin<TTheme, TWidget>::SetSkinState(const TState& state)
     {
-        static_assert(std::is_same_v<TState, typename TWidget<TTheme>::State>,
-            "Passed invalid widget state type to WidgetMixin<TTheme, TWidget>::SetSkinState.");
-
         m_skin->SetState(state);
     }
 
+
     // Managed widget implementations.
-  /*  template<typename TTheme, template<typename> typename TWidget>
+    template<typename TTheme, template<typename> typename TWidget>
     ManagedWidget<TTheme, TWidget>::ManagedWidget() :
         m_layer(nullptr),
         m_widget(nullptr)
@@ -384,11 +378,11 @@ namespace Molten::Gui
 
     template<typename TTheme, template<typename> typename TWidget>
     ManagedWidget<TTheme, TWidget>::ManagedWidget(
-        Layer<TTheme>& layer,
-        TWidget<TTheme>& widget
+        Layer<TTheme>* layer,
+        TWidget<TTheme>* widget
     ) :
-        m_layer(&layer),
-        m_widget(&widget)
+        m_layer(layer),
+        m_widget(widget)
     {}
 
     template<typename TTheme, template<typename> typename TWidget>
@@ -433,7 +427,6 @@ namespace Molten::Gui
         return m_widget;
     }
 
-
     template<typename TTheme, template<typename> typename TWidget>
     ManagedWidget<TTheme, TWidget>::operator bool() const
     {
@@ -445,8 +438,8 @@ namespace Molten::Gui
     {
         if (m_widget)
         {
-            m_widget->GetCanvas()->DestroyWidget(m_widget);
+            m_layer->DestroyOverlayChild(*this);
         }
-    }*/
+    }
 
 }

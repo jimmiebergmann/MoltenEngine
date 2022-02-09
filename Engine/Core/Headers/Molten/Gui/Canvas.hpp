@@ -81,12 +81,6 @@ namespace Molten::Gui
 
         bool DestroyWidget(Widget<TTheme>* widget);
 
-        /** Creates a new widget in the overlay layer.
-         * ManagedWidget is automatically destroy and removed from overlay at destruction.
-         */
-        /*template<template<typename> typename TWidget, typename ... TArgs>
-        [[nodiscard]] ManagedWidget<TTheme, TWidget> CreateOverlayChild(TArgs ... args);*/
-
         /** This function call makes the provided widget to receive all mouse events, 
          * regardless of layers above or child widgets on top being hovered or pressed, until the mouse button is released.
          */

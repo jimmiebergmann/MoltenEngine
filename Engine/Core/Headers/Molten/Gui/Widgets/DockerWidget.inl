@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -1148,6 +1148,7 @@ namespace Molten::Gui
             m_pressedEdge = nullptr;
             m_pressedLeaf = nullptr;
             m_dockingLeaf = nullptr;
+            m_leafDragOverlay = {};
             SetCursor(Mouse::Cursor::Normal);
         }
 
@@ -1335,17 +1336,17 @@ namespace Molten::Gui
             {
                 m_dockingLeaf = leaf;
 
-                //if(!m_leafDragOverlay)
+                if(!m_leafDragOverlay)
                 {
-                    //m_leafDragOverlay = m_docker.GetCanvas()->template CreateOverlayChild<DockerOverlay>();
+                    m_leafDragOverlay = m_docker.GetLayer()->template CreateOverlayChild<DockerOverlay>();
                 }
                 
-                //m_leafDragOverlay->position = WidgetPosition{ Position::Pixels{ dockingBounds.position.x }, Position::Pixels{ dockingBounds.position.y } };
-                //m_leafDragOverlay->size = WidgetSize{ Size::Pixels{ dockingBounds.size.x }, Size::Pixels{ dockingBounds.size.y } };
+                m_leafDragOverlay->position = WidgetPosition{ Position::Pixels{ dockingBounds.position.x }, Position::Pixels{ dockingBounds.position.y } };
+                m_leafDragOverlay->size = WidgetSize{ Size::Pixels{ dockingBounds.size.x }, Size::Pixels{ dockingBounds.size.y } };
             }
             else
             {
-                //m_leafDragOverlay = {};
+                m_leafDragOverlay = {};
                 m_dockingLeaf = nullptr;
             }
 
@@ -1389,7 +1390,7 @@ namespace Molten::Gui
         Vector2f32 m_mouseStatePosition;
         Edge* m_pressedEdge;
         Leaf* m_pressedLeaf;
-        //ManagedWidget<TTheme, DockerOverlay> m_leafDragOverlay;
+        ManagedWidget<TTheme, DockerOverlay> m_leafDragOverlay;
         Leaf* m_dockingLeaf;
         DockingPosition m_dockingLeafPosition;
         

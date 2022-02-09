@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -84,6 +84,12 @@ namespace Molten::Gui
         template<template<typename> typename TWidget, typename ... TArgs>
         TWidget<TTheme>* CreateChildFor(Widget<TTheme>* parent, TArgs ... args);
 
+        template<template<typename> typename TWidget, typename ... TArgs>
+        [[nodiscard]] ManagedWidget<TTheme, TWidget> CreateOverlayChild(TArgs ... args);
+
+        template<template<typename> typename TWidget>
+        void DestroyOverlayChild(ManagedWidget<TTheme, TWidget>& managedWidget);
+
     protected:
 
         [[nodiscard]] bool HandleMouseMoveEvent(
@@ -103,10 +109,10 @@ namespace Molten::Gui
         LayerData<TTheme>& m_data;
         SignalDispatcher& m_widgetPropertyDispatcher;
         WidgetChildren<TTheme> m_children;
+        WidgetChildren<TTheme> m_overlayChildren;
         WidgetVisibilityTracker m_visibilityTracker;
         Vector2f32 m_size;
         Vector2f32 m_scale;
-
         std::vector<Widget<TTheme>*> m_drawChildren;
 
     private:

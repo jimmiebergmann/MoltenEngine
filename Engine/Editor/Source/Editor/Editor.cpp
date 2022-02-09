@@ -35,6 +35,7 @@
 #include "Molten/Gui/Widgets/DockerWidget.hpp"
 #include "Molten/Gui/Widgets/LabelWidget.hpp"
 #include "Molten/Gui/Widgets/ViewportWidget.hpp"
+#include "Molten/Gui/Widgets/MenuBarWidget.hpp"
 
 #include "Molten/FileFormat/Mesh/ObjMeshFile.hpp"
 
@@ -279,8 +280,33 @@ namespace Molten::Editor
 
         {
 	        auto* layer = m_canvas->CreateLayer<Gui::SingleRootLayer>(Gui::LayerPosition::Top);
-	        
-	        auto* docker = layer->CreateChild<Gui::Docker>();
+
+            auto* rootGrid = layer->CreateChild<Gui::Grid>(Gui::GridDirection::Vertical);
+            rootGrid->cellSpacing = 0.0f;
+
+            {
+				auto* menuBar = rootGrid->CreateChild<Gui::MenuBar>();
+                {
+                    auto fileMenu = menuBar->AddMenu("File");
+                    fileMenu->AddItem("New Project")->onClick.Connect(
+                        [&]() { Logger::WriteInfo(m_logger.get(), "New Project"); });
+                    fileMenu->AddItem("Open Project")->onClick.Connect(
+                        [&]() { Logger::WriteInfo(m_logger.get(), "Open Project"); });
+                    fileMenu->AddItem("Import Asset")->onClick.Connect(
+                        [&]() { Logger::WriteInfo(m_logger.get(), "Import Asset"); });
+                    fileMenu->AddItem("Exit")->onClick.Connect(
+                        [&]() { this->Exit(); });
+                }
+                {
+                    auto aboutMenu = menuBar->AddMenu("Help");
+                    aboutMenu->AddItem("About")->onClick.Connect(
+                        [&]() { Logger::WriteInfo(m_logger.get(), "About"); });
+                    aboutMenu->AddItem("Licenses")->onClick.Connect(
+                        [&]() { Logger::WriteInfo(m_logger.get(), "Licenses"); });
+                }
+	        }
+
+	        auto* docker = rootGrid->CreateChild<Gui::Docker>();
 
 	        docker->margin = { 4.0f, 4.0f, 4.0f, 4.0f };
 

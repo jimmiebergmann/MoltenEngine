@@ -136,14 +136,6 @@ namespace Molten::Gui
         return true;
     }
 
-    //template<typename TTheme>
-    //template<template<typename> typename TWidget, typename ... TArgs>
-    //ManagedWidget<TTheme, TWidget> Canvas<TTheme>::CreateOverlayChild(TArgs ... args)
-    //{
-    //    auto* widget = m_overlayLayer->template CreateChild<TWidget>(std::forward<TArgs>(args)...);
-    //    return { *m_overlayLayer, *widget };
-    //}
-
     template<typename TTheme>
     void Canvas<TTheme>::OverrideMouseEventsUntilMouseRelease(
         Widget<TTheme>& widget,
