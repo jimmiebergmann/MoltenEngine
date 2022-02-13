@@ -37,6 +37,7 @@
 #include "Molten/Utility/FpsTracker.hpp"
 #include "Molten/System/ThreadPool.hpp"
 #include "Molten/Utility/FunctionDispatcher.hpp"
+#include "Molten/Utility/BufferCapacityPolicy.hpp"
 #include <optional>
 #include <thread>
 #include <atomic>
@@ -118,6 +119,8 @@ namespace Molten::Editor
         Gui::ProgressBar<Gui::EditorTheme>* m_loadingProgressBar;
         //Gui::FloatingWidgetLayer<Gui::EditorTheme>* m_loadingLayer;
 
+        std::array<BufferCapacityPolicy, 2> m_viewportCapacityPolicy;
+        RenderPassUpdateDescriptor m_viewportRenderPassUpdateDesc;
         SharedRenderResource<RenderPass> m_viewportRenderPass;
         SharedRenderResource<Pipeline> m_viewportPipeline;
         SharedRenderResource<VertexBuffer> m_viewportVertexBuffer;

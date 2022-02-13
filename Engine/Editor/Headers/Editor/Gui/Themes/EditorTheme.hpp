@@ -377,13 +377,16 @@ namespace Molten::Gui
 
         void Draw() override
         {
-             if (!m_framedTexture.framedTexture /* || !widget.IsVisible() */ )
-             {
-                 return;
-             }
+			if (!m_framedTexture.framedTexture)
+			{
+				return;
+			}
 
-             constexpr auto textureBounds = Bounds2f32{ 0.0f, 0.0f, 1.0f, 1.0f };
-             theme.m_canvasRenderer.DrawRect(widget.GetBounds(), textureBounds, m_framedTexture);
+			const auto bounds = widget.GetBounds();
+            const auto upperTextureCoords = bounds.size / Vector2f32{ m_framedTexture.framedTexture->GetDimensions() };
+            const auto textureBounds = Bounds2f32{ { 0.0f, 0.0f }, upperTextureCoords };
+
+			theme.m_canvasRenderer.DrawRect(bounds, textureBounds, m_framedTexture);
         }
 
         void OnStateChange(const State& state) override

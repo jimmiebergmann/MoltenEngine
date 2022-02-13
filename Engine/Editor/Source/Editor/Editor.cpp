@@ -47,6 +47,7 @@ namespace Molten::Editor
         m_isRunning(false),
         m_cancellationSemaphore(cancellationSemaphore),
         m_windowTitle("Molten Editor"),
+        m_viewportCapacityPolicy{ BufferCapacityScalarPolicy{ 100 }, BufferCapacityScalarPolicy{ 100 } },
         m_fpsTracker(8),
         m_threadPool(0, 2, 0)
     {}
@@ -454,36 +455,55 @@ namespace Molten::Editor
 
     void Editor::OnSceneViewportResize(Gui::Viewport<Gui::EditorTheme>* viewport, const Vector2ui32 size)
     {
-        TextureDescriptor2D colorTextureDesc = {};
-        colorTextureDesc.dimensions = size;
-        colorTextureDesc.type = TextureType::Color;
-        colorTextureDesc.initialUsage = TextureUsage::Attachment;
-        colorTextureDesc.format = ImageFormat::URed8Green8Blue8Alpha8;
-        colorTextureDesc.internalFormat = ImageFormat::URed8Green8Blue8Alpha8;
-        auto colorTexture = m_renderer->CreateFramedTexture(colorTextureDesc);
-
-        if (!colorTexture)
+        auto createTextures = [&]()->std::array<SharedRenderResource<FramedTexture2D>, 2>
         {
-            return;
-        }
+            const auto dimensions = Vector2ui32{
+                m_viewportCapacityPolicy[0].GetCapacity(),
+                m_viewportCapacityPolicy[1].GetCapacity()
+            };
 
-        TextureDescriptor2D depthTextureDesc = {};
-        depthTextureDesc.dimensions = size;
-        depthTextureDesc.type = TextureType::DepthStencil;
-        depthTextureDesc.initialUsage = TextureUsage::Attachment;
-        depthTextureDesc.format = ImageFormat::SDepthFloat24StencilUint8;
-        depthTextureDesc.internalFormat = ImageFormat::SDepthFloat24StencilUint8;
-        auto depthTexture = m_renderer->CreateFramedTexture(depthTextureDesc);
+            TextureDescriptor2D colorTextureDesc = {};
+            colorTextureDesc.dimensions = dimensions;
+            colorTextureDesc.type = TextureType::Color;
+            colorTextureDesc.initialUsage = TextureUsage::Attachment;
+            colorTextureDesc.format = ImageFormat::URed8Green8Blue8Alpha8;
+            colorTextureDesc.internalFormat = ImageFormat::URed8Green8Blue8Alpha8;
 
-        if (!depthTexture)
-        {
-            return;
-        }
+        	auto colorTexture = m_renderer->CreateFramedTexture(colorTextureDesc);
+            if (!colorTexture)
+            {
+                return {};
+            }
+
+            TextureDescriptor2D depthTextureDesc = {};
+            depthTextureDesc.dimensions = dimensions;
+            depthTextureDesc.type = TextureType::DepthStencil;
+            depthTextureDesc.initialUsage = TextureUsage::Attachment;
+            depthTextureDesc.format = ImageFormat::SDepthFloat24StencilUint8;
+            depthTextureDesc.internalFormat = ImageFormat::SDepthFloat24StencilUint8;
+
+        	auto depthTexture = m_renderer->CreateFramedTexture(depthTextureDesc);
+            if (!depthTexture)
+            {
+                return {};
+            }
+
+            return { std::move(colorTexture), std::move(depthTexture) };
+        };
+
+        const Vector2b capacitySetSizeResult = {
+		    m_viewportCapacityPolicy[0].SetSize(size.x),
+		    m_viewportCapacityPolicy[1].SetSize(size.y)
+        };
 
         if (!m_viewportRenderPass)
         {
+            auto [colorTexture, depthTexture] = createTextures();
+
+            viewport->SetTexture(colorTexture);
+
             const RenderPassDescriptor renderPassDesc = {
-                colorTexture->GetDimensions(),
+                size,
                 {
                     {
                         colorTexture,
@@ -502,28 +522,8 @@ namespace Molten::Editor
                 }
             };
 
-            m_viewportRenderPass = m_renderer->CreateRenderPass(renderPassDesc);
-            if (!m_viewportRenderPass)
-            {
-                Exit();
-                return;
-            }
-
-            m_viewportRenderPass->SetRecordFunction([&](CommandBuffer& commandBuffer)
-            {
-                DrawSceneViewport(commandBuffer);
-            });
-
-            if(!LoadSceneViewport())
-            {
-                Exit();
-                return;
-            }
-        }
-        else
-        {
-            const RenderPassUpdateDescriptor renderPassUpdateDesc = {
-                colorTexture->GetDimensions(),
+            m_viewportRenderPassUpdateDesc = {
+                size,
                 {
                     {
                         colorTexture,
@@ -540,14 +540,43 @@ namespace Molten::Editor
                 }
             };
 
-            if(!m_renderer->UpdateRenderPass(*m_viewportRenderPass, renderPassUpdateDesc))
+            m_viewportRenderPass = m_renderer->CreateRenderPass(renderPassDesc);
+            if (!m_viewportRenderPass)
+            {
+                Exit();
+                return;
+            }
+
+            m_viewportRenderPass->SetRecordFunction([&](CommandBuffer& commandBuffer) {
+                DrawSceneViewport(commandBuffer);
+            });
+
+            if(!LoadSceneViewport())
             {
                 Exit();
                 return;
             }
         }
+        else
+        {
+            m_viewportRenderPassUpdateDesc.dimensions = size;
 
-        viewport->SetTexture(std::move(colorTexture));
+            if(const bool createNewTexture = capacitySetSizeResult.x || capacitySetSizeResult.y; createNewTexture)
+            {
+                auto [colorTexture, depthTexture] = createTextures();
+
+                viewport->SetTexture(colorTexture);
+
+                m_viewportRenderPassUpdateDesc.attachments[0].texture = colorTexture;
+                m_viewportRenderPassUpdateDesc.attachments[1].texture = depthTexture;
+            }
+
+            if(!m_renderer->UpdateRenderPass(*m_viewportRenderPass, m_viewportRenderPassUpdateDesc))
+            {
+                Exit();
+                return;
+            }
+        }        
     }
 
     bool Editor::LoadSceneViewport()
