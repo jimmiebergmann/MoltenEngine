@@ -43,6 +43,45 @@ namespace Molten::Gui
     }
 
     template<typename TTheme>
+    void MenuBar<TTheme>::OnUpdate(WidgetUpdateContext<TTheme>& updateContext)
+    {
+        m_menuBounds.clear();
+
+        if (!this->PreCalculateBounds())
+        {
+            return;
+        }
+
+        m_contentBounds = this->GetBounds();
+        m_contentBounds.position += this->padding.low;
+        m_contentBounds.size -= this->padding.low + this->padding.high;
+
+        // Children update.
+        for (auto it = this->GetChildrenBegin(); it != this->GetChildrenEnd(); ++it)
+        {
+            auto& child = *(it->get());
+
+            // Pre update
+            this->SetPosition(child, m_contentBounds.position);
+            this->SetGrantedSize(child, m_contentBounds.size);
+
+            // Child update.
+            updateContext.VisitChild(child);
+
+            // Post update
+            const auto childSize = child.GetBounds().size;
+            const auto diff = childSize.x + menuSpacing;
+
+            m_menuBounds.push_back(AABB2f32{ m_contentBounds.position, Vector2f32{diff, m_contentBounds.size.y} });
+
+            m_contentBounds.position.x += diff;
+            m_contentBounds.size.x -= diff;
+
+            updateContext.DrawChild(child);
+        }
+    }
+
+    template<typename TTheme>
     void MenuBar<TTheme>::OnAddChild(Widget<TTheme>& widget)
     {
         //auto menuWidget = this->GetLayer()->template CreateOverlayChild<MenuOverlay>();
@@ -97,7 +136,7 @@ namespace Molten::Gui
         return true;
     }
 
-    template<typename TTheme>
+    /*template<typename TTheme>
     void MenuBar<TTheme>::PreUpdate()
     {
         m_menuBounds.clear();
@@ -132,7 +171,7 @@ namespace Molten::Gui
         m_contentBounds.size.x -= diff;
 
         this->DrawChild(child);
-    }
+    }*/
 
 
     // Menu bar menu implementations.

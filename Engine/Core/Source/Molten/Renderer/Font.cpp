@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -110,8 +110,6 @@ namespace Molten::Gui
 
         FontRepositoryImpl& fontRepositoryImpl;
         const std::vector<uint8_t> data;
-        int32_t ascender;
-        int32_t descender;
         FTC_Manager ftCacheManager;
         FTC_CMapCache ftCMapCache;
         FTC_ImageCache ftImageCache;    
@@ -257,8 +255,6 @@ namespace Molten::Gui
     ) :
         fontRepositoryImpl(fontRepositoryImpl),
         data(fontData),
-        ascender(0),
-        descender(0),
         ftCacheManager(nullptr),
         ftCMapCache(nullptr),
         ftImageCache(nullptr)
@@ -296,9 +292,6 @@ namespace Molten::Gui
         {
             return error;
         }
-
-        ascender = face->ascender >> 6;
-        descender = face->descender >> 6;
        
         return 0;
     }
@@ -330,7 +323,7 @@ namespace Molten::Gui
         ftcImageType.flags = loadlags;
 
         auto* lastAffectedAtlas = fontRepositoryImpl.repository.GetLastAffectedAtlas();
-        auto createNewGlyph = [&](const uint32_t codePoint) -> FontAtlasGlyph*
+        auto createGlyph = [&](const uint32_t codePoint) -> FontAtlasGlyph*
         {
             const auto glyphIndex = FTC_CMapCache_Lookup(ftCMapCache, 0, 0, codePoint);
             if (glyphIndex == 0)
@@ -355,20 +348,40 @@ namespace Molten::Gui
             }
 
              const auto glyphDimensions = Vector2ui32{ bitmap.width, bitmap.rows };
-             auto fontAtlasGlyph = atlasBin->CreateGlyph(codePoint, bitmap.buffer, glyphDimensions, imageFormat, lastAffectedAtlas);
+             auto* fontAtlasGlyph = atlasBin->CreateGlyph(codePoint, bitmap.buffer, glyphDimensions, imageFormat, lastAffectedAtlas);
             
             if(fontAtlasGlyph)
             {
                 fontAtlasGlyph->glyphIndex = glyphIndex;
                 fontAtlasGlyph->advance = { static_cast<int32_t>(glyph->advance.x >> 16), static_cast<int32_t>(glyph->advance.y >> 16) };
                 fontAtlasGlyph->bearing = { bitmapGlyph->left, bitmapGlyph->top };
-                fontAtlasGlyph->topPosition = -bitmapGlyph->top;
             }
 
             return fontAtlasGlyph;
         };
 
+        auto findOrCreateGlyph = [&](const uint32_t codePoint) -> FontAtlasGlyph*
+        {
+            if(FontAtlasGlyph* fontAtlasGlyph = atlasBin->FindGlyph(codePoint); fontAtlasGlyph)
+            {
+                return fontAtlasGlyph;
+            }
+            return createGlyph(codePoint);
+        };
+
         FontGroupedSequence groupedSequence;
+        groupedSequence.fontHeight = fontHeight;
+        groupedSequence.glyphBounds = Bounds2i32{
+            Vector2i32{
+                static_cast<int32_t>(static_cast<float>(face->bbox.xMin) * (static_cast<float>(fontHeight) / 26.6f)) >> 6,
+                -(static_cast<int32_t>(static_cast<float>(face->bbox.yMax) * (static_cast<float>(fontHeight) / 26.6f)) >> 6)
+            },
+            Vector2i32{
+                static_cast<int32_t>(static_cast<float>(face->bbox.xMax) * (static_cast<float>(fontHeight) / 26.6f)) >> 6,
+                -(static_cast<int32_t>(static_cast<float>(face->bbox.yMin) * (static_cast<float>(fontHeight) / 26.6f)) >> 6)
+            }
+        };
+
         FontAtlas* currentAtlas = nullptr;
         FontSequenceGroup* currentSequenceGroup = nullptr;
         auto getOrCreateSequenceGroup = [&](FontAtlas* fontAtlas) -> FontSequenceGroup*
@@ -382,8 +395,7 @@ namespace Molten::Gui
             auto& groups = groupedSequence.groups;
 
             // Find existing.
-            auto it = std::find_if(groups.begin(), groups.end(), [&](auto& sequenceGroup)
-            {
+            auto it = std::find_if(groups.begin(), groups.end(), [&](auto& sequenceGroup) {
                 return sequenceGroup->atlas == fontAtlas;
             });
 
@@ -412,7 +424,7 @@ namespace Molten::Gui
 
         const bool faceHasKerning = FT_HAS_KERNING(face);
         const FontAtlasGlyph* prevAtlasGlyph = nullptr;    
-        auto getKerningFromPrevGlyph = [&](FontAtlasGlyph* atlasGlyph) -> int32_t
+        auto getKerningFromPrevGlyph = [&](const FontAtlasGlyph* atlasGlyph) -> int32_t
         {
             if(faceHasKerning && prevAtlasGlyph)
             {
@@ -433,52 +445,37 @@ namespace Molten::Gui
             std::numeric_limits<int32_t>::min(),
             std::numeric_limits<int32_t>::min() };
 
-        auto appendBounds = [](Bounds2<int32_t>& output, const Bounds2<int32_t>& input)
-        {
-            if (input.low.x < output.low.x)
-            {
-                output.low.x = input.low.x;
-            }
-            if (input.low.y < output.low.y)
-            {
-                output.low.y = input.low.y;
-            }
-            if (input.high.x > output.high.x)
-            {
-                output.high.x = input.high.x;
-            }
-            if (input.high.y > output.high.y)
-            {
-                output.high.y = input.high.y;
-            }
-        };
-
         int32_t penPos = 0;
+
+        if(auto decoder = Utf8Decoder{ text }; decoder.begin() != decoder.end())
+        {
+            const auto codePoint = *decoder.begin();
+            if(auto* fontAtlasGlyph = findOrCreateGlyph(codePoint); fontAtlasGlyph)
+            {
+                penPos -= fontAtlasGlyph->bearing.x;
+            }
+        }
+
         for(const auto codePoint : Utf8Decoder{ text })
         {
-            FontAtlasGlyph* fontAtlasGlyph = atlasBin->FindGlyph(codePoint);
+            auto* fontAtlasGlyph = findOrCreateGlyph(codePoint);
             if(fontAtlasGlyph == nullptr)
             {
-                fontAtlasGlyph = createNewGlyph(codePoint);
-                if(fontAtlasGlyph == nullptr)
-                {
-                    continue;
-                }        
-            }
+                continue;
+            }        
 
             auto* sequenceGroup = getOrCreateSequenceGroup(fontAtlasGlyph->atlas);
-            const auto glyphPosition = Vector2i32{ penPos + fontAtlasGlyph->bearing.x, fontAtlasGlyph->topPosition };
-            const auto glyphTextureSize = fontAtlasGlyph->textureBounds.GetSize();
 
-            auto newGlyph = std::make_shared<FontGlyph>(
-                fontAtlasGlyph, 
-                Bounds2i32{ glyphPosition, glyphPosition + glyphTextureSize } );
+            const auto glyphPosition = Vector2i32{ penPos + fontAtlasGlyph->bearing.x, -fontAtlasGlyph->bearing.y };
+            const auto glyphBounds = Bounds2i32{
+				glyphPosition,
+				glyphPosition + fontAtlasGlyph->textureSize
+            };
 
-            appendBounds(sequenceGroup->bounds, newGlyph->bounds);
-            appendBounds(groupedSequence.bounds, newGlyph->bounds);      
+            sequenceGroup->glyphs.emplace_back(fontAtlasGlyph, glyphBounds);
 
-            sequenceGroup->glyphs.push_back(newGlyph);
-            groupedSequence.glyphs.push_back(newGlyph);
+            sequenceGroup->bounds = Bounds2<int32_t>::Union(sequenceGroup->bounds, glyphBounds);
+            groupedSequence.bounds = Bounds2<int32_t>::Union(groupedSequence.bounds, glyphBounds);
 
             penPos += getKerningFromPrevGlyph(fontAtlasGlyph) + fontAtlasGlyph->advance.x;
         }
@@ -815,7 +812,8 @@ namespace Molten::Gui
             lastAffectedAtlas = fontAtlas;
         }
 
-        auto atlasGlyph = std::make_shared<FontAtlasGlyph>(codePoint, fontAtlas, glyphBounds);
+        const auto textureBounds = Bounds2ui32{ glyphBounds.low + Vector2ui32{ 1, 1 } , glyphBounds.high - Vector2ui32{ 1, 1 } };
+        auto atlasGlyph = std::make_shared<FontAtlasGlyph>(codePoint, fontAtlas, textureBounds);
         auto it = m_glyphs.insert({ codePoint, atlasGlyph });
         return it.first->second.get();
     }
@@ -892,7 +890,8 @@ namespace Molten::Gui
             lastAffectedAtlas = fontAtlas;
         }
 
-        auto atlasGlyph = std::make_shared<FontAtlasGlyph>(codePoint, fontAtlas, glyphBounds);
+        const auto textureBounds = Bounds2ui32{ glyphBounds.low + Vector2ui32{ 1, 1 } , glyphBounds.high - Vector2ui32{ 1, 1 } };
+        auto atlasGlyph = std::make_shared<FontAtlasGlyph>(codePoint, fontAtlas, textureBounds);
         auto it = m_glyphs.insert({ codePoint, atlasGlyph });
         return it.first->second.get();
     }
@@ -907,10 +906,10 @@ namespace Molten::Gui
         codePoint(codePoint),
         atlas(atlas),     
         textureBounds(textureBounds),
+        textureSize(textureBounds.GetSize()),
         glyphIndex(0),
         advance(0, 0),
-        bearing(0, 0),
-        topPosition(0)
+        bearing(0, 0)
     {}
 
 
@@ -979,32 +978,12 @@ namespace Molten::Gui
         delete m_impl;
     }
 
-    int32_t Font::GetAscender() const
-    {
-        return m_impl->ascender;
-    }
-
-    int32_t Font::GetDescender() const
-    {
-        return m_impl->descender;
-    }
-
     FontGroupedSequence Font::CreateGroupedSequence(
         const std::string& text,
         const uint32_t dpi,
         const uint32_t height)
     {
         return m_impl->CreateGroupedSequence(text, dpi, height);
-    }
-
-    float Font::CalculateHeightOffset(const Bounds2f32& bounds) const
-    {
-        const float ascender = static_cast<float>(m_impl->ascender);
-        const float descender = static_cast<float>(m_impl->descender);
-        const float factor = ascender / (ascender - descender);
-
-        const float boundsHeight = bounds.high.y - bounds.low.y;
-        return boundsHeight * factor;
     }
 
 
@@ -1020,8 +999,31 @@ namespace Molten::Gui
 
     // Font sequence grouped implementations.
     FontSequenceGroup::FontSequenceGroup(FontAtlas* atlas) :
-        atlas(atlas),
-        color(1.0f, 1.0f, 1.0f, 1.0f)
+        atlas(atlas)
     {}
+
+
+    // Font grouped sequence implementations.
+    FontGroupedSequence::FontGroupedSequence() :
+        fontHeight(0)
+    {}
+
+    Bounds2i32 FontGroupedSequence::CalculateFontHeightBounds() const
+    {
+        const auto newBottom =
+            static_cast<int32_t>(
+                static_cast<float>(glyphBounds.bottom) * 
+                (static_cast<float>(fontHeight) / static_cast<float>(-glyphBounds.top))
+			);
+
+        auto newBounds = Bounds2i32{
+            bounds.left,
+            -fontHeight,
+            bounds.right,
+            newBottom
+        };
+        
+        return newBounds;
+    }
 
 }

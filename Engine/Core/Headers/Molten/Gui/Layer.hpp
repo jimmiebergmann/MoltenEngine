@@ -102,9 +102,6 @@ namespace Molten::Gui
             const UserInput::MouseButtonEvent& mouseButtonEvent,
             WidgetMouseEventTracker<TTheme>& mouseEventTracker);
 
-        void TraverseVisibleWidgetsReversePreorder(std::function<bool(Widget<TTheme>*)>&& callback);
-
-
         TTheme& m_theme;
         LayerData<TTheme>& m_data;
         SignalDispatcher& m_widgetPropertyDispatcher;
@@ -113,9 +110,12 @@ namespace Molten::Gui
         WidgetVisibilityTracker m_visibilityTracker;
         Vector2f32 m_size;
         Vector2f32 m_scale;
-        std::vector<Widget<TTheme>*> m_drawChildren;
+        WidgetPointers<TTheme> m_widgetDrawQueue;
+        WidgetPointers<TTheme> m_overlayWidgetDrawQueue;
 
     private:
+
+        template<typename> friend class Widget;
 
         template<template<typename> typename TWidget, typename ... TArgs>
         [[nodiscard]] TWidget<TTheme>* CreateChildInternal(

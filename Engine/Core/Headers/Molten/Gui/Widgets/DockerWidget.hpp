@@ -75,7 +75,7 @@ namespace Molten::Gui
 
     private:
 
-        void PreUpdate() override;
+        void OnUpdate(WidgetUpdateContext<TTheme>& updateContext) override;
         void OnAddChild(Widget<TTheme>& child) override;
         bool OnMouseEvent(const WidgetMouseEvent& widgetMouseEvent) override;
 

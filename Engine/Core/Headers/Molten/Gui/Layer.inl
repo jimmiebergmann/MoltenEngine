@@ -62,46 +62,26 @@ namespace Molten::Gui
     template<typename TTheme>
     void Layer<TTheme>::Update(const Time&)
     {
-        m_drawChildren.clear();
+        m_widgetDrawQueue.clear();
+        auto updateContext = WidgetUpdateContext<TTheme>{ m_widgetDrawQueue };
 
-        std::function<void(Widget<TTheme>&)> traverseUpdateWidget;
-        traverseUpdateWidget = [&](Widget<TTheme>& widget)
-        {
-            widget.PrepareUpdate();
-            widget.PreUpdate();
-
-            for (auto it = widget.m_updateChildren.first; it != widget.m_updateChildren.second; ++it)
-            {
-                auto& child = **it;
-                auto preChildResult = widget.PreChildUpdate(child);
-                if(preChildResult == PreChildUpdateResult::SkipRemaining)
-                {
-                    break;
-                }
-
-                if(preChildResult != PreChildUpdateResult::Skip)
-                {
-                    traverseUpdateWidget(child);
-                }
-
-                widget.PostChildUpdate(child);
-            }
-
-            widget.PostUpdate();
-        };
-
-        for(auto& child : m_children)
+        for (auto& child : m_children)
         {
             child->m_bounds.position = { 0.0f, 0.0f };
             child->m_grantedSize = m_size;
-            traverseUpdateWidget(*child);
+            child->OnUpdate(updateContext);
+            updateContext.DrawChild(*child);
         }
 
-        for (auto& overlayChild : m_overlayChildren)
+        m_overlayWidgetDrawQueue.clear();
+        auto overlayUpdateContext = WidgetUpdateContext<TTheme>{ m_overlayWidgetDrawQueue };
+
+        for (auto& overlayWidget : m_overlayChildren)
         {
-            overlayChild->m_bounds.position = { 0.0f, 0.0f };
-            overlayChild->m_grantedSize = m_size;
-            traverseUpdateWidget(*overlayChild);
+            overlayWidget->m_bounds.position = { 0.0f, 0.0f };
+            overlayWidget->m_grantedSize = m_size;
+            overlayWidget->OnUpdate(overlayUpdateContext);
+            overlayUpdateContext.DrawChild(*overlayWidget);
         }
 
         m_visibilityTracker.Update();
@@ -110,25 +90,13 @@ namespace Molten::Gui
     template<typename TTheme>
     void Layer<TTheme>::Draw()
     {
-        std::function<void(Widget<TTheme>*)> traverseDrawWidget;
-        traverseDrawWidget = [&](Widget<TTheme>* widget)
+        for (auto it = m_widgetDrawQueue.rbegin(); it != m_widgetDrawQueue.rend(); ++it)
         {
-            widget->m_skinBase->Draw();
-
-            for(auto* child : widget->m_drawChildren)
-            {
-                traverseDrawWidget(child);
-            }
-        };
-
-    	for (auto& child : m_children)
-        {
-            traverseDrawWidget(child.get());
+            (*it)->m_skinBase->Draw();
         }
-
-        for (auto& overlayChild : m_overlayChildren)
+        for (auto it = m_overlayWidgetDrawQueue.rbegin(); it != m_overlayWidgetDrawQueue.rend(); ++it)
         {
-            traverseDrawWidget(overlayChild.get());
+            (*it)->m_skinBase->Draw();
         }
     }
 
@@ -186,27 +154,23 @@ namespace Molten::Gui
         const UserInput::MouseMoveEvent& mouseMoveEvent,
         WidgetMouseEventTracker<TTheme>& mouseEventTracker)
     {
-        for(auto it = m_overlayChildren.rbegin(); it != m_overlayChildren.rend(); ++it)
+        for (auto* widget : m_overlayWidgetDrawQueue)
         {
-            if (mouseEventTracker.HandleMouseMove(it->get(), mouseMoveEvent.position))
+            if (mouseEventTracker.HandleMouseMove(widget, mouseMoveEvent.position))
             {
                 return true;
             }
         }
 
-        bool handledEvent = false;
-        TraverseVisibleWidgetsReversePreorder([&](auto* widget)
+        for (auto* widget : m_widgetDrawQueue)
         {
             if (mouseEventTracker.HandleMouseMove(widget, mouseMoveEvent.position))
             {
-                handledEvent = true;
-                return false;
+                return true;
             }
-            return true;
-        });
+        }
 
-
-        return handledEvent;
+        return false;
     }
 
     template<typename TTheme>
@@ -214,19 +178,23 @@ namespace Molten::Gui
         const UserInput::MouseButtonEvent& mouseButtonEvent,
         WidgetMouseEventTracker<TTheme>& mouseEventTracker)
     {
-        bool handledEvent = false;
+        for (auto* widget : m_overlayWidgetDrawQueue)
+        {
+            if (mouseEventTracker.HandleMouseButtonPress(widget, mouseButtonEvent.position, mouseButtonEvent.button))
+            {
+                return true;
+            }
+        }
 
-         TraverseVisibleWidgetsReversePreorder([&](auto* widget)
-         {
-             if (mouseEventTracker.HandleMouseButtonPress(widget, mouseButtonEvent.position, mouseButtonEvent.button))
-             {
-                 handledEvent = true;
-                 return false;
-             }
-             return true;
-         });
+        for (auto* widget : m_widgetDrawQueue)
+        {
+            if (mouseEventTracker.HandleMouseButtonPress(widget, mouseButtonEvent.position, mouseButtonEvent.button))
+            {
+                return true;
+            }
+        }
 
-        return handledEvent;
+        return false;
     }
 
     template<typename TTheme>
@@ -236,37 +204,6 @@ namespace Molten::Gui
     {
         mouseEventTracker.HandleMouseButtonRelease(mouseButtonEvent.position, mouseButtonEvent.button);
         return false;
-    }
-
-    template<typename TTheme>
-    void Layer<TTheme>::TraverseVisibleWidgetsReversePreorder(std::function<bool(Widget<TTheme>*)>&& callback)
-    {
-        std::function<bool(Widget<TTheme>*)> traverseWidget;
-        traverseWidget = [&](Widget<TTheme>* widget)
-        {
-            for (auto it = widget->m_drawChildren.rbegin(); it != widget->m_drawChildren.rend(); ++it)
-            {
-                if(!traverseWidget(*it))
-                {
-                    return false;
-                }
-            }
-
-            if(!callback(widget))
-            {
-                return false;
-            }
-
-            return true;
-        };
-
-        for (auto it = m_children.rbegin(); it != m_children.rend(); ++it)
-        {
-            if(!traverseWidget(it->get()))
-            {
-                return;
-            }
-        }
     }
 
     template<typename TTheme>

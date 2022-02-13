@@ -43,14 +43,14 @@ namespace Molten::Gui
     template<typename TTheme> class Layer;
 
     template<typename TTheme> class Widget;
-    template<typename TTheme> using WidgetPointer = std::unique_ptr<Widget<TTheme>>;
-    template<typename TTheme> using WidgetChildren = std::vector<WidgetPointer<TTheme>>;
+    template<typename TTheme> using WidgetPointers = std::vector<Widget<TTheme>*>;
+    template<typename TTheme> using WidgetOwnedPointer = std::unique_ptr<Widget<TTheme>>;
+    template<typename TTheme> using WidgetChildren = std::vector<WidgetOwnedPointer<TTheme>>;
     template<typename TTheme> using WidgetChildIterator = typename WidgetChildren<TTheme>::iterator;
-    template<typename TTheme> using WidgetChildIteratorPair = std::pair<WidgetChildIterator<TTheme>, WidgetChildIterator<TTheme>>;
     template<typename TTheme, template<typename> typename TWidget> class WidgetMixin;
 
     template<typename TTheme, template<typename> typename TWidget> struct WidgetSkin;
-    template<typename TTheme, template<typename> typename TWidget> using WidgetSkinPointer = std::unique_ptr<WidgetSkin<TTheme, TWidget>>;
+    template<typename TTheme, template<typename> typename TWidget> using WidgetSkinOwnedPointer = std::unique_ptr<WidgetSkin<TTheme, TWidget>>;
     class WidgetSkinBase;
 
     template<typename TTheme> using WidgetMouseEventFunction = std::function<Widget<TTheme>* (const WidgetMouseEvent&)>;
@@ -58,11 +58,10 @@ namespace Molten::Gui
 
     class WidgetVisibilityTracker;
 
-    enum class PreChildUpdateResult
+    enum class GridDirection
     {
-        Visit,
-        Skip,
-        SkipRemaining
+        Horizontal,
+        Vertical
     };
 
 
@@ -77,13 +76,31 @@ namespace Molten::Gui
         WidgetVisibilityTracker& visibilityTracker;
     };
 
-
     template<typename TTheme, template<typename> typename TWidget>
     struct WidgetMixinDescriptor : WidgetDescriptor<TTheme>
     {
-        WidgetSkinPointer<TTheme, TWidget> skin;
+        WidgetSkinOwnedPointer<TTheme, TWidget> skin;
     };
 
+    template<typename TTheme>
+    class WidgetUpdateContext
+    {
+
+    public:
+
+        void VisitChild(Widget<TTheme>& child);
+        void DrawChild(Widget<TTheme>& child);
+
+    private:
+
+        explicit WidgetUpdateContext(WidgetPointers<TTheme>& widgetDrawQueue);
+
+        template<typename> friend class Canvas;
+        template<typename> friend class Layer;
+
+        WidgetPointers<TTheme>& m_widgetDrawQueue;
+
+    };
 
     template<typename TTheme>
     class Widget
@@ -119,32 +136,34 @@ namespace Molten::Gui
 
         [[nodiscard]] const AABB2f32& GetBounds() const;
 
-        [[nodiscard]] bool IsDestroyed() const;        
-
     protected:
+
+        
 
         Widget(
             WidgetDescriptor<TTheme>& desc,
             const WidgetPosition& position,
             const WidgetSize& size);
 
-        virtual void PreUpdate();
-        virtual void PostUpdate();
-        virtual PreChildUpdateResult PreChildUpdate(Widget<TTheme>& child);
-        virtual void PostChildUpdate(Widget<TTheme>& child);
-
+        virtual void OnUpdate(WidgetUpdateContext<TTheme>& updateContext);
         virtual void OnCreate();
         virtual void OnAddChild(Widget<TTheme>& widget);
         virtual void OnRemoveChild(Widget<TTheme>& widget);
 
-        typename WidgetChildren<TTheme>::iterator GetChildrenBegin();
-        typename WidgetChildren<TTheme>::iterator GetChildrenEnd();
+        [[nodiscard]] WidgetChildIterator<TTheme> GetChildrenBegin();
+        [[nodiscard]] WidgetChildIterator<TTheme> GetChildrenEnd();
 
         bool PreCalculateBounds();
-        bool PostCalculateBounds(Widget<TTheme>& child);
-        bool PreCalculateBounds(Widget<TTheme>& child);
 
-        [[nodiscard]] Vector2f32 GetGrantedSize();
+        bool PreCalculateChildBounds(Widget<TTheme>& child);
+        bool PreCalculateChildBounds(Widget<TTheme>& child, const AABB2f32& remainingContentBounds);
+
+        void PostCalculateChildBounds(const Widget<TTheme>& child, Vector2f32& contentSize, AABB2f32& remainingContentBounds, const GridDirection gridDirection, const float childSpacing);
+
+        bool PostCalculateBounds(Widget<TTheme>& child);
+        bool PostCalculateBounds(const Vector2f32& contentSize, const GridDirection gridDirection, const float childSpacing);
+
+        [[nodiscard]] Vector2f32 GetGrantedSize() const;
 
         void SetPosition(const Vector2f32& newPosition);
         void SetPosition(Widget<TTheme>& child, const Vector2f32& childPosition);
@@ -152,20 +171,13 @@ namespace Molten::Gui
         void SetSize(const Vector2f32& newSize);
         void SetGrantedSize(Widget<TTheme>& child, const Vector2f32& childGrantedSize);
 
-        void UpdateChildRange(WidgetChildIteratorPair<TTheme> iteratorRange);
-        void UpdateFirstChild();
-        void UpdateAllChildren();
-
-        void DrawChild(Widget<TTheme>& child);
-
     private:
 
         template<typename> friend class Canvas;
         template<typename> friend class Layer;
+        template<typename> friend class WidgetUpdateContext;
         template<typename, template<typename> typename> friend class WidgetMixin;
         template<typename> friend class WidgetMouseEventTracker;
-
-        void PrepareUpdate();
 
         WidgetChildren<TTheme> m_children;
         AABB2f32 m_bounds;
@@ -174,10 +186,7 @@ namespace Molten::Gui
         Canvas<TTheme>* m_canvas;
         Layer<TTheme>* m_layer;
         WidgetSkinBase* m_skinBase;
-        WidgetChildIteratorPair<TTheme> m_updateChildren;
-        std::vector<Widget*> m_drawChildren;
         WidgetMouseEventFunction<TTheme> m_mouseEventFunction;
-        bool m_destroyed;
 
     };
 
@@ -213,7 +222,7 @@ namespace Molten::Gui
         template<typename> friend class Canvas;
         template<typename> friend class Layer;
 
-        WidgetSkinPointer<TTheme, TWidget> m_skin;
+        WidgetSkinOwnedPointer<TTheme, TWidget> m_skin;
 
     };
 
@@ -251,6 +260,7 @@ namespace Molten::Gui
         TWidget<TTheme>* m_widget;
 
     };
+
 
 }
 

@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -32,30 +32,28 @@ namespace Molten::Gui
     {}
 
     template<typename TTheme>
-    void Button<TTheme>::PreUpdate()
+    void Button<TTheme>::OnUpdate(WidgetUpdateContext<TTheme>& updateContext)
     {
-        if (this->PreCalculateBounds())
+        if (!this->PreCalculateBounds())
         {
-            this->UpdateFirstChild();
+            return;
         }
-    }
 
-    template<typename TTheme>
-    PreChildUpdateResult Button<TTheme>::PreChildUpdate(Widget<TTheme>& child)
-    {
-        if(this->PreCalculateBounds(child))
+        if (auto it = this->GetChildrenBegin(); it != this->GetChildrenEnd())
         {
-            return PreChildUpdateResult::Visit;
-        }
-        return PreChildUpdateResult::Skip;
-    }
+            auto& child = *it->get();
 
-    template<typename TTheme>
-    void Button<TTheme>::PostChildUpdate(Widget<TTheme>& child)
-    {
-        if(this->PostCalculateBounds(child))
-        {
-            this->DrawChild(child);
+            if (!this->PreCalculateChildBounds(child))
+            {
+                return;
+            }
+
+            updateContext.VisitChild(child);
+
+            if (this->PostCalculateBounds(child))
+            {
+                updateContext.DrawChild(child);
+            }
         }
     }
 

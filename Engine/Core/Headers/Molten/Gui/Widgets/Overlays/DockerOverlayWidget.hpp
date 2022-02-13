@@ -41,7 +41,7 @@ namespace Molten::Gui
 
         explicit DockerOverlay(WidgetMixinDescriptor<TTheme, DockerOverlay>& desc);
 
-        void PostUpdate() override;
+        void OnUpdate(WidgetUpdateContext<TTheme>& updateContext) override;
 
     };
 

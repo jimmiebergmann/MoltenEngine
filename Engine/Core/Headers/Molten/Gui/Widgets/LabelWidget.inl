@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -38,11 +38,11 @@ namespace Molten::Gui
     {}
 
     template<typename TTheme>
-    void Label<TTheme>::PreUpdate()
+    void Label<TTheme>::OnUpdate(WidgetUpdateContext<TTheme>&)
     {
-        const auto textBounds = this->GetWidgetSkin()->GetTextBounds();
-        this->SetPosition(this->GetBounds().position + Vector2f32{ textBounds.position.x, -textBounds.position.y });
-        this->SetSize(textBounds.size);
+        const auto textBounds = this->GetWidgetSkin()->CalculateFontHeightBounds();
+        this->SetPosition(this->GetBounds().position + Vector2f32{ textBounds.left, -textBounds.top });
+        this->SetSize(textBounds.GetSize());
     }
 
 }

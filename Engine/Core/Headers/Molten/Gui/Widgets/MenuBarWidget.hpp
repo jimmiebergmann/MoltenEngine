@@ -70,13 +70,13 @@ namespace Molten::Gui
 
     private:
 
+        void OnUpdate(WidgetUpdateContext<TTheme>& updateContext) override;
         void OnAddChild(Widget<TTheme>& widget) override;
-
         bool OnMouseEvent(const WidgetMouseEvent& widgetMouseEvent) override;
 
-        void PreUpdate() override;
+       /* void PreUpdate() override;
         PreChildUpdateResult PreChildUpdate(Widget<TTheme>& child) override;
-        void PostChildUpdate(Widget<TTheme>& child) override;
+        void PostChildUpdate(Widget<TTheme>& child) override;*/
 
         AABB2f32 m_contentBounds;
         std::vector<AABB2f32> m_menuBounds;

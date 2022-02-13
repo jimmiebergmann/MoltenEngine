@@ -1047,7 +1047,6 @@ namespace Molten::Gui
             {
                 leaf.widget->size = { Size::Pixels{ grantedBounds.size.x }, Size::Pixels{ grantedBounds.size.y } };
                 m_docker.SetGrantedSize(*leaf.widget, grantedBounds.size);
-                m_docker.DrawChild(*leaf.widget);
             }
         }
 
@@ -1427,7 +1426,7 @@ namespace Molten::Gui
     }
 
     template<typename TTheme>
-    void Docker<TTheme>::PreUpdate()
+    void Docker<TTheme>::OnUpdate(WidgetUpdateContext<TTheme>& updateContext)
     {
         m_impl.ProcessNewLeafs();
 
@@ -1438,14 +1437,19 @@ namespace Molten::Gui
         m_impl.m_contentBounds.position += this->padding.low;
         m_impl.m_contentBounds.size -= this->padding.low + this->padding.high;
 
-        if(m_impl.m_contentBounds.IsEmpty())
+        if (m_impl.m_contentBounds.IsEmpty())
         {
             return;
         }
 
         m_impl.CalculateElementBounds();
 
-        this->UpdateAllChildren();
+        for (auto it = this->GetChildrenBegin(); it != this->GetChildrenEnd(); ++it)
+        {
+            auto& child = *(it->get());
+            updateContext.VisitChild(child);
+            updateContext.DrawChild(child);
+        }
     }
 
     template<typename TTheme>

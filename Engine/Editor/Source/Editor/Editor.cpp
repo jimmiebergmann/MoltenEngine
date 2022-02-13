@@ -1,7 +1,7 @@
 ﻿/*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -310,18 +310,15 @@ namespace Molten::Editor
 
 	        docker->margin = { 4.0f, 4.0f, 4.0f, 4.0f };
 
-	        docker->onCursorChange.Connect([&](Mouse::Cursor cursor)
-	        {
+	        docker->onCursorChange.Connect([&](Mouse::Cursor cursor) {
 	            m_window->SetCursor(cursor);
 	        });
 
 	        auto sceneViewport = docker->CreateChild<Gui::Viewport>(Gui::DockingPosition::Right);
-	        sceneViewport->onResize.Connect([&, viewport = sceneViewport](const auto size)
-	        {
+	        sceneViewport->onResize.Connect([&, viewport = sceneViewport](const auto size) {
 	            OnSceneViewportResize(viewport, size);
 	        });
-	        sceneViewport->onIsVisible.Connect([&]()
-	        {
+	        sceneViewport->onIsVisible.Connect([&]() {
 	            m_renderPasses.push_back(m_viewportRenderPass);
 	        });
 
@@ -335,9 +332,9 @@ namespace Molten::Editor
 	        vertGrid->CreateChild<Gui::Label>("Location:", 18)->position = { Gui::Position::Fixed::Center, Gui::Position::Fixed::Center };
 
     		auto button = vertGrid->CreateChild<Gui::Button>();
-	        button->size.x = Gui::Size::Fit::Parent;
-	        button->onPress.Connect([&](auto)
-	        {
+            button->size.x = Gui::Size::Fit::Content;
+            button->size.y = Gui::Size::Fit::Content;
+	        button->onPress.Connect([&](auto) {
 	            Logger::WriteInfo(m_logger.get(), "You pressed me!");
 	        });
 	        button->CreateChild<Gui::Label>("Click me!", 18);
@@ -412,10 +409,6 @@ namespace Molten::Editor
             m_avgFpsLabel->text.Set("Avg FPS : " + std::to_string(averageFps));
             m_minFpsLabel->text.Set("Min FPS : " + std::to_string(minFps));
             m_maxFpsLabel->text.Set("Max FPS : " + std::to_string(maxFps));
-
-          /*  m_avgFpsLabel = vertGrid->CreateChild<Gui::Label>("", 18);
-            m_minFpsLabel = vertGrid->CreateChild<Gui::Label>("", 18);
-            m_maxFpsLabel =*/
 
             m_fpsTracker.ResetFrameSamples();
 

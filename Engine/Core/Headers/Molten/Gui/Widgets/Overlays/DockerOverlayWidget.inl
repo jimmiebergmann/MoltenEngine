@@ -33,8 +33,10 @@ namespace Molten::Gui
     {}
 
     template<typename TTheme>
-    void DockerOverlay<TTheme>::PostUpdate()
+    void DockerOverlay<TTheme>::OnUpdate(WidgetUpdateContext<TTheme>& updateContext)
     {
+        this->PreCalculateBounds();
+
         Vector2f32 newPosition;
 
         std::visit([&](const auto& element)

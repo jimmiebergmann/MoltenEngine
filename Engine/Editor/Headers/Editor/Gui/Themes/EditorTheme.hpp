@@ -135,14 +135,14 @@ namespace Molten::Gui
             m_canvasFontSequence = m_theme.m_canvasRenderer.CreateFontSequence(m_fontSequence);
         }
 
-        [[nodiscard]] AABB2f32 GetBounds() const
+        [[nodiscard]] Bounds2i32 CalculateFontHeightBounds()
         {
-            return { m_fontSequence.bounds.low, m_fontSequence.bounds.GetSize() };
+            return m_fontSequence.CalculateFontHeightBounds();
         }
 
         void Draw(const Vector2f32& position)
         {
-            m_theme.m_canvasRenderer.DrawFontSequence(position + Vector2f32{ 0.0f, m_fontSequence.bounds.bottom }, m_canvasFontSequence);
+            m_theme.m_canvasRenderer.DrawFontSequence(position, m_canvasFontSequence);
         }
 
         EditorTheme& m_theme;
@@ -242,9 +242,9 @@ namespace Molten::Gui
             m_label.Draw(widget.GetBounds().position);
         }
 
-        [[nodiscard]] AABB2f32 GetTextBounds() const
+        [[nodiscard]] Bounds2i32 CalculateFontHeightBounds()
         {
-            return m_label.GetBounds();
+            return m_label.CalculateFontHeightBounds();
         }
 
     private:

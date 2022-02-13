@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -33,14 +33,16 @@ namespace Molten::Gui
     {}
 
     template<typename TTheme>
-    void Viewport<TTheme>::PreUpdate()
+    void Viewport<TTheme>::SetTexture(SharedRenderResource<FramedTexture2D> framedTexture)
     {
-        this->PreCalculateBounds();
+        Mixin::SetSkinState(State{ std::move(framedTexture) });
     }
 
     template<typename TTheme>
-    void Viewport<TTheme>::PostUpdate()
+    void Viewport<TTheme>::OnUpdate(WidgetUpdateContext<TTheme>& updateContext)
     {
+        this->PreCalculateBounds();
+
         const auto contentSize = this->GetBounds().size;
 
         VisibilityWidget::PostUpdate(contentSize);
@@ -50,12 +52,6 @@ namespace Molten::Gui
             m_prevSize = contentSize;
             onResize(contentSize);
         }
-    }
-
-    template<typename TTheme>
-    void Viewport<TTheme>::SetTexture(SharedRenderResource<FramedTexture2D> framedTexture)
-    {
-        Mixin::SetSkinState(State{ std::move(framedTexture) });
     }
 
     template<typename TTheme>

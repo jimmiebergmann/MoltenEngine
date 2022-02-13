@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -178,21 +178,21 @@ namespace Molten::Gui
 
             for (const auto& glyph : fontGroup->glyphs)
             {
-                currentQuad->triangle[0].vertex[0].position = glyph->bounds.low;
-                currentQuad->triangle[0].vertex[1].position = Vector2f32{ glyph->bounds.high.x, glyph->bounds.low.y };
-                currentQuad->triangle[0].vertex[2].position = glyph->bounds.high;
+                currentQuad->triangle[0].vertex[0].position = glyph.bounds.low;
+                currentQuad->triangle[0].vertex[1].position = Vector2f32{ glyph.bounds.high.x, glyph.bounds.low.y };
+                currentQuad->triangle[0].vertex[2].position = glyph.bounds.high;
 
-                currentQuad->triangle[0].vertex[0].uv = Vector2f32{ glyph->atlasGlyph->textureBounds.low } / textureSize;
-                currentQuad->triangle[0].vertex[1].uv = Vector2f32{ static_cast<float>(glyph->atlasGlyph->textureBounds.high.x) / textureSize.x, currentQuad->triangle[0].vertex[0].uv.y};
-                currentQuad->triangle[0].vertex[2].uv = Vector2f32{ glyph->atlasGlyph->textureBounds.high } / textureSize;
+                currentQuad->triangle[0].vertex[0].uv = Vector2f32{ glyph.atlasGlyph->textureBounds.low } / textureSize;
+                currentQuad->triangle[0].vertex[1].uv = Vector2f32{ static_cast<float>(glyph.atlasGlyph->textureBounds.high.x) / textureSize.x, currentQuad->triangle[0].vertex[0].uv.y};
+                currentQuad->triangle[0].vertex[2].uv = Vector2f32{ glyph.atlasGlyph->textureBounds.high } / textureSize;
 
-                currentQuad->triangle[1].vertex[0].position = glyph->bounds.low;
-                currentQuad->triangle[1].vertex[1].position = glyph->bounds.high;
-                currentQuad->triangle[1].vertex[2].position = Vector2f32{ glyph->bounds.low.x, glyph->bounds.high.y };
+                currentQuad->triangle[1].vertex[0].position = glyph.bounds.low;
+                currentQuad->triangle[1].vertex[1].position = glyph.bounds.high;
+                currentQuad->triangle[1].vertex[2].position = Vector2f32{ glyph.bounds.low.x, glyph.bounds.high.y };
 
                 currentQuad->triangle[1].vertex[0].uv = currentQuad->triangle[0].vertex[0].uv;
                 currentQuad->triangle[1].vertex[1].uv = currentQuad->triangle[0].vertex[2].uv;
-                currentQuad->triangle[1].vertex[2].uv = Vector2f32{ currentQuad->triangle[1].vertex[0].uv.x, static_cast<float>(glyph->atlasGlyph->textureBounds.high.y) / textureSize.y };
+                currentQuad->triangle[1].vertex[2].uv = Vector2f32{ currentQuad->triangle[1].vertex[0].uv.x, static_cast<float>(glyph.atlasGlyph->textureBounds.high.y) / textureSize.y };
 
                 ++currentQuad;
             }

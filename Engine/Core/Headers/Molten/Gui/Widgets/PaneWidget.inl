@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -35,51 +35,41 @@ namespace Molten::Gui
     {}
 
     template<typename TTheme>
-    void Pane<TTheme>::PreUpdate()
+    void Pane<TTheme>::OnUpdate(WidgetUpdateContext<TTheme>& updateContext)
     {
-        if (this->PreCalculateBounds())
+        if (!this->PreCalculateBounds())
         {
-            this->UpdateFirstChild();
+            return;
         }
-    }
 
-    template<typename TTheme>
-    void Pane<TTheme>::PostUpdate()
-    {
+        if (auto it = this->GetChildrenBegin(); it != this->GetChildrenEnd())
+        {
+            auto& child = *(it->get());
+
+            auto childBounds = this->GetBounds();
+
+            childBounds.size -= this->padding.low + this->padding.high + Vector2f32{ 0.0f, WidgetMixin<TTheme, Pane>::WidgetSkinType::headerBarHeight };
+
+            if (childBounds.IsEmpty())
+            {
+                return;
+            }
+
+            childBounds.position += this->padding.low + Vector2f32{ 0.0f, WidgetMixin<TTheme, Pane>::WidgetSkinType::headerBarHeight };
+
+            this->SetPosition(child, childBounds.position);
+            this->SetGrantedSize(child, childBounds.size);
+
+            updateContext.VisitChild(child);
+            updateContext.DrawChild(child);
+        }
+
         const auto& bounds = this->GetBounds();
 
         m_dragBounds = {
             bounds.position,
             { bounds.size.x, WidgetMixin<TTheme, Pane>::WidgetSkinType::headerBarHeight }
         };
-    }
-
-
-    template<typename TTheme>
-    PreChildUpdateResult Pane<TTheme>::PreChildUpdate(Widget<TTheme>& child)
-    {
-
-        auto childBounds = this->GetBounds();
-
-        childBounds.size -= this->padding.low + this->padding.high + Vector2f32{ 0.0f, WidgetMixin<TTheme, Pane>::WidgetSkinType::headerBarHeight };
-
-        if(childBounds.IsEmpty())
-        {
-            return PreChildUpdateResult::Skip;
-        }
-
-        childBounds.position += this->padding.low + Vector2f32{ 0.0f, WidgetMixin<TTheme, Pane>::WidgetSkinType::headerBarHeight };
-
-        this->SetPosition(child, childBounds.position);
-        this->SetGrantedSize(child, childBounds.size);
-
-        return PreChildUpdateResult::Visit;
-    }
-
-    template<typename TTheme>
-    void Pane<TTheme>::PostChildUpdate(Widget<TTheme>& child)
-    {
-        this->DrawChild(child);
     }
 
 }
