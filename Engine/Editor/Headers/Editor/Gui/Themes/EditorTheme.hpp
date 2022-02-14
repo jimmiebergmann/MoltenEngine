@@ -29,6 +29,7 @@
 #include "Molten/Gui/WidgetSkin.hpp"
 #include "Molten/Gui/WidgetData.hpp"
 #include "Molten/Gui/CanvasRenderer.hpp"
+#include "Molten/Gui/GuiHelpers.hpp"
 #include "Molten/Gui/Widgets/ButtonWidget.hpp"
 #include "Molten/Gui/Widgets/DockerWidget.hpp"
 #include "Molten/Gui/Widgets/GridWidget.hpp"
@@ -326,10 +327,14 @@ namespace Molten::Gui
             theme.m_canvasRenderer.DrawRect(headerBounds, headerColor);
 
             auto labelBounds = m_label.CalculateFontHeightBounds<float>();
-            labelBounds.position.x += 4;
-            labelBounds.position.y = -labelBounds.position.y + ((headerBounds.size.y / 2) - (labelBounds.size.y / 2));
+            labelBounds.position.y = -labelBounds.position.y;
 
-        	m_label.Draw(headerBounds.position + labelBounds.position);
+            const auto labelOffset = Vector2f32{
+                4,
+                GetCenterOffset(labelBounds.size.y, headerBounds.size.y)
+            };
+
+        	m_label.Draw(headerBounds.position + labelBounds.position + labelOffset);
         }
 
     private:
