@@ -23,11 +23,12 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_FONT_HPP
-#define MOLTEN_CORE_RENDERER_FONT_HPP
+#ifndef MOLTEN_CORE_GUI_FONT_HPP
+#define MOLTEN_CORE_GUI_FONT_HPP
 
 #include "Molten/Math/Vector.hpp"
 #include "Molten/Math/Bounds.hpp"
+#include "Molten/Math/AABB.hpp"
 #include <memory>
 #include <string>
 #include <vector>
@@ -340,7 +341,8 @@ namespace Molten::Gui
         FontGroupedSequence& operator = (const FontGroupedSequence&) = delete;
         FontGroupedSequence& operator = (FontGroupedSequence&&) noexcept = default;
 
-        [[nodiscard]] Bounds2i32 CalculateFontHeightBounds() const;
+        template<typename T>
+        [[nodiscard]] AABB2<T> CalculateFontHeightBounds() const;
 
         Bounds2i32 bounds;
         Bounds2i32 glyphBounds;
@@ -349,5 +351,7 @@ namespace Molten::Gui
     };
 
 }
+
+#include "Molten/Gui/Font.inl"
 
 #endif

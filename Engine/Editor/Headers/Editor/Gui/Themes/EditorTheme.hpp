@@ -135,9 +135,10 @@ namespace Molten::Gui
             m_canvasFontSequence = m_theme.m_canvasRenderer.CreateFontSequence(m_fontSequence);
         }
 
-        [[nodiscard]] Bounds2i32 CalculateFontHeightBounds()
+        template<typename T>
+        [[nodiscard]] AABB2<T> CalculateFontHeightBounds()
         {
-            return m_fontSequence.CalculateFontHeightBounds();
+            return m_fontSequence.CalculateFontHeightBounds<T>();
         }
 
         void Draw(const Vector2f32& position)
@@ -242,9 +243,10 @@ namespace Molten::Gui
             m_label.Draw(widget.GetBounds().position);
         }
 
-        [[nodiscard]] Bounds2i32 CalculateFontHeightBounds()
+        template<typename T>
+        [[nodiscard]] AABB2<T> CalculateFontHeightBounds()
         {
-            return m_label.CalculateFontHeightBounds();
+            return m_label.CalculateFontHeightBounds<T>();
         }
 
     private:
@@ -323,7 +325,11 @@ namespace Molten::Gui
             headerBounds.size.y = std::min(headerBarHeight, headerBounds.size.y);
             theme.m_canvasRenderer.DrawRect(headerBounds, headerColor);
 
-            m_label.Draw(widget.GetBounds().position + Vector2f32{ 0.0f, 16.0f });
+            auto labelBounds = m_label.CalculateFontHeightBounds<float>();
+            labelBounds.position.x += 4;
+            labelBounds.position.y = -labelBounds.position.y + ((headerBounds.size.y / 2) - (labelBounds.size.y / 2));
+
+        	m_label.Draw(headerBounds.position + labelBounds.position);
         }
 
     private:

@@ -27,6 +27,7 @@
 #define MOLTEN_CORE_GUI_CANVASRENDERER_HPP
 
 #include "Molten/Gui/GuiTypes.hpp"
+#include "Molten/Gui/Font.hpp"
 #include "Molten/Math/Vector.hpp"
 #include "Molten/Math/Matrix.hpp"
 #include "Molten/Math/Bounds.hpp"
@@ -36,7 +37,6 @@
 #include "Molten/Renderer/ShaderProgram.hpp"
 #include "Molten/Renderer/Texture.hpp"
 #include "Molten/Renderer/VertexBuffer.hpp"
-#include "Molten/Renderer/Font.hpp"
 
 namespace Molten
 {

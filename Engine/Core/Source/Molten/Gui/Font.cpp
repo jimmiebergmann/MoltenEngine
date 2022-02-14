@@ -23,7 +23,7 @@
 *
 */
 
-#include "Molten/Renderer/Font.hpp"
+#include "Molten/Gui/Font.hpp"
 #include "Molten/Utility/Utf8Decoder.hpp"
 #include "Molten/Utility/SmartFunction.hpp"
 #include "ThirdParty/FreeType2/include/freetype/freetype.h"
@@ -31,9 +31,7 @@
 #include <vector>
 #include <fstream>
 #include <algorithm>
-#include <cmath>
 #include <filesystem>
-#include <exception>
 #include <cstring>
 
 #if MOLTEN_PLATFORM == MOLTEN_PLATFORM_WINDOWS
@@ -1007,23 +1005,5 @@ namespace Molten::Gui
     FontGroupedSequence::FontGroupedSequence() :
         fontHeight(0)
     {}
-
-    Bounds2i32 FontGroupedSequence::CalculateFontHeightBounds() const
-    {
-        const auto newBottom =
-            static_cast<int32_t>(
-                static_cast<float>(glyphBounds.bottom) * 
-                (static_cast<float>(fontHeight) / static_cast<float>(-glyphBounds.top))
-			);
-
-        auto newBounds = Bounds2i32{
-            bounds.left,
-            -fontHeight,
-            bounds.right,
-            newBottom
-        };
-        
-        return newBounds;
-    }
 
 }

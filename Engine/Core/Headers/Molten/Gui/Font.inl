@@ -25,24 +25,23 @@
 
 namespace Molten::Gui
 {
-    template<typename TTheme>
-    Label<TTheme>::Label(
-        WidgetMixinDescriptor<TTheme, Label>& desc,
-        const std::string& text,
-        const uint32_t height
-    ) :
-        WidgetMixin<TTheme, Label>(desc),
-        text(desc.propertyDispatcher, text),
-        fontFamily(desc.propertyDispatcher),
-        height(desc.propertyDispatcher, height)
-    {}
 
-    template<typename TTheme>
-    void Label<TTheme>::OnUpdate(WidgetUpdateContext<TTheme>&)
+    // Font grouped sequence implementations.
+    template<typename T>
+    AABB2<T> FontGroupedSequence::CalculateFontHeightBounds() const
     {
-        const auto textBounds = this->GetWidgetSkin()->template CalculateFontHeightBounds<float>();
-        this->SetPosition(this->GetBounds().position + Vector2f32{ textBounds.position.x, -textBounds.position.y });
-        this->SetSize(textBounds.size);
+        const auto newBottom = static_cast<T>(
+            static_cast<int32_t>(
+                static_cast<float>(glyphBounds.bottom) *
+                (static_cast<float>(fontHeight) / static_cast<float>(-glyphBounds.top))
+            )
+        );
+
+        return {
+            Vector2<T>{ bounds.left, -fontHeight },
+            Vector2<T>{ bounds.right - bounds.left, newBottom + fontHeight }
+        };
     }
+    
 
 }
