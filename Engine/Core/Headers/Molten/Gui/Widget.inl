@@ -45,6 +45,103 @@ namespace Molten::Gui
     {}
 
 
+    // Widget children wrapper iterator class implementations.
+    template<typename TTheme, bool VIsConst>
+    WidgetChildrenWrapperIterator<TTheme, VIsConst>::WidgetChildrenWrapperIterator(ContainerIterator containerIterator) :
+		m_iterator(containerIterator)
+    {}
+
+    template<typename TTheme, bool VIsConst>
+    template<bool IsConstIterator>
+    std::enable_if_t<!IsConstIterator, typename WidgetChildrenWrapperIterator<TTheme, VIsConst>::reference>
+        WidgetChildrenWrapperIterator<TTheme, VIsConst>::operator *()
+    {
+        return *(m_iterator->get());
+    }
+    template<typename TTheme, bool VIsConst>
+    template<bool IsConstIterator>
+    std::enable_if_t<IsConstIterator, typename WidgetChildrenWrapperIterator<TTheme, VIsConst>::reference>
+		WidgetChildrenWrapperIterator<TTheme, VIsConst>::operator *() const
+    {
+        return *(m_iterator->get());
+    }
+
+    template<typename TTheme, bool VIsConst>
+    template<bool IsConstIterator>
+    std::enable_if_t<!IsConstIterator, typename WidgetChildrenWrapperIterator<TTheme, VIsConst>::pointer>
+        WidgetChildrenWrapperIterator<TTheme, VIsConst>::operator ->()
+    {
+        return m_iterator->get();
+    }
+    template<typename TTheme, bool VIsConst>
+    template<bool IsConstIterator>
+    std::enable_if_t<IsConstIterator, typename WidgetChildrenWrapperIterator<TTheme, VIsConst>::pointer>
+		WidgetChildrenWrapperIterator<TTheme, VIsConst>::operator ->() const
+    {
+        return m_iterator->get();
+    }
+
+    template<typename TTheme, bool VIsConst>
+    WidgetChildrenWrapperIterator<TTheme, VIsConst>& WidgetChildrenWrapperIterator<TTheme, VIsConst>::operator ++ ()
+    {
+        ++m_iterator;
+        return *this;
+    }
+    template<typename TTheme, bool VIsConst>
+    WidgetChildrenWrapperIterator<TTheme, VIsConst>& WidgetChildrenWrapperIterator<TTheme, VIsConst>::operator -- ()
+    {
+        --m_iterator;
+        return *this;
+    }
+
+    template<typename TTheme, bool VIsConst>
+    WidgetChildrenWrapperIterator<TTheme, VIsConst> WidgetChildrenWrapperIterator<TTheme, VIsConst>::operator ++ (int)
+    {
+        return WidgetChildrenWrapperIterator<TTheme, VIsConst>{ m_iterator++ };
+    }
+    template<typename TTheme, bool VIsConst>
+    WidgetChildrenWrapperIterator<TTheme, VIsConst> WidgetChildrenWrapperIterator<TTheme, VIsConst>::operator -- (int)
+    {
+        return WidgetChildrenWrapperIterator<TTheme, VIsConst>{ m_iterator-- };
+    }
+
+    template<typename TTheme, bool VIsConst>
+    bool WidgetChildrenWrapperIterator<TTheme, VIsConst>::operator == (const WidgetChildrenWrapperIterator<TTheme, VIsConst>& rhs) const
+    {
+        return m_iterator == rhs.m_iterator;
+    }
+    template<typename TTheme, bool VIsConst>
+    bool WidgetChildrenWrapperIterator<TTheme, VIsConst>::operator != (const WidgetChildrenWrapperIterator<TTheme, VIsConst>& rhs) const
+    {
+        return m_iterator != rhs.m_iterator;
+    }
+
+
+    // Widget children wrapper class implementations.
+    template<typename TTheme, bool VIsConst>
+    WidgetChildrenWrapper<TTheme, VIsConst>::WidgetChildrenWrapper(ChildrenType& children) :
+		m_children(children)
+    {}
+
+    template<typename TTheme, bool VIsConst>
+    size_t WidgetChildrenWrapper<TTheme, VIsConst>::GetCount() const
+    {
+        return m_children.size();
+    }
+
+    template<typename TTheme, bool VIsConst>
+    typename WidgetChildrenWrapper<TTheme, VIsConst>::Iterator WidgetChildrenWrapper<TTheme, VIsConst>::begin()
+    {
+        return Iterator{ m_children.begin() };
+    }
+
+    template<typename TTheme, bool VIsConst>
+    typename WidgetChildrenWrapper<TTheme, VIsConst>::Iterator WidgetChildrenWrapper<TTheme, VIsConst>::end()
+    {
+        return Iterator{ m_children.end() };
+    }
+
+
     // Widget base class implementations.
     template<typename TTheme>
     template<template<typename> typename TWidget, typename ... TArgs>
@@ -62,6 +159,17 @@ namespace Molten::Gui
     const Widget<TTheme>* Widget<TTheme>::GetParent() const
     {
         return m_parent;
+    }
+
+    template<typename TTheme>
+    WidgetChildrenWrapper<TTheme, false> Widget<TTheme>::GetChildren()
+    {
+        return WidgetChildrenWrapper<TTheme, false>{ m_children };
+    }
+    template<typename TTheme>
+    WidgetChildrenWrapper<TTheme, true> Widget<TTheme>::GetChildren() const
+    {
+        return WidgetChildrenWrapper<TTheme, true>{ m_children };
     }
 
     template<typename TTheme>
@@ -123,18 +231,6 @@ namespace Molten::Gui
     template<typename TTheme>
     void Widget<TTheme>::OnRemoveChild(Widget<TTheme>&)
     {}
-
-    template<typename TTheme>
-	WidgetChildIterator<TTheme> Widget<TTheme>::GetChildrenBegin()
-    {
-        return m_children.begin();
-    }
-
-    template<typename TTheme>
-    WidgetChildIterator<TTheme> Widget<TTheme>::GetChildrenEnd()
-    {
-        return m_children.end();
-    }
 
     template<typename TTheme>
     bool Widget<TTheme>::PreCalculateBounds()

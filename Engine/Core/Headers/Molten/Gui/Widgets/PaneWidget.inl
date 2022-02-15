@@ -42,9 +42,9 @@ namespace Molten::Gui
             return;
         }
 
-        if (auto it = this->GetChildrenBegin(); it != this->GetChildrenEnd())
+        if (auto children = this->GetChildren(); children.begin() != children.end())
         {
-            auto& child = *(it->get());
+            auto& child = *children.begin();
 
             auto childBounds = this->GetBounds();
 

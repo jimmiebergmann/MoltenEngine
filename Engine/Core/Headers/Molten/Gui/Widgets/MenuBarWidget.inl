@@ -57,10 +57,8 @@ namespace Molten::Gui
         m_contentBounds.size -= this->padding.low + this->padding.high;
 
         // Children update.
-        for (auto it = this->GetChildrenBegin(); it != this->GetChildrenEnd(); ++it)
+        for (auto& child : this->GetChildren())
         {
-            auto& child = *(it->get());
-
             // Pre update
             this->SetPosition(child, m_contentBounds.position);
             this->SetGrantedSize(child, m_contentBounds.size);

@@ -39,6 +39,16 @@ namespace Molten::Gui
 
         explicit MenuOverlay(WidgetMixinDescriptor<TTheme, MenuOverlay>& desc);
 
+        size_t AddDivider();
+        bool RemoveDivider(const size_t index);
+
+    private:
+
+        void OnUpdate(WidgetUpdateContext<TTheme>& updateContext) override;
+        //bool OnMouseEvent(const WidgetMouseEvent& widgetMouseEvent) override;
+
+        std::vector<size_t> m_dividers;
+
     };
 
 }

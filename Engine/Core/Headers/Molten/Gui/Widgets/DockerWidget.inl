@@ -1444,9 +1444,8 @@ namespace Molten::Gui
 
         m_impl.CalculateElementBounds();
 
-        for (auto it = this->GetChildrenBegin(); it != this->GetChildrenEnd(); ++it)
+        for (auto& child : this->GetChildren())
         {
-            auto& child = *(it->get());
             updateContext.VisitChild(child);
             updateContext.DrawChild(child);
         }

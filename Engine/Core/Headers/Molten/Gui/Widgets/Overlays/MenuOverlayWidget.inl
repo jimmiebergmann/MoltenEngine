@@ -26,10 +26,44 @@
 namespace Molten::Gui
 {
 
-    // Docker overlay implementations.
+    // Menu overlay implementations.
     template<typename TTheme>
     MenuOverlay<TTheme>::MenuOverlay(WidgetMixinDescriptor<TTheme, MenuOverlay>& desc) :
         WidgetMixin<TTheme, MenuOverlay>(desc)
     {}
+
+    template<typename TTheme>
+    size_t MenuOverlay<TTheme>::AddDivider()
+    {
+        m_dividers.emplace_back();
+        return 0;
+    }
+
+    template<typename TTheme>
+    bool MenuOverlay<TTheme>::RemoveDivider(const size_t index)
+    {
+	    if(index >= m_dividers.size())
+	    {
+            return false;
+	    }
+
+        m_dividers.erase(m_dividers.begin() + index);
+        return true;
+    }
+
+    template<typename TTheme>
+    void MenuOverlay<TTheme>::OnUpdate(WidgetUpdateContext<TTheme>& /*updateContext*/)
+    {
+        /*using Skin = typename WidgetMixin<TTheme, MenuOverlay>::WidgetSkinType;
+
+        float itemPosition = 0.0f;
+        for (auto& child : this->GetChildren())
+        {
+            this->SetPosition(child, { 0.0f, itemPosition });
+
+
+            itemPosition += Skin::itemHeight;
+        }*/
+    }
 
 }

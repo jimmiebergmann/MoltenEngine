@@ -49,11 +49,9 @@ namespace Molten::Gui
         remainingContentBounds.size -= this->padding.low + this->padding.high;
         Vector2f32 maxContentSize = {};
 
-        for(auto it = this->GetChildrenBegin(); it != this->GetChildrenEnd(); ++it)
+        for(auto& child : this->GetChildren())
         {
-            auto& child = *(it->get());
-
-            if(!this->PreCalculateChildBounds(child, remainingContentBounds))
+            if (!this->PreCalculateChildBounds(child, remainingContentBounds))
             {
                 break;
             }

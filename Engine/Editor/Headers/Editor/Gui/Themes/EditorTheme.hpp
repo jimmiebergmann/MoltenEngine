@@ -464,6 +464,7 @@ namespace Molten::Gui
         static constexpr auto defaultPosition = WidgetPosition{ Position::Pixels{ 0.0f }, Position::Pixels{ 0.0f } };
         static constexpr auto defaultSize = WidgetSize{ Size::Pixels{ 0.0f }, Size::Pixels{ 0.0f } };
 
+        static constexpr auto itemHeight = 20.0f;
         static constexpr auto borderColor = Vector4f32{ 60.0f / 255.0f, 60.0f / 255.0f, 60.0f / 255.0f, 1.0f };
         static constexpr auto backgroundColor = Vector4f32{ 60.0f / 255.0f, 60.0f / 255.0f, 60.0f / 255.0f, 1.0f };
 

@@ -34,6 +34,7 @@
 #include "Molten/System/Signal.hpp"
 #include <vector>
 #include <memory>
+#include <type_traits>
 #include <utility>
 
 namespace Molten::Gui
@@ -76,11 +77,13 @@ namespace Molten::Gui
         WidgetVisibilityTracker& visibilityTracker;
     };
 
+
     template<typename TTheme, template<typename> typename TWidget>
     struct WidgetMixinDescriptor : WidgetDescriptor<TTheme>
     {
         WidgetSkinOwnedPointer<TTheme, TWidget> skin;
     };
+
 
     template<typename TTheme>
     class WidgetUpdateContext
@@ -101,6 +104,69 @@ namespace Molten::Gui
         WidgetPointers<TTheme>& m_widgetDrawQueue;
 
     };
+
+
+    template<typename TTheme, bool VIsConst>
+    class WidgetChildrenWrapperIterator
+    {
+
+    public:
+
+        using iterator_category = std::bidirectional_iterator_tag;
+        using value_type = Widget<TTheme>;
+        using difference_type = std::ptrdiff_t;
+        using pointer = std::conditional_t<VIsConst, const Widget<TTheme>*, Widget<TTheme>*>;
+        using reference = std::conditional_t<VIsConst, const Widget<TTheme>&, Widget<TTheme>&>;
+        using ContainerIterator = std::conditional_t<VIsConst, typename WidgetChildren<TTheme>::const_iterator, typename WidgetChildren<TTheme>::iterator>;
+
+        explicit WidgetChildrenWrapperIterator(ContainerIterator containerIterator);
+
+        template<bool IsConstIterator = VIsConst>
+        std::enable_if_t<!IsConstIterator, reference> operator *();
+        template<bool IsConstIterator = VIsConst>
+        std::enable_if_t<IsConstIterator, reference> operator *() const;
+
+        template<bool IsConstIterator = VIsConst>
+        std::enable_if_t<!IsConstIterator, pointer> operator ->();
+        template<bool IsConstIterator = VIsConst>
+        std::enable_if_t<IsConstIterator, pointer> operator ->() const;
+
+        WidgetChildrenWrapperIterator& operator ++ ();
+        WidgetChildrenWrapperIterator& operator -- ();
+        WidgetChildrenWrapperIterator operator ++ (int);
+        WidgetChildrenWrapperIterator operator -- (int);
+
+        bool operator == (const WidgetChildrenWrapperIterator& rhs) const;
+        bool operator != (const WidgetChildrenWrapperIterator& rhs) const;
+
+    private:
+
+        ContainerIterator m_iterator;
+	    
+    };
+
+    template<typename TTheme, bool VIsConst>
+    class WidgetChildrenWrapper
+    {
+
+    public:
+
+        using ChildrenType = std::conditional_t<VIsConst, const WidgetChildren<TTheme>, WidgetChildren<TTheme>>;
+        using Iterator = WidgetChildrenWrapperIterator<TTheme, VIsConst>;
+
+        explicit WidgetChildrenWrapper(ChildrenType& children);
+
+        size_t GetCount() const;
+
+        Iterator begin();
+        Iterator end();
+
+    private:
+
+        ChildrenType& m_children;
+
+    };
+    
 
     template<typename TTheme>
     class Widget
@@ -128,6 +194,9 @@ namespace Molten::Gui
         [[nodiscard]] Widget<TTheme>* GetParent();
         [[nodiscard]] const Widget<TTheme>* GetParent() const;
 
+        [[nodiscard]] WidgetChildrenWrapper<TTheme, false> GetChildren();
+        [[nodiscard]] WidgetChildrenWrapper<TTheme, true> GetChildren() const;
+
         [[nodiscard]] Canvas<TTheme>* GetCanvas();
         [[nodiscard]] const Canvas<TTheme>* GetCanvas() const;
 
@@ -149,9 +218,6 @@ namespace Molten::Gui
         virtual void OnCreate();
         virtual void OnAddChild(Widget<TTheme>& widget);
         virtual void OnRemoveChild(Widget<TTheme>& widget);
-
-        [[nodiscard]] WidgetChildIterator<TTheme> GetChildrenBegin();
-        [[nodiscard]] WidgetChildIterator<TTheme> GetChildrenEnd();
 
         bool PreCalculateBounds();
 
