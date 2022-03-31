@@ -29,9 +29,7 @@
 namespace MoltenEditor
 {
 
-    /**
-    * @brief Editor project class.
-    */
+    /** Editor project class. */
     template<typename TTarget>
     class Project
     {

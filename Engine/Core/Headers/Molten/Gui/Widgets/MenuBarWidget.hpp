@@ -51,7 +51,7 @@ namespace Molten::Gui
 
         float menuSpacing;
 
-        struct State
+        /*struct State
         {
             enum class Type
             {
@@ -62,11 +62,11 @@ namespace Molten::Gui
 
             Type type;
             AABB2f32 typeBounds;
-        };
+        };*/
 
         explicit MenuBar(WidgetMixinDescriptor<TTheme, MenuBar>& desc);
 
-        std::shared_ptr<MenuBarMenu<TTheme>> AddMenu(const std::string& text);
+        //std::shared_ptr<MenuBarMenu<TTheme>> AddMenu(const std::string& text);
 
     private:
 
@@ -78,13 +78,34 @@ namespace Molten::Gui
         PreChildUpdateResult PreChildUpdate(Widget<TTheme>& child) override;
         void PostChildUpdate(Widget<TTheme>& child) override;*/
 
-        AABB2f32 m_contentBounds;
+       /*AABB2f32 m_contentBounds;
         std::vector<AABB2f32> m_menuBounds;
-        ManagedWidget<TTheme, MenuOverlay> m_menuWidget;
+        ManagedWidget<TTheme, MenuOverlay> m_menuWidget;*/
 
     };
 
 
+    template<typename TTheme>
+    class MenuBarItem : public WidgetMixin<TTheme, MenuBarItem>
+    {
+
+    public:
+
+        WidgetProperty<std::string> label;
+
+        MenuBarItem(
+            WidgetMixinDescriptor<TTheme, MenuBarItem>& desc,
+			const std::string& label);
+
+    private:
+
+        void OnUpdate(WidgetUpdateContext<TTheme>& updateContext) override;
+
+    };
+
+
+
+/*
     template<typename TTheme>
     class MenuBarMenu
     {
@@ -123,7 +144,7 @@ namespace Molten::Gui
 
         std::string m_text;
 
-    };
+    };*/
 
 }
 

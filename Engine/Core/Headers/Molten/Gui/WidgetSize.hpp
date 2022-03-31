@@ -54,7 +54,8 @@ namespace Molten::Gui::Size
     enum class Fit
     {
         Parent,
-        Content
+        Content,
+        ContentThenParent
     };
 
 }

@@ -39,31 +39,7 @@ namespace Molten::Gui
     template<typename TTheme>
     void Grid<TTheme>::OnUpdate(WidgetUpdateContext<TTheme>& updateContext)
     {
-        if (!this->PreCalculateBounds())
-        {
-            return;
-        }
-
-        AABB2f32 remainingContentBounds = this->GetBounds();
-        remainingContentBounds.position += this->padding.low;
-        remainingContentBounds.size -= this->padding.low + this->padding.high;
-        Vector2f32 maxContentSize = {};
-
-        for(auto& child : this->GetChildren())
-        {
-            if (!this->PreCalculateChildBounds(child, remainingContentBounds))
-            {
-                break;
-            }
-
-            updateContext.VisitChild(child);
-
-            this->PostCalculateChildBounds(child, maxContentSize, remainingContentBounds, direction, this->cellSpacing);
-            
-			updateContext.DrawChild(child);
-        }
-
-        this->PostCalculateBounds(maxContentSize, direction, this->cellSpacing);
+        this->UpdateAsGridParent(updateContext, direction, this->cellSpacing);
     }
 
 }

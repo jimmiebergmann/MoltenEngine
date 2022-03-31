@@ -27,25 +27,25 @@ namespace Molten::Gui
 {
     // Menu bar implementations.
     template<typename TTheme>
-    MenuBar<TTheme>::MenuBar(
-        WidgetMixinDescriptor<TTheme, MenuBar>& desc
-    ) :
+    MenuBar<TTheme>::MenuBar(WidgetMixinDescriptor<TTheme, MenuBar>& desc) :
         WidgetMixin<TTheme, MenuBar>(desc),
         menuSpacing(WidgetMixin<TTheme, MenuBar>::WidgetSkinType::menuSpacing)
     {}
 
-    template<typename TTheme>
+   /* template<typename TTheme>
     std::shared_ptr<MenuBarMenu<TTheme>> MenuBar<TTheme>::AddMenu(const std::string& text)
     {
         auto* label = this->template CreateChild<Label>(text, 18);
         auto menu = std::make_shared<MenuBarMenu<TTheme>>(label);
         return menu;
-    }
+    }*/
 
     template<typename TTheme>
     void MenuBar<TTheme>::OnUpdate(WidgetUpdateContext<TTheme>& updateContext)
     {
-        m_menuBounds.clear();
+        this->UpdateAsGridParent(updateContext, GridDirection::Horizontal, 0.0f);
+
+        /*m_menuBounds.clear();
 
         if (!this->PreCalculateBounds())
         {
@@ -76,7 +76,7 @@ namespace Molten::Gui
             m_contentBounds.size.x -= diff;
 
             updateContext.DrawChild(child);
-        }
+        }*/
     }
 
     template<typename TTheme>
@@ -89,7 +89,7 @@ namespace Molten::Gui
     template<typename TTheme>
     bool MenuBar<TTheme>::OnMouseEvent(const WidgetMouseEvent& widgetMouseEvent)
     {
-        switch (widgetMouseEvent.type)
+        /*switch (widgetMouseEvent.type)
         {
 			case WidgetMouseEventType::MouseMove: 
             {
@@ -130,68 +130,29 @@ namespace Molten::Gui
                 }
             } break;
 			default: break;
-        }
+        }*/
         return true;
-    }
-
-    /*template<typename TTheme>
-    void MenuBar<TTheme>::PreUpdate()
-    {
-        m_menuBounds.clear();
-
-        if (this->PreCalculateBounds())
-        {
-            m_contentBounds = this->GetBounds();
-            m_contentBounds.position += this->padding.low;
-            m_contentBounds.size -= this->padding.low + this->padding.high;
-            this->UpdateAllChildren();
-        }
-    }
-
-    template<typename TTheme>
-    PreChildUpdateResult MenuBar<TTheme>::PreChildUpdate(Widget<TTheme>& child)
-    {
-        this->SetPosition(child, m_contentBounds.position);
-        this->SetGrantedSize(child, m_contentBounds.size);
-
-        return PreChildUpdateResult::Visit;
-    }
-
-    template<typename TTheme>
-    void MenuBar<TTheme>::PostChildUpdate(Widget<TTheme>& child)
-    {
-        const auto childSize = child.GetBounds().size;
-        const auto diff = childSize.x + menuSpacing;
-
-        m_menuBounds.push_back(AABB2f32{ m_contentBounds.position, Vector2f32{diff, m_contentBounds.size.y} });
-
-        m_contentBounds.position.x += diff;
-        m_contentBounds.size.x -= diff;
-
-        this->DrawChild(child);
-    }*/
-
-
-    // Menu bar menu implementations.
-    template<typename TTheme>
-	MenuBarMenu<TTheme>::MenuBarMenu(Label<TTheme>* label) :
-		m_label(label)
-    {}
-
-    template<typename TTheme>
-    std::shared_ptr<MenuBarItem<TTheme>> MenuBarMenu<TTheme>::AddItem(const std::string& text)
-    {
-        auto item = std::make_shared<MenuBarItem<TTheme>>(text);
-        m_items.push_back(item);
-        return item;
     }
 
 
     // Menu bar item implementations.
     template<typename TTheme>
-    MenuBarItem<TTheme>::MenuBarItem(const std::string& text) :
-        m_text(text)
+    MenuBarItem<TTheme>::MenuBarItem(
+        WidgetMixinDescriptor<TTheme, MenuBarItem>& desc,
+        const std::string& label
+    ) :
+        WidgetMixin<TTheme, MenuBarItem>(desc),
+        label(desc.propertyDispatcher, label)
     {}
+
+    template<typename TTheme>
+    void MenuBarItem<TTheme>::OnUpdate(WidgetUpdateContext<TTheme>&)
+    {
+        const auto textBounds = this->GetWidgetSkin()->label.template CalculateFontHeightBounds<float>();
+        this->SetPosition(this->GetBounds().position + Vector2f32{ textBounds.position.x, -textBounds.position.y });
+        this->SetSize(textBounds.size);
+    }
+
 
 
 

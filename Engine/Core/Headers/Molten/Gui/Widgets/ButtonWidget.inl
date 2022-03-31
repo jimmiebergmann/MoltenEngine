@@ -34,27 +34,7 @@ namespace Molten::Gui
     template<typename TTheme>
     void Button<TTheme>::OnUpdate(WidgetUpdateContext<TTheme>& updateContext)
     {
-        if (!this->PreCalculateBounds())
-        {
-            return;
-        }
-
-        if (auto children = this->GetChildren(); children.begin() != children.end())
-        {
-            auto& child = *children.begin();
-
-            if (!this->PreCalculateChildBounds(child))
-            {
-                return;
-            }
-
-            updateContext.VisitChild(child);
-
-            if (this->PostCalculateBounds(child))
-            {
-                updateContext.DrawChild(child);
-            }
-        }
+        this->UpdateAsSingleParent(updateContext);
     }
 
     template<typename TTheme>

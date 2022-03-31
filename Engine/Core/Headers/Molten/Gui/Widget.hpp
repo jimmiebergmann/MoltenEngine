@@ -219,13 +219,18 @@ namespace Molten::Gui
         virtual void OnAddChild(Widget<TTheme>& widget);
         virtual void OnRemoveChild(Widget<TTheme>& widget);
 
-        bool PreCalculateBounds();
+        void UpdateAsEmpty();
+        void UpdateAsSingleParent(WidgetUpdateContext<TTheme>& updateContext, const PaddingType extraPadding = {});
+        void UpdateAsGridParent(WidgetUpdateContext<TTheme>& updateContext, const GridDirection gridDirection, const float childSpacing = 0.0f, const PaddingType extraPadding = {});
 
-        bool PreCalculateChildBounds(Widget<TTheme>& child);
+        bool PreCalculateBounds();
+        bool PreCalculateChildBounds(Widget<TTheme>& child, const PaddingType extraPadding = {});
+
         bool PreCalculateChildBounds(Widget<TTheme>& child, const AABB2f32& remainingContentBounds);
 
         void PostCalculateChildBounds(const Widget<TTheme>& child, Vector2f32& contentSize, AABB2f32& remainingContentBounds, const GridDirection gridDirection, const float childSpacing);
 
+        bool PostCalculateBounds();
         bool PostCalculateBounds(Widget<TTheme>& child);
         bool PostCalculateBounds(const Vector2f32& contentSize, const GridDirection gridDirection, const float childSpacing);
 

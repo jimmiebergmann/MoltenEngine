@@ -233,6 +233,111 @@ namespace Molten::Gui
     {}
 
     template<typename TTheme>
+    void Widget<TTheme>::UpdateAsEmpty()
+    {
+        this->PreCalculateBounds();
+        this->PostCalculateBounds();
+    }
+
+    template<typename TTheme>
+    void Widget<TTheme>::UpdateAsSingleParent(WidgetUpdateContext<TTheme>& updateContext, const PaddingType extraPadding)
+    {
+        if (!this->PreCalculateBounds())
+        {
+            return;
+        }
+
+        if (auto children = this->GetChildren(); children.begin() != children.end())
+        {
+            auto& child = *children.begin();
+
+            if (!this->PreCalculateChildBounds(child, extraPadding))
+            {
+                return;
+            }
+
+            updateContext.VisitChild(child);
+
+            if (this->PostCalculateBounds(child))
+            {
+                updateContext.DrawChild(child);
+            }
+        }
+        else
+        {
+            this->PostCalculateBounds();
+        }
+    }
+
+    template<typename TTheme>
+    void Widget<TTheme>::UpdateAsGridParent(WidgetUpdateContext<TTheme>& updateContext, const GridDirection gridDirection, const float childSpacing, const PaddingType extraPadding)
+    {
+        if (!this->PreCalculateBounds())
+		{
+		    return;
+		}
+
+		AABB2f32 remainingContentBounds = this->GetBounds();
+		remainingContentBounds.position += this->padding.low + extraPadding.low;
+		remainingContentBounds.size -= this->padding.low + this->padding.high + extraPadding.low + extraPadding.high;
+		Vector2f32 maxContentSize = {};
+
+        std::vector<Widget<TTheme>*> contentThenParentChildren;
+
+		for(auto& child : this->GetChildren())
+		{
+		    if (!this->PreCalculateChildBounds(child, remainingContentBounds))
+		    {
+		        break;
+		    }
+
+		    updateContext.VisitChild(child);
+
+		    this->PostCalculateChildBounds(child, maxContentSize, remainingContentBounds, gridDirection, childSpacing);
+
+            if(gridDirection == GridDirection::Horizontal)
+            {
+                if (VariantEqualsType<Size::Fit>(child.size.y) && std::get<Size::Fit>(child.size.y) == Size::Fit::ContentThenParent)
+                {
+                    contentThenParentChildren.push_back(&child);
+                }
+            }
+            else
+            {
+                if (VariantEqualsType<Size::Fit>(child.size.x) && std::get<Size::Fit>(child.size.x) == Size::Fit::ContentThenParent)
+                {
+                    contentThenParentChildren.push_back(&child);
+                }
+            }
+
+		    updateContext.DrawChild(child);
+		}
+
+		this->PostCalculateBounds(maxContentSize, gridDirection, childSpacing);
+
+        if(!contentThenParentChildren.empty())
+        {
+            auto contentSize = this->GetBounds().size - this->padding.low - this->padding.high;
+
+            if (gridDirection == GridDirection::Horizontal)
+            {
+                for(auto* contentThenParentChild : contentThenParentChildren)
+                {
+                    contentThenParentChild->SetSize({ contentThenParentChild->GetBounds().size.x, contentSize.y });
+                }
+            }
+            else
+            {
+                for (auto* contentThenParentChild : contentThenParentChildren)
+                {
+                    contentThenParentChild->SetSize({ contentSize.x, contentThenParentChild->GetBounds().size.y });
+                }
+            }
+        }
+
+    }
+
+    template<typename TTheme>
     bool Widget<TTheme>::PreCalculateBounds()
     {
         m_bounds.position += this->margin.low;
@@ -275,8 +380,8 @@ namespace Molten::Gui
 
         if (m_bounds.IsEmpty())
         {
-            if (!(VariantEqualsType<Size::Fit>(this->size.x) && std::get<Size::Fit>(this->size.x) == Size::Fit::Content) &&
-                !(VariantEqualsType<Size::Fit>(this->size.y) && std::get<Size::Fit>(this->size.y) == Size::Fit::Content))
+            if (!(VariantEqualsType<Size::Fit>(this->size.x) && std::get<Size::Fit>(this->size.x) != Size::Fit::Parent) &&
+                !(VariantEqualsType<Size::Fit>(this->size.y) && std::get<Size::Fit>(this->size.y) != Size::Fit::Parent))
             {
                 return false;
             }
@@ -286,19 +391,19 @@ namespace Molten::Gui
     }
 
     template<typename TTheme>
-    bool Widget<TTheme>::PreCalculateChildBounds(Widget<TTheme>& child)
+    bool Widget<TTheme>::PreCalculateChildBounds(Widget<TTheme>& child, const PaddingType extraPadding)
     {
-        const auto grantedChildSize = m_bounds.size - this->padding.low - this->padding.high;
+        const auto grantedChildSize = m_bounds.size - this->padding.low - this->padding.high - extraPadding.low - extraPadding.high;
         if (grantedChildSize.x <= 0.0f || grantedChildSize.y <= 0.0f)
         {
-            if (!(VariantEqualsType<Size::Fit>(this->size.x) && std::get<Size::Fit>(this->size.x) == Size::Fit::Content) &&
-                !(VariantEqualsType<Size::Fit>(this->size.y) && std::get<Size::Fit>(this->size.y) == Size::Fit::Content))
+            if (!(VariantEqualsType<Size::Fit>(this->size.x) && std::get<Size::Fit>(this->size.x) != Size::Fit::Parent) &&
+                !(VariantEqualsType<Size::Fit>(this->size.y) && std::get<Size::Fit>(this->size.y) != Size::Fit::Parent))
             {
                 return false;
             }
         }
 
-        const auto childPosition = m_bounds.position + this->padding.low;
+        const auto childPosition = m_bounds.position + this->padding.low + extraPadding.low;
 
         child.m_bounds.position = childPosition;
         child.m_grantedSize = grantedChildSize;
@@ -310,15 +415,15 @@ namespace Molten::Gui
     {
         if (remainingContentBounds.size.x <= 0.0f || remainingContentBounds.size.y <= 0.0f)
         {
-            if (!(VariantEqualsType<Size::Fit>(this->size.x) && std::get<Size::Fit>(this->size.x) == Size::Fit::Content) &&
-                !(VariantEqualsType<Size::Fit>(this->size.y) && std::get<Size::Fit>(this->size.y) == Size::Fit::Content))
+            if (!(VariantEqualsType<Size::Fit>(this->size.x) && std::get<Size::Fit>(this->size.x) != Size::Fit::Parent) &&
+                !(VariantEqualsType<Size::Fit>(this->size.y) && std::get<Size::Fit>(this->size.y) != Size::Fit::Parent))
             {
                 return false;
             }
         }
 
-        this->SetPosition(child, remainingContentBounds.position);
-        this->SetGrantedSize(child, remainingContentBounds.size);
+        child.m_bounds.position = remainingContentBounds.position;
+        child.m_grantedSize = remainingContentBounds.size;
         return true;
     }
 
@@ -345,7 +450,19 @@ namespace Molten::Gui
             contentSize.y += diff;
         }
     }
-    
+
+    template<typename TTheme>
+    bool Widget<TTheme>::PostCalculateBounds()
+    {
+        if ((VariantEqualsType<Size::Fit>(size.x) && std::get<Size::Fit>(size.x) != Size::Fit::Parent) ||
+            (VariantEqualsType<Size::Fit>(size.y) && std::get<Size::Fit>(size.y) != Size::Fit::Parent))
+        {
+            m_bounds.size = { 0.0f, 0.0f };
+        }
+
+        return m_bounds.size.x > 0.0f && m_bounds.size.y > 0.0f;
+    }
+
     template<typename TTheme>
     bool Widget<TTheme>::PostCalculateBounds(Widget<TTheme>& child)
     {
@@ -355,7 +472,7 @@ namespace Molten::Gui
 
             if constexpr (std::is_same_v<T, Size::Fit>)
             {
-                if (element == Size::Fit::Content)
+                if (element != Size::Fit::Parent)
                 {
                     m_bounds.size.x = child.m_bounds.size.x + this->padding.left + this->padding.right;
                 }
@@ -368,7 +485,7 @@ namespace Molten::Gui
 
             if constexpr (std::is_same_v<T, Size::Fit>)
             {
-                if (element == Size::Fit::Content)
+                if (element != Size::Fit::Parent)
                 {
                     m_bounds.size.y = child.m_bounds.size.y + this->padding.top + this->padding.bottom;
                 }
@@ -386,28 +503,26 @@ namespace Molten::Gui
             return false;
         }
 
-        auto newSize = this->GetBounds().size;
-        if (VariantEqualsType<Size::Fit>(this->size.x) && std::get<Size::Fit>(this->size.x) == Size::Fit::Content)
+        if (VariantEqualsType<Size::Fit>(this->size.x) && std::get<Size::Fit>(this->size.x) != Size::Fit::Parent)
         {
-            newSize.x = contentSize.x + this->padding.left + this->padding.right;
+            m_bounds.size.x = contentSize.x + this->padding.left + this->padding.right;
 
             if (gridDirection == GridDirection::Horizontal)
             {
-                newSize.x -= childSpacing;
+                m_bounds.size.x -= childSpacing;
             }
         }
-        if (VariantEqualsType<Size::Fit>(this->size.y) && std::get<Size::Fit>(this->size.y) == Size::Fit::Content)
+        if (VariantEqualsType<Size::Fit>(this->size.y) && std::get<Size::Fit>(this->size.y) != Size::Fit::Parent)
         {
-            newSize.y = contentSize.y + this->padding.left + this->padding.right;
+            m_bounds.size.y = contentSize.y + this->padding.left + this->padding.right;
 
             if (gridDirection == GridDirection::Vertical)
             {
-                newSize.y -= childSpacing;
+                m_bounds.size.y -= childSpacing;
             }
         }
 
-        this->SetSize(newSize);
-        return true;
+        return m_bounds.size.x > 0.0f && m_bounds.size.y > 0.0f;
     }
 
     template<typename TTheme>

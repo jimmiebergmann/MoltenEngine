@@ -37,39 +37,12 @@ namespace Molten::Gui
     template<typename TTheme>
     void Pane<TTheme>::OnUpdate(WidgetUpdateContext<TTheme>& updateContext)
     {
-        if (!this->PreCalculateBounds())
-        {
-            return;
-        }
+        constexpr auto headerBarHeight = WidgetMixin<TTheme, Pane>::WidgetSkinType::headerBarHeight;
 
-        if (auto children = this->GetChildren(); children.begin() != children.end())
-        {
-            auto& child = *children.begin();
+        this->UpdateAsSingleParent(updateContext, { 0.0f, headerBarHeight, 0.0f, 0.0f });
 
-            auto childBounds = this->GetBounds();
-
-            childBounds.size -= this->padding.low + this->padding.high + Vector2f32{ 0.0f, WidgetMixin<TTheme, Pane>::WidgetSkinType::headerBarHeight };
-
-            if (childBounds.IsEmpty())
-            {
-                return;
-            }
-
-            childBounds.position += this->padding.low + Vector2f32{ 0.0f, WidgetMixin<TTheme, Pane>::WidgetSkinType::headerBarHeight };
-
-            this->SetPosition(child, childBounds.position);
-            this->SetGrantedSize(child, childBounds.size);
-
-            updateContext.VisitChild(child);
-            updateContext.DrawChild(child);
-        }
-
-        const auto& bounds = this->GetBounds();
-
-        m_dragBounds = {
-            bounds.position,
-            { bounds.size.x, WidgetMixin<TTheme, Pane>::WidgetSkinType::headerBarHeight }
-        };
+        m_dragBounds = this->GetBounds();
+        m_dragBounds.size.y = headerBarHeight;
     }
 
 }

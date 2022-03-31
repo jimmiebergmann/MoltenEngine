@@ -33,37 +33,42 @@ namespace Molten::Gui
     {}
 
     template<typename TTheme>
-    size_t MenuOverlay<TTheme>::AddDivider()
+    void MenuOverlay<TTheme>::OnUpdate(WidgetUpdateContext<TTheme>& updateContext)
     {
-        m_dividers.emplace_back();
-        return 0;
+        this->UpdateAsGridParent(updateContext, GridDirection::Vertical);
     }
 
     template<typename TTheme>
-    bool MenuOverlay<TTheme>::RemoveDivider(const size_t index)
+    bool MenuOverlay<TTheme>::OnMouseEvent(const WidgetMouseEvent& widgetMouseEvent)
     {
-	    if(index >= m_dividers.size())
-	    {
-            return false;
-	    }
-
-        m_dividers.erase(m_dividers.begin() + index);
         return true;
     }
 
+
+    // Menu overlay item implementations.
     template<typename TTheme>
-    void MenuOverlay<TTheme>::OnUpdate(WidgetUpdateContext<TTheme>& /*updateContext*/)
+    MenuOverlayItem<TTheme>::MenuOverlayItem(WidgetMixinDescriptor<TTheme, MenuOverlayItem>& desc) :
+        WidgetMixin<TTheme, MenuOverlayItem>(desc)
+    {}
+
+    template<typename TTheme>
+    void MenuOverlayItem<TTheme>::OnUpdate(WidgetUpdateContext<TTheme>& updateContext)
     {
-        /*using Skin = typename WidgetMixin<TTheme, MenuOverlay>::WidgetSkinType;
-
-        float itemPosition = 0.0f;
-        for (auto& child : this->GetChildren())
-        {
-            this->SetPosition(child, { 0.0f, itemPosition });
-
-
-            itemPosition += Skin::itemHeight;
-        }*/
+        this->UpdateAsSingleParent(updateContext);
     }
+
+    template<typename TTheme>
+    bool MenuOverlayItem<TTheme>::OnMouseEvent(const WidgetMouseEvent& widgetMouseEvent)
+    {
+        using Mixin = WidgetMixin<TTheme, MenuOverlayItem>;
+
+        switch (widgetMouseEvent.type)
+        {
+	        case WidgetMouseEventType::MouseEnter: Mixin::SetSkinState(State::Hovered); break;
+	        case WidgetMouseEventType::MouseLeave: Mixin::SetSkinState(State::Normal); break;
+	        default: break;
+        }
+        return true;
+    }   
 
 }

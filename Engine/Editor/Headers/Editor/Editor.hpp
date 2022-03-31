@@ -99,6 +99,9 @@ namespace Molten::Editor
         bool HandleWindowFocus();
         void UpdateCanvas();
 
+        bool ValidateFileDrops(const std::vector<std::filesystem::path>& files);
+        bool ProcessFileDrops(const std::vector<std::filesystem::path>& files);
+
         void OnSceneViewportResize(Gui::Viewport<Gui::EditorTheme>* viewport, const Vector2ui32 size);
         bool LoadSceneViewport();
         void DrawSceneViewport(CommandBuffer& commandBuffer);
@@ -145,6 +148,8 @@ namespace Molten::Editor
         Gui::Label<Gui::EditorTheme>* m_avgFpsLabel;
         Gui::Label<Gui::EditorTheme>* m_minFpsLabel;
         Gui::Label<Gui::EditorTheme>* m_maxFpsLabel;
+
+        Gui::ManagedWidget<Gui::EditorTheme, Gui::MenuOverlay> m_menuOverlay;
 
         ThreadPool m_threadPool;
         FunctionDispatcher m_preUpdateCallbacks;

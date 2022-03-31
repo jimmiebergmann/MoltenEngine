@@ -158,75 +158,13 @@ namespace Molten::Editor
             m_logger->Write(Logger::Severity::Info, "Changed scale: " + std::to_string(scale.x) + ", " + std::to_string(scale.y));
         });
 
-
         m_window->OnFilesDropEnter = [&](const std::vector<std::filesystem::path>& files) -> bool
         {
-            if(files.size() != 1)
-            {
-                return false;
-            }
-
-            const auto& file = files.front();
-            if(file.extension() != ".obj")
-            {
-                return false;
-            }
-
-            Logger::WriteInfo(m_logger.get(), "Dragging obj file: " + file.string());
-
-            return true;
+            return ValidateFileDrops(files);
         };
         m_window->OnFilesDrop = [&](const std::vector<std::filesystem::path>& files)
-        {
-            if (files.size() != 1)
-            {
-                return false;
-            }
-
-            const auto& file = files.front();
-            Logger::WriteInfo(m_logger.get(), "Dropping obj file: " + file.string());
-
-            [[maybe_unused]] auto dummy = m_threadPool.Execute([&, filename = file]()
-                {
-                    ObjMeshFile objFile;
-                    ObjMeshFileReader objFileReader;
-
-                    m_preUpdateCallbacks.Add([&]()
-                        {
-                            m_loadingProgressBar->value = 0.0;
-                        });
-
-                    auto onProgressConnection = objFileReader.onProgress.Connect([&](const double progress)
-                        {
-                            m_postUpdateCallbacks.Add([this, progress]()
-                                {
-                                    m_loadingProgressBar->value = progress;
-                                });
-                        });
-
-                    const Clock clock;
-                    const auto result = objFileReader.ReadFromFile(objFile, filename, m_threadPool);
-                    const auto readTime = clock.GetTime();
-
-                    onProgressConnection.Disconnect();
-                    
-
-                    if(!result.IsSuccessful())
-                    {
-                        Logger::WriteError(m_logger.get(), "Model loading failed:" + result.GetError().message);
-                        return;
-                    }
-
-                    Logger::WriteInfo(m_logger.get(), "Read file in: " + std::to_string(readTime.AsSeconds<float>()) + "s.");
-                    Logger::WriteInfo(m_logger.get(), "Objects: " + std::to_string(objFile.objects.size()));
-
-                    m_postUpdateCallbacks.Add([&]()
-                        {
-                            Logger::WriteInfo(m_logger.get(), "Model successfully loaded!");
-                        });
-                });
-
-            return true;
+        {          
+            return ProcessFileDrops(files);
         };
 
         return true;
@@ -282,12 +220,28 @@ namespace Molten::Editor
         {
 	        auto* layer = m_canvas->CreateLayer<Gui::SingleRootLayer>(Gui::LayerPosition::Top);
 
+            /*m_menuOverlay = layer->CreateOverlayChild<Gui::MenuOverlay>();
+            m_menuOverlay->size = { Gui::Size::Fit::Content, Gui::Size::Fit::Content };
+            m_menuOverlay->padding = { 4.0f, 4.0f, 20.0f, 4.0f };
+            m_menuOverlay->CreateChild<Gui::MenuOverlayItem>()->CreateChild<Gui::Label>("New Project", 18);
+            m_menuOverlay->CreateChild<Gui::MenuOverlayItem>()->CreateChild<Gui::Label>("Open Project", 18);
+            m_menuOverlay->CreateChild<Gui::MenuOverlayItem>()->CreateChild<Gui::Label>("Import Asset", 18);
+            m_menuOverlay->CreateChild<Gui::MenuOverlayItem>()->CreateChild<Gui::Label>("Exit", 18);*/
+
+
             auto* rootGrid = layer->CreateChild<Gui::Grid>(Gui::GridDirection::Vertical);
             rootGrid->cellSpacing = 0.0f;
 
             {
 				auto* menuBar = rootGrid->CreateChild<Gui::MenuBar>();
-                {
+				{
+                    menuBar->CreateChild<Gui::MenuBarItem>("File");
+                    menuBar->CreateChild<Gui::MenuBarItem>("Help");
+                    
+				}
+
+
+                /*{
                     auto fileMenu = menuBar->AddMenu("File");
                     fileMenu->AddItem("New Project")->onClick.Connect(
                         [&]() { Logger::WriteInfo(m_logger.get(), "New Project"); });
@@ -304,7 +258,7 @@ namespace Molten::Editor
                         [&]() { Logger::WriteInfo(m_logger.get(), "About"); });
                     aboutMenu->AddItem("Licenses")->onClick.Connect(
                         [&]() { Logger::WriteInfo(m_logger.get(), "Licenses"); });
-                }
+                }*/
 	        }
 
 	        auto* docker = rootGrid->CreateChild<Gui::Docker>();
@@ -451,6 +405,71 @@ namespace Molten::Editor
         m_canvas->SetSize(m_window->GetSize());
         m_canvas->SetScale(m_window->GetScale());
         m_canvas->Update(m_deltaTime);
+    }
+
+    bool Editor::ValidateFileDrops(const std::vector<std::filesystem::path>& files)
+    {
+        if (files.size() != 1)
+        {
+            return false;
+        }
+
+        const auto& file = files.front();
+        if (file.extension() != ".obj")
+        {
+            return false;
+        }
+
+        Logger::WriteInfo(m_logger.get(), "Dragging obj file: " + file.string());
+
+        return true;
+    }
+
+    bool Editor::ProcessFileDrops(const std::vector<std::filesystem::path>& files)
+    {
+        if (files.size() != 1)
+        {
+            return false;
+        }
+
+        const auto& file = files.front();
+        Logger::WriteInfo(m_logger.get(), "Dropping obj file: " + file.string());
+
+        [[maybe_unused]] auto dummy = m_threadPool.Execute([&, filename = file]() {
+            ObjMeshFile objFile;
+            ObjMeshFileReader objFileReader;
+
+            m_preUpdateCallbacks.Add([&]() {
+                m_loadingProgressBar->value = 0.0;
+            });
+
+            auto onProgressConnection = objFileReader.onProgress.Connect([&](const double progress) {
+                m_postUpdateCallbacks.Add([this, progress]() {
+                    m_loadingProgressBar->value = progress;
+                });
+            });
+
+            const Clock clock;
+            const auto result = objFileReader.ReadFromFile(objFile, filename, m_threadPool);
+            const auto readTime = clock.GetTime();
+
+            onProgressConnection.Disconnect();
+
+            if (!result.IsSuccessful())
+            {
+                Logger::WriteError(m_logger.get(), "Model loading failed:" + result.GetError().message);
+                return;
+            }
+
+            Logger::WriteInfo(m_logger.get(), "Read file in: " + std::to_string(readTime.AsSeconds<float>()) + "s.");
+            Logger::WriteInfo(m_logger.get(), "Objects: " + std::to_string(objFile.objects.size()));
+
+            m_postUpdateCallbacks.Add([&]() {
+                Logger::WriteInfo(m_logger.get(), "Model successfully loaded!");
+            });
+        });
+
+        return true;
     }
 
     void Editor::OnSceneViewportResize(Gui::Viewport<Gui::EditorTheme>* viewport, const Vector2ui32 size)

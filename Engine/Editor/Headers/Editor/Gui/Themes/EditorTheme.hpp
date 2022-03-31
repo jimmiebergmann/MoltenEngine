@@ -136,8 +136,13 @@ namespace Molten::Gui
             m_canvasFontSequence = m_theme.m_canvasRenderer.CreateFontSequence(m_fontSequence);
         }
 
+        [[nodiscard]] AABB2i32 GetBounds() const
+        {
+            return { m_fontSequence.bounds.low, m_fontSequence.bounds.GetSize() };
+        }
+
         template<typename T>
-        [[nodiscard]] AABB2<T> CalculateFontHeightBounds()
+        [[nodiscard]] AABB2<T> CalculateFontHeightBounds() const
         {
             return m_fontSequence.CalculateFontHeightBounds<T>();
         }
@@ -287,14 +292,46 @@ namespace Molten::Gui
         void Draw() override
         {
             theme.m_canvasRenderer.DrawRect(widget.GetBounds(), backgroundColor);
-
-            switch (const auto& state = this->GetState(); state.type)
-            {
-	            case State::Type::HoverMenu: theme.m_canvasRenderer.DrawRect(state.typeBounds, hoverColor); break;
-	            case State::Type::PressedMenu: theme.m_canvasRenderer.DrawRect(state.typeBounds, pressColor); break;
-                default: break;
-            }
         }
+    };
+
+    template<>
+    struct WidgetSkin<EditorTheme, MenuBarItem> : WidgetSkinMixin<EditorTheme, MenuBarItem>
+    {
+        static constexpr auto defaultPosition = WidgetPosition{ Position::Pixels{ 0.0f }, Position::Pixels{ 0.0f } };
+        static constexpr auto defaultSize = WidgetSize{ Size::Fit::Content, Size::Fit::Content };
+
+        WidgetSkinLabel label;
+
+        explicit WidgetSkin(const WidgetSkinDescriptor<EditorTheme, MenuBarItem>& descriptor) :
+            WidgetSkinMixin<EditorTheme, MenuBarItem>(descriptor),
+			label(descriptor.theme)
+        {
+            LoadLabel();
+            widget.label.onChange.Connect([&]() {
+                LoadLabel();
+            });
+        }
+
+        void Draw() override
+        {
+            const auto bounds = widget.GetBounds();
+
+            auto labelBounds = label.CalculateFontHeightBounds<float>();
+            labelBounds.position.y = -labelBounds.position.y;
+
+            const auto labelOffset = GetCenterOffset(labelBounds.size, bounds.size);
+
+            label.Draw(bounds.position + labelBounds.position + labelOffset);
+        }
+
+    private:
+
+        void LoadLabel()
+        {
+            label.Load(widget.label(), "OpenSans-VariableFont_wdth,wght", 16);
+        }
+
     };
 
     template<>
@@ -312,8 +349,7 @@ namespace Molten::Gui
             m_label(descriptor.theme)
         {
             LoadLabel();
-            widget.label.onChange.Connect([&]()
-            {
+            widget.label.onChange.Connect([&]() {
 				LoadLabel();
             });
         }
@@ -462,9 +498,8 @@ namespace Molten::Gui
     struct WidgetSkin<EditorTheme, MenuOverlay> : WidgetSkinMixin<EditorTheme, MenuOverlay>
     {
         static constexpr auto defaultPosition = WidgetPosition{ Position::Pixels{ 0.0f }, Position::Pixels{ 0.0f } };
-        static constexpr auto defaultSize = WidgetSize{ Size::Pixels{ 0.0f }, Size::Pixels{ 0.0f } };
+        static constexpr auto defaultSize = WidgetSize{ Size::Fit::Content, Size::Fit::Content };
 
-        static constexpr auto itemHeight = 20.0f;
         static constexpr auto borderColor = Vector4f32{ 60.0f / 255.0f, 60.0f / 255.0f, 60.0f / 255.0f, 1.0f };
         static constexpr auto backgroundColor = Vector4f32{ 60.0f / 255.0f, 60.0f / 255.0f, 60.0f / 255.0f, 1.0f };
 
@@ -482,6 +517,38 @@ namespace Molten::Gui
             bounds.position += Vector2f32{ 1.0f, 1.0f };
             bounds.size -= Vector2f32{ 2.0f, 2.0f };
             theme.m_canvasRenderer.DrawRect(bounds, backgroundColor);
+        }
+    };
+
+    template<>
+    struct WidgetSkin<EditorTheme, MenuOverlayItem> : WidgetSkinMixin<EditorTheme, MenuOverlayItem>
+    {
+        static constexpr auto defaultPosition = WidgetPosition{ Position::Pixels{ 0.0f }, Position::Pixels{ 0.0f } };
+        static constexpr auto defaultSize = WidgetSize{ Size::Fit::ContentThenParent, Size::Fit::Content };
+
+        static constexpr auto hoverColor = Vector4f32{ 1.0f, 60.0f / 255.0f, 60.0f / 255.0f, 1.0f };
+
+        explicit WidgetSkin(const WidgetSkinDescriptor<EditorTheme, MenuOverlayItem>& descriptor) :
+            WidgetSkinMixin<EditorTheme, MenuOverlayItem>(descriptor)
+        {}
+
+        void OnStateChange(const State& /*state*/) override
+        {
+            /*switch (state)
+            {
+            case State::Normal: color = Vector4f32{ 1.0f, 0.0f, 0.0f, 1.0f }; break;
+            case State::Hovered: color = Vector4f32{ 0.0f, 1.0f, 0.0f, 1.0f }; break;
+            }*/
+        }
+
+        void Draw() override
+        {
+            if(this->GetState() != State::Hovered)
+            {
+                return;
+            }
+
+            theme.m_canvasRenderer.DrawRect(widget.GetBounds(), hoverColor);
         }
     };
 

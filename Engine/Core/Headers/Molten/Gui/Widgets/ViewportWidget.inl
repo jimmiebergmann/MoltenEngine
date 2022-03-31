@@ -41,7 +41,7 @@ namespace Molten::Gui
     template<typename TTheme>
     void Viewport<TTheme>::OnUpdate(WidgetUpdateContext<TTheme>& updateContext)
     {
-        this->PreCalculateBounds();
+        this->UpdateAsSingleParent(updateContext);
 
         const auto contentSize = this->GetBounds().size;
 
