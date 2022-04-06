@@ -4,32 +4,27 @@ environment:
     
   matrix:
   
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
-      compiler: msvc-16-seh
-      generator: "Visual Studio 16 2019"
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
+      generator: "Visual Studio 17 2022"
+      arch: x64
       configuration: Debug
       output_name_postfix: Debug
-      arch: x64
-      MOLTEN_ENABLE_VULKAN: -DMOLTEN_ENABLE_VULKAN=On
       
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
+      generator: "Visual Studio 17 2022"
+      arch: x64
+      configuration: Release
+  
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
-      compiler: msvc-16-seh
       generator: "Visual Studio 16 2019"
+      arch: x64
       configuration: Debug
       output_name_postfix: Debug
-      arch: Win32
-    
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
-      compiler: msvc-16-seh
-      generator: "Visual Studio 16 2019"
-      configuration: Release
-      arch: x64
       
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
-      compiler: msvc-16-seh
       generator: "Visual Studio 16 2019"
+      arch: x64
       configuration: Release
-      arch: Win32
       
 cache:
   - C:\ProgramData\VulkanSDK_Installer -> appveyor.yml
@@ -41,7 +36,7 @@ install:
   - SET PATH=%PYTHON%;%PATH%
   - python --version
   
-  # Vulkan cache installer
+  # Vulkan cache installer (Old and not working).
   - ps: >-
       if($env:MOLTEN_ENABLE_VULKAN)
       { 
