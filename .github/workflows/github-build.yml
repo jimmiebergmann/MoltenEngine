@@ -14,14 +14,15 @@ jobs:
             c_compiler: gcc
             cpp_compiler: g++
             compiler_packages: gcc-11 g++-11
-            c_compiler_update: /usr/bin/gcc gcc /usr/bin/gcc-11
-            cpp_compiler_update: /usr/bin/g++ g++ /usr/bin/g++-11
+            c_compiler_update: sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 90
+            cpp_compiler_update: sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 90
+            gcov_compiler_update: sudo update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-11 90  
           - compiler: clang
             c_compiler: clang
             cpp_compiler: clang++
             compiler_packages: clang-11
-            c_compiler_update: /usr/bin/clang clang /usr/bin/clang-11
-            cpp_compiler_update: /usr/bin/clang++ clang++ /usr/bin/clang++-11
+            c_compiler_update: sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-11 90
+            cpp_compiler_update: sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-11 90
           - build_type: Debug
             output_name_postfix: Debug
             
@@ -40,9 +41,10 @@ jobs:
           sudo add-apt-repository ppa:ubuntu-toolchain-r/test
           sudo apt update
           sudo apt install ${{matrix.compiler_packages}} lcov valgrind
-          sudo update-alternatives --install ${{matrix.c_compiler_update}} 90
-          sudo update-alternatives --install ${{matrix.cpp_compiler_update}} 90
-          sudo update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-11 90  
+          ${{matrix.c_compiler_update}}
+          ${{matrix.cpp_compiler_update}}
+          ${{matrix.gcov_compiler_update}}
+          
       - name: Check versions
         run: |
           cmake --version
