@@ -169,7 +169,7 @@ namespace Molten
     template<typename T>
     template<typename TPreCallback, typename TPostCallback, typename TPreChildCallback, typename TPostChildCallback>
     void TreeLane<T>::ForEachPreorder(
-        TreeTraversalCache4<T>& cache,
+        TreeTraversalCache4<T>& /*cache*/,
         TPreCallback&& preCallback,
         TPostCallback&& postCallback,
         TPreChildCallback&& preChildCallback,

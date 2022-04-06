@@ -236,8 +236,8 @@ namespace Molten
         ObjMeshFileReader();       
         ~ObjMeshFileReader() = default;
 
-        ObjMeshFileReader(ObjMeshFileReader&&) = default;
-        ObjMeshFileReader& operator = (ObjMeshFileReader&&) = default;
+        ObjMeshFileReader(ObjMeshFileReader&&) = delete;
+        ObjMeshFileReader& operator = (ObjMeshFileReader&&) = delete;
 
         ObjMeshFileReader(const ObjMeshFileReader&) = delete;
         ObjMeshFileReader& operator = (const ObjMeshFileReader&) = delete;

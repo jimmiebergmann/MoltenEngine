@@ -39,7 +39,7 @@ namespace Molten::Gui
     }
 
     template<typename TTheme>
-    bool MenuOverlay<TTheme>::OnMouseEvent(const WidgetMouseEvent& widgetMouseEvent)
+    bool MenuOverlay<TTheme>::OnMouseEvent(const WidgetMouseEvent& )
     {
         return true;
     }
