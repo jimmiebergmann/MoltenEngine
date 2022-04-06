@@ -33,7 +33,7 @@ namespace Molten::Gui
     {}
 
     template<typename TTheme>
-    void DockerOverlay<TTheme>::OnUpdate(WidgetUpdateContext<TTheme>& updateContext)
+    void DockerOverlay<TTheme>::OnUpdate(WidgetUpdateContext<TTheme>& )
     {
         this->PreCalculateBounds();
 

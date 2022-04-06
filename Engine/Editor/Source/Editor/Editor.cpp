@@ -47,7 +47,10 @@ namespace Molten::Editor
         m_isRunning(false),
         m_cancellationSemaphore(cancellationSemaphore),
         m_windowTitle("Molten Editor"),
-        m_viewportCapacityPolicy{ BufferCapacityScalarPolicy{ 100 }, BufferCapacityScalarPolicy{ 100 } },
+        m_viewportCapacityPolicy{ 
+            BufferCapacityPolicy{ BufferCapacityScalarPolicy{ 100 } }, 
+            BufferCapacityPolicy{ BufferCapacityScalarPolicy{ 100 } }
+        },
         m_fpsTracker(8),
         m_threadPool(0, 2, 0)
     {}

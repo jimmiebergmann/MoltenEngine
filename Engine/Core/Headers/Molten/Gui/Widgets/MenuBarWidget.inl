@@ -80,14 +80,14 @@ namespace Molten::Gui
     }
 
     template<typename TTheme>
-    void MenuBar<TTheme>::OnAddChild(Widget<TTheme>& widget)
+    void MenuBar<TTheme>::OnAddChild(Widget<TTheme>& )
     {
         //auto menuWidget = this->GetLayer()->template CreateOverlayChild<MenuOverlay>();
         //m_menuWidgets.push_back(std::move(menuWidget));
     }
 
     template<typename TTheme>
-    bool MenuBar<TTheme>::OnMouseEvent(const WidgetMouseEvent& widgetMouseEvent)
+    bool MenuBar<TTheme>::OnMouseEvent(const WidgetMouseEvent& )
     {
         /*switch (widgetMouseEvent.type)
         {
