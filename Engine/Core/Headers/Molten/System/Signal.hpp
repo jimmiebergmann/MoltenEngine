@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -29,6 +29,7 @@
 #include "Molten/Types.hpp"
 #include <vector>
 #include <map>
+#include <tuple>
 #include <functional>
 
 namespace Molten
@@ -170,10 +171,10 @@ namespace Molten
 
         DispatchSignalBase() = default;
 
-        using GenericCallback = std::function<void()>;
-        using GenericCallbacks = std::vector<GenericCallback>;
+        using SignaledCallback = std::function<void()>;
+        using SignaledCallbacks = std::vector<SignaledCallback>;
 
-        GenericCallbacks m_genericCallbacks;
+        SignaledCallbacks m_signaledCallbacks;
 
     private:
 
@@ -184,7 +185,6 @@ namespace Molten
 
     /** Dispatch signal class.
     *   Supporting multiple callback connections for a single signal.
-    *   All connections are destroyed at destruction, making any stored Connection object useless.
     *   Signaled callbacks are executed by provided signal dispatcher.
     */
     template<typename ... Args>

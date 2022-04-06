@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -156,12 +156,12 @@ namespace Molten
     {
         for(auto* queuedSignal : m_queuedSignals)
         {
-            for(auto& genericCallback : queuedSignal->m_genericCallbacks)
+            for(auto& signaledCallback : queuedSignal->m_signaledCallbacks)
             {
-                genericCallback();
+                signaledCallback();
             }
 
-            queuedSignal->m_genericCallbacks.clear();
+            queuedSignal->m_signaledCallbacks.clear();
         }
 
         m_queuedSignals.clear();
@@ -194,28 +194,15 @@ namespace Molten
     template<typename ... Args>
     void DispatchSignal<Args...>::operator ()(Args&& ... args)
     {
-        if(m_callbacks.empty())
+        m_signaledCallbacks.push_back([&, tupleArgs = std::make_tuple(std::forward<Args>(args)...)]()
         {
-            return;
-        }
-
-        if(m_genericCallbacks.empty())
-        {
-            m_dispatcher.QueueSignal(*this);
-        }
-        else
-        {
-            m_genericCallbacks.clear();
-        }
-
-        for(auto& callback : m_callbacks)
-        {
-            m_genericCallbacks.push_back([&]()
+            for (auto& callback : m_callbacks)
             {
-                callback(std::forward<Args>(args)...);
-            });
-        }
+                std::apply(callback, tupleArgs);
+            }
+        });
 
+        m_dispatcher.QueueSignal(*this);
     }
 
 }
