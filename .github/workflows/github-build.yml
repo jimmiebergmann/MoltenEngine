@@ -13,16 +13,9 @@ jobs:
           - compiler: g++
             c_compiler: gcc-11
             cpp_compiler: g++-11
-            compiler_packages: gcc-11 g++-11
-            c_compiler_update: sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 90
-            cpp_compiler_update: sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 90
-            gcov_compiler_update: sudo update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-11 90  
           - compiler: clang
-            c_compiler: clang-12
-            cpp_compiler: clang++-12
-            compiler_packages: clang-12
-            c_compiler_update: sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-12 90
-            cpp_compiler_update: sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-12 90
+            c_compiler: clang-11
+            cpp_compiler: clang++-11
           - build_type: Debug
             output_name_postfix: Debug
             
@@ -40,10 +33,12 @@ jobs:
           sudo add-apt-repository 'deb http://apt.llvm.org/focal llvm-toolchain-focal-11 main' -y
           sudo add-apt-repository ppa:ubuntu-toolchain-r/test
           sudo apt update
-          sudo apt install build-essential ${{matrix.compiler_packages}} lcov valgrind
-          ${{matrix.c_compiler_update}}
-          ${{matrix.cpp_compiler_update}}
-          ${{matrix.gcov_compiler_update}}
+          sudo apt install build-essential gcc-11 g++-11 clang-11 lcov valgrind
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 90
+          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 90
+          sudo update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-11 90  
+          sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-11 90
+          sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-11 90
           
       - name: Check versions
         run: |
