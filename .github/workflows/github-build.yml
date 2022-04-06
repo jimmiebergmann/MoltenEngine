@@ -11,15 +11,15 @@ jobs:
         build_type: [Debug, Release]
         include:
           - compiler: g++
-            c_compiler: gcc
-            cpp_compiler: g++
+            c_compiler: gcc-11
+            cpp_compiler: g++-11
             compiler_packages: gcc-11 g++-11
             c_compiler_update: sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 90
             cpp_compiler_update: sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 90
             gcov_compiler_update: sudo update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-11 90  
           - compiler: clang
-            c_compiler: clang
-            cpp_compiler: clang++
+            c_compiler: clang-11
+            cpp_compiler: clang++-11
             compiler_packages: clang-11
             c_compiler_update: sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-11 90
             cpp_compiler_update: sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-11 90
