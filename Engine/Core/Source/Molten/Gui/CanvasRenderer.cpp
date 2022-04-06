@@ -280,66 +280,6 @@ namespace Molten::Gui
         m_commandBuffer->DrawVertexBuffer(*m_texturedRect.indexBuffer, *m_texturedRect.vertexBuffer);
     }
 
-
-    void CanvasRenderer::DrawRect(const Bounds2f32& bounds, const Vector4f32& color)
-    {
-        m_commandBuffer->BindPipeline(*m_coloredRect.pipeline);
-
-        m_commandBuffer->PushConstant(m_coloredRect.projectionLocation, m_projection);
-        m_commandBuffer->PushConstant(m_coloredRect.positionLocation, bounds.low);
-        m_commandBuffer->PushConstant(m_coloredRect.sizeLocation, bounds.high - bounds.low);
-        m_commandBuffer->PushConstant(m_coloredRect.colorLocation, color);
-
-        m_commandBuffer->DrawVertexBuffer(*m_coloredRect.indexBuffer, *m_coloredRect.vertexBuffer);
-    }
-
-    void CanvasRenderer::DrawRect(const Bounds2f32& bounds, CanvasRendererTexture& texture)
-    {
-        m_commandBuffer->BindPipeline(*m_texturedRect.pipeline);
-        m_commandBuffer->BindDescriptorSet(*texture.descriptorSet);
-
-        m_commandBuffer->PushConstant(m_texturedRect.projectionLocation, m_projection);
-        m_commandBuffer->PushConstant(m_texturedRect.positionLocation, bounds.low);
-        m_commandBuffer->PushConstant(m_texturedRect.sizeLocation, bounds.high - bounds.low);
-        m_commandBuffer->PushConstant(m_texturedRect.uvPositionLocation, {0.0f, 0.0f});
-        m_commandBuffer->PushConstant(m_texturedRect.uvSizeLocation, { 1.0f, 1.0f });
-
-        m_commandBuffer->DrawVertexBuffer(*m_texturedRect.indexBuffer, *m_texturedRect.vertexBuffer);
-    }
-
-    void CanvasRenderer::DrawRect(const Bounds2f32& bounds, const Bounds2f32& textureCoords, CanvasRendererTexture& texture)
-    {
-        const auto uvPosition = textureCoords.low / Vector2f32{ texture.dimensions };
-        const auto uvSize = (textureCoords.high - textureCoords.low) / Vector2f32{ texture.dimensions };
-
-        m_commandBuffer->BindPipeline(*m_texturedRect.pipeline);
-        m_commandBuffer->BindDescriptorSet(*texture.descriptorSet);
-
-        m_commandBuffer->PushConstant(m_texturedRect.projectionLocation, m_projection);
-        m_commandBuffer->PushConstant(m_texturedRect.positionLocation, bounds.low);
-        m_commandBuffer->PushConstant(m_texturedRect.sizeLocation, bounds.high - bounds.low);
-        m_commandBuffer->PushConstant(m_texturedRect.uvPositionLocation, uvPosition);
-        m_commandBuffer->PushConstant(m_texturedRect.uvSizeLocation, uvSize);
-
-        m_commandBuffer->DrawVertexBuffer(*m_texturedRect.indexBuffer, *m_texturedRect.vertexBuffer);
-    }
-
-    void CanvasRenderer::DrawRect(const Bounds2f32& bounds, const Bounds2f32& textureCoords, CanvasRendererFramedTexture& framedtexture)
-    {
-        const auto uvSize = textureCoords.GetSize();
-
-        m_commandBuffer->BindPipeline(*m_texturedRect.pipeline);
-        m_commandBuffer->BindFramedDescriptorSet(*framedtexture.framedDescriptorSet);
-
-        m_commandBuffer->PushConstant(m_texturedRect.projectionLocation, m_projection);
-        m_commandBuffer->PushConstant(m_texturedRect.positionLocation, bounds.low);
-        m_commandBuffer->PushConstant(m_texturedRect.sizeLocation, bounds.high - bounds.low);
-        m_commandBuffer->PushConstant(m_texturedRect.uvPositionLocation, textureCoords.low);
-        m_commandBuffer->PushConstant(m_texturedRect.uvSizeLocation, uvSize);
-
-        m_commandBuffer->DrawVertexBuffer(*m_texturedRect.indexBuffer, *m_texturedRect.vertexBuffer);
-    }
-
     void CanvasRenderer::DrawFontSequence(const Vector2f32& position, CanvasRendererFontSequence& fontSequence)
     {
         m_commandBuffer->BindPipeline(*m_fontRenderData.pipeline);

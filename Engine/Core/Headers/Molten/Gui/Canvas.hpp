@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -88,8 +88,6 @@ namespace Molten::Gui
             Widget<TTheme>& widget,
             Mouse::Button button);
 
-        //void OverrideMouseEventsReset();
-
     private:
 
         /**
@@ -119,7 +117,6 @@ namespace Molten::Gui
 
         TTheme m_theme;
         typename LayerData<TTheme>::List m_layers;
-        //MultiRootLayer<TTheme>* m_overlayLayer;
 
         SignalDispatcher m_propertyChangeDispatcher;
 

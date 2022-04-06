@@ -29,7 +29,6 @@
 #include "Molten/Window/Window.hpp"
 #include "Molten/Renderer/Renderer.hpp"
 #include "Molten/Gui/Canvas.hpp"
-#include "Molten/Gui/Layers/FloatingWidgetLayer.hpp"
 #include "Editor/Gui/Themes/EditorTheme.hpp"
 #include "Molten/System/Semaphore.hpp"
 #include "Molten/System/Clock.hpp"
@@ -119,7 +118,6 @@ namespace Molten::Editor
         Gui::FontNameRepository m_fontNameRepository;
         Gui::CanvasPointer<Gui::EditorTheme> m_canvas;
         Gui::ProgressBar<Gui::EditorTheme>* m_loadingProgressBar;
-        //Gui::FloatingWidgetLayer<Gui::EditorTheme>* m_loadingLayer;
 
         std::array<BufferCapacityPolicy, 2> m_viewportCapacityPolicy;
         RenderPassUpdateDescriptor m_viewportRenderPassUpdateDesc;

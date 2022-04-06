@@ -27,7 +27,6 @@
 #define MOLTEN_CORE_GUI_WIDGETS_DOCKERWIDGET_HPP
 
 #include "Molten/Gui/Widget.hpp"
-#include "Molten/Gui/WidgetDescriptor.hpp"
 #include "Molten/Gui/WidgetEvent.hpp"
 #include "Molten/Gui/DraggableWidget.hpp"
 #include "Molten/Gui/Widgets/Overlays/DockerOverlayWidget.hpp"

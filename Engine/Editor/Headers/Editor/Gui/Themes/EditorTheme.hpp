@@ -27,7 +27,6 @@
 #define MOLTEN_EDITOR_GUI_THEME_EDITORTHEME_HPP
 
 #include "Molten/Gui/WidgetSkin.hpp"
-#include "Molten/Gui/WidgetData.hpp"
 #include "Molten/Gui/CanvasRenderer.hpp"
 #include "Molten/Gui/GuiHelpers.hpp"
 #include "Molten/Gui/Widgets/ButtonWidget.hpp"

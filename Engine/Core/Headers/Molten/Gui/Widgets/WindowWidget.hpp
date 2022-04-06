@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -27,7 +27,6 @@
 #define MOLTEN_CORE_GUI_WIDGETS_WINDOWWIDGET_HPP
 
 #include "Molten/Gui/Widget.hpp"
-#include "Molten/Gui/WidgetDescriptor.hpp"
 #include "Molten/Gui/WidgetEvent.hpp"
 #include "Molten/Gui/Widgets/LabelWidget.hpp"
 

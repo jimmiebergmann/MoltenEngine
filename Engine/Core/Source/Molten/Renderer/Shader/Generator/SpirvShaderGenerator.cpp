@@ -333,8 +333,7 @@ namespace Molten::Shader
     SpirvGenerator::GeneratorOutputPin::GeneratorOutputPin(const Visual::Pin& pin) :
         pin(pin),
         id(0),
-        storageClass(Spirv::StorageClass::Function)//,
-        //isVisited(false)
+        storageClass(Spirv::StorageClass::Function)
     {}
 
 
@@ -419,15 +418,6 @@ namespace Molten::Shader
 
 
     // Input structure implementations.
-    /*SpirvGenerator::InputStructure::Member::Member(
-        GeneratorOutputPinPointer outputPin,
-            DataTypePointer dataType,
-            DataTypePtrPointer dataTypePointer
-    ) :
-        outputPin(std::move(outputPin)),
-        dataType(std::move(dataType)),
-        dataTypePointer(std::move(dataTypePointer))
-    {}*/
     SpirvGenerator::InputStructure::Member::Member(const Visual::Pin* pin) :
         pin(pin),
         outputPin{},
@@ -1629,7 +1619,6 @@ namespace Molten::Shader
         for(size_t i = 0; i < descriptorSets.GetSetCount(); i++)
         {
             const auto* set = descriptorSets.GetSetBase(i);
-            //const auto setId = set->GetId();
 
             for(size_t j = 0; j < set->GetBindingCount(); j++)
             {
@@ -1639,8 +1628,6 @@ namespace Molten::Shader
                 {
                     continue;
                 }
-
-                //const auto bindingId = binding->GetId();
 
                 Spirv::Word index = 0;
                 Spirv::Word offset = 0;

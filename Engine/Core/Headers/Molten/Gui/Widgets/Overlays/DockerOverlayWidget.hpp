@@ -27,7 +27,6 @@
 #define MOLTEN_CORE_GUI_WIDGETS_OVERLAYS_DOCKEROVERLAYWIDGET_HPP
 
 #include "Molten/Gui/Widget.hpp"
-#include "Molten/Gui/WidgetDescriptor.hpp"
 #include "Molten/Utility/Template.hpp"
 
 namespace Molten::Gui

@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -36,10 +36,7 @@ namespace Molten::Gui
         m_mouseInputUpdate(&Canvas<TTheme>::UpdateNormalMouseInputs),
         m_overrideWidgetMouseEventWidget(nullptr),
         m_overrideWidgetMouseEventButton(Mouse::Button::Left)
-        //m_overlayLayer(nullptr)
     {
-        //auto normalLane = m_layers.template GetLane<typename LayerData<TTheme>::ListNormalLaneType>();
-        //m_overlayLayer = InternalCreateLayer<MultiRootLayer>(normalLane.end());
     }
 
     template<typename TTheme>

@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -149,12 +149,6 @@ namespace Molten::Gui
         void DrawRect(const AABB2f32& bounds, CanvasRendererTexture& texture);
         void DrawRect(const AABB2f32& bounds, const Bounds2f32& textureCoords, CanvasRendererTexture& texture);
         void DrawRect(const AABB2f32& bounds, const Bounds2f32& textureCoords, CanvasRendererFramedTexture& framedtexture);
-
-
-        void DrawRect(const Bounds2f32& bounds, const Vector4f32& color); // ??
-        void DrawRect(const Bounds2f32& bounds, CanvasRendererTexture& texture); // ??
-        void DrawRect(const Bounds2f32& bounds, const Bounds2f32& textureCoords, CanvasRendererTexture& texture); // ??
-        void DrawRect(const Bounds2f32& bounds, const Bounds2f32& textureCoords, CanvasRendererFramedTexture& framedtexture); // ??
 
         void DrawFontSequence(const Vector2f32& position, CanvasRendererFontSequence& fontSequence);
 
