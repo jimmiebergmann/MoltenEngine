@@ -11,11 +11,13 @@ jobs:
         build_type: [Debug, Release]
         include:
           - compiler: g++
-            c_compiler: gcc-11
-            cpp_compiler: g++-11
+            c_compiler: gcc
+            cpp_compiler: g++
+            compiler_packages: gcc-11 g++-11
           - compiler: clang
-            c_compiler: clang-11
-            cpp_compiler: clang++-11
+            c_compiler: clang
+            cpp_compiler: clang++
+            compiler_packages: clang-11
             
     env:
       CC: ${{matrix.c_compiler}}
@@ -27,7 +29,7 @@ jobs:
         run: |
           sudo add-apt-repository ppa:ubuntu-toolchain-r/test
           sudo apt update
-          sudo apt install ${{matrix.c_compiler}} ${{matrix.cpp_compiler}}
+          sudo apt install ${{matrix.compiler_packages}} lcov valgrind
       - name: Check versions
         run: |
           cmake --version
