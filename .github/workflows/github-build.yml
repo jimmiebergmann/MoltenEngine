@@ -1,0 +1,44 @@
+name: Build
+on: push
+
+jobs:
+
+  Linux:
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        compiler: [g++, clang]
+        build_type: [Debug, Release]
+        include:
+          - compiler: g++
+            c_compiler: gcc-11
+            cpp_compiler: g++-11
+          - compiler: clang
+            c_compiler: clang-11
+            cpp_compiler: clang++-11
+            
+    env:
+      CC: ${{matrix.c_compiler}}
+      CXX: ${{matrix.cpp_compiler}}
+      
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install packages
+        run: |
+          sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+          sudo apt update
+          sudo apt install ${{matrix.c_compiler}} ${{matrix.cpp_compiler}}
+      - name: Check versions
+        run: |
+          cmake --version
+          ${{matrix.c_compiler}} --version
+          ${{matrix.cpp_compiler}} --version
+          gcov --version
+          python --version
+      - name: Build
+        run: |
+          mkdir Build
+          cd Build
+          cmake -DMOLTEN_ENABLE_COVERAGE=ON -DMOLTEN_ENABLE_VULKAN=OFF -DCMAKE_BUILD_TYPE=${{matrix.build_type}} ..
+          cmake --build . --config ${{matrix.build_type}}
+          
