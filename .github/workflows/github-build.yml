@@ -55,7 +55,6 @@ jobs:
           cmake --build . --config ${{matrix.build_type}}
       - name: Test
         run: |
-          cd ../Bin
+          cd Bin
           valgrind --leak-check=full --track-origins=yes --error-exitcode=1 ./MoltenCoreTest${{matrix.output_name_postfix}}
-          cd ../Build
           
