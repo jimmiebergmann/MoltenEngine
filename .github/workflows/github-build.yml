@@ -31,9 +31,16 @@ jobs:
           submodules: recursive
       - name: Install packages
         run: |
+          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key 2>/dev/null | sudo apt-key add -
+          sudo add-apt-repository 'deb http://apt.llvm.org/focal llvm-toolchain-focal-11 main' -y
           sudo add-apt-repository ppa:ubuntu-toolchain-r/test
           sudo apt update
           sudo apt install ${{matrix.compiler_packages}} lcov valgrind
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 90
+          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 90
+          sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-11 90
+          sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-11 90
+          sudo update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-11 90  
       - name: Check versions
         run: |
           cmake --version
