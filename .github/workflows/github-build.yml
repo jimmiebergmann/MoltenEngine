@@ -18,6 +18,8 @@ jobs:
             c_compiler: clang
             cpp_compiler: clang++
             compiler_packages: clang-11
+          - build_type: Debug
+            output_name_postfix: Debug
             
     env:
       CC: ${{matrix.c_compiler}}
@@ -25,6 +27,8 @@ jobs:
       
     steps:
       - uses: actions/checkout@v3
+        with:
+          submodules: recursive
       - name: Install packages
         run: |
           sudo add-apt-repository ppa:ubuntu-toolchain-r/test
@@ -43,4 +47,9 @@ jobs:
           cd Build
           cmake -DMOLTEN_ENABLE_COVERAGE=ON -DMOLTEN_ENABLE_VULKAN=OFF -DCMAKE_BUILD_TYPE=${{matrix.build_type}} ..
           cmake --build . --config ${{matrix.build_type}}
+      - name: Test
+        run: |
+          cd ../Bin
+          valgrind --leak-check=full --track-origins=yes --error-exitcode=1 ./MoltenCoreTest${{matrix.output_name_postfix}}
+          cd ../Build
           
