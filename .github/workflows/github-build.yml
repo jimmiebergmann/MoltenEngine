@@ -58,5 +58,6 @@ jobs:
           cd Bin
           valgrind --leak-check=full --track-origins=yes --error-exitcode=1 ./MoltenCoreTest${{matrix.output_name_postfix}}
       - uses: codecov/codecov-action@v3
+        if: ${{ matrix.compiler == 'g++' && matrix.build_type == 'Debug' }}
         with:
           gcov: true
