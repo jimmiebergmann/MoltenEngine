@@ -336,7 +336,6 @@ namespace Molten
         NESTED_TEST_FUNCTION(ReadCompareFile("../CONTRIBUTING.md", 1000, 1000))
         NESTED_TEST_FUNCTION(ReadCompareFile("../LICENSE", 1000, 1000))
         NESTED_TEST_FUNCTION(ReadCompareFile("../.appveyor.yml", 1000, 1000))
-        NESTED_TEST_FUNCTION(ReadCompareFile("../.travis.yml", 1000, 1000))
         NESTED_TEST_FUNCTION(ReadCompareFile("../.codecov.yml", 1000, 1000))
     }
 
