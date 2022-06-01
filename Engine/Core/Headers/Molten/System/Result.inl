@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -27,11 +27,21 @@ namespace Molten
 {
 
     template<typename T, typename TError>
+    inline Result<T, TError> Result<T, TError>::CreateSuccess(const T& type)
+    {
+        return Result{ VariantType(std::in_place_index<0>, type) };
+    }
+    template<typename T, typename TError>
     inline Result<T, TError> Result<T, TError>::CreateSuccess(T&& type)
     {
         return Result{ VariantType(std::in_place_index<0>, std::move(type)) };
     }
 
+    template<typename T, typename TError>
+    inline Result<T, TError> Result<T, TError>::CreateError(const TError& error)
+    {
+        return Result{ VariantType(std::in_place_index<1>, error) };
+    }
     template<typename T, typename TError>
     inline Result<T, TError> Result<T, TError>::CreateError(TError&& error)
     {

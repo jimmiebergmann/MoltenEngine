@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -405,7 +405,7 @@ namespace Molten
 
         if ((m_context = wglCreateContextAttribsARB(deviceContext, 0, attributes)) == NULL)
         {
-            throw Exception("Failed to create OpenGL context version " + version.AsString());
+            throw Exception("Failed to create OpenGL context version " + ToString(version));
         }
 
         return true;

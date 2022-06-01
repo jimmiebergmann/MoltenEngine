@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -28,9 +28,29 @@
 
 #include <string>
 #include <string_view>
+#include <array>
 
 namespace Molten::StringUtility
 {
+    namespace Hex
+    {
+        static inline const std::array<char, 16> Lowercase = {
+            '0', '1', '2', '3', '4', '5', '6', '7',
+            '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'
+        };
+
+        static inline const std::array<char, 16> Uppercase = {
+            '0', '1', '2', '3', '4', '5', '6', '7',
+            '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'
+        };
+    }
+
+    template<size_t VSize>
+    std::array<char, VSize * 2> ToLowercaseHex(const std::array<uint8_t, VSize>& input);
+
+    template<size_t VSize>
+    std::array<char, VSize * 2> ToUppercaseHex(const std::array<uint8_t, VSize>& input);
+
 
     /** String view trim functions.*/
     /**@{*/

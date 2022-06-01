@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -26,6 +26,7 @@
 #ifndef MOLTEN_CORE_SYSTEM_RESULT_HPP
 #define MOLTEN_CORE_SYSTEM_RESULT_HPP
 
+#include "Molten/Types.hpp"
 #include <variant>
 #include <type_traits>
 
@@ -53,9 +54,11 @@ namespace Molten
         using ErrorType = TError;   ///< Error type of result.
 
         /* Creating a successful result. Access result value via Value(). */
+        [[nodiscard]] static Result CreateSuccess(const T& type);
         [[nodiscard]] static Result CreateSuccess(T&& type);
 
         /* Creating an error result. Access result value via Error(). */
+        [[nodiscard]] static Result CreateError(const TError& error);
         [[nodiscard]] static Result CreateError(TError&& error);
 
         /* Move constructor. */

@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -27,8 +27,11 @@
 #define MOLTEN_CORE_SYSTEM_VERSION_HPP
 
 #include "Molten/Types.hpp"
+#include "Molten/Utility/StringConvert.hpp"
+#include <charconv>
 #include <string_view>
 #include <string>
+#include <array>
 
 namespace Molten
 {
@@ -45,17 +48,8 @@ namespace Molten
         static const Version None;
 
         /** Constructor. */
-        Version(const uint32_t major = 0, const uint32_t minor = 0, const uint32_t patch = 0);
-
-        /** Get version as string.
-        *
-        * @param ignoreTrail Ignoring trailing zeros of version.
-        *                    Major version is always returned, even if being 0.
-        */
-        std::string AsString(const bool ignoreTrail = true) const;
-
-        /** Convert string to version of syntrax xxx[.yyy[.zzz]] */
-        [[nodiscard]] bool FromString(const std::string_view& version);
+        constexpr Version();
+        constexpr explicit Version(const uint32_t major, const uint32_t minor = 0, const uint32_t patch = 0);
 
         /** Operators. */
         /**@{*/
@@ -73,6 +67,27 @@ namespace Molten
 
     };
 
+
+    /** Convert Version to string.
+     *  Trailing zeros are ignored.
+     */
+    template<>
+    [[nodiscard]] std::string ToString(const Version& value);
+
+    /** Convert Version to string.
+    *
+    *   @param ignoreTrail Ignoring trailing zeros of version.
+    *       Major version is always returned, even if being 0.
+    */
+    [[nodiscard]] std::string ToString(const Version& value, const bool ignoreTrail);
+
+    /** Convert string to Version. */
+    template<>
+    [[nodiscard]] Result<Version, size_t> FromString(const std::string_view value);
+
+
 }
+
+#include "Molten/System/Version.inl"
 
 #endif

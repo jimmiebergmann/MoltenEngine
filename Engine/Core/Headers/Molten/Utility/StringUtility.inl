@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -25,6 +25,35 @@
 
 namespace Molten::StringUtility
 {
+
+    // To hex implementations.
+    template<size_t VSize>
+    std::array<char, VSize * 2> ToLowercaseHex(const std::array<uint8_t, VSize>& input)
+    {
+        auto result = std::array<char, VSize * 2>{};
+
+        for (size_t i = 0; i < VSize; i++)
+        {
+            result[i * 2] = Hex::Lowercase[static_cast<size_t>((input[i] >> 4) & 0x0F)];
+            result[(i * 2) + 1] = Hex::Lowercase[static_cast<size_t>(input[i] & 0x0F)];
+        }
+
+        return result;
+    }
+
+    template<size_t VSize>
+    std::array<char, VSize * 2> ToUppercaseHex(const std::array<uint8_t, VSize>& input)
+    {
+        auto result = std::array<char, VSize * 2>{};
+
+        for (size_t i = 0; i < VSize; i++)
+        {
+            result[i * 2] = Hex::Uppercase[static_cast<size_t>((input[i] >> 4) & 0x0F)];
+            result[(i * 2) + 1] = Hex::Uppercase[static_cast<size_t>(input[i] & 0x0F)];
+        }
+
+        return result;
+    }
 
     // Trim implementations.
     template<typename T, typename TTrimChars>

@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -507,7 +507,7 @@ namespace Molten
         m_instance.Destroy();
 
         m_renderTarget = nullptr;
-        m_version = { 0, 0, 0 };
+        m_version = {};
         m_logger = nullptr;
         m_requiredInstanceExtensions = {};
         m_requiredInstanceLayers = {};
@@ -2550,7 +2550,7 @@ namespace Molten
             m_requiredInstanceLayers,
             debugCallbackDesc); !result.IsSuccessful())
         {
-            Vulkan::Logger::WriteError(m_logger, result, "Failed to create instance(vulkan version " + vulkanVersion.AsString() + ")");
+            Vulkan::Logger::WriteError(m_logger, result, "Failed to create instance(vulkan version " + ToString(vulkanVersion) + ")");
             return false;
         }
 

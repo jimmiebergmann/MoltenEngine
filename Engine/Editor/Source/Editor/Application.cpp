@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -126,13 +126,13 @@ namespace Molten::Editor
 
         if (backendRendererApiVersionString.has_value())
         {
-            Version backendRendererVersion;
-            if(!backendRendererVersion.FromString(*backendRendererApiVersionString))
+            const auto backendRendererVersion = FromString<Version>(*backendRendererApiVersionString);
+            if(!backendRendererVersion.IsValid())
             {
                 m_logger->Write(Logger::Severity::Error, "Invalid cli parameter \"backend.renderer.api.version\" :" + *backendRendererApiVersionString);
                 return false;
             }
-            editorDescriptor.backendRendererApiVersion = std::make_optional<Version>(backendRendererVersion);
+            editorDescriptor.backendRendererApiVersion = std::make_optional<Version>(backendRendererVersion.Value());
         }
 
         return true;

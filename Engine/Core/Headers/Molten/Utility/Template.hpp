@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -87,6 +87,10 @@ namespace Molten
     /** Checks if currently held value of variant is of type T. */
     template<typename T, typename ... TVariantTypes>
     [[nodiscard]] constexpr bool VariantEqualsType(const std::variant<TVariantTypes...>& variant);
+
+    /** Checks if currently held value of variant is of same value and type T. */
+    template<typename T, typename ... TVariantTypes>
+    [[nodiscard]] constexpr bool VariantEqualsValue(const std::variant<TVariantTypes...>& variant, const T& value);
 
 }
 

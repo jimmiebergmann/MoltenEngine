@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -94,52 +94,54 @@ namespace Molten
 
     }
 
-    TEST(System, Version_AsString)
+    TEST(System, Version_ToString)
     {
         {
-            EXPECT_STREQ(Version().AsString().c_str(), "0");
-            EXPECT_STREQ(Version().AsString(false).c_str(), "0.0.0");          
+            EXPECT_STREQ(ToString(Version{}).c_str(), "0");
+            EXPECT_STREQ(ToString(Version{}, false).c_str(), "0.0.0");
 
-            EXPECT_STREQ(Version(1).AsString().c_str(), "1");
-            EXPECT_STREQ(Version(1).AsString(false).c_str(), "1.0.0");         
+            EXPECT_STREQ(ToString(Version{ 1 }).c_str(), "1");
+            EXPECT_STREQ(ToString(Version{ 1 }, false).c_str(), "1.0.0");
 
-            EXPECT_STREQ(Version(1, 1).AsString().c_str(), "1.1");
-            EXPECT_STREQ(Version(1, 1).AsString(false).c_str(), "1.1.0");           
+            EXPECT_STREQ(ToString(Version{ 1, 1 }).c_str(), "1.1");
+            EXPECT_STREQ(ToString(Version{ 1, 1 }, false).c_str(), "1.1.0");
 
-            EXPECT_STREQ(Version(1, 1, 1).AsString().c_str(), "1.1.1");
-            EXPECT_STREQ(Version(1, 1, 1).AsString(false).c_str(), "1.1.1");       
+            EXPECT_STREQ(ToString(Version{ 1, 1, 1 }).c_str(), "1.1.1");
+            EXPECT_STREQ(ToString(Version{ 1, 1, 1 }, false).c_str(), "1.1.1");
             
-            EXPECT_STREQ(Version(0, 12 ).AsString(true).c_str(), "0.12");
-            EXPECT_STREQ(Version(0, 12).AsString(false).c_str(), "0.12.0");
+            EXPECT_STREQ(ToString(Version{0, 12 }, true).c_str(), "0.12");
+            EXPECT_STREQ(ToString(Version{ 0, 12 }, false).c_str(), "0.12.0");
 
-            EXPECT_STREQ(Version(0, 0, 12).AsString(true).c_str(), "0.0.12");
-            EXPECT_STREQ(Version(0, 0, 12).AsString(false).c_str(), "0.0.12");
-            EXPECT_STREQ(Version(0, 45, 34).AsString(true).c_str(), "0.45.34");
-            EXPECT_STREQ(Version(0, 45, 34).AsString(false).c_str(), "0.45.34");
-            EXPECT_STREQ(Version(123, 456, 789).AsString(false).c_str(), "123.456.789");
-            EXPECT_STREQ(Version(123, 456, 789).AsString(true).c_str(), "123.456.789");
+            EXPECT_STREQ(ToString(Version{ 0, 0, 12 }, true).c_str(), "0.0.12");
+            EXPECT_STREQ(ToString(Version{ 0, 0, 12 }, false).c_str(), "0.0.12");
+
+            EXPECT_STREQ(ToString(Version{ 0, 45, 34 }, true).c_str(), "0.45.34");
+            EXPECT_STREQ(ToString(Version{ 0, 45, 34 }, false).c_str(), "0.45.34");
+            EXPECT_STREQ(ToString(Version{ 123, 456, 789 }, false).c_str(), "123.456.789");
+            EXPECT_STREQ(ToString(Version{ 123, 456, 789 }, true).c_str(), "123.456.789");
         }
     }
     TEST(System, Version_FromString)
     {
         {
-            Version version;
-            EXPECT_FALSE(version.FromString(""));
-            EXPECT_FALSE(version.FromString(" "));
-            EXPECT_FALSE(version.FromString("a"));
-            EXPECT_FALSE(version.FromString("1.a"));
-            EXPECT_FALSE(version.FromString("1.1.a"));
+            EXPECT_FALSE(FromString<Version>("").IsValid());
+            EXPECT_FALSE(FromString<Version>(" ").IsValid());
+            EXPECT_FALSE(FromString<Version>("a").IsValid());
+            EXPECT_FALSE(FromString<Version>("1.a").IsValid());
+            EXPECT_FALSE(FromString<Version>("1.1.a").IsValid());
         }
         {
-            Version version;
-            EXPECT_TRUE(version.FromString("1"));
-            EXPECT_EQ(version, Version(1, 0, 0));
+            const auto version1 = FromString<Version>("1");
+            ASSERT_TRUE(version1.IsValid());
+            EXPECT_EQ(version1.Value(), Version(1, 0, 0));
 
-            EXPECT_TRUE(version.FromString("2.3"));
-            EXPECT_EQ(version, Version(2, 3, 0));
+            const auto version2 = FromString<Version>("2.3");
+            ASSERT_TRUE(version2.IsValid());
+            EXPECT_EQ(version2.Value(), Version(2, 3, 0));
 
-            EXPECT_TRUE(version.FromString("4.5.6"));
-            EXPECT_EQ(version, Version(4, 5, 6));
+            const auto version3 = FromString<Version>("4.5.6");
+            ASSERT_TRUE(version3.IsValid());
+            EXPECT_EQ(version3.Value(), Version(4, 5, 6));
         }
         {     
             {
@@ -149,9 +151,9 @@ namespace Molten
 
                 const auto str = std::to_string(expectedVersion.Major);
 
-                Version version;
-                EXPECT_TRUE(version.FromString(str));
-                EXPECT_EQ(version, expectedVersion);
+                const auto version = FromString<Version>(str);
+                ASSERT_TRUE(version.IsValid());
+                EXPECT_EQ(version.Value(), expectedVersion);
             }
             { 
                 Version expectedVersion{
@@ -164,9 +166,9 @@ namespace Molten
                     + "." +
                     std::to_string(expectedVersion.Minor);
 
-                Version version;
-                EXPECT_TRUE(version.FromString(str));
-                EXPECT_EQ(version, expectedVersion);
+                const auto version = FromString<Version>(str);
+                ASSERT_TRUE(version.IsValid());
+                EXPECT_EQ(version.Value(), expectedVersion);
             }
             {
                 Version expectedVersion{
@@ -182,9 +184,9 @@ namespace Molten
                     + "." +
                     std::to_string(expectedVersion.Patch);
 
-                Version version;
-                EXPECT_TRUE(version.FromString(str));
-                EXPECT_EQ(version, expectedVersion);
+                const auto version = FromString<Version>(str);
+                ASSERT_TRUE(version.IsValid());
+                EXPECT_EQ(version.Value(), expectedVersion);
             }
         }
     }

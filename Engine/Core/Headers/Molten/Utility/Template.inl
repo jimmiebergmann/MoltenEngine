@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -75,6 +75,12 @@ namespace Molten
     constexpr bool VariantEqualsType(const std::variant<TVariantTypes...>& variant)
     {
         return Private::VariantGetIndex<T, TVariantTypes...>::value == variant.index();
+    }
+
+    template<typename T, typename ... TVariantTypes>
+    constexpr bool VariantEqualsValue(const std::variant<TVariantTypes...>& variant, const T& value)
+    {
+        return Private::VariantGetIndex<T, TVariantTypes...>::value == variant.index() && std::get<T>(variant) == value;
     }
 
 }

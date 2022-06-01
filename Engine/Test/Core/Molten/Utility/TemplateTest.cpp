@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -29,25 +29,42 @@
 
 namespace Molten
 {
-    TEST(Utility, Template_VariantIndexByType)
-    {
-        {
-            constexpr std::variant<int, float> var1(int{ 3 });
-            EXPECT_TRUE(VariantEqualsType<int>(var1));
-            EXPECT_FALSE(VariantEqualsType<float>(var1));
+    TEST(Utility, Template_VariantEqualsType)
+    { 
+        constexpr std::variant<int, float> var1(int{ 3 });
+        EXPECT_TRUE(VariantEqualsType<int>(var1));
+        EXPECT_FALSE(VariantEqualsType<float>(var1));
 
-            constexpr std::variant<int, float> var2(float{ 2.0f });
-            EXPECT_FALSE(VariantEqualsType<int>(var2));
-            EXPECT_TRUE(VariantEqualsType<float>(var2));
+        constexpr std::variant<int, float> var2(float{ 2.0f });
+        EXPECT_FALSE(VariantEqualsType<int>(var2));
+        EXPECT_TRUE(VariantEqualsType<float>(var2));
             
-            constexpr std::variant<float, int> var3(int{ 3 });
-            EXPECT_TRUE(VariantEqualsType<int>(var3));
-            EXPECT_FALSE(VariantEqualsType<float>(var3));
+        constexpr std::variant<float, int> var3(int{ 3 });
+        EXPECT_TRUE(VariantEqualsType<int>(var3));
+        EXPECT_FALSE(VariantEqualsType<float>(var3));
 
-            constexpr std::variant<float, int> var4(float{ 2.0f });
-            EXPECT_FALSE(VariantEqualsType<int>(var4));
-            EXPECT_TRUE(VariantEqualsType<float>(var4));
-        }
+        constexpr std::variant<float, int> var4(float{ 2.0f });
+        EXPECT_FALSE(VariantEqualsType<int>(var4));
+        EXPECT_TRUE(VariantEqualsType<float>(var4));   
+    }
+
+    TEST(Utility, Template_VariantEqualsValue)
+    {
+        constexpr std::variant<int, float> var1(int{ 3 });
+        EXPECT_TRUE(VariantEqualsValue(var1, int{ 3 }));
+        EXPECT_FALSE(VariantEqualsValue(var1, float{ 3.0f }));
+
+        constexpr std::variant<int, float> var2(float{ 2.0f });
+        EXPECT_FALSE(VariantEqualsValue(var2, int{ 2 }));
+        EXPECT_TRUE(VariantEqualsValue(var2, float{ 2.0f }));
+
+        constexpr std::variant<float, int> var3(int{ 3 });
+        EXPECT_TRUE(VariantEqualsValue(var3, int{ 3 }));
+        EXPECT_FALSE(VariantEqualsValue(var3, float{ 3.0f }));
+
+        constexpr std::variant<float, int> var4(float{ 2.0f });
+        EXPECT_FALSE(VariantEqualsValue(var4, int{ 2 }));
+        EXPECT_TRUE(VariantEqualsValue(var4, float{ 2.0f }));
     }
 
 }
