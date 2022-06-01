@@ -5,3 +5,6 @@
 [submodule "Engine/Vendor/ThirdParty/FreeType2"]
 	path = Engine/Vendor/ThirdParty/FreeType2
 	url = https://github.com/jimmiebergmann/FreeType2
+[submodule "Engine/Vendor/ThirdParty/rapidjson"]
+	path = Engine/Vendor/ThirdParty/rapidjson
+	url = https://github.com/jimmiebergmann/rapidjson
