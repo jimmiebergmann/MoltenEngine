@@ -46,23 +46,23 @@ namespace Molten
         std::string description;
     };
 
-    enum class ProjectFileErrorCodes
+    enum class ProjectFileErrorCode
     {
         InvalidFileVersion,
         InvalidEngineVersion,
         InvalidGlobalId
     };
 
-    enum class ProjectFileWarningCodes
+    enum class ProjectFileWarningCode
     {
         MissingFileVersion,
         MissingEngineVersion,
         MissingGlobalId
     };
 
-    using ProjectFileReadErrorResult = std::variant<ProjectFileErrorCodes, JsonParseError>;
+    using ProjectFileReadErrorResult = std::variant<ProjectFileErrorCode, JsonParseError>;
 
-    using ProjectFileReadResult = FileFormatResult<ProjectFile, ProjectFileReadErrorResult, ProjectFileWarningCodes>;
+    using ProjectFileReadResult = FileFormatResult<ProjectFile, ProjectFileReadErrorResult, ProjectFileWarningCode>;
 
     MOLTEN_API ProjectFileReadResult ReadProjectFile(std::istream& istream);
     MOLTEN_API ProjectFileReadResult ReadProjectFile(std::filesystem::path path);

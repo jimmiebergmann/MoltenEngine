@@ -49,28 +49,28 @@ namespace Molten
         // We could use a schema file to validate, but it is probably faster to just check the values manually...
         const auto& jsonDocument = jsonDocumentNonConst;
 
-        std::vector<ProjectFileWarningCodes> warnings;
+        std::vector<ProjectFileWarningCode> warnings;
 
         // File version.
-        auto getFileVersion = [&]() -> Result<Version, ProjectFileErrorCodes>
+        auto getFileVersion = [&]() -> Result<Version, ProjectFileErrorCode>
         {
-            using ResultType = Result<Version, ProjectFileErrorCodes>;
+            using ResultType = Result<Version, ProjectFileErrorCode>;
 
             if (!jsonDocument.HasMember("file_version"))
             {
-                warnings.push_back(ProjectFileWarningCodes::MissingFileVersion);
+                warnings.push_back(ProjectFileWarningCode::MissingFileVersion);
                 return ResultType::CreateSuccess(Version{});
             }
 
             const auto& jsonFileVersion = jsonDocument["file_version"];
             if (!jsonFileVersion.IsString())
             {
-                return ResultType::CreateError(ProjectFileErrorCodes::InvalidFileVersion);
+                return ResultType::CreateError(ProjectFileErrorCode::InvalidFileVersion);
             }
             const auto fileVersion = FromString<Version>(jsonFileVersion.GetString());
             if (!fileVersion.IsValid())
             {
-                return ResultType::CreateError(ProjectFileErrorCodes::InvalidFileVersion);
+                return ResultType::CreateError(ProjectFileErrorCode::InvalidFileVersion);
             }
 
             return ResultType::CreateSuccess(fileVersion.Value());
@@ -83,25 +83,25 @@ namespace Molten
         }
 
         // Engine version.
-        auto getEngineVersion = [&]() -> Result<Version, ProjectFileErrorCodes>
+        auto getEngineVersion = [&]() -> Result<Version, ProjectFileErrorCode>
         {
-            using ResultType = Result<Version, ProjectFileErrorCodes>;
+            using ResultType = Result<Version, ProjectFileErrorCode>;
 
             if (!jsonDocument.HasMember("engine_version"))
             {
-                warnings.push_back(ProjectFileWarningCodes::MissingEngineVersion);
+                warnings.push_back(ProjectFileWarningCode::MissingEngineVersion);
                 return ResultType::CreateSuccess(Version{});
             }
 
             const auto& jsonEngineVersion = jsonDocument["engine_version"];
             if (!jsonEngineVersion.IsString())
             {
-                return ResultType::CreateError(ProjectFileErrorCodes::InvalidEngineVersion);
+                return ResultType::CreateError(ProjectFileErrorCode::InvalidEngineVersion);
             }
             const auto engineVersion = FromString<Version>(jsonEngineVersion.GetString());
             if (!engineVersion.IsValid())
             {
-                return ResultType::CreateError(ProjectFileErrorCodes::InvalidEngineVersion);
+                return ResultType::CreateError(ProjectFileErrorCode::InvalidEngineVersion);
             }
 
             return ResultType::CreateSuccess(engineVersion.Value());
@@ -114,25 +114,25 @@ namespace Molten
         }
 
         // Global id.
-        auto getGlobalId = [&]() -> Result<Uuid, ProjectFileErrorCodes>
+        auto getGlobalId = [&]() -> Result<Uuid, ProjectFileErrorCode>
         {
-            using ResultType = Result<Uuid, ProjectFileErrorCodes>;
+            using ResultType = Result<Uuid, ProjectFileErrorCode>;
 
             if (!jsonDocument.HasMember("global_id"))
             {
-                warnings.push_back(ProjectFileWarningCodes::MissingGlobalId);
+                warnings.push_back(ProjectFileWarningCode::MissingGlobalId);
                 return ResultType::CreateSuccess(Uuid{});
             }
 
             const auto& jsonGlobalId = jsonDocument["global_id"];
             if (!jsonGlobalId.IsString())
             {
-                return ResultType::CreateError(ProjectFileErrorCodes::InvalidGlobalId);
+                return ResultType::CreateError(ProjectFileErrorCode::InvalidGlobalId);
             }
             const auto globalId = FromString<Uuid>(jsonGlobalId.GetString());
             if (!globalId.IsValid())
             {
-                return ResultType::CreateError(ProjectFileErrorCodes::InvalidGlobalId);
+                return ResultType::CreateError(ProjectFileErrorCode::InvalidGlobalId);
             }
 
             return ResultType::CreateSuccess(globalId.Value());

@@ -43,9 +43,9 @@ namespace Molten
             
             ASSERT_TRUE(projectFile.IsValid());
             ASSERT_EQ(projectFile.Value().warnings.size(), size_t{ 3 });
-            ASSERT_EQ(projectFile.Value().warnings.at(0), ProjectFileWarningCodes::MissingFileVersion);
-            ASSERT_EQ(projectFile.Value().warnings.at(1), ProjectFileWarningCodes::MissingEngineVersion);
-            ASSERT_EQ(projectFile.Value().warnings.at(2), ProjectFileWarningCodes::MissingGlobalId);
+            ASSERT_EQ(projectFile.Value().warnings.at(0), ProjectFileWarningCode::MissingFileVersion);
+            ASSERT_EQ(projectFile.Value().warnings.at(1), ProjectFileWarningCode::MissingEngineVersion);
+            ASSERT_EQ(projectFile.Value().warnings.at(2), ProjectFileWarningCode::MissingGlobalId);
         }
         {
             std::string content = R"(
@@ -106,7 +106,7 @@ namespace Molten
 
             ASSERT_TRUE(projectFile.IsValid());
             ASSERT_EQ(projectFile.Value().warnings.size(), size_t{ 1 });
-            ASSERT_EQ(projectFile.Value().warnings.front(), ProjectFileWarningCodes::MissingFileVersion);
+            ASSERT_EQ(projectFile.Value().warnings.front(), ProjectFileWarningCode::MissingFileVersion);
         }
         {
             std::string content = R"(
@@ -122,7 +122,7 @@ namespace Molten
             auto projectFile = ReadProjectFile(stream);
             ASSERT_FALSE(projectFile.IsValid());
 
-            ASSERT_TRUE(VariantEqualsValue<ProjectFileErrorCodes>(projectFile.Error(), ProjectFileErrorCodes::InvalidFileVersion));
+            ASSERT_TRUE(VariantEqualsValue<ProjectFileErrorCode>(projectFile.Error(), ProjectFileErrorCode::InvalidFileVersion));
         }
     }
 
@@ -142,7 +142,7 @@ namespace Molten
 
             ASSERT_TRUE(projectFile.IsValid());
             ASSERT_EQ(projectFile.Value().warnings.size(), size_t{ 1 });
-            ASSERT_EQ(projectFile.Value().warnings.front(), ProjectFileWarningCodes::MissingEngineVersion);
+            ASSERT_EQ(projectFile.Value().warnings.front(), ProjectFileWarningCode::MissingEngineVersion);
         }
         {
             std::string content = R"(
@@ -158,7 +158,7 @@ namespace Molten
             auto projectFile = ReadProjectFile(stream);
             ASSERT_FALSE(projectFile.IsValid());
 
-            ASSERT_TRUE(VariantEqualsValue<ProjectFileErrorCodes>(projectFile.Error(), ProjectFileErrorCodes::InvalidEngineVersion));
+            ASSERT_TRUE(VariantEqualsValue<ProjectFileErrorCode>(projectFile.Error(), ProjectFileErrorCode::InvalidEngineVersion));
         }
     }
 
@@ -178,7 +178,7 @@ namespace Molten
             
             ASSERT_TRUE(projectFile.IsValid());
             ASSERT_EQ(projectFile.Value().warnings.size(), size_t{ 1 });
-            ASSERT_EQ(projectFile.Value().warnings.front(), ProjectFileWarningCodes::MissingGlobalId);
+            ASSERT_EQ(projectFile.Value().warnings.front(), ProjectFileWarningCode::MissingGlobalId);
 
         }
         {
@@ -195,7 +195,7 @@ namespace Molten
             auto projectFile = ReadProjectFile(stream);
             ASSERT_FALSE(projectFile.IsValid());
 
-            ASSERT_TRUE(VariantEqualsValue<ProjectFileErrorCodes>(projectFile.Error(), ProjectFileErrorCodes::InvalidGlobalId));
+            ASSERT_TRUE(VariantEqualsValue<ProjectFileErrorCode>(projectFile.Error(), ProjectFileErrorCode::InvalidGlobalId));
         }
     }
 
