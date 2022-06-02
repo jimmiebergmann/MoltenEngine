@@ -56,7 +56,7 @@ namespace Molten
     bool Version::operator < (const Version& version) const
     {
         return
-            Major < version.Major ||
+            (Major < version.Major) ||
             (Major == version.Major && Minor < version.Minor) ||
             (Major == version.Major && Minor == version.Minor && Patch < version.Patch);
     }
@@ -69,7 +69,7 @@ namespace Molten
     bool Version::operator > (const Version& version) const
     {
         return
-            Major > version.Major ||
+            (Major > version.Major) ||
             (Major == version.Major && Minor > version.Minor) ||
             (Major == version.Major && Minor == version.Minor && Patch > version.Patch);
     }

@@ -33,8 +33,8 @@ namespace Molten
 			std::numeric_limits<uint64_t>::min(),
 			std::numeric_limits<uint64_t>::max()); 
 
-		const uint64_t low = static_cast<uint64_t>(randomDistribution(randomEngine) & 0xFF0FFFFFFFFFFFFFUL | 0x0040000000000000UL);
-		const uint64_t high = static_cast<uint64_t>(randomDistribution(randomEngine) & 0xFFFFFFFFFFFFFF3FUL | 0x0000000000000080UL);
+		const uint64_t low = static_cast<uint64_t>((randomDistribution(randomEngine) & 0xFF0FFFFFFFFFFFFFUL) | 0x0040000000000000UL);
+		const uint64_t high = static_cast<uint64_t>((randomDistribution(randomEngine) & 0xFFFFFFFFFFFFFF3FUL) | 0x0000000000000080UL);
 
 		return { low, high };
 	}
