@@ -24,13 +24,13 @@
 */
 
 #include "Molten/FileFormat/Project/ProjectFile.hpp"
+#include "Molten/FileFormat/RapidJsonFormatResult.hpp"
 #include "ThirdParty/rapidjson/include/rapidjson/document.h"
 #include "ThirdParty/rapidjson/include/rapidjson/istreamwrapper.h"
 #include "ThirdParty/rapidjson/include/rapidjson/schema.h"
 #include <array>
 #include <string>
 #include <fstream>
-
 
 namespace Molten
 {
@@ -43,7 +43,7 @@ namespace Molten
         rapidjson::ParseResult parseResult = jsonDocumentNonConst.ParseStream(fileWrapper);
         if (parseResult.IsError())
         {
-            return ProjectFileReadResult::CreateError(JsonParseError{ parseResult.Offset(), parseResult.Code() });
+            return ProjectFileReadResult::CreateError(ConvertJsonErrorCode(parseResult.Offset(), parseResult.Code()));
         }
 
         // We could use a schema file to validate, but it is probably faster to just check the values manually...

@@ -23,45 +23,20 @@
 *
 */
 
-#ifndef MOLTEN_CORE_FILEFORMAT_JSONFORMATRESULT_HPP
-#define MOLTEN_CORE_FILEFORMAT_JSONFORMATRESULT_HPP
+// NOTE: Do not include this file in a header file, only in source files, due to macro leakages, etc...
 
-#include "Molten/Types.hpp"
+#ifndef MOLTEN_CORE_FILEFORMAT_RAPIDJSONFORMATRESULT_HPP
+#define MOLTEN_CORE_FILEFORMAT_RAPIDJSONFORMATRESULT_HPP
+
+#include "Molten/FileFormat/JsonFormatResult.hpp"
+#include "ThirdParty/rapidjson/include/rapidjson/error/error.h"
 
 namespace Molten
 {
 
-    enum class JsonParseErrorCode
-    {
-        None,
-        DocumentEmpty,
-        DocumentRootNotSingular,
-        ValueInvalid,
-        ObjectMissName,
-        ObjectMissColon,
-        ObjectMissCommaOrCurlyBracket,
-        ArrayMissCommaOrSquareBracket,
-        StringUnicodeEscapeInvalidHex,
-        StringUnicodeSurrogateInvalid,
-        StringEscapeInvalid,
-        StringMissQuotationMark,
-        StringInvalidEncoding,
-        NumberTooBig,
-        NumberMissFraction,
-        NumberMissExponent,
-        Termination,
-        UnspecificSyntaxError
-    };
-
-    struct MOLTEN_API JsonParseError
-    {
-        JsonParseError(
-            const size_t position,
-            const JsonParseErrorCode errorCode);
-
-        size_t position;
-        JsonParseErrorCode errorCode;
-    };
+    [[nodiscard]] JsonParseError MOLTEN_API ConvertJsonErrorCode(
+        const size_t position,
+        const rapidjson::ParseErrorCode parseErrorCode);
 
 }
 

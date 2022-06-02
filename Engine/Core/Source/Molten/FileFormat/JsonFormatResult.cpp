@@ -24,37 +24,10 @@
 */
 
 #include "Molten/FileFormat/JsonFormatResult.hpp"
-#include "ThirdParty/rapidjson/include/rapidjson/error/error.h"
 
 namespace Molten
 {
-    static JsonParseErrorCode CreateRapidJsonErrorCode(const rapidjson::ParseErrorCode& rapidJsonErrorCode)
-    {
-        switch (rapidJsonErrorCode)
-        {
-            case rapidjson::kParseErrorNone: return JsonParseErrorCode::None;
-            case rapidjson::kParseErrorDocumentEmpty: return JsonParseErrorCode::DocumentEmpty;
-            case rapidjson::kParseErrorDocumentRootNotSingular: return JsonParseErrorCode::DocumentRootNotSingular;
-            case rapidjson::kParseErrorValueInvalid: return JsonParseErrorCode::ValueInvalid;
-            case rapidjson::kParseErrorObjectMissName: return JsonParseErrorCode::ObjectMissName;
-            case rapidjson::kParseErrorObjectMissColon: return JsonParseErrorCode::ObjectMissColon;
-            case rapidjson::kParseErrorObjectMissCommaOrCurlyBracket: return JsonParseErrorCode::ObjectMissCommaOrCurlyBracket;
-            case rapidjson::kParseErrorArrayMissCommaOrSquareBracket: return JsonParseErrorCode::ArrayMissCommaOrSquareBracket;
-            case rapidjson::kParseErrorStringUnicodeEscapeInvalidHex: return JsonParseErrorCode::StringUnicodeEscapeInvalidHex;
-            case rapidjson::kParseErrorStringUnicodeSurrogateInvalid: return JsonParseErrorCode::StringUnicodeSurrogateInvalid;
-            case rapidjson::kParseErrorStringEscapeInvalid: return JsonParseErrorCode::StringEscapeInvalid;
-            case rapidjson::kParseErrorStringMissQuotationMark: return JsonParseErrorCode::StringMissQuotationMark;
-            case rapidjson::kParseErrorStringInvalidEncoding: return JsonParseErrorCode::StringInvalidEncoding;
-            case rapidjson::kParseErrorNumberTooBig: return JsonParseErrorCode::NumberTooBig;
-            case rapidjson::kParseErrorNumberMissFraction: return JsonParseErrorCode::NumberMissFraction;
-            case rapidjson::kParseErrorNumberMissExponent: return JsonParseErrorCode::NumberMissExponent;
-            case rapidjson::kParseErrorTermination: return JsonParseErrorCode::Termination;
-            case rapidjson::kParseErrorUnspecificSyntaxError: return JsonParseErrorCode::UnspecificSyntaxError;
-        }
-
-        return JsonParseErrorCode::None;
-    }
-
+    
     JsonParseError::JsonParseError(
         const size_t position,
         const JsonParseErrorCode errorCode
@@ -63,11 +36,4 @@ namespace Molten
         errorCode(errorCode)
     {}
 
-    JsonParseError::JsonParseError(
-        const size_t position,
-        const rapidjson::ParseErrorCode& rapidJsonErrorCode
-    ) :
-        position(position),
-        errorCode(CreateRapidJsonErrorCode(rapidJsonErrorCode))
-    {}
 }
