@@ -69,6 +69,8 @@ namespace Molten
             EXPECT_LT(Version(1), Version(2));
             EXPECT_LT(Version(1), Version(1, 1));
             EXPECT_LT(Version(1), Version(1, 0, 1));
+
+            EXPECT_FALSE(Version(2, 1, 0) < Version(1, 2, 3));
         }
         {
             EXPECT_LE(Version(1), Version(1));
@@ -82,6 +84,8 @@ namespace Molten
             EXPECT_GT(Version(2), Version(1));
             EXPECT_GT(Version(1, 1), Version(1));
             EXPECT_GT(Version(1, 0, 1), Version(1));
+
+            EXPECT_FALSE(Version(1, 2, 3) > Version(2, 1, 0));
         }
         {
             EXPECT_GE(Version(1), Version(1));

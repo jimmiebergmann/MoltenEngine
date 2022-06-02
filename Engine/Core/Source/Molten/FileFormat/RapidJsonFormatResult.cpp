@@ -31,7 +31,7 @@
 namespace Molten
 {
 
-    static JsonParseErrorCode ConvertJsonErrorCode(const rapidjson::ParseErrorCode rapidJsonErrorCode)
+    static JsonParseErrorCode CreateRapidJsonErrorCode(const rapidjson::ParseErrorCode rapidJsonErrorCode)
     {
         switch (rapidJsonErrorCode)
         {
@@ -58,7 +58,7 @@ namespace Molten
         return JsonParseErrorCode::None;
     }
 
-    JsonParseError CreateRapidJsonParseError(
+    JsonParseError CreateJsonErrorCode(
         const size_t position,
         const rapidjson::ParseErrorCode parseErrorCode)
     {

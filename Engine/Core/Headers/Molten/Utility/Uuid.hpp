@@ -29,6 +29,7 @@
 #include "Molten/System/Result.hpp"
 #include "Molten/Utility/StringConvert.hpp"
 #include "Molten/Utility/StringUtility.hpp"
+#include <limits>
 #include <array>
 #include <string>
 

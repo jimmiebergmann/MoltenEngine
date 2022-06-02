@@ -43,7 +43,7 @@ namespace Molten
         rapidjson::ParseResult parseResult = jsonDocumentNonConst.ParseStream(fileWrapper);
         if (parseResult.IsError())
         {
-            return ProjectFileReadResult::CreateError(ConvertJsonErrorCode(parseResult.Offset(), parseResult.Code()));
+            return ProjectFileReadResult::CreateError(CreateJsonErrorCode(parseResult.Offset(), parseResult.Code()));
         }
 
         // We could use a schema file to validate, but it is probably faster to just check the values manually...

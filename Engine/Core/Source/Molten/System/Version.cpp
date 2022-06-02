@@ -31,16 +31,16 @@ namespace Molten
     // Version implementations.
     const Version Version::None = Version(0, 0, 0);
 
-    constexpr Version::Version(const uint32_t major, const uint32_t minor, const uint32_t patch) :
-        Major(major),
-        Minor(minor),
-        Patch(patch)
-    { }
-
-    constexpr Version::Version() :
+    Version::Version() :
         Major(0),
         Minor(0),
         Patch(0)
+    { }
+
+    Version::Version(const uint32_t major, const uint32_t minor, const uint32_t patch) :
+        Major(major),
+        Minor(minor),
+        Patch(patch)
     { }
 
     bool Version::operator == (const Version& version) const
@@ -55,15 +55,10 @@ namespace Molten
 
     bool Version::operator < (const Version& version) const
     {
-        if (Major < version.Major)
-        {
-            return true;
-        }
-        if (Minor < version.Minor)
-        {
-            return true;
-        }
-        return Patch < version.Patch;
+        return
+            Major < version.Major ||
+            (Major == version.Major && Minor < version.Minor) ||
+            (Major == version.Major && Minor == version.Minor && Patch < version.Patch);
     }
 
     bool Version::operator <= (const Version& version) const
@@ -73,15 +68,10 @@ namespace Molten
 
     bool Version::operator > (const Version& version) const
     {
-        if (Major > version.Major)
-        {
-            return true;
-        }
-        if (Minor > version.Minor)
-        {
-            return true;
-        }
-        return Patch > version.Patch;
+        return
+            Major > version.Major ||
+            (Major == version.Major && Minor > version.Minor) ||
+            (Major == version.Major && Minor == version.Minor && Patch > version.Patch);
     }
 
     bool Version::operator >= (const Version& version) const

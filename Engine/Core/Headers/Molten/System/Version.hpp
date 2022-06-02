@@ -36,9 +36,7 @@
 namespace Molten
 {
 
-    /**
-    * @brief Version class.
-    */
+    /** Semantic versioning class. */
     class MOLTEN_API Version
     {
 
@@ -48,8 +46,8 @@ namespace Molten
         static const Version None;
 
         /** Constructor. */
-        constexpr Version();
-        constexpr explicit Version(const uint32_t major, const uint32_t minor = 0, const uint32_t patch = 0);
+        Version();
+        explicit Version(const uint32_t major, const uint32_t minor = 0, const uint32_t patch = 0);
 
         /** Operators. */
         /**@{*/
@@ -75,10 +73,10 @@ namespace Molten
     [[nodiscard]] std::string ToString(const Version& value);
 
     /** Convert Version to string.
-    *
-    *   @param ignoreTrail Ignoring trailing zeros of version.
-    *       Major version is always returned, even if being 0.
-    */
+     *
+     *   @param ignoreTrail Ignoring trailing zeros of version.
+     *       Major version is always returned, even if being 0.
+     */
     [[nodiscard]] std::string ToString(const Version& value, const bool ignoreTrail);
 
     /** Convert string to Version. */
