@@ -1,3 +1,3 @@
-Engine/Core/Headers/Molten/Renderer/Khronos/khrplatform.h linguist-vendored
-Engine/Core/Headers/Molten/Renderer/OpenGL/glext.h linguist-vendored
-Engine/Core/Headers/Molten/Renderer/OpenGL/wglext.h linguist-vendored
+Engine/Graphics/Headers/Molten/Graphics/Khronos/khrplatform.h linguist-vendored
+Engine/Graphics/Headers/Molten/Graphics/OpenGL/glext.h linguist-vendored
+Engine/Graphics/Headers/Molten/Graphics/OpenGL/wglext.h linguist-vendored

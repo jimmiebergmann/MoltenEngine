@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,10 +23,10 @@
 *
 */
 
-#ifndef MOLTEN_CORE_WINDOW_WINDOW_HPP
-#define MOLTEN_CORE_WINDOW_WINDOW_HPP
+#ifndef MOLTEN_GRAPHICS_WINDOW_WINDOW_HPP
+#define MOLTEN_GRAPHICS_WINDOW_WINDOW_HPP
 
-#include "Molten/Renderer/RenderTarget.hpp"
+#include "Molten/Graphics/RenderTarget.hpp"
 #include "Molten/System/Signal.hpp"
 #include "Molten/System/UserInput.hpp"
 #include "Molten/Math/Vector.hpp"
@@ -43,7 +43,7 @@ namespace Molten
 
 
     /** Window creation descriptor. */
-    struct MOLTEN_API WindowDescriptor
+    struct MOLTEN_GRAPHICS_API WindowDescriptor
     {
         WindowDescriptor();
 
@@ -55,7 +55,7 @@ namespace Molten
 
 
     /** Base class of application windows. */
-    class MOLTEN_API Window : public RenderTarget
+    class MOLTEN_GRAPHICS_API Window : public RenderTarget
     {
 
     public:
@@ -240,7 +240,7 @@ namespace Molten
     };
 
     /**  Platform independent window class. */
-    class MOLTEN_API PlatformWindow
+    class MOLTEN_GRAPHICS_API PlatformWindow
     {
 
     public:

@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,14 +23,14 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANPHYSICALDEVICE_HPP
-#define MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANPHYSICALDEVICE_HPP
+#ifndef MOLTEN_GRAPHICS_VULKAN_UTILITY_VULKANPHYSICALDEVICE_HPP
+#define MOLTEN_GRAPHICS_VULKAN_UTILITY_VULKANPHYSICALDEVICE_HPP
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 
-#include "Molten/Renderer/Vulkan/Utility/VulkanResult.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanPhysicalDeviceCapabilities.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanDeviceQueues.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanResult.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanPhysicalDeviceCapabilities.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanDeviceQueues.hpp"
 #include <vector>
 #include <functional>
 
@@ -43,7 +43,7 @@ namespace Molten::Vulkan
     class Surface;
 
    /** Vulkan physical device.*/
-   class MOLTEN_API PhysicalDevice
+   class MOLTEN_GRAPHICS_API PhysicalDevice
    {
 
    public:
@@ -91,7 +91,7 @@ namespace Molten::Vulkan
    /** Fetch and create physical devices from vulkan instance.
     * Provide filters to ignore certain physical devices.
     */
-   MOLTEN_API Result<> FetchAndCreatePhysicalDevices(
+   MOLTEN_GRAPHICS_API Result<> FetchAndCreatePhysicalDevices(
        PhysicalDevices& physicalDevices,
        Instance& instance,
        Surface& surface,
@@ -106,7 +106,7 @@ namespace Molten::Vulkan
     *
     * @return true if any device with positive score is found, else false.
     */
-   MOLTEN_API bool ScorePhysicalDevices(
+   MOLTEN_GRAPHICS_API bool ScorePhysicalDevices(
        PhysicalDevice& winningPhysicalDevice,
        const PhysicalDevices& physicalDevices,
        const ScoringCallback& scoringCallback);

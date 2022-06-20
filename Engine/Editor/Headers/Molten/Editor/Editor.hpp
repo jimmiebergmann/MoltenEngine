@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -26,10 +26,10 @@
 #ifndef MOLTEN_EDITOR_EDITOR_HPP
 #define MOLTEN_EDITOR_EDITOR_HPP
 
-#include "Molten/Window/Window.hpp"
-#include "Molten/Renderer/Renderer.hpp"
-#include "Molten/Gui/Canvas.hpp"
-#include "Editor/Gui/Themes/EditorTheme.hpp"
+#include "Molten/Editor/Gui/Themes/EditorTheme.hpp"
+#include "Molten/Graphics/Window/Window.hpp"
+#include "Molten/Graphics/Renderer.hpp"
+#include "Molten/Graphics/Gui/Canvas.hpp"
 #include "Molten/System/Semaphore.hpp"
 #include "Molten/System/Clock.hpp"
 #include "Molten/Utility/FpsTracker.hpp"

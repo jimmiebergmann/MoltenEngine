@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -24,9 +24,9 @@
 */
 
 #include "Test.hpp"
-#include "Molten/Renderer/Shader/Visual/VisualShaderScript.hpp"
-#include "Molten/Renderer/Shader/Visual/VisualShaderNode.hpp"
-#include "Molten/Renderer/Shader/Visual/VisualShaderPin.hpp"
+#include "Molten/Shader/Visual/VisualShaderScript.hpp"
+#include "Molten/Shader/Visual/VisualShaderNode.hpp"
+#include "Molten/Shader/Visual/VisualShaderPin.hpp"
 
 namespace Molten::Shader::Visual
 {

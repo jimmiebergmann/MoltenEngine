@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,24 +23,24 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_OPENGL_OPENGLHEADERS_HPP
-#define MOLTEN_CORE_RENDERER_OPENGL_OPENGLHEADERS_HPP
+#ifndef MOLTEN_GRAPHICS_OPENGL_OPENGLHEADERS_HPP
+#define MOLTEN_GRAPHICS_OPENGL_OPENGLHEADERS_HPP
 
-#include "Molten/Core.hpp"
+#include "Molten/Graphics/Build.hpp"
 
 #if defined(MOLTEN_ENABLE_OPENGL)
 
 #if MOLTEN_PLATFORM == MOLTEN_PLATFORM_WINDOWS
     #include "Molten/Platform/Win32headers.hpp"
     #include <GL/gl.h>
-    #include "Molten/Renderer/OpenGL/wglext.h"
-    #include "Molten/Renderer/OpenGL/glext.h"
+    #include "Molten/Graphics/OpenGL/wglext.h"
+    #include "Molten/Graphics/OpenGL/glext.h"
 #elif MOLTEN_PLATFORM == MOLTEN_PLATFORM_LINUX
     #include "Molten/Platform/X11Headers.hpp"
     #include <GL/gl.h>
 #define Bool bool
 	#include <GL/glx.h>
-    #include "Molten/Renderer/OpenGL/glext.h"
+    #include "Molten/Graphics/OpenGL/glext.h"
 #endif
 
 #endif

@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,8 +23,8 @@
 *
 */
 
-#ifndef MOLTEN_CORE_GUI_WIDGETEVENTTRACKER_HPP
-#define MOLTEN_CORE_GUI_WIDGETEVENTTRACKER_HPP
+#ifndef MOLTEN_GRAPHICS_GUI_WIDGETEVENTTRACKER_HPP
+#define MOLTEN_GRAPHICS_GUI_WIDGETEVENTTRACKER_HPP
 
 #include <vector>
 
@@ -77,6 +77,6 @@ namespace Molten::Gui
 
 }
 
-#include "Molten/Gui/WidgetEventTracker.inl"
+#include "Molten/Graphics/Gui/WidgetEventTracker.inl"
 
 #endif

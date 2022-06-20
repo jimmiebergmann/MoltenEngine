@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,11 +23,11 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_SHADER_VISUAL_VISUALSHADERDESCRIPTORSET_HPP
-#define MOLTEN_CORE_RENDERER_SHADER_VISUAL_VISUALSHADERDESCRIPTORSET_HPP
+#ifndef MOLTEN_CORE_SHADER_VISUAL_VISUALSHADERDESCRIPTORSET_HPP
+#define MOLTEN_CORE_SHADER_VISUAL_VISUALSHADERDESCRIPTORSET_HPP
 
-#include "Molten/Renderer/Shader/Visual/VisualShaderDescriptorBinding.hpp"
-#include "Molten/Renderer/Shader/Visual/VisualShaderUniformBuffer.hpp"
+#include "Molten/Shader/Visual/VisualShaderDescriptorBinding.hpp"
+#include "Molten/Shader/Visual/VisualShaderUniformBuffer.hpp"
 #include <set>
 #include <vector>
 
@@ -273,6 +273,6 @@ namespace Molten::Shader::Visual
 
 }
 
-#include "Molten/Renderer/Shader/Visual/VisualShaderDescriptorSet.inl"
+#include "Molten/Shader/Visual/VisualShaderDescriptorSet.inl"
 
 #endif

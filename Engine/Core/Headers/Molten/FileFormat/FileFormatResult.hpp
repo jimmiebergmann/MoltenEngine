@@ -27,6 +27,7 @@
 #define MOLTEN_CORE_FILEFORMAT_FILEFORMATRESULT_HPP
 
 #include "Molten/System/Result.hpp"
+#include <vector>
 
 namespace Molten
 {

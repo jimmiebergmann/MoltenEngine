@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -24,18 +24,18 @@
 */
 
 
-#include "Molten/Renderer/Vulkan/VulkanRenderPass.hpp"
+#include "Molten/Graphics/Vulkan/VulkanRenderPass.hpp"
 #if defined(MOLTEN_ENABLE_VULKAN)
 
-#include "Molten/Renderer/Vulkan/Utility/VulkanResourceDestroyer.hpp"
-#include "Molten/Renderer/Vulkan/VulkanDescriptorSet.hpp"
-#include "Molten/Renderer/Vulkan/VulkanIndexBuffer.hpp"
-#include "Molten/Renderer/Vulkan/VulkanPipeline.hpp"
-#include "Molten/Renderer/Vulkan/VulkanSampler.hpp"
-#include "Molten/Renderer/Vulkan/VulkanShaderProgram.hpp"
-#include "Molten/Renderer/Vulkan/VulkanTexture.hpp"
-#include "Molten/Renderer/Vulkan/VulkanUniformBuffer.hpp"
-#include "Molten/Renderer/Vulkan/VulkanVertexBuffer.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanResourceDestroyer.hpp"
+#include "Molten/Graphics/Vulkan/VulkanDescriptorSet.hpp"
+#include "Molten/Graphics/Vulkan/VulkanIndexBuffer.hpp"
+#include "Molten/Graphics/Vulkan/VulkanPipeline.hpp"
+#include "Molten/Graphics/Vulkan/VulkanSampler.hpp"
+#include "Molten/Graphics/Vulkan/VulkanShaderProgram.hpp"
+#include "Molten/Graphics/Vulkan/VulkanTexture.hpp"
+#include "Molten/Graphics/Vulkan/VulkanUniformBuffer.hpp"
+#include "Molten/Graphics/Vulkan/VulkanVertexBuffer.hpp"
 #include <limits>
 
 namespace Molten::Vulkan

@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -25,8 +25,8 @@
 
 #include "Test.hpp"
 #include "Molten/Logger.hpp"
-#include "Molten/Renderer/Shader/Generator/SpirvShaderGenerator.hpp"
-#include "Molten/Renderer/Shader/Visual/VisualShaderScript.hpp"
+#include "Molten/Shader/Generator/SpirvShaderGenerator.hpp"
+#include "Molten/Shader/Visual/VisualShaderScript.hpp"
 #include <fstream>
 
 namespace Molten::Shader

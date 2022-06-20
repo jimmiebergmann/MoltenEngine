@@ -23,7 +23,7 @@
 *
 */
 
-#include "Molten/Renderer/Shader/Visual/VisualShaderFunction.hpp"
+#include "Molten/Shader/Visual/VisualShaderFunction.hpp"
 
 namespace Molten::Shader::Visual
 {

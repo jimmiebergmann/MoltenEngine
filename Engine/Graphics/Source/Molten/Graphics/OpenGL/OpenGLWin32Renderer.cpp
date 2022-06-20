@@ -24,14 +24,14 @@
 */
 
 
-#include "Molten/Renderer/OpenGL/OpenGLWin32Renderer.hpp"
+#include "Molten/Graphics/OpenGL/OpenGLWin32Renderer.hpp"
 
 #if defined(MOLTEN_ENABLE_OPENGL)
 #if MOLTEN_PLATFORM == MOLTEN_PLATFORM_WINDOWS
 
-#include "Molten/Renderer/OpenGL/OpengGLFunctions.hpp"
-#include "Molten/Renderer/PushConstant.hpp"
-#include "Molten/Window/Window.hpp"
+#include "Molten/Graphics/OpenGL/OpengGLFunctions.hpp"
+#include "Molten/Graphics/Window/Window.hpp"
+#include "Molten/Shader/PushConstant.hpp"
 #include "Molten/System/Exception.hpp"
 #include <array>
 

@@ -1,7 +1,7 @@
 ///*
 //* MIT License
 //*
-//* Copyright (c) 2020 Jimmie Bergmann
+//* Copyright (c) 2022 Jimmie Bergmann
 //*
 //* Permission is hereby granted, free of charge, to any person obtaining a copy
 //* of this software and associated documentation files(the "Software"), to deal
@@ -24,7 +24,7 @@
 //*/
 //
 //#include "Test.hpp"
-//#include "Molten/Gui/WidgetTree.hpp"
+//#include "Molten/Graphics/Gui/WidgetTree.hpp"
 //#include <vector>
 //
 //template<typename TValueType, typename TLaneType>

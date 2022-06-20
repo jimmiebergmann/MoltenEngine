@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,14 +23,15 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANLAYER_HPP
-#define MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANLAYER_HPP
+#ifndef MOLTEN_GRAPHICS_VULKAN_UTILITY_VULKANLAYER_HPP
+#define MOLTEN_GRAPHICS_VULKAN_UTILITY_VULKANLAYER_HPP
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 
-#include "Molten/Renderer/Vulkan/Utility/VulkanResult.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanResult.hpp"
 #include "Molten/System/Version.hpp"
 #include <string>
+#include <vector>
 
 MOLTEN_UNSCOPED_ENUM_BEGIN
 
@@ -38,7 +39,7 @@ namespace Molten::Vulkan
 {
 
     /** A more c++ friendly version of VkLayerProperties. */
-    struct MOLTEN_API Layer
+    struct MOLTEN_GRAPHICS_API Layer
     {
         Layer();
         explicit Layer(const std::string& name);
@@ -66,7 +67,7 @@ namespace Molten::Vulkan
 
 
     /** Fetch available instance extensions. */
-    MOLTEN_API Result<> FetchInstanceLayers(Layers& layers);
+    MOLTEN_GRAPHICS_API Result<> FetchInstanceLayers(Layers& layers);
 
 }
 

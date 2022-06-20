@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,13 +23,13 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANMEMORY_HPP
-#define MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANMEMORY_HPP
+#ifndef MOLTEN_GRAPHICS_VULKAN_UTILITY_VULKANMEMORY_HPP
+#define MOLTEN_GRAPHICS_VULKAN_UTILITY_VULKANMEMORY_HPP
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 
-#include "Molten/Renderer/Vulkan/VulkanHeaders.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanResult.hpp"
+#include "Molten/Graphics/Vulkan/VulkanHeaders.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanResult.hpp"
 
 namespace Molten::Vulkan
 {
@@ -51,7 +51,7 @@ namespace Molten::Vulkan
 
 
     /** Map and copy data to memory. */
-    MOLTEN_API Result<> MapMemory(
+    MOLTEN_GRAPHICS_API Result<> MapMemory(
         LogicalDevice& logicalDevice,
         MemoryHandle memoryHandle,
         const void* data,

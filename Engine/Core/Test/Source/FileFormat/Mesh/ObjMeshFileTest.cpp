@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -47,7 +47,7 @@ namespace Molten
         ObjMeshFile objFile;
         TextFileFormatResult result;
 
-        EXPECT_NO_THROW(result = objFile.ReadFromFile("../Engine/Test/Data/ObjMesh/TestCubes.obj", threadPool));
+        EXPECT_NO_THROW(result = objFile.ReadFromFile("../Engine/Core/Test/Data/ObjMesh/TestCubes.obj", threadPool));
         ASSERT_TRUE(result.IsSuccessful());
 
         ASSERT_EQ(objFile.objects.size(), size_t{ 3 });

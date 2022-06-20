@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,12 +23,12 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANRESULTLOGGER_HPP
-#define MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANRESULTLOGGER_HPP
+#ifndef MOLTEN_GRAPHICS_VULKAN_UTILITY_VULKANRESULTLOGGER_HPP
+#define MOLTEN_GRAPHICS_VULKAN_UTILITY_VULKANRESULTLOGGER_HPP
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 
-#include "Molten/Renderer/Vulkan/Utility/VulkanResult.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanResult.hpp"
 #include "Molten/Logger.hpp"
 
 MOLTEN_UNSCOPED_ENUM_BEGIN
@@ -154,7 +154,7 @@ namespace Molten::Vulkan
 
 }
 
-#include "Molten/Renderer/Vulkan/Utility/VulkanResultLogger.inl"
+#include "Molten/Graphics/Vulkan/Utility/VulkanResultLogger.inl"
 
 MOLTEN_UNSCOPED_ENUM_END
 

@@ -23,8 +23,8 @@
 *
 */
 
-#ifndef MOLTEN_CORE_GUI_GUI_HELPERS_HPP
-#define MOLTEN_CORE_GUI_GUI_HELPERS_HPP
+#ifndef MOLTEN_GRAPHICS_GUI_GUI_HELPERS_HPP
+#define MOLTEN_GRAPHICS_GUI_GUI_HELPERS_HPP
 
 #include "Molten/Math/Vector.hpp"
 
@@ -43,6 +43,6 @@ namespace Molten::Gui
 
 }
 
-#include "Molten/Gui/GuiHelpers.inl"
+#include "Molten/Graphics/Gui/GuiHelpers.inl"
 
 #endif

@@ -26,7 +26,7 @@
 #ifndef MOLTEN_CORE_FILEFORMAT_JSONFORMATRESULT_HPP
 #define MOLTEN_CORE_FILEFORMAT_JSONFORMATRESULT_HPP
 
-#include "Molten/Types.hpp"
+#include "Molten/Core.hpp"
 
 namespace Molten
 {

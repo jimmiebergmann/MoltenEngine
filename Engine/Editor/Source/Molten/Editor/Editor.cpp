@@ -24,18 +24,18 @@
 */
 
 
-#include "Editor/Editor.hpp"
+#include "Molten/Editor/Editor.hpp"
 #include "Molten/Logger.hpp"
 
-#include "Molten/Gui/CanvasRenderer.hpp"
-#include "Molten/Gui/Layers/SingleRootLayer.hpp"
-#include "Molten/Gui/Widgets/ButtonWidget.hpp"
-#include "Molten/Gui/Widgets/GridWidget.hpp"
-#include "Molten/Gui/Widgets/PaneWidget.hpp"
-#include "Molten/Gui/Widgets/DockerWidget.hpp"
-#include "Molten/Gui/Widgets/LabelWidget.hpp"
-#include "Molten/Gui/Widgets/ViewportWidget.hpp"
-#include "Molten/Gui/Widgets/MenuBarWidget.hpp"
+#include "Molten/Graphics/Gui/CanvasRenderer.hpp"
+#include "Molten/Graphics/Gui/Layers/SingleRootLayer.hpp"
+#include "Molten/Graphics/Gui/Widgets/ButtonWidget.hpp"
+#include "Molten/Graphics/Gui/Widgets/GridWidget.hpp"
+#include "Molten/Graphics/Gui/Widgets/PaneWidget.hpp"
+#include "Molten/Graphics/Gui/Widgets/DockerWidget.hpp"
+#include "Molten/Graphics/Gui/Widgets/LabelWidget.hpp"
+#include "Molten/Graphics/Gui/Widgets/ViewportWidget.hpp"
+#include "Molten/Graphics/Gui/Widgets/MenuBarWidget.hpp"
 
 #include "Molten/FileFormat/Mesh/ObjMeshFile.hpp"
 

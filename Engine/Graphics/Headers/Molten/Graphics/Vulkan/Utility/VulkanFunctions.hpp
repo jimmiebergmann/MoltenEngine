@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,14 +23,14 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANFUNCTIONS_HPP
-#define MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANFUNCTIONS_HPP
+#ifndef MOLTEN_GRAPHICS_VULKAN_UTILITY_VULKANFUNCTIONS_HPP
+#define MOLTEN_GRAPHICS_VULKAN_UTILITY_VULKANFUNCTIONS_HPP
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 
-#include "Molten/Renderer/Vulkan/Utility/VulkanTypes.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanExtension.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanLayer.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanTypes.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanExtension.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanLayer.hpp"
 #include "Molten/Math/Vector.hpp"
 #include "Molten/System/Version.hpp"
 #include <string>
@@ -45,75 +45,75 @@ namespace Molten::Vulkan
 
 
     /** Create N number of fences. */
-    MOLTEN_API VkResult CreateFences(
+    MOLTEN_GRAPHICS_API VkResult CreateFences(
         Fences& fences,
         VkDevice logicalDevice,
         const VkFenceCreateFlagBits createFlags,
         const size_t count);
 
-    MOLTEN_API VkFramebuffer CreateFramebuffer(
+    MOLTEN_GRAPHICS_API VkFramebuffer CreateFramebuffer(
         VkDevice logicalDevice, 
         VkRenderPass renderpass, 
         const VkImageView& imageView, 
         const Vector2ui32 size);
 
     /** Create N number of semaphores. */
-    MOLTEN_API VkResult CreateSemaphores(
+    MOLTEN_GRAPHICS_API VkResult CreateSemaphores(
         Semaphores& semaphores,
         VkDevice logicalDevice,
         const size_t count);
 
     /** Create Vulkan version(uint32_t) from Molten version,*/
-    MOLTEN_API uint32_t CreateVersion(const Version& version);
+    MOLTEN_GRAPHICS_API uint32_t CreateVersion(const Version& version);
 
 
     /** Destroy all fences in vector. */
-    MOLTEN_API void DestroyFences(
+    MOLTEN_GRAPHICS_API void DestroyFences(
         VkDevice logicalDevice,
         Fences& fences);
 
     /** Destroy all image vies in vector. */
-    MOLTEN_API void DestroyImageViews(
+    MOLTEN_GRAPHICS_API void DestroyImageViews(
         VkDevice logicalDevice,
         ImageViews& imageViews);
 
     /** Destroy all semaphores in vector. */
-    MOLTEN_API void DestroySemaphores(
+    MOLTEN_GRAPHICS_API void DestroySemaphores(
         VkDevice logicalDevice,
         Semaphores& semaphores);
 
 
     /** Search for the last in structure, where pNext == nullptr. */
-    MOLTEN_API const VkBaseInStructure& FindLastBaseInStructure(VkBaseInStructure& baseInStructure);
+    MOLTEN_GRAPHICS_API const VkBaseInStructure& FindLastBaseInStructure(VkBaseInStructure& baseInStructure);
 
     /** Search for the last out structure, where pNext == nullptr. */
-    MOLTEN_API VkBaseOutStructure& FindLastBaseOutStructure(VkBaseOutStructure& baseOutStructure);
+    MOLTEN_GRAPHICS_API VkBaseOutStructure& FindLastBaseOutStructure(VkBaseOutStructure& baseOutStructure);
 
     /** Find layer in vector of layers, by name. Returns iterator of found layer, else layers.end(). */
-    MOLTEN_API Layers::iterator FindLayer(Layers& layers, const std::string& name);
+    MOLTEN_GRAPHICS_API Layers::iterator FindLayer(Layers& layers, const std::string& name);
 
     /** Find layer in vector of extensions, by name. Returns iterator of found extension, else extensions.end(). */
-    MOLTEN_API Extensions::iterator FindExtension(Extensions& extensions, const std::string& name);
+    MOLTEN_GRAPHICS_API Extensions::iterator FindExtension(Extensions& extensions, const std::string& name);
 
 
     /** Removing layers by an exluding list of other layers.*/
-    MOLTEN_API void RemoveLayers(
+    MOLTEN_GRAPHICS_API void RemoveLayers(
         Layers& layers,
         const Layers& excludes);
 
     /** Removing extensions by an exluding list of other extensions.*/
-    MOLTEN_API void RemoveExtensions(
+    MOLTEN_GRAPHICS_API void RemoveExtensions(
         Extensions& extensions,
         const Extensions& excludes);
 
     /** Functions for begining and ending single time commands. */
     /**@{*/
-    MOLTEN_API Result<> BeginSingleTimeCommands(
+    MOLTEN_GRAPHICS_API Result<> BeginSingleTimeCommands(
         VkCommandBuffer& commandBuffer,
         LogicalDevice& logicalDevice,
         VkCommandPool commandPool);
 
-    MOLTEN_API Result<> EndSingleTimeCommands(
+    MOLTEN_GRAPHICS_API Result<> EndSingleTimeCommands(
         VkCommandBuffer commandBuffer,
         LogicalDevice& logicalDevice,
         VkCommandPool commandPool);
@@ -122,13 +122,13 @@ namespace Molten::Vulkan
 
     /** Function for changing layout of image. */
     /**@{*/
-    MOLTEN_API bool TransitionImageLayout(
+    MOLTEN_GRAPHICS_API bool TransitionImageLayout(
         VkCommandBuffer commandBuffer,
         VkImage image,
         const VkImageLayout oldLayout,
         const VkImageLayout newLayout);
 
-    MOLTEN_API bool TransitionImageLayout(
+    MOLTEN_GRAPHICS_API bool TransitionImageLayout(
         VkCommandBuffer commandBuffer,
         DeviceImage& deviceImage,
         const VkImageLayout newLayout);

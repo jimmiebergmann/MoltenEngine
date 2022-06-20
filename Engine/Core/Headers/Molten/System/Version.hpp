@@ -26,7 +26,7 @@
 #ifndef MOLTEN_CORE_SYSTEM_VERSION_HPP
 #define MOLTEN_CORE_SYSTEM_VERSION_HPP
 
-#include "Molten/Types.hpp"
+#include "Molten/Core.hpp"
 #include "Molten/Utility/StringConvert.hpp"
 #include <charconv>
 #include <string_view>

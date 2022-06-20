@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,15 +23,15 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_VULKANTEXTURE_HPP
-#define MOLTEN_CORE_RENDERER_VULKANTEXTURE_HPP
+#ifndef MOLTEN_GRAPHICS_VULKAN_VULKANTEXTURE_HPP
+#define MOLTEN_GRAPHICS_VULKAN_VULKANTEXTURE_HPP
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 
-#include "Molten/Renderer/Texture.hpp"
-#include "Molten/Renderer/Vulkan/VulkanHeaders.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanDeviceImage.hpp"
-#include "Molten/Renderer/Vulkan/VulkanTextureFrame.hpp"
+#include "Molten/Graphics/Texture.hpp"
+#include "Molten/Graphics/Vulkan/VulkanHeaders.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanDeviceImage.hpp"
+#include "Molten/Graphics/Vulkan/VulkanTextureFrame.hpp"
 
 namespace Molten
 {
@@ -117,7 +117,7 @@ namespace Molten
 
 }
 
-#include "Molten/Renderer/Vulkan/VulkanTexture.inl"
+#include "Molten/Graphics/Vulkan/VulkanTexture.inl"
 
 #endif
 

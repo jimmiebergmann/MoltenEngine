@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,8 +23,8 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_SAMPLER_HPP
-#define MOLTEN_CORE_RENDERER_SAMPLER_HPP
+#ifndef MOLTEN_GRAPHICS_SAMPLER_HPP
+#define MOLTEN_GRAPHICS_SAMPLER_HPP
 
 #include "Molten/Math/Vector.hpp"
 
@@ -110,6 +110,6 @@ namespace Molten
 
 }
 
-#include "Molten/Renderer/Sampler.inl"
+#include "Molten/Graphics/Sampler.inl"
 
 #endif

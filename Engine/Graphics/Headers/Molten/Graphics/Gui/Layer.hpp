@@ -23,13 +23,13 @@
 *
 */
 
-#ifndef MOLTEN_CORE_GUI_LAYER_HPP
-#define MOLTEN_CORE_GUI_LAYER_HPP
+#ifndef MOLTEN_GRAPHICS_GUI_LAYER_HPP
+#define MOLTEN_GRAPHICS_GUI_LAYER_HPP
 
-#include "Molten/Gui/LayerData.hpp"
-#include "Molten/Gui/Widget.hpp"
-#include "Molten/Gui/WidgetEventTracker.hpp"
-#include "Molten/Gui/WidgetVisibilityTracker.hpp"
+#include "Molten/Graphics/Gui/LayerData.hpp"
+#include "Molten/Graphics/Gui/Widget.hpp"
+#include "Molten/Graphics/Gui/WidgetEventTracker.hpp"
+#include "Molten/Graphics/Gui/WidgetVisibilityTracker.hpp"
 #include "Molten/Math/Vector.hpp"
 #include "Molten/System/Time.hpp"
 #include "Molten/System/UserInput.hpp"
@@ -132,6 +132,6 @@ namespace Molten::Gui
 
 }
 
-#include "Molten/Gui/Layer.inl"
+#include "Molten/Graphics/Gui/Layer.inl"
 
 #endif

@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -24,10 +24,10 @@
 */
 
 
-#ifndef MOLTEN_CORE_GUI_LAYERS_SINGLEEROOTGLAYER_HPP
-#define MOLTEN_CORE_GUI_LAYERS_SINGLEEROOTGLAYER_HPP
+#ifndef MOLTEN_GRAPHICS_GUI_LAYERS_SINGLEEROOTGLAYER_HPP
+#define MOLTEN_GRAPHICS_GUI_LAYERS_SINGLEEROOTGLAYER_HPP
 
-#include "Molten/Gui/Layer.hpp"
+#include "Molten/Graphics/Gui/Layer.hpp"
 
 namespace Molten::Gui
 {
@@ -55,6 +55,6 @@ namespace Molten::Gui
 
 }
 
-#include "Molten/Gui/Layers/SingleRootLayer.inl"
+#include "Molten/Graphics/Gui/Layers/SingleRootLayer.inl"
 
 #endif

@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -24,7 +24,7 @@
 */
 
 
-#include "Molten/Renderer/DescriptorSet.hpp"
+#include "Molten/Graphics/DescriptorSet.hpp"
 #include <limits>
 
 namespace Molten
@@ -149,40 +149,5 @@ namespace Molten
         id(id),
         bindings(std::move(bindings))
     {}
-
-
-    // Mapped descriptor binding implementations.
-    MappedDescriptorBinding::MappedDescriptorBinding(
-        const uint32_t index,
-        const DescriptorBindingType bindingType
-    ) :
-        index(index),
-        bindingType(bindingType)
-    {}
-
-
-    // Mapped descriptor set implementations.
-    MappedDescriptorSet::MappedDescriptorSet() :
-        index(std::numeric_limits<uint32_t>::max())
-    {}
-
-    MappedDescriptorSet::MappedDescriptorSet(const uint32_t index) :
-        index(index)
-    {}
-
-    MappedDescriptorSet::MappedDescriptorSet(MappedDescriptorSet&& mappedDescriptorSet) noexcept :
-        index(mappedDescriptorSet.index),
-        bindings(std::move(mappedDescriptorSet.bindings))
-    {
-        mappedDescriptorSet.index = std::numeric_limits<uint32_t>::max();
-    }
-
-    MappedDescriptorSet& MappedDescriptorSet::operator =(MappedDescriptorSet&& mappedDescriptorSet) noexcept
-    {
-        index = mappedDescriptorSet.index;
-        bindings = std::move(mappedDescriptorSet.bindings);
-        mappedDescriptorSet.index = std::numeric_limits<uint32_t>::max();
-        return *this;
-    }
 
 }

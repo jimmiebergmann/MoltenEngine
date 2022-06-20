@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,20 +23,20 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_VULKANSHADERPROGRAM_HPP
-#define MOLTEN_CORE_RENDERER_VULKANSHADERPROGRAM_HPP
+#ifndef MOLTEN_GRAPHICS_VULKAN_VULKANSHADERPROGRAM_HPP
+#define MOLTEN_GRAPHICS_VULKAN_VULKANSHADERPROGRAM_HPP
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 
-#include "Molten/Renderer/ShaderProgram.hpp"
-#include "Molten/Renderer/PushConstant.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanTypes.hpp"
+#include "Molten/Graphics/ShaderProgram.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanTypes.hpp"
+#include "Molten/Shader/PushConstant.hpp"
 #include <memory>
 
 namespace Molten
 {
 
-    class MOLTEN_API VulkanShaderProgram final : public ShaderProgram
+    class MOLTEN_GRAPHICS_API VulkanShaderProgram final : public ShaderProgram
     {
 
     public:

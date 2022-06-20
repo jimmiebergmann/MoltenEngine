@@ -23,13 +23,13 @@
 *
 */
 
-#ifndef MOLTEN_CORE_GUI_WIDGET_HPP
-#define MOLTEN_CORE_GUI_WIDGET_HPP
+#ifndef MOLTEN_GRAPHICS_GUI_WIDGET_HPP
+#define MOLTEN_GRAPHICS_GUI_WIDGET_HPP
 
-#include "Molten/Gui/SpacingTypes.hpp"
-#include "Molten/Gui/WidgetPosition.hpp"
-#include "Molten/Gui/WidgetSize.hpp"
-#include "Molten/Gui/WidgetEvent.hpp"
+#include "Molten/Graphics/Gui/SpacingTypes.hpp"
+#include "Molten/Graphics/Gui/WidgetPosition.hpp"
+#include "Molten/Graphics/Gui/WidgetSize.hpp"
+#include "Molten/Graphics/Gui/WidgetEvent.hpp"
 #include "Molten/Math/AABB.hpp"
 #include "Molten/System/Signal.hpp"
 #include <vector>
@@ -335,6 +335,6 @@ namespace Molten::Gui
 
 }
 
-#include "Molten/Gui/Widget.inl"
+#include "Molten/Graphics/Gui/Widget.inl"
 
 #endif

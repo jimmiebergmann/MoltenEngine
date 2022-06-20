@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,10 +23,10 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_SHADER_VISUAL_VISUALSHADERPUSHCONSTANTS_HPP
-#define MOLTEN_CORE_RENDERER_SHADER_VISUAL_VISUALSHADERPUSHCONSTANTS_HPP
+#ifndef MOLTEN_CORE_SHADER_VISUAL_VISUALSHADERPUSHCONSTANTS_HPP
+#define MOLTEN_CORE_SHADER_VISUAL_VISUALSHADERPUSHCONSTANTS_HPP
 
-#include "Molten/Renderer/Shader/Visual/VisualShaderStructure.hpp"
+#include "Molten/Shader/Visual/VisualShaderStructure.hpp"
 #include "Molten/Math/Vector.hpp"
 #include "Molten/Math/Matrix.hpp"
 
@@ -74,6 +74,6 @@ namespace Molten::Shader::Visual
 
 }
 
-#include "Molten/Renderer/Shader/Visual/VisualShaderPushConstants.inl"
+#include "Molten/Shader/Visual/VisualShaderPushConstants.inl"
 
 #endif

@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,8 +23,8 @@
 *
 */
 
-#ifndef MOLTEN_TEST_HPP
-#define MOLTEN_TEST_HPP
+#ifndef MOLTEN_TEST_TEST_HPP
+#define MOLTEN_TEST_TEST_HPP
 
 #include "ThirdParty/googletest/googletest/include/gtest/gtest.h"
 
@@ -54,7 +54,11 @@ namespace Molten::Test
 {
 
     /** Googletest style info printer. */
-    void PrintInfo(const std::string& message);
+    static void PrintInfo(const std::string& message)
+    {
+        std::cout << "\033[0;32m" << "[          ] " << "\033[0;0m";
+        std::cout << "\033[0;36m" << message << "\033[0;0m" << std::endl;
+    }
 
     /** Googletest style time benchmarker class. This object will print the result at destruction. */
     class Benchmarker
@@ -62,20 +66,56 @@ namespace Molten::Test
 
     public:
 
-        explicit Benchmarker(const std::string& description);
-        ~Benchmarker();
-
-        void Stop();
-
-    private:
-
+        explicit Benchmarker(const std::string& description) :
+            m_description(description),
+            m_stopped(false)
+        {}
+        
+        ~Benchmarker()
+        {
+            Stop();
+        }
+        
         Benchmarker(const Benchmarker&) = delete;
         Benchmarker(Benchmarker&&) = delete;
         Benchmarker& operator= (const Benchmarker&) = delete;
         Benchmarker& operator= (Benchmarker&&) = delete;
 
+        void Stop()
+        {
+            if(m_stopped)
+            {
+                return;
+            }
+
+            auto time = m_clock.GetTime();
+            auto [convertedTime, convertedUnit] = GetConvertedTime(time);
+            PrintInfo("Benchmarked \"" + m_description + "\", took " + std::to_string(convertedTime) + " " + convertedUnit + ".");
+
+            m_stopped = true;
+        }
+
+    private:
+
         /** Get time as double and it's unit. Units are split up by multiples of 1000.*/
-        std::pair<double, std::string> GetConvertedTime(const Time& time);
+        std::pair<double, std::string> GetConvertedTime(const Time& time)
+        {
+            auto ns = time.AsNanoseconds<uint64_t>();
+            if (ns >= 1000000000UL)
+            {
+                return { time.AsSeconds<double>(), "s" };
+            }
+            else if (ns >= 1000000UL)
+            {
+                return { time.AsMilliseconds<double>(), "ms" };
+            }
+            else if (ns >= 1000UL)
+            {
+                return { time.AsMicroseconds<double>(), "us" };
+            }
+
+            return { time.AsNanoseconds<double>(), "ns" };
+        }
 
         std::string m_description;
         Clock m_clock;

@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,18 +23,18 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_VULKANINDEXBUFFER_HPP
-#define MOLTEN_CORE_RENDERER_VULKANINDEXBUFFER_HPP
+#ifndef MOLTEN_GRAPHICS_VULKAN_VULKANINDEXBUFFER_HPP
+#define MOLTEN_GRAPHICS_VULKAN_VULKANINDEXBUFFER_HPP
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 
-#include "Molten/Renderer/IndexBuffer.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanDeviceBuffer.hpp"
+#include "Molten/Graphics/IndexBuffer.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanDeviceBuffer.hpp"
 
 namespace Molten
 {
 
-    class MOLTEN_API VulkanIndexBuffer final : public IndexBuffer
+    class MOLTEN_GRAPHICS_API VulkanIndexBuffer final : public IndexBuffer
     {
 
     public:

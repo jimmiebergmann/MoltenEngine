@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,18 +23,19 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_SHADER_GENERATOR_SPIRVSHADERGENERATOR_HPP
-#define MOLTEN_CORE_RENDERER_SHADER_GENERATOR_SPIRVSHADERGENERATOR_HPP
+#ifndef MOLTEN_CORE_SHADER_GENERATOR_SPIRVSHADERGENERATOR_HPP
+#define MOLTEN_CORE_SHADER_GENERATOR_SPIRVSHADERGENERATOR_HPP
 
 #include "Molten/Core.hpp"
-#include "Molten/Renderer/Shader.hpp"
-#include "Molten/Renderer/Shader/Spirv/SpirvModule.hpp"
-#include "Molten/Renderer/Shader/Visual/VisualShaderScript.hpp"
-#include "Molten/Renderer/PushConstant.hpp"
-#include "Molten/Renderer/DescriptorSet.hpp"
+#include "Molten/Shader/Shader.hpp"
+#include "Molten/Shader/Spirv/SpirvModule.hpp"
+#include "Molten/Shader/Visual/VisualShaderScript.hpp"
+#include "Molten/Shader/PushConstant.hpp"
+#include "Molten/Shader/DescriptorSet.hpp"
 #include <vector>
 #include <memory>
 #include <map>
+#include <unordered_map>
 #include <variant>
 #include <optional>
 
@@ -648,6 +649,6 @@ namespace Molten::Shader
 
 }
 
-#include "Molten/Renderer/Shader/Generator/SpirvShaderGenerator.inl"
+#include "Molten/Shader/Generator/SpirvShaderGenerator.inl"
 
 #endif

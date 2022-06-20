@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,10 +23,10 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_SHADER_VISUAL_VISUALSHADEROPERATOR_HPP
-#define MOLTEN_CORE_RENDERER_SHADER_VISUAL_VISUALSHADEROPERATOR_HPP
+#ifndef MOLTEN_CORE_SHADER_VISUAL_VISUALSHADEROPERATOR_HPP
+#define MOLTEN_CORE_SHADER_VISUAL_VISUALSHADEROPERATOR_HPP
 
-#include "Molten/Renderer/Shader/Visual/VisualShaderNode.hpp"
+#include "Molten/Shader/Visual/VisualShaderNode.hpp"
 
 namespace Molten::Shader::Visual
 {
@@ -197,6 +197,6 @@ namespace Molten::Shader::Visual
 
 }
 
-#include "Molten/Renderer/Shader/Visual/VisualShaderOperator.inl"
+#include "Molten/Shader/Visual/VisualShaderOperator.inl"
 
 #endif

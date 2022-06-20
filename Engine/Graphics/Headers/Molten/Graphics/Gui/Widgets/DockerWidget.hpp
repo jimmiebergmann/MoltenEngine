@@ -23,13 +23,13 @@
 *
 */
 
-#ifndef MOLTEN_CORE_GUI_WIDGETS_DOCKERWIDGET_HPP
-#define MOLTEN_CORE_GUI_WIDGETS_DOCKERWIDGET_HPP
+#ifndef MOLTEN_GRAPHICS_GUI_WIDGETS_DOCKERWIDGET_HPP
+#define MOLTEN_GRAPHICS_GUI_WIDGETS_DOCKERWIDGET_HPP
 
-#include "Molten/Gui/Widget.hpp"
-#include "Molten/Gui/WidgetEvent.hpp"
-#include "Molten/Gui/DraggableWidget.hpp"
-#include "Molten/Gui/Widgets/Overlays/DockerOverlayWidget.hpp"
+#include "Molten/Graphics/Gui/Widget.hpp"
+#include "Molten/Graphics/Gui/WidgetEvent.hpp"
+#include "Molten/Graphics/Gui/DraggableWidget.hpp"
+#include "Molten/Graphics/Gui/Widgets/Overlays/DockerOverlayWidget.hpp"
 #include "Molten/System/Signal.hpp"
 #include "Molten/Math/Triangle.hpp"
 #include "Molten/Utility/Template.hpp"
@@ -85,6 +85,6 @@ namespace Molten::Gui
 
 }
 
-#include "Molten/Gui/Widgets/DockerWidget.inl"
+#include "Molten/Graphics/Gui/Widgets/DockerWidget.inl"
 
 #endif

@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,13 +23,13 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_VULKANSAMPLER_HPP
-#define MOLTEN_CORE_RENDERER_VULKANSAMPLER_HPP
+#ifndef MOLTEN_GRAPHICS_VULKAN_VULKANSAMPLER_HPP
+#define MOLTEN_GRAPHICS_VULKAN_VULKANSAMPLER_HPP
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 
-#include "Molten/Renderer/Sampler.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanImageSampler.hpp"
+#include "Molten/Graphics/Sampler.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanImageSampler.hpp"
 
 namespace Molten
 {
@@ -55,7 +55,7 @@ namespace Molten
 
 }
 
-#include "Molten/Renderer/Vulkan/VulkanSampler.inl"
+#include "Molten/Graphics/Vulkan/VulkanSampler.inl"
 
 #endif
 

@@ -23,11 +23,11 @@
 *
 */
 
-#ifndef MOLTEN_CORE_GUI_WIDGETS_LABELWIDGET_HPP
-#define MOLTEN_CORE_GUI_WIDGETS_LABELWIDGET_HPP
+#ifndef MOLTEN_GRAPHICS_GUI_WIDGETS_LABELWIDGET_HPP
+#define MOLTEN_GRAPHICS_GUI_WIDGETS_LABELWIDGET_HPP
 
-#include "Molten/Gui/Widget.hpp"
-#include "Molten/Gui/WidgetProperty.hpp"
+#include "Molten/Graphics/Gui/Widget.hpp"
+#include "Molten/Graphics/Gui/WidgetProperty.hpp"
 #include <string>
 
 namespace Molten::Gui
@@ -56,6 +56,6 @@ namespace Molten::Gui
 
 }
 
-#include "Molten/Gui/Widgets/LabelWidget.inl"
+#include "Molten/Graphics/Gui/Widgets/LabelWidget.inl"
 
 #endif

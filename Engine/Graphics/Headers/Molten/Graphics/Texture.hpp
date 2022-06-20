@@ -23,11 +23,11 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_TEXTURE_HPP
-#define MOLTEN_CORE_RENDERER_TEXTURE_HPP
+#ifndef MOLTEN_GRAPHICS_TEXTURE_HPP
+#define MOLTEN_GRAPHICS_TEXTURE_HPP
 
-#include "Molten/Renderer/ImageFormat.hpp"
-#include "Molten/Renderer/ImageSwizzle.hpp"
+#include "Molten/Graphics/ImageFormat.hpp"
+#include "Molten/Graphics/ImageSwizzle.hpp"
 #include "Molten/Math/Vector.hpp"
 
 namespace Molten
@@ -213,6 +213,6 @@ namespace Molten
 
 }
 
-#include "Molten/Renderer/Texture.inl"
+#include "Molten/Graphics/Texture.inl"
 
 #endif

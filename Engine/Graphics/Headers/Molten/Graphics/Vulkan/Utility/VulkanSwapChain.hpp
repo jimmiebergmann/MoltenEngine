@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,13 +23,13 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANSWAPCHAIN_HPP
-#define MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANSWAPCHAIN_HPP
+#ifndef MOLTEN_GRAPHICS_VULKAN_UTILITY_VULKANSWAPCHAIN_HPP
+#define MOLTEN_GRAPHICS_VULKAN_UTILITY_VULKANSWAPCHAIN_HPP
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 
-#include "Molten/Renderer/Vulkan/Utility/VulkanTypes.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanResult.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanTypes.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanResult.hpp"
 #include <vector>
 
 MOLTEN_UNSCOPED_ENUM_BEGIN
@@ -39,7 +39,7 @@ namespace Molten::Vulkan
 
     class LogicalDevice;
 
-    class MOLTEN_API SwapChain
+    class MOLTEN_GRAPHICS_API SwapChain
     {
 
     public:

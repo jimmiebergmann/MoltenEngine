@@ -23,12 +23,12 @@
 *
 */
 
-#ifndef MOLTEN_CORE_GUI_WIDGETS_WINDOWWIDGET_HPP
-#define MOLTEN_CORE_GUI_WIDGETS_WINDOWWIDGET_HPP
+#ifndef MOLTEN_GRAPHICS_GUI_WIDGETS_WINDOWWIDGET_HPP
+#define MOLTEN_GRAPHICS_GUI_WIDGETS_WINDOWWIDGET_HPP
 
-#include "Molten/Gui/Widget.hpp"
-#include "Molten/Gui/WidgetEvent.hpp"
-#include "Molten/Gui/Widgets/LabelWidget.hpp"
+#include "Molten/Graphics/Gui/Widget.hpp"
+#include "Molten/Graphics/Gui/WidgetEvent.hpp"
+#include "Molten/Graphics/Gui/Widgets/LabelWidget.hpp"
 
 namespace Molten::Gui
 {
@@ -57,6 +57,6 @@ namespace Molten::Gui
 
 }
 
-#include "Molten/Gui/Widgets/WindowWidget.inl"
+#include "Molten/Graphics/Gui/Widgets/WindowWidget.inl"
 
 #endif

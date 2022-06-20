@@ -27,6 +27,7 @@
 #define MOLTEN_CORE_ECS_ECSALLOCATOR_HPP
 
 #include "Molten/Ecs/Ecs.hpp"
+#include <vector>
 
 namespace Molten::Ecs
 {

@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -25,10 +25,10 @@
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 
-#include "Molten/Renderer/Vulkan/Utility/VulkanSurface.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanInstance.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanExtension.hpp"
-#include "Molten/Renderer/RenderTarget.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanSurface.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanInstance.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanExtension.hpp"
+#include "Molten/Graphics/RenderTarget.hpp"
 
 MOLTEN_UNSCOPED_ENUM_BEGIN
 

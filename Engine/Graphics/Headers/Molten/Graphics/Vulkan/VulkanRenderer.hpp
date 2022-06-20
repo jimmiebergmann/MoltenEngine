@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,22 +23,22 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_VULKAN_VULKANRENDERER_HPP
-#define MOLTEN_CORE_RENDERER_VULKAN_VULKANRENDERER_HPP
+#ifndef MOLTEN_GRAPHICS_VULKAN_VULKANRENDERER_HPP
+#define MOLTEN_GRAPHICS_VULKAN_VULKANRENDERER_HPP
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 
-#include "Molten/Renderer/Renderer.hpp"
-#include "Molten/Renderer/Vulkan/VulkanPipeline.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanMemoryAllocator.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanResourceDestroyer.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanInstance.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanSurface.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanPhysicalDevice.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanPhysicalDeviceFeatures.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanLogicalDevice.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanSwapChain.hpp"
-#include "Molten/Renderer/Shader/Visual/VisualShaderScript.hpp"
+#include "Molten/Graphics/Renderer.hpp"
+#include "Molten/Graphics/Vulkan/VulkanPipeline.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanMemoryAllocator.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanResourceDestroyer.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanInstance.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanSurface.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanPhysicalDevice.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanPhysicalDeviceFeatures.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanLogicalDevice.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanSwapChain.hpp"
+#include "Molten/Shader/Visual/VisualShaderScript.hpp"
 
 MOLTEN_UNSCOPED_ENUM_BEGIN
 
@@ -54,7 +54,7 @@ namespace Molten
     /**
     * @brief Vulkan renderer class.
     */
-    class MOLTEN_API VulkanRenderer final : public Renderer
+    class MOLTEN_GRAPHICS_API VulkanRenderer final : public Renderer
     {
 
     public:

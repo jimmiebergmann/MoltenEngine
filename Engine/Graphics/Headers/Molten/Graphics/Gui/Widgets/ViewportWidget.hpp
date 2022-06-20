@@ -23,16 +23,15 @@
 *
 */
 
-#ifndef MOLTEN_CORE_GUI_WIDGETS_VIEWPORTWIDGET_HPP
-#define MOLTEN_CORE_GUI_WIDGETS_VIEWPORTWIDGET_HPP
+#ifndef MOLTEN_GRAPHICS_GUI_WIDGETS_VIEWPORTWIDGET_HPP
+#define MOLTEN_GRAPHICS_GUI_WIDGETS_VIEWPORTWIDGET_HPP
 
-#include "Molten/Gui/Widget.hpp"
-#include "Molten/Gui/WidgetEvent.hpp"
-#include "Molten/Gui/VisibilityWidget.hpp"
+#include "Molten/Graphics/Gui/Widget.hpp"
+#include "Molten/Graphics/Gui/WidgetEvent.hpp"
+#include "Molten/Graphics/Gui/VisibilityWidget.hpp"
+#include "Molten/Graphics/RenderResource.hpp"
+#include "Molten/Graphics/Texture.hpp"
 #include "Molten/System/Signal.hpp"
-#include "Molten/Renderer/RenderResource.hpp"
-#include "Molten/Renderer/Texture.hpp"
-
 
 namespace Molten::Gui
 {
@@ -67,6 +66,6 @@ namespace Molten::Gui
 
 }
 
-#include "Molten/Gui/Widgets/ViewportWidget.inl"
+#include "Molten/Graphics/Gui/Widgets/ViewportWidget.inl"
 
 #endif

@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,16 +23,16 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_VERTEXBUFFER_HPP
-#define MOLTEN_CORE_RENDERER_VERTEXBUFFER_HPP
+#ifndef MOLTEN_GRAPHICS_VERTEXBUFFER_HPP
+#define MOLTEN_GRAPHICS_VERTEXBUFFER_HPP
 
-#include "Molten/Types.hpp"
+#include "Molten/Graphics/Build.hpp"
 
 namespace Molten
 {
 
     /** Vertex buffer resource object. */
-    class MOLTEN_API VertexBuffer
+    class MOLTEN_GRAPHICS_API VertexBuffer
     {
 
     public:
@@ -60,7 +60,7 @@ namespace Molten
     /**
     * @brief Descriptor class of vertex buffer class.
     */
-    struct MOLTEN_API VertexBufferDescriptor
+    struct MOLTEN_GRAPHICS_API VertexBufferDescriptor
     {
 
         VertexBufferDescriptor();

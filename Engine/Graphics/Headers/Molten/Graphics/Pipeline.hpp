@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,10 +23,10 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_PIPELINE_HPP
-#define MOLTEN_CORE_RENDERER_PIPELINE_HPP
+#ifndef MOLTEN_GRAPHICS_PIPELINE_HPP
+#define MOLTEN_GRAPHICS_PIPELINE_HPP
 
-#include "Molten/Renderer/RenderResource.hpp"
+#include "Molten/Graphics/RenderResource.hpp"
 
 namespace Molten::Shader::Visual
 {
@@ -41,7 +41,7 @@ namespace Molten
 
     
     /** Pipeline base class. */
-    class MOLTEN_API Pipeline
+    class MOLTEN_GRAPHICS_API Pipeline
     {
 
     public:
@@ -119,7 +119,7 @@ namespace Molten
     };
 
     /** Descriptor of pipeline blending. */
-    struct MOLTEN_API PipelineBlendingDescriptor
+    struct MOLTEN_GRAPHICS_API PipelineBlendingDescriptor
     {
         PipelineBlendingDescriptor();
         PipelineBlendingDescriptor(
@@ -145,7 +145,7 @@ namespace Molten
     };
 
     /** Descriptor of pipeline. */
-    struct MOLTEN_API PipelineDescriptor
+    struct MOLTEN_GRAPHICS_API PipelineDescriptor
     {
 
         PipelineDescriptor();

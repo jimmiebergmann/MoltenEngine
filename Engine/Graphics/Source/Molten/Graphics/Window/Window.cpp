@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,12 +23,12 @@
 *
 */
 
-#include "Molten/Window/Window.hpp"
+#include "Molten/Graphics/Window/Window.hpp"
 
 #if MOLTEN_PLATFORM == MOLTEN_PLATFORM_WINDOWS
-#include "Molten/Window/WindowWin32.hpp"
+#include "Molten/Graphics/Window/WindowWin32.hpp"
 #elif MOLTEN_PLATFORM == MOLTEN_PLATFORM_LINUX
-#include "Molten/Window/WindowX11.hpp"
+#include "Molten/Graphics/Window/WindowX11.hpp"
 #endif  
 
 namespace Molten

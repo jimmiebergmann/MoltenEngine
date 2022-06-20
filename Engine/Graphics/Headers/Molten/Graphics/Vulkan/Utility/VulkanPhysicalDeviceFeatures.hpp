@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,14 +23,15 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANPHYSICALDEVICEFEATURES_HPP
-#define MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANPHYSICALDEVICEFEATURES_HPP
+#ifndef MOLTEN_GRAPHICS_VULKAN_UTILITY_VULKANPHYSICALDEVICEFEATURES_HPP
+#define MOLTEN_GRAPHICS_VULKAN_UTILITY_VULKANPHYSICALDEVICEFEATURES_HPP
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 
-#include "Molten/Renderer/Vulkan/VulkanHeaders.hpp"
+#include "Molten/Graphics/Vulkan/VulkanHeaders.hpp"
 #include "Molten/Math/Vector.hpp"
 #include <string>
+#include <vector>
 
 MOLTEN_UNSCOPED_ENUM_BEGIN
 
@@ -40,7 +41,7 @@ namespace Molten::Vulkan
     using PhysicalDeviceFeaturePointer = VkBool32 (VkPhysicalDeviceFeatures::*);
     using PhysicalDeviceFeaturePointers = std::vector<PhysicalDeviceFeaturePointer>;
 
-    struct MOLTEN_API PhysicalDeviceFeatureWithName
+    struct MOLTEN_GRAPHICS_API PhysicalDeviceFeatureWithName
     {
         PhysicalDeviceFeatureWithName();
         PhysicalDeviceFeatureWithName(
@@ -55,18 +56,18 @@ namespace Molten::Vulkan
 
 
     /** Enabled features in finalFeatures from feature pointer vector. */
-    MOLTEN_API void EnablePhysicalDeviceFeatures(
+    MOLTEN_GRAPHICS_API void EnablePhysicalDeviceFeatures(
         VkPhysicalDeviceFeatures& finalFeatures,
         const PhysicalDeviceFeaturePointers enableFeatures);
 
     /** Apply optional features to finalFeatures, if optional feature is present in availableFeatures. */
-    MOLTEN_API void EnableOptionalPhysicalDeviceFeatures(
+    MOLTEN_GRAPHICS_API void EnableOptionalPhysicalDeviceFeatures(
         VkPhysicalDeviceFeatures& finalFeatures,
         const VkPhysicalDeviceFeatures& availableFeatures,
         const PhysicalDeviceFeaturePointers optionalFeatures);
 
     /** Check if all requiredFeatures are present in availablefeatures. */
-    MOLTEN_API bool CheckRequiredPhysicalDeviceFeatures(
+    MOLTEN_GRAPHICS_API bool CheckRequiredPhysicalDeviceFeatures(
         PhysicalDeviceFeaturesWithName& missingFeatures,
         const VkPhysicalDeviceFeatures& availableFeatures,
         const PhysicalDeviceFeaturePointers requiredFeatures);

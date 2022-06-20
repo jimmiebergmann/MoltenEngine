@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -24,13 +24,13 @@
 */
 
 
-#include "Molten/Renderer/OpenGL/OpenGLX11Renderer.hpp"
+#include "Molten/Graphics/OpenGL/OpenGLX11Renderer.hpp"
 
 #if defined(MOLTEN_ENABLE_OPENGL)
 #if MOLTEN_PLATFORM == MOLTEN_PLATFORM_LINUX
 
-#include "Molten/Renderer/OpenGL/OpengGLFunctions.hpp"
-#include "Molten/Renderer/PushConstant.hpp"
+#include "Molten/Graphics/OpenGL/OpengGLFunctions.hpp"
+#include "Molten/Graphics/PushConstant.hpp"
 #include "Molten/Window/Window.hpp"
 #include "Molten/System/Exception.hpp"
 

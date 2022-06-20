@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,10 +23,10 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_COMBINEDTEXTURESAMPLER_HPP
-#define MOLTEN_CORE_RENDERER_COMBINEDTEXTURESAMPLER_HPP
+#ifndef MOLTEN_GRAPHICS_COMBINEDTEXTURESAMPLER_HPP
+#define MOLTEN_GRAPHICS_COMBINEDTEXTURESAMPLER_HPP
 
-#include "Molten/Renderer/RenderResource.hpp"
+#include "Molten/Graphics/RenderResource.hpp"
 
 namespace Molten
 {
@@ -88,6 +88,6 @@ namespace Molten
 
 }
 
-#include "Molten/Renderer/CombinedTextureSampler.inl"
+#include "Molten/Graphics/CombinedTextureSampler.inl"
 
 #endif

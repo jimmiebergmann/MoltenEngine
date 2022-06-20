@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,16 +23,17 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_SHADERPROGRAM_HPP
-#define MOLTEN_CORE_RENDERER_SHADERPROGRAM_HPP
+#ifndef MOLTEN_GRAPHICS_SHADERPROGRAM_HPP
+#define MOLTEN_GRAPHICS_SHADERPROGRAM_HPP
 
-#include "Molten/Renderer/Shader/Visual/VisualShaderScript.hpp"
+#include "Molten/Graphics/Build.hpp"
+#include "Molten/Shader/Visual/VisualShaderScript.hpp"
 
 namespace Molten
 {
 
     /** Shader module resource object, representing a compiled shader program. */
-    class MOLTEN_API ShaderProgram
+    class MOLTEN_GRAPHICS_API ShaderProgram
     {
 
     public:
@@ -51,7 +52,7 @@ namespace Molten
     };
 
     /** Descriptor class of shader program class. */
-    struct MOLTEN_API VisualShaderProgramDescriptor
+    struct MOLTEN_GRAPHICS_API VisualShaderProgramDescriptor
     {
 
         VisualShaderProgramDescriptor();

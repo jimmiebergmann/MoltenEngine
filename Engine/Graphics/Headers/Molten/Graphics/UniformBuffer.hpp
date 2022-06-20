@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,16 +23,16 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_UNIFORMBUFFER_HPP
-#define MOLTEN_CORE_RENDERER_UNIFORMBUFFER_HPP
+#ifndef MOLTEN_GRAPHICS_UNIFORMBUFFER_HPP
+#define MOLTEN_GRAPHICS_UNIFORMBUFFER_HPP
 
-#include "Molten/Types.hpp"
+#include "Molten/Graphics/Build.hpp"
 
 namespace Molten
 {
 
     /** Uniform buffer resource object. */
-    class MOLTEN_API UniformBuffer
+    class MOLTEN_GRAPHICS_API UniformBuffer
     {
 
     public:
@@ -51,7 +51,7 @@ namespace Molten
     };
 
     /** Descriptor class of uniform buffer class. */
-    struct MOLTEN_API UniformBufferDescriptor
+    struct MOLTEN_GRAPHICS_API UniformBufferDescriptor
     {
 
         UniformBufferDescriptor();
@@ -69,7 +69,7 @@ namespace Molten
 
 
     /** Uniform buffer resource object. */
-    class MOLTEN_API FramedUniformBuffer
+    class MOLTEN_GRAPHICS_API FramedUniformBuffer
     {
 
     public:
@@ -89,7 +89,7 @@ namespace Molten
 
     
     /** Descriptor class of framed uniform buffer class. */
-    struct MOLTEN_API FramedUniformBufferDescriptor
+    struct MOLTEN_GRAPHICS_API FramedUniformBufferDescriptor
     {
 
         FramedUniformBufferDescriptor();

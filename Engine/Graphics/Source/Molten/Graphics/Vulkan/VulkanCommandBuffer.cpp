@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -25,11 +25,11 @@
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 
-#include "Molten/Renderer/Vulkan/VulkanCommandBuffer.hpp"
-#include "Molten/Renderer/Vulkan/VulkanDescriptorSet.hpp"
-#include "Molten/Renderer/Vulkan/VulkanPipeline.hpp"
-#include "Molten/Renderer/Vulkan/VulkanIndexBuffer.hpp"
-#include "Molten/Renderer/Vulkan/VulkanVertexBuffer.hpp"
+#include "Molten/Graphics/Vulkan/VulkanCommandBuffer.hpp"
+#include "Molten/Graphics/Vulkan/VulkanDescriptorSet.hpp"
+#include "Molten/Graphics/Vulkan/VulkanPipeline.hpp"
+#include "Molten/Graphics/Vulkan/VulkanIndexBuffer.hpp"
+#include "Molten/Graphics/Vulkan/VulkanVertexBuffer.hpp"
 
 namespace Molten
 {

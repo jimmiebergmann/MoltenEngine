@@ -23,11 +23,11 @@
 *
 */
 
-#include "Molten/Gui/CanvasRenderer.hpp"
-#include "Molten/Renderer/Renderer.hpp"
-#include "Molten/Renderer/CommandBuffer.hpp"
-#include "Molten/Renderer/Pipeline.hpp"
-#include "Molten/Renderer/Shader/Visual/VisualShaderScript.hpp"
+#include "Molten/Graphics/Gui/CanvasRenderer.hpp"
+#include "Molten/Graphics/Renderer.hpp"
+#include "Molten/Graphics/CommandBuffer.hpp"
+#include "Molten/Graphics/Pipeline.hpp"
+#include "Molten/Shader/Visual/VisualShaderScript.hpp"
 #include "Molten/Logger.hpp"
 #include <array>
 

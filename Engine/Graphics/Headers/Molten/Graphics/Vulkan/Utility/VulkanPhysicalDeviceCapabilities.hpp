@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,13 +23,13 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANPHYSICALDEVICECAPABILITIES_HPP
-#define MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANPHYSICALDEVICECAPABILITIES_HPP
+#ifndef MOLTEN_GRAPHICS_VULKAN_UTILITY_VULKANPHYSICALDEVICECAPABILITIES_HPP
+#define MOLTEN_GRAPHICS_VULKAN_UTILITY_VULKANPHYSICALDEVICECAPABILITIES_HPP
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 
-#include "Molten/Renderer/Vulkan/Utility/VulkanTypes.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanExtension.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanTypes.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanExtension.hpp"
 
 MOLTEN_UNSCOPED_ENUM_BEGIN
 
@@ -40,7 +40,7 @@ namespace Molten::Vulkan
   
 
     /** Vulkan physical device.*/
-    struct MOLTEN_API PhysicalDeviceSurfaceCapabilities
+    struct MOLTEN_GRAPHICS_API PhysicalDeviceSurfaceCapabilities
     {
         PhysicalDeviceSurfaceCapabilities();
 
@@ -53,7 +53,7 @@ namespace Molten::Vulkan
     using PhysicalDeviceSurfacesCapabilities = std::vector<PhysicalDeviceSurfaceCapabilities>;
 
     /** Vulkan physical device.*/
-    struct MOLTEN_API PhysicalDeviceCapabilities
+    struct MOLTEN_GRAPHICS_API PhysicalDeviceCapabilities
     {
         PhysicalDeviceCapabilities();
 
@@ -70,13 +70,13 @@ namespace Molten::Vulkan
     /** Common function for fetching capabilities of physical device by handle and surface. 
      * THis function also fetches surface capabilities.
      */
-    MOLTEN_API Result<> FetchPhysicalDeviceCapabilities(
+    MOLTEN_GRAPHICS_API Result<> FetchPhysicalDeviceCapabilities(
         PhysicalDeviceCapabilities& capabilities,
         const VkPhysicalDevice physicalDeviceHandle,
         const VkSurfaceKHR surfaceHandle);
 
     /** Common function for fetching surface capabilities of physical device by handle and surface. */
-    MOLTEN_API Result<> FetchPhysicalDeviceSurfaceCapabilities(
+    MOLTEN_GRAPHICS_API Result<> FetchPhysicalDeviceSurfaceCapabilities(
         PhysicalDeviceSurfaceCapabilities& surfaceCababilities,
         const VkPhysicalDevice physicalDeviceHandle,
         const VkSurfaceKHR surfaceHandle);

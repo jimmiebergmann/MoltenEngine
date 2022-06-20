@@ -4,7 +4,7 @@
     -   topic-*something* E.g. `topic-renderer`.
     -   feature-*something* E.g. `feature-my_new_cool_thingie`.
     -   fix-*something* E.g. `fix-broken_thing`.
-    -   Feel free to reference to an issue. I.e. `fix-issue-123`.
+    -   Feel free to reference to an issue. I.e. `fix-issue_123`.
 3.  Commit changes.
 4.  Send pull request at Github.
 

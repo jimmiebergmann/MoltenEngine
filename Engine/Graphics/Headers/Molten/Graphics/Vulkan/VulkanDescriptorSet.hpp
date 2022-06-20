@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,19 +23,19 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_VULKANDESCRIPTORSET_HPP
-#define MOLTEN_CORE_RENDERER_VULKANDESCRIPTORSET_HPP
+#ifndef MOLTEN_GRAPHICS_VULKAN_VULKANDESCRIPTORSET_HPP
+#define MOLTEN_GRAPHICS_VULKAN_VULKANDESCRIPTORSET_HPP
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 
-#include "Molten/Renderer/DescriptorSet.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanTypes.hpp"
+#include "Molten/Graphics/DescriptorSet.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanTypes.hpp"
 
 namespace Molten
 {
 
     /** Vulkan descriptor set. */
-    class MOLTEN_API VulkanDescriptorSet final : public DescriptorSet
+    class MOLTEN_GRAPHICS_API VulkanDescriptorSet final : public DescriptorSet
     {
 
     public:
@@ -56,7 +56,7 @@ namespace Molten
 
 
     /** Vulkan framed descriptor set. */
-    class MOLTEN_API VulkanFramedDescriptorSet : public FramedDescriptorSet
+    class MOLTEN_GRAPHICS_API VulkanFramedDescriptorSet : public FramedDescriptorSet
     {
 
     public:

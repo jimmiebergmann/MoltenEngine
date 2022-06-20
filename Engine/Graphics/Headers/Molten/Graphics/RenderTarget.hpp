@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,9 +23,10 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_PLATFORM_RENDERTARGET_HPP
-#define MOLTEN_CORE_RENDERER_PLATFORM_RENDERTARGET_HPP
+#ifndef MOLTEN_GRAPHICS_RENDERTARGET_HPP
+#define MOLTEN_GRAPHICS_RENDERTARGET_HPP
 
+#include "Molten/Graphics/Build.hpp"
 #include "Molten/Math/Vector.hpp"
 #include "Molten/Platform.hpp"
 
@@ -33,7 +34,7 @@ namespace Molten
 {
 
     /** Render target specific for win32 systems. */
-    class MOLTEN_API RenderTarget
+    class MOLTEN_GRAPHICS_API RenderTarget
     {
 
     public:

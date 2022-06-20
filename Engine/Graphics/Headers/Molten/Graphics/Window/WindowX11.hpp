@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,10 +23,10 @@
 *
 */
 
-#ifndef MOLTEN_CORE_WINDOW_WINDOWX11_HPP
-#define MOLTEN_CORE_WINDOW_WINDOWX11_HPP
+#ifndef MOLTEN_GRAPHICS_WINDOW_WINDOWX11_HPP
+#define MOLTEN_GRAPHICS_WINDOW_WINDOWX11_HPP
 
-#include "Molten/Window/Window.hpp"
+#include "Molten/Graphics/Window/Window.hpp"
 
 #if MOLTEN_PLATFORM == MOLTEN_PLATFORM_LINUX
 
@@ -34,7 +34,7 @@ namespace Molten
 {
 
     /** Window class of X11 application windows. */
-    class MOLTEN_API WindowX11 : public Window
+    class MOLTEN_GRAPHICS_API WindowX11 : public Window
     {
 
     public:

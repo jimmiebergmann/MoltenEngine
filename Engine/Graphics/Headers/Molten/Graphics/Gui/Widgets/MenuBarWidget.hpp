@@ -23,13 +23,13 @@
 *
 */
 
-#ifndef MOLTEN_CORE_GUI_WIDGETS_MENUBARWIDGET_HPP
-#define MOLTEN_CORE_GUI_WIDGETS_MENUBARWIDGET_HPP
+#ifndef MOLTEN_GRAPHICS_GUI_WIDGETS_MENUBARWIDGET_HPP
+#define MOLTEN_GRAPHICS_GUI_WIDGETS_MENUBARWIDGET_HPP
 
-#include "Molten/Gui/Widget.hpp"
-#include "Molten/Gui/WidgetEvent.hpp"
-#include "Molten/Gui/Widgets/LabelWidget.hpp"
-#include "Molten/Gui/Widgets/Overlays/MenuOverlayWidget.hpp"
+#include "Molten/Graphics/Gui/Widget.hpp"
+#include "Molten/Graphics/Gui/WidgetEvent.hpp"
+#include "Molten/Graphics/Gui/Widgets/LabelWidget.hpp"
+#include "Molten/Graphics/Gui/Widgets/Overlays/MenuOverlayWidget.hpp"
 #include "Molten/System/Signal.hpp"
 #include <memory>
 #include <vector>
@@ -148,6 +148,6 @@ namespace Molten::Gui
 
 }
 
-#include "Molten/Gui/Widgets/MenuBarWidget.inl"
+#include "Molten/Graphics/Gui/Widgets/MenuBarWidget.inl"
 
 #endif

@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,10 +23,10 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_COMMANDBUFFER_HPP
-#define MOLTEN_CORE_RENDERER_COMMANDBUFFER_HPP
+#ifndef MOLTEN_GRAPHICS_COMMANDBUFFER_HPP
+#define MOLTEN_GRAPHICS_COMMANDBUFFER_HPP
 
-#include "Molten/Types.hpp"
+#include "Molten/Graphics/Build.hpp"
 #include <Molten/Math/Matrix.hpp>
 #include <Molten/Math/Vector.hpp>
 
@@ -46,7 +46,7 @@ namespace Molten
 
 
     /** Command buffer, used for recording render commands for render pass. */
-    class MOLTEN_API CommandBuffer
+    class MOLTEN_GRAPHICS_API CommandBuffer
     {
 
     public:

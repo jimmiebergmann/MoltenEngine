@@ -23,13 +23,13 @@
 *
 */
 
-#ifndef MOLTEN_CORE_GUI_CANVAS_HPP
-#define MOLTEN_CORE_GUI_CANVAS_HPP
+#ifndef MOLTEN_GRAPHICS_GUI_CANVAS_HPP
+#define MOLTEN_GRAPHICS_GUI_CANVAS_HPP
 
-#include "Molten/Gui/Layers/MultiRootLayer.hpp"
-#include "Molten/Gui/Widget.hpp"
-#include "Molten/Gui/WidgetEventTracker.hpp"
-#include "Molten/Gui/CanvasRenderer.hpp"
+#include "Molten/Graphics/Gui/Layers/MultiRootLayer.hpp"
+#include "Molten/Graphics/Gui/Widget.hpp"
+#include "Molten/Graphics/Gui/WidgetEventTracker.hpp"
+#include "Molten/Graphics/Gui/CanvasRenderer.hpp"
 #include "Molten/Math/Vector.hpp"
 #include "Molten/System/Time.hpp"
 #include "Molten/System/UserInput.hpp"
@@ -131,6 +131,6 @@ namespace Molten::Gui
 
 }
 
-#include "Molten/Gui/Canvas.inl"
+#include "Molten/Graphics/Gui/Canvas.inl"
 
 #endif

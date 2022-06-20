@@ -23,10 +23,10 @@
 *
 */
 
-#ifndef MOLTEN_CORE_GUI_WIDGETS_OVERLAYS_DOCKEROVERLAYWIDGET_HPP
-#define MOLTEN_CORE_GUI_WIDGETS_OVERLAYS_DOCKEROVERLAYWIDGET_HPP
+#ifndef MOLTEN_GRAPHICS_GUI_WIDGETS_OVERLAYS_DOCKEROVERLAYWIDGET_HPP
+#define MOLTEN_GRAPHICS_GUI_WIDGETS_OVERLAYS_DOCKEROVERLAYWIDGET_HPP
 
-#include "Molten/Gui/Widget.hpp"
+#include "Molten/Graphics/Gui/Widget.hpp"
 #include "Molten/Utility/Template.hpp"
 
 namespace Molten::Gui
@@ -46,6 +46,6 @@ namespace Molten::Gui
 
 }
 
-#include "Molten/Gui/Widgets/Overlays/DockerOverlayWidget.inl"
+#include "Molten/Graphics/Gui/Widgets/Overlays/DockerOverlayWidget.inl"
 
 #endif

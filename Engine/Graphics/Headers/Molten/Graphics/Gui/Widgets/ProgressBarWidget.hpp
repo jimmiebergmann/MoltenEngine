@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,10 +23,10 @@
 *
 */
 
-#ifndef MOLTEN_CORE_GUI_WIDGETS_PROGRESSBARWIDGET_HPP
-#define MOLTEN_CORE_GUI_WIDGETS_PROGRESSBARWIDGET_HPP
+#ifndef MOLTEN_GRAPHICS_GUI_WIDGETS_PROGRESSBARWIDGET_HPP
+#define MOLTEN_GRAPHICS_GUI_WIDGETS_PROGRESSBARWIDGET_HPP
 
-#include "Molten/Gui/Widget.hpp"
+#include "Molten/Graphics/Gui/Widget.hpp"
 
 namespace Molten::Gui
 {
@@ -56,6 +56,6 @@ namespace Molten::Gui
 
 }
 
-#include "Molten/Gui/Widgets/ProgressBarWidget.inl"
+#include "Molten/Graphics/Gui/Widgets/ProgressBarWidget.inl"
 
 #endif

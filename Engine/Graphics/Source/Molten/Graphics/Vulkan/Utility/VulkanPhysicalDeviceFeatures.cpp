@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -25,7 +25,7 @@
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 
-#include "Molten/Renderer/Vulkan/Utility/VulkanPhysicalDeviceFeatures.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanPhysicalDeviceFeatures.hpp"
 #include <map>
 
 MOLTEN_UNSCOPED_ENUM_BEGIN

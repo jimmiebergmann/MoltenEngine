@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -26,7 +26,7 @@
 #ifndef MOLTEN_CORE_SYSTEM_FILESYSTEM_HPP
 #define MOLTEN_CORE_SYSTEM_FILESYSTEM_HPP
 
-#include "Molten/Types.hpp"
+#include "Molten/Core.hpp"
 #include <vector>
 #include <string>
 

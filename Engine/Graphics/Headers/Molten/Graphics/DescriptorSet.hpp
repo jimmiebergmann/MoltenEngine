@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,13 +23,14 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_DESCRIPTORSET_HPP
-#define MOLTEN_CORE_RENDERER_DESCRIPTORSET_HPP
+#ifndef MOLTEN_GRAPHICS_DESCRIPTORSET_HPP
+#define MOLTEN_GRAPHICS_DESCRIPTORSET_HPP
 
-#include "Molten/Renderer/Shader.hpp"
-#include "Molten/Renderer/CombinedTextureSampler.hpp"
-#include "Molten/Renderer/RenderResource.hpp"
+#include "Molten/Graphics/CombinedTextureSampler.hpp"
+#include "Molten/Graphics/RenderResource.hpp"
+#include "Molten/Shader/DescriptorSet.hpp"
 #include <variant>
+#include <vector>
 #include <map>
 
 namespace Molten
@@ -39,17 +40,8 @@ namespace Molten
     class UniformBuffer;
     class FramedUniformBuffer;
 
-    /** Enumerator of descriptor binding types. */
-    enum class DescriptorBindingType : uint8_t
-    {
-        Sampler1D,
-        Sampler2D,
-        Sampler3D,
-        UniformBuffer
-    };
-
     /** Descriptor set resource object. */
-    class MOLTEN_API DescriptorSet
+    class MOLTEN_GRAPHICS_API DescriptorSet
     {
 
     public:
@@ -68,7 +60,7 @@ namespace Molten
     };
 
     /** Descriptor class of descriptor binding class. */
-    struct MOLTEN_API DescriptorBinding
+    struct MOLTEN_GRAPHICS_API DescriptorBinding
     {
 
         using BindingVariant = std::variant< 
@@ -97,7 +89,7 @@ namespace Molten
     };
 
     /** Descriptor class of descriptor set class. */
-    struct MOLTEN_API DescriptorSetDescriptor
+    struct MOLTEN_GRAPHICS_API DescriptorSetDescriptor
     {
 
         DescriptorSetDescriptor();
@@ -119,7 +111,7 @@ namespace Molten
     };
 
     /** Framed descriptor set resource object. */
-    class MOLTEN_API FramedDescriptorSet
+    class MOLTEN_GRAPHICS_API FramedDescriptorSet
     {
 
     public:
@@ -138,7 +130,7 @@ namespace Molten
     };
 
     /** Framed descriptor class of descriptor binding class. */
-    struct MOLTEN_API FramedDescriptorBinding
+    struct MOLTEN_GRAPHICS_API FramedDescriptorBinding
     {
 
         using BindingVariant = std::variant<
@@ -167,7 +159,7 @@ namespace Molten
     };
 
     /** Descriptor class of descriptor set class. */
-    struct MOLTEN_API FramedDescriptorSetDescriptor
+    struct MOLTEN_GRAPHICS_API FramedDescriptorSetDescriptor
     {
 
         FramedDescriptorSetDescriptor();
@@ -187,38 +179,6 @@ namespace Molten
         std::vector<FramedDescriptorBinding> bindings;
 
     };
-
-    /** Data structures for mapping arbitrary indices to actually used indices in compiler shader. */
-    /**@{*/
-    struct MOLTEN_API MappedDescriptorBinding
-    {
-        MappedDescriptorBinding(
-            const uint32_t index,
-            const DescriptorBindingType bindingType);
-
-        uint32_t index;
-        DescriptorBindingType bindingType;
-    };
-
-    using MappedDescriptorBindings = std::map<uint32_t, MappedDescriptorBinding>;
-
-    struct MOLTEN_API MappedDescriptorSet
-    {
-        MappedDescriptorSet();
-        MappedDescriptorSet(const uint32_t index);
-        ~MappedDescriptorSet() = default;
-
-        MappedDescriptorSet(const MappedDescriptorSet& mappedDescriptorSet) = default;
-        MappedDescriptorSet(MappedDescriptorSet&& mappedDescriptorSet) noexcept;
-        MappedDescriptorSet& operator =(const MappedDescriptorSet& mappedDescriptorSet) = default;
-        MappedDescriptorSet& operator =(MappedDescriptorSet&& mappedDescriptorSet) noexcept;
-
-        uint32_t index;
-        MappedDescriptorBindings bindings;
-    };
-
-    using MappedDescriptorSets = std::map<uint32_t, MappedDescriptorSet>;
-    /**@}*/
 
 }
 

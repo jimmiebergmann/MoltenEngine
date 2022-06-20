@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,20 +23,20 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_VULKANUNIFORMBUFFER_HPP
-#define MOLTEN_CORE_RENDERER_VULKANUNIFORMBUFFER_HPP
+#ifndef MOLTEN_GRAPHICS_VULKAN_VULKANUNIFORMBUFFER_HPP
+#define MOLTEN_GRAPHICS_VULKAN_VULKANUNIFORMBUFFER_HPP
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 
-#include "Molten/Renderer/UniformBuffer.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanDeviceBuffer.hpp"
+#include "Molten/Graphics/UniformBuffer.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanDeviceBuffer.hpp"
 #include <vector>
 
 namespace Molten
 {
 
     /** Vulkan uniform buffer. */
-    class MOLTEN_API VulkanUniformBuffer final : public UniformBuffer
+    class MOLTEN_GRAPHICS_API VulkanUniformBuffer final : public UniformBuffer
     {
 
     public:
@@ -52,7 +52,7 @@ namespace Molten
 
 
     /** Vulkan framed uniform buffer. */
-    class MOLTEN_API VulkanFramedUniformBuffer final : public FramedUniformBuffer
+    class MOLTEN_GRAPHICS_API VulkanFramedUniformBuffer final : public FramedUniformBuffer
     {
 
     public:

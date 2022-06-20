@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,10 +23,10 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_SHADER_HPP
-#define MOLTEN_CORE_RENDERER_SHADER_HPP
+#ifndef MOLTEN_CORE_SHADER_SHADER_HPP
+#define MOLTEN_CORE_SHADER_SHADER_HPP
 
-#include "Molten/Types.hpp"
+#include "Molten/Core.hpp"
 
 namespace Molten::Shader
 {
@@ -106,6 +106,6 @@ namespace Molten::Shader
 
 }
  
-#include "Molten/Renderer/Shader.inl"
+#include "Molten/Shader/Shader.inl"
 
 #endif

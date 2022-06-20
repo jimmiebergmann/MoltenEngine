@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,12 +23,12 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANDEVICEQUEUE_HPP
-#define MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANDEVICEQUEUE_HPP
+#ifndef MOLTEN_GRAPHICS_VULKAN_UTILITY_VULKANDEVICEQUEUE_HPP
+#define MOLTEN_GRAPHICS_VULKAN_UTILITY_VULKANDEVICEQUEUE_HPP
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 
-#include "Molten/Renderer/Vulkan/Utility/VulkanTypes.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanTypes.hpp"
 #include <optional>
 
 MOLTEN_UNSCOPED_ENUM_BEGIN
@@ -38,7 +38,7 @@ namespace Molten::Vulkan
 
     class Surface;
 
-    struct MOLTEN_API DeviceQueueIndices
+    struct MOLTEN_GRAPHICS_API DeviceQueueIndices
     {
         DeviceQueueIndices();
 
@@ -47,7 +47,7 @@ namespace Molten::Vulkan
 
     };
 
-    struct MOLTEN_API DeviceQueues
+    struct MOLTEN_GRAPHICS_API DeviceQueues
     {
         DeviceQueues();
 
@@ -58,12 +58,12 @@ namespace Molten::Vulkan
     };
 
 
-    MOLTEN_API void FetchQueueFamilyProperties(
+    MOLTEN_GRAPHICS_API void FetchQueueFamilyProperties(
         QueueFamilyProperties& queueFamilyProperties,
         VkPhysicalDevice physicalDevice);
 
 
-    MOLTEN_API bool FindRenderableDeviceQueueIndices(
+    MOLTEN_GRAPHICS_API bool FindRenderableDeviceQueueIndices(
         DeviceQueueIndices& queueIndices,
         VkPhysicalDevice physicalDevice,
         const VkSurfaceKHR surface,

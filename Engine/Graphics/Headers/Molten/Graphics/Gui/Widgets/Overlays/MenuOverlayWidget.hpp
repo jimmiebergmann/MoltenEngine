@@ -23,10 +23,10 @@
 *
 */
 
-#ifndef MOLTEN_CORE_GUI_WIDGETS_OVERLAYS_MENUOVERLAYWIDGET_HPP
-#define MOLTEN_CORE_GUI_WIDGETS_OVERLAYS_MENUOVERLAYWIDGET_HPP
+#ifndef MOLTEN_GRAPHICS_GUI_WIDGETS_OVERLAYS_MENUOVERLAYWIDGET_HPP
+#define MOLTEN_GRAPHICS_GUI_WIDGETS_OVERLAYS_MENUOVERLAYWIDGET_HPP
 
-#include "Molten/Gui/Widget.hpp"
+#include "Molten/Graphics/Gui/Widget.hpp"
 
 namespace Molten::Gui
 {
@@ -71,6 +71,6 @@ namespace Molten::Gui
 
 }
 
-#include "Molten/Gui/Widgets/Overlays/MenuOverlayWidget.inl"
+#include "Molten/Graphics/Gui/Widgets/Overlays/MenuOverlayWidget.inl"
 
 #endif

@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,12 +23,12 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANMEMORYBLOCK_HPP
-#define MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANMEMORYBLOCK_HPP
+#ifndef MOLTEN_GRAPHICS_VULKAN_UTILITY_VULKANMEMORYBLOCK_HPP
+#define MOLTEN_GRAPHICS_VULKAN_UTILITY_VULKANMEMORYBLOCK_HPP
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 
-#include "Molten/Renderer/Vulkan/Utility/VulkanMemory.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanMemory.hpp"
 #include <memory>
 #include <list>
 
@@ -38,7 +38,7 @@ namespace Molten::Vulkan
 {
 
     /** Memory block struct, used by memory allocator. */
-    struct MOLTEN_API MemoryBlock
+    struct MOLTEN_GRAPHICS_API MemoryBlock
     {
         using FeeMemoryList = std::list<Memory*>;
 

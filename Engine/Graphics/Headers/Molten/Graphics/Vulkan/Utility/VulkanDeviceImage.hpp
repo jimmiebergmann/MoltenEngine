@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,12 +23,12 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANDEVICEIMAGE_HPP
-#define MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANDEVICEIMAGE_HPP
+#ifndef MOLTEN_GRAPHICS_VULKAN_UTILITY_VULKANDEVICEIMAGE_HPP
+#define MOLTEN_GRAPHICS_VULKAN_UTILITY_VULKANDEVICEIMAGE_HPP
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 
-#include "Molten/Renderer/Vulkan/Utility/VulkanMemory.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanMemory.hpp"
 
 namespace Molten::Vulkan
 {
@@ -39,7 +39,7 @@ namespace Molten::Vulkan
 
 
     /** Vulkan device image, backed by device memory. */
-    struct MOLTEN_API DeviceImage
+    struct MOLTEN_GRAPHICS_API DeviceImage
     {
         DeviceImage();
 
@@ -64,7 +64,7 @@ namespace Molten::Vulkan
      *  Destroys device image, by returning it to memory allocation, at destruction.
      *  Call Release before guard destruction to prevent image device from being destroyed.
      */
-    class MOLTEN_API DeviceImageGuard
+    class MOLTEN_GRAPHICS_API DeviceImageGuard
     {
 
     public:
@@ -95,7 +95,7 @@ namespace Molten::Vulkan
      *  Image layout is transitioned to finalImageLayout at completion.
      *  Provide deviceImage.layout to restore it at completion.
      */
-    MOLTEN_API bool CopyDeviceBufferToDeviceImage(
+    MOLTEN_GRAPHICS_API bool CopyDeviceBufferToDeviceImage(
         DeviceBuffer& deviceBuffer,
         DeviceImage& deviceImage,
         VkCommandBuffer commandBuffer,

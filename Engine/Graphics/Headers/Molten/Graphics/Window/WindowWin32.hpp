@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,10 +23,10 @@
 *
 */
 
-#ifndef MOLTEN_CORE_WINDOW_WINDOWWIN32_HPP
-#define MOLTEN_CORE_WINDOW_WINDOWWIN32_HPP
+#ifndef MOLTEN_GRAPHICS_WINDOW_WINDOWWIN32_HPP
+#define MOLTEN_GRAPHICS_WINDOW_WINDOWWIN32_HPP
 
-#include "Molten/Window/Window.hpp"
+#include "Molten/Graphics/Window/Window.hpp"
 
 #if MOLTEN_PLATFORM == MOLTEN_PLATFORM_WINDOWS
 
@@ -38,7 +38,7 @@ namespace Molten
 
 
     /** Win32 drag and drop interface. */
-    class MOLTEN_API DropTargetWin32 : public IDropTarget
+    class MOLTEN_GRAPHICS_API DropTargetWin32 : public IDropTarget
     {
 
     public:
@@ -89,7 +89,7 @@ namespace Molten
 
 
     /** Window class of win32 application windows. */
-    class MOLTEN_API WindowWin32 : public Window
+    class MOLTEN_GRAPHICS_API WindowWin32 : public Window
     {
 
     public:

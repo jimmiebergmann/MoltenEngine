@@ -26,32 +26,30 @@
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 
-#include "Molten/Renderer/Vulkan/VulkanRenderer.hpp"
-#include "Molten/Renderer/Vulkan/VulkanDescriptorSet.hpp"
-#include "Molten/Renderer/Vulkan/VulkanIndexBuffer.hpp"
-#include "Molten/Renderer/Vulkan/VulkanPipeline.hpp"
-#include "Molten/Renderer/Vulkan/VulkanRenderPass.hpp"
-#include "Molten/Renderer/Vulkan/VulkanSampler.hpp"
-#include "Molten/Renderer/Vulkan/VulkanShaderProgram.hpp"
-#include "Molten/Renderer/Vulkan/VulkanTexture.hpp"
-#include "Molten/Renderer/Vulkan/VulkanUniformBuffer.hpp"
-#include "Molten/Renderer/Vulkan/VulkanVertexBuffer.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanFunctions.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanResultLogger.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanDeviceBuffer.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanDeviceImage.hpp"
-#include "Molten/Renderer/Shader/Visual/VisualShaderScript.hpp"
-#include "Molten/Renderer/Shader/Visual/VisualShaderStructure.hpp"
-#include "Molten/Renderer/Shader/Generator/SpirvShaderGenerator.hpp"
-#include "Molten/Window/Window.hpp"
-#include "Molten/Logger.hpp"
+#include "Molten/Graphics/Vulkan/VulkanRenderer.hpp"
+#include "Molten/Graphics/Vulkan/VulkanDescriptorSet.hpp"
+#include "Molten/Graphics/Vulkan/VulkanIndexBuffer.hpp"
+#include "Molten/Graphics/Vulkan/VulkanPipeline.hpp"
+#include "Molten/Graphics/Vulkan/VulkanRenderPass.hpp"
+#include "Molten/Graphics/Vulkan/VulkanSampler.hpp"
+#include "Molten/Graphics/Vulkan/VulkanShaderProgram.hpp"
+#include "Molten/Graphics/Vulkan/VulkanTexture.hpp"
+#include "Molten/Graphics/Vulkan/VulkanUniformBuffer.hpp"
+#include "Molten/Graphics/Vulkan/VulkanVertexBuffer.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanFunctions.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanResultLogger.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanDeviceBuffer.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanDeviceImage.hpp"
+#include "Molten/Graphics/Window/Window.hpp"
+#include "Molten/Shader/Visual/VisualShaderScript.hpp"
+#include "Molten/Shader/Visual/VisualShaderStructure.hpp"
+#include "Molten/Shader/Generator/SpirvShaderGenerator.hpp"
 #include "Molten/System/Exception.hpp"
 #include "Molten/Utility/SmartFunction.hpp"
+#include "Molten/Logger.hpp"
 #include <algorithm>
 #include <limits>
 #include <memory>
-
-
 
 namespace Molten
 {

@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,9 +23,9 @@
 *
 */
 
-#include "Molten/Renderer/Renderer.hpp"
-#include "Molten/Renderer/OpenGL/OpenGLRenderer.hpp"
-#include "Molten/Renderer/Vulkan/VulkanRenderer.hpp"
+#include "Molten/Graphics/Renderer.hpp"
+#include "Molten/Graphics/OpenGL/OpenGLRenderer.hpp"
+#include "Molten/Graphics/Vulkan/VulkanRenderer.hpp"
 
 namespace Molten
 {

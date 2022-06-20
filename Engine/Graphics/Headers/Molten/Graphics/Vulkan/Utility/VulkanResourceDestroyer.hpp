@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,19 +23,19 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANRESOURCEDESTROYER_HPP
-#define MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANRESOURCEDESTROYER_HPP
+#ifndef MOLTEN_GRAPHICS_VULKAN_UTILITY_VULKANRESOURCEDESTROYER_HPP
+#define MOLTEN_GRAPHICS_VULKAN_UTILITY_VULKANRESOURCEDESTROYER_HPP
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 
-#include "Molten/Renderer/Vulkan/Utility/VulkanLogicalDevice.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanMemoryAllocator.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanTypes.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanDeviceBuffer.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanDeviceImage.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanImageSampler.hpp"
-#include "Molten/Renderer/Vulkan/VulkanTextureFrame.hpp"
-#include "Molten/Renderer/Vulkan/VulkanRenderPassFrame.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanLogicalDevice.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanMemoryAllocator.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanTypes.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanDeviceBuffer.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanDeviceImage.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanImageSampler.hpp"
+#include "Molten/Graphics/Vulkan/VulkanTextureFrame.hpp"
+#include "Molten/Graphics/Vulkan/VulkanRenderPassFrame.hpp"
 #include <variant>
 #include <queue>
 
@@ -62,7 +62,7 @@ namespace Molten::Vulkan
     /**
     * @brief Vulkan renderer class.
     */
-    class MOLTEN_API ResourceDestroyer
+    class MOLTEN_GRAPHICS_API ResourceDestroyer
     {
 
     public:

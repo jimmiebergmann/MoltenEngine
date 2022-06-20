@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,13 +23,13 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_VULKANPIPELINE_HPP
-#define MOLTEN_CORE_RENDERER_VULKANPIPELINE_HPP
+#ifndef MOLTEN_GRAPHICS_VULKAN_VULKANPIPELINE_HPP
+#define MOLTEN_GRAPHICS_VULKAN_VULKANPIPELINE_HPP
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 
-#include "Molten/Renderer/Pipeline.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanTypes.hpp"
+#include "Molten/Graphics/Pipeline.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanTypes.hpp"
 
 namespace Molten
 {
@@ -37,7 +37,7 @@ namespace Molten
     class VulkanShaderProgram;
 
 
-    class MOLTEN_API VulkanPipeline final : public Pipeline
+    class MOLTEN_GRAPHICS_API VulkanPipeline final : public Pipeline
     {
 
     public:

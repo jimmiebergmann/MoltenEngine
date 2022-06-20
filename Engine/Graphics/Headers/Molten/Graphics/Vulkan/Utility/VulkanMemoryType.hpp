@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,12 +23,12 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANMEMORYTYPE_HPP
-#define MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANMEMORYTYPE_HPP
+#ifndef MOLTEN_GRAPHICS_VULKAN_UTILITY_VULKANMEMORYTYPE_HPP
+#define MOLTEN_GRAPHICS_VULKAN_UTILITY_VULKANMEMORYTYPE_HPP
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 
-#include "Molten/Renderer/Vulkan/Utility/VulkanTypes.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanTypes.hpp"
 
 MOLTEN_UNSCOPED_ENUM_BEGIN
 
@@ -45,12 +45,12 @@ namespace Molten::Vulkan
     using MemoryTypes = std::vector<MemoryType>;
 
 
-    MOLTEN_API void GetPhysicalDeviceMemoryTypes(
+    MOLTEN_GRAPHICS_API void GetPhysicalDeviceMemoryTypes(
         MemoryTypes& memoryTypes,
         VkPhysicalDevice physicalDeviceHandle,
         const bool ignoreEmptyProperties = false);
 
-    MOLTEN_API bool FindSupportedMemoryType(
+    MOLTEN_GRAPHICS_API bool FindSupportedMemoryType(
         MemoryType*& foundMemoryType,
         MemoryTypes& availableMemoryTypes,
         const uint32_t memoryTypeBits,

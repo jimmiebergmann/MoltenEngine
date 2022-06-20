@@ -23,10 +23,10 @@
 *
 */
 
-#ifndef MOLTEN_CORE_GUI_WIDGETS_GRIDWIDGET_HPP
-#define MOLTEN_CORE_GUI_WIDGETS_GRIDWIDGET_HPP
+#ifndef MOLTEN_GRAPHICS_GUI_WIDGETS_GRIDWIDGET_HPP
+#define MOLTEN_GRAPHICS_GUI_WIDGETS_GRIDWIDGET_HPP
 
-#include "Molten/Gui/Widget.hpp"
+#include "Molten/Graphics/Gui/Widget.hpp"
 
 namespace Molten::Gui
 {
@@ -52,6 +52,6 @@ namespace Molten::Gui
 
 }
 
-#include "Molten/Gui/Widgets/GridWidget.inl"
+#include "Molten/Graphics/Gui/Widgets/GridWidget.inl"
 
 #endif

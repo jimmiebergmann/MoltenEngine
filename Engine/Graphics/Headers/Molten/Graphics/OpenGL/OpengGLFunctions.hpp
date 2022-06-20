@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,10 +23,10 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_OPENGL_OPENGLFUNCTIONS_HPP
-#define MOLTEN_CORE_RENDERER_OPENGL_OPENGLFUNCTIONS_HPP
+#ifndef MOLTEN_GRAPHICS_OPENGL_OPENGLFUNCTIONS_HPP
+#define MOLTEN_GRAPHICS_OPENGL_OPENGLFUNCTIONS_HPP
 
-#include "Molten/Renderer/OpenGL/OpengGLHeaders.hpp"
+#include "Molten/Graphics/OpenGL/OpengGLHeaders.hpp"
 
 #if defined(MOLTEN_ENABLE_OPENGL)
 
@@ -36,7 +36,7 @@ namespace Molten
     namespace OpenGL
     {
 
-        MOLTEN_API bool BindOpenGLExtensions();
+        MOLTEN_GRAPHICS_API bool BindOpenGLExtensions();
 
         extern PFNGLGETSTRINGIPROC GetStrigi;
 

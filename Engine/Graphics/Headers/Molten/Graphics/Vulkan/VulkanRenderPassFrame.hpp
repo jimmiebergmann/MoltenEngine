@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,18 +23,18 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_VULKANRENDERPASSFRAME_HPP
-#define MOLTEN_CORE_RENDERER_VULKANRENDERPASSFRAME_HPP
+#ifndef MOLTEN_GRAPHICS_VULKAN_VULKANRENDERPASSFRAME_HPP
+#define MOLTEN_GRAPHICS_VULKAN_VULKANRENDERPASSFRAME_HPP
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 
-#include "Molten/Renderer/Vulkan/VulkanHeaders.hpp"
+#include "Molten/Graphics/Vulkan/VulkanHeaders.hpp"
 #include <vector>
 
 namespace Molten
 {
 
-    struct MOLTEN_API VulkanRenderPassFrame
+    struct MOLTEN_GRAPHICS_API VulkanRenderPassFrame
     {
         VulkanRenderPassFrame();
         ~VulkanRenderPassFrame() = default;

@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,16 +23,16 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_INDEXBUFFER_HPP
-#define MOLTEN_CORE_RENDERER_INDEXBUFFER_HPP
+#ifndef MOLTEN_GRAPHICS_INDEXBUFFER_HPP
+#define MOLTEN_GRAPHICS_INDEXBUFFER_HPP
 
-#include "Molten/Types.hpp"
+#include "Molten/Graphics/Build.hpp"
 
 namespace Molten
 {
 
     /** Index buffer resource object. */
-    class MOLTEN_API IndexBuffer
+    class MOLTEN_GRAPHICS_API IndexBuffer
     {
 
     public:
@@ -58,7 +58,7 @@ namespace Molten
     };
 
     /** Descriptor class of index buffer class. */
-    struct MOLTEN_API IndexBufferDescriptor
+    struct MOLTEN_GRAPHICS_API IndexBufferDescriptor
     {
 
         IndexBufferDescriptor();

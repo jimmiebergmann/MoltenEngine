@@ -23,12 +23,12 @@
 *
 */
 
-#ifndef MOLTEN_CORE_GUI_WIDGETS_PANEWIDGET_HPP
-#define MOLTEN_CORE_GUI_WIDGETS_PANEWIDGET_HPP
+#ifndef MOLTEN_GRAPHICS_GUI_WIDGETS_PANEWIDGET_HPP
+#define MOLTEN_GRAPHICS_GUI_WIDGETS_PANEWIDGET_HPP
 
-#include "Molten/Gui/Widget.hpp"
-#include "Molten/Gui/WidgetProperty.hpp"
-#include "Molten/Gui/DraggableWidget.hpp"
+#include "Molten/Graphics/Gui/Widget.hpp"
+#include "Molten/Graphics/Gui/WidgetProperty.hpp"
+#include "Molten/Graphics/Gui/DraggableWidget.hpp"
 #include <string>
 
 namespace Molten::Gui
@@ -54,6 +54,6 @@ namespace Molten::Gui
 
 }
 
-#include "Molten/Gui/Widgets/PaneWidget.inl"
+#include "Molten/Graphics/Gui/Widgets/PaneWidget.inl"
 
 #endif

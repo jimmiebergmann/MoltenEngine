@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,12 +23,12 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_RENDERPASS_HPP
-#define MOLTEN_CORE_RENDERER_RENDERPASS_HPP
+#ifndef MOLTEN_GRAPHICS_RENDERPASS_HPP
+#define MOLTEN_GRAPHICS_RENDERPASS_HPP
 
-#include "Molten/Renderer/Texture.hpp"
-#include "Molten/Renderer/CommandBuffer.hpp"
-#include "Molten/Renderer/RenderResource.hpp"
+#include "Molten/Graphics/Texture.hpp"
+#include "Molten/Graphics/CommandBuffer.hpp"
+#include "Molten/Graphics/RenderResource.hpp"
 #include "Molten/Math/Bounds.hpp"
 #include <vector>
 #include <variant>
@@ -43,7 +43,7 @@ namespace Molten
 
 
     /** Render pass resource object. */
-    class MOLTEN_API RenderPass
+    class MOLTEN_GRAPHICS_API RenderPass
     {
 
     public:
@@ -117,7 +117,7 @@ namespace Molten
     using RenderPassAttachments = std::vector<RenderPassAttachment>;
 
     /** Descriptor class of render pass class. */
-    struct MOLTEN_API RenderPassDescriptor
+    struct MOLTEN_GRAPHICS_API RenderPassDescriptor
     {
         Vector2ui32 dimensions = { 0, 0 };
         RenderPassAttachments attachments = {};
@@ -137,7 +137,7 @@ namespace Molten
     using RenderPassUpdateAttachments = std::vector<RenderPassUpdateAttachment>;
 
     /** Update descriptor class of render pass class. */
-    struct MOLTEN_API RenderPassUpdateDescriptor
+    struct MOLTEN_GRAPHICS_API RenderPassUpdateDescriptor
     {
         Vector2ui32 dimensions = { 0, 0 };
         RenderPassUpdateAttachments attachments = {};

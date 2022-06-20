@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,12 +23,12 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANDEVICEBUFFER_HPP
-#define MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANDEVICEBUFFER_HPP
+#ifndef MOLTEN_GRAPHICS_VULKAN_UTILITY_VULKANDEVICEBUFFER_HPP
+#define MOLTEN_GRAPHICS_VULKAN_UTILITY_VULKANDEVICEBUFFER_HPP
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 
-#include "Molten/Renderer/Vulkan/Utility/VulkanMemory.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanMemory.hpp"
 #include <vector>
 
 namespace Molten::Vulkan
@@ -40,7 +40,7 @@ namespace Molten::Vulkan
 
 
     /** Vulkan device buffer, backed by device memory. */
-    struct MOLTEN_API DeviceBuffer
+    struct MOLTEN_GRAPHICS_API DeviceBuffer
     {
         DeviceBuffer();
 
@@ -64,7 +64,7 @@ namespace Molten::Vulkan
      *  DeviceBuffer object is not returned if DeviceBuffer::IsEmpty is true
      *  or Release is called before destruction.
      */
-    class MOLTEN_API DeviceBufferGuard
+    class MOLTEN_GRAPHICS_API DeviceBufferGuard
     {
 
     public:
@@ -92,7 +92,7 @@ namespace Molten::Vulkan
 
 
     /** Map and copy data to device buffer's memory. */
-    MOLTEN_API Result<> MapMemory(
+    MOLTEN_GRAPHICS_API Result<> MapMemory(
         LogicalDevice& logicalDevice,
         DeviceBuffer& deviceBuffer,
         const void* data,
@@ -101,14 +101,14 @@ namespace Molten::Vulkan
 
     /** Copy data between two device buffers. */
     /**@{*/
-    MOLTEN_API Result<> CopyMemory(
+    MOLTEN_GRAPHICS_API Result<> CopyMemory(
         LogicalDevice& logicalDevice,
         VkCommandPool commandPool,
         VkBuffer sourceBuffer,
         VkBuffer destinationBuffer,
         const VkDeviceSize& size);
 
-    MOLTEN_API Result<> CopyMemory(
+    MOLTEN_GRAPHICS_API Result<> CopyMemory(
         LogicalDevice& logicalDevice,
         VkCommandPool commandPool,
         DeviceBuffer& sourceBuffer,

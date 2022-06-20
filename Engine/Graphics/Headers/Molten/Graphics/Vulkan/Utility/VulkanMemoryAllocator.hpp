@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,16 +23,16 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANMEMORYALLOCATOR_HPP
-#define MOLTEN_CORE_RENDERER_VULKAN_UTILITY_VULKANMEMORYALLOCATOR_HPP
+#ifndef MOLTEN_GRAPHICS_VULKAN_UTILITY_VULKANMEMORYALLOCATOR_HPP
+#define MOLTEN_GRAPHICS_VULKAN_UTILITY_VULKANMEMORYALLOCATOR_HPP
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 
-#include "Molten/Renderer/Vulkan/Utility/VulkanLogicalDevice.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanResult.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanMemory.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanMemoryType.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanMemoryBlock.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanLogicalDevice.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanResult.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanMemory.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanMemoryType.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanMemoryBlock.hpp"
 #include <vector>
 #include <list>
 #include <memory>
@@ -51,7 +51,7 @@ namespace Molten::Vulkan
 
 
     /** Memory allocator for logical device. */
-    class MOLTEN_API MemoryAllocator
+    class MOLTEN_GRAPHICS_API MemoryAllocator
     {
 
     public:

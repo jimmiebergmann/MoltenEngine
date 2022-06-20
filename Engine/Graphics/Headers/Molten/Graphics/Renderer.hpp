@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,20 +23,20 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_RENDERER_HPP
-#define MOLTEN_CORE_RENDERER_RENDERER_HPP
+#ifndef MOLTEN_GRAPHICS_RENDERER_HPP
+#define MOLTEN_GRAPHICS_RENDERER_HPP
 
-#include "Molten/Renderer/RenderTarget.hpp"
-#include "Molten/Renderer/DescriptorSet.hpp"
-#include "Molten/Renderer/IndexBuffer.hpp"
-#include "Molten/Renderer/Pipeline.hpp"
-#include "Molten/Renderer/RenderPass.hpp"
-#include "Molten/Renderer/Sampler.hpp"
-#include "Molten/Renderer/ShaderProgram.hpp"
-#include "Molten/Renderer/Texture.hpp"
-#include "Molten/Renderer/UniformBuffer.hpp"
-#include "Molten/Renderer/VertexBuffer.hpp"
-#include "Molten/Renderer/RenderResource.hpp"
+#include "Molten/Graphics/RenderTarget.hpp"
+#include "Molten/Graphics/DescriptorSet.hpp"
+#include "Molten/Graphics/IndexBuffer.hpp"
+#include "Molten/Graphics/Pipeline.hpp"
+#include "Molten/Graphics/RenderPass.hpp"
+#include "Molten/Graphics/Sampler.hpp"
+#include "Molten/Graphics/ShaderProgram.hpp"
+#include "Molten/Graphics/Texture.hpp"
+#include "Molten/Graphics/UniformBuffer.hpp"
+#include "Molten/Graphics/VertexBuffer.hpp"
+#include "Molten/Graphics/RenderResource.hpp"
 #include "Molten/System/Version.hpp"
 
 namespace Molten::Shader::Visual
@@ -60,7 +60,7 @@ namespace Molten
 
 
     /** Base class of renderer. */
-    class MOLTEN_API Renderer
+    class MOLTEN_GRAPHICS_API Renderer
     {
 
     public:

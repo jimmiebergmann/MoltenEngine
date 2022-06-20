@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,17 +23,17 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_OPENGLRENDERER_HPP
-#define MOLTEN_CORE_RENDERER_OPENGLRENDERER_HPP
+#ifndef MOLTEN_GRAPHICS_OPENGL_OPENGLRENDERER_HPP
+#define MOLTEN_GRAPHICS_OPENGL_OPENGLRENDERER_HPP
 
-#include "Molten/Types.hpp"
+#include "Molten/Core.hpp"
 
 #if defined(MOLTEN_ENABLE_OPENGL)
 
 #if MOLTEN_PLATFORM == MOLTEN_PLATFORM_WINDOWS
-    #include "Molten/Renderer/OpenGL/OpenGLWin32Renderer.hpp"
+    #include "Molten/Graphics/OpenGL/OpenGLWin32Renderer.hpp"
 #elif MOLTEN_PLATFORM == MOLTEN_PLATFORM_LINUX
-    #include "Molten/Renderer/OpenGL/OpenGLX11Renderer.hpp"
+    #include "Molten/Graphics/OpenGL/OpenGLX11Renderer.hpp"
 #endif
 
 namespace Molten

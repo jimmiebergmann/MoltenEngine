@@ -26,6 +26,16 @@
 #ifndef MOLTEN_CORE_CORE_HPP
 #define MOLTEN_CORE_CORE_HPP
 
+#include <stdint.h>
+#include <stddef.h>
+
+namespace Molten
+{
+
+    using Byte = uint8_t; ///< Data type of a single byte.
+
+}
+
 /*
 * Current version of Molten.
 */
@@ -200,7 +210,7 @@
         #pragma warning(disable : 4100) // identifier' : unreferenced formal parameter
     #endif
 
-    // Define as export or import, if FLARE_EXPORTS is defined.
+    // Define as export or import, if MOLTEN_EXPORT is defined.
     #if MOLTEN_PLATFORM == MOLTEN_PLATFORM_WINDOWS
         #undef MOLTEN_API
         #if defined(MOLTEN_EXPORT)

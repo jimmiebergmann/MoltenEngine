@@ -39,6 +39,7 @@ extern "C" {
 * CHANGE LOG:
 *
 * 2019-11-15 - Jimmie Bergmann - Fixed path to khrplatform.h, to fit Molten Engine.
+* 2022-06-16 - Jimmie Bergmann - New path to khrplatform.h.
 *
 */
 
@@ -62,7 +63,7 @@ extern "C" {
 
 #define GL_GLEXT_VERSION 20191029
 
-#include "Molten/Renderer/Khronos/khrplatform.h"
+#include "Molten/Graphics/Khronos/khrplatform.h"
 
 /* Generated C header for:
  * API: gl

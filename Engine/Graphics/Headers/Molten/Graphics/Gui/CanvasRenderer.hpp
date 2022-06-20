@@ -23,20 +23,20 @@
 *
 */
 
-#ifndef MOLTEN_CORE_GUI_CANVASRENDERER_HPP
-#define MOLTEN_CORE_GUI_CANVASRENDERER_HPP
+#ifndef MOLTEN_GRAPHICS_GUI_CANVASRENDERER_HPP
+#define MOLTEN_GRAPHICS_GUI_CANVASRENDERER_HPP
 
-#include "Molten/Gui/GuiTypes.hpp"
-#include "Molten/Gui/Font.hpp"
+#include "Molten/Graphics/Gui/GuiTypes.hpp"
+#include "Molten/Graphics/Gui/Font.hpp"
+#include "Molten/Graphics/RenderResource.hpp"
+#include "Molten/Graphics/Sampler.hpp"
+#include "Molten/Graphics/ShaderProgram.hpp"
+#include "Molten/Graphics/Texture.hpp"
+#include "Molten/Graphics/VertexBuffer.hpp"
 #include "Molten/Math/Vector.hpp"
 #include "Molten/Math/Matrix.hpp"
 #include "Molten/Math/Bounds.hpp"
 #include "Molten/Math/AABB.hpp"
-#include "Molten/Renderer/RenderResource.hpp"
-#include "Molten/Renderer/Sampler.hpp"
-#include "Molten/Renderer/ShaderProgram.hpp"
-#include "Molten/Renderer/Texture.hpp"
-#include "Molten/Renderer/VertexBuffer.hpp"
 
 namespace Molten
 {
@@ -62,7 +62,7 @@ namespace Molten::Gui
     class CanvasRenderer;
 
 
-    struct MOLTEN_API CanvasRendererTexture
+    struct MOLTEN_GRAPHICS_API CanvasRendererTexture
     {
 
         CanvasRendererTexture() = default;
@@ -78,7 +78,7 @@ namespace Molten::Gui
 
     };
 
-    struct MOLTEN_API CanvasRendererFramedTexture
+    struct MOLTEN_GRAPHICS_API CanvasRendererFramedTexture
     {
 
         CanvasRendererFramedTexture() = default;
@@ -94,7 +94,7 @@ namespace Molten::Gui
 
     };
 
-    struct MOLTEN_API CanvasRendererFontSequence
+    struct MOLTEN_GRAPHICS_API CanvasRendererFontSequence
     {
         struct Group
         {
@@ -117,7 +117,7 @@ namespace Molten::Gui
         std::vector<Group> groups;
     };
 
-    class MOLTEN_API CanvasRenderer
+    class MOLTEN_GRAPHICS_API CanvasRenderer
     {
 
     public:

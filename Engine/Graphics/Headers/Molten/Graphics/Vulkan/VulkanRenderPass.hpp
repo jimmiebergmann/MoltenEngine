@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,15 +23,15 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_VULKANRENDERPASS_HPP
-#define MOLTEN_CORE_RENDERER_VULKANRENDERPASS_HPP
+#ifndef MOLTEN_GRAPHICS_VULKAN_VULKANRENDERPASS_HPP
+#define MOLTEN_GRAPHICS_VULKAN_VULKANRENDERPASS_HPP
 
 #if defined(MOLTEN_ENABLE_VULKAN)
 
-#include "Molten/Renderer/RenderPass.hpp"
-#include "Molten/Renderer/Vulkan/VulkanRenderPassFrame.hpp"
-#include "Molten/Renderer/Vulkan/VulkanCommandBuffer.hpp"
-#include "Molten/Renderer/Vulkan/Utility/VulkanResult.hpp"
+#include "Molten/Graphics/RenderPass.hpp"
+#include "Molten/Graphics/Vulkan/VulkanRenderPassFrame.hpp"
+#include "Molten/Graphics/Vulkan/VulkanCommandBuffer.hpp"
+#include "Molten/Graphics/Vulkan/Utility/VulkanResult.hpp"
 
 namespace Molten
 {
@@ -47,7 +47,7 @@ namespace Molten
 
 
     /** Vulkan render pass attachment. */
-    struct MOLTEN_API VulkanRenderPassAttachment
+    struct MOLTEN_GRAPHICS_API VulkanRenderPassAttachment
     {
         VulkanRenderPassAttachment();
         VulkanRenderPassAttachment(
@@ -72,7 +72,7 @@ namespace Molten
 
 
     /** Vulkan Render pass. */
-    class MOLTEN_API VulkanRenderPass final : public RenderPass
+    class MOLTEN_GRAPHICS_API VulkanRenderPass final : public RenderPass
     {
 
     public:

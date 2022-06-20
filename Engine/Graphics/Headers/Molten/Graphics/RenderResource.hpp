@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,10 +23,10 @@
 *
 */
 
-#ifndef MOLTEN_CORE_RENDERER_RENDERERRESOURCE_HPP
-#define MOLTEN_CORE_RENDERER_RENDERERRESOURCE_HPP
+#ifndef MOLTEN_GRAPHICS_RENDERERRESOURCE_HPP
+#define MOLTEN_GRAPHICS_RENDERERRESOURCE_HPP
 
-#include "Molten/Core.hpp"
+#include "Molten/Graphics/Build.hpp"
 #include <memory>
 
 namespace Molten
@@ -45,7 +45,7 @@ namespace Molten
     class FramedUniformBuffer;
     class VertexBuffer;
 
-    class MOLTEN_API RenderResourceDeleter
+    class MOLTEN_GRAPHICS_API RenderResourceDeleter
     {
 
     public:

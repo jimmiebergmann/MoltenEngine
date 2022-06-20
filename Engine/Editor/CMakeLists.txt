@@ -9,32 +9,51 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/../CMake/Tools.cmake)
 
 option(MOLTEN_ENABLE_COVERAGE "Enables code coverage reporting" OFF)
 
-find_package(Threads)
+# Linux configurations.
+if(UNIX AND NOT APPLE)
+  set(LINUX TRUE)
+  find_package(Threads)
+endif()
 
 set(RootDir "${CMAKE_CURRENT_SOURCE_DIR}/../..")
 set(EngineDir "${RootDir}/Engine")
 set(CoreDir "${EngineDir}/Core")
 set(CoreHeadersDir "${CoreDir}/Headers")
-set(EditorDir "${CMAKE_CURRENT_SOURCE_DIR}")
-set(EditorHeadersDir "${CMAKE_CURRENT_SOURCE_DIR}/Headers")
-set(EditorSourceDir "${CMAKE_CURRENT_SOURCE_DIR}/Source")
-file(GLOB_RECURSE EditorHeaders "${EditorHeadersDir}/*.h" "${EditorHeadersDir}/*.hpp" "${EditorHeadersDir}/*.inl")
-file(GLOB_RECURSE EditorSources "${EditorSourceDir}/*.c" "${EditorSourceDir}/*.cpp")
+set(GraphicsDir "${EngineDir}/Graphics")
+set(GraphicsHeadersDir "${GraphicsDir}/Headers")
+set(EditorDir "${EngineDir}/Editor")
+set(HeadersDir "${EditorDir}/Headers")
+set(SourceDir "${EditorDir}/Source")
+set(EditorHeadersDir "${HeadersDir}/Molten/Editor")
+set(EditorSourceDir "${SourceDir}/Molten/Editor")
+set(VendorDir "${EngineDir}/Vendor")
 
-if (NOT TARGET Molten)
+file(GLOB_RECURSE EditorHeaders "${HeadersDir}/*.h" "${HeadersDir}/*.hpp" "${HeadersDir}/*.inl")
+file(GLOB_RECURSE EditorSources "${SourceDir}/*.c" "${SourceDir}/*.cpp")
+
+# Add Core
+if (NOT TARGET MoltenCore)
 	add_subdirectory(${CoreDir} ${CoreDir} EXCLUDE_FROM_ALL)
+endif()
+
+# Add Graphics
+if (NOT TARGET MoltenGraphics)
+	add_subdirectory(${GraphicsDir} ${GraphicsDir} EXCLUDE_FROM_ALL)
 endif() 
 
-include_directories ("${EditorHeadersDir}")				 
-include_directories ("${CoreHeadersDir}")
-
+# Create Editor
 add_executable(MoltenEditor "${EditorSources}" "${EditorHeaders}")
+target_include_directories(MoltenEditor PUBLIC "${HeadersDir}")
+target_include_directories(MoltenEditor PUBLIC "${CoreHeadersDir}")
+target_include_directories(MoltenEditor PUBLIC "${GraphicsHeadersDir}")
+target_include_directories(MoltenEditor PUBLIC "${VendorDir}")
 
+# Configure defaults.
 SetDefaultCompileOptions(MoltenEditor)
+SetDefaultLinkerInputs(MoltenGraphics)
 EnableMultiProcessorCompilation(MoltenEditor)
-
-CreateSourceGroups("${EditorSources}" "${EditorSourceDir}")
 CreateSourceGroups("${EditorHeaders}" "${EditorHeadersDir}")
+CreateSourceGroups("${EditorSources}" "${EditorSourceDir}")
 
 set_target_properties( MoltenEditor
   PROPERTIES
@@ -52,4 +71,4 @@ if(MOLTEN_ENABLE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU") ## Code cover
   target_link_libraries(MoltenEditor "gcov")
 endif()
 
-target_link_libraries(MoltenEditor Molten)
+target_link_libraries(MoltenEditor MoltenCore MoltenGraphics)
