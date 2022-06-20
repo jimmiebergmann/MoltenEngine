@@ -32,6 +32,7 @@
 #include <limits>
 #include <array>
 #include <string>
+#include <random>
 
 namespace Molten
 {
