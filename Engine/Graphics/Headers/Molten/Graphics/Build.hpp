@@ -28,6 +28,12 @@
 
 #include "Molten/Core.hpp"
 
+/*
+* DLL import or export, required for Windows, example:
+*   class MOLTEN_GRAPHICS_API MyClass {};
+*/
+#define MOLTEN_GRAPHICS_API
+
 // Export API
 #if !defined(MOLTEN_GRAPHICS_STATIC)
 #ifdef _MSC_VER

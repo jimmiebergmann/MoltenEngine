@@ -30,8 +30,8 @@
 #if MOLTEN_PLATFORM == MOLTEN_PLATFORM_LINUX
 
 #include "Molten/Graphics/OpenGL/OpengGLFunctions.hpp"
-#include "Molten/Graphics/PushConstant.hpp"
-#include "Molten/Window/Window.hpp"
+#include "Molten/Graphics/Window/Window.hpp"
+#include "Molten/Shader/PushConstant.hpp"
 #include "Molten/System/Exception.hpp"
 
 namespace Molten

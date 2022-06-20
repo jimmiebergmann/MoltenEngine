@@ -29,6 +29,7 @@
 #include "Molten/Shader/Shader.hpp"
 #include <vector>
 #include <string>
+#include <algorithm>
 
 namespace Molten::Shader::Visual
 {
