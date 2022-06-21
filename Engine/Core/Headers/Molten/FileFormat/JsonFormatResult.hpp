@@ -53,7 +53,7 @@ namespace Molten
         UnspecificSyntaxError
     };
 
-    struct MOLTEN_API JsonParseError
+    struct MOLTEN_CORE_API JsonParseError
     {
         JsonParseError(
             const size_t position,

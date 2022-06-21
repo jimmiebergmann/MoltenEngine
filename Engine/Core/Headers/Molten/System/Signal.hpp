@@ -131,7 +131,7 @@ namespace Molten
     };
 
 
-    class MOLTEN_API SignalDispatcher
+    class MOLTEN_CORE_API SignalDispatcher
     {
 
     public:
@@ -164,7 +164,7 @@ namespace Molten
     };
 
 
-    class MOLTEN_API DispatchSignalBase
+    class MOLTEN_CORE_API DispatchSignalBase
     {
 
     protected:

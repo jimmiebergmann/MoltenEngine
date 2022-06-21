@@ -40,7 +40,7 @@ namespace Molten::Shader::Visual
     
 
     /** Base class for Descriptor binding. */
-    class MOLTEN_API DescriptorBindingBase : public Node
+    class MOLTEN_CORE_API DescriptorBindingBase : public Node
     {
 
     public:

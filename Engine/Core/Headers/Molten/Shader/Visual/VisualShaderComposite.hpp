@@ -44,7 +44,7 @@ namespace Molten::Shader::Visual
 
 
     /** Visual script composite node base class. */
-    class MOLTEN_API CompositeBase : public Node
+    class MOLTEN_CORE_API CompositeBase : public Node
     {
 
     public:

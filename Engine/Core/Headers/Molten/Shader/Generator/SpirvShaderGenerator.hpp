@@ -67,7 +67,7 @@ namespace Molten::Shader
 
 
     /** SPIR-V code generator descriptor. */
-    struct MOLTEN_API SpirvGeneratorDescriptor
+    struct MOLTEN_CORE_API SpirvGeneratorDescriptor
     {
         const Visual::Script* script = nullptr;
         std::vector<size_t> ignoredOutputIndices = {};
@@ -78,7 +78,7 @@ namespace Molten::Shader
 
 
     /** SPIR-V code generator result. */
-    struct MOLTEN_API SpirvGeneratoResult
+    struct MOLTEN_CORE_API SpirvGeneratoResult
     {
         Spirv::Words source;
         std::vector<size_t> ignoredInputIndices;
@@ -86,7 +86,7 @@ namespace Molten::Shader
 
 
     /** SPIR-V code generator from visual script. */
-    class MOLTEN_API SpirvGenerator
+    class MOLTEN_CORE_API SpirvGenerator
     {
 
     public:

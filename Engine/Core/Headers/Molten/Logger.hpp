@@ -35,7 +35,7 @@ namespace Molten
 {
 
     /** Logger class. */
-    class MOLTEN_API Logger
+    class MOLTEN_CORE_API Logger
     {
 
     public:
@@ -115,7 +115,7 @@ namespace Molten
 
 
     /** File logger class. */
-    class MOLTEN_API FileLogger : public Logger
+    class MOLTEN_CORE_API FileLogger : public Logger
     {
 
     public:

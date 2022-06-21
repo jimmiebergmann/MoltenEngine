@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -32,7 +32,7 @@
 namespace Molten
 {
     /** Utility class for tracking fps over time. */
-    class MOLTEN_API FpsTracker
+    class MOLTEN_CORE_API FpsTracker
     {
 
     public:

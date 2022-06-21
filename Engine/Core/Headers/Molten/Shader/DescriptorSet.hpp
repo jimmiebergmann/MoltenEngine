@@ -43,7 +43,7 @@ namespace Molten
 
     /** Data structures for mapping arbitrary indices to actually used indices in compiler shader. */
     /**@{*/
-    struct MOLTEN_API MappedDescriptorBinding
+    struct MOLTEN_CORE_API MappedDescriptorBinding
     {
         MappedDescriptorBinding(
             const uint32_t index,
@@ -55,7 +55,7 @@ namespace Molten
 
     using MappedDescriptorBindings = std::map<uint32_t, MappedDescriptorBinding>;
 
-    struct MOLTEN_API MappedDescriptorSet
+    struct MOLTEN_CORE_API MappedDescriptorSet
     {
         MappedDescriptorSet();
         MappedDescriptorSet(const uint32_t index);

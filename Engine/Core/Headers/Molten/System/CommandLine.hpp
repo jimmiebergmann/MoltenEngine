@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -41,7 +41,7 @@ namespace Molten
 {
 
     /** Base class for command line arguments. */
-    class MOLTEN_API CliArgument
+    class MOLTEN_CORE_API CliArgument
     {
 
     public:
@@ -120,7 +120,7 @@ namespace Molten
     };
 
     /** Single argument flag. */
-    class MOLTEN_API CliFlag : public CliArgument
+    class MOLTEN_CORE_API CliFlag : public CliArgument
     {
 
     public:
@@ -174,7 +174,7 @@ namespace Molten
 
     };
 
-    class MOLTEN_API CliParser
+    class MOLTEN_CORE_API CliParser
     {
 
     public:

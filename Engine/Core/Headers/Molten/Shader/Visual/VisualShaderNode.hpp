@@ -54,7 +54,7 @@ namespace Molten::Shader::Visual
     /** Visual shader script node. This type is inherited by all script nodes.
      *  A node contains 0 to N input or/an output pins.
      */
-    class MOLTEN_API Node
+    class MOLTEN_CORE_API Node
     {
 
     public:

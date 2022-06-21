@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -35,7 +35,7 @@ namespace Molten
     *   It's not possible to stop or pause a clock.
     *   Clock starts to tick at construction.
     */
-    class MOLTEN_API Clock
+    class MOLTEN_CORE_API Clock
     {
 
     public:
@@ -60,7 +60,7 @@ namespace Molten
 
 
     /** Sleep clock class, used for limiting FPS for example. */
-    class MOLTEN_API SleepClock
+    class MOLTEN_CORE_API SleepClock
     {
 
     public:
@@ -95,7 +95,7 @@ namespace Molten
 
 
     /** Precision thread sleep function.*/
-    MOLTEN_API void SleepThreadFor(const Time& time);
+    MOLTEN_CORE_API void SleepThreadFor(const Time& time);
 
 }
 

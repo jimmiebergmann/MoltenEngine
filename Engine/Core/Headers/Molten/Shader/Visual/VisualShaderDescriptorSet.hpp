@@ -159,7 +159,7 @@ namespace Molten::Shader::Visual
 
 
     /** Descriptor set contrainer base class. */
-    class MOLTEN_API DescriptorSetsBase
+    class MOLTEN_CORE_API DescriptorSetsBase
     {
 
     public:

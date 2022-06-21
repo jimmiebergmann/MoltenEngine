@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -43,7 +43,7 @@ namespace Molten
 
 
     /** Task object with execution time tracking. */
-    class MOLTEN_API Task
+    class MOLTEN_CORE_API Task
     {
 
     public:
@@ -85,7 +85,7 @@ namespace Molten
 
 
     /** Parallel task group, with an interface to execute tasks in parallel. */
-    class MOLTEN_API ParallelTaskGroup
+    class MOLTEN_CORE_API ParallelTaskGroup
     {
 
     public:
@@ -142,7 +142,7 @@ namespace Molten
     };
 
     /** Serial task group, with an interface to execute tasks or parallel task groups in serial. */
-    class MOLTEN_API SerialTaskGroup
+    class MOLTEN_CORE_API SerialTaskGroup
     {
 
     public:

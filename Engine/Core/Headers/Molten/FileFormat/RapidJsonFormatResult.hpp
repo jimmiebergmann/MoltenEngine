@@ -34,7 +34,7 @@
 namespace Molten
 {
 
-    [[nodiscard]] JsonParseError MOLTEN_API CreateJsonErrorCode(
+    [[nodiscard]] MOLTEN_CORE_API JsonParseError CreateJsonErrorCode(
         const size_t position,
         const rapidjson::ParseErrorCode parseErrorCode);
 

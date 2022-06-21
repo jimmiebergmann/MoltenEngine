@@ -37,7 +37,7 @@
 namespace Molten
 {
 
-	struct MOLTEN_API Uuid
+	struct MOLTEN_CORE_API Uuid
 	{
 		Uuid() = default;
 

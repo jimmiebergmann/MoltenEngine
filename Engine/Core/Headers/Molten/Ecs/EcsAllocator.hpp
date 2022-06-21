@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2020 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -39,7 +39,7 @@ namespace Molten::Ecs
     * The user can request any amount of memory, less or equal to GetBlockSize().
     *
     */
-    class MOLTEN_API Allocator
+    class MOLTEN_CORE_API Allocator
     {
 
     public:

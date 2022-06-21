@@ -34,7 +34,7 @@
 namespace Molten
 {
 
-    class MOLTEN_API FunctionDispatcher
+    class MOLTEN_CORE_API FunctionDispatcher
     {
 
     public:

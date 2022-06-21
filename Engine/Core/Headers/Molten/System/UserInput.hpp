@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -34,7 +34,7 @@ namespace Molten
 {
 
     /** Generic mouse class. */
-    class MOLTEN_API Mouse
+    class MOLTEN_CORE_API Mouse
     {
 
     public:
@@ -63,7 +63,7 @@ namespace Molten
 
 
     /** Generic keyboard class. */
-    class MOLTEN_API Keyboard
+    class MOLTEN_CORE_API Keyboard
     {
 
     public:
@@ -172,7 +172,7 @@ namespace Molten
      *  The *-Pressed events are automatically pushed and
      *  *-Down events are supposed to be pushed every update if the key or button is being held down.
      */
-    class MOLTEN_API UserInput
+    class MOLTEN_CORE_API UserInput
     {
 
     public:
@@ -182,7 +182,7 @@ namespace Molten
          *   - MouseButtonDown
          *   - MouseButtonReleased
          */
-        struct MOLTEN_API MouseButtonEvent
+        struct MOLTEN_CORE_API MouseButtonEvent
         {
             Mouse::Button button;
             Vector2i32 position;
@@ -191,7 +191,7 @@ namespace Molten
         /** Mouse event, describing the following event types:
          *   - MouseMove
          */
-        struct MOLTEN_API MouseMoveEvent
+        struct MOLTEN_CORE_API MouseMoveEvent
         {
             Vector2i32 position;
         };
@@ -201,7 +201,7 @@ namespace Molten
          *   - KeyDown
          *   - KeyReleased
          */
-        struct MOLTEN_API KeyboardEvent
+        struct MOLTEN_CORE_API KeyboardEvent
         {
             Keyboard::Key key;
         };
@@ -231,7 +231,7 @@ namespace Molten
         };
 
         /** Event object, containing information about  */
-        class MOLTEN_API Event
+        class MOLTEN_CORE_API Event
         {
 
         public:

@@ -54,7 +54,7 @@ namespace Molten
     *   sf.Release(); // Everything is fine, release the cleanup function.
     *
     */
-    class MOLTEN_API SmartFunction
+    class MOLTEN_CORE_API SmartFunction
     {
 
     public:

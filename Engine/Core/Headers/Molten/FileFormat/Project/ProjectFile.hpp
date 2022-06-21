@@ -38,7 +38,7 @@
 namespace Molten
 {
 
-    struct MOLTEN_API ProjectFile
+    struct MOLTEN_CORE_API ProjectFile
     {
         Version fileVersion;
         Version engineVersion;
@@ -64,8 +64,8 @@ namespace Molten
 
     using ProjectFileReadResult = FileFormatResult<ProjectFile, ProjectFileReadErrorResult, ProjectFileWarningCode>;
 
-    MOLTEN_API ProjectFileReadResult ReadProjectFile(std::istream& istream);
-    MOLTEN_API ProjectFileReadResult ReadProjectFile(std::filesystem::path path);
+    MOLTEN_CORE_API ProjectFileReadResult ReadProjectFile(std::istream& istream);
+    MOLTEN_CORE_API ProjectFileReadResult ReadProjectFile(std::filesystem::path path);
 
 }
 

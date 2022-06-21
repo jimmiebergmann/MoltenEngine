@@ -36,7 +36,7 @@ namespace Molten
     /**
     * @brief Filesystem class.
     */
-    class MOLTEN_API FileSystem
+    class MOLTEN_CORE_API FileSystem
     {
 
     public:

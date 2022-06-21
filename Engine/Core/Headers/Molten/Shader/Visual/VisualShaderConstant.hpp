@@ -31,7 +31,7 @@
 namespace Molten::Shader::Visual
 {
 
-    class MOLTEN_API ConstantBase : public Node
+    class MOLTEN_CORE_API ConstantBase : public Node
     {
 
     public:

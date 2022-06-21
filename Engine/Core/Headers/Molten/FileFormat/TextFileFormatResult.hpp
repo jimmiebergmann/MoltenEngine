@@ -33,7 +33,7 @@
 namespace Molten
 {
 
-    class MOLTEN_API TextFileFormatResult
+    class MOLTEN_CORE_API TextFileFormatResult
     {
 
     public:

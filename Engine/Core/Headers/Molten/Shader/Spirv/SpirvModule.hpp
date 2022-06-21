@@ -209,8 +209,8 @@ namespace Molten::Shader::Spirv
         std::vector<Id> interfaceIds;
     };
 
-    [[nodiscard]] Word MOLTEN_API CreateOpCode(const OpCode opCode, const HalfWord wordCount);
-    [[nodiscard]] HalfWord GetLiteralWordCount(const size_t stringLength);
+    [[nodiscard]] MOLTEN_CORE_API Word CreateOpCode(const OpCode opCode, const HalfWord wordCount);
+    [[nodiscard]] MOLTEN_CORE_API HalfWord GetLiteralWordCount(const size_t stringLength);
 
     class ModuleBuffer
     {

@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -75,7 +75,7 @@ namespace Molten
      * - http://www.martinreddy.net/gfx/3d/OBJ.spec
      * - https://www.fileformat.info/format/material/
      */
-    class MOLTEN_API ObjMeshFile
+    class MOLTEN_CORE_API ObjMeshFile
     {
 
     public:
@@ -226,7 +226,7 @@ namespace Molten
     /** Helper class for reading obj mesh files.
      *  This class is internally used by ObjMeshFile::ReadFromFile(...).
      */
-    class MOLTEN_API ObjMeshFileReader
+    class MOLTEN_CORE_API ObjMeshFileReader
     {
 
     public:

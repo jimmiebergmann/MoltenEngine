@@ -50,7 +50,7 @@ namespace Molten::Shader::Visual
 
 
     /** Visual shader script class, used for generating shaders via visual node based system. */
-    class MOLTEN_API Script
+    class MOLTEN_CORE_API Script
     {
 
     public:
@@ -110,7 +110,7 @@ namespace Molten::Shader::Visual
 
 
     /** Visual vertex shader script. */
-    class MOLTEN_API VertexScript : public Script
+    class MOLTEN_CORE_API VertexScript : public Script
     {
 
     public:
@@ -219,7 +219,7 @@ namespace Molten::Shader::Visual
     /**
     * @brief Fragment shader script.
     */
-    class MOLTEN_API FragmentScript : public Script
+    class MOLTEN_CORE_API FragmentScript : public Script
     {
 
     public:

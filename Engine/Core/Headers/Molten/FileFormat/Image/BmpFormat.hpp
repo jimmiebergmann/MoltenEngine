@@ -52,7 +52,7 @@ namespace Molten::Formats::Bmp
 
 
     /** BMP Header class, containing basic file information. */
-    class MOLTEN_API Header
+    class MOLTEN_CORE_API Header
     {
 
     public:
@@ -82,7 +82,7 @@ namespace Molten::Formats::Bmp
 
 
     /** BMP Info Header class, containing information about bitmap data. */
-    class MOLTEN_API InfoHeader
+    class MOLTEN_CORE_API InfoHeader
     {
 
     public:
@@ -92,7 +92,7 @@ namespace Molten::Formats::Bmp
 
 
     /** BMP Color Table class. This section is optional, but used for padding indices to color values. */
-    class MOLTEN_API ColorTable
+    class MOLTEN_CORE_API ColorTable
     {
 
     public:
@@ -102,7 +102,7 @@ namespace Molten::Formats::Bmp
 
 
     /** BMP File class contains all data necessary for reading and writing BMP image files. */
-    class MOLTEN_API File
+    class MOLTEN_CORE_API File
     {
 
     public:
@@ -161,9 +161,9 @@ namespace Molten::Formats::Bmp
     };
 
 
-    MOLTEN_API ReaderResult ReadFromFile(const std::string& filename);
-    MOLTEN_API ReaderResult ReadFromBytes(const std::vector<uint8_t>& bytes);
-    MOLTEN_API ReaderResult ReadFromStream(const std::istream& stream);
+    MOLTEN_CORE_API ReaderResult ReadFromFile(const std::string& filename);
+    MOLTEN_CORE_API ReaderResult ReadFromBytes(const std::vector<uint8_t>& bytes);
+    MOLTEN_CORE_API ReaderResult ReadFromStream(const std::istream& stream);
     
 }
 

@@ -37,7 +37,7 @@ namespace Molten
 {
 
     /** Semantic versioning class. */
-    class MOLTEN_API Version
+    class MOLTEN_CORE_API Version
     {
 
     public:

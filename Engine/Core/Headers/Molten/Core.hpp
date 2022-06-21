@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -87,9 +87,9 @@ namespace Molten
 
 /*
 * DLL import or export, required for Windows, example:
-*   class MOLTEN_API MyClass {};
+*   class MOLTEN_CORE_API MyClass {};
 */
-#define MOLTEN_API
+#define MOLTEN_CORE_API
 
 /*
 * Disable anymous structure warnings,
@@ -212,11 +212,11 @@ namespace Molten
 
     // Define as export or import, if MOLTEN_EXPORT is defined.
     #if MOLTEN_PLATFORM == MOLTEN_PLATFORM_WINDOWS
-        #undef MOLTEN_API
+        #undef MOLTEN_CORE_API
         #if defined(MOLTEN_EXPORT)
-            #define MOLTEN_API __declspec(dllexport)
+            #define MOLTEN_CORE_API __declspec(dllexport)
         #else
-            #define MOLTEN_API __declspec(dllimport)
+            #define MOLTEN_CORE_API __declspec(dllimport)
         #endif
     #endif
 #endif

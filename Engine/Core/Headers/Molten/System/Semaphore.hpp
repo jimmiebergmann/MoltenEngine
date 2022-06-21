@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -37,7 +37,7 @@ namespace Molten
     *   Providing a lockable object,
     *   making it possible to block the current thread, until being notified and unblocked.
     */
-    class MOLTEN_API Semaphore
+    class MOLTEN_CORE_API Semaphore
     {
 
     public:

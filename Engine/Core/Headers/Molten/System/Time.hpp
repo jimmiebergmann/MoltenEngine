@@ -33,7 +33,7 @@ namespace Molten
 {
 
     /** Time class. */
-    class MOLTEN_API Time
+    class MOLTEN_CORE_API Time
     {
 
     public:

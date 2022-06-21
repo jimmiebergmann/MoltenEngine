@@ -32,7 +32,7 @@
 namespace Molten
 {
 
-    struct MOLTEN_API PushConstantLocation
+    struct MOLTEN_CORE_API PushConstantLocation
     {
 
         static constexpr uint32_t UnknownId = std::numeric_limits<uint32_t>::max();

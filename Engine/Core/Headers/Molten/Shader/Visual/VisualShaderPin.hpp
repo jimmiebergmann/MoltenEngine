@@ -48,7 +48,7 @@ namespace Molten::Shader::Visual
 
 
     /** Visual script pin base class. */
-    class MOLTEN_API Pin
+    class MOLTEN_CORE_API Pin
     {
 
     public:

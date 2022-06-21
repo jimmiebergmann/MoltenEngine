@@ -49,7 +49,7 @@ namespace Molten::Shader::Visual
 
 
     /** Operator node base class of shader script. Inherited by all operator nodes.  */
-    class MOLTEN_API OperatorBase : public Node
+    class MOLTEN_CORE_API OperatorBase : public Node
     {
 
     public:
@@ -79,7 +79,7 @@ namespace Molten::Shader::Visual
     /**
     * Arithmetic operator node base class of shader script. Inherited by all arithemic operator nodes.
     */
-    class MOLTEN_API ArithmeticOperatorBase : public OperatorBase
+    class MOLTEN_CORE_API ArithmeticOperatorBase : public OperatorBase
     {
 
     public:

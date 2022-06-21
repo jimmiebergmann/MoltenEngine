@@ -58,7 +58,7 @@ namespace Molten::Shader::Visual
 
 
     /** Visual script function node base class. */
-    class MOLTEN_API FunctionBase : public Node
+    class MOLTEN_CORE_API FunctionBase : public Node
     {
 
     public:
