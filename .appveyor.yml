@@ -82,4 +82,5 @@ build_script:
    
 after_build:
    - cd ../Bin
-   - MoltenCoreTest%output_name_postfix%.exe
+   - MoltenCoreTests%output_name_postfix%.exe
+   - MoltenGraphicsTests%output_name_postfix%.exe
