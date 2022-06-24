@@ -3,4 +3,5 @@ project (MoltenEngine)
 
 add_subdirectory(Core)
 add_subdirectory(Graphics)
+add_subdirectory(EditorFramework)
 add_subdirectory(Editor)

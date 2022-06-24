@@ -84,3 +84,4 @@ after_build:
    - cd ../Bin
    - MoltenCoreTests%output_name_postfix%.exe
    - MoltenGraphicsTests%output_name_postfix%.exe
+   - MoltenEditorFrameworkTests%output_name_postfix%.exe

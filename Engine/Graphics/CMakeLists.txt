@@ -26,8 +26,8 @@ set(GraphicsHeadersDir "${HeadersDir}/Molten/Graphics")
 set(GraphicsSourceDir "${SourceDir}/Molten/Graphics")
 set(VendorDir "${EngineDir}/Vendor")
 
-file(GLOB_RECURSE GraphicsHeaders "${HeadersDir}/*.h" "${HeadersDir}/*.hpp" "${HeadersDir}/*.inl")
-file(GLOB_RECURSE GraphicsSources "${SourceDir}/*.c" "${SourceDir}/*.cpp")
+file(GLOB_RECURSE Headers "${HeadersDir}/*.h" "${HeadersDir}/*.hpp" "${HeadersDir}/*.inl")
+file(GLOB_RECURSE Sources "${SourceDir}/*.c" "${SourceDir}/*.cpp")
 
 # Linux configurations.
 if(UNIX AND NOT APPLE)
@@ -69,7 +69,7 @@ if (NOT TARGET MoltenCore)
 endif() 
 
 # Create library.
-add_library(MoltenGraphics SHARED "${GraphicsSources}" "${GraphicsHeaders}")
+add_library(MoltenGraphics SHARED "${Sources}" "${Headers}")
 target_include_directories(MoltenGraphics PUBLIC "${HeadersDir}")
 target_include_directories(MoltenGraphics PUBLIC "${CoreHeadersDir}")
 target_include_directories(MoltenGraphics PUBLIC "${VendorDir}")
@@ -78,8 +78,8 @@ target_include_directories(MoltenGraphics PUBLIC "${VendorDir}")
 SetDefaultCompileOptions(MoltenGraphics)
 SetDefaultLinkerInputs(MoltenGraphics)
 EnableMultiProcessorCompilation(MoltenGraphics)
-CreateSourceGroups("${GraphicsHeaders}" "${GraphicsHeadersDir}")
-CreateSourceGroups("${GraphicsSources}" "${GraphicsSourceDir}")
+CreateSourceGroups("${Headers}" "${GraphicsHeadersDir}")
+CreateSourceGroups("${Sources}" "${GraphicsSourceDir}")
 
 # Set preprocessor definitions.
 target_compile_definitions(MoltenGraphics PRIVATE MOLTEN_GRAPHICS_EXPORT)

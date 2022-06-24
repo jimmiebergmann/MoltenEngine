@@ -24,7 +24,7 @@
 */
 
 #include "Test.hpp"
-#include "Molten/FileFormat/Project/ProjectFile.hpp"
+#include "Molten/EditorFramework/FileFormat/ProjectFile.hpp"
 #include "Molten/Utility/Template.hpp"
 #include <sstream>
 

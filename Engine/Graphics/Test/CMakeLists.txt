@@ -25,7 +25,7 @@ set(TestDir "${EngineDir}/Test")
 set(TestIncludeDir "${TestDir}/Headers/Molten/Test")
 
 set(TestMainSource "${TestDir}/Source/Molten/Test/TestMain.cpp")
-file(GLOB_RECURSE GraphicsTestSources "${GraphicsTestSourceDir}/*.c" "${GraphicsTestSourceDir}/*.cpp")
+file(GLOB_RECURSE TestSources "${GraphicsTestSourceDir}/*.c" "${GraphicsTestSourceDir}/*.cpp")
 
 # Add google test
 if (NOT TARGET gtest)
@@ -41,7 +41,7 @@ if (NOT TARGET MoltenGraphics)
 	add_subdirectory(${GraphicsDir} ${GraphicsDir} EXCLUDE_FROM_ALL)
 endif() 
 
-add_executable(MoltenGraphicsTests "${TestMainSource}" "${GraphicsTestSources}")
+add_executable(MoltenGraphicsTests "${TestMainSource}" "${TestSources}")
 target_include_directories(MoltenGraphicsTests PUBLIC "${TestIncludeDir}")
 target_include_directories(MoltenGraphicsTests PUBLIC "${CoreHeadersDir}")
 target_include_directories(MoltenGraphicsTests PUBLIC "${GraphicsHeadersDir}")
@@ -49,7 +49,7 @@ target_include_directories(MoltenGraphicsTests PUBLIC "${GraphicsHeadersDir}")
 # Configure defaults.
 SetDefaultCompileOptions(MoltenGraphicsTests)
 EnableMultiProcessorCompilation(MoltenGraphicsTests)
-CreateSourceGroups("${GraphicsTestSources}" "${GraphicsTestSourceDir}")
+CreateSourceGroups("${TestSources}" "${GraphicsTestSourceDir}")
 
 set_target_properties( MoltenGraphicsTests
   PROPERTIES

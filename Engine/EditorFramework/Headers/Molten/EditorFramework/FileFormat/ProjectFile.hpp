@@ -23,9 +23,10 @@
 *
 */
 
-#ifndef MOLTEN_CORE_FILEFORMAT_PROJECT_PROJECTFILE_HPP
-#define MOLTEN_CORE_FILEFORMAT_PROJECT_PROJECTFILE_HPP
+#ifndef MOLTEN_EDITOR_FRAMEWORK_FILEFORMAT_PROJECTFILE_HPP
+#define MOLTEN_EDITOR_FRAMEWORK_FILEFORMAT_PROJECTFILE_HPP
 
+#include "Molten/EditorFramework/Build.hpp"
 #include "Molten/FileFormat/FileFormatResult.hpp"
 #include "Molten/FileFormat/JsonFormatResult.hpp"
 #include "Molten/Utility/Uuid.hpp"
@@ -38,7 +39,7 @@
 namespace Molten
 {
 
-    struct MOLTEN_CORE_API ProjectFile
+    struct MOLTEN_EDITOR_FRAMEWORK_API ProjectFile
     {
         Version fileVersion;
         Version engineVersion;
@@ -64,8 +65,8 @@ namespace Molten
 
     using ProjectFileReadResult = FileFormatResult<ProjectFile, ProjectFileReadErrorResult, ProjectFileWarningCode>;
 
-    MOLTEN_CORE_API ProjectFileReadResult ReadProjectFile(std::istream& istream);
-    MOLTEN_CORE_API ProjectFileReadResult ReadProjectFile(std::filesystem::path path);
+    MOLTEN_EDITOR_FRAMEWORK_API ProjectFileReadResult ReadProjectFile(std::istream& istream);
+    MOLTEN_EDITOR_FRAMEWORK_API ProjectFileReadResult ReadProjectFile(std::filesystem::path path);
 
 }
 
