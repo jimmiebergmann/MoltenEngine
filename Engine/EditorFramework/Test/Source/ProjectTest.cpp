@@ -23,27 +23,22 @@
 *
 */
 
-#ifndef MOLTEN_CORE_FILEFORMAT_FILEFORMATRESULT_HPP
-#define MOLTEN_CORE_FILEFORMAT_FILEFORMATRESULT_HPP
-
-#include "Molten/System/Result.hpp"
-#include <vector>
+#include "Test.hpp"
+#include "Molten/EditorFramework/Project.hpp"
+#include "Molten/Utility/Template.hpp"
 
 namespace Molten
 {
 
-    template<typename TData, typename TWarning>
-    struct FileFormatResultSuccess
+    TEST(Project, CreateProject_NoTemplate)
     {
-        TData data;
-        std::vector<TWarning> warnings;
-    };
+        const auto dir = Molten::Test::CreateTestDirectory("Project_CreateProject_NoTemplate");
+        EXPECT_EQ(Project::Create(dir, "my_new_project"), CreateProjectResult::Success);
+        
+        const auto projectDir = dir / "my_new_project";
 
-    template<typename TData, typename TError, typename TWarning>
-    using FileFormatResult = Result<FileFormatResultSuccess<TData, TWarning>, TError>;
-
-    struct OpenFileError{};
+        auto openResult = Project::Open(projectDir / "my_new_project.mproj");
+        ASSERT_TRUE(openResult.IsValid());
+    }
 
 }
-
-#endif

@@ -28,6 +28,7 @@
 #include "ThirdParty/rapidjson/include/rapidjson/document.h"
 #include "ThirdParty/rapidjson/include/rapidjson/istreamwrapper.h"
 #include "ThirdParty/rapidjson/include/rapidjson/schema.h"
+#include "ThirdParty/rapidjson/include/rapidjson/prettywriter.h"
 #include <array>
 #include <string>
 #include <fstream>
@@ -174,7 +175,81 @@ namespace Molten
     ProjectFileReadResult ReadProjectFile(std::filesystem::path path)
     {
         std::ifstream file(path.c_str());
+        if (!file.is_open())
+        {
+            return ProjectFileReadResult::CreateError(OpenFileError{});
+        }
+
         return ReadProjectFile(file);
+    }
+
+    bool WriteProjectFile(
+        const ProjectFile& projectFile,
+        std::filesystem::path path)
+    {
+        std::ofstream file(path);
+        if (!file.is_open())
+        {
+            return false;
+        }
+
+        rapidjson::Document jsonDocument;
+        jsonDocument.SetObject();
+
+        {
+            const auto fileVersion = ToString(projectFile.fileVersion);
+
+            jsonDocument.AddMember(
+                "file_version", 
+                rapidjson::Value{
+                     fileVersion.c_str(),
+                    static_cast<rapidjson::SizeType>(fileVersion.size()),
+                    jsonDocument.GetAllocator()
+                },
+                jsonDocument.GetAllocator());
+        } 
+        {
+            const auto engineVersion = ToString(projectFile.engineVersion);
+
+            jsonDocument.AddMember(
+                "engine_version",
+                rapidjson::Value{
+                    engineVersion.c_str(),
+                    static_cast<rapidjson::SizeType>(engineVersion.size()),
+                    jsonDocument.GetAllocator()
+                },
+                jsonDocument.GetAllocator());
+        }
+        {
+            const auto globalId = ToString(projectFile.globalId);
+
+            jsonDocument.AddMember(
+                "global_id",
+                rapidjson::Value{
+                    globalId.c_str(),
+                    static_cast<rapidjson::SizeType>(globalId.size()),
+                    jsonDocument.GetAllocator()
+                },
+                jsonDocument.GetAllocator());
+        }
+        {
+            jsonDocument.AddMember(
+                "description",
+                rapidjson::Value{
+                    projectFile.description.c_str(),
+                    static_cast<rapidjson::SizeType>(projectFile.description.size()),
+                    jsonDocument.GetAllocator()
+                },
+                jsonDocument.GetAllocator());
+        }
+        
+        rapidjson::StringBuffer buffer;
+        rapidjson::PrettyWriter writer(buffer);
+
+        jsonDocument.Accept(writer);
+        file.write(buffer.GetString(), buffer.GetSize());
+
+        return true;
     }
 
 }

@@ -49,15 +49,24 @@
 
 #include "Molten/System/Clock.hpp"
 #include <string>
+#include <filesystem>
 
 namespace Molten::Test
 {
 
     /** Googletest style info printer. */
-    static void PrintInfo(const std::string& message)
+    inline void PrintInfo(const std::string& message)
     {
         std::cout << "\033[0;32m" << "[          ] " << "\033[0;0m";
         std::cout << "\033[0;36m" << message << "\033[0;0m" << std::endl;
+    }
+
+    inline std::filesystem::path CreateTestDirectory(const std::string& testName)
+    {
+        const auto path = std::filesystem::path{ "Test" } / testName;
+        std::filesystem::remove_all(path);
+        std::filesystem::create_directory(path);
+        return path;
     }
 
     /** Googletest style time benchmarker class. This object will print the result at destruction. */

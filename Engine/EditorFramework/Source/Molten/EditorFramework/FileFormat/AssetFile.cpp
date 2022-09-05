@@ -23,52 +23,26 @@
 *
 */
 
-#ifndef MOLTEN_CORE_SYSTEM_FILESYSTEM_HPP
-#define MOLTEN_CORE_SYSTEM_FILESYSTEM_HPP
-
-#include "Molten/Core.hpp"
-#include <vector>
-#include <string>
+#include "Molten/EditorFramework/FileFormat/AssetFile.hpp"
+#include <fstream>
 
 namespace Molten
 {
 
-    /**
-    * @brief Filesystem class.
-    */
-    class MOLTEN_CORE_API FileSystem
+    AssetFile ReadAssetFile(std::istream& istream)
     {
+        return {};
+    }
 
-    public:
+    AssetFile ReadAssetFile(std::filesystem::path path)
+    {
+        std::ifstream file(path.c_str(), std::ifstream::binary);
+        if (!file.is_open())
+        {
+            return {};
+        }
 
-        /**
-        * @brief Read file of given filename.
-        *
-        * @param filename Full path and name of file to read.
-        *
-        * @throw Exception if unable to open file.
-        *
-        * @return Raw pointer of data. User is responsible of deleting the pointer.
-        *         nullptr is returned if file is empty.
-        */
-        static std::vector<uint8_t> ReadFile(const std::string& filename);
-        
-        /**
-        * @brief Make directory, from current directory.
-        *        Recursive directory creation is not yet supported.
-        *        
-        */
-        static bool MakeDirectory(const std::string& directory);
-
-        /**
-        * @brief Delete file, from current directory.
-        *
-        */
-        static bool DeleteFile(const std::string& filename);
-
-
-    };
+        return ReadAssetFile(file);
+    }
 
 }
-
-#endif

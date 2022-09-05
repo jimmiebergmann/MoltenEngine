@@ -48,14 +48,11 @@ namespace Molten
         /** Constructor. */
         OpenGLWin32Renderer();
 
-        /** Constructs and creates renderer. */
-        OpenGLWin32Renderer(RenderTarget& renderTarget, const Version& version, Logger* logger = nullptr);
-
         /** Virtual destructor. */
         ~OpenGLWin32Renderer() override;
 
         /** Opens renderer by loading and attaching renderer to provided window. */
-        bool Open(RenderTarget& renderTarget, const Version& version = Version::None, Logger* logger = nullptr) override;
+        bool Open(const RendererDescriptor& descriptor) override;
 
         /** Closing renderer. */
         void Close() override;

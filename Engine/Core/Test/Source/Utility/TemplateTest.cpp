@@ -26,6 +26,17 @@
 #include "Test.hpp"
 #include "Molten/Utility/Template.hpp"
 
+template<typename T>
+struct Foo
+{
+
+};
+
+template<typename T>
+struct Bar
+{
+
+};
 
 namespace Molten
 {
@@ -66,5 +77,22 @@ namespace Molten
         EXPECT_FALSE(VariantEqualsValue(var4, int{ 2 }));
         EXPECT_TRUE(VariantEqualsValue(var4, float{ 2.0f }));
     }
+
+    TEST(Utility, Template_IsInstance)
+    {
+        const auto value = Foo<int>{};
+
+        EXPECT_TRUE((IsTemplateInstance<Foo<int>, Foo>::value));
+        EXPECT_TRUE((IsTemplateInstance<Foo<float>, Foo>::value));
+        EXPECT_FALSE((IsTemplateInstance<Foo<int>, Bar>::value));
+        EXPECT_FALSE((IsTemplateInstance<Foo<float>, Bar>::value));
+
+        EXPECT_FALSE((IsTemplateInstance<Bar<int>, Foo>::value));
+        EXPECT_FALSE((IsTemplateInstance<Bar<float>, Foo>::value));
+        EXPECT_TRUE((IsTemplateInstance<Bar<int>, Bar>::value));
+        EXPECT_TRUE((IsTemplateInstance<Bar<float>, Bar>::value));
+
+        EXPECT_FALSE((IsTemplateInstance<float, Bar>::value));
+    }  
 
 }

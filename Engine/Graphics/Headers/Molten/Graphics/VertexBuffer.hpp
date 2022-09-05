@@ -37,13 +37,6 @@ namespace Molten
 
     public:
 
-        /** Enumerator of data types. */
-        enum class DataType : uint8_t
-        {
-            Float32,
-            Float64
-        };
-
         VertexBuffer() = default;
         virtual ~VertexBuffer() = default;
 
@@ -57,9 +50,7 @@ namespace Molten
 
     };
 
-    /**
-    * @brief Descriptor class of vertex buffer class.
-    */
+    /** Descriptor of vertex buffer resource object. */
     struct MOLTEN_GRAPHICS_API VertexBufferDescriptor
     {
 

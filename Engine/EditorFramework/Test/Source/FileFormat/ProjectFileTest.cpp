@@ -27,9 +27,44 @@
 #include "Molten/EditorFramework/FileFormat/ProjectFile.hpp"
 #include "Molten/Utility/Template.hpp"
 #include <sstream>
+#include <fstream>
 
 namespace Molten
 {
+
+    TEST(FileFormat, ProjectFile_OpenFile)
+    {
+        const auto dir = Molten::Test::CreateTestDirectory("FileFormat_ProjectFile");
+
+        {
+            const auto path = dir / "cannot_open_this_file.txt";
+            auto projectFile = ReadProjectFile(path);
+            ASSERT_FALSE(projectFile.IsValid());
+            ASSERT_TRUE(VariantEqualsType<OpenFileError>(projectFile.Error()));
+        }
+        {
+            const auto path = dir / "project_file_test.mproj";
+
+            {
+                std::string content = R"(
+                {
+	                "file_version": "1.2.3",
+	                "engine_version": "4.5.6",
+	                "global_id": "78563412-ab90-efcd-2143-658709badcfe",
+	                "description": "Hello world"
+                }
+                )";
+
+                std::ofstream fout(path);
+                ASSERT_TRUE(fout.is_open());
+                fout.write(content.c_str(), content.size());
+            }
+            
+            auto projectFile = ReadProjectFile(path);
+            ASSERT_TRUE(projectFile.IsValid());
+        }
+    }
+
     TEST(FileFormat, ProjectFile_Success)
     {
         {

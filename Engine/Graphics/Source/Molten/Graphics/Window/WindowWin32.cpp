@@ -349,12 +349,6 @@ namespace Molten
         m_dropTarget(*this)
     {}
 
-    WindowWin32::WindowWin32(const WindowDescriptor& descriptor) :
-        WindowWin32()
-    {
-        WindowWin32::Open(descriptor);
-    }
-
     WindowWin32::~WindowWin32()
     {
         WindowWin32::Close();
@@ -407,7 +401,7 @@ namespace Molten
         m_window = ::CreateWindowEx(
             m_extendedStyle,
             className.c_str(),
-            descriptor.title.c_str(), //stringToWideString(m_title).c_str(),
+            descriptor.title.c_str(),
             WS_CLIPSIBLINGS | WS_CLIPCHILDREN | m_style,
             CW_USEDEFAULT,
             CW_USEDEFAULT,

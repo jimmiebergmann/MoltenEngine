@@ -20,9 +20,10 @@
 -   Put output reference arguments at the beginning of any function's argument list.
 -   Use fixed width integer types, e.g. `uint8_t`, `int32_t`, `uint32_t`.
 -   Document public members of classes.
+-   Never transfer object ownership through raw pointers in public APIs.
 
 ## Tests
 Make sure to add new unit tests for new classes, functions or features. Unit tests are written using the `googletest` framework, which is available as a submodule.
 
 ## License
-This project is licensed under MIT license. Put license notice on top of all header and source files.
+This project is licensed under MIT license. Put license notice at top of all header and source files.

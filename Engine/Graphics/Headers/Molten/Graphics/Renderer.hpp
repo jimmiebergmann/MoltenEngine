@@ -38,6 +38,7 @@
 #include "Molten/Graphics/VertexBuffer.hpp"
 #include "Molten/Graphics/RenderResource.hpp"
 #include "Molten/System/Version.hpp"
+#include <memory>
 
 namespace Molten::Shader::Visual
 {
@@ -51,11 +52,20 @@ namespace Molten
     class Logger;
 
     /** Structure for storing and presenting capabilities and features supported by renderer.
-     *  Each renderer implementation must present its capabilities via Renderer::GetFeatures().
+     *  Each renderer implementation must present its capabilities via Renderer::GetCapabilities().
      */
     struct RendererCapabilities
     {
         bool textureSwizzle;
+    };
+
+
+    /** Renderer creation descriptor. */
+    struct MOLTEN_GRAPHICS_API RendererDescriptor
+    {
+        RenderTarget& renderTarget;
+        Version version = Version::None;
+        Logger* logger = nullptr;
     };
 
 
@@ -73,17 +83,18 @@ namespace Molten
         };
 
         /** Static function for creating any renderer by Type.
-         *  Make sure to open the renderer before using it.
          *
          * @return Pointer to renderer, nullptr if the type of renderer is unavailable.
          */
-        static Renderer * Create(const BackendApi backendApi);
+        static std::unique_ptr<Renderer> Create(
+            const BackendApi backendApi,
+            [[maybe_unused]] const RendererDescriptor& descriptor);
 
         /** Virtual destructor. */
         virtual ~Renderer() = default;
 
-        /** Opens renderer by loading and attaching renderer to provided window. */
-        virtual bool Open(RenderTarget& renderTarget, const Version& version = Version::None, Logger * logger = nullptr) = 0;
+        /** Opens renderer by loading and attaching renderer to provided render target. */
+        virtual bool Open(const RendererDescriptor& descriptor) = 0;
 
         /** Closing renderer. */
         virtual void Close() = 0;

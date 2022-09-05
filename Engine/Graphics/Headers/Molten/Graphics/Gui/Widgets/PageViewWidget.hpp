@@ -23,27 +23,30 @@
 *
 */
 
-#ifndef MOLTEN_CORE_FILEFORMAT_FILEFORMATRESULT_HPP
-#define MOLTEN_CORE_FILEFORMAT_FILEFORMATRESULT_HPP
+#ifndef MOLTEN_GRAPHICS_GUI_WIDGETS_PAGEVIEWWIDGET_HPP
+#define MOLTEN_GRAPHICS_GUI_WIDGETS_PAGEVIEWWIDGET_HPP
 
-#include "Molten/System/Result.hpp"
-#include <vector>
+#include "Molten/Graphics/Gui/Widget.hpp"
 
-namespace Molten
+namespace Molten::Gui
 {
 
-    template<typename TData, typename TWarning>
-    struct FileFormatResultSuccess
+    template<typename TTheme>
+    class PageView : public WidgetMixin<TTheme, PageView>
     {
-        TData data;
-        std::vector<TWarning> warnings;
+
+    public:
+
+        explicit PageView(WidgetMixinDescriptor<TTheme, PageView>& desc);
+
+    private:
+
+        void OnUpdate(WidgetUpdateContext<TTheme>& updateContext) override;
+
     };
 
-    template<typename TData, typename TError, typename TWarning>
-    using FileFormatResult = Result<FileFormatResultSuccess<TData, TWarning>, TError>;
-
-    struct OpenFileError{};
-
 }
+
+#include "Molten/Graphics/Gui/Widgets/PageViewWidget.inl"
 
 #endif

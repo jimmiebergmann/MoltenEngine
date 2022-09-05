@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -121,7 +121,11 @@ namespace Molten
     }
 
     // File logger implementations.
-    FileLogger::FileLogger(const std::string& filename, const OpenMode openMode, const uint32_t severityFlags) :
+    FileLogger::FileLogger(
+        const std::string& filename,
+        const OpenMode openMode,
+        const uint32_t severityFlags
+    ) :
         Logger([this](const Severity severity, const std::string& message)
         {
             m_file << GetSeverityString(severity) << message << "\n";
@@ -132,16 +136,32 @@ namespace Molten
         Open(filename, openMode);
     }
 
+    FileLogger::FileLogger(
+        const std::filesystem::path& path,
+        const OpenMode openMode,
+        const uint32_t severityFlags
+    ) :
+        Logger([this](const Severity severity, const std::string& message)
+            {
+                m_file << GetSeverityString(severity) << message << "\n";
+                m_file.flush();
+            },
+            severityFlags)
+    {
+        Open(path, openMode);
+    }
 
     FileLogger::~FileLogger()
     {
         Close();
     }
 
- 
-    bool FileLogger::Open(const std::string& filename, const OpenMode openMode, const uint32_t severityFlags)
+    bool FileLogger::Open(
+        const std::string& filename,
+        const OpenMode openMode,
+        const uint32_t severityFlags)
     {
-        if (filename == "")
+        if (filename.empty())
         {
             return false;
         }
@@ -163,11 +183,18 @@ namespace Molten
         return true;
     }
 
+    bool FileLogger::Open(
+        const std::filesystem::path& path,
+        const OpenMode openMode,
+        const uint32_t severityFlags)
+    {
+        return Open(path.string(), openMode, severityFlags);
+    }
+
     void FileLogger::Close()
     {
         m_file.close();
     }
-
 
     bool FileLogger::IsOpen() const
     {

@@ -51,12 +51,6 @@ namespace Molten
     {
     }
 
-    WindowX11::WindowX11(const WindowDescriptor& descriptor) :
-        WindowX11()
-    {
-        WindowX11::Open(descriptor);
-    }
-
     WindowX11::~WindowX11()
     {
         WindowX11::Close();

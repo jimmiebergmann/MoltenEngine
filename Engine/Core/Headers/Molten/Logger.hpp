@@ -29,6 +29,7 @@
 #include "Molten/Core.hpp"
 #include <functional>
 #include <string>
+#include <filesystem>
 #include <fstream>
 
 namespace Molten
@@ -133,12 +134,22 @@ namespace Molten
             const OpenMode openMode = OpenMode::Append,
             const uint32_t severityFlags = Logger::SeverityAllFlags);
 
+        FileLogger(
+            const std::filesystem::path& path,
+            const OpenMode openMode = OpenMode::Append,
+            const uint32_t severityFlags = Logger::SeverityAllFlags);
+
         /** Destructor. Closing current open log file. */
         virtual ~FileLogger();
 
         /** Open log file for writing. */
         virtual bool Open(
-            const std::string & filename,
+            const std::string& filename,
+            const OpenMode openMode = OpenMode::Append,
+            const uint32_t severityFlags = Logger::SeverityAllFlags);
+
+        virtual bool Open(
+            const std::filesystem::path& path,
             const OpenMode openMode = OpenMode::Append,
             const uint32_t severityFlags = Logger::SeverityAllFlags);
 

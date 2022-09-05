@@ -34,16 +34,13 @@ namespace Molten
 {
 
     /** Window class of X11 application windows. */
-    class MOLTEN_GRAPHICS_API WindowX11 : public Window
+    class MOLTEN_GRAPHICS_API WindowX11 final : public Window
     {
 
     public:
 
         /** Constructor. */
         WindowX11();
-
-        /** Constructs and opens window. */
-        WindowX11(const WindowDescriptor& descriptor);
 
         /** Destructor. */
         ~WindowX11();

@@ -92,6 +92,15 @@ namespace Molten
     template<typename T, typename ... TVariantTypes>
     [[nodiscard]] constexpr bool VariantEqualsValue(const std::variant<TVariantTypes...>& variant, const T& value);
 
+
+    /** Checks if first type is an instation of a template class(second parameter). */
+    /**@{*/
+    template <typename, template <typename, typename...> typename>
+    struct IsTemplateInstance : public std::false_type {};
+
+    template <typename...Ts, template <typename, typename...> typename U>
+    struct IsTemplateInstance<U<Ts...>, U> : public std::true_type {};
+    /**@}*/
 }
 
 #include "Molten/Utility/Template.inl"

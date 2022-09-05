@@ -47,13 +47,6 @@ namespace Molten
         /** Constructor. */
         OpenGLX11Renderer();
 
-        /**
-         * Constructs and creates renderer.
-         *
-         * @param window[in] Render target window.
-         */
-        OpenGLX11Renderer(RenderTarget& renderTarget, const Version& version, Logger* logger = nullptr);
-
         /** Virtual destructor. */
         ~OpenGLX11Renderer() override;
 
@@ -62,7 +55,7 @@ namespace Molten
          *
          * @param window Render target window.
          */
-        bool Open(RenderTarget& renderTarget, const Version& version = Version::None, Logger* logger = nullptr) override;
+        bool Open(const RendererDescriptor& descriptor) override;
 
         /** Closing renderer. */
         void Close() override;

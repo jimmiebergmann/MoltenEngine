@@ -23,26 +23,38 @@
 *
 */
 
-#ifndef MOLTEN_CORE_FILEFORMAT_FILEFORMATRESULT_HPP
-#define MOLTEN_CORE_FILEFORMAT_FILEFORMATRESULT_HPP
+#ifndef MOLTEN_EDITOR_FRAMEWORK_FILEFORMAT_ASSETFILE_HPP
+#define MOLTEN_EDITOR_FRAMEWORK_FILEFORMAT_ASSETFILE_HPP
 
-#include "Molten/System/Result.hpp"
-#include <vector>
+#include "Molten/EditorFramework/Build.hpp"
+#include "Molten/Utility/Uuid.hpp"
+#include "Molten/System/Version.hpp"
+#include <istream>
+#include <filesystem>
 
 namespace Molten
 {
 
-    template<typename TData, typename TWarning>
-    struct FileFormatResultSuccess
+    enum class AssetType
     {
-        TData data;
-        std::vector<TWarning> warnings;
+        Unknown = 0,
+        Scene = 1,
+        Mesh = 2,
+        Texture = 3,
+        Material = 4,
+        Audio = 5
     };
 
-    template<typename TData, typename TError, typename TWarning>
-    using FileFormatResult = Result<FileFormatResultSuccess<TData, TWarning>, TError>;
+    struct MOLTEN_EDITOR_FRAMEWORK_API AssetFile
+    {
+        Version fileVersion;
+        Version engineVersion;
+        Uuid globalId;
+        AssetType type = AssetType::Unknown;
+    };
 
-    struct OpenFileError{};
+    MOLTEN_EDITOR_FRAMEWORK_API AssetFile ReadAssetFile(std::istream& istream);
+    MOLTEN_EDITOR_FRAMEWORK_API AssetFile ReadAssetFile(std::filesystem::path path);
 
 }
 

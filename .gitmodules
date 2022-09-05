@@ -10,3 +10,6 @@
 	path = Engine/Vendor/ThirdParty/rapidjson
 	url = https://github.com/jimmiebergmann/rapidjson
 	shallow = true
+[submodule "Engine/Vendor/ThirdParty/cppli"]
+	path = Engine/Vendor/ThirdParty/cppli
+	url = https://github.com/jimmiebergmann/cppli

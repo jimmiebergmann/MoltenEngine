@@ -34,24 +34,25 @@
 namespace Molten
 {
 
-    // Window descriptor implementations.
-    WindowDescriptor::WindowDescriptor() :
-        title{},
-        size(0, 0),
-        enableDragAndDrop(false),
-        logger(nullptr)
-    {}
-
-
     // Window implementations.
     std::unique_ptr<Window> Window::Create([[maybe_unused]] const WindowDescriptor& descriptor)
     {
     #if MOLTEN_PLATFORM == MOLTEN_PLATFORM_WINDOWS
-        return std::make_unique<WindowWin32>(descriptor);
+        auto window = std::make_unique<WindowWin32>();
+        if (!window->Open(descriptor))
+        {
+            return nullptr;
+        }
+        return window;
     #elif MOLTEN_PLATFORM == MOLTEN_PLATFORM_LINUX
-        return std::make_unique<WindowX11>(descriptor);
+        auto window = std::make_unique<WindowX11>();
+        if (!window->Open(descriptor))
+        {
+            return nullptr;
+        }
+        return window;
     #else
-        return nullptr
+        return nullptr;
     #endif    
     }
 

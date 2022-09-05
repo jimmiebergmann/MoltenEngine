@@ -23,26 +23,48 @@
 *
 */
 
-#ifndef MOLTEN_CORE_FILEFORMAT_FILEFORMATRESULT_HPP
-#define MOLTEN_CORE_FILEFORMAT_FILEFORMATRESULT_HPP
+#ifndef MOLTEN_EDITOR_VIEW_SCENEVIEW_HPP
+#define MOLTEN_EDITOR_VIEW_SCENEVIEW_HPP
 
-#include "Molten/System/Result.hpp"
-#include <vector>
+#include "Molten/Editor/Gui/Themes/EditorTheme.hpp"
+#include "Molten/Editor/Viewport/SceneViewport.hpp"
 
-namespace Molten
+namespace Molten::Editor
 {
 
-    template<typename TData, typename TWarning>
-    struct FileFormatResultSuccess
+    struct SceneViewDescriptor
     {
-        TData data;
-        std::vector<TWarning> warnings;
+        Renderer& renderer;
+        Gui::Widget<Gui::EditorTheme>& rootWidget;
     };
 
-    template<typename TData, typename TError, typename TWarning>
-    using FileFormatResult = Result<FileFormatResultSuccess<TData, TWarning>, TError>;
+    /** Editor class. */
+    class SceneView
+    {
 
-    struct OpenFileError{};
+    public:
+
+        ~SceneView() = default;
+
+        /* Deleted operations. */
+        /**@{*/
+        SceneView(const SceneView&) = delete;
+        SceneView(SceneView&&) = delete;
+        SceneView& operator =(const SceneView&) = delete;
+        SceneView& operator =(SceneView&&) = delete;
+        /**@}*/
+
+        static std::unique_ptr<SceneView> Create(const SceneViewDescriptor& descriptor);
+
+        Gui::Docker<Gui::EditorTheme>* dockerWidget = nullptr;
+        Gui::Viewport<Gui::EditorTheme>* viewportWidget = nullptr;
+        std::unique_ptr<SceneViewport> sceneViewport = {};
+
+    private:
+
+        SceneView() = default;
+
+    };
 
 }
 

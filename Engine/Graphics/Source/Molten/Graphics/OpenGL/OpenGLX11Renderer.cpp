@@ -38,21 +38,14 @@ namespace Molten
 {
 
     OpenGLX11Renderer::OpenGLX11Renderer()
-    {
-    }
-
-    OpenGLX11Renderer::OpenGLX11Renderer(RenderTarget& renderTarget, const Version& version, Logger* logger) :
-        OpenGLX11Renderer()
-    {
-        Open(renderTarget, version, logger);
-    }
+    {}
 
     OpenGLX11Renderer::~OpenGLX11Renderer()
     {
         Close();
     }
 
-    bool OpenGLX11Renderer::Open(RenderTarget& /*renderTarget*/, const Version& /*version*/, Logger* /*logger*/)
+    bool OpenGLX11Renderer::Open(const RendererDescriptor& /*descriptor*/)
     {
         /*HGLRC temporaryContext = NULL;
 

@@ -38,7 +38,7 @@ namespace Molten
 
 
     /** Win32 drag and drop interface. */
-    class MOLTEN_GRAPHICS_API DropTargetWin32 : public IDropTarget
+    class MOLTEN_GRAPHICS_API DropTargetWin32 final : public IDropTarget
     {
 
     public:
@@ -89,16 +89,13 @@ namespace Molten
 
 
     /** Window class of win32 application windows. */
-    class MOLTEN_GRAPHICS_API WindowWin32 : public Window
+    class MOLTEN_GRAPHICS_API WindowWin32 final : public Window
     {
 
     public:
 
         /** Constructor. */
         WindowWin32();
-
-        /** Constructs and opens window. */
-        WindowWin32(const WindowDescriptor& descriptor);
 
         /** Destructor. */
         ~WindowWin32() override;

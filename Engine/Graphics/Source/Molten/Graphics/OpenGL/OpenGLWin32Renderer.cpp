@@ -43,22 +43,16 @@ namespace Molten
         m_context(NULL)
     {}
 
-    OpenGLWin32Renderer::OpenGLWin32Renderer(RenderTarget& renderTarget, const Version& version, Logger* logger) :
-        OpenGLWin32Renderer()
-    {
-        Open(renderTarget, version, logger);
-    }
-
     OpenGLWin32Renderer::~OpenGLWin32Renderer()
     {
         Close();
     }
 
-    bool OpenGLWin32Renderer::Open(RenderTarget& renderTarget, const Version& version, Logger* /*logger*/)
+    bool OpenGLWin32Renderer::Open(const RendererDescriptor& descriptor)
     {
         HGLRC temporaryContext = NULL;
 
-        auto deviceContext = renderTarget.GetWin32DeviceContext();
+        auto deviceContext = descriptor.renderTarget.GetWin32DeviceContext();
         if (deviceContext == NULL)
         {
             throw Exception("OpenGLWin32Renderer: Device context of parameter \"window\" is null.");
@@ -109,7 +103,7 @@ namespace Molten
             ::wglMakeCurrent(NULL, NULL);
             ::wglMakeCurrent(deviceContext, temporaryContext);
       
-            if (version == Version::None)
+            if (descriptor.version == Version::None)
             {
                 Version openedVersion;
                 OpenBestVersion(deviceContext, openedVersion);
@@ -117,8 +111,8 @@ namespace Molten
             }
             else
             {
-                OpenVersion(deviceContext, version);
-                m_version = version;
+                OpenVersion(deviceContext, descriptor.version);
+                m_version = descriptor.version;
             }
         }
         catch (Exception &)

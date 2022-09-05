@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2019 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -24,7 +24,6 @@
 */
 
 #include "Test.hpp"
-#include "Molten/System/FileSystem.hpp"
 #include "Molten/Logger.hpp"
 #include <fstream>
 
@@ -34,11 +33,10 @@ namespace Molten
 {
     TEST(Core, FileLogger)
     {
-        const std::string logFilename = "test/log_test_1.txt";
+        const auto dir = Molten::Test::CreateTestDirectory("Core_FileLogger");
 
-        FileSystem::MakeDirectory("test");
-        FileSystem::DeleteFile(logFilename);
-        
+        const auto logFilename = dir / "log_test_1.txt";
+
         FileLogger logger(logFilename);
         logger.Write(Logger::Severity::Info, "Test info message.");
         logger.Write(Logger::Severity::Debug, "Test debug message.");

@@ -62,14 +62,11 @@ namespace Molten
         /** Constructor. */
         VulkanRenderer();
 
-        /** Constructs and creates renderer. */
-        VulkanRenderer(RenderTarget& renderTarget, const Version& version, Logger* logger = nullptr);
-
         /** Virtual destructor. */
         ~VulkanRenderer() override; // Replace by noexcept version.
 
         /** Opens renderer by loading and attaching renderer to provided window. */
-        bool Open(RenderTarget& renderTarget, const Version& version = Version::None, Logger* logger = nullptr) override;
+        bool Open(const RendererDescriptor& descriptor) override;
 
         /** Closing renderer. */
         void Close() override;

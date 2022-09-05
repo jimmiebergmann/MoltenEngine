@@ -26,7 +26,8 @@
 #ifndef MOLTEN_EDITOR_EDITOR_HPP
 #define MOLTEN_EDITOR_EDITOR_HPP
 
-#include "Molten/Editor/Gui/Themes/EditorTheme.hpp"
+#include "Molten/Editor/View/RootView.hpp"
+#include "Molten/Editor/View/SceneView.hpp"
 #include "Molten/Graphics/Window/Window.hpp"
 #include "Molten/Graphics/Renderer.hpp"
 #include "Molten/Graphics/Gui/Canvas.hpp"
@@ -35,7 +36,6 @@
 #include "Molten/Utility/FpsTracker.hpp"
 #include "Molten/System/ThreadPool.hpp"
 #include "Molten/Utility/FunctionDispatcher.hpp"
-#include "Molten/Utility/BufferCapacityPolicy.hpp"
 #include <optional>
 #include <thread>
 #include <atomic>
@@ -89,7 +89,8 @@ namespace Molten::Editor
         [[nodiscard]] bool LoadRenderer(const EditorDescriptor& descriptor);
         [[nodiscard]] bool LoadRenderPasses();
         [[nodiscard]] bool LoadGui();
-        //void ShowImportProgress(std::function<void()> )
+        [[nodiscard]] bool LoadGuiViews();
+        [[nodiscard]] bool LoadGuiSignals();
 
         void Exit();
 
@@ -101,10 +102,6 @@ namespace Molten::Editor
         bool ValidateFileDrops(const std::vector<std::filesystem::path>& files);
         bool ProcessFileDrops(const std::vector<std::filesystem::path>& files);
 
-        void OnSceneViewportResize(Gui::Viewport<Gui::EditorTheme>* viewport, const Vector2ui32 size);
-        bool LoadSceneViewport();
-        void DrawSceneViewport(CommandBuffer& commandBuffer);
-
         std::atomic_bool m_isRunning;
         Semaphore& m_cancellationSemaphore;
 
@@ -114,16 +111,7 @@ namespace Molten::Editor
         std::unique_ptr<Renderer> m_renderer;
         RenderPasses m_renderPasses;
         std::thread m_thread;
-        Gui::CanvasRendererPointer m_canvasRenderer;
         Gui::FontNameRepository m_fontNameRepository;
-        Gui::CanvasPointer<Gui::EditorTheme> m_canvas;
-        Gui::ProgressBar<Gui::EditorTheme>* m_loadingProgressBar;
-
-        std::array<BufferCapacityPolicy, 2> m_viewportCapacityPolicy;
-        RenderPassUpdateDescriptor m_viewportRenderPassUpdateDesc;
-        SharedRenderResource<RenderPass> m_viewportRenderPass;
-        SharedRenderResource<Pipeline> m_viewportPipeline;
-        SharedRenderResource<VertexBuffer> m_viewportVertexBuffer;
 
         SleepClock m_fpsLimiter;
         SleepClock m_unfocusedWindowFpsLimiter;
@@ -132,26 +120,13 @@ namespace Molten::Editor
         Time m_deltaTime;
         Clock m_windowTitleUpdateClock;
 
-        struct ViewportSceneData
-        {
-            RenderResource<Pipeline> pipeline;
-            RenderResource<VertexBuffer> vertexBuffer;
-            RenderResource<IndexBuffer> indexBuffer;
-
-            uint32_t projectionLocation = 0;
-        };
-
-        ViewportSceneData m_viewportSceneData;
-
-        Gui::Label<Gui::EditorTheme>* m_avgFpsLabel;
-        Gui::Label<Gui::EditorTheme>* m_minFpsLabel;
-        Gui::Label<Gui::EditorTheme>* m_maxFpsLabel;
-
-        Gui::ManagedWidget<Gui::EditorTheme, Gui::MenuOverlay> m_menuOverlay;
-
         ThreadPool m_threadPool;
         FunctionDispatcher m_preUpdateCallbacks;
         FunctionDispatcher m_postUpdateCallbacks;
+
+        // NEW
+        std::unique_ptr<RootView> m_rootView;
+        std::unique_ptr<SceneView> m_sceneView;
 
     };
 

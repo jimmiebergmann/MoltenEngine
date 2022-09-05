@@ -43,14 +43,12 @@ namespace Molten
 
 
     /** Window creation descriptor. */
-    struct MOLTEN_GRAPHICS_API WindowDescriptor
+    struct WindowDescriptor
     {
-        WindowDescriptor();
-
-        std::string title;
-        Vector2ui32 size;
-        bool enableDragAndDrop;
-        Logger* logger;
+        std::string title = {};
+        Vector2ui32 size = { 0, 0 };
+        bool enableDragAndDrop = false;
+        Logger* logger = nullptr;
     };
 
 
@@ -71,7 +69,7 @@ namespace Molten
          *
          * @return Pointer to window, nullptr if no window is available for the current platform.
          */
-        static std::unique_ptr<Window> Create(const WindowDescriptor& descriptor);
+        static std::unique_ptr<Window> Create([[maybe_unused]] const WindowDescriptor& descriptor);
 
         /** On DPI change signal. */
         Signal<Vector2ui32> OnDpiChange;

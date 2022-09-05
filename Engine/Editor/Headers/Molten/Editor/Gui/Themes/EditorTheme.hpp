@@ -34,6 +34,7 @@
 #include "Molten/Graphics/Gui/Widgets/GridWidget.hpp"
 #include "Molten/Graphics/Gui/Widgets/LabelWidget.hpp"
 #include "Molten/Graphics/Gui/Widgets/MenuBarWidget.hpp"
+#include "Molten/Graphics/Gui/Widgets/PageViewWidget.hpp"
 #include "Molten/Graphics/Gui/Widgets/PaneWidget.hpp"
 #include "Molten/Graphics/Gui/Widgets/ProgressBarWidget.hpp"
 #include "Molten/Graphics/Gui/Widgets/ViewportWidget.hpp"
@@ -260,7 +261,8 @@ namespace Molten::Gui
             // arial.ttf
             // seguiemj.ttf
 
-            const auto fontFamily = widget.fontFamily().empty() ? "OpenSans-VariableFont_wdth,wght" : widget.fontFamily();
+            //const auto fontFamily = widget.fontFamily().empty() ? "OpenSans-VariableFont_wdth,wght" : widget.fontFamily();
+            const auto fontFamily = widget.fontFamily().empty() ? "Arial" : widget.fontFamily();
             const auto height = widget.height() == 0 ? 16 : widget.height();
 
             m_label.Load(widget.text(), fontFamily, height);
@@ -327,8 +329,22 @@ namespace Molten::Gui
 
         void LoadLabel()
         {
-            label.Load(widget.label(), "OpenSans-VariableFont_wdth,wght", 16);
+            //label.Load(widget.label(), "OpenSans-VariableFont_wdth,wght", 16);
+            label.Load(widget.label(), "Arial", 16);
         }
+
+    };
+
+    template<>
+    struct WidgetSkin<EditorTheme, PageView> : WidgetSkinMixin<EditorTheme, PageView>
+    {
+        static constexpr auto defaultPosition = WidgetPosition{ Position::Pixels{ 0.0f }, Position::Pixels{ 0.0f } };
+        static constexpr auto defaultSize = WidgetSize{ Size::Fit::Parent, Size::Fit::Parent };
+
+
+        explicit WidgetSkin(const WidgetSkinDescriptor<EditorTheme, PageView>& descriptor) :
+            WidgetSkinMixin<EditorTheme, PageView>(descriptor)
+        {}
 
     };
 
@@ -375,7 +391,8 @@ namespace Molten::Gui
 
         void LoadLabel()
         {
-            m_label.Load(widget.label(), "OpenSans-VariableFont_wdth,wght", 16);
+            //m_label.Load(widget.label(), "OpenSans-VariableFont_wdth,wght", 16);
+            m_label.Load(widget.label(), "Arial", 16);
         }
 
         WidgetSkinLabel m_label;

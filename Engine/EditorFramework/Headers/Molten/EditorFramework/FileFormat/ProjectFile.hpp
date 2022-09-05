@@ -61,12 +61,22 @@ namespace Molten
         MissingGlobalId
     };
 
-    using ProjectFileReadErrorResult = std::variant<ProjectFileErrorCode, JsonParseError>;
+    using ProjectFileReadErrorResult = std::variant<
+        ProjectFileErrorCode,
+        JsonParseError,
+        OpenFileError>;
 
-    using ProjectFileReadResult = FileFormatResult<ProjectFile, ProjectFileReadErrorResult, ProjectFileWarningCode>;
+    using ProjectFileReadResult = FileFormatResult<
+        ProjectFile,
+        ProjectFileReadErrorResult,
+        ProjectFileWarningCode>;
 
     MOLTEN_EDITOR_FRAMEWORK_API ProjectFileReadResult ReadProjectFile(std::istream& istream);
     MOLTEN_EDITOR_FRAMEWORK_API ProjectFileReadResult ReadProjectFile(std::filesystem::path path);
+
+    MOLTEN_EDITOR_FRAMEWORK_API bool WriteProjectFile(
+        const ProjectFile& projectFile,
+        std::filesystem::path path);
 
 }
 

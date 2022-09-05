@@ -423,23 +423,17 @@ namespace Molten
         m_recordedRenderPasses{}
     {}
 
-    VulkanRenderer::VulkanRenderer(RenderTarget& renderTarget, const Version& version, Logger* logger) :
-        VulkanRenderer()
-    {
-        Open(renderTarget, version, logger);
-    }
-
     VulkanRenderer::~VulkanRenderer()
     {
         Close();
     }
 
-    bool VulkanRenderer::Open(RenderTarget& renderTarget, const Version& version, Logger* logger)
+    bool VulkanRenderer::Open(const RendererDescriptor& descriptor)
     {
         Close();
 
-        m_renderTarget = &renderTarget;
-        m_logger = logger;
+        m_renderTarget = &descriptor.renderTarget;
+        m_logger = descriptor.logger;
 
     #if MOLTEN_BUILD == MOLTEN_BUILD_DEBUG
         m_enableDebugMessenger = true;
@@ -447,7 +441,7 @@ namespace Molten
 
         bool loaded =
             LoadRequirements() &&
-            LoadInstance(version) &&
+            LoadInstance(descriptor.version) &&
             LoadSurface() &&
             LoadPhysicalDevice() &&
             LoadLogicalDevice() &&
@@ -2180,7 +2174,7 @@ namespace Molten
             if (const auto result = vkCreateFramebuffer(m_logicalDevice.GetHandle(), &framebufferInfo, nullptr, &renderPassFrame.framebuffer); result != VK_SUCCESS)
             {
                 Vulkan::Logger::WriteError(m_logger, result, "Failed to create framebuffer object for render pass");
-                return {};
+                return false;
             }
         }
 

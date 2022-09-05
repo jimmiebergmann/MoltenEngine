@@ -23,27 +23,18 @@
 *
 */
 
-#ifndef MOLTEN_CORE_FILEFORMAT_FILEFORMATRESULT_HPP
-#define MOLTEN_CORE_FILEFORMAT_FILEFORMATRESULT_HPP
-
-#include "Molten/System/Result.hpp"
-#include <vector>
-
-namespace Molten
+namespace Molten::Gui
 {
+  
+    template<typename TTheme>
+    PageView<TTheme>::PageView(WidgetMixinDescriptor<TTheme, PageView>& desc) :
+        WidgetMixin<TTheme, PageView>(desc)
+    {}
 
-    template<typename TData, typename TWarning>
-    struct FileFormatResultSuccess
+    template<typename TTheme>
+    void PageView<TTheme>::OnUpdate(WidgetUpdateContext<TTheme>& updateContext)
     {
-        TData data;
-        std::vector<TWarning> warnings;
-    };
-
-    template<typename TData, typename TError, typename TWarning>
-    using FileFormatResult = Result<FileFormatResultSuccess<TData, TWarning>, TError>;
-
-    struct OpenFileError{};
+        this->UpdateAsSingleParent(updateContext);
+    }
 
 }
-
-#endif

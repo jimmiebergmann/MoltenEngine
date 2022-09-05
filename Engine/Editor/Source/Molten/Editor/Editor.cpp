@@ -47,10 +47,6 @@ namespace Molten::Editor
         m_isRunning(false),
         m_cancellationSemaphore(cancellationSemaphore),
         m_windowTitle("Molten Editor"),
-        m_viewportCapacityPolicy{ 
-            BufferCapacityPolicy{ BufferCapacityScalarPolicy{ 100 } }, 
-            BufferCapacityPolicy{ BufferCapacityScalarPolicy{ 100 } }
-        },
         m_fpsTracker(8),
         m_threadPool(0, 2, 0)
     {}
@@ -175,24 +171,20 @@ namespace Molten::Editor
 
     bool Editor::LoadRenderer(const EditorDescriptor& descriptor)
     {
+        auto* logger = descriptor.enableGpuLogging ? m_logger.get() : nullptr;
+
         const auto api = descriptor.backendRendererApi.has_value() ? 
             descriptor.backendRendererApi.value() : Renderer::BackendApi::Vulkan;
 
-        m_renderer = std::unique_ptr<Renderer>(Renderer::Create(api));
+        const auto apiVersion = descriptor.backendRendererApiVersion.has_value() ?
+            descriptor.backendRendererApiVersion.value() : Version(1, 0);
+
+        const auto rendererDesc = RendererDescriptor{ *m_window, apiVersion, logger };
+
+        m_renderer = Renderer::Create(api, rendererDesc);
         if (!m_renderer)
         {
             Logger::WriteError(m_logger.get(), "Failed to create renderer.");
-            return false;
-        }
-
-        const auto version = descriptor.backendRendererApiVersion.has_value() ?
-            descriptor.backendRendererApiVersion.value() : Version(1, 0);
-
-        auto* logger = descriptor.enableGpuLogging ? m_logger.get() : nullptr;
-
-        if (!m_renderer->Open(*m_window, version, logger))
-        {
-            Logger::WriteError(m_logger.get(), "Failed to open renderer.");
             return false;
         }
 
@@ -201,12 +193,10 @@ namespace Molten::Editor
 
     bool Editor::LoadRenderPasses()
     {
-        // GUI
         auto renderPass = m_renderer->GetSwapChainRenderPass();
-        renderPass->SetRecordFunction([&](auto& commandBuffer)
-        {
-            m_canvasRenderer->SetCommandBuffer(commandBuffer);
-            m_canvas->Draw();
+        renderPass->SetRecordFunction([&](auto& commandBuffer) {
+            m_rootView->canvasRenderer->SetCommandBuffer(commandBuffer);
+            m_rootView->canvas->Draw();
         });
 
         return true;
@@ -214,97 +204,43 @@ namespace Molten::Editor
 
     bool Editor::LoadGui()
     {
+        return 
+            LoadGuiViews() &&
+            LoadGuiSignals();
+    }
+
+    bool Editor::LoadGuiViews()
+    {
         m_fontNameRepository.AddSystemDirectories();
-        m_fontNameRepository.AddDirectory("C:/Users/sours/AppData/Local/Microsoft/Windows/Fonts");
 
-        m_canvasRenderer = Gui::CanvasRenderer::Create(*m_renderer, m_logger.get());
-        m_canvas = std::make_shared<Gui::Canvas<Gui::EditorTheme>>(*m_canvasRenderer, m_fontNameRepository);
-
+        if (m_rootView = RootView::Create({ *m_renderer, m_fontNameRepository,  m_logger.get() }); !m_rootView)
         {
-	        auto* layer = m_canvas->CreateLayer<Gui::SingleRootLayer>(Gui::LayerPosition::Top);
-
-            /*m_menuOverlay = layer->CreateOverlayChild<Gui::MenuOverlay>();
-            m_menuOverlay->size = { Gui::Size::Fit::Content, Gui::Size::Fit::Content };
-            m_menuOverlay->padding = { 4.0f, 4.0f, 20.0f, 4.0f };
-            m_menuOverlay->CreateChild<Gui::MenuOverlayItem>()->CreateChild<Gui::Label>("New Project", 18);
-            m_menuOverlay->CreateChild<Gui::MenuOverlayItem>()->CreateChild<Gui::Label>("Open Project", 18);
-            m_menuOverlay->CreateChild<Gui::MenuOverlayItem>()->CreateChild<Gui::Label>("Import Asset", 18);
-            m_menuOverlay->CreateChild<Gui::MenuOverlayItem>()->CreateChild<Gui::Label>("Exit", 18);*/
-
-
-            auto* rootGrid = layer->CreateChild<Gui::Grid>(Gui::GridDirection::Vertical);
-            rootGrid->cellSpacing = 0.0f;
-
-            {
-				auto* menuBar = rootGrid->CreateChild<Gui::MenuBar>();
-				{
-                    menuBar->CreateChild<Gui::MenuBarItem>("File");
-                    menuBar->CreateChild<Gui::MenuBarItem>("Help");
-                    
-				}
-
-
-                /*{
-                    auto fileMenu = menuBar->AddMenu("File");
-                    fileMenu->AddItem("New Project")->onClick.Connect(
-                        [&]() { Logger::WriteInfo(m_logger.get(), "New Project"); });
-                    fileMenu->AddItem("Open Project")->onClick.Connect(
-                        [&]() { Logger::WriteInfo(m_logger.get(), "Open Project"); });
-                    fileMenu->AddItem("Import Asset")->onClick.Connect(
-                        [&]() { Logger::WriteInfo(m_logger.get(), "Import Asset"); });
-                    fileMenu->AddItem("Exit")->onClick.Connect(
-                        [&]() { this->Exit(); });
-                }
-                {
-                    auto aboutMenu = menuBar->AddMenu("Help");
-                    aboutMenu->AddItem("About")->onClick.Connect(
-                        [&]() { Logger::WriteInfo(m_logger.get(), "About"); });
-                    aboutMenu->AddItem("Licenses")->onClick.Connect(
-                        [&]() { Logger::WriteInfo(m_logger.get(), "Licenses"); });
-                }*/
-	        }
-
-	        auto* docker = rootGrid->CreateChild<Gui::Docker>();
-
-	        docker->margin = { 4.0f, 4.0f, 4.0f, 4.0f };
-
-	        docker->onCursorChange.Connect([&](Mouse::Cursor cursor) {
-	            m_window->SetCursor(cursor);
-	        });
-
-	        auto sceneViewport = docker->CreateChild<Gui::Viewport>(Gui::DockingPosition::Right);
-	        sceneViewport->onResize.Connect([&, viewport = sceneViewport](const auto size) {
-	            OnSceneViewportResize(viewport, size);
-	        });
-	        sceneViewport->onIsVisible.Connect([&]() {
-	            m_renderPasses.push_back(m_viewportRenderPass);
-	        });
-
-	        docker->CreateChild<Gui::Pane>(Gui::DockingPosition::Bottom, "Assets")->size = { Gui::Size::Pixels{ 250.0f }, Gui::Size::Pixels{ 300.0f } };
-
-	        auto inspector = docker->CreateChild<Gui::Pane>(Gui::DockingPosition::Right, "Inspector");
-    		inspector->size = { Gui::Size::Pixels{ 350.0f }, Gui::Size::Pixels{ 200.0f } };
-	        inspector->padding = { 3.0f, 3.0f, 3.0f, 3.0f };
-
-    		auto vertGrid = inspector->CreateChild<Gui::Grid>(Gui::GridDirection::Vertical);
-	        vertGrid->CreateChild<Gui::Label>("Location:", 18)->position = { Gui::Position::Fixed::Center, Gui::Position::Fixed::Center };
-
-    		auto button = vertGrid->CreateChild<Gui::Button>();
-            button->size.x = Gui::Size::Fit::Content;
-            button->size.y = Gui::Size::Fit::Content;
-	        button->onPress.Connect([&](auto) {
-	            Logger::WriteInfo(m_logger.get(), "You pressed me!");
-	        });
-	        button->CreateChild<Gui::Label>("Click me!", 18);
-
-            m_avgFpsLabel = vertGrid->CreateChild<Gui::Label>("", 18);
-            m_minFpsLabel = vertGrid->CreateChild<Gui::Label>("", 18);
-            m_maxFpsLabel = vertGrid->CreateChild<Gui::Label>("", 18);
-
-            m_loadingProgressBar = vertGrid->CreateChild<Gui::ProgressBar>();
-            m_loadingProgressBar->position = { Gui::Position::Pixels{ 0.0f }, Gui::Position::Pixels{ 100.0f } };
-
+            return false;
         }
+
+        if (m_sceneView = SceneView::Create({ *m_renderer, *m_rootView->pageView }); !m_sceneView)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    bool Editor::LoadGuiSignals()
+    {
+        m_sceneView->dockerWidget->onCursorChange.Connect([&](Mouse::Cursor cursor) {
+            m_window->SetCursor(cursor);
+        });
+
+        m_sceneView->viewportWidget->onResize.Connect([&](const auto size) {
+            m_sceneView->sceneViewport->Resize(size);
+        });
+        m_sceneView->viewportWidget->onIsVisible.Connect([&]() {
+            if (m_sceneView->sceneViewport->renderPass)
+            {
+                m_renderPasses.push_back(m_sceneView->sceneViewport->renderPass);
+            }
+        });
 
         return true;
     }
@@ -336,11 +272,6 @@ namespace Molten::Editor
 
         m_postUpdateCallbacks.Dispatch();
 
-        /*if (m_modelLoaded)
-        {
-            Logger::WriteInfo(m_logger.get(), "Model successfully loaded!");
-        }*/
-
         m_renderPasses.push_back(m_renderer->GetSwapChainRenderPass());
 
         if(!m_renderer->DrawFrame(m_renderPasses))
@@ -355,18 +286,18 @@ namespace Molten::Editor
     {
         if(m_windowTitleUpdateClock.GetTime() >= Seconds(1.0f))
         {
-            const auto averageFps = static_cast<int64_t>(1.0 / m_fpsTracker.GetAverageFrameTime().AsSeconds<double>());
+            /*const auto averageFps = static_cast<int64_t>(1.0 / m_fpsTracker.GetAverageFrameTime().AsSeconds<double>());
             const auto minFps = static_cast<int64_t>(1.0 / m_fpsTracker.GetMaxFrameTime().AsSeconds<double>());
-            const auto maxFps = static_cast<int64_t>(1.0 / m_fpsTracker.GetMinFrameTime().AsSeconds<double>());
+            const auto maxFps = static_cast<int64_t>(1.0 / m_fpsTracker.GetMinFrameTime().AsSeconds<double>());*/
 
-            /*m_window->SetTitle(
+           /* m_window->SetTitle(
                 m_windowTitle + " - avg FPS: " + std::to_string(averageFps) + 
                 " | min FPS: " + std::to_string(minFps) +
                 " | max FPS: " + std::to_string(maxFps));*/
 
-            m_avgFpsLabel->text.Set("Avg FPS : " + std::to_string(averageFps));
+            /*m_avgFpsLabel->text.Set("Avg FPS : " + std::to_string(averageFps));
             m_minFpsLabel->text.Set("Min FPS : " + std::to_string(minFps));
-            m_maxFpsLabel->text.Set("Max FPS : " + std::to_string(maxFps));
+            m_maxFpsLabel->text.Set("Max FPS : " + std::to_string(maxFps));*/
 
             m_fpsTracker.ResetFrameSamples();
 
@@ -398,16 +329,17 @@ namespace Molten::Editor
     void Editor::UpdateCanvas()
     {
         auto& userInput = m_window->GetUserInput();
+        auto& canvas = *m_rootView->canvas;
 
         UserInput::Event inputEvent;
         while (userInput.PollEvent(inputEvent))
         {
-            m_canvas->PushUserInputEvent(inputEvent);
+            canvas.PushUserInputEvent(inputEvent);
         }
 
-        m_canvas->SetSize(m_window->GetSize());
-        m_canvas->SetScale(m_window->GetScale());
-        m_canvas->Update(m_deltaTime);
+        canvas.SetSize(m_window->GetSize());
+        canvas.SetScale(m_window->GetScale());
+        canvas.Update(m_deltaTime);
     }
 
     bool Editor::ValidateFileDrops(const std::vector<std::filesystem::path>& files)
@@ -435,7 +367,7 @@ namespace Molten::Editor
             return false;
         }
 
-        const auto& file = files.front();
+        /*const auto& file = files.front();
         Logger::WriteInfo(m_logger.get(), "Dropping obj file: " + file.string());
 
         [[maybe_unused]] auto dummy = m_threadPool.Execute([&, filename = file]() {
@@ -470,268 +402,9 @@ namespace Molten::Editor
             m_postUpdateCallbacks.Add([&]() {
                 Logger::WriteInfo(m_logger.get(), "Model successfully loaded!");
             });
-        });
+        });*/
 
         return true;
-    }
-
-    void Editor::OnSceneViewportResize(Gui::Viewport<Gui::EditorTheme>* viewport, const Vector2ui32 size)
-    {
-        auto createTextures = [&]()->std::array<SharedRenderResource<FramedTexture2D>, 2>
-        {
-            const auto dimensions = Vector2ui32{
-                m_viewportCapacityPolicy[0].GetCapacity(),
-                m_viewportCapacityPolicy[1].GetCapacity()
-            };
-
-            TextureDescriptor2D colorTextureDesc = {};
-            colorTextureDesc.dimensions = dimensions;
-            colorTextureDesc.type = TextureType::Color;
-            colorTextureDesc.initialUsage = TextureUsage::Attachment;
-            colorTextureDesc.format = ImageFormat::URed8Green8Blue8Alpha8;
-            colorTextureDesc.internalFormat = ImageFormat::URed8Green8Blue8Alpha8;
-
-        	auto colorTexture = m_renderer->CreateFramedTexture(colorTextureDesc);
-            if (!colorTexture)
-            {
-                return {};
-            }
-
-            TextureDescriptor2D depthTextureDesc = {};
-            depthTextureDesc.dimensions = dimensions;
-            depthTextureDesc.type = TextureType::DepthStencil;
-            depthTextureDesc.initialUsage = TextureUsage::Attachment;
-            depthTextureDesc.format = ImageFormat::SDepthFloat24StencilUint8;
-            depthTextureDesc.internalFormat = ImageFormat::SDepthFloat24StencilUint8;
-
-        	auto depthTexture = m_renderer->CreateFramedTexture(depthTextureDesc);
-            if (!depthTexture)
-            {
-                return {};
-            }
-
-            return { std::move(colorTexture), std::move(depthTexture) };
-        };
-
-        const Vector2b capacitySetSizeResult = {
-		    m_viewportCapacityPolicy[0].SetSize(size.x),
-		    m_viewportCapacityPolicy[1].SetSize(size.y)
-        };
-
-        if (!m_viewportRenderPass)
-        {
-            auto [colorTexture, depthTexture] = createTextures();
-
-            viewport->SetTexture(colorTexture);
-
-            const RenderPassDescriptor renderPassDesc = {
-                size,
-                {
-                    {
-                        colorTexture,
-                        RenderPassAttachmentColorClearValue{ { 0.0f, 0.0f, 0.0f, 0.0f} },
-                        TextureType::Color,
-                        TextureUsage::Attachment,
-                        TextureType::Color,
-                        TextureUsage::ReadOnly
-                    },
-                    {
-                        depthTexture,
-                        RenderPassAttachmentDepthStencilClearValue{ 1.0f, uint8_t{0} },
-                        TextureType::DepthStencil,
-                        TextureUsage::Attachment
-                    }
-                }
-            };
-
-            m_viewportRenderPassUpdateDesc = {
-                size,
-                {
-                    {
-                        colorTexture,
-                        TextureType::Color,
-                        TextureUsage::Attachment,
-                        TextureType::Color,
-                        TextureUsage::ReadOnly
-                    },
-                    {
-                        depthTexture,
-                        TextureType::DepthStencil,
-                        TextureUsage::Attachment
-                    }
-                }
-            };
-
-            m_viewportRenderPass = m_renderer->CreateRenderPass(renderPassDesc);
-            if (!m_viewportRenderPass)
-            {
-                Exit();
-                return;
-            }
-
-            m_viewportRenderPass->SetRecordFunction([&](CommandBuffer& commandBuffer) {
-                DrawSceneViewport(commandBuffer);
-            });
-
-            if(!LoadSceneViewport())
-            {
-                Exit();
-                return;
-            }
-        }
-        else
-        {
-            m_viewportRenderPassUpdateDesc.dimensions = size;
-
-            if(const bool createNewTexture = capacitySetSizeResult.x || capacitySetSizeResult.y; createNewTexture)
-            {
-                auto [colorTexture, depthTexture] = createTextures();
-
-                viewport->SetTexture(colorTexture);
-
-                m_viewportRenderPassUpdateDesc.attachments[0].texture = colorTexture;
-                m_viewportRenderPassUpdateDesc.attachments[1].texture = depthTexture;
-            }
-
-            if(!m_renderer->UpdateRenderPass(*m_viewportRenderPass, m_viewportRenderPassUpdateDesc))
-            {
-                Exit();
-                return;
-            }
-        }        
-    }
-
-    bool Editor::LoadSceneViewport()
-    {
-        struct Vertex
-        {
-            Vector3f32 position;
-            Vector4f32 color;
-        };
-
-        const std::array<Vertex, 8> vertexData =
-        {
-            Vertex{ { -10.0f, 10.0f, 0.0f }, { 1.0f, 1.0f, 0.0f, 1.0f} },
-            Vertex{ { 10.0f, 10.0f, 0.0f }, { 1.0f, 0.0f, 1.0f, 1.0f} },
-            Vertex{ { 10.0f, -10.0f, 0.0f }, { 1.0f, 0.0f, 1.0f, 1.0f} },
-            Vertex{ { -10.0f, -10.0f, 0.0f }, { 1.0f, 1.0f, 0.0f, 1.0f} },
-
-            Vertex{ { -15.0f, 10.0f, -20.0f }, { 1.0f, 0.0f, 0.0f, 1.0f} },
-            Vertex{ { 5.0f, 10.0f, -20.0f }, { 1.0f, 0.0f, 0.0f, 1.0f} },
-            Vertex{ { 5.0f, -10.0f, -20.0f }, { 1.0f, 0.0f, 0.0f, 1.0f} },
-            Vertex{ { -15.0f, -10.0f, -20.0f }, { 1.0f, 0.0f, 0.0f, 1.0f} },
-        };
-
-        const std::array<uint16_t, 12> indices =
-        {
-            0, 1, 2,
-            0, 2, 3,
-
-            4, 5, 6,
-            4, 6, 7
-        };
-
-        VertexBufferDescriptor vertexPositionBufferDesc;
-        vertexPositionBufferDesc.vertexCount = static_cast<uint32_t>(vertexData.size());
-        vertexPositionBufferDesc.vertexSize = sizeof(Vertex);
-        vertexPositionBufferDesc.data = static_cast<const void*>(vertexData.data());
-        m_viewportSceneData.vertexBuffer = m_renderer->CreateVertexBuffer(vertexPositionBufferDesc);
-        if (!m_viewportSceneData.vertexBuffer)
-        {
-            return false;
-        }
-
-        IndexBufferDescriptor indexBufferDesc;
-        indexBufferDesc.indexCount = static_cast<uint32_t>(indices.size());
-        indexBufferDesc.data = static_cast<const void*>(indices.data());
-        indexBufferDesc.dataType = IndexBuffer::DataType::Uint16;
-        m_viewportSceneData.indexBuffer = m_renderer->CreateIndexBuffer(indexBufferDesc);
-        if (!m_viewportSceneData.indexBuffer)
-        {
-            return false;
-        }
-
-        Shader::Visual::VertexScript vertexScript;
-        Shader::Visual::FragmentScript fragmentScript;
-
-        { // Vertex
-            auto& script = vertexScript;
-
-            auto& inputs = script.GetInputInterface();
-            auto& vertexPosition = inputs.AddMember<Vector3f32>();
-            auto& vertexColor = inputs.AddMember<Vector4f32>();
-
-            auto& pushConstants = script.GetPushConstants();
-            auto& projection = pushConstants.AddMember<Matrix4x4f32>(0);
-
-            auto& positionComposit = script.CreateComposite<Shader::Visual::Composites::Vec4f32FromVec3f32Float32>();
-            positionComposit.GetInput<0>().Connect(vertexPosition);
-            positionComposit.GetInput<1>().SetDefaultValue(1.0f);
-
-            auto& projectedVertexPosition = script.CreateOperator<Shader::Visual::Operators::MultMat4f32Vec4f32>();
-            projectedVertexPosition.GetLeftInput().Connect(projection);
-            projectedVertexPosition.GetRightInput().Connect(positionComposit.GetOutput());
-
-            auto* outPosition = script.GetVertexOutput();
-            outPosition->GetInputPin()->ConnectBase(*projectedVertexPosition.GetOutputPin());
-
-            auto& outputs = script.GetOutputInterface();
-            auto& outColor = outputs.AddMember<Vector4f32>();
-            outColor.Connect(vertexColor);
-        }
-        { // Fragment
-            auto& script = fragmentScript;
-
-            auto& inputs = script.GetInputInterface();
-            auto& vertexColor = inputs.AddMember<Vector4f32>();
-
-            auto& outputs = script.GetOutputInterface();
-            auto& outColor = outputs.AddMember<Vector4f32>();
-
-            outColor.Connect(vertexColor);
-        }
-
-        VisualShaderProgramDescriptor shaderProgramDesc;
-        shaderProgramDesc.vertexScript = &vertexScript;
-        shaderProgramDesc.fragmentScript = &fragmentScript;
-        auto shaderProgram = m_renderer->CreateShaderProgram(shaderProgramDesc);
-        if (!shaderProgram)
-        {
-            return false;
-        }
-
-        PipelineDescriptor pipelineDesc;
-        pipelineDesc.cullMode = Pipeline::CullMode::None;
-        pipelineDesc.polygonMode = Pipeline::PolygonMode::Fill;
-        pipelineDesc.topology = Pipeline::Topology::TriangleList;
-        pipelineDesc.frontFace = Pipeline::FrontFace::Clockwise;
-        pipelineDesc.renderPass = m_viewportRenderPass;
-        pipelineDesc.shaderProgram = shaderProgram;
-        m_viewportSceneData.pipeline = m_renderer->CreatePipeline(pipelineDesc);
-        if (!m_viewportSceneData.pipeline)
-        {
-            return false;
-        }
-
-        m_viewportSceneData.projectionLocation = m_renderer->GetPushConstantLocation(*m_viewportSceneData.pipeline, 0);
-
-        return true;
-    }
-
-    void Editor::DrawSceneViewport(CommandBuffer& commandBuffer)
-    {
-        // Very temporary scene viewport rendering.
-        static float totalDelta = 0.0f;
-        totalDelta += m_deltaTime.AsSeconds<float>();
-        const auto lookAtX = std::sin(totalDelta * 4.0f) * 20.0f;
-
-        const auto projectionMatrix = Matrix4x4f32::Perspective(Degrees(60), 1.0f, 0.1f, 100.0f);
-        const auto viewMatrix = Matrix4x4f32::LookAtPoint({ 0.0f, 0.0f, 60.0f }, { lookAtX, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f });
-        const auto finalProjecton = projectionMatrix * viewMatrix;
-
-        commandBuffer.BindPipeline(*m_viewportSceneData.pipeline);
-        commandBuffer.PushConstant(m_viewportSceneData.projectionLocation, finalProjecton);
-        commandBuffer.DrawVertexBuffer(*m_viewportSceneData.indexBuffer, *m_viewportSceneData.vertexBuffer);
     }
 
 }

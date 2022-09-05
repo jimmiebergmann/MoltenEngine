@@ -23,27 +23,33 @@
 *
 */
 
-#ifndef MOLTEN_CORE_FILEFORMAT_FILEFORMATRESULT_HPP
-#define MOLTEN_CORE_FILEFORMAT_FILEFORMATRESULT_HPP
 
-#include "Molten/System/Result.hpp"
-#include <vector>
+#include "Molten/Editor/View/RootView.hpp"
+#include "Molten/Graphics/Gui/Canvas.hpp"
 
-namespace Molten
+namespace Molten::Editor
 {
 
-    template<typename TData, typename TWarning>
-    struct FileFormatResultSuccess
+    std::unique_ptr<RootView> RootView::Create(const RootViewDescriptor& descriptor)
     {
-        TData data;
-        std::vector<TWarning> warnings;
-    };
+        auto result = std::unique_ptr<RootView>(new RootView{});
 
-    template<typename TData, typename TError, typename TWarning>
-    using FileFormatResult = Result<FileFormatResultSuccess<TData, TWarning>, TError>;
+        result->canvasRenderer = Gui::CanvasRenderer::Create(descriptor.renderer, descriptor.logger);
+        result->canvas = std::make_shared<Gui::Canvas<Gui::EditorTheme>>(*result->canvasRenderer, descriptor.fontNameRepository);
+        result->rootLayer = result->canvas->CreateLayer<Gui::SingleRootLayer>(Gui::LayerPosition::Top);
 
-    struct OpenFileError{};
+        auto* rootGrid = result->rootLayer->CreateChild<Gui::Grid>(Gui::GridDirection::Vertical);
+        {
+            auto* menuBar = rootGrid->CreateChild<Gui::MenuBar>();
+            {
+                menuBar->CreateChild<Gui::MenuBarItem>("File");
+                menuBar->CreateChild<Gui::MenuBarItem>("Help");
+            }
+        }
+
+        result->pageView = rootGrid->CreateChild<Gui::PageView>();
+
+        return result;
+    }
 
 }
-
-#endif

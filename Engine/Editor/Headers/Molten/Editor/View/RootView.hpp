@@ -23,26 +23,50 @@
 *
 */
 
-#ifndef MOLTEN_CORE_FILEFORMAT_FILEFORMATRESULT_HPP
-#define MOLTEN_CORE_FILEFORMAT_FILEFORMATRESULT_HPP
+#ifndef MOLTEN_EDITOR_VIEW_ROOTVIEW_HPP
+#define MOLTEN_EDITOR_VIEW_ROOTVIEW_HPP
 
-#include "Molten/System/Result.hpp"
-#include <vector>
+#include "Molten/Editor/Gui/Themes/EditorTheme.hpp"
+#include "Molten/Graphics/Gui/Layers/SingleRootLayer.hpp"
 
-namespace Molten
+namespace Molten::Editor
 {
 
-    template<typename TData, typename TWarning>
-    struct FileFormatResultSuccess
+    struct RootViewDescriptor
     {
-        TData data;
-        std::vector<TWarning> warnings;
+        Renderer& renderer;
+        Gui::FontNameRepository& fontNameRepository;
+        Logger* logger = nullptr;
     };
 
-    template<typename TData, typename TError, typename TWarning>
-    using FileFormatResult = Result<FileFormatResultSuccess<TData, TWarning>, TError>;
+    /** Editor class. */
+    class RootView
+    {
 
-    struct OpenFileError{};
+    public:
+
+        ~RootView() = default;
+
+        /* Deleted operations. */
+        /**@{*/
+        RootView(const RootView&) = delete;
+        RootView(RootView&&) = delete;
+        RootView& operator =(const RootView&) = delete;
+        RootView& operator =(RootView&&) = delete;
+        /**@}*/
+
+        static std::unique_ptr<RootView> Create(const RootViewDescriptor& descriptor);
+
+        Gui::CanvasRendererPointer canvasRenderer = {};
+        Gui::CanvasPointer<Gui::EditorTheme> canvas = {};
+        Gui::SingleRootLayer<Gui::EditorTheme>* rootLayer = nullptr;
+        Gui::PageView<Gui::EditorTheme>* pageView = nullptr;
+
+    private:
+
+        RootView() = default;
+
+    };
 
 }
 

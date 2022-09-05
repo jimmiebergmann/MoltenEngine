@@ -25,7 +25,7 @@
 
 
 #include "Molten/Editor/Application.hpp"
-#include "Molten/System/CommandLine.hpp"
+#include "ThirdParty/cppli/include/cppli/cppli.hpp"
 #include <exception>
 
 static int g_error_load = -1;
@@ -77,20 +77,27 @@ namespace Molten::Editor
         char** argv,
         EditorDescriptor& editorDescriptor)
     {
+        std::string projectName;
         std::optional<std::string> loggerFilename;
         std::optional<bool> enableGpuLogging;
         std::optional<std::string> backendRendererApiName;
         std::optional<std::string> backendRendererApiVersionString;
 
-        const CliParser parser{
-            CliValue{ { "logger.filename" }, loggerFilename },
-            CliValue{ { "logger.gpu" }, enableGpuLogging },
-            CliValue{ { "backend.renderer.api.name" }, backendRendererApiName },
-            CliValue{ { "backend.renderer.api.version" }, backendRendererApiVersionString },
-            CliValue{ { "fps.max" }, editorDescriptor.fpsLimit }
-        };
+        const auto cliOptions
+            = cppli::option<std::string>{ projectName, { "project" } }
+            | cppli::option<std::optional<std::string>>{ loggerFilename, { "--logger.filename" } }
+            | cppli::option_flag<std::optional<bool>>{ enableGpuLogging, { "--logger.gpu" } }
+            | cppli::option<std::optional<std::string>>{ backendRendererApiName, { "--backend.renderer.api.name" } }
+            | cppli::option<std::optional<std::string>>{ backendRendererApiVersionString, { "--backend.renderer.api.versionu" } }
+            | cppli::option<std::optional<uint32_t>>{ editorDescriptor.fpsLimit, { "--fps.max" } };
 
-        if(!parser.Parse(argc, argv))
+        auto cliContext = cppli::context{ argc, argv } | cppli::default_error{} | cppli::default_help{};
+
+        if (const auto result = cliOptions.parse(cliContext); result == cppli::parse_codes::successful_help)
+        {
+            return true;
+        }
+        else if (result != cppli::parse_codes::successful)
         {
             return false;
         }

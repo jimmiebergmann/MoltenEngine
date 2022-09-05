@@ -30,22 +30,33 @@
 namespace Molten
 {
 
-    Renderer * Renderer::Create(const BackendApi backendApi)
+    std::unique_ptr<Renderer> Renderer::Create(
+        const BackendApi backendApi,
+        [[maybe_unused]] const RendererDescriptor& descriptor)
     {
         switch (backendApi)
         {
-        case BackendApi::OpenGL:
 #if MOLTEN_ENABLE_OPENGL
-            return new OpenGLRenderer;
-#else
-            break;
+        case BackendApi::OpenGL: {
+            auto renderer = std::make_unique<OpenGLRenderer>();
+            if (!renderer->Open(descriptor))
+            {
+                return nullptr;
+            }
+            return renderer;
+        }         
 #endif
-        case BackendApi::Vulkan:
 #if MOLTEN_ENABLE_VULKAN
-            return new VulkanRenderer;
-#else
-            break;
+        case BackendApi::Vulkan: {
+            auto renderer = std::make_unique<VulkanRenderer>();
+            if (!renderer->Open(descriptor))
+            {
+                return nullptr;
+            }
+            return renderer;
+        }         
 #endif
+        default: break;
         }
 
         return nullptr;
