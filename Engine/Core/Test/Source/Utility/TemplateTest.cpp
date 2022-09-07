@@ -80,8 +80,6 @@ namespace Molten
 
     TEST(Utility, Template_IsInstance)
     {
-        const auto value = Foo<int>{};
-
         EXPECT_TRUE((IsTemplateInstance<Foo<int>, Foo>::value));
         EXPECT_TRUE((IsTemplateInstance<Foo<float>, Foo>::value));
         EXPECT_FALSE((IsTemplateInstance<Foo<int>, Bar>::value));
