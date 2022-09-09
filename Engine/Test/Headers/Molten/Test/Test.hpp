@@ -65,7 +65,7 @@ namespace Molten::Test
     {
         const auto path = std::filesystem::path{ "Test" } / testName;
         std::filesystem::remove_all(path);
-        std::filesystem::create_directory(path);
+        std::filesystem::create_directories(path);
         return path;
     }
 
