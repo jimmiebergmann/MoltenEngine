@@ -74,13 +74,18 @@ namespace Molten::Gui
                         ImageSwizzleMapping{ ImageComponentSwizzle::One, ImageComponentSwizzle::One, ImageComponentSwizzle::One, ImageComponentSwizzle::Red } :
                         ImageSwizzleMapping{ };
 
-                    const TextureDescriptor2D textureDesc = {
-                        fontAtlas->GetBuffer(),
-                        fontAtlas->GetImageDimensions(),
-                        TextureType::Color,
-                        TextureUsage::ReadOnly,
-                        fontAtlas->GetImageFormat() == FontAtlasImageFormat::Gray ? ImageFormat::URed8 : ImageFormat::UBlue8Green8Red8Alpha8,
-                        swizzleMapping
+                    const auto imageFormat = fontAtlas->GetImageFormat() == FontAtlasImageFormat::Gray ? 
+                        ImageFormat::URed8 :
+                        ImageFormat::UBlue8Green8Red8Alpha8;
+
+                    const auto textureDesc = TextureDescriptor2D{
+                        .data = fontAtlas->GetBuffer(),
+                        .dimensions = fontAtlas->GetImageDimensions(),
+                        .type = TextureType::Color,
+                        .initialUsage = TextureUsage::ReadOnly,
+                        .format = imageFormat,
+                        .internalFormat = imageFormat,
+                        .swizzleMapping = swizzleMapping
                     };
 
                     *newTexture = m_canvasRenderer.CreateTexture(textureDesc);

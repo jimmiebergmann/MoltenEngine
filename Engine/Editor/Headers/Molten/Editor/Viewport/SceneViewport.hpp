@@ -41,6 +41,7 @@ namespace Molten::Editor
     {
         Renderer& renderer;
         Gui::Viewport<Gui::EditorTheme>& viewportWidget;
+        Time& deltaTime;
         Logger* logger = nullptr;
     };
 
@@ -80,12 +81,14 @@ namespace Molten::Editor
 
         SceneViewport(
             Renderer& renderer,
-            Gui::Viewport<Gui::EditorTheme>& viewportWidget);
+            Gui::Viewport<Gui::EditorTheme>& viewportWidget,
+            Time& deltaTime);
 
-        void Draw(CommandBuffer& commandBuffer, Time deltaTime);
+        void Draw(CommandBuffer& commandBuffer);
 
         Renderer& m_renderer;
         Gui::Viewport<Gui::EditorTheme>& m_viewportWidget;
+        Time& m_deltaTime;
 
     };
 

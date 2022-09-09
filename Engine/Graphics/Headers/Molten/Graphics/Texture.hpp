@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -147,37 +147,13 @@ namespace Molten
 
         static_assert(VDimensions >= 1 && VDimensions <= 3, "Texture descriptor must be of dimension 1-3.");
 
-        TextureDescriptor();
-        TextureDescriptor(
-            const void* data,
-            const Vector<VDimensions, uint32_t>& dimensions,
-            const TextureType type,
-            const TextureUsage initialUsage,
-            const ImageFormat format,
-            const ImageSwizzleMapping& swizzleMapping = {});
-        TextureDescriptor(
-            const void* data,
-            const Vector<VDimensions, uint32_t>& dimensions,
-            const TextureType type,
-            const TextureUsage initialUsage,
-            const ImageFormat format,
-            const ImageFormat internalFormat,
-            const ImageSwizzleMapping& swizzleMapping = {});
-        ~TextureDescriptor() = default;
-
-        TextureDescriptor(const TextureDescriptor&) = default;
-        TextureDescriptor(TextureDescriptor&&) = default;
-        TextureDescriptor& operator =(const TextureDescriptor&) = default;
-        TextureDescriptor& operator =(TextureDescriptor&&) = default;
-
-        const void* data;
-        Vector<VDimensions, uint32_t> dimensions;
-        TextureType type;
-        TextureUsage initialUsage;
-        ImageFormat format;
-        ImageFormat internalFormat;
-        ImageSwizzleMapping swizzleMapping;
-
+        const void* data = nullptr;
+        Vector<VDimensions, uint32_t> dimensions = { 0 };
+        TextureType type = TextureType::Color;
+        TextureUsage initialUsage = TextureUsage::ReadOnly;
+        ImageFormat format = ImageFormat::URed8Green8Blue8;
+        ImageFormat internalFormat = ImageFormat::URed8Green8Blue8;
+        ImageSwizzleMapping swizzleMapping = {};
     };
 
     using TextureDescriptor1D = TextureDescriptor<1>;
@@ -191,20 +167,9 @@ namespace Molten
     {
         static_assert(VDimensions >= 1 && VDimensions <= 3, "Texture descriptor must be of dimension 1-3.");
 
-        explicit TextureUpdateDescriptor(
-            const void* data = nullptr,
-            Vector<VDimensions, uint32_t> destinationDimensions = {},
-            Vector<VDimensions, uint32_t> destinationOffset = {});
-        ~TextureUpdateDescriptor() = default;
-
-        TextureUpdateDescriptor(const TextureUpdateDescriptor&) = default;
-        TextureUpdateDescriptor(TextureUpdateDescriptor&&) = default;
-        TextureUpdateDescriptor& operator =(const TextureUpdateDescriptor&) = default;
-        TextureUpdateDescriptor& operator =(TextureUpdateDescriptor&&) = default;
-
-        const void* data;          
-        Vector<VDimensions, uint32_t> destinationDimensions;
-        Vector<VDimensions, uint32_t> destinationOffset;
+        const void* data = nullptr;          
+        Vector<VDimensions, uint32_t> destinationDimensions = { 0 };
+        Vector<VDimensions, uint32_t> destinationOffset = { 0 };
     };
 
     using TextureUpdateDescriptor1D = TextureUpdateDescriptor<1>;

@@ -332,16 +332,14 @@ namespace Molten::Gui
 
     void CanvasRenderer::LoadColoredRect()
     {      
-        const std::array<Vector2f32, 4> vertexData =
-        {
+        const auto vertexData = std::array<Vector2f32, 4>{
             Vector2f32{ 0.0f, 0.0f },
             Vector2f32{ 1.0f, 0.0f },
             Vector2f32{ 1.0f, 1.0f },
             Vector2f32{ 0.0f, 1.0f }
         };
 
-        const std::array<uint16_t, 6> indices =
-        {
+        const auto indices = std::array<uint16_t, 6>{
             0, 1, 2, 
             0, 2, 3
         };
@@ -475,16 +473,14 @@ namespace Molten::Gui
 
     void CanvasRenderer::LoadTexturedRect()
     {
-        const std::array<Vector2f32, 4> vertexData =
-        {
+        const auto vertexData = std::array<Vector2f32, 4>{
             Vector2f32{ 0.0f, 0.0f },
             Vector2f32{ 1.0f, 0.0f },
             Vector2f32{ 1.0f, 1.0f },
             Vector2f32{ 0.0f, 1.0f }
         };
 
-        const std::array<uint16_t, 6> indices =
-        {
+        const auto indices = std::array<uint16_t, 6>{
             0, 1, 2,
             0, 2, 3
         };

@@ -213,12 +213,25 @@ namespace Molten::Editor
     {
         m_fontNameRepository.AddSystemDirectories();
 
-        if (m_rootView = RootView::Create({ *m_renderer, m_fontNameRepository,  m_logger.get() }); !m_rootView)
+        const auto rootViewDesc = RootViewDescriptor{
+           .renderer = *m_renderer,
+           .fontNameRepository = m_fontNameRepository,
+           .logger = m_logger.get()
+        };
+
+        if (m_rootView = RootView::Create(rootViewDesc); !m_rootView)
         {
             return false;
         }
 
-        if (m_sceneView = SceneView::Create({ *m_renderer, *m_rootView->pageView }); !m_sceneView)
+        const auto sceneViewDesc = SceneViewDescriptor{
+            .renderer = *m_renderer,
+            .rootWidget = *m_rootView->pageView,
+            .deltaTime = m_deltaTime,
+            .logger = m_logger.get()
+        };
+
+        if (m_sceneView = SceneView::Create(sceneViewDesc); !m_sceneView)
         {
             return false;
         }

@@ -32,7 +32,7 @@ namespace Molten::Editor
 {
 
 	std::unique_ptr<SceneView> SceneView::Create(const SceneViewDescriptor& descriptor)
-    {
+	{
 		auto result = std::unique_ptr<SceneView>(new SceneView{});
 
 		auto* docker = descriptor.rootWidget.CreateChild<Gui::Docker>();
@@ -66,7 +66,7 @@ namespace Molten::Editor
 		button->size.y = Gui::Size::Fit::Content;
 		button->onPress.Connect([&](auto) {
 			//Logger::WriteInfo(m_logger.get(), "You pressed me!");
-		});
+			});
 		button->CreateChild<Gui::Label>("Click me!", 18);
 
 		/*m_avgFpsLabel = vertGrid->CreateChild<Gui::Label>("", 18);
@@ -76,7 +76,14 @@ namespace Molten::Editor
 		m_loadingProgressBar = vertGrid->CreateChild<Gui::ProgressBar>();
 		m_loadingProgressBar->position = { Gui::Position::Pixels{ 0.0f }, Gui::Position::Pixels{ 100.0f } };*/
 
-		if (result->sceneViewport = SceneViewport::Create({ descriptor.renderer, *result->viewportWidget }); !result->sceneViewport)
+		const auto sceneViewportDesc = SceneViewportDescriptor{
+			.renderer = descriptor.renderer,
+			.viewportWidget = *result->viewportWidget,
+			.deltaTime = descriptor.deltaTime,
+			.logger = descriptor.logger
+		};
+
+		if (result->sceneViewport = SceneViewport::Create(sceneViewportDesc); !result->sceneViewport)
 		{
 			return {};
 		}

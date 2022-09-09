@@ -30,7 +30,7 @@ namespace Molten::Editor
 
     std::unique_ptr<SceneViewport> SceneViewport::Create(const SceneViewportDescriptor& descriptor)
 	{
-        auto result = std::unique_ptr<SceneViewport>(new SceneViewport{ descriptor.renderer, descriptor.viewportWidget });
+        auto result = std::unique_ptr<SceneViewport>(new SceneViewport{ descriptor.renderer, descriptor.viewportWidget, descriptor.deltaTime });
 
         struct Vertex
         {
@@ -38,8 +38,7 @@ namespace Molten::Editor
             Vector4f32 color;
         };
 
-        const std::array<Vertex, 8> vertexData =
-        {
+        const auto vertexData = std::array<Vertex, 8>{
             Vertex{ { -10.0f, 10.0f, 0.0f }, { 1.0f, 1.0f, 0.0f, 1.0f} },
             Vertex{ { 10.0f, 10.0f, 0.0f }, { 1.0f, 0.0f, 1.0f, 1.0f} },
             Vertex{ { 10.0f, -10.0f, 0.0f }, { 1.0f, 0.0f, 1.0f, 1.0f} },
@@ -51,8 +50,7 @@ namespace Molten::Editor
             Vertex{ { -15.0f, -10.0f, -20.0f }, { 1.0f, 0.0f, 0.0f, 1.0f} },
         };
 
-        const std::array<uint16_t, 12> indices =
-        {
+        const auto indices = std::array<uint16_t, 12>{
             0, 1, 2,
             0, 2, 3,
 
@@ -60,20 +58,24 @@ namespace Molten::Editor
             4, 6, 7
         };
 
-        VertexBufferDescriptor vertexPositionBufferDesc;
-        vertexPositionBufferDesc.vertexCount = static_cast<uint32_t>(vertexData.size());
-        vertexPositionBufferDesc.vertexSize = sizeof(Vertex);
-        vertexPositionBufferDesc.data = static_cast<const void*>(vertexData.data());
+        const auto vertexPositionBufferDesc = VertexBufferDescriptor{
+            .vertexCount = static_cast<uint32_t>(vertexData.size()),
+            .vertexSize = sizeof(Vertex),
+            .data = static_cast<const void*>(vertexData.data())
+        };
+
         result->vertexBuffer = descriptor.renderer.CreateVertexBuffer(vertexPositionBufferDesc);
         if (!result->vertexBuffer)
         {
             return nullptr;
         }
 
-        IndexBufferDescriptor indexBufferDesc;
-        indexBufferDesc.indexCount = static_cast<uint32_t>(indices.size());
-        indexBufferDesc.data = static_cast<const void*>(indices.data());
-        indexBufferDesc.dataType = IndexBuffer::DataType::Uint16;
+        const auto indexBufferDesc = IndexBufferDescriptor{
+            .indexCount = static_cast<uint32_t>(indices.size()),
+            .data = static_cast<const void*>(indices.data()),
+            .dataType = IndexBuffer::DataType::Uint16
+        };
+      
         result->indexBuffer = descriptor.renderer.CreateIndexBuffer(indexBufferDesc);
         if (!result->indexBuffer)
         {
@@ -143,25 +145,27 @@ namespace Molten::Editor
                 bufferCapacityPolicy[1].GetCapacity()
             };
 
-            TextureDescriptor2D colorTextureDesc = {};
-            colorTextureDesc.dimensions = dimensions;
-            colorTextureDesc.type = TextureType::Color;
-            colorTextureDesc.initialUsage = TextureUsage::Attachment;
-            colorTextureDesc.format = ImageFormat::URed8Green8Blue8Alpha8;
-            colorTextureDesc.internalFormat = ImageFormat::URed8Green8Blue8Alpha8;
-
+            const auto colorTextureDesc = TextureDescriptor2D{
+                .dimensions = dimensions,
+                .type = TextureType::Color,
+                .initialUsage = TextureUsage::Attachment,
+                .format = ImageFormat::URed8Green8Blue8Alpha8,
+                .internalFormat = ImageFormat::URed8Green8Blue8Alpha8
+            };
+           
             auto colorTexture = m_renderer.CreateFramedTexture(colorTextureDesc);
             if (!colorTexture)
             {
                 return {};
             }
 
-            TextureDescriptor2D depthTextureDesc = {};
-            depthTextureDesc.dimensions = dimensions;
-            depthTextureDesc.type = TextureType::DepthStencil;
-            depthTextureDesc.initialUsage = TextureUsage::Attachment;
-            depthTextureDesc.format = ImageFormat::SDepthFloat24StencilUint8;
-            depthTextureDesc.internalFormat = ImageFormat::SDepthFloat24StencilUint8;
+            const auto depthTextureDesc = TextureDescriptor2D{
+                .dimensions = dimensions,
+                .type = TextureType::DepthStencil,
+                .initialUsage = TextureUsage::Attachment,
+                .format = ImageFormat::SDepthFloat24StencilUint8,
+                .internalFormat = ImageFormat::SDepthFloat24StencilUint8
+            };
 
             auto depthTexture = m_renderer.CreateFramedTexture(depthTextureDesc);
             if (!depthTexture)
@@ -172,7 +176,7 @@ namespace Molten::Editor
             return { std::move(colorTexture), std::move(depthTexture) };
         };
 
-        const Vector2b capacitySetSizeResult = {
+        const auto capacitySetSizeResult = Vector2b{
             bufferCapacityPolicy[0].SetSize(size.x),
             bufferCapacityPolicy[1].SetSize(size.y)
         };
@@ -200,7 +204,7 @@ namespace Molten::Editor
                     },
                     {
                         .texture = depthTexture,
-                        . clearValue = RenderPassAttachmentDepthStencilClearValue{ 
+                        .clearValue = RenderPassAttachmentDepthStencilClearValue{ 
                             .depth = 1.0f, 
                             .stencil = uint8_t{0} 
                         },
@@ -235,7 +239,7 @@ namespace Molten::Editor
             }
 
             renderPass->SetRecordFunction([&](CommandBuffer& commandBuffer) {
-                Draw(commandBuffer, Time::Zero);
+                Draw(commandBuffer);
             });
 
             const auto pipelineDesc = PipelineDescriptor{
@@ -282,17 +286,19 @@ namespace Molten::Editor
 
     SceneViewport::SceneViewport(
         Renderer& renderer,
-        Gui::Viewport<Gui::EditorTheme>& viewportWidget
+        Gui::Viewport<Gui::EditorTheme>& viewportWidget,
+        Time& deltaTime
     ) :
         m_renderer(renderer),
-        m_viewportWidget(viewportWidget)
+        m_viewportWidget(viewportWidget),
+        m_deltaTime(deltaTime)
     {}
 
-    void SceneViewport::Draw(CommandBuffer& commandBuffer, Time deltaTime)
+    void SceneViewport::Draw(CommandBuffer& commandBuffer)
     {
         // Very temporary scene viewport rendering.
         static float totalDelta = 0.0f;
-        totalDelta += deltaTime.AsSeconds<float>();
+        totalDelta += m_deltaTime.AsSeconds<float>();
         const auto lookAtX = std::sin(totalDelta * 4.0f) * 20.0f;
 
         const auto projectionMatrix = Matrix4x4f32::Perspective(Degrees(60), 1.0f, 0.1f, 100.0f);

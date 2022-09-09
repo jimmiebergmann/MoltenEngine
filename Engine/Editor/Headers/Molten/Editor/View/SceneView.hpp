@@ -36,6 +36,8 @@ namespace Molten::Editor
     {
         Renderer& renderer;
         Gui::Widget<Gui::EditorTheme>& rootWidget;
+        Time& deltaTime;
+        Logger* logger = nullptr;
     };
 
     class SceneView
