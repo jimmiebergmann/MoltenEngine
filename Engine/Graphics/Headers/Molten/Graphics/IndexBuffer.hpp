@@ -60,23 +60,9 @@ namespace Molten
     /** Descriptor class of index buffer class. */
     struct MOLTEN_GRAPHICS_API IndexBufferDescriptor
     {
-
-        IndexBufferDescriptor();
-        IndexBufferDescriptor(
-            const uint32_t indexCount,
-            const void* data,
-            const IndexBuffer::DataType dataType);
-        ~IndexBufferDescriptor() = default;
-
-        IndexBufferDescriptor(const IndexBufferDescriptor&) = default;
-        IndexBufferDescriptor(IndexBufferDescriptor&&) = default;
-        IndexBufferDescriptor& operator =(const IndexBufferDescriptor&) = default;
-        IndexBufferDescriptor& operator =(IndexBufferDescriptor&&) = default;
-
-        uint32_t indexCount;
-        const void* data;   
-        IndexBuffer::DataType dataType;
-
+        uint32_t indexCount = 0;
+        const void* data = nullptr;   
+        IndexBuffer::DataType dataType = IndexBuffer::DataType::Uint32;
     };
 
 }

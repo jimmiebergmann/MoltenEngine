@@ -121,56 +121,23 @@ namespace Molten
     /** Descriptor of pipeline blending. */
     struct MOLTEN_GRAPHICS_API PipelineBlendingDescriptor
     {
-        PipelineBlendingDescriptor();
-        PipelineBlendingDescriptor(
-            const Pipeline::BlendOperator blendOperator,
-            const Pipeline::BlendFunction sourceColor,
-            const Pipeline::BlendFunction sourceAlpha,
-            const Pipeline::BlendFunction destinationColor,
-            const Pipeline::BlendFunction destinationAlpha);
-
-        ~PipelineBlendingDescriptor() = default;
-
-        PipelineBlendingDescriptor(const PipelineBlendingDescriptor&) = default;
-        PipelineBlendingDescriptor(PipelineBlendingDescriptor&&) = default;
-        PipelineBlendingDescriptor& operator =(const PipelineBlendingDescriptor&) = default;
-        PipelineBlendingDescriptor& operator =(PipelineBlendingDescriptor&&) = default;
-
-        Pipeline::BlendOperator blendOperator;
-        Pipeline::BlendFunction sourceColor;
-        Pipeline::BlendFunction sourceAlpha;
-        Pipeline::BlendFunction destinationColor;
-        Pipeline::BlendFunction destinationAlpha;
-        
+        Pipeline::BlendOperator blendOperator = Pipeline::BlendOperator::Add;
+        Pipeline::BlendFunction sourceColor = Pipeline::BlendFunction::SourceAlpha;
+        Pipeline::BlendFunction sourceAlpha = Pipeline::BlendFunction::SourceAlpha;
+        Pipeline::BlendFunction destinationColor = Pipeline::BlendFunction::OneMinusSourceAlpha;
+        Pipeline::BlendFunction destinationAlpha = Pipeline::BlendFunction::OneMinusSourceAlpha;
     };
 
     /** Descriptor of pipeline. */
     struct MOLTEN_GRAPHICS_API PipelineDescriptor
     {
-
-        PipelineDescriptor();
-        PipelineDescriptor(
-            const Pipeline::Topology topology,
-            const Pipeline::PolygonMode polygonMode,
-            const Pipeline::FrontFace frontFace,
-            const Pipeline::CullMode cullMode,
-            const PipelineBlendingDescriptor blending,
-            SharedRenderResource<ShaderProgram> shaderProgram);
-        ~PipelineDescriptor() = default;
-
-        PipelineDescriptor(const PipelineDescriptor&) = default;
-        PipelineDescriptor(PipelineDescriptor&&) = default;
-        PipelineDescriptor& operator =(const PipelineDescriptor&) = default;
-        PipelineDescriptor& operator =(PipelineDescriptor&&) = default;
-        
-        Pipeline::Topology topology;
-        Pipeline::PolygonMode polygonMode;
-        Pipeline::FrontFace frontFace;
-        Pipeline::CullMode cullMode;
-        PipelineBlendingDescriptor blending;
-        SharedRenderResource<RenderPass> renderPass;
-        SharedRenderResource<ShaderProgram> shaderProgram;
-
+        Pipeline::Topology topology = Pipeline::Topology::TriangleList;
+        Pipeline::PolygonMode polygonMode = Pipeline::PolygonMode::Fill;
+        Pipeline::FrontFace frontFace = Pipeline::FrontFace::Clockwise;
+        Pipeline::CullMode cullMode = Pipeline::CullMode::None;
+        PipelineBlendingDescriptor blending = {};
+        SharedRenderResource<RenderPass> renderPass = {};
+        SharedRenderResource<ShaderProgram> shaderProgram = {};
     };
 
 }

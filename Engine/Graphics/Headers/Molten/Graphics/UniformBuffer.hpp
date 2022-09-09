@@ -53,18 +53,7 @@ namespace Molten
     /** Descriptor class of uniform buffer class. */
     struct MOLTEN_GRAPHICS_API UniformBufferDescriptor
     {
-
-        UniformBufferDescriptor();
-        explicit UniformBufferDescriptor(const uint32_t size);
-        ~UniformBufferDescriptor() = default;
-
-        UniformBufferDescriptor(const UniformBufferDescriptor&) = default;
-        UniformBufferDescriptor(UniformBufferDescriptor&&) = default;
-        UniformBufferDescriptor& operator =(const UniformBufferDescriptor&) = default;
-        UniformBufferDescriptor& operator =(UniformBufferDescriptor&&) = default;
-
-        uint32_t size; ///< Buffer size in bytes.
-
+        uint32_t size = 0; ///< Buffer size in bytes.
     };
 
 
@@ -91,18 +80,7 @@ namespace Molten
     /** Descriptor class of framed uniform buffer class. */
     struct MOLTEN_GRAPHICS_API FramedUniformBufferDescriptor
     {
-
-        FramedUniformBufferDescriptor();
-        explicit FramedUniformBufferDescriptor(const uint32_t size);
-        ~FramedUniformBufferDescriptor() = default;
-
-        FramedUniformBufferDescriptor(const FramedUniformBufferDescriptor&) = default;
-        FramedUniformBufferDescriptor(FramedUniformBufferDescriptor&&) = default;
-        FramedUniformBufferDescriptor& operator =(const FramedUniformBufferDescriptor&) = default;
-        FramedUniformBufferDescriptor& operator =(FramedUniformBufferDescriptor&&) = default;
-
-        uint32_t size;///< Buffer size in bytes.
-
+        uint32_t size = 0; ///< Buffer size in bytes.
     };
 
 }

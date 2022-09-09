@@ -54,22 +54,8 @@ namespace Molten
     /** Descriptor class of shader program class. */
     struct MOLTEN_GRAPHICS_API VisualShaderProgramDescriptor
     {
-
-        VisualShaderProgramDescriptor();
-        VisualShaderProgramDescriptor(
-            Shader::Visual::VertexScript* vertexScript,
-            Shader::Visual::FragmentScript* fragmentScript);
-
-        ~VisualShaderProgramDescriptor() = default;
-
-        VisualShaderProgramDescriptor(const VisualShaderProgramDescriptor&) = default;
-        VisualShaderProgramDescriptor(VisualShaderProgramDescriptor&&) = default;
-        VisualShaderProgramDescriptor& operator =(const VisualShaderProgramDescriptor&) = default;
-        VisualShaderProgramDescriptor& operator =(VisualShaderProgramDescriptor&&) = default;
-
-        Shader::Visual::VertexScript* vertexScript;
-        Shader::Visual::FragmentScript* fragmentScript;
-
+        Shader::Visual::VertexScript* vertexScript = nullptr;
+        Shader::Visual::FragmentScript* fragmentScript = nullptr;
     };
 
 }

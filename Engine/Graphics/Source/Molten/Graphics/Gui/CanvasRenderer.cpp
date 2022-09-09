@@ -91,9 +91,16 @@ namespace Molten::Gui
         }
 
         const auto descriptorSetDescriptor = DescriptorSetDescriptor{
-            &m_texturedRect.pipeline, 0,
-            { 0,  { texture, m_sampler2D } }
+            .pipeline = &m_texturedRect.pipeline,
+            .id = 0,
+            .bindings = {
+                { 
+                    .id = 0, 
+                    .binding = CombinedTextureSampler2D{ texture, m_sampler2D }
+                }
+            }
         };
+        
         auto descriptorSet = m_backendRenderer.CreateDescriptorSet(descriptorSetDescriptor);
         if (!descriptorSet)
         {
@@ -121,8 +128,14 @@ namespace Molten::Gui
         }
 
         const auto descriptorSetDescriptor = FramedDescriptorSetDescriptor{
-           &m_texturedRect.pipeline, 0,
-           { 0,  CombinedFramedTextureSampler2D{ framedTexture, m_sampler2D } }
+            .pipeline = &m_texturedRect.pipeline,
+            .id = 0,
+            .bindings = {
+                { 
+                    .id = 0, 
+                    .binding = CombinedFramedTextureSampler2D{ framedTexture, m_sampler2D }
+                } 
+            }
         };
 
         auto framedDescriptorSet = m_backendRenderer.CreateFramedDescriptorSet(descriptorSetDescriptor);
@@ -197,10 +210,12 @@ namespace Molten::Gui
                 ++currentQuad;
             }
 
-            VertexBufferDescriptor vertexPositionBufferDesc;
-            vertexPositionBufferDesc.vertexCount = static_cast<uint32_t>(quadBuffer->size() * 6);
-            vertexPositionBufferDesc.vertexSize = sizeof(Vertex);
-            vertexPositionBufferDesc.data = static_cast<const void*>(quadBuffer->data());
+            const auto vertexPositionBufferDesc = VertexBufferDescriptor{
+                .vertexCount = static_cast<uint32_t>(quadBuffer->size() * 6),
+                .vertexSize = sizeof(Vertex),
+                .data = static_cast<const void*>(quadBuffer->data())
+            };
+          
             auto vertexBuffer = m_backendRenderer.CreateVertexBuffer(vertexPositionBufferDesc);
             if (!vertexBuffer)
             {
@@ -331,20 +346,24 @@ namespace Molten::Gui
             0, 2, 3
         };
 
-        VertexBufferDescriptor vertexPositionBufferDesc;
-        vertexPositionBufferDesc.vertexCount = static_cast<uint32_t>(vertexData.size());
-        vertexPositionBufferDesc.vertexSize = sizeof(Vector2f32);
-        vertexPositionBufferDesc.data = static_cast<const void*>(vertexData.data());
+        const auto vertexPositionBufferDesc = VertexBufferDescriptor{
+            .vertexCount = static_cast<uint32_t>(vertexData.size()),
+            .vertexSize = sizeof(Vector2f32),
+            .data = static_cast<const void*>(vertexData.data())
+        };
+        
         m_coloredRect.vertexBuffer = m_backendRenderer.CreateVertexBuffer(vertexPositionBufferDesc);
         if (!m_coloredRect.vertexBuffer)
         {
             throw Exception("Failed to create position vertex buffer.");
         }
 
-        IndexBufferDescriptor indexBufferDesc;
-        indexBufferDesc.indexCount = static_cast<uint32_t>(indices.size());
-        indexBufferDesc.data = static_cast<const void*>(indices.data());
-        indexBufferDesc.dataType = IndexBuffer::DataType::Uint16;
+        const auto indexBufferDesc = IndexBufferDescriptor{
+            .indexCount = static_cast<uint32_t>(indices.size()),
+            .data = static_cast<const void*>(indices.data()),
+            .dataType = IndexBuffer::DataType::Uint16
+        };
+       
         m_coloredRect.indexBuffer = m_backendRenderer.CreateIndexBuffer(indexBufferDesc);
         if (!m_coloredRect.indexBuffer)
         {
@@ -422,22 +441,26 @@ namespace Molten::Gui
             Logger::WriteInfo(m_logger, "-------------------------------------");
         }*/
 
-        VisualShaderProgramDescriptor shaderProgramDesc;
-        shaderProgramDesc.vertexScript = &vertexScript;
-        shaderProgramDesc.fragmentScript = &fragmentScript;
+        const auto shaderProgramDesc = VisualShaderProgramDescriptor{
+            .vertexScript = &vertexScript,
+            .fragmentScript = &fragmentScript
+        };
+
         auto shaderProgram = m_backendRenderer.CreateShaderProgram(shaderProgramDesc);
         if (!shaderProgram)
         {
             throw Exception("Failed to create gui shader program");
         }
 
-        PipelineDescriptor pipelineDesc;
-        pipelineDesc.cullMode = Pipeline::CullMode::None;
-        pipelineDesc.polygonMode = Pipeline::PolygonMode::Fill;
-        pipelineDesc.topology = Pipeline::Topology::TriangleList;
-        pipelineDesc.frontFace = Pipeline::FrontFace::Clockwise;
-        pipelineDesc.renderPass = m_backendRenderer.GetSwapChainRenderPass();
-        pipelineDesc.shaderProgram = shaderProgram;
+        const auto pipelineDesc = PipelineDescriptor{
+            .topology = Pipeline::Topology::TriangleList,
+            .polygonMode = Pipeline::PolygonMode::Fill,
+            .frontFace = Pipeline::FrontFace::Clockwise,
+            .cullMode = Pipeline::CullMode::None,
+            .renderPass = m_backendRenderer.GetSwapChainRenderPass(),
+            .shaderProgram = shaderProgram
+        };
+
         m_coloredRect.pipeline = m_backendRenderer.CreatePipeline(pipelineDesc);
         if (!m_coloredRect.pipeline)
         {
@@ -466,20 +489,24 @@ namespace Molten::Gui
             0, 2, 3
         };
 
-        VertexBufferDescriptor vertexPositionBufferDesc;
-        vertexPositionBufferDesc.vertexCount = static_cast<uint32_t>(vertexData.size());
-        vertexPositionBufferDesc.vertexSize = sizeof(Vector2f32);
-        vertexPositionBufferDesc.data = static_cast<const void*>(vertexData.data());
+        const auto vertexPositionBufferDesc = VertexBufferDescriptor{
+            .vertexCount = static_cast<uint32_t>(vertexData.size()),
+            .vertexSize = sizeof(Vector2f32),
+            .data = static_cast<const void*>(vertexData.data())
+        };
+        
         m_texturedRect.vertexBuffer = m_backendRenderer.CreateVertexBuffer(vertexPositionBufferDesc);
         if (!m_texturedRect.vertexBuffer)
         {
             throw Exception("Failed to create position vertex buffer.");
         }
 
-        IndexBufferDescriptor indexBufferDesc;
-        indexBufferDesc.indexCount = static_cast<uint32_t>(indices.size());
-        indexBufferDesc.data = static_cast<const void*>(indices.data());
-        indexBufferDesc.dataType = IndexBuffer::DataType::Uint16;
+        const auto indexBufferDesc = IndexBufferDescriptor{
+            .indexCount = static_cast<uint32_t>(indices.size()),
+            .data = static_cast<const void*>(indices.data()),
+            .dataType = IndexBuffer::DataType::Uint16
+        };
+       
         m_texturedRect.indexBuffer = m_backendRenderer.CreateIndexBuffer(indexBufferDesc);
         if (!m_texturedRect.indexBuffer)
         {
@@ -581,22 +608,26 @@ namespace Molten::Gui
             Logger::WriteInfo(m_logger, "-------------------------------------");
         }*/
 
-        VisualShaderProgramDescriptor shaderProgramDesc;
-        shaderProgramDesc.vertexScript = &vertexScript;
-        shaderProgramDesc.fragmentScript = &fragmentScript;
+        const auto shaderProgramDesc = VisualShaderProgramDescriptor{
+            .vertexScript = &vertexScript,
+            .fragmentScript = &fragmentScript
+        };
+
         auto shaderProgram = m_backendRenderer.CreateShaderProgram(shaderProgramDesc);
         if (!shaderProgram)
         {
             throw Exception("Failed to create gui shader program");
         }
 
-        PipelineDescriptor pipelineDesc;
-        pipelineDesc.cullMode = Pipeline::CullMode::None;
-        pipelineDesc.polygonMode = Pipeline::PolygonMode::Fill;
-        pipelineDesc.topology = Pipeline::Topology::TriangleList;
-        pipelineDesc.frontFace = Pipeline::FrontFace::Clockwise;
-        pipelineDesc.renderPass = m_backendRenderer.GetSwapChainRenderPass();
-        pipelineDesc.shaderProgram = shaderProgram;
+        const auto pipelineDesc = PipelineDescriptor{
+            .topology = Pipeline::Topology::TriangleList,
+            .polygonMode = Pipeline::PolygonMode::Fill,
+            .frontFace = Pipeline::FrontFace::Clockwise,
+            .cullMode = Pipeline::CullMode::None,
+            .renderPass = m_backendRenderer.GetSwapChainRenderPass(),
+            .shaderProgram = shaderProgram
+        };
+
         m_texturedRect.pipeline = m_backendRenderer.CreatePipeline(pipelineDesc);
         if (!m_texturedRect.pipeline)
         {
@@ -691,22 +722,26 @@ namespace Molten::Gui
             Logger::WriteInfo(m_logger, "-------------------------------------");
         }*/
 
-        VisualShaderProgramDescriptor shaderProgramDesc;
-        shaderProgramDesc.vertexScript = &vertexScript;
-        shaderProgramDesc.fragmentScript = &fragmentScript;
+        const auto shaderProgramDesc = VisualShaderProgramDescriptor{
+            .vertexScript = &vertexScript,
+            .fragmentScript = &fragmentScript
+        };
+      
         auto shaderProgram = m_backendRenderer.CreateShaderProgram(shaderProgramDesc);
         if (!shaderProgram)
         {
             throw Exception("Failed to create gui shader program");
         }
 
-        PipelineDescriptor pipelineDesc;
-        pipelineDesc.cullMode = Pipeline::CullMode::None;
-        pipelineDesc.polygonMode = Pipeline::PolygonMode::Fill;
-        pipelineDesc.topology = Pipeline::Topology::TriangleList;
-        pipelineDesc.frontFace = Pipeline::FrontFace::Clockwise;
-        pipelineDesc.renderPass = m_backendRenderer.GetSwapChainRenderPass();
-        pipelineDesc.shaderProgram = shaderProgram;
+        const auto pipelineDesc = PipelineDescriptor{
+            .topology = Pipeline::Topology::TriangleList,
+            .polygonMode = Pipeline::PolygonMode::Fill,
+            .frontFace = Pipeline::FrontFace::Clockwise,
+            .cullMode = Pipeline::CullMode::None,
+            .renderPass = m_backendRenderer.GetSwapChainRenderPass(),
+            .shaderProgram = shaderProgram
+        };
+
         m_fontRenderData.pipeline = m_backendRenderer.CreatePipeline(pipelineDesc);
         if (!m_fontRenderData.pipeline)
         {

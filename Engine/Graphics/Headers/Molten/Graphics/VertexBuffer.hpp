@@ -53,23 +53,9 @@ namespace Molten
     /** Descriptor of vertex buffer resource object. */
     struct MOLTEN_GRAPHICS_API VertexBufferDescriptor
     {
-
-        VertexBufferDescriptor();
-        VertexBufferDescriptor(
-            const uint32_t vertexCount,
-            const uint32_t vertexSize,
-            const void* data);
-        ~VertexBufferDescriptor() = default;
-
-        VertexBufferDescriptor(const VertexBufferDescriptor&) = default;
-        VertexBufferDescriptor(VertexBufferDescriptor&&) = default;
-        VertexBufferDescriptor& operator =(const VertexBufferDescriptor&) = default;
-        VertexBufferDescriptor& operator =(VertexBufferDescriptor&&) = default;
-
-        uint32_t vertexCount;
-        uint32_t vertexSize;
-        const void* data;
-
+        uint32_t vertexCount = 0;
+        uint32_t vertexSize = 0;
+        const void* data = nullptr;
     };
 
 }

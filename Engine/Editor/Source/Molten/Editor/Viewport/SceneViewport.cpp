@@ -120,9 +120,11 @@ namespace Molten::Editor
             outColor.Connect(vertexColor);
         }
 
-        VisualShaderProgramDescriptor shaderProgramDesc;
-        shaderProgramDesc.vertexScript = &vertexScript;
-        shaderProgramDesc.fragmentScript = &fragmentScript;
+        const auto shaderProgramDesc = VisualShaderProgramDescriptor{
+            .vertexScript = &vertexScript,
+            .fragmentScript = &fragmentScript
+        };
+
         result->shaderProgram = descriptor.renderer.CreateShaderProgram(shaderProgramDesc);
         if (!result->shaderProgram)
         {
@@ -183,40 +185,45 @@ namespace Molten::Editor
 
             m_viewportWidget.SetTexture(colorTexture);
 
-            const RenderPassDescriptor renderPassDesc = {
-                size,
-                {
+            const auto renderPassDesc = RenderPassDescriptor{
+                .dimensions = size,
+                .attachments = {
                     {
-                        colorTexture,
-                        RenderPassAttachmentColorClearValue{ { 0.0f, 0.0f, 0.0f, 0.0f} },
-                        TextureType::Color,
-                        TextureUsage::Attachment,
-                        TextureType::Color,
-                        TextureUsage::ReadOnly
+                        .texture = colorTexture,
+                        .clearValue = RenderPassAttachmentColorClearValue{ 
+                            .color = { 0.0f, 0.0f, 0.0f, 0.0f } 
+                        },
+                        .initialType = TextureType::Color,
+                        .initialUsage = TextureUsage::Attachment,
+                        .finalType = TextureType::Color,
+                        .finalUsage = TextureUsage::ReadOnly
                     },
                     {
-                        depthTexture,
-                        RenderPassAttachmentDepthStencilClearValue{ 1.0f, uint8_t{0} },
-                        TextureType::DepthStencil,
-                        TextureUsage::Attachment
+                        .texture = depthTexture,
+                        . clearValue = RenderPassAttachmentDepthStencilClearValue{ 
+                            .depth = 1.0f, 
+                            .stencil = uint8_t{0} 
+                        },
+                        .initialType = TextureType::DepthStencil,
+                        .initialUsage = TextureUsage::Attachment
                     }
                 }
             };
 
             renderPassUpdateDesc = {
-                size,
-                {
+                .dimensions = size,
+                .attachments = {
                     {
-                        colorTexture,
-                        TextureType::Color,
-                        TextureUsage::Attachment,
-                        TextureType::Color,
-                        TextureUsage::ReadOnly
+                        .texture = colorTexture,
+                        .initialType = TextureType::Color,
+                        .initialUsage = TextureUsage::Attachment,
+                        .finalType = TextureType::Color,
+                        .finalUsage = TextureUsage::ReadOnly
                     },
                     {
-                        depthTexture,
-                        TextureType::DepthStencil,
-                        TextureUsage::Attachment
+                        .texture = depthTexture,
+                        .initialType = TextureType::DepthStencil,
+                        .initialUsage = TextureUsage::Attachment
                     }
                 }
             };
@@ -231,13 +238,15 @@ namespace Molten::Editor
                 Draw(commandBuffer, Time::Zero);
             });
 
-            PipelineDescriptor pipelineDesc;
-            pipelineDesc.cullMode = Pipeline::CullMode::None;
-            pipelineDesc.polygonMode = Pipeline::PolygonMode::Fill;
-            pipelineDesc.topology = Pipeline::Topology::TriangleList;
-            pipelineDesc.frontFace = Pipeline::FrontFace::Clockwise;
-            pipelineDesc.renderPass = renderPass;
-            pipelineDesc.shaderProgram = shaderProgram;
+            const auto pipelineDesc = PipelineDescriptor{
+                .topology = Pipeline::Topology::TriangleList,
+                .polygonMode = Pipeline::PolygonMode::Fill,
+                .frontFace = Pipeline::FrontFace::Clockwise,
+                .cullMode = Pipeline::CullMode::None,
+                .renderPass = renderPass,
+                .shaderProgram = shaderProgram
+            };
+            
             pipeline = m_renderer.CreatePipeline(pipelineDesc);
             if (!pipeline)
             {

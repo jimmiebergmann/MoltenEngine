@@ -32,6 +32,7 @@
 #include <variant>
 #include <vector>
 #include <map>
+#include <limits>
 
 namespace Molten
 {
@@ -60,9 +61,8 @@ namespace Molten
     };
 
     /** Descriptor class of descriptor binding class. */
-    struct MOLTEN_GRAPHICS_API DescriptorBinding
+    struct MOLTEN_GRAPHICS_API DescriptorBindingDescriptor
     {
-
         using BindingVariant = std::variant< 
             RenderResource<UniformBuffer>*, // TODO: Do not use raw pointer.
             CombinedTextureSampler1D,
@@ -70,45 +70,18 @@ namespace Molten
             CombinedTextureSampler3D
         >;
 
-        DescriptorBinding(
-            const uint32_t id,
-            RenderResource<UniformBuffer>& uniformBuffer);
-        DescriptorBinding(
-            const uint32_t id,
-            CombinedTextureSampler1D&& combinedTextureSampler1D);
-        DescriptorBinding(
-            const uint32_t id,
-            CombinedTextureSampler2D&& combinedTextureSampler2D);
-        DescriptorBinding(
-            const uint32_t id,
-            CombinedTextureSampler3D&& combinedTextureSampler3D);
-
-        uint32_t id;
+        uint32_t id = std::numeric_limits<uint32_t>::max();
         BindingVariant binding;
-
     };
 
     /** Descriptor class of descriptor set class. */
     struct MOLTEN_GRAPHICS_API DescriptorSetDescriptor
     {
-
-        DescriptorSetDescriptor();
-        DescriptorSetDescriptor(
-            RenderResource<Pipeline>* pipeline, // TODO: Do not use raw pointer.
-            const uint32_t id,
-            DescriptorBinding&& binding
-        );
-        DescriptorSetDescriptor(
-            RenderResource<Pipeline>* pipeline,
-            const uint32_t id,
-            std::vector<DescriptorBinding>&& bindings
-        );
-
-        RenderResource<Pipeline>* pipeline; // TODO: Do not use raw pointer.
-        uint32_t id;
-        std::vector<DescriptorBinding> bindings;
-
+        RenderResource<Pipeline>* pipeline = nullptr; // TODO: Do not use raw pointer.
+        uint32_t id = std::numeric_limits<uint32_t>::max();
+        std::vector<DescriptorBindingDescriptor> bindings = {};
     };
+
 
     /** Framed descriptor set resource object. */
     class MOLTEN_GRAPHICS_API FramedDescriptorSet
@@ -129,10 +102,10 @@ namespace Molten
 
     };
 
+
     /** Framed descriptor class of descriptor binding class. */
     struct MOLTEN_GRAPHICS_API FramedDescriptorBinding
     {
-
         using BindingVariant = std::variant<
             RenderResource<FramedUniformBuffer>*, // TODO: Do not use raw pointer.
             CombinedFramedTextureSampler1D,
@@ -140,44 +113,16 @@ namespace Molten
             CombinedFramedTextureSampler3D
         >;
 
-        FramedDescriptorBinding(
-            const uint32_t id,
-            RenderResource<FramedUniformBuffer>& framedUniformBuffer);
-        FramedDescriptorBinding(
-            const uint32_t id,
-            CombinedFramedTextureSampler1D&& combinedFramedTextureSampler1D);
-        FramedDescriptorBinding(
-            const uint32_t id,
-            CombinedFramedTextureSampler2D&& combinedFramedTextureSampler2D);
-        FramedDescriptorBinding(
-            const uint32_t id,
-            CombinedFramedTextureSampler3D&& combinedFramedTextureSampler3D);
-
-        uint32_t id;
+        uint32_t id = std::numeric_limits<uint32_t>::max();
         BindingVariant binding;
-
     };
 
     /** Descriptor class of descriptor set class. */
     struct MOLTEN_GRAPHICS_API FramedDescriptorSetDescriptor
     {
-
-        FramedDescriptorSetDescriptor();
-        FramedDescriptorSetDescriptor(
-            RenderResource<Pipeline>* pipeline, // TODO: Do not use raw pointer.
-            const uint32_t id,
-            FramedDescriptorBinding&& binding
-        );
-        FramedDescriptorSetDescriptor(
-            RenderResource<Pipeline>* pipeline, // TODO: Do not use raw pointer.
-            const uint32_t id,
-            std::vector<FramedDescriptorBinding>&& bindings
-        );
-
-        RenderResource<Pipeline>* pipeline; // TODO: Do not use raw pointer.
-        uint32_t id;
-        std::vector<FramedDescriptorBinding> bindings;
-
+        RenderResource<Pipeline>* pipeline = nullptr; // TODO: Do not use raw pointer.
+        uint32_t id = std::numeric_limits<uint32_t>::max();
+        std::vector<FramedDescriptorBinding> bindings = {};
     };
 
 }
