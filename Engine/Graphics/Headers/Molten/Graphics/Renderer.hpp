@@ -201,7 +201,7 @@ namespace Molten
         virtual void Destroy(FramedDescriptorSet& framedDescriptorSet) = 0;
         virtual void Destroy(IndexBuffer& indexBuffer) = 0;
         virtual void Destroy(Pipeline& pipeline) = 0;
-        virtual void Destroy(RenderPass& /*renderPass*/) {} // TODO: Make pure.
+        virtual void Destroy(RenderPass& renderPass) = 0;
         virtual void Destroy(Sampler1D& sampler1D) = 0;
         virtual void Destroy(Sampler2D& sampler2D) = 0;
         virtual void Destroy(Sampler3D& sampler3D) = 0;

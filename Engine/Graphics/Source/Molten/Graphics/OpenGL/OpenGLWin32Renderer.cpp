@@ -326,6 +326,10 @@ namespace Molten
     {
     }
 
+    void OpenGLWin32Renderer::Destroy(RenderPass& /*renderPass*/)
+    {
+    }
+
     void OpenGLWin32Renderer::Destroy(Sampler1D& /*sampler1D*/)
     {
     }

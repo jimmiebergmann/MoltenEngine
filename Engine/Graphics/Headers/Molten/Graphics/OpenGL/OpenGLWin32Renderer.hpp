@@ -153,6 +153,7 @@ namespace Molten
         void Destroy(FramedDescriptorSet& framedDescriptorSet) override;
         void Destroy(IndexBuffer& indexBuffer) override;
         void Destroy(Pipeline& pipeline) override;
+        void Destroy(RenderPass& renderPass) override;
         void Destroy(Sampler1D& sampler1D) override;
         void Destroy(Sampler2D& sampler2D) override;
         void Destroy(Sampler3D& sampler3D) override;

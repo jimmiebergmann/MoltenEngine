@@ -323,6 +323,10 @@ namespace Molten
     {
     }
 
+    void OpenGLX11Renderer::Destroy(RenderPass& /*renderPass*/)
+    {
+    }
+
     void OpenGLX11Renderer::Destroy(Sampler1D& /*sampler1D*/)
     {
     }
