@@ -148,7 +148,7 @@ namespace Molten
         static_assert(VDimensions >= 1 && VDimensions <= 3, "Texture descriptor must be of dimension 1-3.");
 
         const void* data = nullptr;
-        Vector<VDimensions, uint32_t> dimensions = { 0 };
+        Vector<VDimensions, uint32_t> dimensions = {};
         TextureType type = TextureType::Color;
         TextureUsage initialUsage = TextureUsage::ReadOnly;
         ImageFormat format = ImageFormat::URed8Green8Blue8;
@@ -168,8 +168,8 @@ namespace Molten
         static_assert(VDimensions >= 1 && VDimensions <= 3, "Texture descriptor must be of dimension 1-3.");
 
         const void* data = nullptr;          
-        Vector<VDimensions, uint32_t> destinationDimensions = { 0 };
-        Vector<VDimensions, uint32_t> destinationOffset = { 0 };
+        Vector<VDimensions, uint32_t> destinationDimensions = {};
+        Vector<VDimensions, uint32_t> destinationOffset = {};
     };
 
     using TextureUpdateDescriptor1D = TextureUpdateDescriptor<1>;
