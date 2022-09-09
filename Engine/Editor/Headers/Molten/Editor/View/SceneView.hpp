@@ -38,7 +38,6 @@ namespace Molten::Editor
         Gui::Widget<Gui::EditorTheme>& rootWidget;
     };
 
-    /** Editor class. */
     class SceneView
     {
 
@@ -46,13 +45,10 @@ namespace Molten::Editor
 
         ~SceneView() = default;
 
-        /* Deleted operations. */
-        /**@{*/
         SceneView(const SceneView&) = delete;
         SceneView(SceneView&&) = delete;
         SceneView& operator =(const SceneView&) = delete;
         SceneView& operator =(SceneView&&) = delete;
-        /**@}*/
 
         static std::unique_ptr<SceneView> Create(const SceneViewDescriptor& descriptor);
 

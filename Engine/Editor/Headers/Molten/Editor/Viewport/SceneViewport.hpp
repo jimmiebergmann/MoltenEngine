@@ -44,7 +44,6 @@ namespace Molten::Editor
         Logger* logger = nullptr;
     };
 
-    /** Editor class. */
     class SceneViewport
     {
 
@@ -60,10 +59,9 @@ namespace Molten::Editor
         ~SceneViewport() = default;
 
         SceneViewport(const SceneViewport&) = delete;
-        SceneViewport& operator =(const SceneViewport&) = delete;
-
-        SceneViewport(SceneViewport&&)  noexcept = default;    
-        SceneViewport& operator =(SceneViewport&&) noexcept = default;
+        SceneViewport(SceneViewport&&)  noexcept = delete;
+        SceneViewport& operator =(const SceneViewport&) = delete;       
+        SceneViewport& operator =(SceneViewport&&) noexcept = delete;
 
         bool Resize(const Vector2ui32 size);
 

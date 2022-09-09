@@ -39,7 +39,6 @@ namespace Molten::Editor
         Logger* logger = nullptr;
     };
 
-    /** Editor class. */
     class RootView
     {
 
@@ -47,13 +46,10 @@ namespace Molten::Editor
 
         ~RootView() = default;
 
-        /* Deleted operations. */
-        /**@{*/
         RootView(const RootView&) = delete;
         RootView(RootView&&) = delete;
         RootView& operator =(const RootView&) = delete;
         RootView& operator =(RootView&&) = delete;
-        /**@}*/
 
         static std::unique_ptr<RootView> Create(const RootViewDescriptor& descriptor);
 
