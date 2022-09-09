@@ -247,7 +247,10 @@ namespace Molten::Editor
 
     void Editor::Exit()
     {
-        m_renderer->WaitForDevice();
+        if (m_renderer)
+        {
+            m_renderer->WaitForDevice();
+        }
 
         m_isRunning = false;
         m_cancellationSemaphore.NotifyAll();
