@@ -71,7 +71,7 @@ namespace Molten::Gui
         bool AddAtlasNewEvent(FontAtlas* atlas);
         bool AddAtlasUpdateEvent(FontAtlas* atlas);
 
-        void ForEachAtlasEvent(std::function<void(FontAtlasEventType, FontAtlas*)>&& callback);
+        void ForEachAtlasEvent(std::function<void(FontAtlasEventType, FontAtlas&)>&& callback);
 
         FontRepository& repository;
         FontNameRepository& nameRepository;
@@ -230,17 +230,17 @@ namespace Molten::Gui
         return false;
     }
 
-    void FontRepositoryImpl::ForEachAtlasEvent(std::function<void(FontAtlasEventType, FontAtlas*)>&& callback)
+    void FontRepositoryImpl::ForEachAtlasEvent(std::function<void(FontAtlasEventType, FontAtlas&)>&& callback)
     {
         for (auto* eventNew : atlasNewEvents)
         {
-            callback(FontAtlasEventType::New, eventNew);
+            callback(FontAtlasEventType::New, *eventNew);
         }
         atlasNewEvents.clear();
 
         for (auto* updateEvent : atlasUpdateEvents)
         {
-            callback(FontAtlasEventType::Update, updateEvent);
+            callback(FontAtlasEventType::Update, *updateEvent);
         }
         atlasUpdateEvents.clear();
 
@@ -960,7 +960,7 @@ namespace Molten::Gui
         return m_impl->lastAffectedAtlas;
     }
 
-    void FontRepository::ForEachAtlasEvent(std::function<void(FontAtlasEventType, FontAtlas*)>&& callback)
+    void FontRepository::ForEachAtlasEvent(std::function<void(FontAtlasEventType, FontAtlas&)>&& callback)
     {
         m_impl->ForEachAtlasEvent(std::move(callback));
     }

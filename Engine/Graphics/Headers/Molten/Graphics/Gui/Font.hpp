@@ -257,7 +257,7 @@ namespace Molten::Gui
         FontAtlas* GetLastAffectedAtlas();
 
         /** Fetching all update and new atlas events. Queue is cleared when finished. */
-        void ForEachAtlasEvent(std::function<void(FontAtlasEventType, FontAtlas*)>&& callback);
+        void ForEachAtlasEvent(std::function<void(FontAtlasEventType, FontAtlas&)>&& callback);
 
     private:
 

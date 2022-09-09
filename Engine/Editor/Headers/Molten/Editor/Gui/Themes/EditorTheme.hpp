@@ -64,23 +64,23 @@ namespace Molten::Gui
 
         void UpdateFontRepository()
         {
-            m_fontRepository.ForEachAtlasEvent([&](FontAtlasEventType eventType, FontAtlas* fontAtlas)
+            m_fontRepository.ForEachAtlasEvent([&](FontAtlasEventType eventType, FontAtlas& fontAtlas)
             {
                 if (eventType == FontAtlasEventType::New)
                 {
                     auto newTexture = std::make_unique<CanvasRendererTexture>();
 
-                    const auto swizzleMapping = fontAtlas->GetImageFormat() == FontAtlasImageFormat::Gray ?
+                    const auto swizzleMapping = fontAtlas.GetImageFormat() == FontAtlasImageFormat::Gray ?
                         ImageSwizzleMapping{ ImageComponentSwizzle::One, ImageComponentSwizzle::One, ImageComponentSwizzle::One, ImageComponentSwizzle::Red } :
                         ImageSwizzleMapping{ };
 
-                    const auto imageFormat = fontAtlas->GetImageFormat() == FontAtlasImageFormat::Gray ? 
+                    const auto imageFormat = fontAtlas.GetImageFormat() == FontAtlasImageFormat::Gray ? 
                         ImageFormat::URed8 :
                         ImageFormat::UBlue8Green8Red8Alpha8;
 
                     const auto textureDesc = TextureDescriptor2D{
-                        .data = fontAtlas->GetBuffer(),
-                        .dimensions = fontAtlas->GetImageDimensions(),
+                        .data = fontAtlas.GetBuffer(),
+                        .dimensions = fontAtlas.GetImageDimensions(),
                         .type = TextureType::Color,
                         .initialUsage = TextureUsage::ReadOnly,
                         .format = imageFormat,
@@ -89,16 +89,16 @@ namespace Molten::Gui
                     };
 
                     *newTexture = m_canvasRenderer.CreateTexture(textureDesc);
-                    fontAtlas->metaData = newTexture.get();
-                    m_fontAtlasTextures.insert({ fontAtlas, std::move(newTexture) });
+                    fontAtlas.metaData = newTexture.get();
+                    m_fontAtlasTextures.insert({ &fontAtlas, std::move(newTexture) });
                 }
                 else
                 {
-                    auto* texture = static_cast<CanvasRendererTexture*>(fontAtlas->metaData);
+                    auto* texture = static_cast<CanvasRendererTexture*>(fontAtlas.metaData);
 
                     const auto textureUpdateDesc = TextureUpdateDescriptor2D{
-                       fontAtlas->GetBuffer(),
-                       fontAtlas->GetImageDimensions()
+                       .data = fontAtlas.GetBuffer(),
+                       .destinationDimensions = fontAtlas.GetImageDimensions()
                     };
 
                     m_canvasRenderer.UpdateTexture(*texture, textureUpdateDesc);
