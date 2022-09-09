@@ -27,12 +27,8 @@ namespace Molten::Gui
 {
     
     template<typename TTheme>
-    SingleRootLayer<TTheme>::SingleRootLayer(
-        TTheme& theme,
-        LayerData<TTheme>& data,
-        SignalDispatcher& widgetPropertyDispatcher
-    ) :
-        Layer<TTheme>(theme, data, widgetPropertyDispatcher)
+    SingleRootLayer<TTheme>::SingleRootLayer(const LayerDescriptor<TTheme>& descriptor) :
+        Layer<TTheme>(descriptor)
     {}
 
     template<typename TTheme>

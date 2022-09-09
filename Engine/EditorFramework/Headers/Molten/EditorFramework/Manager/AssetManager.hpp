@@ -60,11 +60,11 @@ namespace Molten
     private:
 
         /** Returns path without any extension. */
-        std::optional<std::filesystem::path> AssetManager::GetAssetPath(
+        std::optional<std::filesystem::path> GetAssetPath(
             const std::filesystem::path& relativePath);
 
         /** Returns path with ".asset" extention. */
-        std::optional<std::filesystem::path> AssetManager::GetAssetFilePath(
+        std::optional<std::filesystem::path> GetAssetFilePath(
             const std::filesystem::path& relativePath);
 
         Project& m_project;

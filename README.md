@@ -5,9 +5,9 @@ Real-time game engine framework and editor.
 **Warning:** Under heavy development.
 
 ## Requirements
-* C++ >= 17 compiler
-    - Windows: Visual Studio >= 2019 (16.10.4)
-    - Linux: G++ or Clang++ >= 11
+* C++ >= 20 compiler
+    - Windows: Visual Studio >= 2022 (17.3.0)
+    - Linux: G++ >= 11 or Clang++ >= 13
 * CMake >= 3.16
 
 ## Build

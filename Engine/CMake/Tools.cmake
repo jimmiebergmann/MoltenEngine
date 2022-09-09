@@ -39,7 +39,7 @@ function(SetDefaultCompileOptions target)
   # C++ standard version.
   set_target_properties(${target}
     PROPERTIES
-      CXX_STANDARD 17
+      CXX_STANDARD 20
       CXX_STANDARD_REQUIRED OFF
       CXX_EXTENSIONS OFF
   )

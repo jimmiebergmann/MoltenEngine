@@ -29,7 +29,7 @@
 namespace Molten
 {
 
-    AssetFile ReadAssetFile(std::istream& istream)
+    AssetFile ReadAssetFile(std::istream&)
     {
         return {};
     }

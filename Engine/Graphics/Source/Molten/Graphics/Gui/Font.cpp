@@ -546,7 +546,7 @@ namespace Molten::Gui
             return false;
         }
 
-        std::string genericDirectory = path.generic_u8string();
+        std::string genericDirectory = path.generic_string();
 
         if(auto it = std::find(m_fontDirectories.begin(), m_fontDirectories.end(), genericDirectory); it != m_fontDirectories.end())
         {
@@ -618,7 +618,7 @@ namespace Molten::Gui
                     continue;
                 }
 
-                auto dirEntryName = dirEntry.path().stem().u8string();
+                auto dirEntryName = dirEntry.path().stem().string();
                 std::transform(dirEntryName.begin(), dirEntryName.end(), dirEntryName.begin(), [](const auto c)
                 {
                     return static_cast<char>(std::tolower(static_cast<int>(c)));
@@ -626,7 +626,7 @@ namespace Molten::Gui
 
                 if(dirEntryName == lowercaseFontFamily)
                 {
-                    auto fontPath = dirEntry.path().generic_u8string();
+                    auto fontPath = dirEntry.path().generic_string();
                     m_cachedFontPaths.insert({ lowercaseFontFamily, fontPath });
                     return fontPath;
                 }

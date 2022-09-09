@@ -28,14 +28,10 @@ namespace Molten::Gui
 
     // Layer implementations.
     template<typename TTheme>
-    Layer<TTheme>::Layer(
-        TTheme& theme,
-        LayerData<TTheme>& data,
-        SignalDispatcher& widgetPropertyDispatcher
-    ) :
-        m_theme(theme),
-        m_data(data),
-        m_widgetPropertyDispatcher(widgetPropertyDispatcher),
+    Layer<TTheme>::Layer(const LayerDescriptor<TTheme>& descriptor) :
+        m_theme(descriptor.theme),
+        m_canvas(descriptor.canvas),
+        m_widgetPropertyDispatcher(descriptor.propertyDispatcher),
         m_size(0.0f, 0.0f),
         m_scale(1.0f, 1.0f)
     {}
@@ -215,12 +211,12 @@ namespace Molten::Gui
     {
         WidgetMixinDescriptor<TTheme, TWidget> widgetDescriptor = {
             WidgetDescriptor<TTheme>{
-                parent,
-                m_data.GetCanvas(),
-                this,
-                m_theme,
-                m_widgetPropertyDispatcher,
-                m_visibilityTracker
+                .parent = parent,
+                .canvas = m_canvas,
+                .layer = this,
+                .theme = m_theme,
+                .propertyDispatcher = m_widgetPropertyDispatcher,
+                .visibilityTracker = m_visibilityTracker
             },
             nullptr
         };

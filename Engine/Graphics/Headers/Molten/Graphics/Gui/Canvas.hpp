@@ -35,6 +35,7 @@
 #include "Molten/System/UserInput.hpp"
 #include "Molten/System/Signal.hpp"
 #include <vector>
+#include <memory>
 #include <type_traits>
 
 namespace Molten
@@ -90,14 +91,6 @@ namespace Molten::Gui
 
     private:
 
-        /**
-         * Internal function for creating and inserting a new layer at provided iterator position.
-         */
-        template<template<typename> typename TLayer, typename ... TArgs>
-        [[nodiscard]] TLayer<TTheme>* InternalCreateLayer(
-            typename LayerData<TTheme>::ListNormalIterator position,
-            TArgs ... args);
-
         void UpdateUserInputs(); 
         
         void UpdateNormalMouseInputs(const UserInput::Event& mouseEvent);
@@ -116,7 +109,7 @@ namespace Molten::Gui
         Vector2f32 m_scale;
 
         TTheme m_theme;
-        typename LayerData<TTheme>::List m_layers;
+        std::vector<std::unique_ptr<Layer<TTheme>>> m_layers;
 
         SignalDispatcher m_propertyChangeDispatcher;
 

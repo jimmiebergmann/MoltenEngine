@@ -36,8 +36,7 @@ namespace Molten::Gui
         m_mouseInputUpdate(&Canvas<TTheme>::UpdateNormalMouseInputs),
         m_overrideWidgetMouseEventWidget(nullptr),
         m_overrideWidgetMouseEventButton(Mouse::Button::Left)
-    {
-    }
+    {}
 
     template<typename TTheme>
     void Canvas<TTheme>::PushUserInputEvent(const UserInput::Event& inputEvent)
@@ -52,10 +51,8 @@ namespace Molten::Gui
 
         UpdateUserInputs();
 
-        auto layerPartialLane = m_layers.template GetLane<typename LayerData<TTheme>::ListPartialLaneType>();
-        for (auto& layerData : layerPartialLane)
+        for (auto& layer : m_layers)
         {
-            auto* layer = layerData->GetLayer();
             layer->SetSize(m_size);
             layer->Update({});
         }
@@ -68,10 +65,9 @@ namespace Molten::Gui
     {
         m_canvasRenderer.DrawRect(AABB2f32{ { 0.0f, 0.0f }, m_size }, m_theme.backgroundColor);
 
-        auto layerPartialLane = m_layers.template GetLane<typename LayerData<TTheme>::ListPartialLaneType>();
-        for(auto& layer : layerPartialLane)
+        for(auto& layer : m_layers)
         {
-            layer->GetLayer()->Draw();
+            layer->Draw();
         }
     }
 
@@ -108,9 +104,23 @@ namespace Molten::Gui
     template<template<typename> typename TLayer, typename ... TArgs>
     TLayer<TTheme>* Canvas<TTheme>::CreateLayer(const LayerPosition position, TArgs ... args)
     {
-        auto normalLane = m_layers.template GetLane<typename LayerData<TTheme>::ListNormalLaneType>();
-        auto insertPosition = position == LayerPosition::Bottom ? normalLane.begin() : (normalLane.GetSize() > 0 ? std::prev(normalLane.end()) : normalLane.end());
-        return InternalCreateLayer<TLayer>(insertPosition, args...);
+        static_assert(std::is_base_of_v<Layer<TTheme>, TLayer<TTheme>>, "Layer<TTheme> is not a base of TLayer<TTheme>.");
+
+        auto insertPosition = position == LayerPosition::Bottom ? m_layers.begin() : (m_layers.empty() ? m_layers.end() : std::prev(m_layers.end()));
+
+        auto layer = std::make_unique<TLayer<TTheme>>(
+            LayerDescriptor<TTheme>{
+                .canvas = this,
+                .theme = m_theme,
+                .propertyDispatcher = m_propertyChangeDispatcher
+            },
+            args...);
+
+        auto* layerPointer = layer.get();
+
+        m_layers.insert(insertPosition, std::move(layer));
+
+        return layerPointer;
     }
 
     template<typename TTheme>
@@ -121,15 +131,6 @@ namespace Molten::Gui
             return false;
         }  
 
-        auto& widgetData = widget->GetData();
-
-        if(auto* parentWidget = widgetData.GetParentWidget(); parentWidget)
-        {
-            parentWidget->OnRemoveChild(widgetData);
-        }
-
-        auto it = widgetData.GetTreeIterator();
-        widgetData.GetTree()->Erase(it);
         return true;
     }
 
@@ -142,32 +143,6 @@ namespace Molten::Gui
         m_overrideWidgetMouseEventWidget = &widget;
         m_overrideWidgetMouseEventButton = button;
     }
-
-    template<typename TTheme>
-    template<template<typename> typename TLayer, typename ... TArgs>
-    TLayer<TTheme>* Canvas<TTheme>::InternalCreateLayer(
-        typename LayerData<TTheme>::ListNormalIterator position,
-        TArgs ... args)
-    {
-        static_assert(std::is_base_of_v<Layer<TTheme>, TLayer<TTheme>>, "Layer<TTheme> is not a base of TLayer<TTheme>.");
-
-        auto layerData = std::make_unique<LayerData<TTheme>>(this);
-        auto* layerDataPointer = layerData.get();
-
-        auto partialLane = m_layers.template GetLane<typename LayerData<TTheme>::ListPartialLaneType>();
-        auto layerDataIt = partialLane.Insert(position, std::move(layerData));
-
-        auto layer = std::make_unique<TLayer<TTheme>>(m_theme, *layerDataPointer, m_propertyChangeDispatcher, args...);
-        auto* layerPointer = layer.get();
-
-        layerDataPointer->Initialize(
-            &m_layers,
-            layerDataIt,
-            std::move(layer));
-
-        return layerPointer;
-    }
-
 
     template<typename TTheme>
     void Canvas<TTheme>::UpdateUserInputs()
@@ -199,11 +174,10 @@ namespace Molten::Gui
     template<typename TTheme>
     void Canvas<TTheme>::HandleNormalMouseMove(const UserInput::Event& mouseEvent)
     {
-        auto layerPartialLane = m_layers.template GetLane<typename LayerData<TTheme>::ListPartialLaneType>();
-        for (auto it = layerPartialLane.rbegin(); it != layerPartialLane.rend(); ++it)
+        for (auto it = m_layers.rbegin(); it != m_layers.rend(); ++it)
         {
-            auto& layerData = *it;
-            if(layerData->GetLayer()->HandleUserInput(mouseEvent, m_mouseEventTracker))
+            auto& layer = *it;
+            if(layer->HandleUserInput(mouseEvent, m_mouseEventTracker))
             {
                 return;
             }
@@ -218,11 +192,11 @@ namespace Molten::Gui
     template<typename TTheme>
     void Canvas<TTheme>::HandleNormalMouseButtonPressed(const UserInput::Event& mouseEvent)
     {
-        auto layerPartialLane = m_layers.template GetLane<typename LayerData<TTheme>::ListPartialLaneType>();
-        for (auto it = layerPartialLane.rbegin(); it != layerPartialLane.rend(); ++it)
+        
+        for (auto it = m_layers.rbegin(); it != m_layers.rend(); ++it)
         {
-            auto& layerData = *it;
-            if (layerData->GetLayer()->HandleUserInput(mouseEvent, m_mouseEventTracker))
+            auto& layer = *it;
+            if (layer->HandleUserInput(mouseEvent, m_mouseEventTracker))
             {
                 return;
             }
@@ -232,11 +206,10 @@ namespace Molten::Gui
     template<typename TTheme>
     void Canvas<TTheme>::HandleNormalMouseButtonReleased(const UserInput::Event& mouseEvent)
     {
-        auto layerPartialLane = m_layers.template GetLane<typename LayerData<TTheme>::ListPartialLaneType>();
-        for (auto it = layerPartialLane.rbegin(); it != layerPartialLane.rend(); ++it)
+        for (auto it = m_layers.rbegin(); it != m_layers.rend(); ++it)
         {
-            auto& layerData = *it;
-            if (layerData->GetLayer()->HandleUserInput(mouseEvent, m_mouseEventTracker))
+            auto& layer = *it;
+            if (layer->HandleUserInput(mouseEvent, m_mouseEventTracker))
             {
                 return;
             }

@@ -26,7 +26,6 @@
 #ifndef MOLTEN_GRAPHICS_GUI_LAYER_HPP
 #define MOLTEN_GRAPHICS_GUI_LAYER_HPP
 
-#include "Molten/Graphics/Gui/LayerData.hpp"
 #include "Molten/Graphics/Gui/Widget.hpp"
 #include "Molten/Graphics/Gui/WidgetEventTracker.hpp"
 #include "Molten/Graphics/Gui/WidgetVisibilityTracker.hpp"
@@ -45,6 +44,14 @@ namespace Molten::Gui
         Bottom
     };
 
+    template<typename TTheme>
+    struct LayerDescriptor
+    {
+        Canvas<TTheme>* canvas;
+        TTheme& theme;
+        SignalDispatcher& propertyDispatcher;
+    };
+
 
     /** Layer base class. Layers should inherit from LayerMixin instead of this class template.*/
     template<typename TTheme>
@@ -53,10 +60,8 @@ namespace Molten::Gui
 
     public:
 
-        Layer(
-            TTheme& theme,
-            LayerData<TTheme>& data,
-            SignalDispatcher& widgetPropertyDispatcher);
+        explicit Layer(const LayerDescriptor<TTheme>& descriptor);
+
         virtual ~Layer() = default;
 
         Layer(Layer&&) = delete;
@@ -103,7 +108,7 @@ namespace Molten::Gui
             WidgetMouseEventTracker<TTheme>& mouseEventTracker);
 
         TTheme& m_theme;
-        LayerData<TTheme>& m_data;
+        Canvas<TTheme>* m_canvas;
         SignalDispatcher& m_widgetPropertyDispatcher;
         WidgetChildren<TTheme> m_children;
         WidgetChildren<TTheme> m_overlayChildren;

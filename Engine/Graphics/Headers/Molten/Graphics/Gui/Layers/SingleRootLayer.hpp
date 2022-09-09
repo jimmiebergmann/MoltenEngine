@@ -38,10 +38,8 @@ namespace Molten::Gui
 
     public:
 
-        SingleRootLayer(
-            TTheme& theme,
-            LayerData<TTheme>& data,
-            SignalDispatcher& widgetPropertyDispatcher);
+        explicit SingleRootLayer(const LayerDescriptor<TTheme>& descriptor);
+
         ~SingleRootLayer() override = default;
 
         SingleRootLayer(SingleRootLayer&&) = delete;

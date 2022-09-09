@@ -29,9 +29,6 @@
 namespace Molten::Gui
 {
 
-    template<typename TTheme>
-    class WidgetData;
-
     template<typename TTheme, template<typename> typename TWidget>
     struct WidgetSkin {};
 

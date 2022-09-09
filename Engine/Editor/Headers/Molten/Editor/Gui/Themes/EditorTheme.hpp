@@ -219,11 +219,6 @@ namespace Molten::Gui
             WidgetSkinMixin<EditorTheme, Grid>(descriptor)
         {}
 
-        void Draw() override
-        {
-            //theme.m_canvasRenderer.DrawRect(widgetData.GetBounds(), Vector4f32{ 1.0f, 1.0f, 0.0f, 1.0f });
-        }
-
     };
 
     template<>
@@ -475,18 +470,6 @@ namespace Molten::Gui
         explicit WidgetSkin(const WidgetSkinDescriptor<EditorTheme, Window>& descriptor) :
             WidgetSkinMixin<EditorTheme, Window>(descriptor)
         {}
-
-        void Draw() override
-        {
-            /*auto& grantedBounds = widgetData.GetGrantedBounds();
-
-            theme.m_canvasRenderer.DrawRect(grantedBounds, Vector4f32{ 0.43f, 0.45f, 0.49f, 1.0f });
-            theme.m_canvasRenderer.DrawRect(
-                grantedBounds.WithoutMargins({ 0.0f, headerBarHeight, 0.0f, 0.0f }),
-                Vector4f32{ 0.24f, 0.25f, 0.27f, 1.0f });
-            */
-
-        }
 
     };
 
