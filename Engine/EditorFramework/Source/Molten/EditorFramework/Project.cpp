@@ -105,7 +105,7 @@ namespace Molten
     CreateProjectResult Project::Create(
         const std::filesystem::path& directory,
         const std::string& name,
-        const std::string& templateName)
+        const std::string&)
     {
         auto directoryCreationResult = CreateProjectDirectory(directory, name);
         if (!directoryCreationResult)

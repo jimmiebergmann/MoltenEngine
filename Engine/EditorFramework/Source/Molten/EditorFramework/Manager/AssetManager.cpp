@@ -97,17 +97,17 @@ namespace Molten
         return true;
     }
 
-    bool AssetManager::MakeDirectory(const std::filesystem::path& path)
+    bool AssetManager::MakeDirectory(const std::filesystem::path&)
     {
         return false;
     }
 
-    bool AssetManager::DeleteDirectory(const std::filesystem::path& path)
+    bool AssetManager::DeleteDirectory(const std::filesystem::path&)
     {
         return false;
     }
 
-    bool AssetManager::RenameDirectory(const std::filesystem::path& from, const std::filesystem::path& to)
+    bool AssetManager::RenameDirectory(const std::filesystem::path&, const std::filesystem::path&)
     {
         return false;
     }
