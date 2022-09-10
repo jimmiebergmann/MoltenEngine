@@ -29,12 +29,18 @@
 namespace Molten
 {
 
-    AssetFile ReadAssetFile(std::istream&)
+    AssetFileHeader ReadAssetFileHeader(std::istream& stream)
     {
-        return {};
+        AssetFileHeader result = {};
+        stream.read(result.magic.data(), result.magic.size());
+        stream.read(reinterpret_cast<char*>(&result.fileVersion), sizeof(result.fileVersion));
+        stream.read(reinterpret_cast<char*>(&result.engineVersion), sizeof(result.engineVersion));
+        stream.read(reinterpret_cast<char*>(&result.globalId), sizeof(result.globalId));
+        stream.read(reinterpret_cast<char*>(&result.type), sizeof(result.type));
+        return result;
     }
 
-    AssetFile ReadAssetFile(std::filesystem::path path)
+    AssetFileHeader ReadAssetFileHeader(std::filesystem::path path)
     {
         std::ifstream file(path.c_str(), std::ifstream::binary);
         if (!file.is_open())
@@ -42,7 +48,18 @@ namespace Molten
             return {};
         }
 
-        return ReadAssetFile(file);
+        return ReadAssetFileHeader(file);
+    }
+
+    void WriteAssetFileHeader(
+        std::ostream& stream,
+        const AssetFileHeader& assetFileHeader)
+    {
+        stream.write(assetFileHeader.magic.data(), assetFileHeader.magic.size());
+        stream.write(reinterpret_cast<const char*>(&assetFileHeader.fileVersion), sizeof(assetFileHeader.fileVersion));
+        stream.write(reinterpret_cast<const char*>(&assetFileHeader.engineVersion), sizeof(assetFileHeader.engineVersion));
+        stream.write(reinterpret_cast<const char*>(&assetFileHeader.globalId), sizeof(assetFileHeader.globalId));
+        stream.write(reinterpret_cast<const char*>(&assetFileHeader.type), sizeof(assetFileHeader.type));
     }
 
 }

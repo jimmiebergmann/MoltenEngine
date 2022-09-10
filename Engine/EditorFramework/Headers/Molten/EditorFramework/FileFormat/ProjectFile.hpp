@@ -71,7 +71,7 @@ namespace Molten
         ProjectFileReadErrorResult,
         ProjectFileWarningCode>;
 
-    MOLTEN_EDITOR_FRAMEWORK_API ProjectFileReadResult ReadProjectFile(std::istream& istream);
+    MOLTEN_EDITOR_FRAMEWORK_API ProjectFileReadResult ReadProjectFile(std::istream& stream);
     MOLTEN_EDITOR_FRAMEWORK_API ProjectFileReadResult ReadProjectFile(std::filesystem::path path);
 
     MOLTEN_EDITOR_FRAMEWORK_API bool WriteProjectFile(

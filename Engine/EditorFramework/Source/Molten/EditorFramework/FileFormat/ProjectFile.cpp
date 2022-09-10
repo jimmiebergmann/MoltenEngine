@@ -36,9 +36,9 @@
 namespace Molten
 {
 
-    ProjectFileReadResult ReadProjectFile(std::istream& istream)
+    ProjectFileReadResult ReadProjectFile(std::istream& stream)
     {
-        rapidjson::IStreamWrapper fileWrapper(istream);
+        rapidjson::IStreamWrapper fileWrapper(stream);
 
         rapidjson::Document jsonDocumentNonConst;
         rapidjson::ParseResult parseResult = jsonDocumentNonConst.ParseStream(fileWrapper);

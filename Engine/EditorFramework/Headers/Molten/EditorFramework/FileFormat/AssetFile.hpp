@@ -29,13 +29,15 @@
 #include "Molten/EditorFramework/Build.hpp"
 #include "Molten/Utility/Uuid.hpp"
 #include "Molten/System/Version.hpp"
+#include <array>
 #include <istream>
+#include <ostream>
 #include <filesystem>
 
 namespace Molten
 {
 
-    enum class AssetType
+    enum class AssetType : uint32_t
     {
         Unknown = 0,
         Scene = 1,
@@ -45,16 +47,21 @@ namespace Molten
         Audio = 5
     };
 
-    struct MOLTEN_EDITOR_FRAMEWORK_API AssetFile
+    struct MOLTEN_EDITOR_FRAMEWORK_API AssetFileHeader
     {
-        Version fileVersion;
-        Version engineVersion;
-        Uuid globalId;
+        std::array<char, 12> magic = { 'm', 'o', 'l', 't', 'e', 'n', '.', 'a', 's', 's', 'e', 't', };
+        Version fileVersion = {};
+        Version engineVersion = {};
+        Uuid globalId = {};
         AssetType type = AssetType::Unknown;
     };
 
-    MOLTEN_EDITOR_FRAMEWORK_API AssetFile ReadAssetFile(std::istream& istream);
-    MOLTEN_EDITOR_FRAMEWORK_API AssetFile ReadAssetFile(std::filesystem::path path);
+    MOLTEN_EDITOR_FRAMEWORK_API AssetFileHeader ReadAssetFileHeader(std::istream& stream);
+    MOLTEN_EDITOR_FRAMEWORK_API AssetFileHeader ReadAssetFileHeader(std::filesystem::path path);
+
+    MOLTEN_EDITOR_FRAMEWORK_API void WriteAssetFileHeader(
+        std::ostream& stream,
+        const AssetFileHeader& assetFileHeader);
 
 }
 
