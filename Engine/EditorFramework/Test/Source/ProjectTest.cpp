@@ -38,7 +38,7 @@ namespace Molten
         const auto projectDir = dir / "my_new_project";
 
         auto openResult = Project::Open(projectDir / "my_new_project.mproj");
-        ASSERT_TRUE(openResult.IsValid());
+        ASSERT_TRUE(openResult.HasValue());
     }
 
 }

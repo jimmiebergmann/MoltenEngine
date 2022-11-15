@@ -26,145 +26,103 @@
 #ifndef MOLTEN_CORE_FILEFORMAT_IMAGE_BMPFORMAT_HPP
 #define MOLTEN_CORE_FILEFORMAT_IMAGE_BMPFORMAT_HPP
 
-#include "Molten/Core.hpp"
+#include "Molten/FileFormat/FileFormatResult.hpp"
+
+#include "Molten/Utility/Expected.hpp"
+#include "Molten/Math/Vector.hpp"
+#include <array>
 #include <vector>
-#include <string>
+#include <filesystem>
 #include <istream>
 
-namespace Molten::Formats::Bmp
+
+namespace Molten::FileFormat::Image::Bmp
 {
 
-    class File;
-    class Header;
-    class InfoHeader;
-    class ColorTable;
-    class ReaderResult;
-
-    using Data = std::vector<uint8_t>; ///< Data type of BMP data bytes.
-    
-    /** Result enumerator for describing result of reading BMP image. */
-    enum class ResultCode
-    {
-        Successful,
-        CannotOpenFile,
-        UnexpectedEndOfFile
-    };
-
-
-    /** BMP Header class, containing basic file information. */
-    class MOLTEN_CORE_API Header
-    {
-
-    public:
-
-        Header();
-
-        uint16_t& GetSignature();
-        uint16_t GetSignature() const;
-
-        uint32_t& GetFileSize();
-        uint32_t GetFileSize() const;
-
-        uint32_t& GetReserved();
-        uint32_t GetReserved() const;
-
-        uint32_t& GetDataOffset();
-        uint32_t GetDataOffset() const;
-
-    private:
-
-        uint16_t m_signature;
-        uint32_t m_fileSize;
-        uint32_t m_reserved;
-        uint32_t m_dataOffset;
-
-    };
-
+    /** Data type of BMP data bytes. */
+    using Data = std::vector<uint8_t>;
 
     /** BMP Info Header class, containing information about bitmap data. */
-    class MOLTEN_CORE_API InfoHeader
+    struct MOLTEN_CORE_API InfoHeader
     {
+        inline static constexpr size_t packedSize = 40;
 
-    public:
-
-
+        uint32_t headerSize = 40;
+        uint32_t width = 0;
+        uint32_t height = 0;
+        uint16_t planes = 1;
+        uint16_t bitsPerPixel = 24;
+        uint32_t compression = 0;
+        uint32_t imageSize = 0;
+        uint32_t xPixelsPerM = 0;
+        uint32_t yPixelsPerM = 0;
+        uint32_t colorsUsed = 0;
+        uint32_t importantColorsUsed = 0;
     };
 
+    /** BMP Header class, containing basic file information. */
+    struct MOLTEN_CORE_API Header
+    {
+        inline static constexpr size_t packedSize = 14;
+
+        std::array<uint8_t, 2> signature = { 'B', 'M' };
+        uint32_t fileSize = packedSize + InfoHeader::packedSize;
+        uint16_t reserved1 = 0;
+        uint16_t reserved2 = 0;
+        uint32_t dataOffset = packedSize + InfoHeader::packedSize;
+    };
 
     /** BMP Color Table class. This section is optional, but used for padding indices to color values. */
-    class MOLTEN_CORE_API ColorTable
-    {
-
-    public:
-
-
-    };
+    //struct MOLTEN_CORE_API ColorTable
+    //{
+    //    std::vector<Vector4<uint8_t>> colors = {};
+    //};
 
 
     /** BMP File class contains all data necessary for reading and writing BMP image files. */
-    class MOLTEN_CORE_API File
+    struct MOLTEN_CORE_API File
     {
-
-    public:
-
-        File();
-
-        /** Get const or non-const reference to header data. */
-        Header& GetHeader();
-        const Header& GetHeader() const;
-
-        /** Get const or non-const reference to info(DIB) header. */
-        InfoHeader& GetInfoHeader();
-        const InfoHeader& GetInfoHeader() const;
-
-        /** Get const or non-const reference to color table. */
-        ColorTable& GetColorTable();
-        const ColorTable& GetColorTable() const;
-
-        /** Get const or non-const reference raw data bytes. */
-        Data& GetData();
-        const Data& GetData() const;
-
-    private:
-
-        Header m_header;
-        InfoHeader m_infoHeader;
-        ColorTable m_colorTable;
-        Data m_data;
-
+        Header header = {};
+        InfoHeader infoHeader = {};
+        //ColorTable colorTable = {};
+        Data data = {}; ///< Raw data without scan line padding.
     };
 
 
-    /** Result class, returned from ReadFrom*, containing the parsed BMP image and result code. */
-    class ReaderResult
-    {
-
-    public:
-
-        /** Constructor. */
-        ReaderResult();
-
-        /** @return true if reader result is successful. */
-        bool IsSuccessful() const;
-
-        ResultCode GetCode() const;
-
-        /** Get reference to read BMP file. */
-        File& GetFile();
-        const File& GetFile() const;
-
-    private:
-
-        File m_file;
-        ResultCode m_resultCode;
-
+    enum class ReadErrorCode {
+        UnexpectedEndOfFile,
+        InvalidHeaderSignature, ///< Signature consists of two characters: 'BM'.
+        InvalidHeaderSize, ///< Size of stream is less than 16 bytes.
+        MissingInfoHeader, ///< Unexpected EOF.
+        UnsupportedInfoHeader, ///< Currently only supporting BITMAPINFOHEADER (40 bytes).
+        UnsupportedBitsPerPixel, ///< Currently only supporting values divisible by 8.
+        UnsupportedCompression ///< No compression is currently supported.
     };
 
+    using ReadError = std::variant<ReadErrorCode, OpenFileError>;
+    using ReadResult = Expected<File, ReadError>;
 
-    MOLTEN_CORE_API ReaderResult ReadFromFile(const std::string& filename);
-    MOLTEN_CORE_API ReaderResult ReadFromBytes(const std::vector<uint8_t>& bytes);
-    MOLTEN_CORE_API ReaderResult ReadFromStream(const std::istream& stream);
+    MOLTEN_CORE_API ReadResult ReadFile(std::istream& stream);
+    MOLTEN_CORE_API ReadResult ReadFile(const std::filesystem::path& path);
+
+
+    enum class WriteErrorCode {
+        UnsupportedBitsPerPixel, ///< Currently only supporting values divisible by 8.
+        UnsupportedCompression, ///< No compression is currently supported.
+        InvalidDataSize
+    };
+
+    using WriteError = std::variant<WriteErrorCode, OpenFileError>;
+    using WriteResult = Expected<void, WriteError>;
+
+    MOLTEN_CORE_API WriteResult WriteFile(const File& bmpFile, std::ostream& stream);
+    MOLTEN_CORE_API WriteResult WriteFile(const File& bmpFile, const std::filesystem::path& path);
     
+}
+
+namespace Molten
+{
+    using BmpImageFile = Molten::FileFormat::Image::Bmp::File;
 }
 
 #endif

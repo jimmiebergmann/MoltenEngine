@@ -128,23 +128,23 @@ namespace Molten
     TEST(System, Version_FromString)
     {
         {
-            EXPECT_FALSE(FromString<Version>("").IsValid());
-            EXPECT_FALSE(FromString<Version>(" ").IsValid());
-            EXPECT_FALSE(FromString<Version>("a").IsValid());
-            EXPECT_FALSE(FromString<Version>("1.a").IsValid());
-            EXPECT_FALSE(FromString<Version>("1.1.a").IsValid());
+            EXPECT_FALSE(FromString<Version>("").HasValue());
+            EXPECT_FALSE(FromString<Version>(" ").HasValue());
+            EXPECT_FALSE(FromString<Version>("a").HasValue());
+            EXPECT_FALSE(FromString<Version>("1.a").HasValue());
+            EXPECT_FALSE(FromString<Version>("1.1.a").HasValue());
         }
         {
             const auto version1 = FromString<Version>("1");
-            ASSERT_TRUE(version1.IsValid());
+            ASSERT_TRUE(version1.HasValue());
             EXPECT_EQ(version1.Value(), Version(1, 0, 0));
 
             const auto version2 = FromString<Version>("2.3");
-            ASSERT_TRUE(version2.IsValid());
+            ASSERT_TRUE(version2.HasValue());
             EXPECT_EQ(version2.Value(), Version(2, 3, 0));
 
             const auto version3 = FromString<Version>("4.5.6");
-            ASSERT_TRUE(version3.IsValid());
+            ASSERT_TRUE(version3.HasValue());
             EXPECT_EQ(version3.Value(), Version(4, 5, 6));
         }
         {     
@@ -156,7 +156,7 @@ namespace Molten
                 const auto str = std::to_string(expectedVersion.Major);
 
                 const auto version = FromString<Version>(str);
-                ASSERT_TRUE(version.IsValid());
+                ASSERT_TRUE(version.HasValue());
                 EXPECT_EQ(version.Value(), expectedVersion);
             }
             { 
@@ -171,7 +171,7 @@ namespace Molten
                     std::to_string(expectedVersion.Minor);
 
                 const auto version = FromString<Version>(str);
-                ASSERT_TRUE(version.IsValid());
+                ASSERT_TRUE(version.HasValue());
                 EXPECT_EQ(version.Value(), expectedVersion);
             }
             {
@@ -189,7 +189,7 @@ namespace Molten
                     std::to_string(expectedVersion.Patch);
 
                 const auto version = FromString<Version>(str);
-                ASSERT_TRUE(version.IsValid());
+                ASSERT_TRUE(version.HasValue());
                 EXPECT_EQ(version.Value(), expectedVersion);
             }
         }

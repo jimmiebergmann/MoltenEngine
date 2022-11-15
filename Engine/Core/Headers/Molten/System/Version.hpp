@@ -81,7 +81,7 @@ namespace Molten
 
     /** Convert string to Version. */
     template<>
-    [[nodiscard]] Result<Version, size_t> FromString(const std::string_view value);
+    [[nodiscard]] Expected<Version, size_t> FromString(const std::string_view value);
 
 
 }

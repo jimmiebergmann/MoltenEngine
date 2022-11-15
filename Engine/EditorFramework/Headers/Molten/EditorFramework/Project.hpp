@@ -28,7 +28,7 @@
 
 #include "Molten/EditorFramework/Build.hpp"
 #include "Molten/EditorFramework/Manager/AssetManager.hpp"
-#include "Molten/System/Result.hpp"
+#include "Molten/Utility/Expected.hpp"
 #include <string>
 #include <filesystem>
 #include <fstream>
@@ -58,7 +58,7 @@ namespace Molten
         InvalidProjectFile, ///< Project file is corrupt.
     };
 
-    using OpenProjectResult = Result<Project, OpenProjectResultCode>;
+    using OpenProjectResult = Expected<Project, OpenProjectResultCode>;
 
     class MOLTEN_EDITOR_FRAMEWORK_API Project
     {

@@ -26,7 +26,6 @@
 #ifndef MOLTEN_CORE_UTILITY_UUID_HPP
 #define MOLTEN_CORE_UTILITY_UUID_HPP
 
-#include "Molten/System/Result.hpp"
 #include "Molten/Utility/StringConvert.hpp"
 #include "Molten/Utility/StringUtility.hpp"
 #include <limits>
@@ -97,7 +96,7 @@ namespace Molten
 
 	/** Convert string to UUID. */
 	template<>
-	[[nodiscard]] Result<Uuid, size_t> FromString(const std::string_view value);
+	[[nodiscard]] Expected<Uuid, size_t> FromString(const std::string_view value);
 
 }
 

@@ -49,15 +49,18 @@ namespace Molten
 
     struct MOLTEN_EDITOR_FRAMEWORK_API AssetFileHeader
     {
+        inline static constexpr size_t packedSize = 56;
+
         std::array<char, 12> magic = { 'm', 'o', 'l', 't', 'e', 'n', '.', 'a', 's', 's', 'e', 't', };
-        Version fileVersion = {};
-        Version engineVersion = {};
+        Version fileVersion = Version{ 0, 1, 0 };
+        Version engineVersion = MOLTEN_VERSION;
         Uuid globalId = {};
         AssetType type = AssetType::Unknown;
     };
 
     MOLTEN_EDITOR_FRAMEWORK_API AssetFileHeader ReadAssetFileHeader(std::istream& stream);
-    MOLTEN_EDITOR_FRAMEWORK_API AssetFileHeader ReadAssetFileHeader(std::filesystem::path path);
+    MOLTEN_EDITOR_FRAMEWORK_API AssetFileHeader ReadAssetFileHeader(const std::filesystem::path& path);
+
 
     MOLTEN_EDITOR_FRAMEWORK_API void WriteAssetFileHeader(
         std::ostream& stream,

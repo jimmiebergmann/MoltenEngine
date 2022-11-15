@@ -29,6 +29,7 @@
 #include "Molten/EditorFramework/Build.hpp"
 #include "Molten/FileFormat/FileFormatResult.hpp"
 #include "Molten/FileFormat/JsonFormatResult.hpp"
+#include "Molten/Utility/Expected.hpp"
 #include "Molten/Utility/Uuid.hpp"
 #include "Molten/System/Version.hpp"
 #include <istream>
@@ -66,13 +67,10 @@ namespace Molten
         JsonParseError,
         OpenFileError>;
 
-    using ProjectFileReadResult = FileFormatResult<
-        ProjectFile,
-        ProjectFileReadErrorResult,
-        ProjectFileWarningCode>;
+    using ReadProjectFileResult = Expected<ProjectFile, ProjectFileReadErrorResult>;
 
-    MOLTEN_EDITOR_FRAMEWORK_API ProjectFileReadResult ReadProjectFile(std::istream& stream);
-    MOLTEN_EDITOR_FRAMEWORK_API ProjectFileReadResult ReadProjectFile(std::filesystem::path path);
+    MOLTEN_EDITOR_FRAMEWORK_API ReadProjectFileResult ReadProjectFile(std::istream& stream);
+    MOLTEN_EDITOR_FRAMEWORK_API ReadProjectFileResult ReadProjectFile(std::filesystem::path path);
 
     MOLTEN_EDITOR_FRAMEWORK_API bool WriteProjectFile(
         const ProjectFile& projectFile,

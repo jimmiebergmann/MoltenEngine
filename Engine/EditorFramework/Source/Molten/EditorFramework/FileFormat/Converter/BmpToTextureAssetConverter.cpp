@@ -23,29 +23,15 @@
 *
 */
 
-#ifndef MOLTEN_CORE_UTILITY_STRINGCONVERT_HPP
-#define MOLTEN_CORE_UTILITY_STRINGCONVERT_HPP
-
-#include <string>
-#include <string_view>
-#include "Molten/Utility/Expected.hpp"
-
+#include "Molten/EditorFramework/FileFormat/Converter/BmpToTextureAssetConverter.hpp"
 
 namespace Molten
 {
 
-    /** Convert template object to string. */
-    template<typename T>
-    [[nodiscard]] std::string ToString(const T& value);
-
-    /** Convert string to template object.
-     *
-     *  @return Result object, with value to set to T if string parsing is successful,
-     *			else Result with size_t value set to failing string parsing position.
-     */
-    template<typename T>
-    [[nodiscard]] Expected<T, size_t> FromString(const std::string_view value);
+    TextureAssetFile ConvertToTextureAssetFile(
+        const Molten::BmpImageFile& /*bmpFile*/)
+    {
+        return {};
+    }
 
 }
-
-#endif

@@ -134,7 +134,7 @@ namespace Molten::Editor
         if (backendRendererApiVersionString.has_value())
         {
             const auto backendRendererVersion = FromString<Version>(*backendRendererApiVersionString);
-            if(!backendRendererVersion.IsValid())
+            if(!backendRendererVersion.HasValue())
             {
                 m_logger->Write(Logger::Severity::Error, "Invalid cli parameter \"backend.renderer.api.version\" :" + *backendRendererApiVersionString);
                 return false;

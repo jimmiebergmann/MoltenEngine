@@ -49,9 +49,9 @@ namespace Molten
     }
 
     template<>
-    inline Result<Version, size_t> FromString(const std::string_view input)
+    inline Expected<Version, size_t> FromString(const std::string_view input)
     {
-        auto readNextNumber = [&input](std::string_view& string) -> Result<uint32_t, size_t>
+        auto readNextNumber = [&input](std::string_view& string) -> Expected<uint32_t, size_t>
         {
             const auto* first = string.data();
             const auto* last = first + string.size();
@@ -60,7 +60,7 @@ namespace Molten
             const auto result = std::from_chars(first, last, value);
             if (result.ec != std::errc())
             {
-                return Result<uint32_t, size_t>::CreateError(static_cast<size_t>(result.ptr - input.data()));
+                return Unexpected(static_cast<size_t>(result.ptr - input.data()));
             }
 
             size_t ignoreDot = 0;
@@ -68,7 +68,7 @@ namespace Molten
             {
                 if (*result.ptr != '.')
                 {
-                    return Result<uint32_t, size_t>::CreateError(static_cast<size_t>(result.ptr - input.data()));
+                    return Unexpected(static_cast<size_t>(result.ptr - input.data()));
                 }
 
                 ignoreDot = 1;
@@ -78,7 +78,7 @@ namespace Molten
             const auto newSize = static_cast<size_t>(last - newFirst);
             string = { newFirst, newSize };
 
-            return Result<uint32_t, size_t>::CreateSuccess(value);
+            return value;
         };
 
         Version version = {};
@@ -89,9 +89,9 @@ namespace Molten
         for (size_t i = 0; i < values.size(); i++)
         {
             auto numberResult = readNextNumber(remainingInput);
-            if (!numberResult.IsValid())
+            if (!numberResult.HasValue())
             {
-                return Result<Version, size_t>::CreateError(numberResult.Error());
+                return Unexpected(numberResult.Error());
             }
 
             *values[i] = numberResult.Value();
@@ -102,7 +102,7 @@ namespace Molten
             }
         }
 
-        return Result<Version, size_t>::CreateSuccess(version);
+        return version;
     }
 
 }

@@ -61,7 +61,7 @@ namespace Molten
 	}
 
 	template<>
-	inline Result<Uuid, size_t> FromString(const std::string_view input)
+	inline Expected<Uuid, size_t> FromString(const std::string_view input)
 	{
 		static const auto indices = std::array<size_t, 16>{
 			0, 2, 4, 6,
@@ -73,7 +73,7 @@ namespace Molten
 
 		if (input.size() != 36 || input[8] != '-' || input[13] != '-' || input[18] != '-' || input[23] != '-')
 		{
-			return Result<Uuid, size_t>::CreateError(0);
+			return Unexpected(0);
 		}
 
 		auto getHexAsDecimal = [](const char c) -> uint8_t
@@ -95,19 +95,19 @@ namespace Molten
 			const auto high = getHexAsDecimal(input[indices[i]]);
 			if (high == 255)
 			{
-				return Result<Uuid, size_t>::CreateError(size_t{ 0 });
+				return Unexpected(size_t{ 0 });
 			}
 
 			const auto low = getHexAsDecimal(input[indices[i] + 1]);
 			if (low == 255)
 			{
-				return Result<Uuid, size_t>::CreateError(size_t{ 0 + 1 });
+				return Unexpected(size_t{ 0 + 1 });
 			}
 
 			data[i] = (high << 4) | low;
 		}
 
-		return Result<Uuid, size_t>::CreateSuccess(Uuid{ data });
+		return Uuid{ data };
 	}
 
 }

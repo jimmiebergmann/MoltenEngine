@@ -26,7 +26,7 @@
 #ifndef MOLTEN_CORE_FILEFORMAT_FILEFORMATRESULT_HPP
 #define MOLTEN_CORE_FILEFORMAT_FILEFORMATRESULT_HPP
 
-#include "Molten/System/Result.hpp"
+#include "Molten/Utility/Expected.hpp"
 #include <vector>
 
 namespace Molten
@@ -40,9 +40,15 @@ namespace Molten
     };
 
     template<typename TData, typename TError, typename TWarning>
-    using FileFormatResult = Result<FileFormatResultSuccess<TData, TWarning>, TError>;
+    using FileFormatResult = Expected<FileFormatResultSuccess<TData, TWarning>, TError>;
 
     struct OpenFileError{};
+
+
+    enum class FileSystemError
+    {
+        FileNotFound
+    };
 
 }
 

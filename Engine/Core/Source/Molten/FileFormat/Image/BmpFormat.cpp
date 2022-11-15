@@ -24,155 +24,197 @@
 */
 
 #include "Molten/FileFormat/Image/BmpFormat.hpp"
+#include <fstream>
 
-namespace Molten::Formats::Bmp
+namespace Molten::FileFormat::Image::Bmp
 {
-
- 
-    // Header implementations
-    Header::Header() :
-        m_signature(0),
-        m_fileSize(0),
-        m_reserved(0),
-        m_dataOffset(0)
-    {}
-
-    uint16_t& Header::GetSignature()
+    ReadResult ReadFile(std::istream& stream)
     {
-        return m_signature;
-    }
-    uint16_t Header::GetSignature() const
-    {
-        return m_signature;
-    }
+        const auto startPos = static_cast<size_t>(stream.tellg());
+        stream.seekg(0, std::ios::end);
+        const auto endPos = static_cast<size_t>(stream.tellg());
+        const auto streamSize = endPos - startPos;
+        stream.seekg(startPos, std::ios::beg);
 
-    uint32_t& Header::GetFileSize()
-    {
-        return m_fileSize;
-    }
-    uint32_t Header::GetFileSize() const
-    {
-        return m_fileSize;
-    }
+        // Read header
+        if (streamSize < Header::packedSize)
+        {
+            return Unexpected(ReadErrorCode::InvalidHeaderSize);
+        }        
 
-    uint32_t& Header::GetReserved()
-    {
-        return m_reserved;
-    }
-    uint32_t Header::GetReserved() const
-    {
-        return m_reserved;
-    }
+        File result;
+        auto& header = result.header;
 
-    uint32_t& Header::GetDataOffset()
-    {
-        return m_dataOffset;
-    }
-    uint32_t Header::GetDataOffset() const
-    {
-        return m_dataOffset;
-    }
+        stream.read(reinterpret_cast<char*>(&header.signature), sizeof(header.signature));
+        if (header.signature[0] != 'B' || header.signature[1] != 'M') {
+            return Unexpected(ReadErrorCode::InvalidHeaderSignature);
+        }
+  
+        stream.read(reinterpret_cast<char*>(&header.fileSize), sizeof(header.fileSize));
+        // Validate fileSize
 
+        stream.read(reinterpret_cast<char*>(&header.reserved1), sizeof(header.reserved1));
+        stream.read(reinterpret_cast<char*>(&header.reserved2), sizeof(header.reserved2));
+        stream.read(reinterpret_cast<char*>(&header.dataOffset), sizeof(header.dataOffset));
 
-    // File implementations.
-    File::File() :
-        m_header{},
-        m_infoHeader{},
-        m_colorTable{},
-        m_data{}
-    {}
+        // Read info header.
+        if (streamSize < Header::packedSize + sizeof(InfoHeader::headerSize))
+        {
+            return Unexpected(ReadErrorCode::MissingInfoHeader);
+        }
 
-    Header& File::GetHeader()
-    {
-        return m_header;
-    }
-    const Header& File::GetHeader() const
-    {
-        return m_header;
-    }
+        auto& infoHeader = result.infoHeader;
+        stream.read(reinterpret_cast<char*>(&infoHeader.headerSize), sizeof(infoHeader.headerSize));
+        if (infoHeader.headerSize != InfoHeader::packedSize) // Only supporting BITMAPINFOHEADER
+        {
+            return Unexpected(ReadErrorCode::UnsupportedInfoHeader);
+        }
 
-    InfoHeader& File::GetInfoHeader()
-    {
-        return m_infoHeader;
-    }
-    const InfoHeader& File::GetInfoHeader() const
-    {
-        return m_infoHeader;
-    }
+        if (streamSize < Header::packedSize + InfoHeader::packedSize)
+        {
+            return Unexpected(ReadErrorCode::UnexpectedEndOfFile);
+        }
 
-    ColorTable& File::GetColorTable()
-    {
-        return m_colorTable;
-    }
-    const ColorTable& File::GetColorTable() const
-    {
-        return m_colorTable;
-    }
+        stream.read(reinterpret_cast<char*>(&infoHeader.width), sizeof(infoHeader.width));
+        stream.read(reinterpret_cast<char*>(&infoHeader.height), sizeof(infoHeader.height));
+        stream.read(reinterpret_cast<char*>(&infoHeader.planes), sizeof(infoHeader.planes));
+        stream.read(reinterpret_cast<char*>(&infoHeader.bitsPerPixel), sizeof(infoHeader.bitsPerPixel));
+        if ((infoHeader.bitsPerPixel ) % 8 != 0)
+        {
+            return Unexpected(ReadErrorCode::UnsupportedBitsPerPixel);
+        }
+        stream.read(reinterpret_cast<char*>(&infoHeader.compression), sizeof(infoHeader.compression));
+        if (infoHeader.compression != 0)
+        {
+            return Unexpected(ReadErrorCode::UnsupportedCompression);
+        }
+        stream.read(reinterpret_cast<char*>(&infoHeader.imageSize), sizeof(infoHeader.imageSize));
+        stream.read(reinterpret_cast<char*>(&infoHeader.xPixelsPerM), sizeof(infoHeader.xPixelsPerM));
+        stream.read(reinterpret_cast<char*>(&infoHeader.yPixelsPerM), sizeof(infoHeader.yPixelsPerM));
+        stream.read(reinterpret_cast<char*>(&infoHeader.colorsUsed), sizeof(infoHeader.colorsUsed));
+        stream.read(reinterpret_cast<char*>(&infoHeader.importantColorsUsed), sizeof(infoHeader.importantColorsUsed));
 
-    Data& File::GetData()
-    {
-        return m_data;
-    }
-    const Data& File::GetData() const
-    {
-        return m_data;
-    }
+        const size_t bytesPerPixel = infoHeader.bitsPerPixel / 8;
+        const size_t rawScanLineSize = static_cast<size_t>(infoHeader.width) * bytesPerPixel;
+        const size_t scanLinePaddingSize = rawScanLineSize % 4;
+        const size_t scanLineSize = rawScanLineSize + scanLinePaddingSize;
+        
+        const size_t minDataSize = scanLineSize * static_cast<size_t>(infoHeader.height);
+        if (streamSize < Header::packedSize + InfoHeader::packedSize + minDataSize)
+        {
+            return Unexpected(ReadErrorCode::UnexpectedEndOfFile);
+        }
 
+        // Read data
+        const size_t minRawDataSize = rawScanLineSize * static_cast<size_t>(infoHeader.height);
+        auto& data = result.data;
+        
+        data.resize(minRawDataSize);
+        auto* currentData = data.data();
+        for (size_t i = 0; i < infoHeader.height; i++)
+        {
+            stream.read(reinterpret_cast<char*>(currentData), rawScanLineSize);
+            currentData += rawScanLineSize;
 
-    // Header implementations.
+            if (scanLinePaddingSize > 0)
+            {
+                stream.seekg(scanLinePaddingSize, std::ios::cur);
+            }   
+        }
 
-
-
-    // Info header implementations.
-
-
-
-    // Color table implementations.
-
-
-    // Reader result implementations.
-    ReaderResult::ReaderResult() :
-        m_file(),
-        m_resultCode(ResultCode::Successful)
-    {}
-
-    bool ReaderResult::IsSuccessful() const
-    {
-        return m_resultCode == ResultCode::Successful;
-    }
-
-    ResultCode ReaderResult::GetCode() const
-    {
-        return m_resultCode;
-    }
-
-    File& ReaderResult::GetFile()
-    {
-        return m_file;
-    }
-    const File& ReaderResult::GetFile() const
-    {
-        return m_file;
-    }
-
-
-    // Reader implementations.
-    ReaderResult ReadFromFile(const std::string& /*filename*/)
-    {
-        ReaderResult result;
         return result;
     }
 
-    ReaderResult ReadFromBytes(const std::vector<uint8_t>& /*bytes*/)
+    ReadResult ReadFile(const std::filesystem::path& path)
     {
-        ReaderResult result;
-        return result;
+        std::ifstream file(path.c_str(), std::ifstream::binary);
+        if (!file.is_open())
+        {
+            return Unexpected(OpenFileError{});
+        }
+
+        return ReadFile(file);
     }
 
-    ReaderResult ReadFromStream(const std::istream& /*stream*/)
+    WriteResult WriteFile(const File& bmpFile, std::ostream& stream)
     {
-        ReaderResult result;
-        return result;
+        const auto& header = bmpFile.header;
+        const auto& infoHeader = bmpFile.infoHeader;
+        const auto& data = bmpFile.data;
+
+        if ((bmpFile.infoHeader.bitsPerPixel % 8) != 0)
+        {
+            return Unexpected(WriteErrorCode::UnsupportedBitsPerPixel);
+        }
+        if (bmpFile.infoHeader.compression != 0)
+        {
+            return Unexpected(WriteErrorCode::UnsupportedCompression);
+        }
+
+        const size_t bytesPerPixel = static_cast<size_t>(infoHeader.bitsPerPixel) / 8;
+        const size_t scanLineSize = static_cast<size_t>(infoHeader.width) * bytesPerPixel;
+        const size_t minRawDataSize = scanLineSize * static_cast<size_t>(infoHeader.height);
+        if (minRawDataSize < data.size())
+        {
+            return Unexpected(WriteErrorCode::InvalidDataSize);
+        }
+
+        const size_t scanLinePaddingSize = scanLineSize % 4;
+        const size_t minDataSize = (scanLineSize + scanLinePaddingSize) * static_cast<size_t>(infoHeader.height);
+
+        const decltype(header.fileSize) fileSize =
+            static_cast<uint32_t>(Header::packedSize) +
+            static_cast<uint32_t>(InfoHeader::packedSize) +
+            static_cast<uint32_t>(minDataSize);
+
+        // Write header      
+        stream.write(reinterpret_cast<const char*>(&header.signature), sizeof(header.signature));
+        stream.write(reinterpret_cast<const char*>(&fileSize), sizeof(fileSize));
+        stream.write(reinterpret_cast<const char*>(&header.reserved1), sizeof(header.reserved1));
+        stream.write(reinterpret_cast<const char*>(&header.reserved2), sizeof(header.reserved2));
+        stream.write(reinterpret_cast<const char*>(&header.dataOffset), sizeof(header.dataOffset));      
+
+        // Write info header
+        stream.write(reinterpret_cast<const char*>(&infoHeader.headerSize), sizeof(infoHeader.headerSize));
+        stream.write(reinterpret_cast<const char*>(&infoHeader.width), sizeof(infoHeader.width));
+        stream.write(reinterpret_cast<const char*>(&infoHeader.height), sizeof(infoHeader.height));
+        stream.write(reinterpret_cast<const char*>(&infoHeader.planes), sizeof(infoHeader.planes));
+        stream.write(reinterpret_cast<const char*>(&infoHeader.bitsPerPixel), sizeof(infoHeader.bitsPerPixel));
+        stream.write(reinterpret_cast<const char*>(&infoHeader.compression), sizeof(infoHeader.compression));
+        stream.write(reinterpret_cast<const char*>(&infoHeader.imageSize), sizeof(infoHeader.imageSize));
+        stream.write(reinterpret_cast<const char*>(&infoHeader.xPixelsPerM), sizeof(infoHeader.xPixelsPerM));
+        stream.write(reinterpret_cast<const char*>(&infoHeader.yPixelsPerM), sizeof(infoHeader.yPixelsPerM));
+        stream.write(reinterpret_cast<const char*>(&infoHeader.colorsUsed), sizeof(infoHeader.colorsUsed));
+        stream.write(reinterpret_cast<const char*>(&infoHeader.importantColorsUsed), sizeof(infoHeader.importantColorsUsed)); 
+
+        // Write data  
+        const std::array<uint8_t, 4> paddingBytes = { 0, 0, 0, 0 };
+
+        const auto* currentData = data.data();
+        for (size_t i = 0; i < infoHeader.height; i++)
+        {
+            stream.write(reinterpret_cast<const char*>(currentData), scanLineSize);
+            currentData += scanLineSize;
+
+            if (scanLinePaddingSize > 0)
+            {
+                stream.write(reinterpret_cast<const char*>(paddingBytes.data()), scanLinePaddingSize);
+            }
+        }        
+       
+        return {};
     }
+
+    WriteResult WriteFile(const File& bmpFile, const std::filesystem::path& path)
+    {
+        std::ofstream file(path.c_str(), std::ifstream::binary);
+        if (!file.is_open())
+        {
+            return Unexpected(OpenFileError{});
+        }
+
+        return WriteFile(bmpFile, file);
+    }
+
 
 }

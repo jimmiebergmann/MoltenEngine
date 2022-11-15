@@ -137,7 +137,7 @@ namespace Molten
             const auto uuid = Uuid{ low1, low2, low3, high };
 
             auto fromString = FromString<Uuid>("78563412-ab90-efcd-2143-658709badcfe");
-            ASSERT_TRUE(fromString.IsValid());
+            ASSERT_TRUE(fromString.HasValue());
             EXPECT_EQ(fromString.Value(), uuid);
 
             EXPECT_STREQ(ToString(fromString.Value()).c_str(), "78563412-ab90-efcd-2143-658709badcfe");
@@ -151,20 +151,20 @@ namespace Molten
             const auto uuid = Uuid{ data };
 
             auto fromString = FromString<Uuid>("12345678-90ab-cdef-fedc-ba0987654321");
-            ASSERT_TRUE(fromString.IsValid());
+            ASSERT_TRUE(fromString.HasValue());
             EXPECT_EQ(fromString.Value(), uuid);
 
             EXPECT_STREQ(ToString(fromString.Value()).c_str(), "12345678-90ab-cdef-fedc-ba0987654321");
         }
         {
-            EXPECT_FALSE(FromString<Uuid>("").IsValid());
-            EXPECT_FALSE(FromString<Uuid>(" ").IsValid());
-            EXPECT_FALSE(FromString<Uuid>("\t").IsValid());
-            EXPECT_FALSE(FromString<Uuid>("-").IsValid());
-            EXPECT_FALSE(FromString<Uuid>("123x5678-90ab-cdef-fedc-ba0987654321").IsValid());
-            EXPECT_FALSE(FromString<Uuid>("123x5678-90ab-cdef-fedc-ba098765432K").IsValid());
-            EXPECT_FALSE(FromString<Uuid>("1234567-890ab-cdef-fedc-ba0987654321").IsValid());
-            EXPECT_FALSE(FromString<Uuid>("12345678-90a-bcdef-fedc-ba0987654321").IsValid());
+            EXPECT_FALSE(FromString<Uuid>("").HasValue());
+            EXPECT_FALSE(FromString<Uuid>(" ").HasValue());
+            EXPECT_FALSE(FromString<Uuid>("\t").HasValue());
+            EXPECT_FALSE(FromString<Uuid>("-").HasValue());
+            EXPECT_FALSE(FromString<Uuid>("123x5678-90ab-cdef-fedc-ba0987654321").HasValue());
+            EXPECT_FALSE(FromString<Uuid>("123x5678-90ab-cdef-fedc-ba098765432K").HasValue());
+            EXPECT_FALSE(FromString<Uuid>("1234567-890ab-cdef-fedc-ba0987654321").HasValue());
+            EXPECT_FALSE(FromString<Uuid>("12345678-90a-bcdef-fedc-ba0987654321").HasValue());
         }
     }
 

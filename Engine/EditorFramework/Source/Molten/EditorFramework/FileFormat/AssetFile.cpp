@@ -31,6 +31,17 @@ namespace Molten
 
     AssetFileHeader ReadAssetFileHeader(std::istream& stream)
     {
+        const auto startPos = static_cast<size_t>(stream.tellg());
+        stream.seekg(0, std::ios::end);
+        const auto endPos = static_cast<size_t>(stream.tellg());
+        stream.seekg(startPos, std::ios::beg);
+
+        const auto size = endPos - startPos;
+        if (size < AssetFileHeader::packedSize)
+        {
+            return {};
+        }  
+
         AssetFileHeader result = {};
         stream.read(result.magic.data(), result.magic.size());
         stream.read(reinterpret_cast<char*>(&result.fileVersion), sizeof(result.fileVersion));
@@ -40,7 +51,7 @@ namespace Molten
         return result;
     }
 
-    AssetFileHeader ReadAssetFileHeader(std::filesystem::path path)
+    AssetFileHeader ReadAssetFileHeader(const std::filesystem::path& path)
     {
         std::ifstream file(path.c_str(), std::ifstream::binary);
         if (!file.is_open())

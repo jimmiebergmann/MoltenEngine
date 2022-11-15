@@ -33,22 +33,22 @@ namespace Molten
 
     enum class ImageFormat : uint8_t
     {
-        URed8,
-        URed8Green8,
-        URed8Green8Blue8,
-        URed8Green8Blue8Alpha8,
+        URed8,                      ///< Linear { uint8_t red; }
+        URed8Green8,                ///< Linear { uint8_t red; uint8_t green; }
+        URed8Green8Blue8,           ///< Linear { uint8_t red; uint8_t green; uint8_t blue; }
+        URed8Green8Blue8Alpha8,     ///< Linear { uint8_t red; uint8_t green; uint8_t blue; uint8_t alpha; }
 
-        SRed8,
-        SRed8Green8,
-        SRed8Green8Blue8,
-        SRed8Green8Blue8Alpha8,
-        SDepthFloat24StencilUint8,
+        SRed8,                      ///< Linear { uint8_t red; }
+        SRed8Green8,                ///< Linear { uint8_t red; uint8_t green; }
+        SRed8Green8Blue8,           ///< Linear { uint8_t red; uint8_t green; uint8_t blue; }
+        SRed8Green8Blue8Alpha8,     ///< Linear { uint8_t red; uint8_t green; uint8_t blue; uint8_t alpha; }
+        SDepthFloat24StencilUint8,  ///< Linear { float(24 bit) depth; uint8_t stencil; }
 
-        SrgbRed8Green8Blue8,
-        SrgbRed8Green8Blue8Alpha8,
+        SrgbRed8Green8Blue8,        ///< Non-linear sRGB { int8_t red; int8_t green; int8_t blue; }
+        SrgbRed8Green8Blue8Alpha8,  ///< Non-linear sRGB { int8_t red; int8_t green; int8_t blue; int8_t alpha; }
 
-        UBlue8Green8Red8,
-        UBlue8Green8Red8Alpha8,
+        UBlue8Green8Red8,           ///< Linear { uint8_t blue; uint8_t green; uint8_t red; }
+        UBlue8Green8Red8Alpha8,     ///< Linear { uint8_t blue; uint8_t green; uint8_t red; uint8_t alpha; }
     };
 
 }

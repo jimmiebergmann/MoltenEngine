@@ -36,7 +36,7 @@
 namespace Molten
 {
 
-    ProjectFileReadResult ReadProjectFile(std::istream& stream)
+    ReadProjectFileResult ReadProjectFile(std::istream& stream)
     {
         rapidjson::IStreamWrapper fileWrapper(stream);
 
@@ -44,140 +44,104 @@ namespace Molten
         rapidjson::ParseResult parseResult = jsonDocumentNonConst.ParseStream(fileWrapper);
         if (parseResult.IsError())
         {
-            return ProjectFileReadResult::CreateError(CreateJsonErrorCode(parseResult.Offset(), parseResult.Code()));
+            return Unexpected(CreateJsonErrorCode(parseResult.Offset(), parseResult.Code()));
         }
 
         // We could use a schema file to validate, but it is probably faster to just check the values manually...
         const auto& jsonDocument = jsonDocumentNonConst;
 
-        std::vector<ProjectFileWarningCode> warnings;
+        //std::vector<ProjectFileWarningCode> warnings;
 
-        // File version.
-        auto getFileVersion = [&]() -> Result<Version, ProjectFileErrorCode>
+        auto parseVersion = [&](const std::string& member) -> std::optional<Version>
         {
-            using ResultType = Result<Version, ProjectFileErrorCode>;
-
-            if (!jsonDocument.HasMember("file_version"))
+            if (!jsonDocument.HasMember(member.c_str()))
             {
-                warnings.push_back(ProjectFileWarningCode::MissingFileVersion);
-                return ResultType::CreateSuccess(Version{});
+                //warnings.push_back(ProjectFileWarningCode::MissingFileVersion);
+                //warnings.push_back(ProjectFileWarningCode::MissingEngineVersion);
+                return Version{ 0, 0, 0 };
             }
 
-            const auto& jsonFileVersion = jsonDocument["file_version"];
-            if (!jsonFileVersion.IsString())
+            const auto& jsonVersion = jsonDocument[member.c_str()];
+            if (!jsonVersion.IsString())
             {
-                return ResultType::CreateError(ProjectFileErrorCode::InvalidFileVersion);
+                return std::nullopt;
             }
-            const auto fileVersion = FromString<Version>(jsonFileVersion.GetString());
-            if (!fileVersion.IsValid())
+            const auto version = FromString<Version>(jsonVersion.GetString());
+            if (!version.HasValue())
             {
-                return ResultType::CreateError(ProjectFileErrorCode::InvalidFileVersion);
+                return std::nullopt;
             }
 
-            return ResultType::CreateSuccess(fileVersion.Value());
+            return version.Value();
         };
 
-        auto fileVersion = getFileVersion();
-        if (!fileVersion.IsValid())
+        auto parseUuid = [&](const std::string& member) -> std::optional<Uuid>
         {
-            return ProjectFileReadResult::CreateError(fileVersion.Error());
-        }
-
-        // Engine version.
-        auto getEngineVersion = [&]() -> Result<Version, ProjectFileErrorCode>
-        {
-            using ResultType = Result<Version, ProjectFileErrorCode>;
-
-            if (!jsonDocument.HasMember("engine_version"))
+            if (!jsonDocument.HasMember(member.c_str()))
             {
-                warnings.push_back(ProjectFileWarningCode::MissingEngineVersion);
-                return ResultType::CreateSuccess(Version{});
+                //warnings.push_back(ProjectFileWarningCode::MissingGlobalId);
+                return Uuid{};
             }
 
-            const auto& jsonEngineVersion = jsonDocument["engine_version"];
-            if (!jsonEngineVersion.IsString())
+            const auto& jsonUuid = jsonDocument[member.c_str()];
+            if (!jsonUuid.IsString())
             {
-                return ResultType::CreateError(ProjectFileErrorCode::InvalidEngineVersion);
+                return std::nullopt;
             }
-            const auto engineVersion = FromString<Version>(jsonEngineVersion.GetString());
-            if (!engineVersion.IsValid())
+            const auto uuid = FromString<Uuid>(jsonUuid.GetString());
+            if (!uuid.HasValue())
             {
-                return ResultType::CreateError(ProjectFileErrorCode::InvalidEngineVersion);
+                return std::nullopt;
             }
 
-            return ResultType::CreateSuccess(engineVersion.Value());
+            return uuid.Value();
         };
 
-        auto engineVersion = getEngineVersion();
-        if (!engineVersion.IsValid())
+        auto parseString = [&](const std::string& member) -> std::string
         {
-            return ProjectFileReadResult::CreateError(engineVersion.Error());
-        }
-
-        // Global id.
-        auto getGlobalId = [&]() -> Result<Uuid, ProjectFileErrorCode>
-        {
-            using ResultType = Result<Uuid, ProjectFileErrorCode>;
-
-            if (!jsonDocument.HasMember("global_id"))
-            {
-                warnings.push_back(ProjectFileWarningCode::MissingGlobalId);
-                return ResultType::CreateSuccess(Uuid{});
-            }
-
-            const auto& jsonGlobalId = jsonDocument["global_id"];
-            if (!jsonGlobalId.IsString())
-            {
-                return ResultType::CreateError(ProjectFileErrorCode::InvalidGlobalId);
-            }
-            const auto globalId = FromString<Uuid>(jsonGlobalId.GetString());
-            if (!globalId.IsValid())
-            {
-                return ResultType::CreateError(ProjectFileErrorCode::InvalidGlobalId);
-            }
-
-            return ResultType::CreateSuccess(globalId.Value());
-        };
-
-        auto globalId = getGlobalId();
-        if (!globalId.IsValid())
-        {
-            return ProjectFileReadResult::CreateError(globalId.Error());
-        }
-
-        // Description
-        auto getDescription = [&]() -> std::string
-        {
-            if (!jsonDocument.HasMember("description"))
+            if (!jsonDocument.HasMember(member.c_str()))
             {
                 return "";
             }
 
-            const auto& jsonDescription = jsonDocument["description"];
-            return std::string{ jsonDescription.GetString(), jsonDescription.GetStringLength() };
+            const auto& jsonString = jsonDocument[member.c_str()];
+            return std::string{ jsonString.GetString(), jsonString.GetStringLength() };
         };
 
-        const auto description = getDescription();
+        auto fileVersion = parseVersion("file_version");
+        if (!fileVersion.has_value())
+        {
+            return Unexpected(ProjectFileErrorCode::InvalidFileVersion);
+        }
 
-        return ProjectFileReadResult::CreateSuccess({
-            ProjectFileReadResult::Type{
-                ProjectFile{
-                    fileVersion.Value(),
-                    engineVersion.Value(),
-                    globalId.Value(),
-                    description
-                },
-                std::move(warnings)
-            }
-        });
+        auto engineVersion = parseVersion("engine_version");
+        if (!engineVersion.has_value())
+        {
+            return Unexpected(ProjectFileErrorCode::InvalidEngineVersion);
+        }
+
+        auto globalId = parseUuid("global_id");
+        if (!globalId.has_value())
+        {
+            return Unexpected(ProjectFileErrorCode::InvalidGlobalId);
+        }
+
+        const auto description = parseString("description");
+
+        return ProjectFile{
+            .fileVersion = fileVersion.value(),
+            .engineVersion = engineVersion.value(),
+            .globalId = globalId.value(),
+            .description = description
+        };
     }
 
-    ProjectFileReadResult ReadProjectFile(std::filesystem::path path)
+    ReadProjectFileResult ReadProjectFile(std::filesystem::path path)
     {
         std::ifstream file(path.c_str());
         if (!file.is_open())
         {
-            return ProjectFileReadResult::CreateError(OpenFileError{});
+            return Unexpected(ProjectFileReadErrorResult{ OpenFileError{} });
         }
 
         return ReadProjectFile(file);

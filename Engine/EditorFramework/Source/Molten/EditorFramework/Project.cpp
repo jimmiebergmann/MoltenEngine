@@ -30,7 +30,7 @@ namespace Molten
 {
 
     /** Static functions. */
-    using CreateProjectFolderResult = Result<std::filesystem::path, CreateProjectResult>;
+    using CreateProjectFolderResult = Expected<std::filesystem::path, CreateProjectResult>;
 
     static CreateProjectFolderResult CreateProjectDirectory(
         const std::filesystem::path& path,
@@ -38,31 +38,31 @@ namespace Molten
     {
         if (!Project::ValidateName(name))
         {
-            return CreateProjectFolderResult::CreateError(CreateProjectResult::InvalidName);
+            return Unexpected(CreateProjectResult::InvalidName);
         }
 
         std::error_code ec{};
         if (!std::filesystem::is_directory(path, ec))
         {
-            return CreateProjectFolderResult::CreateError(CreateProjectResult::InvalidDirectory);
+            return Unexpected(CreateProjectResult::InvalidDirectory);
         }
 
         const auto projectDirectory = path / name;
         if (std::filesystem::exists(projectDirectory, ec))
         {
-            return CreateProjectFolderResult::CreateError(CreateProjectResult::AlreadyExists);
+            return Unexpected(CreateProjectResult::AlreadyExists);
         }
         if (ec != std::error_code{})
         {
-            return CreateProjectFolderResult::CreateError(CreateProjectResult::CannotCreateDirectory);
+            return Unexpected(CreateProjectResult::CannotCreateDirectory);
         }
 
         if (!std::filesystem::create_directory(projectDirectory, ec))
         {
-            return CreateProjectFolderResult::CreateError(CreateProjectResult::CannotCreateDirectory);
+            return Unexpected(CreateProjectResult::CannotCreateDirectory);
         }
 
-        return CreateProjectFolderResult::CreateSuccess(projectDirectory);
+        return projectDirectory;
     }
 
     static bool CreateProjectFile(
@@ -137,12 +137,12 @@ namespace Molten
         project.m_projectFile.open(projectFilePath);
         if (!project.m_projectFile.is_open())
         {
-            return OpenProjectResult::CreateError(OpenProjectResultCode::UnknownProjectFile);
+            return Unexpected(OpenProjectResultCode::UnknownProjectFile);
         }
 
         project.m_projectDirectory = projectFilePath.parent_path();
 
-        return OpenProjectResult::CreateSuccess(std::move(project));
+        return project;
     }
 
     std::filesystem::path Project::GetDirectoryPath() const
