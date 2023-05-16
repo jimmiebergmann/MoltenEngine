@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2022 Jimmie Bergmann
+* Copyright (c) 2023 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -25,31 +25,32 @@
 
 #include "Test.hpp"
 #include "Molten/System/ThreadPool.hpp"
-#include "Molten/FileFormat/Mesh/ObjMeshFile.hpp"
+#include "Molten/EditorFramework/FileFormat/Mesh/ObjMeshFile.hpp"
 
-namespace Molten
+namespace Molten::EditorFramework
 {
     TEST(FileFormat, ObjMeshFile_OpenFileError)
     {
         ThreadPool threadPool;
+        ObjMeshFileReader objFileReader;
 
-        ObjMeshFile objFile;
-        const auto result = objFile.ReadFromFile("../Engine/Test/Data/ObjMesh/ThisFileDoesNotExist.obj", threadPool);
+        const auto result = objFileReader.ReadFromFile("../Engine/Test/Data/ObjMesh/ThisFileDoesNotExist.obj", threadPool);
 
-        EXPECT_FALSE(result.IsSuccessful());
-        EXPECT_EQ(result.GetError().code, TextFileFormatResult::OpenFileError);
-        EXPECT_EQ(result.GetError().lineNumber, size_t{ 0 });
+        ASSERT_FALSE(result);
+        EXPECT_EQ(result.Error().code, TextFileFormatErrorCode::OpenFileError);
+        EXPECT_EQ(result.Error().line, size_t{ 0 });
+        EXPECT_EQ(result.Error().column, size_t{ 0 });
     }
 
     TEST(FileFormat, ObjMeshFile)
     {
         ThreadPool threadPool(1);
-        ObjMeshFile objFile;
-        TextFileFormatResult result;
+        ObjMeshFileReader objFileReader;
 
-        EXPECT_NO_THROW(result = objFile.ReadFromFile("../Engine/Core/Test/Data/ObjMesh/TestCubes.obj", threadPool));
-        ASSERT_TRUE(result.IsSuccessful());
-
+        auto result = objFileReader.ReadFromFile("../Engine/Core/Test/Data/ObjMesh/TestCubes.obj", threadPool);
+        ASSERT_TRUE(result);
+        
+        auto objFile = std::move(result.Value());
         ASSERT_EQ(objFile.objects.size(), size_t{ 3 });
         {
             auto& object = objFile.objects[0];
@@ -253,14 +254,14 @@ namespace Molten
         }
     }
 
-   /* TEST(FileFormat, ObjMeshFile_Benchmark)
+    TEST(FileFormat, ObjMeshFile_Benchmark)
     {
         ThreadPool threadPool;
-        ObjMeshFile objFile;
+        ObjMeshFileReader objFileReader;
 
         Molten::Test::Benchmarker bm("Model");
-        const auto result = objFile.ReadFromFile("C:/temp/Sponza/Sponza.obj", threadPool);
-        EXPECT_TRUE(result.IsSuccessful());
-    }*/
+        const auto result = objFileReader.ReadFromFile("C:/temp/dino_obj/dino.obj", threadPool);
+        EXPECT_TRUE(result);
+    }
 
 }

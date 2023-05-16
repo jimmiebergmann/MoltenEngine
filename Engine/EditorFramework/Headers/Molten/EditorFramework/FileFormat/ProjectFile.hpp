@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2022 Jimmie Bergmann
+* Copyright (c) 2023 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -37,10 +37,10 @@
 #include <vector>
 #include <string>
 
-namespace Molten
+namespace Molten::EditorFramework
 {
 
-    struct MOLTEN_EDITOR_FRAMEWORK_API ProjectFile
+    struct ProjectFile
     {
         Version fileVersion;
         Version engineVersion;

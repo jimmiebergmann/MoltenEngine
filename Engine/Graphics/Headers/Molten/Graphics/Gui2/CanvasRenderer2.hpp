@@ -23,21 +23,22 @@
 *
 */
 
-#ifndef MOLTEN_GRAPHICS_GUI_CANVASRENDERER_HPP
-#define MOLTEN_GRAPHICS_GUI_CANVASRENDERER_HPP
+#ifndef MOLTEN_GRAPHICS_GUI2_CANVASRENDERER_HPP
+#define MOLTEN_GRAPHICS_GUI2_CANVASRENDERER_HPP
 
 #include "Molten/Graphics/Build.hpp"
-#include "Molten/Graphics/Gui/GuiTypes.hpp"
-#include "Molten/Graphics/Gui/Font.hpp"
+#include "Molten/Graphics/Gui2/Gui2Namespace.hpp"
+/*#include "Molten/Graphics/Gui/GuiTypes.hpp"
+#include "Molten/Graphics/Gui/Font.hpp"*/
 #include "Molten/Graphics/RenderResource.hpp"
 #include "Molten/Graphics/Sampler.hpp"
 #include "Molten/Graphics/ShaderProgram.hpp"
 #include "Molten/Graphics/Texture.hpp"
 #include "Molten/Graphics/VertexBuffer.hpp"
-#include "Molten/Math/Vector.hpp"
+#include "Molten/Utility/Expected.hpp"
 #include "Molten/Math/Matrix.hpp"
-#include "Molten/Math/Bounds.hpp"
 #include "Molten/Math/AABB.hpp"
+#include <optional>
 
 namespace Molten
 {
@@ -57,13 +58,13 @@ namespace Molten::Shader::Visual
     class FragmentScript;
 }
 
-namespace Molten::Gui
+namespace Molten::MOLTEN_GUI2NAMESPACE
 {
 
-    class CanvasRenderer;
+    class CanvasRenderer2;
 
 
-    struct MOLTEN_GRAPHICS_API CanvasRendererTexture
+    /*struct MOLTEN_GRAPHICS_API CanvasRendererTexture
     {
 
         CanvasRendererTexture() = default;
@@ -116,6 +117,13 @@ namespace Molten::Gui
         CanvasRendererFontSequence& operator =(CanvasRendererFontSequence&&) noexcept = default;
 
         std::vector<Group> groups;
+    };*/
+
+    struct CanvasRendererDescriptor
+    {
+        Renderer& backendRenderer;
+        Vector2f32 size = { 0.0f, 0.0f };
+        Logger* logger = nullptr;
     };
 
     class MOLTEN_GRAPHICS_API CanvasRenderer
@@ -123,52 +131,48 @@ namespace Molten::Gui
 
     public:
 
-        static CanvasRendererPointer Create(Renderer& renderer, Logger * logger = nullptr, const Vector2f32& size = { 0.0f, 0.0f });
+        //static CanvasRendererPointer Create(Renderer& renderer, Logger * logger = nullptr, const Vector2f32& size = { 0.0f, 0.0f });
 
-        CanvasRenderer(Renderer& renderer, Logger* logger = nullptr, const Vector2f32& size = {0.0f, 0.0f});
-        ~CanvasRenderer();
+        static std::unique_ptr<CanvasRenderer> Create(const CanvasRendererDescriptor& descriptor);
 
         CanvasRenderer(const CanvasRenderer&) = delete;
         CanvasRenderer(CanvasRenderer&&) = delete;
         CanvasRenderer& operator =(const CanvasRenderer&) = delete;
         CanvasRenderer& operator =(CanvasRenderer&&) = delete;
 
-        void Close();
-
         void Resize(const Vector2f32& size);
 
-        CanvasRendererTexture CreateTexture(const TextureDescriptor2D& textureDescriptor);
+        /*CanvasRendererTexture CreateTexture(const TextureDescriptor2D& textureDescriptor);
         bool UpdateTexture(CanvasRendererTexture& texture, const TextureUpdateDescriptor2D& textureUpdateDescriptor);
 
         CanvasRendererFramedTexture CreateFramedTexture(SharedRenderResource<FramedTexture2D> framedTexture);
 
-        CanvasRendererFontSequence CreateFontSequence(FontGroupedSequence& fontGroupedSequence);
+        CanvasRendererFontSequence CreateFontSequence(FontGroupedSequence& fontGroupedSequence);*/
 
         void SetCommandBuffer(CommandBuffer& commandBuffer);
 
-        void DrawRect(const AABB2f32& bounds, const Vector4f32& color);
-        void DrawRect(const AABB2f32& bounds, CanvasRendererTexture& texture);
+        void DrawQuad(const AABB2f32& bounds, const Vector4f32& color);
+        /*void DrawRect(const AABB2f32& bounds, CanvasRendererTexture& texture);
         void DrawRect(const AABB2f32& bounds, const Bounds2f32& textureCoords, CanvasRendererTexture& texture);
         void DrawRect(const AABB2f32& bounds, const Bounds2f32& textureCoords, CanvasRendererFramedTexture& framedtexture);
 
-        void DrawFontSequence(const Vector2f32& position, CanvasRendererFontSequence& fontSequence);
+        void DrawFontSequence(const Vector2f32& position, CanvasRendererFontSequence& fontSequence);*/
 
     private:
 
-        struct ColoredRectData
+        struct ColoredQuad
         {
-            ColoredRectData();
+            RenderResource<Pipeline> pipeline = {};
+            RenderResource<VertexBuffer> vertexBuffer = {};
+            RenderResource<IndexBuffer> indexBuffer = {};
 
-            RenderResource<Pipeline> pipeline;
-            RenderResource<VertexBuffer> vertexBuffer;
-            RenderResource<IndexBuffer> indexBuffer;
-
-            uint32_t projectionLocation;
-            uint32_t positionLocation;
-            uint32_t sizeLocation;
-            uint32_t colorLocation;
+            uint32_t projectionLocation = 0;
+            uint32_t positionLocation = 0;
+            uint32_t sizeLocation = 0; 
+            uint32_t colorLocation = 0;
         };
 
+/*
         struct TexturedRectData
         {
             TexturedRectData();
@@ -201,14 +205,22 @@ namespace Molten::Gui
         void LoadTexturedRect();
         void LoadFontRenderData();
 
-        //Logger* m_logger;
+        //Logger* m_logger;*/
+
+        CanvasRenderer(
+            Renderer& backendRenderer,
+            SharedRenderResource<Sampler2D> sampler2D,
+            ColoredQuad coloredQuad);
+
+        static std::optional<ColoredQuad> CreateColoredRect(const CanvasRendererDescriptor& descriptor);
+
         Renderer& m_backendRenderer;
         CommandBuffer* m_commandBuffer;
         Matrix4x4f32 m_projection;
         SharedRenderResource<Sampler2D> m_sampler2D;
-        ColoredRectData m_coloredRect;
-        TexturedRectData m_texturedRect;
-        FontRenderData m_fontRenderData;
+        ColoredQuad m_coloredQuad;
+        /*TexturedRectData m_texturedRect;
+        FontRenderData m_fontRenderData;*/
 
     };
 

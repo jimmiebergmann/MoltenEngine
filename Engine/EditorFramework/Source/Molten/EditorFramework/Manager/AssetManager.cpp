@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2022 Jimmie Bergmann
+* Copyright (c) 2023 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -26,7 +26,7 @@
 #include "Molten/EditorFramework/Manager/AssetManager.hpp"
 #include "Molten/EditorFramework/Project.hpp"
 
-namespace Molten
+namespace Molten::EditorFramework
 {
 
     AssetManager::AssetManager(Project& project) :

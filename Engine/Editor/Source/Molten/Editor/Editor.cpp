@@ -1,7 +1,7 @@
 ﻿/*
 * MIT License
 *
-* Copyright (c) 2022 Jimmie Bergmann
+* Copyright (c) 2023 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -37,7 +37,13 @@
 #include "Molten/Graphics/Gui/Widgets/ViewportWidget.hpp"
 #include "Molten/Graphics/Gui/Widgets/MenuBarWidget.hpp"
 
-#include "Molten/FileFormat/Mesh/ObjMeshFile.hpp"
+#include "Molten/Graphics/Gui2/Style.hpp"
+#include "Molten/Graphics/Gui2/Widgets/ButtonWidget.hpp"
+
+#include "Molten/EditorFramework/Project.hpp"
+#include "Molten/EditorFramework/FileFormat/Mesh/ObjMeshFile.hpp"
+
+#include <random>
 
 namespace Molten::Editor
 {
@@ -78,7 +84,9 @@ namespace Molten::Editor
                 return;
             }
 
-            Clock tickTimer;
+            
+
+            /*Clock tickTimer;
             while(m_isRunning)
             {
                 m_fpsLimiter.Reset();               
@@ -94,7 +102,7 @@ namespace Molten::Editor
                 }
 
                 m_fpsLimiter.PrecisionSleep();                
-            }
+            }*/
         });
 
         startedSemaphore.Wait();
@@ -103,15 +111,34 @@ namespace Molten::Editor
 
     bool Editor::Load(const EditorDescriptor& descriptor)
     {
-        if (!LoadWindow(descriptor) ||
-            !LoadRenderer(descriptor) ||
-            !LoadRenderPasses() ||
-            !LoadGui())
+        const auto projectName = "my_project";
+        const auto projectPath = "" / std::filesystem::path{ projectName };
+        if (!LoadProject(projectPath)) 
         {
-            return false;
+            Logger::WriteInfo(m_logger.get(), "Could not load project, creating new project.");
+
+            if (!CreateProject("", projectName))
+            {
+                Logger::WriteError(m_logger.get(), "Failed to create project.");
+                return false;
+            }
+
+            if (!LoadProject(projectPath))
+            {
+                Logger::WriteError(m_logger.get(), "Failed to load project file after creation.");
+                return false;
+            }
         }
 
-        const auto windowUnfocusedSleepTime = Seconds(
+        //if (!LoadWindow(descriptor) ||
+        //    !LoadRenderer(descriptor) ||
+        //    !LoadRenderPasses() /*||
+        //    !LoadGui()*/)
+        //{
+        //    return false;
+        //}
+
+        /*const auto windowUnfocusedSleepTime = Seconds(
             1.0 / (descriptor.windowUnfocusedFpsLimit.has_value() ?
             static_cast<double>(descriptor.windowUnfocusedFpsLimit.value()) : 15.0)
         );
@@ -123,93 +150,150 @@ namespace Molten::Editor
             m_fpsLimiter.SetSleepTime(Seconds(1.0 / fpsLimit));
         }
 
-        m_window->Show();
+        m_window->Show();*/
         return true;
     }
 
-    bool Editor::LoadWindow(const EditorDescriptor&)
+    bool Editor::LoadProject(const std::filesystem::path& /*path*/)
     {
-        WindowDescriptor windowDescriptor;
-        windowDescriptor.size = { 1600, 1200 };
-        windowDescriptor.title = m_windowTitle;
-        windowDescriptor.enableDragAndDrop = true;
-        windowDescriptor.logger = m_logger.get();
+        return false;
+    }
 
-        m_window = Window::Create(windowDescriptor);
-        if (!m_window || !m_window->IsOpen())
+    bool Editor::CreateProject(const std::filesystem::path& path, const std::string& filename)
+    {     
+        auto fullPath = path.empty() ? filename : path / filename;
+        std::filesystem::remove_all(fullPath);
+
+        auto createProjectResult = EditorFramework::Project::Create(path, filename);
+        if (createProjectResult != EditorFramework::CreateProjectResult::Success)
         {
-            Logger::WriteError(m_logger.get(), "Failed to create editor window.");
+            Logger::WriteError(m_logger.get(), "Failed to create project.");
             return false;
         }
 
-        m_window->OnResize.Connect([&](Vector2ui32)
+        auto openProjectResult = EditorFramework::Project::Open(fullPath / (filename + ".mproj"));
+        if (!openProjectResult.HasValue())
         {
-            Tick();
-        });
-
-        m_window->OnDpiChange.Connect([&](Vector2ui32 dpi)
-        {
-            m_logger->Write(Logger::Severity::Info, "Changed DPI: " + std::to_string(dpi.x) + ", " + std::to_string(dpi.y));
-        });
-
-        m_window->OnScaleChange.Connect([&](Vector2f32 scale)
-        {
-            m_logger->Write(Logger::Severity::Info, "Changed scale: " + std::to_string(scale.x) + ", " + std::to_string(scale.y));
-        });
-
-        m_window->OnFilesDropEnter = [&](const std::vector<std::filesystem::path>& files) -> bool
-        {
-            return ValidateFileDrops(files);
-        };
-        m_window->OnFilesDrop = [&](const std::vector<std::filesystem::path>& files)
-        {          
-            return ProcessFileDrops(files);
-        };
-
-        return true;
-    }
-
-    bool Editor::LoadRenderer(const EditorDescriptor& descriptor)
-    {
-        auto* logger = descriptor.enableGpuLogging ? m_logger.get() : nullptr;
-
-        const auto api = descriptor.backendRendererApi.has_value() ? 
-            descriptor.backendRendererApi.value() : Renderer::BackendApi::Vulkan;
-
-        const auto apiVersion = descriptor.backendRendererApiVersion.has_value() ?
-            descriptor.backendRendererApiVersion.value() : Version(1, 0);
-
-        const auto rendererDesc = RendererDescriptor{ *m_window, apiVersion, logger };
-
-        m_renderer = Renderer::Create(api, rendererDesc);
-        if (!m_renderer)
-        {
-            Logger::WriteError(m_logger.get(), "Failed to create renderer.");
+            Logger::WriteError(m_logger.get(), "Failed to open project.");
             return false;
         }
 
-        return true;
-    }
-
-    bool Editor::LoadRenderPasses()
-    {
-        auto renderPass = m_renderer->GetSwapChainRenderPass();
-        renderPass->SetRecordFunction([&](auto& commandBuffer) {
-            m_rootView->canvasRenderer->SetCommandBuffer(commandBuffer);
-            m_rootView->canvas->Draw();
-        });
 
         return true;
     }
 
-    bool Editor::LoadGui()
-    {
-        return 
-            LoadGuiViews() &&
-            LoadGuiSignals();
-    }
+    //bool Editor::LoadWindow(const EditorDescriptor&)
+    //{
+    //    WindowDescriptor windowDescriptor;
+    //    windowDescriptor.size = { 1600, 1200 };
+    //    windowDescriptor.title = m_windowTitle;
+    //    windowDescriptor.enableDragAndDrop = true;
+    //    windowDescriptor.logger = m_logger.get();
 
-    bool Editor::LoadGuiViews()
+    //    m_window = Window::Create(windowDescriptor);
+    //    if (!m_window || !m_window->IsOpen())
+    //    {
+    //        Logger::WriteError(m_logger.get(), "Failed to create editor window.");
+    //        return false;
+    //    }
+
+    //    m_window->OnResize.Connect([&](Vector2ui32)
+    //    {
+    //        Tick();
+    //    });
+
+    //    m_window->OnDpiChange.Connect([&](Vector2ui32 dpi)
+    //    {
+    //        m_logger->Write(Logger::Severity::Info, "Changed DPI: " + std::to_string(dpi.x) + ", " + std::to_string(dpi.y));
+    //    });
+
+    //    m_window->OnScaleChange.Connect([&](Vector2f32 scale)
+    //    {
+    //        m_logger->Write(Logger::Severity::Info, "Changed scale: " + std::to_string(scale.x) + ", " + std::to_string(scale.y));
+    //    });
+
+    //    m_window->OnFilesDropEnter = [&](const std::vector<std::filesystem::path>& files) -> bool
+    //    {
+    //        return ValidateFileDrops(files);
+    //    };
+    //    m_window->OnFilesDrop = [&](const std::vector<std::filesystem::path>& files)
+    //    {          
+    //        return ProcessFileDrops(files);
+    //    };
+
+    //    return true;
+    //}
+
+    //bool Editor::LoadRenderer(const EditorDescriptor& descriptor)
+    //{
+    //    auto* logger = descriptor.enableGpuLogging ? m_logger.get() : nullptr;
+
+    //    const auto api = descriptor.backendRendererApi.has_value() ? 
+    //        descriptor.backendRendererApi.value() : Renderer::BackendApi::Vulkan;
+
+    //    const auto apiVersion = descriptor.backendRendererApiVersion.has_value() ?
+    //        descriptor.backendRendererApiVersion.value() : Version(1, 0);
+
+    //    const auto rendererDesc = RendererDescriptor{ *m_window, apiVersion, logger };
+
+    //    m_renderer = Renderer::Create(api, rendererDesc);
+    //    if (!m_renderer)
+    //    {
+    //        Logger::WriteError(m_logger.get(), "Failed to create renderer.");
+    //        return false;
+    //    }
+
+    //    return true;
+    //}
+
+    //bool Editor::LoadRenderPasses()
+    //{
+    //    /*auto renderPass = m_renderer->GetSwapChainRenderPass();
+    //    renderPass->SetRecordFunction([&](auto& commandBuffer) {
+    //       m_canvasRenderer->SetCommandBuffer(commandBuffer);
+    //        //m_rootView->canvasRenderer->SetCommandBuffer(commandBuffer);
+    //        //m_rootView->canvas->Draw();
+
+    //       m_canvasRenderer->SetCommandBuffer(commandBuffer);
+    //       m_canvas->Draw();
+    //    });*/
+
+    //    return true;
+    //}
+
+    /*bool Editor::LoadGui()
+    {
+        const auto canvasRendererDesc = Gui2::CanvasRendererDescriptor{
+            .backendRenderer = *m_renderer.get(),
+            .logger = m_logger.get()
+        };
+
+        m_canvasRenderer = Gui2::CanvasRenderer::Create(canvasRendererDesc);
+        if (!m_canvasRenderer)
+        {
+            return false;
+        }
+
+        auto style = std::make_shared<Gui2::Style>();
+
+        m_canvas = std::make_unique<Gui2::Canvas>(m_canvasRenderer, style);
+
+        [[maybe_unused]] auto button1 = m_canvas->CreateChild<Gui2::Button>();
+
+        auto button2Style = std::make_shared<Gui2::ButtonStyle>();
+        button2Style->colors.normal = { 0.0f, 1.0f, 0.0f, 1.0f };
+
+        [[maybe_unused]] auto button2 = button1->CreateChild<Gui2::Button>(button2Style);
+
+        auto button3Style = std::make_shared<Gui2::ButtonStyle>();
+        button3Style->colors.normal = { 0.0f, 0.0f, 1.0f, 1.0f };
+
+        [[maybe_unused]] auto button3 = button2->CreateChild<Gui2::Button>(button3Style);
+
+        return true;
+    }*/
+
+   /* bool Editor::LoadGuiViews()
     {
         m_fontNameRepository.AddSystemDirectories();
 
@@ -256,7 +340,7 @@ namespace Molten::Editor
         });
 
         return true;
-    }
+    }*/
 
     void Editor::Exit()
     {
@@ -271,7 +355,7 @@ namespace Molten::Editor
 
     bool Editor::Tick()
     {
-        m_preUpdateCallbacks.Dispatch();
+        //m_preUpdateCallbacks.Dispatch();
 
         if(!UpdateWindow())
         {
@@ -284,9 +368,9 @@ namespace Molten::Editor
 
         m_renderPasses.clear();
 
-        UpdateCanvas();
+        //UpdateCanvas();
 
-        m_postUpdateCallbacks.Dispatch();
+        //m_postUpdateCallbacks.Dispatch();
 
         m_renderPasses.push_back(m_renderer->GetSwapChainRenderPass());
 
@@ -302,14 +386,14 @@ namespace Molten::Editor
     {
         if(m_windowTitleUpdateClock.GetTime() >= Seconds(1.0f))
         {
-            /*const auto averageFps = static_cast<int64_t>(1.0 / m_fpsTracker.GetAverageFrameTime().AsSeconds<double>());
+            const auto averageFps = static_cast<int64_t>(1.0 / m_fpsTracker.GetAverageFrameTime().AsSeconds<double>());
             const auto minFps = static_cast<int64_t>(1.0 / m_fpsTracker.GetMaxFrameTime().AsSeconds<double>());
-            const auto maxFps = static_cast<int64_t>(1.0 / m_fpsTracker.GetMinFrameTime().AsSeconds<double>());*/
+            const auto maxFps = static_cast<int64_t>(1.0 / m_fpsTracker.GetMinFrameTime().AsSeconds<double>());
 
-           /* m_window->SetTitle(
+            m_window->SetTitle(
                 m_windowTitle + " - avg FPS: " + std::to_string(averageFps) + 
                 " | min FPS: " + std::to_string(minFps) +
-                " | max FPS: " + std::to_string(maxFps));*/
+                " | max FPS: " + std::to_string(maxFps));
 
             /*m_avgFpsLabel->text.Set("Avg FPS : " + std::to_string(averageFps));
             m_minFpsLabel->text.Set("Min FPS : " + std::to_string(minFps));
@@ -342,9 +426,25 @@ namespace Molten::Editor
         return true;
     }
 
-    void Editor::UpdateCanvas()
+    /*void Editor::UpdateCanvas()
     {
         auto& userInput = m_window->GetUserInput();
+        //auto& canvas = *m_rootView->canvas;
+
+        UserInput::Event inputEvent;
+        while (userInput.PollEvent(inputEvent))
+        {
+            m_canvas->PushUserInputEvent(inputEvent);
+        }
+
+        m_canvas->SetSize(m_window->GetSize());
+        m_canvas->SetScale(m_window->GetScale());
+        m_canvas->Update();
+    }*/
+
+    /*void Editor::UpdateCanvas()
+    {
+       auto& userInput = m_window->GetUserInput();
         auto& canvas = *m_rootView->canvas;
 
         UserInput::Event inputEvent;
@@ -356,7 +456,7 @@ namespace Molten::Editor
         canvas.SetSize(m_window->GetSize());
         canvas.SetScale(m_window->GetScale());
         canvas.Update(m_deltaTime);
-    }
+    }*/
 
     bool Editor::ValidateFileDrops(const std::vector<std::filesystem::path>& files)
     {

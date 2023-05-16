@@ -43,7 +43,7 @@ CreateSourceGroups("${CoreHeaders}" "${CoreMoltenHeadersDir}")
 CreateSourceGroups("${CoreSources}" "${CoreMoltenSourceDir}")
 
 # Set preprocessor definitions.
-target_compile_definitions(MoltenCore PRIVATE MOLTEN_EXPORT)
+target_compile_definitions(MoltenCore PRIVATE MOLTEN_CORE_EXPORT)
 install(TARGETS MoltenCore DESTINATION "${RootDir}/Lib") # Install library
 set_target_properties( MoltenCore
   PROPERTIES

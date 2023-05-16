@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2023 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,14 +23,14 @@
 *
 */
 
-#include "Molten/FileFormat/Mesh/ObjMeshFile.hpp"
+#include "Molten/EditorFramework/FileFormat/Mesh/ObjMeshFile.hpp"
 #include "Molten/System/ThreadPool.hpp"
 #include "Molten/Utility/StringUtility.hpp"
 #include "Molten/Utility/BufferedFileLineReader.hpp"
 #include <fstream>
 #include <charconv>
 
-namespace Molten
+namespace Molten::EditorFramework
 {
 
     // Global implementations.
@@ -63,6 +63,37 @@ namespace Molten
             ++index;
         }
         return true;
+    }
+
+    template<typename TCommand>
+    static Unexpected<TextFileFormatError> CreateParseError(const TCommand& command, std::string&& message)
+    {
+        return Unexpected(TextFileFormatError{
+            .code = TextFileFormatErrorCode::ParseError,
+            .message = std::move(message),
+            .line = command.lineNumber,
+            .column = 0
+        });
+    }
+
+    static Unexpected<TextFileFormatError> CreateParseError(std::string&& message)
+    {
+        return Unexpected(TextFileFormatError{
+            .code = TextFileFormatErrorCode::ParseError,
+            .message = std::move(message),
+            .line = 0,
+            .column = 0
+        });
+    }
+
+    static Unexpected<TextFileFormatError> CreateParseError(const size_t lineNumber, std::string&& message)
+    {
+        return Unexpected(TextFileFormatError{
+            .code = TextFileFormatErrorCode::ParseError,
+            .message = std::move(message),
+            .line = lineNumber,
+            .column = 0
+        });
     }
 
 
@@ -106,72 +137,38 @@ namespace Molten
 
 
     // Object mesh file implementations.
-    TextFileFormatResult ObjMeshFile::ReadFromFile(
-        const std::filesystem::path& filename,
-        ThreadPool& threadPool)
-    {
-        ObjMeshFileReader reader;
-        return reader.ReadFromFile(*this, filename, threadPool);
-    }
-
-    [[nodiscard]] TextFileFormatResult ObjMeshFile::ReadFromFile(
-        const std::filesystem::path& filename,
-        ObjMeshFileReader& reader)
-    {
-        return reader.ReadFromFile(*this, filename);
-    }
-
     void ObjMeshFile::Clear()
     {
+        objects.clear();
     }
 
 
     // Obj mesh file reader implementations.
     ObjMeshFileReader::ObjMeshFileReader() :
-        m_threadPool(nullptr),
-        m_objMeshFile(nullptr)
+        m_threadPool(nullptr)
     {}
 
-    TextFileFormatResult ObjMeshFileReader::ReadFromFile(
-        ObjMeshFile& objMeshFile,
-        const std::filesystem::path& filename)
+    Expected<ObjMeshFile, TextFileFormatError> ObjMeshFileReader::ReadFromFile(const std::filesystem::path& filename)
     {
         m_threadPool = nullptr;
-
-        auto result = InternalReadFromFile(objMeshFile, filename);
-
-        for (auto& future : m_objectFutures)
-        {
-            future.wait();
-        }
-
-        return result;
+        return InternalReadFromFile(filename);
     }
 
-    TextFileFormatResult ObjMeshFileReader::ReadFromFile(
-        ObjMeshFile& objMeshFile,
+    Expected<ObjMeshFile, TextFileFormatError> ObjMeshFileReader::ReadFromFile(
         const std::filesystem::path& filename,
         ThreadPool& threadPool)
     {
         m_threadPool = &threadPool;
-
-        auto result = InternalReadFromFile(objMeshFile, filename);
-
-        for (auto& future : m_objectFutures)
-        {
-            future.wait();
-        }
-
-        return result;
+        return InternalReadFromFile(filename);
     }
 
-    ObjMeshFileReader::MaterialCommand::MaterialCommand(
+    /*ObjMeshFileReader::MaterialCommand::MaterialCommand(
         const size_t lineNumber,
         std::string line
     ) :
         lineNumber(lineNumber),
         line(std::move(line))
-    {}
+    {}*/
 
     ObjMeshFileReader::ObjectCommand::ObjectCommand(
         const size_t lineNumber,
@@ -183,32 +180,34 @@ namespace Molten
         line(line)
     {}
 
-    TextFileFormatResult ObjMeshFileReader::InternalReadFromFile(
-        ObjMeshFile& objMeshFile,
+    ObjMeshFileReaderResult ObjMeshFileReader::InternalReadFromFile(
         const std::filesystem::path& filename)
     {
-        objMeshFile.Clear();
 
         // Open file and prepare obj mesh file reader.
         std::ifstream file(filename, std::ifstream::binary);
         if (!file.is_open())
         {
-            return { TextFileFormatResult::OpenFileError, "Failed to open file " + filename.string() };
+            return Unexpected(TextFileFormatError{
+                .code = TextFileFormatErrorCode::OpenFileError,
+                .message = "Missing command data"
+            });
         }
 
-        Prepare(objMeshFile, filename);
+        m_objectFutures.clear();
+        ObjMeshFile objMeshFile{};
 
         // Helper function for creating error values.
         size_t lineNumber = 0;
 
-        auto createMissingCommandDataError = [&lineNumber]() -> TextFileFormatResult
+        auto createMissingCommandDataError = [&lineNumber]()
         {
-            return { TextFileFormatResult::ParseError, lineNumber, "Missing command data" };
+            return CreateParseError(lineNumber, "Missing command data");
         };
 
-        auto createUnknownCommandError = [&lineNumber]() -> TextFileFormatResult
+        auto createUnknownCommandError = [&lineNumber]()
         {
-            return { TextFileFormatResult::ParseError, lineNumber, "Unknown command" };
+            return CreateParseError(lineNumber, "Unknown command");
         };
 
         // Storage for current object buffer.
@@ -231,8 +230,8 @@ namespace Molten
 
             switch(readResult)
             {                
-                case BufferedFileLineReader::LineReadResult::BufferOverflow: return { TextFileFormatResult::ParseError, lineNumber, "Row is too long for an obj file" };
-                case BufferedFileLineReader::LineReadResult::AllocationError: return { TextFileFormatResult::ParseError, lineNumber, "Failed to allocate required memory" };
+                case BufferedFileLineReader::LineReadResult::BufferOverflow: return CreateParseError(lineNumber, "Row is too long for an obj file");
+                case BufferedFileLineReader::LineReadResult::AllocationError: return CreateParseError(lineNumber, "Failed to allocate required memory");
                 case BufferedFileLineReader::LineReadResult::Successful:
                 case BufferedFileLineReader::LineReadResult::EndOfFile: break;
             }
@@ -257,10 +256,13 @@ namespace Molten
                         return createUnknownCommandError();
                     }
 
-                    if (auto result = ExecuteProcessMaterial({ lineNumber, std::string{ line } }); !result)
+                    // Add material names to obj mesh file.
+                    // ...
+
+                    /*if (auto result = ExecuteProcessMaterial({ lineNumber, std::string{ line } }); !result)
                     {
                         return result;
-                    }
+                    }*/
                 } break;
                 case 'o': // Object
                 {
@@ -276,9 +278,9 @@ namespace Molten
 
 
                         // Send current line buffer to new thread and process object lines.
-                        if (auto result = ExecuteProcessObject(currentObjectBuffer); !result)
+                        if (auto result = ProcessObject(objMeshFile, currentObjectBuffer); !result)
                         {
-                            return result;
+                            return Unexpected(result.Error());
                         }
 
                         // Create new line buffer and object
@@ -369,112 +371,27 @@ namespace Molten
         // Process remaining object lines if any.
         if (!currentObjectBuffer->commands.empty())
         {
-            if (auto result = ExecuteProcessObject(std::move(currentObjectBuffer)); !result)
+            if (auto result = ProcessObject(objMeshFile, currentObjectBuffer); !result)
             {
-                return result;
+                return Unexpected(result.Error());
             }
         }
 
         // Wait for futures to complete.
-        if(auto result = HandleFutures(); !result)
+        if(auto result = HandleObjectFutures(objMeshFile); !result)
         {
-            return result;
+            return Unexpected(std::move(result.Error()));
         }
 
-        return {};
+        return objMeshFile;
     }
 
-    void ObjMeshFileReader::Prepare(
+    ObjMeshFileReader::ProcessObjectResult ObjMeshFileReader::ProcessObject(
         ObjMeshFile& objMeshFile,
-        const std::filesystem::path& filename)
-    {
-        m_objMeshFile = &objMeshFile;
-        m_objMeshDirectory = filename.parent_path();
-        m_materialFilenames.clear();
-        m_materialFutures.clear();
-        m_objectFutures.clear();
-    }
-
-    TextFileFormatResult ObjMeshFileReader::ExecuteProcessMaterial(MaterialCommand&& materialCommand)
+        ObjectBufferSharedPointer objectBuffer)
     {
         // Handle all futures and check for errors.
-        if (auto result = TryHandleFutures(); !result)
-        {
-            return result;
-        }
-
-        // Parse file names.
-        auto lineView = std::string_view{ materialCommand.line.data() + 7, materialCommand.line.size() - 7 };
-        StringUtility::TrimFront(lineView);
-
-        std::vector<std::string> filenames;
-        while (!lineView.empty())
-        {
-            StringUtility::TrimFront(lineView);
-            const auto end = lineView.find_first_of(" \t");
-            auto filename = lineView.substr(0, end);
-            lineView = std::string_view{ lineView.data() + filename.size(), lineView.size() - filename.size() };
-
-            if (!filename.empty())
-            {
-                filenames.push_back((m_objMeshDirectory / std::string{ filename }).generic_string());
-            }
-        }
-
-        if (filenames.empty())
-        {
-            return { TextFileFormatResult::ParseError, materialCommand.lineNumber, "Expecting one or more material file names" };
-        }
-
-        // Use thread pool.
-        if (m_threadPool)
-        {
-            for(auto& filename : filenames)
-            {
-                auto future = ProcessMaterialAsync(std::move(filename));
-                m_materialFutures.push_back(std::move(future));
-            }
-            
-            return {};
-        }
-
-        // Execute material processing on this thread.
-        for (auto& filename : filenames)
-        {
-            auto result = ProcessMaterial(std::move(filename));
-            if (result.index() == 0)
-            {
-                auto& material = std::get<MaterialSharedPointer>(result);
-                m_objMeshFile->materials.push_back(material);
-            }
-            else
-            {
-                // An error occurred while processing on this thread.
-                auto& error = std::get<TextFileFormatResult::Error>(result);
-                return { std::move(error) };
-            }
-        }
-
-        return {};
-    }
-    ObjMeshFileReader::ProcessMaterialResult ObjMeshFileReader::ProcessMaterial(std::string&& /*filename*/)
-    {
-        return { nullptr };
-    }
-
-    ObjMeshFileReader::ProcessMaterialFuture ObjMeshFileReader::ProcessMaterialAsync(std::string&& filename)
-    {
-        return m_threadPool->Execute(
-            [this, filename = std::move(filename)]() mutable
-        {
-            return ProcessMaterial(std::move(filename));
-        });
-    }
-
-    TextFileFormatResult ObjMeshFileReader::ExecuteProcessObject(ObjectBufferSharedPointer objectBuffer)
-    {
-        // Handle all futures and check for errors.
-        if(auto result = TryHandleFutures(); !result)
+        if(auto result = TryHandleObjectFutures(objMeshFile); !result)
         {
             return result;
         }
@@ -482,26 +399,26 @@ namespace Molten
         // Use thread pool.
         if(m_threadPool)
         {
-            auto future = ProcessObjectAsync(std::move(objectBuffer));
+            auto future = ParseObjectCommandsAsync(std::move(objectBuffer));
             m_objectFutures.push_back(std::move(future));
             return {};
         }
 
         // Execute object processing on this thread.
-        auto result = ProcessObject(std::move(objectBuffer));
-        if(result.index() == 0)
+        auto result = ParseObjectCommands(std::move(objectBuffer));
+        if (!result)
         {
-            auto& object = std::get<ObjectSharedPointer>(result);
-            m_objMeshFile->objects.push_back(object);
-            return {};
+            // An error occurred while processing on this thread.
+            return Unexpected(std::move(result.Error()));
         }
 
-        // An error occurred while processing on this thread.
-        auto& error = std::get<TextFileFormatResult::Error>(result);
-        return { std::move(error) };
+        auto& object = result.Value();
+        objMeshFile.objects.push_back(object);
+
+        return {};
     }
     
-    ObjMeshFileReader::ProcessObjectResult ObjMeshFileReader::ProcessObject(ObjectBufferSharedPointer objectBuffer)
+    ObjMeshFileReader::ParseObjectResult ObjMeshFileReader::ParseObjectCommands(ObjectBufferSharedPointer objectBuffer)
     {
         auto object = std::make_shared<Object>();
 
@@ -542,7 +459,7 @@ namespace Molten
         };
 
         // Lambda for reading face data.
-        auto readFace = [&](std::string_view lineView) -> TextFileFormatResult
+        auto readFace = [&](std::string_view lineView) -> ProcessObjectResult
         {
             enum class FaceFlags : uint8_t
             {
@@ -601,7 +518,7 @@ namespace Molten
             const auto elementLayout = readElement(triangle, 0);
             if (elementLayout == 0)
             {
-                return { TextFileFormatResult::ParseError, "Invalid face layout" };
+                return CreateParseError("Invalid face layout");
             }
 
             for (size_t i = 1; i < 3; i++)
@@ -610,34 +527,40 @@ namespace Molten
                 {
                     if (flags == 0)
                     {
-                        return { TextFileFormatResult::ParseError, "Invalid face layout" };
+                        return CreateParseError("Invalid face layout");
                     }
 
-                    return { TextFileFormatResult::ParseError, "Mismatching face layout" };
+                    return CreateParseError("Mismatching face layout");
                 }
+            }
+
+            // Current face is a quad, add extra triangle.
+            if (!lineView.empty())
+            {
+                auto& newTriangle = currentSmoothingGroup->triangles.emplace_back();
+                auto& prevTriangle = currentSmoothingGroup->triangles[currentSmoothingGroup->triangles.size() - 2];
+                if (auto flags = readElement(newTriangle, 0); flags != elementLayout)
+                {
+                    if (flags == 0)
+                    {
+                        return CreateParseError("Invalid face layout");
+                    }
+
+                    return CreateParseError("Mismatching face layout");
+                }
+
+                newTriangle.vertexIndices[1] = prevTriangle.vertexIndices[0];
+                newTriangle.textureCoordinateIndices[1] = prevTriangle.textureCoordinateIndices[0];
+                newTriangle.normalIndices[1] = prevTriangle.normalIndices[0];
+
+                newTriangle.vertexIndices[2] = prevTriangle.vertexIndices[2];
+                newTriangle.textureCoordinateIndices[2] = prevTriangle.textureCoordinateIndices[2];
+                newTriangle.normalIndices[2] = prevTriangle.normalIndices[2];
             }
 
             if (!lineView.empty())
             {
-                auto& nextTriangle = currentSmoothingGroup->triangles.emplace_back();
-                auto& prevTriangle = currentSmoothingGroup->triangles[currentSmoothingGroup->triangles.size() - 2];
-                if (auto flags = readElement(nextTriangle, 0); flags != elementLayout)
-                {
-                    if (flags == 0)
-                    {
-                        return { TextFileFormatResult::ParseError, "Invalid face layout" };
-                    }
-
-                    return { TextFileFormatResult::ParseError, "Mismatching face layout" };
-                }
-
-                nextTriangle.vertexIndices[1] = prevTriangle.vertexIndices[0];
-                nextTriangle.textureCoordinateIndices[1] = prevTriangle.textureCoordinateIndices[0];
-                nextTriangle.normalIndices[1] = prevTriangle.normalIndices[0];
-
-                nextTriangle.vertexIndices[2] = prevTriangle.vertexIndices[2];
-                nextTriangle.textureCoordinateIndices[2] = prevTriangle.textureCoordinateIndices[2];
-                nextTriangle.normalIndices[2] = prevTriangle.normalIndices[2];
+                return CreateParseError("Unsupported face layout");
             }
 
             return {};
@@ -654,7 +577,7 @@ namespace Molten
                     auto lineView = createDataView(command, 2);
                     if(lineView.empty())
                     {
-                        return TextFileFormatResult::Error{ TextFileFormatResult::ParseError, command.lineNumber, "Expecting an object name" };
+                        return CreateParseError(command.lineNumber, "Expecting an object name");
                     }
                     object->name = std::string{ lineView };
                 } break;
@@ -663,13 +586,13 @@ namespace Molten
                     auto lineView = createDataView(command, 2);
                     if (lineView.empty())
                     {
-                        return TextFileFormatResult::Error{ TextFileFormatResult::ParseError, command.lineNumber, "Expecting vertex data" };
+                        return CreateParseError(command.lineNumber, "Expecting vertex data");
                     }
 
                     Vector3f32 vertex;
                     if(!ParseVector(lineView, vertex))
                     {
-                        return TextFileFormatResult::Error{ TextFileFormatResult::ParseError, command.lineNumber, "Invalid vertex data" };
+                        return CreateParseError(command.lineNumber, "Invalid vertex data");
                     }
                     object->vertices.push_back(vertex);
                     
@@ -679,13 +602,13 @@ namespace Molten
                     auto lineView = createDataView(command, 3);
                     if (lineView.empty())
                     {
-                        return TextFileFormatResult::Error{ TextFileFormatResult::ParseError, command.lineNumber, "Expecting vertex normal data" };
+                        return CreateParseError(command.lineNumber, "Expecting vertex normal data");
                     }
 
                     Vector3f32 normal;
                     if (!ParseVector(lineView, normal))
                     {
-                        return TextFileFormatResult::Error{ TextFileFormatResult::ParseError, command.lineNumber, "Invalid vertex normal data" };
+                        return CreateParseError(command.lineNumber, "Invalid vertex normal data");
                     }
                     object->normals.push_back(normal);
                 } break;
@@ -694,13 +617,13 @@ namespace Molten
                     auto lineView = createDataView(command, 3);
                     if (lineView.empty())
                     {
-                        return TextFileFormatResult::Error{ TextFileFormatResult::ParseError, command.lineNumber, "Expecting texture coordinate data" };
+                        return CreateParseError(command.lineNumber, "Expecting texture coordinate data");
                     }
 
                     Vector2f32 textureCoordinate;
                     if (!ParseVector(lineView, textureCoordinate))
                     {
-                        return TextFileFormatResult::Error{ TextFileFormatResult::ParseError, command.lineNumber, "Invalid texture coordinate data" };
+                        return CreateParseError(command.lineNumber, "Invalid texture coordinate data");
                     }
                     object->textureCoordinates.push_back(textureCoordinate);
                 } break;
@@ -709,7 +632,7 @@ namespace Molten
                     auto lineView = createDataView(command, 2);
                     if (lineView.empty())
                     {
-                        return TextFileFormatResult::Error{ TextFileFormatResult::ParseError, command.lineNumber, "Expecting group name" };
+                        return CreateParseError(command.lineNumber, "Expecting group name");
                     }
 
                     if (!currentGroup->IsEmpty())
@@ -724,7 +647,7 @@ namespace Molten
                     auto lineView = createDataView(command, 2);
                     if (lineView.empty())
                     {
-                        return TextFileFormatResult::Error{ TextFileFormatResult::ParseError, command.lineNumber, "Expecting smoothing group id" };
+                        return CreateParseError(command.lineNumber, "Expecting smoothing group id");
                     }
 
                     if (!currentSmoothingGroup->IsEmpty())
@@ -740,7 +663,7 @@ namespace Molten
                     {
                         if (std::from_chars(lineView.data(), lineView.data() + lineView.size(), currentSmoothingGroup->id).ec != std::errc())
                         {
-                            return TextFileFormatResult::Error{ TextFileFormatResult::ParseError, command.lineNumber, "Invalid smoothing group id" };
+                            return CreateParseError(command.lineNumber, "Invalid smoothing group id");
                         }
                     }
                 } break;
@@ -749,14 +672,14 @@ namespace Molten
                     auto lineView = createDataView(command, 2);
                     if (lineView.empty())
                     {
-                        return TextFileFormatResult::Error{ TextFileFormatResult::ParseError, command.lineNumber, "Expecting face data" };
+                        return CreateParseError(command.lineNumber, "Expecting face data");
                     }
 
                     if (auto result = readFace(lineView); !result)
                     {
-                        TextFileFormatResult::Error error = result.GetError();
-                        error.lineNumber = command.lineNumber;
-                        return { error };
+                        auto& error = result.Error();
+                        error.line = command.lineNumber;
+                        return Unexpected(std::move(error));
                     }
 
                 } break;
@@ -765,7 +688,7 @@ namespace Molten
                     auto lineView = createDataView(command, 7);
                     if (lineView.empty())
                     {
-                        return TextFileFormatResult::Error{ TextFileFormatResult::ParseError, command.lineNumber, "Expecting material name" };
+                        return CreateParseError(command.lineNumber, "Expecting material name");
                     }
 
                     if (!currentGroup->IsEmpty())
@@ -777,149 +700,54 @@ namespace Molten
             }
         }
 
-        return { object };
+        return object;
     }
 
-    ObjMeshFileReader::ProcessObjectFuture ObjMeshFileReader::ProcessObjectAsync(ObjectBufferSharedPointer objectBuffer)
+    ObjMeshFileReader::ParseObjectFuture ObjMeshFileReader::ParseObjectCommandsAsync(ObjectBufferSharedPointer objectBuffer)
     {
         return m_threadPool->Execute(
             [this, objectBuffer = std::move(objectBuffer)]() mutable
         {
-            return ProcessObject(std::move(objectBuffer));
+            return ParseObjectCommands(std::move(objectBuffer));
         });
     }
 
-    TextFileFormatResult ObjMeshFileReader::HandleFutures()
+    ObjMeshFileReader::ProcessObjectResult ObjMeshFileReader::HandleObjectFutures(ObjMeshFile& objMeshFile)
     {
-        if (auto result = HandleMaterialFutures(); !result)
-        {
-            return result;
-        }
-        if (auto result = HandleObjectFutures(); !result)
-        {
-            return result;
-        }
-
-        return {};
-    }
-
-    TextFileFormatResult ObjMeshFileReader::HandleMaterialFutures()
-    {
-        // Check material futures.
-        for (auto it = m_materialFutures.begin(); it != m_materialFutures.end();)
-        {
-            auto& future = *it;
-
-            if (auto result = future.get(); result.index() == 0)
-            {
-                auto& material = std::get<MaterialSharedPointer>(result);
-                m_objMeshFile->materials.push_back(material);
-                it = m_materialFutures.erase(it);
-            }
-            else
-            {
-                m_materialFutures.erase(it);
-
-                // An error occurred while processing via thread pool.
-                auto& error = std::get<TextFileFormatResult::Error>(result);
-                return { std::move(error) };
-            }
-        }
-
-        return {};
-    }
-
-    TextFileFormatResult ObjMeshFileReader::HandleObjectFutures()
-    {
-        // Check object futures.
         for (auto it = m_objectFutures.begin(); it != m_objectFutures.end();)
         {
             auto& future = *it;
 
-            if (auto result = future.get(); result.index() == 0)
+            if (auto result = future.get(); !result)
+            {  
+                m_objectFutures.erase(it);
+                return Unexpected(std::move(result.Error()));
+            }
+            else
             {
-                auto& object = std::get<ObjectSharedPointer>(result);
-                m_objMeshFile->objects.push_back(object);
+                objMeshFile.objects.emplace_back(std::move(result.Value()));
                 it = m_objectFutures.erase(it);
             }
-            else
-            {
-                m_objectFutures.erase(it);
-
-                // An error occurred while processing via thread pool.
-                auto& error = std::get<TextFileFormatResult::Error>(result);
-                return { std::move(error) };
-            }
         }
 
         return {};
     }
 
-    TextFileFormatResult ObjMeshFileReader::TryHandleFutures()
-    {
-        if (auto result = TryHandleMaterialFutures(); !result)
-        {
-            return result;
-        }
-        if (auto result = TryHandleObjectFutures(); !result)
-        {
-            return result;
-        }
-
-        return {};
-    }
-
-    TextFileFormatResult ObjMeshFileReader::TryHandleMaterialFutures()
-    {
-        for (auto it = m_materialFutures.begin(); it != m_materialFutures.end();)
-        {
-            if (auto& future = *it; future.wait_for(std::chrono::seconds{ 0 }) == std::future_status::ready)
-            {
-                if (auto result = future.get(); result.index() == 0)
-                {
-                    auto& material = std::get<MaterialSharedPointer>(result);
-                    m_objMeshFile->materials.push_back(material);
-
-                    it = m_materialFutures.erase(it);
-                }
-                else
-                {
-                    m_materialFutures.erase(it);
-
-                    // An error occurred while processing via thread pool.
-                    auto& error = std::get<TextFileFormatResult::Error>(result);
-                    return { std::move(error) };
-                }
-            }
-            else
-            {
-                ++it;
-            }
-        }
-
-        return {};
-    }
-
-    TextFileFormatResult ObjMeshFileReader::TryHandleObjectFutures()
+    ObjMeshFileReader::ProcessObjectResult ObjMeshFileReader::TryHandleObjectFutures(ObjMeshFile& objMeshFile)
     {
         for (auto it = m_objectFutures.begin(); it != m_objectFutures.end();)
         {
             if (auto& future = *it; future.wait_for(std::chrono::seconds{ 0 }) == std::future_status::ready)
             {
-                if (auto result = future.get(); result.index() == 0)
+                if (auto result = future.get(); !result)
                 {
-                    auto& object = std::get<ObjectSharedPointer>(result);
-                    m_objMeshFile->objects.push_back(object);
-
-                    it = m_objectFutures.erase(it);
+                    m_objectFutures.erase(it);
+                    return Unexpected(std::move(result.Error()));
                 }
                 else
                 {
-                    m_objectFutures.erase(it);
-
-                    // An error occurred while processing via thread pool.
-                    auto& error = std::get<TextFileFormatResult::Error>(result);
-                    return { std::move(error) };
+                    objMeshFile.objects.emplace_back(std::move(result.Value()));
+                    it = m_objectFutures.erase(it);
                 }
             }
             else

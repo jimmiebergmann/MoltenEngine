@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2023 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,33 +23,43 @@
 *
 */
 
-#ifndef MOLTEN_EDITOR_FRAMEWORK_BUILD_HPP
-#define MOLTEN_EDITOR_FRAMEWORK_BUILD_HPP
+#ifndef MOLTEN_GRAPHICS_GUI2_STYLE_HPP
+#define MOLTEN_GRAPHICS_GUI2_STYLE_HPP
 
-#include "Molten/Core.hpp"
+#include "Molten/Graphics/Gui2/Gui2Namespace.hpp"
+#include "Molten/Graphics/Gui2/WidgetStyle.hpp"
+#include <memory>
+#include <any>
+#include <map>
+#include <type_traits>
 
-/*
-* DLL import or export, required for Windows, example:
-*   class MOLTEN_EDITOR_FRAMEWORK_API MyClass {};
-*/
-#define MOLTEN_EDITOR_FRAMEWORK_API
+namespace Molten::MOLTEN_GUI2NAMESPACE
+{
 
-// Export API
-#if !defined(MOLTEN_EDITOR_FRAMEWORK_STATIC)
-#ifdef _MSC_VER
-#pragma warning(disable : 4251) // identifier' : class 'type' needs to have dll-interface to be used by clients of class 'type2'
-#pragma warning(disable : 4100) // identifier' : unreferenced formal parameter
-#endif
+    class Style
+    {
 
-// Define as export or import, if MOLTEN_EDITOR_FRAMEWORK_EXPORT is defined.
-#if MOLTEN_PLATFORM == MOLTEN_PLATFORM_WINDOWS
-#undef MOLTEN_EDITOR_FRAMEWORK_API
-#if defined(MOLTEN_EDITOR_FRAMEWORK_EXPORT)
-#define MOLTEN_EDITOR_FRAMEWORK_API __declspec(dllexport)
-#else
-#define MOLTEN_EDITOR_FRAMEWORK_API __declspec(dllimport)
-#endif
-#endif
-#endif
+    public:
+
+        Style() = default;
+        ~Style() = default;
+
+        Style(const Style&) = delete;
+        Style(Style&&) = delete;
+        Style& operator = (const Style&) = delete;
+        Style& operator = (Style&&) = delete;
+
+        template<typename T>
+        std::shared_ptr<T> Get();
+
+    private:
+
+        std::map<size_t, std::any> m_widgetStyles;
+
+    };
+
+}
+
+#include "Molten/Graphics/Gui2/Style.inl"
 
 #endif

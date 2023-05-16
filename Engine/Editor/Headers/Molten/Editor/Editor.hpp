@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2022 Jimmie Bergmann
+* Copyright (c) 2023 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -31,11 +31,14 @@
 #include "Molten/Graphics/Window/Window.hpp"
 #include "Molten/Graphics/Renderer.hpp"
 #include "Molten/Graphics/Gui/Canvas.hpp"
+#include "Molten/Graphics/Gui2/CanvasRenderer2.hpp"
+#include "Molten/Graphics/Gui2/Canvas2.hpp"
 #include "Molten/System/Semaphore.hpp"
 #include "Molten/System/Clock.hpp"
 #include "Molten/Utility/FpsTracker.hpp"
 #include "Molten/System/ThreadPool.hpp"
 #include "Molten/Utility/FunctionDispatcher.hpp"
+#include <filesystem>
 #include <optional>
 #include <thread>
 #include <atomic>
@@ -85,19 +88,22 @@ namespace Molten::Editor
     private:
 
         [[nodiscard]] bool Load(const EditorDescriptor& descriptor);
-        [[nodiscard]] bool LoadWindow(const EditorDescriptor& descriptor);
+        [[nodiscard]] bool LoadProject(const std::filesystem::path& path);
+        [[nodiscard]] bool CreateProject(const std::filesystem::path& path, const std::string& filename);
+
+        /*[[nodiscard]] bool LoadWindow(const EditorDescriptor& descriptor);
         [[nodiscard]] bool LoadRenderer(const EditorDescriptor& descriptor);
-        [[nodiscard]] bool LoadRenderPasses();
-        [[nodiscard]] bool LoadGui();
-        [[nodiscard]] bool LoadGuiViews();
-        [[nodiscard]] bool LoadGuiSignals();
+        [[nodiscard]] bool LoadRenderPasses();*/
+        //[[nodiscard]] bool LoadGui();
+        /*[[nodiscard]] bool LoadGuiViews();
+        [[nodiscard]] bool LoadGuiSignals();*/
 
         void Exit();
 
         bool Tick();
         bool UpdateWindow();
         bool HandleWindowFocus();
-        void UpdateCanvas();
+        //void UpdateCanvas();
 
         bool ValidateFileDrops(const std::vector<std::filesystem::path>& files);
         bool ProcessFileDrops(const std::vector<std::filesystem::path>& files);
@@ -111,7 +117,7 @@ namespace Molten::Editor
         std::unique_ptr<Renderer> m_renderer;
         RenderPasses m_renderPasses;
         std::thread m_thread;
-        Gui::FontNameRepository m_fontNameRepository;
+        //Gui::FontNameRepository m_fontNameRepository;
 
         SleepClock m_fpsLimiter;
         SleepClock m_unfocusedWindowFpsLimiter;
@@ -121,12 +127,15 @@ namespace Molten::Editor
         Clock m_windowTitleUpdateClock;
 
         ThreadPool m_threadPool;
-        FunctionDispatcher m_preUpdateCallbacks;
-        FunctionDispatcher m_postUpdateCallbacks;
+        //FunctionDispatcher m_preUpdateCallbacks;
+        //FunctionDispatcher m_postUpdateCallbacks;
+
+        //std::shared_ptr<Gui2::CanvasRenderer> m_canvasRenderer;
+        //std::unique_ptr<Gui2::Canvas> m_canvas;
 
         // NEW
-        std::unique_ptr<RootView> m_rootView;
-        std::unique_ptr<SceneView> m_sceneView;
+        //std::unique_ptr<RootView> m_rootView;
+        //std::unique_ptr<SceneView> m_sceneView;
 
     };
 

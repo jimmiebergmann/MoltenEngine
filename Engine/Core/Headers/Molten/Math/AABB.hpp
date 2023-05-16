@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2023 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -80,8 +80,8 @@ namespace Molten
         [[nodiscard]] Vector<3, T> GetHigh() const;
         [[nodiscard]] bool Intersects(const Vector<3, T>& point) const;
 
-        Vector<2, T> position;
-        Vector<2, T> size;
+        Vector<3, T> position;
+        Vector<3, T> size;
 
     };
 

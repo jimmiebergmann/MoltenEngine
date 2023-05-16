@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2023 Jimmie Bergmann
+* Copyright (c) 2022 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,17 +23,48 @@
 *
 */
 
-#ifndef MOLTEN_EDITOR_FRAMEWORK_FILEFORMAT_CONVERTER_BMPTOTEXTUREASSETCONVERTER_HPP
-#define MOLTEN_EDITOR_FRAMEWORK_FILEFORMAT_CONVERTER_BMPTOTEXTUREASSETCONVERTER_HPP
+#ifndef MOLTEN_GRAPHICS_GUI2_WIDGETPOSITION_HPP
+#define MOLTEN_GRAPHICS_GUI2_WIDGETPOSITION_HPP
 
-#include "Molten/EditorFramework/FileFormat/TextureAssetFile.hpp"
-#include "Molten/FileFormat/Image/BmpFormat.hpp"
+#include "Molten/Graphics/Gui2/Gui2Namespace.hpp"
+#include "Molten/Math/Vector.hpp"
+#include <variant>
 
-namespace Molten::EditorFramework
+namespace Molten::MOLTEN_GUI2NAMESPACE::Position
 {
 
-    MOLTEN_EDITOR_FRAMEWORK_API TextureAssetFile ConvertToTextureAssetFile(
-        const Molten::BmpImageFile& bmpFile);
+    /** Fixed position in pixels. DPI affects scale of pixel value. */
+    struct Pixels
+    {
+        float value;
+    };
+
+    /** Fixed position in percent of available space from parent. */
+    struct Percent
+    {
+        float value;
+    };
+
+    /** Enumerator of different types of fixed positions. */
+    enum class Fixed
+    {
+        Left,
+        Right,
+        Top,
+        Bottom,
+        Center
+    };
+
+}
+
+namespace Molten::MOLTEN_GUI2NAMESPACE
+{
+
+    /** Variant of single position element of XY coordinate system. */
+    using WidgetElementPosition = std::variant<Position::Pixels, Position::Percent, Position::Fixed>;
+
+    /** Vector of position variants. It is possible to mix position variants for X and Y coordinates. */
+    using WidgetPosition = Vector2<WidgetElementPosition>;
 
 }
 

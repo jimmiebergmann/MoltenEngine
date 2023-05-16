@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2022 Jimmie Bergmann
+* Copyright (c) 2023 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -77,15 +77,13 @@ namespace Molten::Editor
         char** argv,
         EditorDescriptor& editorDescriptor)
     {
-        std::string projectName;
         std::optional<std::string> loggerFilename;
         std::optional<bool> enableGpuLogging;
         std::optional<std::string> backendRendererApiName;
         std::optional<std::string> backendRendererApiVersionString;
 
         const auto cliOptions
-            = cppli::option<std::string>{ projectName, { "project" } }
-            | cppli::option<std::optional<std::string>>{ loggerFilename, { "--logger.filename" } }
+            = cppli::option<std::optional<std::string>>{ loggerFilename, { "--logger.filename" } }
             | cppli::option_flag<std::optional<bool>>{ enableGpuLogging, { "--logger.gpu" } }
             | cppli::option<std::optional<std::string>>{ backendRendererApiName, { "--backend.renderer.api.name" } }
             | cppli::option<std::optional<std::string>>{ backendRendererApiVersionString, { "--backend.renderer.api.versionu" } }

@@ -21,6 +21,8 @@ set(CoreDir "${EngineDir}/Core")
 set(CoreHeadersDir "${CoreDir}/Headers")
 set(GraphicsDir "${EngineDir}/Graphics")
 set(GraphicsHeadersDir "${GraphicsDir}/Headers")
+set(EditorFrameworkDir "${EngineDir}/EditorFramework")
+set(EditorFrameworkHeadersDir "${EditorFrameworkDir}/Headers")
 set(EditorDir "${EngineDir}/Editor")
 set(HeadersDir "${EditorDir}/Headers")
 set(SourceDir "${EditorDir}/Source")
@@ -39,6 +41,11 @@ endif()
 # Add Graphics
 if (NOT TARGET MoltenGraphics)
 	add_subdirectory(${GraphicsDir} ${GraphicsDir} EXCLUDE_FROM_ALL)
+endif()
+
+# Add Editor Framework
+if (NOT TARGET MoltenEditorFramework)
+	add_subdirectory(${EditorFrameworkDir} ${EditorFrameworkDir} EXCLUDE_FROM_ALL)
 endif() 
 
 # Create Editor
@@ -46,6 +53,7 @@ add_executable(MoltenEditor "${EditorSources}" "${EditorHeaders}")
 target_include_directories(MoltenEditor PUBLIC "${HeadersDir}")
 target_include_directories(MoltenEditor PUBLIC "${CoreHeadersDir}")
 target_include_directories(MoltenEditor PUBLIC "${GraphicsHeadersDir}")
+target_include_directories(MoltenEditor PUBLIC "${EditorFrameworkHeadersDir}")
 target_include_directories(MoltenEditor PUBLIC "${VendorDir}")
 
 # Configure defaults.
@@ -71,4 +79,4 @@ if(MOLTEN_ENABLE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU") ## Code cover
   target_link_libraries(MoltenEditor "gcov")
 endif()
 
-target_link_libraries(MoltenEditor MoltenCore MoltenGraphics)
+target_link_libraries(MoltenEditor MoltenCore MoltenGraphics MoltenEditorFramework)

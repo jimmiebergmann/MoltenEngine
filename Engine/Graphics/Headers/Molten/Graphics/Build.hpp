@@ -41,7 +41,7 @@
 #pragma warning(disable : 4100) // identifier' : unreferenced formal parameter
 #endif
 
-// Define as export or import, if MOLTEN_EXPORT is defined.
+// Define as export or import, if MOLTEN_GRAPHICS_EXPORT is defined.
 #if MOLTEN_PLATFORM == MOLTEN_PLATFORM_WINDOWS
 #undef MOLTEN_GRAPHICS_API
 #if defined(MOLTEN_GRAPHICS_EXPORT)

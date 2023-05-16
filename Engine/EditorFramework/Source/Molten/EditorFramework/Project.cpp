@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2022 Jimmie Bergmann
+* Copyright (c) 2023 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -26,7 +26,7 @@
 #include "Molten/EditorFramework/Project.hpp"
 #include "Molten/EditorFramework/FileFormat/ProjectFile.hpp"
 
-namespace Molten
+namespace Molten::EditorFramework
 {
 
     /** Static functions. */
@@ -42,12 +42,12 @@ namespace Molten
         }
 
         std::error_code ec{};
-        if (!std::filesystem::is_directory(path, ec))
+        if (!path.empty() && !std::filesystem::is_directory(path, ec))
         {
             return Unexpected(CreateProjectResult::InvalidDirectory);
         }
 
-        const auto projectDirectory = path / name;
+        const auto projectDirectory = path.empty() ? name : path / name;
         if (std::filesystem::exists(projectDirectory, ec))
         {
             return Unexpected(CreateProjectResult::AlreadyExists);

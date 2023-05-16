@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2022 Jimmie Bergmann
+* Copyright (c) 2023 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -33,7 +33,7 @@
 #include <string>
 #include <fstream>
 
-namespace Molten
+namespace Molten::EditorFramework
 {
 
     ReadProjectFileResult ReadProjectFile(std::istream& stream)
@@ -161,7 +161,7 @@ namespace Molten
         jsonDocument.SetObject();
 
         {
-            const auto fileVersion = ToString(projectFile.fileVersion);
+            const auto fileVersion = ToString(projectFile.fileVersion, false);
 
             jsonDocument.AddMember(
                 "file_version", 
@@ -173,7 +173,7 @@ namespace Molten
                 jsonDocument.GetAllocator());
         } 
         {
-            const auto engineVersion = ToString(projectFile.engineVersion);
+            const auto engineVersion = ToString(projectFile.engineVersion, false);
 
             jsonDocument.AddMember(
                 "engine_version",
