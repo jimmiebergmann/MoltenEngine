@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2023 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -26,9 +26,9 @@
 namespace Molten
 {
 
-    // Buffered file line reader implementations.
+    // Buffered stream reader implementations.
     template<typename TBufferCreationCallback>
-    BufferedFileLineReader::LineReadResult BufferedFileLineReader::ReadLine(std::string_view& line, TBufferCreationCallback&& bufferCreationCallback)
+    BufferedStreamReader::LineReadResult BufferedStreamReader::ReadLine(std::string_view& line, TBufferCreationCallback&& bufferCreationCallback)
     {
         if (m_currentFilePosition > m_fileSize)
         {
@@ -48,7 +48,7 @@ namespace Molten
     }
 
     template<typename TBufferCreationCallback>
-    BufferedFileLineReader::LineReadResult BufferedFileLineReader::CreateNewBuffer(TBufferCreationCallback&& bufferCreationCallback)
+    BufferedStreamReader::LineReadResult BufferedStreamReader::CreateNewBuffer(TBufferCreationCallback&& bufferCreationCallback)
     {
         if (m_currentReadPosition >= m_fileSize)
         {
@@ -102,7 +102,7 @@ namespace Molten
     }
 
     template<typename TBufferCreationCallback>
-    BufferedFileLineReader::LineReadResult BufferedFileLineReader::ReadNextLine(std::string_view& line, TBufferCreationCallback&& bufferCreationCallback)
+    BufferedStreamReader::LineReadResult BufferedStreamReader::ReadNextLine(std::string_view& line, TBufferCreationCallback&& bufferCreationCallback)
     {
         auto view = std::string_view{ m_currentBuffer.get() + m_currentBufferPosition, m_currentBufferSize - m_currentBufferPosition };
         auto newline = FindNextNewline(view);

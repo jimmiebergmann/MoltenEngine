@@ -42,6 +42,8 @@
 
 #include "Molten/EditorFramework/Project.hpp"
 #include "Molten/EditorFramework/FileFormat/Mesh/ObjMeshFile.hpp"
+#include "Molten/EditorFramework/FileFormat/Converter/ObjMeshToAssetConverter.hpp"
+#include "Molten/EditorFramework/FileFormat/Converter/ObjMaterialToAssetConverter.hpp"
 
 #include <random>
 
@@ -111,24 +113,28 @@ namespace Molten::Editor
 
     bool Editor::Load(const EditorDescriptor& descriptor)
     {
-        const auto projectName = "my_project";
-        const auto projectPath = "" / std::filesystem::path{ projectName };
-        if (!LoadProject(projectPath)) 
+        const auto projectDirectory = std::filesystem::path{ "my_project" };
+
+        std::filesystem::remove_all(projectDirectory); // Temp
+
+        if (!LoadProject(projectDirectory))
         {
             Logger::WriteInfo(m_logger.get(), "Could not load project, creating new project.");
 
-            if (!CreateProject("", projectName))
+            if (!CreateProject(projectDirectory))
             {
                 Logger::WriteError(m_logger.get(), "Failed to create project.");
                 return false;
             }
 
-            if (!LoadProject(projectPath))
+            if (!LoadProject(projectDirectory))
             {
                 Logger::WriteError(m_logger.get(), "Failed to load project file after creation.");
                 return false;
             }
         }
+
+
 
         //if (!LoadWindow(descriptor) ||
         //    !LoadRenderer(descriptor) ||
@@ -154,30 +160,166 @@ namespace Molten::Editor
         return true;
     }
 
-    bool Editor::LoadProject(const std::filesystem::path& /*path*/)
+    bool Editor::LoadProject(const std::filesystem::path& filename)
     {
-        return false;
+        auto openProjectResult = EditorFramework::Project::Open(filename);
+        if (!openProjectResult)
+        {
+            Logger::WriteError(m_logger.get(), "Failed to open project.");
+            return false;
+        }
+
+        return true;
     }
 
-    bool Editor::CreateProject(const std::filesystem::path& path, const std::string& filename)
-    {     
-        auto fullPath = path.empty() ? filename : path / filename;
-        std::filesystem::remove_all(fullPath);
-
-        auto createProjectResult = EditorFramework::Project::Create(path, filename);
+    bool Editor::CreateProject(const std::filesystem::path& directory)
+    {
+        auto createProjectResult = EditorFramework::Project::Create(directory);
         if (createProjectResult != EditorFramework::CreateProjectResult::Success)
         {
             Logger::WriteError(m_logger.get(), "Failed to create project.");
             return false;
         }
 
-        auto openProjectResult = EditorFramework::Project::Open(fullPath / (filename + ".mproj"));
-        if (!openProjectResult.HasValue())
+        const auto assetDirectory = directory / "Assets";
+
+        // Read obj files.
+        const auto objMeshFilename = std::filesystem::path{ "C:/temp/dino_obj/dino.obj" };
+        const auto objMeshDirectory = objMeshFilename.parent_path();
+
+        const auto objMeshFileResult = EditorFramework::ReadObjMeshFile(objMeshFilename);
+        if (!objMeshFileResult)
         {
-            Logger::WriteError(m_logger.get(), "Failed to open project.");
+            Logger::WriteError(m_logger.get(), "Failed to read obj mesh file.");
             return false;
         }
 
+        auto& objMeshFile = *objMeshFileResult;
+        if (objMeshFile.objects.empty())
+        {
+            Logger::WriteError(m_logger.get(), "Obj mesh file is empty of objects.");
+            return false;
+        }
+
+        auto objMaterialFiles = std::vector<EditorFramework::ObjMaterialFile>{};
+        for (auto& materialFile : objMeshFileResult->materialFiles)
+        {
+            const auto objMeshMaterialFilename = objMeshDirectory / materialFile;
+            auto objMeshMaterialResult = EditorFramework::ReadObjMaterialFile(objMeshMaterialFilename);
+            if (!objMeshMaterialResult)
+            {
+                Logger::WriteError(m_logger.get(), "Failed to read obj material file.");
+                return false;
+            }
+
+            objMaterialFiles.emplace_back(std::move(objMeshMaterialResult->file));
+        }
+
+        auto requiredObjMaterials = [&]() -> std::optional<EditorFramework::ObjMaterialFile::MaterialSharedPointers>
+        {
+            auto requiredNames = std::set<std::string>{};
+            auto loadedMaterials = std::map<std::string, EditorFramework::ObjMaterialFile::MaterialSharedPointer>{};
+
+            for (auto& object : objMeshFile.objects)
+            {
+                for (auto& group : object->groups)
+                {
+                    requiredNames.insert(group->material);
+                }
+            }
+
+            for (auto& objMaterialFile : objMaterialFiles)
+            {
+                for (auto& objMaterial : objMaterialFile.materials)
+                {
+                    loadedMaterials.insert({ objMaterial->name, objMaterial });
+                }
+            }
+
+            auto result = EditorFramework::ObjMaterialFile::MaterialSharedPointers{};
+
+            for (const auto& requiredName : requiredNames)
+            {
+                auto it = loadedMaterials.find(requiredName);
+                if (it == loadedMaterials.end())
+                {
+                    return std::nullopt;
+                }
+
+                result.push_back(it->second);
+            }
+
+            return std::make_optional(std::move(result));
+        }();
+
+        if (!requiredObjMaterials)
+        {
+            Logger::WriteError(m_logger.get(), "Failed to get required obj materials.");
+            return false;
+        }
+
+        // Convert to asset files.
+        const auto objMeshConvertResult = EditorFramework::ConvertToMeshAssetFile(*objMeshFile.objects.front());
+        if (!objMeshConvertResult)
+        {
+            Logger::WriteError(m_logger.get(), "Failed to convert obj mesh to mesh asset.");
+            return false;
+        }
+
+        auto materialAssetFiles = std::vector<EditorFramework::MaterialAssetFile>{};
+        for (auto& objMaterial : requiredObjMaterials.value())
+        {
+            auto objMaterialConvertResult = EditorFramework::ConvertToMaterialAssetFile(*objMaterial);
+            if (!objMaterialConvertResult)
+            {
+                Logger::WriteError(m_logger.get(), "Failed to convert obj material to material asset.");
+                return false;
+            }
+
+            materialAssetFiles.emplace_back(std::move(*objMaterialConvertResult));
+        }
+
+        // Write asset files.
+        auto meshAssetPath = assetDirectory / "mesh.asset";
+        auto writeMeshAssetResult = EditorFramework::WriteMeshAssetFile(meshAssetPath, *objMeshConvertResult);
+        if (!writeMeshAssetResult)
+        {
+            Logger::WriteError(m_logger.get(), "Failed to write mesh asset.");
+            return false;
+        }
+
+        auto materialAssetPaths = std::vector<std::filesystem::path>{};
+        for (auto& materialAssetFile : materialAssetFiles)
+        {
+            auto materialAssetPath = assetDirectory / (std::string{"material_"} + std::to_string(materialAssetPaths.size()) + ".asset");
+            auto writeMaterialAssetResult = EditorFramework::WriteMaterialAssetFile(materialAssetPath, materialAssetFile);
+            if (!writeMaterialAssetResult)
+            {
+                Logger::WriteError(m_logger.get(), "Failed to write material asset.");
+                return false;
+            }
+
+            materialAssetPaths.emplace_back(materialAssetPath);
+        }
+
+        // Read files.
+        // TODO: Remove, no need to read...
+        auto readMeshAssetResult = EditorFramework::ReadMeshAssetFile(meshAssetPath);
+        if (!readMeshAssetResult)
+        {
+            Logger::WriteError(m_logger.get(), "Failed to read mesh asset.");
+            return false;
+        }
+
+        for (auto& materialAssetPath : materialAssetPaths)
+        {
+            auto readMaterialAssetResult = EditorFramework::ReadMaterialAssetFile(materialAssetPath);
+            if (!readMaterialAssetResult)
+            {
+                Logger::WriteError(m_logger.get(), "Failed to read material asset.");
+                return false;
+            }
+        }
 
         return true;
     }

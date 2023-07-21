@@ -23,48 +23,33 @@
 *
 */
 
-#ifndef MOLTEN_EDITOR_FRAMEWORK_FILEFORMAT_ASSETFILE_HPP
-#define MOLTEN_EDITOR_FRAMEWORK_FILEFORMAT_ASSETFILE_HPP
+#ifndef MOLTEN_EDITOR_FRAMEWORK_FILEFORMAT_CONVERTER_OBJMATERIALTOASSETCONVERTER_HPP
+#define MOLTEN_EDITOR_FRAMEWORK_FILEFORMAT_CONVERTER_OBJMATERIALTOASSETCONVERTER_HPP
 
-#include "Molten/EditorFramework/Build.hpp"
-#include "Molten/Utility/Uuid.hpp"
-#include "Molten/System/Version.hpp"
-#include <array>
-#include <istream>
-#include <ostream>
-#include <filesystem>
+#include "Molten/EditorFramework/FileFormat/Asset/MaterialAssetFile.hpp"
+#include "Molten/EditorFramework/FileFormat/Mesh/ObjMeshFile.hpp"
 
 namespace Molten::EditorFramework
 {
 
-    enum class AssetType : uint32_t
+    struct ConvertToMaterialAssetTexture
     {
-        Unknown = 0,
-        Scene = 1,
-        Mesh = 2,
-        Texture = 3,
-        Material = 4,
-        Audio = 5
+        std::optional<ObjMaterialFile::MaterialTexture>* materialTexture = nullptr;
+        Uuid assetGlobalid = {};
     };
 
-    struct MOLTEN_EDITOR_FRAMEWORK_API AssetFileHeader
+    struct ConvertToMaterialAssetFileOptions
     {
-        inline static constexpr size_t packedSize = 56;
-
-        std::array<char, 12> magic = { 'm', 'o', 'l', 't', 'e', 'n', '.', 'a', 's', 's', 'e', 't', };
-        Version fileVersion = Version{ 0, 1, 0 };
-        Version engineVersion = MOLTEN_VERSION;
-        Uuid globalId = {};
-        AssetType type = AssetType::Unknown;
+        std::vector<ConvertToMaterialAssetTexture> textures = {};
     };
 
-    MOLTEN_EDITOR_FRAMEWORK_API AssetFileHeader ReadAssetFileHeader(std::istream& stream);
-    MOLTEN_EDITOR_FRAMEWORK_API AssetFileHeader ReadAssetFileHeader(const std::filesystem::path& path);
+    enum class ConvertToMaterialAssetFileError
+    {
+    };
 
-
-    MOLTEN_EDITOR_FRAMEWORK_API void WriteAssetFileHeader(
-        std::ostream& stream,
-        const AssetFileHeader& assetFileHeader);
+    MOLTEN_EDITOR_FRAMEWORK_API Expected<MaterialAssetFile, ConvertToMaterialAssetFileError> ConvertToMaterialAssetFile(
+        const ObjMaterialFile::Material& objMaterial,
+        const ConvertToMaterialAssetFileOptions& options = {});
 
 }
 

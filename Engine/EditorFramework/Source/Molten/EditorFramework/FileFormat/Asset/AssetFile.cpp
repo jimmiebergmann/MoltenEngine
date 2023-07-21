@@ -23,7 +23,7 @@
 *
 */
 
-#include "Molten/EditorFramework/FileFormat/AssetFile.hpp"
+#include "Molten/EditorFramework/FileFormat/Asset/AssetFile.hpp"
 #include <fstream>
 
 namespace Molten::EditorFramework

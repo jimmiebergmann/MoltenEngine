@@ -24,7 +24,7 @@
 */
 
 #include "Test.hpp"
-#include "Molten/EditorFramework/FileFormat/AssetFile.hpp"
+#include "Molten/EditorFramework/FileFormat/Asset/AssetFile.hpp"
 #include <fstream>
 #include <cstring>
 

@@ -40,26 +40,17 @@ namespace Molten
     * Example:
     * ForEachTemplateType<int, double>([](auto type)
     * {
-    *   using Type = typename decltype(type)::Type;
+    *   using Param = decltype(type);
+    *   using Type = typename Param::Type;
+    *  
+    *   size_t index = Param::index;
     * }
     */
     template<typename ... TTypes, typename TCallback>
-    constexpr void ForEachTemplateArgument(TCallback&& callback);
+    constexpr void ForEachTemplateType(TCallback&& callback);
 
-    /**
-    * @brief Loop each template type in a parameter pack.
-    * Privide the types and a callback function, being called for each type.
-    *
-    * Same as ForEachTemplateType, but also provides the loop index(starts at 0) to the calback function.
-    *
-    * Example:
-    * ForEachTemplateTypeIndexed<int, double>([](auto type, size_t index)
-    * {
-    *   using Type = typename decltype(type)::Type;
-    * }
-    */
-    template<typename ... TTypes, typename TCallback>
-    constexpr void ForEachTemplateArgumentIndexed(TCallback&& callback);
+    template<typename T, T ... TTypes, typename TCallback>
+    constexpr void ForEachTemplateValue(TCallback&& callback);
 
     /**
     * @brief Checks if a set of template argument types contains Type.
@@ -101,6 +92,11 @@ namespace Molten
     template <typename...Ts, template <typename, typename...> typename U>
     struct IsTemplateInstance<U<Ts...>, U> : public std::true_type {};
     /**@}*/
+
+
+    /** Always false value, used for static_assert. */
+    template<typename T>
+    constexpr bool AlwaysFalse = false;
 }
 
 #include "Molten/Utility/Template.inl"

@@ -47,15 +47,13 @@ static int CreateProject(cppli::context& context)
         return result;
     }
 
-    switch (const auto result = Molten::EditorFramework::Project::Create(std::filesystem::current_path(), name, templateName.value_or("")); result)
+    switch (const auto result = Molten::EditorFramework::Project::Create(std::filesystem::current_path() / name); result)
     {
         case Molten::EditorFramework::CreateProjectResult::Success: return 0;
         case Molten::EditorFramework::CreateProjectResult::InvalidName: std::cerr << "Project name is invalid." << std::endl; break;
         case Molten::EditorFramework::CreateProjectResult::InvalidDirectory: std::cerr << "Project directory is invalid." << std::endl; break;
         case Molten::EditorFramework::CreateProjectResult::CannotCreateDirectory: std::cerr << "Cannot create project directory." << std::endl; break;
-        case Molten::EditorFramework::CreateProjectResult::AlreadyExists: std::cerr << "Project name already exsits in directory." << std::endl; break;
-        case Molten::EditorFramework::CreateProjectResult::UnknownTemplate: std::cerr << "Invalid template name." << std::endl; break;
-        case Molten::EditorFramework::CreateProjectResult::InvalidTemplate: std::cerr << "Corrupt template." << std::endl; break;
+        case Molten::EditorFramework::CreateProjectResult::DirectoryAlreadyExists: std::cerr << "Project directory already exsits in directory." << std::endl; break;
         case Molten::EditorFramework::CreateProjectResult::CannotCreateProjectFile: std::cerr << "Cannot create project file." << std::endl; break;
     }
 

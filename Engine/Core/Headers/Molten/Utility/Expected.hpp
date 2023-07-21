@@ -131,6 +131,24 @@ namespace Molten
             return std::get<2>(m_variant);
         }
 
+        TValue* operator ->() noexcept
+        {
+            return &std::get<1>(m_variant);
+        }
+        const TValue* operator ->() const noexcept
+        {
+            return &std::get<1>(m_variant);
+        }
+
+        TValue& operator *() noexcept
+        {
+            return std::get<1>(m_variant);
+        }
+        const TValue& operator *() const noexcept
+        {
+            return std::get<1>(m_variant);
+        }
+
     private:
 
         using VariantType = std::variant<std::monostate, ValueType, ErrorType>;

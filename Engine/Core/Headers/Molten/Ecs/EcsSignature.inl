@@ -37,7 +37,7 @@ namespace Molten
         {
             Signature signature;
 
-            ForEachTemplateArgument<Components...>([&signature](auto type)
+            ForEachTemplateType<Components...>([&signature](auto type)
             {
                 using Type = typename decltype(type)::Type;
                 signature.Set(Type::componentTypeId);

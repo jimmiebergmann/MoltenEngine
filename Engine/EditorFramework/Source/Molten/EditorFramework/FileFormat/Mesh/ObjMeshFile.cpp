@@ -26,7 +26,8 @@
 #include "Molten/EditorFramework/FileFormat/Mesh/ObjMeshFile.hpp"
 #include "Molten/System/ThreadPool.hpp"
 #include "Molten/Utility/StringUtility.hpp"
-#include "Molten/Utility/BufferedFileLineReader.hpp"
+#include "Molten/Utility/BufferedStreamReader.hpp"
+#include <algorithm>
 #include <fstream>
 #include <charconv>
 
@@ -40,28 +41,52 @@ namespace Molten::EditorFramework
     }
 
     template<typename T>
-    static bool ParseVector(std::string_view lineView, T& value)
+    static bool ParseValue(std::string_view& lineView, T& value)
     {
-        size_t index = 0;
-        while (!lineView.empty())
+        const auto end = lineView.find_first_of(" \t");
+
+        auto element = lineView.substr(0, end);
+        if (element.empty())
         {
-            if(index > T::Dimensions)
-            {
-                return false;
-            }
-
-            StringUtility::TrimFront(lineView);
-            const auto end = lineView.find_first_of(" \t");
-            auto element = lineView.substr(0, end);
-            lineView = lineView.substr(element.size());
-
-            if(std::from_chars(element.data(), element.data() + element.size(), value.c[index]).ec != std::errc())
-            {
-                return false;
-            }
-
-            ++index;
+            return false;
         }
+        if (std::from_chars(element.data(), element.data() + element.size(), value).ec != std::errc())
+        {
+            return false;
+        }
+
+        lineView = StringUtility::TrimFront(lineView.substr(element.size()));
+        return true;
+    }
+
+    template<typename T>
+    static bool ParseVector(std::string_view& lineView, T& value)
+    {
+        for(size_t index = 0; index < T::Dimensions; index++)
+        {
+            if (!ParseValue(lineView, value.c[index]))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    template<typename T>
+    static bool TryParseVector(std::string_view& lineView, T& value)
+    {
+        for (size_t index = 0; index < T::Dimensions; index++)
+        {
+            if (lineView.empty())
+            {
+                return true;
+            }
+            if (!ParseValue(lineView, value.c[index]))
+            {
+                return false;
+            }
+        }
+
         return true;
     }
 
@@ -140,6 +165,14 @@ namespace Molten::EditorFramework
     void ObjMeshFile::Clear()
     {
         objects.clear();
+        materialFiles.clear();
+    }
+
+
+    // Object mesh materialfile implementations.
+    void ObjMaterialFile::Clear()
+    {
+        materials.clear();
     }
 
 
@@ -148,27 +181,33 @@ namespace Molten::EditorFramework
         m_threadPool(nullptr)
     {}
 
-    Expected<ObjMeshFile, TextFileFormatError> ObjMeshFileReader::ReadFromFile(const std::filesystem::path& filename)
+    Expected<ObjMeshFile, TextFileFormatError> ObjMeshFileReader::Read(const std::filesystem::path& filename)
     {
         m_threadPool = nullptr;
-        return InternalReadFromFile(filename);
+        return InternalRead(filename);
     }
 
-    Expected<ObjMeshFile, TextFileFormatError> ObjMeshFileReader::ReadFromFile(
+    Expected<ObjMeshFile, TextFileFormatError> ObjMeshFileReader::Read(
         const std::filesystem::path& filename,
         ThreadPool& threadPool)
     {
         m_threadPool = &threadPool;
-        return InternalReadFromFile(filename);
+        return InternalRead(filename);
     }
 
-    /*ObjMeshFileReader::MaterialCommand::MaterialCommand(
-        const size_t lineNumber,
-        std::string line
-    ) :
-        lineNumber(lineNumber),
-        line(std::move(line))
-    {}*/
+    Expected<ObjMeshFile, TextFileFormatError> ObjMeshFileReader::Read(std::istream& stream)
+    {
+        m_threadPool = nullptr;
+        return InternalRead(stream);
+    }
+
+    Expected<ObjMeshFile, TextFileFormatError> ObjMeshFileReader::Read(
+        std::istream& stream,
+        ThreadPool& threadPool)
+    {
+        m_threadPool = &threadPool;
+        return InternalRead(stream);
+    }
 
     ObjMeshFileReader::ObjectCommand::ObjectCommand(
         const size_t lineNumber,
@@ -180,10 +219,9 @@ namespace Molten::EditorFramework
         line(line)
     {}
 
-    ObjMeshFileReaderResult ObjMeshFileReader::InternalReadFromFile(
+    ObjMeshFileReaderResult ObjMeshFileReader::InternalRead(
         const std::filesystem::path& filename)
     {
-
         // Open file and prepare obj mesh file reader.
         std::ifstream file(filename, std::ifstream::binary);
         if (!file.is_open())
@@ -194,12 +232,18 @@ namespace Molten::EditorFramework
             });
         }
 
-        m_objectFutures.clear();
-        ObjMeshFile objMeshFile{};
+        return InternalRead(file);
+    }
 
-        // Helper function for creating error values.
+    ObjMeshFileReaderResult ObjMeshFileReader::InternalRead(
+        std::istream& stream)
+    {
+        m_objectFutures.clear();
+
+        ObjMeshFile objMeshFile{};
         size_t lineNumber = 0;
 
+        // Helper function for creating error values.
         auto createMissingCommandDataError = [&lineNumber]()
         {
             return CreateParseError(lineNumber, "Missing command data");
@@ -218,22 +262,20 @@ namespace Molten::EditorFramework
         };
 
         // Read lines from file and process them.
-        BufferedFileLineReader lineReader(file, 2048, 1048576);
-        BufferedFileLineReader::LineReadResult readResult = BufferedFileLineReader::LineReadResult::Successful;
+        BufferedStreamReader lineReader(stream, 2048, 1048576);
+        BufferedStreamReader::LineReadResult readResult = BufferedStreamReader::LineReadResult::Successful;
 
-        onProgress(0.0);
-
-        while(readResult == BufferedFileLineReader::LineReadResult::Successful)
+        while(readResult == BufferedStreamReader::LineReadResult::Successful)
         {
             std::string_view line;
             readResult = lineReader.ReadLine(line, addNewBuffer);
 
             switch(readResult)
             {                
-                case BufferedFileLineReader::LineReadResult::BufferOverflow: return CreateParseError(lineNumber, "Row is too long for an obj file");
-                case BufferedFileLineReader::LineReadResult::AllocationError: return CreateParseError(lineNumber, "Failed to allocate required memory");
-                case BufferedFileLineReader::LineReadResult::Successful:
-                case BufferedFileLineReader::LineReadResult::EndOfFile: break;
+                case BufferedStreamReader::LineReadResult::BufferOverflow: return CreateParseError(lineNumber, "Row is too long for an obj file");
+                case BufferedStreamReader::LineReadResult::AllocationError: return CreateParseError(lineNumber, "Failed to allocate required memory");
+                case BufferedStreamReader::LineReadResult::Successful:
+                case BufferedStreamReader::LineReadResult::EndOfFile: break;
             }
 
             StringUtility::Trim(line);
@@ -256,13 +298,19 @@ namespace Molten::EditorFramework
                         return createUnknownCommandError();
                     }
 
-                    // Add material names to obj mesh file.
-                    // ...
-
-                    /*if (auto result = ExecuteProcessMaterial({ lineNumber, std::string{ line } }); !result)
+                    line = StringUtility::TrimFront(line.substr(6));
+                    while (!line.empty())
                     {
-                        return result;
-                    }*/
+                        const size_t endPos = line.find_first_of(" \t");
+                        auto materialFilename = line.substr(0, endPos);
+
+                        if (auto it = std::find(objMeshFile.materialFiles.begin(), objMeshFile.materialFiles.end(), materialFilename); it == objMeshFile.materialFiles.end())
+                        {
+                            objMeshFile.materialFiles.emplace_back(materialFilename);
+                        }
+                        
+                        line = StringUtility::TrimFront(line.substr(materialFilename.size()));
+                    }      
                 } break;
                 case 'o': // Object
                 {
@@ -273,14 +321,10 @@ namespace Molten::EditorFramework
 
                     if (!currentObjectBuffer->commands.empty())
                     {
-                        const auto progress = (1.0 - (static_cast<double>(lineReader.GetSizeLeft()) / static_cast<double>(lineReader.GetStreamSize()))) * 100.0;
-                        onProgress(progress);
-
-
                         // Send current line buffer to new thread and process object lines.
                         if (auto result = ProcessObject(objMeshFile, currentObjectBuffer); !result)
                         {
-                            return Unexpected(result.Error());
+                            return Unexpected(std::move(result.Error()));
                         }
 
                         // Create new line buffer and object
@@ -373,7 +417,7 @@ namespace Molten::EditorFramework
         {
             if (auto result = ProcessObject(objMeshFile, currentObjectBuffer); !result)
             {
-                return Unexpected(result.Error());
+                return Unexpected(std::move(result.Error()));
             }
         }
 
@@ -453,9 +497,7 @@ namespace Molten::EditorFramework
         // Helper lambda for extracting data from string view.
         auto createDataView = [](const ObjectCommand& command, const size_t offset)
         {
-            auto dataView = std::string_view{ command.line.data() + offset, command.line.size() - offset };
-            StringUtility::TrimFront(dataView);
-            return dataView;
+            return StringUtility::TrimFront(command.line.substr(offset));
         };
 
         // Lambda for reading face data.
@@ -490,7 +532,7 @@ namespace Molten::EditorFramework
                     const size_t endPos = lineView.find_first_of(" /\t");
 
                     auto element = lineView.substr(0, endPos);
-                    lineView = std::string_view{ lineView.data() + element.size(), lineView.size() - element.size() };
+                    lineView = lineView.substr(element.size());
 
                     if (!element.empty())
                     {
@@ -590,7 +632,7 @@ namespace Molten::EditorFramework
                     }
 
                     Vector3f32 vertex;
-                    if(!ParseVector(lineView, vertex))
+                    if(!TryParseVector(lineView, vertex) || !lineView.empty())
                     {
                         return CreateParseError(command.lineNumber, "Invalid vertex data");
                     }
@@ -606,7 +648,7 @@ namespace Molten::EditorFramework
                     }
 
                     Vector3f32 normal;
-                    if (!ParseVector(lineView, normal))
+                    if (!TryParseVector(lineView, normal) || !lineView.empty())
                     {
                         return CreateParseError(command.lineNumber, "Invalid vertex normal data");
                     }
@@ -621,7 +663,7 @@ namespace Molten::EditorFramework
                     }
 
                     Vector2f32 textureCoordinate;
-                    if (!ParseVector(lineView, textureCoordinate))
+                    if (!TryParseVector(lineView, textureCoordinate) || !lineView.empty())
                     {
                         return CreateParseError(command.lineNumber, "Invalid texture coordinate data");
                     }
@@ -759,4 +801,736 @@ namespace Molten::EditorFramework
         return {};
     }
 
+
+    // Global obj mesh file reader functions.
+    ObjMeshFileReaderResult ReadObjMeshFile(
+        const std::filesystem::path& filename)
+    {
+        return ObjMeshFileReader{}.Read(filename);
+    }
+
+    ObjMeshFileReaderResult ReadObjMeshFile(
+        const std::filesystem::path& filename,
+        ThreadPool& threadPool)
+    {
+        return ObjMeshFileReader{}.Read(filename, threadPool);
+    }
+
+    ObjMeshFileReaderResult ReadObjMeshFile(
+        std::istream& stream)
+    {
+        return ObjMeshFileReader{}.Read(stream);
+    }
+
+    ObjMeshFileReaderResult ReadObjMeshFile(
+        std::istream& stream,
+        ThreadPool& threadPool)
+    {
+        return ObjMeshFileReader{}.Read(stream, threadPool);
+    }
+
+    ObjMaterialFileReaderResult ObjMaterialFileReader::Read(
+        const std::filesystem::path& filename,
+        const ObjMaterialFileReaderOptions& options)
+    {
+        // Open file and prepare obj mesh file reader.
+        std::ifstream file(filename, std::ifstream::binary);
+        if (!file.is_open())
+        {
+            return Unexpected(TextFileFormatError{
+                .code = TextFileFormatErrorCode::OpenFileError,
+                .message = "Missing command data"
+            });
+        }
+
+        return Read(file, options);
+    }
+
+    // Obj mesh material file reader implementations.
+    ObjMaterialFileReaderResult ObjMaterialFileReader::Read(
+        std::istream& stream,
+        const ObjMaterialFileReaderOptions& options)
+    {
+        // Storage for current object buffer.
+        MaterialBufferSharedPointer currentMaterialBuffer = std::make_shared<MaterialBuffer>();
+        auto addNewBuffer = [&currentMaterialBuffer](auto& buffer)
+        {
+            currentMaterialBuffer->buffers.push_back(buffer);
+        };
+
+        // Read lines from file and process them.
+        BufferedStreamReader lineReader(stream, 2048, 1048576);
+        BufferedStreamReader::LineReadResult readResult = BufferedStreamReader::LineReadResult::Successful;
+        size_t lineNumber = 0;
+        std::string_view line{};
+
+        ObjMaterialReaderResult readerResult{};
+        auto& objMaterialFile = readerResult.file;
+
+        auto addUnkownCommandWarning = [&]() -> ProcessMaterialResult
+        {
+            if (options.ignoreUnknownCommands)
+            {
+                return {};
+            }
+
+            auto createMessage = [&]()
+            {
+                auto commandSlice = line.substr(0, std::min(line.size(), size_t{ 32 }));
+                auto commandEnd = commandSlice.find_first_of(" \t");
+                auto command = commandSlice.substr(0, commandEnd);
+                auto isSliced = commandEnd == std::string_view::npos;
+                return std::string{ "Unkown command '" } + std::string{ command } + (isSliced ? "..." : "") + std::string{ "'" };
+            };
+
+            if (options.warningsAsErrors)
+            {
+                return CreateParseError(lineNumber, createMessage());
+            }
+            if (!options.useWarnings)
+            {
+                return {};
+            }
+
+            readerResult.warnings.emplace_back(lineNumber, createMessage());
+            return {};
+        };
+
+        auto parseTexture = [&](std::string_view mapLine) -> ProcessMaterialResult
+        {
+            switch (mapLine[0])
+            {
+                case 'K':
+                {
+                    if (!IsWhitespace(2, mapLine)) 
+                    {
+                        if (auto result = addUnkownCommandWarning(); !result)
+                        {
+                            return Unexpected(std::move(result.Error()));
+                        }
+                        break;
+                    }
+
+                    auto data = StringUtility::TrimFront(mapLine.substr(2));
+
+                    switch (mapLine[1])
+                    {
+                        case 'a':
+                        {
+                            currentMaterialBuffer->commands.emplace_back(lineNumber, MaterialCommandType::AmbientTexture, data);
+                        } break;
+                        case 'e':
+                        {
+                            currentMaterialBuffer->commands.emplace_back(lineNumber, MaterialCommandType::EmissiveTexture, data);
+                        } break;
+                        case 'd':
+                        {
+                            currentMaterialBuffer->commands.emplace_back(lineNumber, MaterialCommandType::DiffuseTexture, data);
+                        } break;
+                        case 's':
+                        {
+                            currentMaterialBuffer->commands.emplace_back(lineNumber, MaterialCommandType::SpecularTexture, data);
+                        } break;
+                        default: 
+                        {
+                            if (auto result = addUnkownCommandWarning(); !result)
+                            {
+                                return Unexpected(std::move(result.Error()));
+                            }
+                        } break;
+                    }
+
+                } break;
+                case 'P':
+                {
+                    if (!IsWhitespace(2, mapLine))
+                    {
+                        if (auto result = addUnkownCommandWarning(); !result)
+                        {
+                            return Unexpected(std::move(result.Error()));
+                        }
+                        break;
+                    }
+
+                    auto data = StringUtility::TrimFront(mapLine.substr(2));
+
+                    switch (mapLine[1])
+                    {
+                        case 'r':
+                        {
+                            currentMaterialBuffer->commands.emplace_back(lineNumber, MaterialCommandType::RoughnessTexture, data);
+                        } break;
+                        case 'm':
+                        {
+                            currentMaterialBuffer->commands.emplace_back(lineNumber, MaterialCommandType::MetallicTexture, data);
+                        } break;
+                        default:
+                        {
+                            if (auto result = addUnkownCommandWarning(); !result)
+                            {
+                                return Unexpected(std::move(result.Error()));
+                            }
+                        } break;
+                    }
+
+                } break;
+                case 'N':
+                {
+                    if (!IsWhitespace(2, mapLine))
+                    {
+                        if (auto result = addUnkownCommandWarning(); !result)
+                        {
+                            return Unexpected(std::move(result.Error()));
+                        }
+                        break;
+                    }
+
+                    auto data = StringUtility::TrimFront(mapLine.substr(2));
+
+                    switch (mapLine[1])
+                    {
+                        case 's':
+                        {
+                            currentMaterialBuffer->commands.emplace_back(lineNumber, MaterialCommandType::SpecularExponentTexture, data);
+                        } break;
+                        default:
+                        {
+                            if (auto result = addUnkownCommandWarning(); !result)
+                            {
+                                return Unexpected(std::move(result.Error()));
+                            }
+                        } break;
+                    }
+                } break;
+                case 'd':
+                {
+                    if (IsWhitespace(1, mapLine))
+                    {
+                        auto data = StringUtility::TrimFront(mapLine.substr(1));
+                        currentMaterialBuffer->commands.emplace_back(lineNumber, MaterialCommandType::DissolveTexture, data);
+                        break;
+                    }
+                    if (line.rfind("disp", 0) == 0 && IsWhitespace(4, line))
+                    {
+                        auto data = StringUtility::TrimFront(mapLine.substr(4));
+                        currentMaterialBuffer->commands.emplace_back(lineNumber, MaterialCommandType::DisplacementTexture, data);
+                        break;
+                    }
+                    if (auto result = addUnkownCommandWarning(); !result)
+                    {
+                        return Unexpected(std::move(result.Error()));
+                    }
+                } break;
+                case 'b': 
+                {
+                    if (!IsWhitespace(4, mapLine) || mapLine.rfind("bump", 0) != 0)
+                    {
+                        if (auto result = addUnkownCommandWarning(); !result)
+                        {
+                            return Unexpected(std::move(result.Error()));
+                        }
+                        break;
+                    }
+                    auto data = StringUtility::TrimFront(mapLine.substr(4));
+                    currentMaterialBuffer->commands.emplace_back(lineNumber, MaterialCommandType::BumpTexture, data);
+                } break;
+                default:
+                {
+                    if (auto result = addUnkownCommandWarning(); !result)
+                    {
+                        return Unexpected(std::move(result.Error()));
+                    }
+                } break;
+            }
+
+            return {};
+        };
+
+        while (readResult == BufferedStreamReader::LineReadResult::Successful)
+        {
+            readResult = lineReader.ReadLine(line, addNewBuffer);
+
+            switch (readResult)
+            {
+                case BufferedStreamReader::LineReadResult::BufferOverflow: return CreateParseError(lineNumber, "Row is too long for an obj material file");
+                case BufferedStreamReader::LineReadResult::AllocationError: return CreateParseError(lineNumber, "Failed to allocate required memory");
+                case BufferedStreamReader::LineReadResult::Successful:
+                case BufferedStreamReader::LineReadResult::EndOfFile: break;
+            }
+
+            StringUtility::Trim(line);
+
+            // Ignore empty line
+            if (line.empty())
+            {
+                ++lineNumber;
+                continue;
+            }
+
+            // Process first character in order to determine what command current line is.
+            switch (line[0])
+            {
+                case '#': break; // Comment.
+                case 'n': // New material.
+                {
+                    if (!IsWhitespace(6, line) || line.rfind("newmtl", 0) != 0)
+                    {
+                        if (auto result = addUnkownCommandWarning(); !result)
+                        {
+                            return Unexpected(std::move(result.Error()));
+                        }
+                        break;
+                    }
+                    auto data = StringUtility::TrimFront(line.substr(7));
+
+                    if (!currentMaterialBuffer->commands.empty())
+                    {
+                        if (auto result = ProcessMaterial(readerResult, options, objMaterialFile, currentMaterialBuffer); !result)
+                        {
+                            return Unexpected(std::move(result.Error()));
+                        }
+
+                        // Create new line buffer and object
+                        auto newMaterialBuffer = std::make_shared<MaterialBuffer>();
+                        if (!currentMaterialBuffer->buffers.empty())
+                        {
+                            newMaterialBuffer->buffers.push_back(currentMaterialBuffer->buffers.back());
+                        }
+                        currentMaterialBuffer = newMaterialBuffer;
+                    }
+
+                    currentMaterialBuffer->commands.emplace_back(lineNumber, MaterialCommandType::NewMaterial, data);
+
+                } break;
+                case 'i':
+                {
+                    if (!IsWhitespace(5, line) || line.rfind("illum", 0) != 0)
+                    {
+                        if (auto result = addUnkownCommandWarning(); !result)
+                        {
+                            return Unexpected(std::move(result.Error()));
+                        }
+                        break;
+                    }
+                } break;
+                case 'K':
+                {
+                    if (!IsWhitespace(2, line))
+                    {
+                        if (auto result = addUnkownCommandWarning(); !result)
+                        {
+                            return Unexpected(std::move(result.Error()));
+                        }
+                        break;
+                    }
+                    auto data = StringUtility::TrimFront(line.substr(3));
+
+                    switch (line[1])
+                    {
+                        case 'a':
+                        {
+                            currentMaterialBuffer->commands.emplace_back(lineNumber, MaterialCommandType::AmbientColor, data);
+                        } break;
+                        case 'e':
+                        {
+                            currentMaterialBuffer->commands.emplace_back(lineNumber, MaterialCommandType::EmissiveColor, data);
+                        } break;
+                        case 'd':
+                        {
+                            currentMaterialBuffer->commands.emplace_back(lineNumber, MaterialCommandType::DiffuseColor, data);
+                        } break;
+                        case 's':
+                        {
+                            currentMaterialBuffer->commands.emplace_back(lineNumber, MaterialCommandType::SpecularColor, data);
+                        } break;
+                        default:
+                        {
+                            if (auto result = addUnkownCommandWarning(); !result)
+                            {
+                                return Unexpected(std::move(result.Error()));
+                            }
+                        } break;
+                    }
+                } break;
+                case 'N':
+                {
+                    if (!IsWhitespace(2, line))
+                    {
+                        if (auto result = addUnkownCommandWarning(); !result)
+                        {
+                            return Unexpected(std::move(result.Error()));
+                        }
+                        break;
+                    }
+                    auto data = StringUtility::TrimFront(line.substr(3));
+                    switch (line[1])
+                    {
+                        case 's':
+                        {
+                            currentMaterialBuffer->commands.emplace_back(lineNumber, MaterialCommandType::SpecularExponent, data);
+                        } break;
+                        case 'i':
+                        {
+                            currentMaterialBuffer->commands.emplace_back(lineNumber, MaterialCommandType::OpticalDensity, data);
+                        } break;
+                        default:
+                        {
+                            if (auto result = addUnkownCommandWarning(); !result)
+                            {
+                                return Unexpected(std::move(result.Error()));
+                            }
+                        } break;
+                    }
+                } break;
+                case 'd':
+                {
+                    if (IsWhitespace(1, line))
+                    {
+                        auto data = StringUtility::TrimFront(line.substr(2));
+                        currentMaterialBuffer->commands.emplace_back(lineNumber, MaterialCommandType::Dissolve, data);
+                        break;
+                    }
+
+                    if (auto result = parseTexture(line); !result)
+                    {
+                        return Unexpected(std::move(result.Error()));
+                    }
+                } break;
+                case 'b':
+                {
+                    if (IsWhitespace(1, line))
+                    {
+                        auto data = StringUtility::TrimFront(line.substr(2));
+                        currentMaterialBuffer->commands.emplace_back(lineNumber, MaterialCommandType::Dissolve, data);
+                        break;
+                    }
+
+                    if (auto result = parseTexture(line); !result)
+                    {
+                        return Unexpected(std::move(result.Error()));
+                    }
+                } break;
+                case 'P':
+                {
+                    if (!IsWhitespace(2, line))
+                    {
+                        if (auto result = addUnkownCommandWarning(); !result)
+                        {
+                            return Unexpected(std::move(result.Error()));
+                        }
+                        break;
+                    }
+                    auto data = StringUtility::TrimFront(line.substr(3));
+                    switch (line[1])
+                    {
+                        case 'r':
+                        {
+                            currentMaterialBuffer->commands.emplace_back(lineNumber, MaterialCommandType::Roughness, data);
+                        } break;
+                        case 'm':
+                        {
+                            currentMaterialBuffer->commands.emplace_back(lineNumber, MaterialCommandType::Metallic, data);
+                        } break;
+                        default:
+                        {
+                            if (auto result = addUnkownCommandWarning(); !result)
+                            {
+                                return Unexpected(std::move(result.Error()));
+                            }
+                        } break;
+                    }
+                } break;
+                case 'm':
+                {
+                    if (line.size() < 6 || line.rfind("map_", 0) != 0)
+                    {
+                        if (auto result = addUnkownCommandWarning(); !result)
+                        {
+                            return Unexpected(std::move(result.Error()));
+                        }
+                        break;
+                    }
+                    if (auto result = parseTexture(line.substr(4)); !result)
+                    {
+                        return Unexpected(std::move(result.Error()));
+                    }
+                } break;
+                default:
+                {
+                    if (auto result = addUnkownCommandWarning(); !result)
+                    {
+                        return Unexpected(std::move(result.Error()));
+                    }
+                } break;
+            }
+
+            ++lineNumber;
+        }
+
+        // Process remaining object lines if any.
+        if (!currentMaterialBuffer->commands.empty())
+        {
+            if (auto result = ProcessMaterial(readerResult, options, objMaterialFile, currentMaterialBuffer); !result)
+            {
+                return Unexpected(std::move(result.Error()));
+            }
+        }
+
+        return readerResult;
+    }
+
+    ObjMaterialFileReader::MaterialCommand::MaterialCommand(
+        const size_t lineNumber,
+        const MaterialCommandType type,
+        const std::string_view data
+    ) :
+        lineNumber(lineNumber),
+        type(type),
+        data(data)
+    {}
+
+    ObjMaterialFileReader::ProcessMaterialResult ObjMaterialFileReader::ProcessMaterial(
+        ObjMaterialReaderResult& readerResult,
+        const ObjMaterialFileReaderOptions& options,
+        ObjMaterialFile& objMaterialFile,
+        MaterialBufferSharedPointer materialBuffer)
+    {
+        auto material = std::make_shared<Material>();
+        objMaterialFile.materials.push_back(material);
+
+        auto duplicateCommandWarning = [&](const MaterialCommand& command, const char* member) -> ProcessMaterialResult
+        {
+            auto createMessage = [&]()
+            {
+                return std::string{"Duplicate command for '"} + member + std::string{ "'" };;
+            };
+
+            if (options.warningsAsErrors)
+            {
+                return CreateParseError(command.lineNumber, createMessage());
+            }
+            if (!options.useWarnings)
+            {
+                return {};
+            }
+
+            readerResult.warnings.emplace_back(command.lineNumber, createMessage());
+            return {};
+        };
+
+        auto readFloat32 = [](const MaterialCommand& command) -> Expected<float, TextFileFormatError> 
+        {
+            if (command.data.empty())
+            {
+                return CreateParseError(command.lineNumber, "Expecting command data");
+            }
+            float value{};
+            auto data = std::string_view{ command.data };
+            if (!ParseValue(data, value) || !data.empty())
+            {
+                return CreateParseError(command.lineNumber, "Invalid command data");
+            }
+            return value;
+        };
+
+        auto readVector3f32 = [](const MaterialCommand& command) -> Expected<Vector3f32, TextFileFormatError> 
+        {
+            if (command.data.empty())
+            {
+                return CreateParseError(command.lineNumber, "Expecting command data");
+            }
+            Vector3f32 value{};
+            auto data = std::string_view{ command.data };
+            if (!ParseVector(data, value) || !data.empty())
+            {
+                return CreateParseError(command.lineNumber, "Invalid command data");
+            }
+            return value;
+        };
+
+        auto assignFloat32 = [&](const MaterialCommand& command, std::optional<float>& member, const char* memberName) -> ProcessMaterialResult
+        {
+            if (member.has_value())
+            {
+                if (options.ignoreDuplicateCommands)
+                {
+                    return {};
+                }
+                if (auto result = duplicateCommandWarning(command, memberName); !result)
+                {
+                    return Unexpected(std::move(result.Error()));
+                }
+            }
+
+            auto result = readFloat32(command);
+            if (!result)
+            {
+                return Unexpected(std::move(result.Error()));
+            }
+            member = result.Value();
+            return {};
+        };
+
+        auto assignVector3f32 = [&](const MaterialCommand& command, std::optional<Vector3f32>& member, const char* memberName) -> ProcessMaterialResult
+        {
+            if (member.has_value()) 
+            {
+                if (options.ignoreDuplicateCommands)
+                {
+                    return {};
+                }
+                if (auto result = duplicateCommandWarning(command, memberName); !result)
+                {
+                    return Unexpected(std::move(result.Error()));
+                }
+            }
+
+            auto result = readVector3f32(command);
+            if (!result)
+            {
+                return Unexpected(std::move(result.Error()));
+            }
+            member = result.Value();
+            return {};
+        };
+
+        auto assignTexture = [&](const MaterialCommand& command, std::optional<MaterialTexture>& member, const char* memberName) -> ProcessMaterialResult
+        {
+            if (member.has_value())
+            {
+                if (options.ignoreDuplicateCommands)
+                {
+                    return {};
+                }
+                if (auto result = duplicateCommandWarning(command, memberName); !result)
+                {
+                    return Unexpected(std::move(result.Error()));
+                }
+            }
+
+            member = MaterialTexture{ .filename = std::string{ command.data } };
+            return {};
+        };
+
+        auto processCommand = [&](const MaterialCommand& command) -> ProcessMaterialResult
+        {
+            switch (command.type)
+            {
+                case MaterialCommandType::NewMaterial:
+                {
+                    if (command.data.empty())
+                    {
+                        return CreateParseError(command.lineNumber, "Expecting a material name");
+                    }
+                    material->name = std::string{ command.data };
+                } break;
+                case MaterialCommandType::AmbientColor:
+                {
+                    return assignVector3f32(command, material->ambientColor, "ambient color");
+                } break;
+                case MaterialCommandType::DiffuseColor:
+                {
+                    return assignVector3f32(command, material->diffuseColor, "diffuse color");
+                } break;
+                case MaterialCommandType::SpecularColor:
+                {
+                    return assignVector3f32(command, material->specularColor, "specular color");
+                } break;
+                case MaterialCommandType::SpecularExponent:
+                {
+                    return assignFloat32(command, material->specularExponent, "specular exponent");
+                } break;
+                case MaterialCommandType::Dissolve:
+                {
+                    return assignFloat32(command, material->dissolve, "dissolve");
+                } break;
+                case MaterialCommandType::OpticalDensity:
+                {
+                    return assignFloat32(command, material->opticalDensity, "optical density");
+                } break;
+                case MaterialCommandType::AmbientTexture:
+                {
+                    return assignTexture(command, material->ambientTexture, "ambient texture");
+                } break;
+                case MaterialCommandType::DiffuseTexture:
+                {
+                    return assignTexture(command, material->diffuseTexture, "diffuse texture");
+                } break;
+                case MaterialCommandType::SpecularTexture:
+                {
+                    return assignTexture(command, material->specularTexture, "specular texture");
+                } break;
+                case MaterialCommandType::SpecularExponentTexture:
+                {
+                    return assignTexture(command, material->specularExponentTexture, "specular exponent texture");
+                } break;
+                case MaterialCommandType::DissolveTexture:
+                {
+                    return assignTexture(command, material->dissolveTexture, "dissolve texture");
+                } break;
+                case MaterialCommandType::BumpTexture:
+                {
+                    return assignTexture(command, material->bumpTexture, "bump texture");
+                } break;
+                case MaterialCommandType::DisplacementTexture:
+                {
+                    return assignTexture(command, material->displacementTexture, "displacement texture");
+                } break;
+                case MaterialCommandType::Roughness:
+                {
+                    return assignFloat32(command, material->roughness, "roughness");
+                } break;
+                case MaterialCommandType::Metallic:
+                {
+                    return assignFloat32(command, material->metallic, "metallic");
+                } break;
+                case MaterialCommandType::EmissiveColor:
+                {
+                    return assignVector3f32(command, material->emissiveColor, "emissive color");
+                } break;
+                case MaterialCommandType::RoughnessTexture:
+                {
+                    return assignTexture(command, material->roughnessTexture, "roughness texture");
+                } break;
+                case MaterialCommandType::MetallicTexture:
+                {
+                    return assignTexture(command, material->metallicTexture, "metallic texture");
+                } break;
+                case MaterialCommandType::EmissiveTexture:
+                {
+                    return assignTexture(command, material->emissiveTexture, "emissive texture");
+                } break;
+            }
+
+            return {};
+        };
+
+        // Run all material commands.
+        for (auto& command : materialBuffer->commands)
+        {
+            if (auto result = processCommand(command); !result)
+            {
+                return Unexpected(std::move(result.Error()));
+            }
+            
+        }
+
+        return {};
+    }
+
+
+    // Global obj material file implementations.
+    ObjMaterialFileReaderResult ReadObjMaterialFile(
+        const std::filesystem::path& filename,
+        const ObjMaterialFileReaderOptions& options)
+    {
+        return ObjMaterialFileReader{}.Read(filename, options);
+    }
+
+    ObjMaterialFileReaderResult ReadObjMaterialFile(
+        std::istream& stream,
+        const ObjMaterialFileReaderOptions& options)
+    {
+        return ObjMaterialFileReader{}.Read(stream, options);
+    }
 }

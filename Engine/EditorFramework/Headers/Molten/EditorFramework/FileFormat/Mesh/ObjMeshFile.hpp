@@ -30,7 +30,6 @@
 #include "Molten/FileFormat/TextFileFormatResult.hpp"
 #include "Molten/Utility/Expected.hpp"
 #include "Molten/Math/Vector.hpp"
-#include "Molten/System/Signal.hpp"
 #include <string>
 #include <string_view>
 #include <filesystem>
@@ -63,7 +62,7 @@ namespace Molten::EditorFramework
      *    - TextureCoordinate[n]
      *    - Group[n]
      *       - SmoothingGroup[n]
-     *         - Flag
+     *         - Id (flag)
      *         - Triangle[n]
      *           - vertexIndex[3]
      *           - textureCoordinateIndex[3]
@@ -82,68 +81,16 @@ namespace Molten::EditorFramework
      *  - f - Face (Quads are split into two triangles)
      *
      * Documentation:
-     * - http://paulbourke.net/dataformats/mtl/
-     * - http://www.martinreddy.net/gfx/3d/OBJ.spec
-     * - https://www.fileformat.info/format/material/
+     *  - http://www.martinreddy.net/gfx/3d/OBJ.spec
      */
     class MOLTEN_EDITOR_FRAMEWORK_API ObjMeshFile
     {
 
     public:
 
-        ///** Texture options struct. */
-        //struct TextureOptions
-        //{
-        //    //std::optional<bool> horizontalBlend; ///< -blendu = on | off  (Default on)
-        //    //std::optional<bool> verticalBlend; ///< -blendv = on | off  (Default on)
-        //    //std::optional<float> boostMipmapSharpness; ///< -boost
-        //    std::optional<Vector2f32> modifier; ///< -mm = { brightness, contrast }
-        //    std::optional<Vector3f32> originOffset; ///< -o = { x, [y, [z]] }  (Default { 0.0, 0.0, 0.0})
-        //    std::optional<Vector3f32> scale; ///< -s = { x, [y, [z]] }  (Default { 1.0, 1.0, 1.0})
-        //    //std::optional<Vector3f32> turbulence; ///< -t = { x, [y, [z]] }  (Default { 0.0, 0.0, 0.0})
-        //    std::optional<bool> clamp; ///< -clamp = on | off
-        //    //std::optional<float> bumpMultiplier; ///< bm
-        //};
-
-        ///** Texture struct, represented by filename and options. */
-        //struct MaterialTexture
-        //{
-        //    std::string filename;
-        //    TextureOptions options;
-        //};
-
-        ///** Material with optional properties. */
-        //struct Material
-        //{
-        //    std::optional<Vector3f32> ambientColor; ///< Ka = rgb{ 0.0 - 1.0, ... }
-        //    std::optional<Vector3f32> diffuseColor; ///< Kd = rgb{ 0.0 - 1.0, ... }
-        //    std::optional<Vector3f32> specularColor; ///< Ks = rgb{ 0.0 - 1.0, ... }
-        //    std::optional<float> specularWeight; ///< Ns = 0.0 - 1000.0
-        //    std::optional<float> transparency; ///< d = 0.0 - 1.0 or Tr = (1.0 - d)
-        //    std::optional<float> opticalDensity; ///< Ni = Refractive index
-        //    std::optional<MaterialTexture> ambientTexture; ///< map_Ka
-        //    std::optional<MaterialTexture> diffuseTexture; ///< map_Kd - Often same as map_Ka
-        //    std::optional<MaterialTexture> specularTexture; ///< map_Ks
-        //    std::optional<MaterialTexture> specularWeightTexture; ///< map_Ns
-        //    std::optional<MaterialTexture> alphaTexture; ///< map_d
-        //    //std::optional<MaterialTexture> bumpTexture; ///< map_bump - Ignored for now.
-        //    //std::optional<MaterialTexture> luminanceBumpTexture; ///< bump - Ignored for now.
-        //    std::optional<MaterialTexture> displacementTexture; ///< disp = Normal map
-        //    //std::optional<MaterialTexture> stencilDecalTexture; ///< decal - Ignored for now.
-
-        //    /** PBR materials*/
-        //    /**@{*/
-        //    std::optional<float> roughness; ///< Pr
-        //    std::optional<float> metallic; ///< Pm
-        //    std::optional<MaterialTexture> roughnessTexture; ///< map_Pr
-        //    std::optional<MaterialTexture> metallicTexture; ///< map_Pm
-        //    /**@}*/
-        //};
-
-        //using MaterialSharedPointer = std::shared_ptr<Material>;
-        //using MaterialSharedPointers = std::vector<MaterialSharedPointer>;
-
-        /** Triangle indices, pointing to Object vertices/normals/textureCoordinates. Index is set to std::numeric_limits<uint32_t>::max() if unused. */
+        /** Triangle indices, pointing to Object vertices/normals/textureCoordinates. 
+         *  Index is set to std::numeric_limits<uint32_t>::max() if unused. 
+         */
         struct Triangle
         {
             Triangle();
@@ -196,8 +143,10 @@ namespace Molten::EditorFramework
         using ObjectSharedPointer = std::shared_ptr<Object>;
         using ObjectSharedPointers = std::vector<ObjectSharedPointer>;
 
-        //MaterialSharedPointers materials; ///< List of materials.
+        using MaterialFiles = std::vector<std::string>;
+
         ObjectSharedPointers objects; ///< List of objects.
+        MaterialFiles materialFiles; ///< List of associated material filenames.
 
         ObjMeshFile() = default;
         ~ObjMeshFile() = default;
@@ -207,24 +156,104 @@ namespace Molten::EditorFramework
         ObjMeshFile& operator = (const ObjMeshFile&) = default;
         ObjMeshFile& operator = (ObjMeshFile&&) = default;
 
-        /** Clear all data and internal */
         void Clear();
 
+    };
+
+    /** Obj mesh material file format.
+     *
+     * Documentation:
+     *  - http://paulbourke.net/dataformats/mtl/
+     *  - https://www.fileformat.info/format/material/
+     */
+    class MOLTEN_EDITOR_FRAMEWORK_API ObjMaterialFile
+    {
+
+    public:
+
+        /** Texture options struct. */
+        struct TextureOptions
+        {
+            //std::optional<bool> horizontalBlend; ///< -blendu = on | off  (Default on)
+            //std::optional<bool> verticalBlend; ///< -blendv = on | off  (Default on)
+            //std::optional<float> boostMipmapSharpness; ///< -boost
+            std::optional<Vector2f32> modifier; ///< -mm = { brightness, contrast }
+            std::optional<Vector3f32> originOffset; ///< -o = { x, [y, [z]] }  (Default { 0.0, 0.0, 0.0})
+            std::optional<Vector3f32> scale; ///< -s = { x, [y, [z]] }  (Default { 1.0, 1.0, 1.0})
+            //std::optional<Vector3f32> turbulence; ///< -t = { x, [y, [z]] }  (Default { 0.0, 0.0, 0.0})
+            std::optional<bool> clamp; ///< -clamp = on | off
+            //std::optional<float> bumpMultiplier; ///< bm
+        };
+
+        /** Texture struct, represented by filename and options. */
+        struct MaterialTexture
+        {
+            std::string filename;
+            TextureOptions options; ///< Not parsed at the moment.
+        };
+
+        /** Material with optional properties. */
+        struct Material
+        {
+            /** Standard properties. */
+            /**@{*/
+            std::string name; ///< Name of material.
+            std::optional<Vector3f32> ambientColor; ///< Ka = rgb{ 0.0 - 1.0, ... }
+            std::optional<Vector3f32> diffuseColor; ///< Kd = rgb{ 0.0 - 1.0, ... }
+            std::optional<Vector3f32> specularColor; ///< Ks = rgb{ 0.0 - 1.0, ... }
+            std::optional<float> specularExponent; ///< Ns = 0.0 - 1000.0
+            std::optional<float> dissolve; ///< d = 0.0 - 1.0 or Tr = (1.0 - d)
+            std::optional<float> opticalDensity; ///< Ni = Refractive index
+            std::optional<MaterialTexture> ambientTexture; ///< map_Ka
+            std::optional<MaterialTexture> diffuseTexture; ///< map_Kd - Often same as map_Ka
+            std::optional<MaterialTexture> specularTexture; ///< map_Ks
+            std::optional<MaterialTexture> specularExponentTexture; ///< map_Ns
+            std::optional<MaterialTexture> dissolveTexture; ///< map_d
+            std::optional<MaterialTexture> bumpTexture; ///< map_bump / bump
+            std::optional<MaterialTexture> displacementTexture; ///< disp = Normal map
+            /**@}*/
+
+            /** PBR properties. */
+            /**@{*/
+            std::optional<float> roughness; ///< Pr
+            std::optional<float> metallic; ///< Pm
+            std::optional<Vector3f32> emissiveColor; ///< Ke
+            std::optional<MaterialTexture> roughnessTexture; ///< map_Pr
+            std::optional<MaterialTexture> metallicTexture; ///< map_Pm
+            std::optional<MaterialTexture> emissiveTexture; ///< map_Ke
+            /**@}*/
+        };
+
+        using MaterialSharedPointer = std::shared_ptr<Material>;
+        using MaterialSharedPointers = std::vector<MaterialSharedPointer>;
+
+        MaterialSharedPointers materials; ///< List of materials.
+
+        void Clear();
+    };
+
+    struct ObjMeshReaderWarning
+    {
+        size_t line = 0;
+        std::string message = {};
+    };
+
+    template<typename T>
+    struct ObjMeshReaderResult
+    {
+        T file = {};
+        std::vector<ObjMeshReaderWarning> warnings = {};
     };
 
 
     using ObjMeshFileReaderResult = Expected<ObjMeshFile, TextFileFormatError>;
 
 
-    /** Helper class for reading obj mesh files.
-     *  This class is internally used by ObjMeshFile::ReadFromFile(...).
-     */
+    /** Helper class for reading obj mesh files. */
     class MOLTEN_EDITOR_FRAMEWORK_API ObjMeshFileReader
     {
 
     public:
-
-        Signal<double> onProgress;
 
         ObjMeshFileReader();       
         ~ObjMeshFileReader() = default;
@@ -235,18 +264,20 @@ namespace Molten::EditorFramework
         ObjMeshFileReader(const ObjMeshFileReader&) = delete;
         ObjMeshFileReader& operator = (const ObjMeshFileReader&) = delete;
 
-        /** Read and parse obj mesh file on a single thread.
-        *  Clear() is automatically called on objMeshFile,
-        *  so no need to call it manually before calling this function.
-        */
-        [[nodiscard]] ObjMeshFileReaderResult ReadFromFile(const std::filesystem::path& filename);
+        /** Read and parse obj mesh file on a single thread. */
+        [[nodiscard]] ObjMeshFileReaderResult Read(const std::filesystem::path& filename);
 
-        /** Read and parse obj mesh file using multiple threads from provided thread pool.
-        *  Clear() is automatically called on objMeshFile,
-        *  so no need to call it manually before calling this function.
-        */
-        [[nodiscard]] ObjMeshFileReaderResult ReadFromFile(
+        /** Read and parse obj mesh file using multiple threads from provided thread pool. */
+        [[nodiscard]] ObjMeshFileReaderResult Read(
             const std::filesystem::path& filename,
+            ThreadPool& threadPool);
+
+        /** Read and parse obj mesh file on a single thread. */
+        [[nodiscard]] ObjMeshFileReaderResult Read(std::istream& stream);
+
+        /** Read and parse obj mesh file using multiple threads from provided thread pool. */
+        [[nodiscard]] ObjMeshFileReaderResult Read(
+            std::istream& stream,
             ThreadPool& threadPool);
 
     private:
@@ -262,16 +293,6 @@ namespace Molten::EditorFramework
             Face, ///< f
             UseMaterial ///< usemtl
         };
-
-        /*struct MaterialCommand
-        {
-            MaterialCommand(
-                const size_t lineNumber,
-                std::string line);
-
-            size_t lineNumber; ///< Line number, used for error messages.
-            std::string line; ///< Full line data.
-        };*/
 
         struct ObjectCommand
         {
@@ -303,12 +324,6 @@ namespace Molten::EditorFramework
 
         using ObjectBufferSharedPointer = std::shared_ptr<ObjectBuffer>;
 
-        /*using Material = ObjMeshFile::Material;
-        using MaterialSharedPointer = std::shared_ptr<Material>;
-        using ProcessMaterialResult = std::variant<MaterialSharedPointer, TextFileFormatResult::Error>;
-        using ProcessMaterialFuture = std::future<ProcessMaterialResult>;
-        using ProcessMaterialFutures = std::vector<ProcessMaterialFuture>;*/
-
         using SmoothingGroup = ObjMeshFile::SmoothingGroup;
         using Group = ObjMeshFile::Group;
         using Object = ObjMeshFile::Object;
@@ -319,14 +334,13 @@ namespace Molten::EditorFramework
         using ParseObjectFuture = std::future<ParseObjectResult>;
         using ParseObjectFutures = std::vector<ParseObjectFuture>;
 
-        /** This function is called by ReadFromFile and performs all reading and parsing tasks.
+        /** This function is called by Read and performs all reading and parsing tasks.
          *  Called of this function must wait for all tasks before proceeding execution.
          */
-        [[nodiscard]] ObjMeshFileReaderResult InternalReadFromFile(const std::filesystem::path& filename);
+        [[nodiscard]] ObjMeshFileReaderResult InternalRead(const std::filesystem::path& filename);
+        [[nodiscard]] ObjMeshFileReaderResult InternalRead(std::istream& stream);
 
-        [[nodiscard]] ProcessObjectResult ProcessObject(
-            ObjMeshFile& objMeshFile,
-            ObjectBufferSharedPointer objectBuffer);
+        [[nodiscard]] ProcessObjectResult ProcessObject(ObjMeshFile& objMeshFile, ObjectBufferSharedPointer objectBuffer);
         [[nodiscard]] ParseObjectResult ParseObjectCommands(ObjectBufferSharedPointer objectBuffer);
         [[nodiscard]] ParseObjectFuture ParseObjectCommandsAsync(ObjectBufferSharedPointer objectBuffer);
 
@@ -337,6 +351,138 @@ namespace Molten::EditorFramework
         ParseObjectFutures m_objectFutures;
 
     };
+
+    MOLTEN_EDITOR_FRAMEWORK_API [[nodiscard]] ObjMeshFileReaderResult ReadObjMeshFile(
+        const std::filesystem::path& filename);
+
+    MOLTEN_EDITOR_FRAMEWORK_API [[nodiscard]] ObjMeshFileReaderResult ReadObjMeshFile(
+        const std::filesystem::path& filename,
+        ThreadPool& threadPool);
+
+    MOLTEN_EDITOR_FRAMEWORK_API [[nodiscard]] ObjMeshFileReaderResult ReadObjMeshFile(
+        std::istream& stream);
+
+    MOLTEN_EDITOR_FRAMEWORK_API [[nodiscard]] ObjMeshFileReaderResult ReadObjMeshFile(
+        std::istream& stream,
+        ThreadPool& threadPool);
+
+
+    using ObjMaterialReaderResult = ObjMeshReaderResult<ObjMaterialFile>;
+    using ObjMaterialFileReaderResult = Expected<ObjMaterialReaderResult, TextFileFormatError>;
+
+    struct ObjMaterialFileReaderOptions
+    {
+        bool useWarnings = false;
+        bool warningsAsErrors = false;
+        bool ignoreUnknownCommands = true;
+        bool ignoreDuplicateCommands = true;
+    };
+
+    /** Helper class for reading obj mesh files. */
+    class MOLTEN_EDITOR_FRAMEWORK_API ObjMaterialFileReader
+    {
+
+    public:
+
+        ObjMaterialFileReader() = default;
+        ~ObjMaterialFileReader() = default;
+
+        ObjMaterialFileReader(ObjMaterialFileReader&&) = delete;
+        ObjMaterialFileReader& operator = (ObjMaterialFileReader&&) = delete;
+
+        ObjMaterialFileReader(const ObjMaterialFileReader&) = delete;
+        ObjMaterialFileReader& operator = (const ObjMaterialFileReader&) = delete;
+
+        /** Read and parse obj mesh file on a single thread. */
+        [[nodiscard]] ObjMaterialFileReaderResult Read(
+            const std::filesystem::path& filename,
+            const ObjMaterialFileReaderOptions& options = {});
+
+        /** Read and parse obj mesh file on a single thread. */
+        [[nodiscard]] ObjMaterialFileReaderResult Read(
+            std::istream& stream,
+            const ObjMaterialFileReaderOptions& options = {});
+
+    private:
+
+        enum class MaterialCommandType
+        {
+            // Standard properties:
+            NewMaterial,                ///< newmtl
+            AmbientColor,               ///< Ka
+            DiffuseColor,               ///< Kd 
+            SpecularColor,              ///< Ks
+            SpecularExponent,           ///< Ns
+            Dissolve,                   ///< d
+            OpticalDensity,             ///< Ni
+            AmbientTexture,             ///< map_Ka
+            DiffuseTexture,             ///< map_Kd
+            SpecularTexture,            ///< map_Ks
+            SpecularExponentTexture,    ///< map_Ns
+            DissolveTexture,            ///< map_Ns
+            BumpTexture,                ///< map_bump / bump
+            DisplacementTexture,        ///< disp
+
+            // PBR extensions:
+            Roughness,                  ///< Pr
+            Metallic,                   ///< Pm
+            EmissiveColor,              ///< Ke
+            RoughnessTexture,           ///< map_Pr
+            MetallicTexture,            ///< map_Pm
+            EmissiveTexture,            ///< map_Ke
+        };
+
+        struct MaterialCommand
+        {
+            MaterialCommand(
+                const size_t lineNumber,
+                const MaterialCommandType type,
+                const std::string_view data = {});
+
+            MaterialCommand(MaterialCommand&&) = default;
+            MaterialCommand& operator = (MaterialCommand&&) = default;
+
+            MaterialCommand(const MaterialCommand&) = delete;
+            MaterialCommand& operator = (const MaterialCommand&) = delete;
+
+            size_t lineNumber; ///< Line number, used for error messages.
+            MaterialCommandType type; ///< Type of line.
+            std::string_view data; ///< Command data.
+        };
+
+        using MaterialCommands = std::vector<MaterialCommand>;
+        using Buffer = std::shared_ptr<char[]>;
+        using Buffers = std::vector<Buffer>;
+
+        struct MaterialBuffer
+        {
+            Buffers buffers;
+            MaterialCommands commands;
+        };
+
+        using MaterialBufferSharedPointer = std::shared_ptr<MaterialBuffer>;
+
+        using MaterialTexture = ObjMaterialFile::MaterialTexture;
+        using TextureOptions = ObjMaterialFile::TextureOptions;
+        using Material = ObjMaterialFile::Material;
+
+        using ProcessMaterialResult = Expected<void, TextFileFormatError>;
+
+        [[nodiscard]] ProcessMaterialResult ProcessMaterial(
+            ObjMaterialReaderResult& readerResult,
+            const ObjMaterialFileReaderOptions& options,
+            ObjMaterialFile& objMaterialFile,
+            MaterialBufferSharedPointer materialBuffer);
+
+    };
+
+    MOLTEN_EDITOR_FRAMEWORK_API [[nodiscard]] ObjMaterialFileReaderResult ReadObjMaterialFile(
+        const std::filesystem::path& filename,
+        const ObjMaterialFileReaderOptions& options = {});
+
+    MOLTEN_EDITOR_FRAMEWORK_API [[nodiscard]] ObjMaterialFileReaderResult ReadObjMaterialFile(
+        std::istream& stream,
+        const ObjMaterialFileReaderOptions& options = {});
 
 }
 

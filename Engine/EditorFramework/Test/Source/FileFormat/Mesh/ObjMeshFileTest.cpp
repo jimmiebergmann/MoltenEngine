@@ -32,9 +32,9 @@ namespace Molten::EditorFramework
     TEST(FileFormat, ObjMeshFile_OpenFileError)
     {
         ThreadPool threadPool;
-        ObjMeshFileReader objFileReader;
+        ObjMeshFileReader reader;
 
-        const auto result = objFileReader.ReadFromFile("../Engine/Test/Data/ObjMesh/ThisFileDoesNotExist.obj", threadPool);
+        const auto result = reader.Read("../Engine/Test/Data/ObjMesh/ThisFileDoesNotExist.obj", threadPool);
 
         ASSERT_FALSE(result);
         EXPECT_EQ(result.Error().code, TextFileFormatErrorCode::OpenFileError);
@@ -45,9 +45,9 @@ namespace Molten::EditorFramework
     TEST(FileFormat, ObjMeshFile)
     {
         ThreadPool threadPool(1);
-        ObjMeshFileReader objFileReader;
+        ObjMeshFileReader reader;
 
-        auto result = objFileReader.ReadFromFile("../Engine/Core/Test/Data/ObjMesh/TestCubes.obj", threadPool);
+        auto result = reader.Read("../Engine/Core/Test/Data/ObjMesh/TestCubes.obj", threadPool);
         ASSERT_TRUE(result);
         
         auto objFile = std::move(result.Value());
@@ -252,16 +252,6 @@ namespace Molten::EditorFramework
                 }
             }
         }
-    }
-
-    TEST(FileFormat, ObjMeshFile_Benchmark)
-    {
-        ThreadPool threadPool;
-        ObjMeshFileReader objFileReader;
-
-        Molten::Test::Benchmarker bm("Model");
-        const auto result = objFileReader.ReadFromFile("C:/temp/dino_obj/dino.obj", threadPool);
-        EXPECT_TRUE(result);
     }
 
 }

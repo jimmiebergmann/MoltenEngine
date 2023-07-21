@@ -26,7 +26,7 @@
 #ifndef MOLTEN_EDITOR_FRAMEWORK_FILEFORMAT_TEXTUREASSETFILE_HPP
 #define MOLTEN_EDITOR_FRAMEWORK_FILEFORMAT_TEXTUREASSETFILE_HPP
 
-#include "Molten/EditorFramework/FileFormat/AssetFile.hpp"
+#include "Molten/EditorFramework/FileFormat/Asset/AssetFile.hpp"
 #include "Molten/Math/Vector.hpp"
 #include <memory>
 

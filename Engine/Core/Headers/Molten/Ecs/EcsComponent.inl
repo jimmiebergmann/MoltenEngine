@@ -64,7 +64,7 @@ namespace Molten
             {
                 size_t size = 0;          
                 std::vector<ComponentTypeId> visitedOffsets;
-                ForEachTemplateArgument<Components...>([&](auto type)
+                ForEachTemplateType<Components...>([&](auto type)
                 {
                     using Type = typename decltype(type)::Type;
 
@@ -127,7 +127,7 @@ namespace Molten
                     }
                 }
 
-                ForEachTemplateArgument<Components...>([&](auto type)
+                ForEachTemplateType<Components...>([&](auto type)
                 {
                     using Type = typename decltype(type)::Type;
 
@@ -304,7 +304,7 @@ namespace Molten
                     };
 
                     std::vector<Item> items;
-                    ForEachTemplateArgument<Components...>([&items](auto type)
+                    ForEachTemplateType<Components...>([&items](auto type)
                     {
                         using Type = typename decltype(type)::Type;
                         items.push_back({ Type::componentTypeId, sizeof(Type) });
@@ -377,7 +377,7 @@ namespace Molten
                     };
 
                     std::vector<ItemSize> sizeTypes;
-                    ForEachTemplateArgument<Components...>([&sizeTypes](auto type)
+                    ForEachTemplateType<Components...>([&sizeTypes](auto type)
                     {
                         using Type = typename decltype(type)::Type;
                         sizeTypes.push_back({ Type::componentTypeId, sizeof(Type) });
@@ -393,15 +393,16 @@ namespace Molten
                     }
 
                     ComponentOffsetArray<sizeof...(Components)> offsets = {};
-                    ForEachTemplateArgumentIndexed<Components...>([&offsetType, &offsets](auto type, const size_t index)
+                    ForEachTemplateType<Components...>([&offsetType, &offsets](auto type)
                     {
-                        using Type = typename decltype(type)::Type;
+                        using Param = decltype(type);
+                        using Type = typename Param::Type;
   
                         for (size_t i = 0; i < offsetType.size(); i++)
                         {
                             if (offsetType[i].componentTypeId == Type::componentTypeId)
                             {
-                                auto& offset = offsets[index];
+                                auto& offset = offsets[Param::index];
                                 offset.componentTypeId = Type::componentTypeId;
                                 offset.componentSize = sizeof(Type);
                                 offset.offset = offsetType[i].offset;
@@ -442,7 +443,7 @@ namespace Molten
 
                     std::vector<ItemSize> sizeTypes;
                     std::vector<ComponentTypeId> visitedOffsets;
-                    ForEachTemplateArgument<Components...>([&sizeTypes, &visitedOffsets](auto type)
+                    ForEachTemplateType<Components...>([&sizeTypes, &visitedOffsets](auto type)
                     {
                         using Type = typename decltype(type)::Type;
 
@@ -464,7 +465,7 @@ namespace Molten
 
                     ComponentOffsetList uniqueOffsets;
                     visitedOffsets.clear();
-                    ForEachTemplateArgument<Components...>([&offsetType, &uniqueOffsets, &visitedOffsets](auto type)
+                    ForEachTemplateType<Components...>([&offsetType, &uniqueOffsets, &visitedOffsets](auto type)
                     {
                         using Type = typename decltype(type)::Type;
 
@@ -495,7 +496,7 @@ namespace Molten
 
                 std::vector<ComponentTypeId> componentIds;
 
-                ForEachTemplateArgument<Components...>([&componentIds](auto type)
+                ForEachTemplateType<Components...>([&componentIds](auto type)
                 {
                     using Type = typename decltype(type)::Type;
                     componentIds.push_back(Type::componentTypeId);

@@ -30,53 +30,55 @@ namespace Molten::EditorFramework
 {
 
     /** Static functions. */
-    using CreateProjectFolderResult = Expected<std::filesystem::path, CreateProjectResult>;
+    using CreateProjectFolderResult = Expected<void, CreateProjectResult>;
 
     static CreateProjectFolderResult CreateProjectDirectory(
-        const std::filesystem::path& path,
-        const std::string& name)
+        const std::filesystem::path& directory)
     {
+        if (directory.has_extension())
+        {
+            return Unexpected(CreateProjectResult::InvalidDirectory);
+        }
+
+        auto name = directory.filename().string();
+
         if (!Project::ValidateName(name))
         {
             return Unexpected(CreateProjectResult::InvalidName);
         }
 
         std::error_code ec{};
-        if (!path.empty() && !std::filesystem::is_directory(path, ec))
+        if (std::filesystem::exists(directory, ec))
         {
-            return Unexpected(CreateProjectResult::InvalidDirectory);
-        }
-
-        const auto projectDirectory = path.empty() ? name : path / name;
-        if (std::filesystem::exists(projectDirectory, ec))
-        {
-            return Unexpected(CreateProjectResult::AlreadyExists);
+            return Unexpected(CreateProjectResult::DirectoryAlreadyExists);
         }
         if (ec != std::error_code{})
         {
             return Unexpected(CreateProjectResult::CannotCreateDirectory);
         }
 
-        if (!std::filesystem::create_directory(projectDirectory, ec))
+        if (!std::filesystem::create_directory(directory, ec))
         {
             return Unexpected(CreateProjectResult::CannotCreateDirectory);
         }
 
-        return projectDirectory;
+        return {};
     }
 
-    static bool CreateProjectFile(
-        const std::filesystem::path& directory,
-        const std::string& name)
+    static bool CreateProjectFile(const std::filesystem::path& directory)
     {
+        std::random_device randomDevice;
+        std::mt19937 randomEngine(randomDevice());
+
         auto projectFile = ProjectFile{ };
         projectFile.fileVersion = Version{ 0, 0, 1 };
         projectFile.engineVersion = Version{ 0, 0, 1 };
-        projectFile.globalId = Uuid{ };
+        projectFile.globalId = Uuid::GenerateVersion4(randomEngine);
         projectFile.description = "";
 
-        const auto path = directory / (name + ".mproj");
-        return WriteProjectFile(projectFile, path);
+        const auto filename = directory.filename().replace_extension(".mproj");
+        const auto filePath = directory / filename;
+        return WriteProjectFile(projectFile, filePath);
     }
 
     static CreateProjectResult CreateProjectSubDirectories(const std::filesystem::path& projectDirectory)
@@ -102,25 +104,20 @@ namespace Molten::EditorFramework
         return !name.empty() && name.find_first_of("/\\.* \t\n\r") == std::string::npos;
     }
 
-    CreateProjectResult Project::Create(
-        const std::filesystem::path& directory,
-        const std::string& name,
-        const std::string&)
+    CreateProjectResult Project::Create(const std::filesystem::path& directory)
     {
-        auto directoryCreationResult = CreateProjectDirectory(directory, name);
+        auto directoryCreationResult = CreateProjectDirectory(directory);
         if (!directoryCreationResult)
         {
             return directoryCreationResult.Error();
         }
 
-        const auto projectFolder = std::move(directoryCreationResult.Value());
-
-        if (!CreateProjectFile(projectFolder, name))
+        if (!CreateProjectFile(directory))
         {
             return CreateProjectResult::CannotCreateProjectFile;
         }
 
-        if (const auto result = CreateProjectSubDirectories(projectFolder); result != CreateProjectResult::Success)
+        if (const auto result = CreateProjectSubDirectories(directory); result != CreateProjectResult::Success)
         {
             return result;
         }
@@ -132,15 +129,19 @@ namespace Molten::EditorFramework
     {
         Project project;
 
-        const auto projectFilePath = std::filesystem::absolute(filename);
+        auto absoluteFilename = std::filesystem::absolute(filename);
+        if (!absoluteFilename.has_extension())
+        {
+            absoluteFilename /= absoluteFilename.filename().replace_extension(".mproj");
+        }
 
-        project.m_projectFile.open(projectFilePath);
+        project.m_projectFile.open(absoluteFilename);
         if (!project.m_projectFile.is_open())
         {
             return Unexpected(OpenProjectResultCode::UnknownProjectFile);
         }
 
-        project.m_projectDirectory = projectFilePath.parent_path();
+        project.m_projectDirectory = absoluteFilename.parent_path();
 
         return project;
     }

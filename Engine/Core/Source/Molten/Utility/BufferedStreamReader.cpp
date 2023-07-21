@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2023 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,13 +23,13 @@
 *
 */
 
-#include "Molten/Utility/BufferedFileLineReader.hpp"
+#include "Molten/Utility/BufferedStreamReader.hpp"
 
 namespace Molten
 {
 
     // Buffered file line reader implementations.
-    BufferedFileLineReader::BufferedFileLineReader(std::istream& inStream, const size_t minBufferSize, const size_t maxBufferSize) :
+    BufferedStreamReader::BufferedStreamReader(std::istream& inStream, const size_t minBufferSize, const size_t maxBufferSize) :
         m_inStream(inStream),
         m_minBufferSize(std::max(size_t{ 16 }, minBufferSize)),
         m_maxBufferSize(std::max(m_minBufferSize, maxBufferSize)),
@@ -46,17 +46,17 @@ namespace Molten
         m_inStream.seekg(startPos, std::istream::beg);
     }
 
-    size_t BufferedFileLineReader::GetStreamSize() const
+    size_t BufferedStreamReader::GetStreamSize() const
     {
         return m_fileSize;
     }
 
-    size_t BufferedFileLineReader::GetSizeLeft() const
+    size_t BufferedStreamReader::GetSizeLeft() const
     {
         return m_fileSize - m_currentReadPosition + (m_currentBufferSize - m_currentBufferPosition);
     }
 
-    BufferedFileLineReader::LineReadResult BufferedFileLineReader::ReadEndOfFile(std::string_view& line, std::string_view view)
+    BufferedStreamReader::LineReadResult BufferedStreamReader::ReadEndOfFile(std::string_view& line, std::string_view view)
     {
         m_currentBufferPosition = m_currentBufferSize + 1;
         m_currentFilePosition = m_fileSize + 1;
@@ -66,7 +66,7 @@ namespace Molten
     }
 
 
-    size_t BufferedFileLineReader::FindNextNewline(const std::string_view& line)
+    size_t BufferedStreamReader::FindNextNewline(const std::string_view& line)
     {
         const auto newline = line.find_first_of("\r\n");
         if (newline == std::string_view::npos)

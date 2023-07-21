@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2022 Jimmie Bergmann
+* Copyright (c) 2023 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -23,8 +23,8 @@
 *
 */
 
-#ifndef MOLTEN_CORE_UTILITY_BUFFEREDFILELINEREADER_HPP
-#define MOLTEN_CORE_UTILITY_BUFFEREDFILELINEREADER_HPP
+#ifndef MOLTEN_CORE_UTILITY_BUFFEREDSTREAMREADER_HPP
+#define MOLTEN_CORE_UTILITY_BUFFEREDSTREAMREADER_HPP
 
 #include "Molten/Core.hpp"
 #include <cstring>
@@ -35,10 +35,10 @@
 namespace Molten
 {
 
-    /** Optimized file line reader.
-     *  Files are read in chunks, but parsed line by line. Resulting data type is a string_view, pointing to an
+    /** Optimized stream reader.
+     *  Streams are read in chunks, but parsed line by line. Resulting data type is a string_view, pointing to an
      */
-    class MOLTEN_CORE_API BufferedFileLineReader
+    class MOLTEN_CORE_API BufferedStreamReader
     {
 
     public:
@@ -57,23 +57,23 @@ namespace Molten
         /** Constructing a buffered reader, by providing a std::istream and min/max buffer size.
          *  Streaming is not supported because size of file is determined at construction.
          */
-        BufferedFileLineReader(
+        BufferedStreamReader(
             std::istream& inStream,
             const size_t minBufferSize,
             const size_t maxBufferSize);
 
         /** Deleted copy/move constructors/operators. */
         /**@{*/
-        BufferedFileLineReader(const BufferedFileLineReader&) = delete;
-        BufferedFileLineReader(BufferedFileLineReader&&) = delete;
-        BufferedFileLineReader& operator = (const BufferedFileLineReader&) = delete;
-        BufferedFileLineReader& operator = (BufferedFileLineReader&&) = delete;
+        BufferedStreamReader(const BufferedStreamReader&) = delete;
+        BufferedStreamReader(BufferedStreamReader&&) = delete;
+        BufferedStreamReader& operator = (const BufferedStreamReader&) = delete;
+        BufferedStreamReader& operator = (BufferedStreamReader&&) = delete;
         /**@}*/
 
         /** Default destructor.*/
-        ~BufferedFileLineReader() = default;
+        ~BufferedStreamReader() = default;
 
-        /** Read next line from file.
+        /** Read next line from stream.
          *  Underlying implementation reads chunks of data, but provides an output string_view parameter which will contain the next line if result is Successful.
          *  Provided parameter "bufferCreationCallback" is invoked with a new data chunk of data type Buffer, when new chunks are allocated.
          *  it is undefined behaviour to access "line" after it's data chunk is destroyed, so received chunk through bufferCreationCallback should be stored in some way by the caller.
@@ -114,6 +114,6 @@ namespace Molten
 
 }
 
-#include "Molten/Utility/BufferedFileLineReader.inl"
+#include "Molten/Utility/BufferedStreamReader.inl"
 
 #endif

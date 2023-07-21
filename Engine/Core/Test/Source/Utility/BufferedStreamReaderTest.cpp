@@ -1,7 +1,7 @@
 /*
 * MIT License
 *
-* Copyright (c) 2021 Jimmie Bergmann
+* Copyright (c) 2023 Jimmie Bergmann
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files(the "Software"), to deal
@@ -24,7 +24,7 @@
 */
 
 #include "Test.hpp"
-#include "Molten/Utility/BufferedFileLineReader.hpp"
+#include "Molten/Utility/BufferedStreamReader.hpp"
 #include <sstream>
 
 
@@ -33,44 +33,44 @@
 
 namespace Molten
 {
-    TEST(Utility, BufferedFileLineReader_FitAll)
+    TEST(Utility, BufferedStreamReader_FitAll)
     {
         std::stringstream ss;
         ss << "Hello first world\nHello second world\r\nHello third world\r\n\r\nFoo\n\nBar\r\r\rEnding\r\n";     
 
         std::vector<std::string> lines;
-        std::vector<BufferedFileLineReader::Buffer> buffers;
+        std::vector<BufferedStreamReader::Buffer> buffers;
         auto addBuffer = [&](auto& buffer) { buffers.push_back(buffer); };
 
         {
-            BufferedFileLineReader lineReader(ss, 25, 200);
+            BufferedStreamReader reader(ss, 25, 200);
 
             Molten::Test::Benchmarker bm("Reading lines");
 
             std::string_view line;
-            ASSERT_EQ(lineReader.ReadLine(line, addBuffer), BufferedFileLineReader::LineReadResult::Successful);
+            ASSERT_EQ(reader.ReadLine(line, addBuffer), BufferedStreamReader::LineReadResult::Successful);
             lines.emplace_back(line);
-            ASSERT_EQ(lineReader.ReadLine(line, addBuffer), BufferedFileLineReader::LineReadResult::Successful);
+            ASSERT_EQ(reader.ReadLine(line, addBuffer), BufferedStreamReader::LineReadResult::Successful);
             lines.emplace_back(line);
-            ASSERT_EQ(lineReader.ReadLine(line, addBuffer), BufferedFileLineReader::LineReadResult::Successful);
+            ASSERT_EQ(reader.ReadLine(line, addBuffer), BufferedStreamReader::LineReadResult::Successful);
             lines.emplace_back(line);
-            ASSERT_EQ(lineReader.ReadLine(line, addBuffer), BufferedFileLineReader::LineReadResult::Successful);
+            ASSERT_EQ(reader.ReadLine(line, addBuffer), BufferedStreamReader::LineReadResult::Successful);
             lines.emplace_back(line);
-            ASSERT_EQ(lineReader.ReadLine(line, addBuffer), BufferedFileLineReader::LineReadResult::Successful);
+            ASSERT_EQ(reader.ReadLine(line, addBuffer), BufferedStreamReader::LineReadResult::Successful);
             lines.emplace_back(line);
-            ASSERT_EQ(lineReader.ReadLine(line, addBuffer), BufferedFileLineReader::LineReadResult::Successful);
+            ASSERT_EQ(reader.ReadLine(line, addBuffer), BufferedStreamReader::LineReadResult::Successful);
             lines.emplace_back(line);
-            ASSERT_EQ(lineReader.ReadLine(line, addBuffer), BufferedFileLineReader::LineReadResult::Successful);
+            ASSERT_EQ(reader.ReadLine(line, addBuffer), BufferedStreamReader::LineReadResult::Successful);
             lines.emplace_back(line);
-            ASSERT_EQ(lineReader.ReadLine(line, addBuffer), BufferedFileLineReader::LineReadResult::Successful);
+            ASSERT_EQ(reader.ReadLine(line, addBuffer), BufferedStreamReader::LineReadResult::Successful);
             lines.emplace_back(line);
-            ASSERT_EQ(lineReader.ReadLine(line, addBuffer), BufferedFileLineReader::LineReadResult::Successful);
+            ASSERT_EQ(reader.ReadLine(line, addBuffer), BufferedStreamReader::LineReadResult::Successful);
             lines.emplace_back(line);
-            ASSERT_EQ(lineReader.ReadLine(line, addBuffer), BufferedFileLineReader::LineReadResult::Successful);
+            ASSERT_EQ(reader.ReadLine(line, addBuffer), BufferedStreamReader::LineReadResult::Successful);
             lines.emplace_back(line);
-            ASSERT_EQ(lineReader.ReadLine(line, addBuffer), BufferedFileLineReader::LineReadResult::Successful);
+            ASSERT_EQ(reader.ReadLine(line, addBuffer), BufferedStreamReader::LineReadResult::Successful);
             lines.emplace_back(line);
-            ASSERT_EQ(lineReader.ReadLine(line, addBuffer), BufferedFileLineReader::LineReadResult::EndOfFile);
+            ASSERT_EQ(reader.ReadLine(line, addBuffer), BufferedStreamReader::LineReadResult::EndOfFile);
         }
 
         ASSERT_EQ(buffers.size(), size_t{ 1 });
@@ -90,30 +90,30 @@ namespace Molten
         EXPECT_STREQ(lines[10].c_str(), "");
     }
 
-    TEST(Utility, BufferedFileLineReader_FitExactly)
+    TEST(Utility, BufferedStreamReader_FitExactly)
     {
         { // No newline at end.
             std::stringstream ss;
             ss << "Hello first world\r\nHello second world\nHello third world ";
 
             std::vector<std::string> lines;
-            std::vector<BufferedFileLineReader::Buffer> buffers;
+            std::vector<BufferedStreamReader::Buffer> buffers;
 
             {
                 auto addBuffer = [&](auto& buffer) { buffers.push_back(buffer); };
 
-                BufferedFileLineReader lineReader(ss, 19, 19);
+                BufferedStreamReader reader(ss, 19, 19);
 
                 Molten::Test::Benchmarker bm("Reading lines");
 
                 std::string_view line;
-                ASSERT_EQ(lineReader.ReadLine(line, addBuffer), BufferedFileLineReader::LineReadResult::Successful);
+                ASSERT_EQ(reader.ReadLine(line, addBuffer), BufferedStreamReader::LineReadResult::Successful);
                 lines.emplace_back(line);
-                ASSERT_EQ(lineReader.ReadLine(line, addBuffer), BufferedFileLineReader::LineReadResult::Successful);
+                ASSERT_EQ(reader.ReadLine(line, addBuffer), BufferedStreamReader::LineReadResult::Successful);
                 lines.emplace_back(line);
-                ASSERT_EQ(lineReader.ReadLine(line, addBuffer), BufferedFileLineReader::LineReadResult::Successful);
+                ASSERT_EQ(reader.ReadLine(line, addBuffer), BufferedStreamReader::LineReadResult::Successful);
                 lines.emplace_back(line);
-                ASSERT_EQ(lineReader.ReadLine(line, addBuffer), BufferedFileLineReader::LineReadResult::EndOfFile);
+                ASSERT_EQ(reader.ReadLine(line, addBuffer), BufferedStreamReader::LineReadResult::EndOfFile);
             }
 
             ASSERT_EQ(buffers.size(), size_t{ 3 });
@@ -131,25 +131,25 @@ namespace Molten
             ss << "Hello first world\r\nHello second world\nHello third world\r";
 
             std::vector<std::string> lines;
-            std::vector<BufferedFileLineReader::Buffer> buffers;
+            std::vector<BufferedStreamReader::Buffer> buffers;
             
             {
                 auto addBuffer = [&](auto& buffer) { buffers.push_back(buffer); };
 
-                BufferedFileLineReader lineReader(ss, 19, 19);
+                BufferedStreamReader reader(ss, 19, 19);
 
                 Molten::Test::Benchmarker bm("Reading lines");
 
                 std::string_view line;
-                ASSERT_EQ(lineReader.ReadLine(line, addBuffer), BufferedFileLineReader::LineReadResult::Successful);
+                ASSERT_EQ(reader.ReadLine(line, addBuffer), BufferedStreamReader::LineReadResult::Successful);
                 lines.emplace_back(line);
-                ASSERT_EQ(lineReader.ReadLine(line, addBuffer), BufferedFileLineReader::LineReadResult::Successful);
+                ASSERT_EQ(reader.ReadLine(line, addBuffer), BufferedStreamReader::LineReadResult::Successful);
                 lines.emplace_back(line);
-                ASSERT_EQ(lineReader.ReadLine(line, addBuffer), BufferedFileLineReader::LineReadResult::Successful);
+                ASSERT_EQ(reader.ReadLine(line, addBuffer), BufferedStreamReader::LineReadResult::Successful);
                 lines.emplace_back(line);
-                ASSERT_EQ(lineReader.ReadLine(line, addBuffer), BufferedFileLineReader::LineReadResult::Successful);
+                ASSERT_EQ(reader.ReadLine(line, addBuffer), BufferedStreamReader::LineReadResult::Successful);
                 lines.emplace_back(line);
-                ASSERT_EQ(lineReader.ReadLine(line, addBuffer), BufferedFileLineReader::LineReadResult::EndOfFile);
+                ASSERT_EQ(reader.ReadLine(line, addBuffer), BufferedStreamReader::LineReadResult::EndOfFile);
             }
 
             ASSERT_EQ(buffers.size(), size_t{ 3 });
@@ -165,30 +165,30 @@ namespace Molten
         }
     }
 
-    TEST(Utility, BufferedFileLineReader_FitSplit)
+    TEST(Utility, BufferedStreamReader_FitSplit)
     {
         {
             std::stringstream ss;
             ss << "Hello first world - foo\nHello second world\r\nHello third world - bar";
 
             std::vector<std::string> lines;
-            std::vector<BufferedFileLineReader::Buffer> buffers;
+            std::vector<BufferedStreamReader::Buffer> buffers;
 
             {
                 auto addBuffer = [&](auto& buffer) { buffers.push_back(buffer); };
 
-                BufferedFileLineReader lineReader(ss, 30, 30);
+                BufferedStreamReader reader(ss, 30, 30);
 
                 Molten::Test::Benchmarker bm("Reading lines");
 
                 std::string_view line;
-                ASSERT_EQ(lineReader.ReadLine(line, addBuffer), BufferedFileLineReader::LineReadResult::Successful);
+                ASSERT_EQ(reader.ReadLine(line, addBuffer), BufferedStreamReader::LineReadResult::Successful);
                 lines.emplace_back(line);
-                ASSERT_EQ(lineReader.ReadLine(line, addBuffer), BufferedFileLineReader::LineReadResult::Successful);
+                ASSERT_EQ(reader.ReadLine(line, addBuffer), BufferedStreamReader::LineReadResult::Successful);
                 lines.emplace_back(line);
-                ASSERT_EQ(lineReader.ReadLine(line, addBuffer), BufferedFileLineReader::LineReadResult::Successful);
+                ASSERT_EQ(reader.ReadLine(line, addBuffer), BufferedStreamReader::LineReadResult::Successful);
                 lines.emplace_back(line);
-                ASSERT_EQ(lineReader.ReadLine(line, addBuffer), BufferedFileLineReader::LineReadResult::EndOfFile);
+                ASSERT_EQ(reader.ReadLine(line, addBuffer), BufferedStreamReader::LineReadResult::EndOfFile);
             }
 
             ASSERT_EQ(buffers.size(), size_t{ 3 });
@@ -206,25 +206,25 @@ namespace Molten
             ss << "Hello first world - foo\nHello second world\r\nHello third world - bar\n";
 
             std::vector<std::string> lines;
-            std::vector<BufferedFileLineReader::Buffer> buffers;
+            std::vector<BufferedStreamReader::Buffer> buffers;
 
             {
                 auto addBuffer = [&](auto& buffer) { buffers.push_back(buffer); };
 
-                BufferedFileLineReader lineReader(ss, 30, 30);
+                BufferedStreamReader reader(ss, 30, 30);
 
                 Molten::Test::Benchmarker bm("Reading lines");
 
                 std::string_view line;
-                ASSERT_EQ(lineReader.ReadLine(line, addBuffer), BufferedFileLineReader::LineReadResult::Successful);
+                ASSERT_EQ(reader.ReadLine(line, addBuffer), BufferedStreamReader::LineReadResult::Successful);
                 lines.emplace_back(line);
-                ASSERT_EQ(lineReader.ReadLine(line, addBuffer), BufferedFileLineReader::LineReadResult::Successful);
+                ASSERT_EQ(reader.ReadLine(line, addBuffer), BufferedStreamReader::LineReadResult::Successful);
                 lines.emplace_back(line);
-                ASSERT_EQ(lineReader.ReadLine(line, addBuffer), BufferedFileLineReader::LineReadResult::Successful);
+                ASSERT_EQ(reader.ReadLine(line, addBuffer), BufferedStreamReader::LineReadResult::Successful);
                 lines.emplace_back(line);
-                ASSERT_EQ(lineReader.ReadLine(line, addBuffer), BufferedFileLineReader::LineReadResult::Successful);
+                ASSERT_EQ(reader.ReadLine(line, addBuffer), BufferedStreamReader::LineReadResult::Successful);
                 lines.emplace_back(line);
-                ASSERT_EQ(lineReader.ReadLine(line, addBuffer), BufferedFileLineReader::LineReadResult::EndOfFile);
+                ASSERT_EQ(reader.ReadLine(line, addBuffer), BufferedStreamReader::LineReadResult::EndOfFile);
             }
 
             ASSERT_EQ(buffers.size(), size_t{ 3 });
@@ -244,26 +244,26 @@ namespace Molten
 
     void ReadCompareFile(const std::string& filename, const size_t minbufferSize, const size_t maxbufferSize)
     {
-        { // Compare BufferedFileLineReader and std::getline.
+        { // Compare BufferedStreamReader and std::getline.
             std::ifstream file(filename);
             ASSERT_TRUE(file.is_open());
 
             std::ifstream bufferFile(filename, std::ifstream::binary);
             ASSERT_TRUE(bufferFile.is_open());
 
-            std::vector<BufferedFileLineReader::Buffer> buffers;
+            std::vector<BufferedStreamReader::Buffer> buffers;
             auto addBuffer = [&](auto& buffer) { buffers.push_back(buffer); };
 
-            BufferedFileLineReader lineReader(bufferFile, minbufferSize, maxbufferSize);
+            BufferedStreamReader reader(bufferFile, minbufferSize, maxbufferSize);
 
-            auto result = BufferedFileLineReader::LineReadResult::Successful;
-            while (result == BufferedFileLineReader::LineReadResult::Successful)
+            auto result = BufferedStreamReader::LineReadResult::Successful;
+            while (result == BufferedStreamReader::LineReadResult::Successful)
             {
                 std::string fileLine;
                 std::string_view line;
 
-                result = lineReader.ReadLine(line, addBuffer);
-                if (result == BufferedFileLineReader::LineReadResult::EndOfFile)
+                result = reader.ReadLine(line, addBuffer);
+                if (result == BufferedStreamReader::LineReadResult::EndOfFile)
                 {
                     std::getline(file, fileLine);
                     ASSERT_STREQ(fileLine.c_str(), std::string(line).c_str());
@@ -271,7 +271,7 @@ namespace Molten
                     EXPECT_TRUE(file.eof());
                     break;
                 }
-                if (result != BufferedFileLineReader::LineReadResult::Successful)
+                if (result != BufferedStreamReader::LineReadResult::Successful)
                 {
                     ASSERT_TRUE(false);
                     return;
@@ -285,28 +285,28 @@ namespace Molten
         }
 
         { // Benchmarking
-            { // BufferedFileLineReader
+            { // BufferedStreamReader
                 std::ifstream file(filename, std::ifstream::binary);
                 ASSERT_TRUE(file.is_open());
 
-                std::vector<BufferedFileLineReader::Buffer> buffers;
+                std::vector<BufferedStreamReader::Buffer> buffers;
                 auto addBuffer = [&](auto& buffer) { buffers.push_back(buffer); };
 
-                BufferedFileLineReader lineReader(file, 2048, 1048576);
-                auto result = BufferedFileLineReader::LineReadResult::Successful;
+                BufferedStreamReader reader(file, 2048, 1048576);
+                auto result = BufferedStreamReader::LineReadResult::Successful;
 
                 {
-                    Molten::Test::Benchmarker bm(filename + " - BufferedFileLineReader");
+                    Molten::Test::Benchmarker bm(filename + " - BufferedStreamReader");
 
-                    while (result == BufferedFileLineReader::LineReadResult::Successful)
+                    while (result == BufferedStreamReader::LineReadResult::Successful)
                     {
                         std::string_view line;
-                        result = lineReader.ReadLine(line, addBuffer);
-                        if (result == BufferedFileLineReader::LineReadResult::EndOfFile)
+                        result = reader.ReadLine(line, addBuffer);
+                        if (result == BufferedStreamReader::LineReadResult::EndOfFile)
                         {
                             break;
                         }
-                        if (result != BufferedFileLineReader::LineReadResult::Successful)
+                        if (result != BufferedStreamReader::LineReadResult::Successful)
                         {
                             ASSERT_TRUE(false);
                         }
@@ -330,7 +330,7 @@ namespace Molten
         }
     }
 
-    TEST(Utility, BufferedFileLineReader_ProjectFiles)
+    TEST(Utility, BufferedStreamReader_ProjectFiles)
     {
         NESTED_TEST_FUNCTION(ReadCompareFile("../.gitignore", 1000, 1000))
         NESTED_TEST_FUNCTION(ReadCompareFile("../CONTRIBUTING.md", 1000, 1000))

@@ -46,6 +46,7 @@
 #include "Molten/Shader/Generator/SpirvShaderGenerator.hpp"
 #include "Molten/System/Exception.hpp"
 #include "Molten/Utility/SmartFunction.hpp"
+#include "Molten/Utility/Template.hpp"
 #include "Molten/Logger.hpp"
 #include <algorithm>
 #include <limits>
@@ -689,7 +690,7 @@ namespace Molten
                 }
                 else
                 {
-                    static_assert("Unknown binding type.");
+                    static_assert(AlwaysFalse<T>, "Unknown binding type.");
                 }
                     
             }, binding.binding);
@@ -906,7 +907,7 @@ namespace Molten
                 }
                 else
                 {
-                    static_assert("Unknown binding type.");
+                    static_assert(AlwaysFalse<T>, "Unknown binding type.");
                 }
 
             }, binding.binding);

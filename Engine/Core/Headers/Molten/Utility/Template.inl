@@ -29,11 +29,32 @@ namespace Molten
     namespace Private
     {
 
-        template<typename T>
+        template<typename T, size_t Vindex>
         struct ForEachTemplateTypeWrapper
         {
             using Type = T;
+            static constexpr auto index = Vindex;
         };
+
+        template<typename T, size_t Vindex>
+        struct ForEachTemplateValueWrapper
+        {
+            using Type = T;
+            static constexpr auto index = Vindex;
+            T value;
+        };
+
+        template<typename ... TTypes, std::size_t ... VIndex, typename TCallback>
+        constexpr void ForEachTemplateTypeIndexed(std::index_sequence<VIndex...> const&, TCallback&& callback)
+        {
+            (callback(ForEachTemplateTypeWrapper<TTypes, VIndex>{}), ...);
+        }
+
+        template<typename T, T ... TValues, std::size_t ... VIndex, typename TCallback>
+        constexpr void ForEachTemplateValueIndexed(std::index_sequence<VIndex...> const&, TCallback&& callback)
+        {
+            (callback(ForEachTemplateValueWrapper<T, VIndex>{ TValues }), ...);
+        }
 
         template <typename>
         struct VariantTypeTag {};
@@ -46,16 +67,15 @@ namespace Molten
     }
 
     template<typename ... TTypes, typename TCallback>
-    constexpr void ForEachTemplateArgument(TCallback&& callback)
+    constexpr void ForEachTemplateType(TCallback&& callback)
     {
-        (callback(Private::ForEachTemplateTypeWrapper<TTypes>{}), ...);
+        Private::ForEachTemplateTypeIndexed<TTypes...>(std::make_index_sequence<sizeof...(TTypes)>{}, callback);
     }
 
-    template<typename ... TTypes, typename TCallback>
-    constexpr void ForEachTemplateArgumentIndexed(TCallback&& callback)
+    template<typename T, T ... TValues, typename TCallback>
+    constexpr void ForEachTemplateValue(TCallback&& callback)
     {
-        size_t index = 0;
-        (callback(Private::ForEachTemplateTypeWrapper<TTypes>{}, index++), ...);
+        Private::ForEachTemplateValueIndexed<T, TValues...>(std::make_index_sequence<sizeof...(TValues)>{}, callback);
     }
 
     template<typename TType, typename ... TTypes>

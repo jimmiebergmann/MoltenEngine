@@ -88,8 +88,8 @@ namespace Molten::Editor
     private:
 
         [[nodiscard]] bool Load(const EditorDescriptor& descriptor);
-        [[nodiscard]] bool LoadProject(const std::filesystem::path& path);
-        [[nodiscard]] bool CreateProject(const std::filesystem::path& path, const std::string& filename);
+        [[nodiscard]] bool LoadProject(const std::filesystem::path& filename);
+        [[nodiscard]] bool CreateProject(const std::filesystem::path& directory);
 
         /*[[nodiscard]] bool LoadWindow(const EditorDescriptor& descriptor);
         [[nodiscard]] bool LoadRenderer(const EditorDescriptor& descriptor);

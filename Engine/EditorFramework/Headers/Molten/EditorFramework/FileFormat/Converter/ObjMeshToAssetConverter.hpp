@@ -23,21 +23,25 @@
 *
 */
 
-#include "Test.hpp"
-#include "Molten/EditorFramework/Project.hpp"
-#include "Molten/Utility/Template.hpp"
+#ifndef MOLTEN_EDITOR_FRAMEWORK_FILEFORMAT_CONVERTER_OBJMESHTOASSETCONVERTER_HPP
+#define MOLTEN_EDITOR_FRAMEWORK_FILEFORMAT_CONVERTER_OBJMESHTOASSETCONVERTER_HPP
+
+#include "Molten/EditorFramework/FileFormat/Asset/MeshAssetFile.hpp"
+#include "Molten/EditorFramework/FileFormat/Mesh/ObjMeshFile.hpp"
 
 namespace Molten::EditorFramework
 {
 
-    TEST(Project, CreateProject)
+    enum class ConvertToMeshAssetFileError
     {
-        const auto dir = Molten::Test::CreateTestDirectory("Project_CreateProject");
-        const auto projectDir = dir / "my_new_project";
-        EXPECT_EQ(Project::Create(projectDir), CreateProjectResult::Success);
-        
-        auto openResult = Project::Open(projectDir / "my_new_project.mproj");
-        ASSERT_TRUE(openResult.HasValue());
-    }
+        VertexIndexOverflow,
+        NormalIndexOverflow,
+        TextureCoordinateIndexOverflow
+    };
+
+    MOLTEN_EDITOR_FRAMEWORK_API Expected<MeshAssetFile, ConvertToMeshAssetFileError> ConvertToMeshAssetFile(
+        const ObjMeshFile::Object& objObject);
 
 }
+
+#endif

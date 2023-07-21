@@ -101,7 +101,7 @@ namespace Molten
             static_assert(Private::AreExplicitContextComponentTypes<Context, Components...>(), "Implicit component type.");
 
             // Make sure the size of each component is larger than 0 bytes.
-            ForEachTemplateArgument<Components...>([](auto type)
+            ForEachTemplateType<Components...>([](auto type)
             {
                 using Type = typename decltype(type)::Type;
                 static_assert(sizeof(Type) != 0, "Component of size 0 is not supported.");                
@@ -242,7 +242,7 @@ namespace Molten
             else
             {
                 // Make sure the size of each component is larger than 0 bytes.
-                ForEachTemplateArgument<Components...>([](auto type)
+                ForEachTemplateType<Components...>([](auto type)
                 {
                     using Type = typename decltype(type)::Type;
                     static_assert(sizeof(Type) != 0, "Component of size 0 is not supported.");
@@ -420,7 +420,7 @@ namespace Molten
             else
             {
                 // Make sure the size of each component is larger than 0 bytes.
-                ForEachTemplateArgument<Components...>([](auto type)
+                ForEachTemplateType<Components...>([](auto type)
                 {
                     using Type = typename decltype(type)::Type;
                     static_assert(sizeof(Type) != 0, "Component of size 0 is not supported.");
@@ -675,7 +675,7 @@ namespace Molten
             std::vector<ComponentTypeId> visitedComponents;
             size_t index = 0;
 
-            ForEachTemplateArgument<Components...>([&](auto type)
+            ForEachTemplateType<Components...>([&](auto type)
             {
                 using Type = typename decltype(type)::Type;
 
@@ -703,7 +703,7 @@ namespace Molten
 
             size_t index = 0;
 
-            ForEachTemplateArgument<Components...>([&](auto type)
+            ForEachTemplateType<Components...>([&](auto type)
             {
                 using Type = typename decltype(type)::Type;
 

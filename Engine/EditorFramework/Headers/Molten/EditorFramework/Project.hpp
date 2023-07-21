@@ -45,9 +45,7 @@ namespace Molten::EditorFramework
         InvalidName, ///< Project name contains valid characters.
         InvalidDirectory, ///< Directory does not exists or is not a directory.
         CannotCreateDirectory, ///< Failed to create project directory.
-        AlreadyExists, ///< Project name already exists in path folder.
-        UnknownTemplate, ///< Cannot find template by name.
-        InvalidTemplate, ///< Template is corrupt.
+        DirectoryAlreadyExists, ///< Project directory already exists.
         CannotCreateProjectFile ///< Failed to create project file in directory.
     };
 
@@ -69,12 +67,9 @@ namespace Molten::EditorFramework
 
         static bool ValidateName(const std::string& name);
 
-        static CreateProjectResult Create(
-            const std::filesystem::path& directory,
-            const std::string& name,
-            const std::string& templateName = "");
+        static [[nodiscard]] CreateProjectResult Create(const std::filesystem::path& directory);
 
-        static OpenProjectResult Open(const std::filesystem::path& filename);
+        static [[nodiscard]] OpenProjectResult Open(const std::filesystem::path& filename);
 
         std::filesystem::path GetDirectoryPath() const;
 
