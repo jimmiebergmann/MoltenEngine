@@ -88,16 +88,16 @@ namespace Molten::EditorFramework::BinaryFile
     {};
 
     template<> struct PropertyTraits<Vector2f32> :
-        IsDataType<DataType::Vector2f32>, IsArrayParsable<false>, IsScalarParsable<false>
+        IsDataType<DataType::Vector2f32>, IsArrayParsable<false>, IsScalarParsable<true>
     {};
     template<> struct PropertyTraits<Vector3f32> :
-        IsDataType<DataType::Vector3f32>, IsArrayParsable<false>, IsScalarParsable<false>
+        IsDataType<DataType::Vector3f32>, IsArrayParsable<false>, IsScalarParsable<true>
     {};
     template<> struct PropertyTraits<Vector4f32> :
-        IsDataType<DataType::Vector3f32>, IsArrayParsable<false>, IsScalarParsable<false>
+        IsDataType<DataType::Vector3f32>, IsArrayParsable<false>, IsScalarParsable<true>
     {};
     template<> struct PropertyTraits<Matrix4x4f32> :
-        IsDataType<DataType::Matrix4x4f32>, IsArrayParsable<false>, IsScalarParsable<false>
+        IsDataType<DataType::Matrix4x4f32>, IsArrayParsable<false>, IsScalarParsable<true>
     {};
 
 
@@ -284,7 +284,14 @@ namespace Molten::EditorFramework::BinaryFile
     template<typename T>
     T Parser::StreamWrapper::ReadRawIntegral()
     {
-        static_assert(std::is_integral_v<T> == true || std::is_floating_point_v<T> == true, "Cannot read type T as scalar");
+        static_assert(
+            std::is_integral_v<T> == true || 
+            std::is_floating_point_v<T> == true ||
+            std::is_same_v<T, Vector2f32> == true ||
+            std::is_same_v<T, Vector3f32> == true ||
+            std::is_same_v<T, Vector4f32> == true ||
+            std::is_same_v<T, Matrix4x4f32> == true,
+            "Cannot read type T as scalar");
 
         auto value = T{};
         stream.read(reinterpret_cast<char*>(&value), sizeof(value));

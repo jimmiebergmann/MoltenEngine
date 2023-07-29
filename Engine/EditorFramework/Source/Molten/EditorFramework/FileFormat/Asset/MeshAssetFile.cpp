@@ -31,169 +31,6 @@
 namespace Molten::EditorFramework
 {
 
-    Expected<void, WriteMeshAssetFileError> WriteMeshAssetFile(
-        const std::filesystem::path& path,
-        const MeshAssetFile& meshAssetFile,
-        const WriteMeshAssetFileOptions& options)
-    {
-        std::ofstream file(path.c_str(), std::ifstream::binary);
-        if (!file.is_open())
-        {
-            return Unexpected(WriteMeshAssetFileError::OpenFileError);
-        }
-
-        return WriteMeshAssetFile(file, meshAssetFile, options);
-    }
-
-    Expected<void, WriteMeshAssetFileError> WriteMeshAssetFile(
-        std::ostream& stream,
-        const MeshAssetFile& meshAssetFile,
-        const WriteMeshAssetFileOptions& options)
-    {
-        if (!options.ignoreHeader)
-        {
-            const auto assetFileHeader = AssetFileHeader{
-                .type = AssetType::Mesh
-            };
-
-            WriteAssetFileHeader(stream, assetFileHeader);
-        }
-
-        auto subMeshBlockResult = [&meshAssetFile]()->Expected<BinaryFile::BlockView, WriteMeshAssetFileError>
-        {
-            auto subMeshBlocks = std::vector<BinaryFile::BlockView>{};
-
-            for (const auto& subMesh : meshAssetFile.subMeshes)
-            {
-                if (subMesh.indexBufferViewIndex >= static_cast<uint64_t>(meshAssetFile.bufferViews.size()))
-                {
-                    return Unexpected(WriteMeshAssetFileError::BadBufferViewIndex);
-                }
-
-                auto vertexAttributeBlocks = std::vector<BinaryFile::BlockView>{};
-                for (const auto& vertexAttribute : subMesh.vertexAttributes)
-                {
-                    if (vertexAttribute.bufferViewIndex >= static_cast<uint64_t>(meshAssetFile.bufferViews.size()))
-                    {
-                        return Unexpected(WriteMeshAssetFileError::BadBufferViewIndex);
-                    }
-
-                    vertexAttributeBlocks.emplace_back(BinaryFile::BlockView{
-                        .name = "vertex_attribute",
-                        .properties = {
-                            static_cast<uint32_t>(vertexAttribute.type),
-                            vertexAttribute.bufferViewIndex
-                        }
-                    });
-                }
-
-                subMeshBlocks.emplace_back(BinaryFile::BlockView{
-                    .name = "sub_mesh",
-                    .properties = {
-                        subMesh.name,
-                        subMesh.indexBufferViewIndex,
-                        BinaryFile::ArrayView{ std::move(vertexAttributeBlocks)}
-                    }
-                });
-            }
-
-            return BinaryFile::BlockView{
-                .name = "sub_meshes",
-                .properties = {
-                    BinaryFile::ArrayView{ std::move(subMeshBlocks) }
-                }
-            };
-        }();
-
-        if (!subMeshBlockResult)
-        {
-            return Unexpected(subMeshBlockResult.Error());
-        }
-
-        auto buffersBlockResult = [&meshAssetFile]() -> Expected<BinaryFile::BlockView, WriteMeshAssetFileError>
-        {
-            auto bufferBlocks = std::vector<BinaryFile::BlockView>{};
-
-            for (const auto& buffer : meshAssetFile.buffers)
-            {
-                bufferBlocks.emplace_back(BinaryFile::BlockView{
-                    .name = "buffer",
-                    .properties = {
-                        BinaryFile::ArrayView{ buffer.data }
-                    }
-                });
-            }
-
-            return BinaryFile::BlockView{
-                .name = "buffers",
-                .properties = {
-                    BinaryFile::ArrayView{ std::move(bufferBlocks) }
-                }
-            };
-        }();
-
-        if (!buffersBlockResult)
-        {
-            return Unexpected(buffersBlockResult.Error());
-        }
-
-        auto bufferViewsBlockResult = [&meshAssetFile]() -> Expected<BinaryFile::BlockView, WriteMeshAssetFileError>
-        {
-            auto bufferViewBlocks = std::vector<BinaryFile::BlockView>{};
-
-            for (const auto& bufferView : meshAssetFile.bufferViews)
-            {
-                if (bufferView.bufferIndex >= static_cast<uint64_t>(meshAssetFile.buffers.size()))
-                {
-                    return Unexpected(WriteMeshAssetFileError::BadBufferIndex);
-                }
-
-                bufferViewBlocks.emplace_back(BinaryFile::BlockView{
-                    .name = "buffer_view",
-                    .properties = {
-                        bufferView.bufferIndex,
-                        bufferView.bufferOffset,
-                        bufferView.bufferStride
-                    }
-                });
-            }
-
-            return BinaryFile::BlockView{
-                .name = "buffer_views",
-                .properties = {
-                    BinaryFile::ArrayView{ std::move(bufferViewBlocks) }
-                }
-            };
-        }();
-
-        if (!bufferViewsBlockResult)
-        {
-            return Unexpected(bufferViewsBlockResult.Error());
-        }
-
-        const auto meshBlock = BinaryFile::BlockView{
-            .name = "mesh",
-            .properties = {
-                meshAssetFile.name,
-                std::move(*subMeshBlockResult),
-                std::move(*buffersBlockResult),
-                std::move(*bufferViewsBlockResult)
-            }
-        };
-
-        auto writeResult = WriteBinaryFile(stream, meshBlock);
-        if (!writeResult)
-        {
-            switch (writeResult.Error())
-            {
-                case WriteBinaryFileError::OpenFileError: return Unexpected(WriteMeshAssetFileError::OpenFileError);
-                case WriteBinaryFileError::InternalError: return Unexpected(WriteMeshAssetFileError::InternalError);
-            }
-        }
-
-        return {};
-    }
-
     Expected<MeshAssetFile, ReadMeshAssetFileError> ReadMeshAssetFile(
         const std::filesystem::path& path,
         const ReadMeshAssetFileOptions& options)
@@ -375,8 +212,170 @@ namespace Molten::EditorFramework
             }
         }
   
-
         return meshAssetFile;
+    }
+
+    Expected<void, WriteMeshAssetFileError> WriteMeshAssetFile(
+        const std::filesystem::path& path,
+        const MeshAssetFile& meshAssetFile,
+        const WriteMeshAssetFileOptions& options)
+    {
+        std::ofstream file(path.c_str(), std::ifstream::binary);
+        if (!file.is_open())
+        {
+            return Unexpected(WriteMeshAssetFileError::OpenFileError);
+        }
+
+        return WriteMeshAssetFile(file, meshAssetFile, options);
+    }
+
+    Expected<void, WriteMeshAssetFileError> WriteMeshAssetFile(
+        std::ostream& stream,
+        const MeshAssetFile& meshAssetFile,
+        const WriteMeshAssetFileOptions& options)
+    {
+        if (!options.ignoreHeader)
+        {
+            const auto assetFileHeader = AssetFileHeader{
+                .type = AssetType::Mesh
+            };
+
+            WriteAssetFileHeader(stream, assetFileHeader);
+        }
+
+        auto subMeshBlockResult = [&meshAssetFile]()->Expected<BinaryFile::BlockView, WriteMeshAssetFileError>
+        {
+            auto subMeshBlocks = std::vector<BinaryFile::BlockView>{};
+
+            for (const auto& subMesh : meshAssetFile.subMeshes)
+            {
+                if (subMesh.indexBufferViewIndex >= static_cast<uint64_t>(meshAssetFile.bufferViews.size()))
+                {
+                    return Unexpected(WriteMeshAssetFileError::BadBufferViewIndex);
+                }
+
+                auto vertexAttributeBlocks = std::vector<BinaryFile::BlockView>{};
+                for (const auto& vertexAttribute : subMesh.vertexAttributes)
+                {
+                    if (vertexAttribute.bufferViewIndex >= static_cast<uint64_t>(meshAssetFile.bufferViews.size()))
+                    {
+                        return Unexpected(WriteMeshAssetFileError::BadBufferViewIndex);
+                    }
+
+                    vertexAttributeBlocks.emplace_back(BinaryFile::BlockView{
+                        .name = "vertex_attribute",
+                        .properties = {
+                            static_cast<uint32_t>(vertexAttribute.type),
+                            vertexAttribute.bufferViewIndex
+                        }
+                    });
+                }
+
+                subMeshBlocks.emplace_back(BinaryFile::BlockView{
+                    .name = "sub_mesh",
+                    .properties = {
+                        subMesh.name,
+                        subMesh.indexBufferViewIndex,
+                        BinaryFile::ArrayView{ std::move(vertexAttributeBlocks)}
+                    }
+                });
+            }
+
+            return BinaryFile::BlockView{
+                .name = "sub_meshes",
+                .properties = {
+                    BinaryFile::ArrayView{ std::move(subMeshBlocks) }
+                }
+            };
+        }();
+
+        if (!subMeshBlockResult)
+        {
+            return Unexpected(subMeshBlockResult.Error());
+        }
+
+        auto buffersBlockResult = [&meshAssetFile]() -> Expected<BinaryFile::BlockView, WriteMeshAssetFileError>
+        {
+            auto bufferBlocks = std::vector<BinaryFile::BlockView>{};
+
+            for (const auto& buffer : meshAssetFile.buffers)
+            {
+                bufferBlocks.emplace_back(BinaryFile::BlockView{
+                    .name = "buffer",
+                    .properties = {
+                        BinaryFile::ArrayView{ buffer.data }
+                    }
+                });
+            }
+
+            return BinaryFile::BlockView{
+                .name = "buffers",
+                .properties = {
+                    BinaryFile::ArrayView{ std::move(bufferBlocks) }
+                }
+            };
+        }();
+
+        if (!buffersBlockResult)
+        {
+            return Unexpected(buffersBlockResult.Error());
+        }
+
+        auto bufferViewsBlockResult = [&meshAssetFile]() -> Expected<BinaryFile::BlockView, WriteMeshAssetFileError>
+        {
+            auto bufferViewBlocks = std::vector<BinaryFile::BlockView>{};
+
+            for (const auto& bufferView : meshAssetFile.bufferViews)
+            {
+                if (bufferView.bufferIndex >= static_cast<uint64_t>(meshAssetFile.buffers.size()))
+                {
+                    return Unexpected(WriteMeshAssetFileError::BadBufferIndex);
+                }
+
+                bufferViewBlocks.emplace_back(BinaryFile::BlockView{
+                    .name = "buffer_view",
+                    .properties = {
+                        bufferView.bufferIndex,
+                        bufferView.bufferOffset,
+                        bufferView.bufferStride
+                    }
+                });
+            }
+
+            return BinaryFile::BlockView{
+                .name = "buffer_views",
+                    .properties = {
+                        BinaryFile::ArrayView{ std::move(bufferViewBlocks) }
+                }
+            };
+        }();
+
+        if (!bufferViewsBlockResult)
+        {
+            return Unexpected(bufferViewsBlockResult.Error());
+        }
+
+        const auto meshBlock = BinaryFile::BlockView{
+            .name = "mesh",
+            .properties = {
+                meshAssetFile.name,
+                std::move(*subMeshBlockResult),
+                std::move(*buffersBlockResult),
+                std::move(*bufferViewsBlockResult)
+            }
+        };
+
+        auto writeResult = WriteBinaryFile(stream, meshBlock);
+        if (!writeResult)
+        {
+            switch (writeResult.Error())
+            {
+                case WriteBinaryFileError::OpenFileError: return Unexpected(WriteMeshAssetFileError::OpenFileError);
+                case WriteBinaryFileError::InternalError: return Unexpected(WriteMeshAssetFileError::InternalError);
+            }
+        }
+
+        return {};
     }
 
 }

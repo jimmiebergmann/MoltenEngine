@@ -37,7 +37,7 @@ namespace Molten::EditorFramework
         stream.seekg(startPos, std::ios::beg);
 
         const auto size = endPos - startPos;
-        if (size < AssetFileHeader::packedSize)
+        if (size < 56)
         {
             return {};
         }  

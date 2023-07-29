@@ -23,15 +23,15 @@
 *
 */
 
-#include "Molten/EditorFramework/FileFormat/Converter/BmpToTextureAssetConverter.hpp"
-
-namespace Molten::EditorFramework
-{
-
-    TextureAssetFile ConvertToTextureAssetFile(
-        const Molten::BmpImageFile& /*bmpFile*/)
-    {
-        return {};
-    }
-
-}
+//#include "Molten/EditorFramework/FileFormat/Converter/BmpToTextureAssetConverter.hpp"
+//
+//namespace Molten::EditorFramework
+//{
+//
+//    TextureAssetFile ConvertToTextureAssetFile(
+//        const Molten::BmpImageFile& /*bmpFile*/)
+//    {
+//        return {};
+//    }
+//
+//}

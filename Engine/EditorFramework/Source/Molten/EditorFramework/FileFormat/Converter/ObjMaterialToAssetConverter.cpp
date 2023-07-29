@@ -49,23 +49,78 @@ namespace Molten::EditorFramework
         materialAssetFile.name = objMaterial.name;
 
         using File = MaterialAssetFile;
+        using BuilderTypes = MaterialAssetFileBuilderTypes;
 
         auto builder = MaterialAssetFileBuilder{ materialAssetFile };
 
-        // Color
-        auto colorOutputNode = builder.AddOutputNode<File::EntryPointOutputType::Color>();
-
-        const auto ambientColor = objMaterial.ambientColor.value_or(Vector3f32{ 1.0f, 1.0f, 1.0f });
-        auto ambientColorNode = builder.AddConstantNode<File::DataType::Vector3f32>(ambientColor);
-        
-        builder.LinkNodes<>(ambientColorNode, colorOutputNode);
-       
-        // Opacity
-        if (objMaterial.dissolve)
+        using UvInputNodeType = BuilderTypes::OutputDataNode<BuilderTypes::DataTypesWrapper<File::DataType::Vector2f32>>;
+        auto getUvInputNode = [&, uvInputNode = std::optional<UvInputNodeType>{}]() mutable
         {
-            auto opacityOutputNode = builder.AddOutputNode<File::EntryPointOutputType::Opacity>();
-            auto opacityNode = builder.AddConstantNode<File::DataType::Float32>(objMaterial.dissolve.value());
+            if (!uvInputNode.has_value())
+            {
+                uvInputNode = UvInputNodeType{ builder.AddVertexInputNode<File::VertexInputType::Uv>(0) };
+            }
+            return uvInputNode.value();
+        };
 
+        // Color
+        using ColorOutputType = BuilderTypes::OutputDataNode<BuilderTypes::DataTypesWrapper<File::DataType::Vector3f32>>;
+        auto lastColorOutputNode = std::optional<ColorOutputType>{};
+
+        if (objMaterial.ambientColor)
+        {
+            const auto ambientColor = objMaterial.ambientColor.value_or(Vector3f32{ 1.0f, 1.0f, 1.0f });
+            auto ambientColorNode = builder.AddConstantNode<File::DataType::Vector3f32>(ambientColor);
+
+            lastColorOutputNode = ambientColorNode;
+        }
+
+        const auto* colorTexture = 
+            objMaterial.diffuseTexture.has_value() ? &objMaterial.diffuseTexture :
+                objMaterial.ambientTexture.has_value() ? &objMaterial.ambientTexture : 
+                    nullptr;
+
+        if (colorTexture != nullptr)
+        {
+            auto ambientTextureGlobalId = FindTextureGlobalId(*colorTexture, options);
+            auto uvInputNode = getUvInputNode();
+            auto ambientSamplerNode = builder.AddBuiltInFunctionNode<File::BuiltInFunctionType::SampleTexture, File::DataType::Sampler2D, File::DataType::Vector2f32>();
+        
+            builder.SetNodeInput<0>(File::Sampler2D{ ambientTextureGlobalId }, ambientSamplerNode);
+            builder.LinkNodes<1>(uvInputNode, ambientSamplerNode);
+
+            auto ambientSamplerNodeVec3 = builder.AddComponentNode<File::DataType::Vector4f32, 0, 1, 2>();
+            builder.LinkNodes<>(ambientSamplerNode, ambientSamplerNodeVec3);
+
+            if (lastColorOutputNode.has_value())
+            {
+                auto colorMult = builder.AddOperatorNode<File::OperatorType::Multiplication, File::DataType::Vector3f32, File::DataType::Vector3f32>();
+                builder.LinkNodes<0>(lastColorOutputNode.value(), colorMult);
+                builder.LinkNodes<1>(ambientSamplerNodeVec3, colorMult);
+
+                lastColorOutputNode = colorMult;
+            }
+            else
+            {
+                lastColorOutputNode = ambientSamplerNodeVec3;
+            }
+        }
+
+        auto colorOutputNode = builder.AddOutputNode<File::EntryPointOutputType::Color>();
+        if (lastColorOutputNode.has_value())
+        {          
+            builder.LinkNodes(lastColorOutputNode.value(), colorOutputNode);
+        }
+        else
+        {
+            builder.SetNodeInput(Vector3f32{1.0f, 1.0f, 1.0f}, colorOutputNode);
+        }
+             
+        // Opacity
+        if (objMaterial.dissolve && std::min(*objMaterial.dissolve, 1.0f) < 1.0f)
+        {
+            auto opacityNode = builder.AddConstantNode<File::DataType::Float32>(objMaterial.dissolve.value());
+            auto opacityOutputNode = builder.AddOutputNode<File::EntryPointOutputType::Opacity>();
             builder.LinkNodes<>(opacityNode, opacityOutputNode);
         }
 
@@ -73,13 +128,17 @@ namespace Molten::EditorFramework
         if (objMaterial.bumpTexture)
         {
             auto bumpTextureGlobalId = FindTextureGlobalId(objMaterial.bumpTexture, options);
-
-            auto normalOutputNode = builder.AddOutputNode<File::EntryPointOutputType::Normal>();
-            auto uvInputNode = builder.AddVertexInputNode<File::VertexInputType::Uv>(0);
+            auto uvInputNode = getUvInputNode();
             auto bumpSamplerNode = builder.AddBuiltInFunctionNode<File::BuiltInFunctionType::SampleTexture, File::DataType::Sampler2D, File::DataType::Vector2f32>();
 
             builder.SetNodeInput<0>(File::Sampler2D{ bumpTextureGlobalId }, bumpSamplerNode);
             builder.LinkNodes<1>(uvInputNode, bumpSamplerNode);
+
+            auto bumpSamplerNodeVec3 = builder.AddComponentNode<File::DataType::Vector4f32, 0, 1, 2>();
+            builder.LinkNodes<>(bumpSamplerNode, bumpSamplerNodeVec3);
+
+            auto normalOutputNode = builder.AddOutputNode<File::EntryPointOutputType::Normal>();
+            builder.LinkNodes<>(bumpSamplerNodeVec3, normalOutputNode);
         }
 
         return materialAssetFile;

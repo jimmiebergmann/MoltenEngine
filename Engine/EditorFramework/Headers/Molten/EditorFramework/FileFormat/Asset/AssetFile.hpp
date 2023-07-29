@@ -48,10 +48,8 @@ namespace Molten::EditorFramework
         Audio = 6
     };
 
-    struct MOLTEN_EDITOR_FRAMEWORK_API AssetFileHeader
+    struct AssetFileHeader
     {
-        inline static constexpr size_t packedSize = 56;
-
         std::array<char, 12> magic = { 'm', 'o', 'l', 't', 'e', 'n', '.', 'a', 's', 's', 'e', 't', };
         Version fileVersion = Version{ 0, 1, 0 };
         Version engineVersion = MOLTEN_VERSION;

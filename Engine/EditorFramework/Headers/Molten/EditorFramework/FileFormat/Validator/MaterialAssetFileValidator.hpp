@@ -28,7 +28,7 @@
 
 #include "Molten/EditorFramework/FileFormat/Asset/MaterialAssetFile.hpp"
 #include "Molten/Utility/StaticVector.hpp"
-#include "Molten/Utility/Expected.hpp"
+#include <string>
 
 namespace Molten::EditorFramework
 {
@@ -77,6 +77,9 @@ namespace Molten::EditorFramework
         template<DataType VDataType>
         struct CompositeTraits;
 
+        template<DataType VDataType, size_t componentCount>
+        struct ComponentTraits;
+
         template<OperatorType VOperatorType>
         struct OperatorTraits;
 
@@ -90,11 +93,14 @@ namespace Molten::EditorFramework
         struct NodeTraits;
 
         // Regex       
-        static constexpr auto materialNameRegex = "[A-Za-z0-9]([A-Za-z0-9_.-]*)";
+        /*static constexpr auto materialNameRegex = "[A-Za-z0-9]([A-Za-z0-9_.-]*)";
         static constexpr auto materialNameMaxLength = size_t{ 255 };
 
         static constexpr auto functionNameRegex = "[A-Za-z]([A-Za-z0-9_]*)";
         static constexpr auto functionNameMaxLength = size_t{ 255 };
+
+        static constexpr auto parameterNameRegex = "[A-Za-z]([A-Za-z0-9_]*)";
+        static constexpr auto parameterNameMaxLength = size_t{ 255 };*/
 
         // Validation errors.
         enum class FunctionAddError 
@@ -124,10 +130,31 @@ namespace Molten::EditorFramework
         static constexpr std::optional<FunctionOverride> GetFunctionOverride(const DataTypes& parameters);
         static constexpr std::optional<FunctionOverride> GetFunctionOverride(BuiltInFunctionType builtInFunctionType, const DataTypes& parameters);
 
-        static bool ValidateFunctionName(const std::string& name);
+        //static constexpr bool ValidateFunctionName(const std::string& name);
         static constexpr bool ValidateFunctionDuplicate(const Functions& existingFunctions, const std::string& name);
 
+        static constexpr bool ValidateDataType(const DataType dataType);
+        static constexpr bool ValidateDataTypes(const DataTypes& dataTypes);
+        static constexpr bool ValidateVertexInputType(const VertexInputType vertexInputType);
+        static constexpr bool ValidateEntryPointOutputType(const EntryPointOutputType entryPointOutputType);
+        static constexpr bool ValidateOperatorType(const OperatorType operatorType);
+        static constexpr bool ValidateBuiltInFunctionType(const BuiltInFunctionType builtInFunctionType);
+
     };
+
+    enum class ValidateMaterialAssetFileError
+    {
+        BadDataType,
+        BadOperatorType,
+        BadVertexInputType,
+        BadEntryPointOutputType,
+        BadNodeIndex,
+        MissingParameter,
+        MissingArgument
+    };
+
+    MOLTEN_EDITOR_FRAMEWORK_API Expected<void, ValidateMaterialAssetFileError> ValidateMaterialAssetFile(
+        const MaterialAssetFile& materialAssetFile);
 
 }
 

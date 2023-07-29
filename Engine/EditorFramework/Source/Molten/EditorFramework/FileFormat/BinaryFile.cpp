@@ -455,9 +455,9 @@ namespace Molten::EditorFramework
             return Unexpected(WriteBinaryFileError::InternalError);
         }
 
-        const auto blockSize = static_cast<uint64_t>(blockSizeIt->second);
-        static_assert(sizeof(blockSize) == BinaryFile::Limits::blockSizeBytes);
-        stream.write(reinterpret_cast<const char*>(&blockSize), sizeof(blockSize));
+        const auto arraySize = static_cast<uint64_t>(blockSizeIt->second);
+        static_assert(sizeof(arraySize) == BinaryFile::Limits::arraySizeBytes);
+        stream.write(reinterpret_cast<const char*>(&arraySize), sizeof(arraySize));
 
         return std::visit([&](const auto& value) -> Expected<void, WriteBinaryFileError>
         {
@@ -644,9 +644,9 @@ namespace Molten::EditorFramework::BinaryFile
             return Unexpected(ParserError::BadDataType);
         }
 
-        const auto blockSize = static_cast<size_t>(stream.ReadRawIntegral<uint64_t>());
-        static_assert(sizeof(blockSize) == Limits::blockSizeBytes);
-        if (blockSize < Limits::minBlockSizeBytes || stream.OverflowsFrom(arrayHeaderPosition, blockSize))
+        const auto arraySize = static_cast<size_t>(stream.ReadRawIntegral<uint64_t>());
+        static_assert(sizeof(arraySize) == Limits::arraySizeBytes);
+        if (arraySize < Limits::minArraySizeBytes || stream.OverflowsFrom(arrayHeaderPosition, arraySize))
         {
             return Unexpected(ParserError::InvalidBlockSize);
         }
@@ -668,7 +668,7 @@ namespace Molten::EditorFramework::BinaryFile
         }
 
         return ArrayHeader{
-            .size = blockSize,
+            .size = arraySize,
             .elementDataType = elementDataType,
             .elementCount = elementCount
         };

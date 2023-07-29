@@ -69,15 +69,23 @@ namespace Molten::EditorFramework::BinaryFile
     namespace Limits
     {
         static constexpr auto dataTypeBytes = static_cast<size_t>(sizeof(DataType));
+
         static constexpr auto blockSizeBytes = static_cast<size_t>(sizeof(uint64_t));
         static constexpr auto stringLengthBytes = static_cast<size_t>(sizeof(uint64_t));
         static constexpr auto propertyCountBytes = static_cast<size_t>(sizeof(uint64_t));
-        static constexpr auto elementCountBytes = static_cast<size_t>(sizeof(uint64_t));
-        static constexpr auto minBlockSizeBytes = 
+        
+        static constexpr auto minBlockSizeBytes =
             dataTypeBytes +
             blockSizeBytes +
             stringLengthBytes +
             propertyCountBytes;
+
+        static constexpr auto arraySizeBytes = static_cast<size_t>(sizeof(uint64_t));
+        static constexpr auto elementCountBytes = static_cast<size_t>(sizeof(uint64_t));
+        static constexpr auto minArraySizeBytes =
+            dataTypeBytes +
+            arraySizeBytes +
+            elementCountBytes;
     }
 
     template<bool Vvalue>

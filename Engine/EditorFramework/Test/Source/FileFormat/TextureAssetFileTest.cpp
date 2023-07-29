@@ -24,7 +24,7 @@
 */
 
 #include "Test.hpp"
-#include "Molten/EditorFramework/FileFormat/TextureAssetFile.hpp"
+#include "Molten/EditorFramework/FileFormat/Asset/TextureAssetFile.hpp"
 #include <fstream>
 #include <cstring>
 
@@ -38,29 +38,33 @@ namespace Molten::EditorFramework
           
         const auto assetFileHeader = AssetFileHeader{
             .globalId = { 123456789012345ULL, 234567890123456ULL },
-            .type = AssetType::Texture
+            .type = AssetType::Texture,
         };
 
         const auto textureAssetFile = TextureAssetFile{
-            .dimensions = Vector3ui32{ 2, 2, 2 },
-            .format = TextureAssetFormat::Red8Green8Blue8Alpha8,
-            .data = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31}
+            .header = TextureAssetFile::Header {
+                .dimensions = Vector3ui32{ 2, 2, 1 },
+                .imageFormat = TextureAssetFile::ImageFormat::Red8Green8Blue8Alpha8,
+                .compressionType = TextureAssetFile::CompressionType::None
+            },
+            .imageData = TextureAssetFile::ImageData{
+                .data = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31}
+            }
         };
 
-        ASSERT_EQ(textureAssetFile.data.size(), size_t{ 32 });
+        ASSERT_EQ(textureAssetFile.imageData.data.size(), size_t{ 32 });
 
-        std::ofstream fileStream(path, std::ios::binary);
-        ASSERT_TRUE(fileStream.is_open());
-        WriteTextureAssetFileWithHeader(fileStream, assetFileHeader, textureAssetFile);
+        auto writeResult = WriteTextureAssetFile(path, textureAssetFile);
+        ASSERT_TRUE(writeResult);
 
-        fileStream.close();
+        auto readTextureAssetFile = ReadTextureAssetFile(path);
+        ASSERT_TRUE(readTextureAssetFile);
 
-        auto readTextureAssetFile = ReadTextureAssetFileWithHeader(path);
-
-        EXPECT_EQ(readTextureAssetFile.dimensions, textureAssetFile.dimensions);
-        EXPECT_EQ(readTextureAssetFile.format, textureAssetFile.format);
-        ASSERT_EQ(readTextureAssetFile.data.size(), textureAssetFile.data.size());
-        EXPECT_EQ(std::memcmp(readTextureAssetFile.data.data(), textureAssetFile.data.data(), readTextureAssetFile.data.size()), int{ 0 });
+        EXPECT_EQ(readTextureAssetFile->header.dimensions, textureAssetFile.header.dimensions);
+        EXPECT_EQ(readTextureAssetFile->header.imageFormat, textureAssetFile.header.imageFormat);
+        EXPECT_EQ(readTextureAssetFile->header.compressionType, textureAssetFile.header.compressionType);
+        ASSERT_EQ(readTextureAssetFile->imageData.data.size(), textureAssetFile.imageData.data.size());
+        EXPECT_EQ(std::memcmp(readTextureAssetFile->imageData.data.data(), readTextureAssetFile->imageData.data.data(), textureAssetFile.imageData.data.size()), int{ 0 });
     }
 
 }

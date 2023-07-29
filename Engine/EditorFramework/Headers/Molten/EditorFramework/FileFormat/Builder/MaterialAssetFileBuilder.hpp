@@ -27,8 +27,9 @@
 #define MOLTEN_EDITOR_FRAMEWORK_FILEFORMAT_BUILDER_MATERIALASSETFILEBUILDER_HPP
 
 #include "Molten/EditorFramework/FileFormat/Validator/MaterialAssetFileValidator.hpp"
-#include <limits>
 #include <stdexcept>
+#include <limits>
+
 
 namespace Molten::EditorFramework
 {
@@ -43,54 +44,51 @@ namespace Molten::EditorFramework
             static constexpr auto dataTypes = std::array<File::DataType, sizeof...(VDataTypes)>{ VDataTypes... };
         };
 
-        struct NodeBase
+        template<typename TInputDataTypesWrapper>
+        struct InputDataNode;
+
+        template<typename TOutputDataTypesWrapper>
+        struct OutputDataNode;
+
+        template<typename TInputDataTypesWrapper, typename TOutputDataTypesWrapper>
+        struct Node;
+
+        template<typename TInputDataTypesWrapper>
+        struct InputDataNode
         {
-            virtual uint64_t GetIndex() const = 0;
-            virtual bool IsOutputNode() const = 0;
+            static constexpr auto inputDataTypes = TInputDataTypesWrapper::dataTypes;
+
+            template<typename TOutputDataTypesWrapper>
+            InputDataNode(const Node<TInputDataTypesWrapper, TOutputDataTypesWrapper>& node);
+
+            uint64_t nodeIndex;
+            bool isOutputNode;
         };
 
-        template<typename TDataTypesWrapper>
-        struct InputDataNode : NodeBase
+        template<typename TOutputDataTypesWrapper>
+        struct OutputDataNode
         {
-            static constexpr auto inputDataTypes = TDataTypesWrapper::dataTypes;
+            static constexpr auto outputDataTypes = TOutputDataTypesWrapper::dataTypes;
 
-            virtual uint64_t GetIndex() const = 0;
-            virtual bool IsOutputNode() const = 0;
-        };
+            template<typename TInputDataTypesWrapper>
+            OutputDataNode(const Node<TInputDataTypesWrapper, TOutputDataTypesWrapper>& node);
 
-        template<typename TDataTypesWrapper>
-        struct OutputDataNode : NodeBase
-        {
-            static constexpr auto outputDataTypes = TDataTypesWrapper::dataTypes;
-
-            virtual uint64_t GetIndex() const = 0;
-            virtual bool IsOutputNode() const = 0;
+            uint64_t nodeIndex;
+            bool isOutputNode;
         };
 
         template<typename TInputDataTypesWrapper, typename TOutputDataTypesWrapper>
-        class Node : public InputDataNode<TInputDataTypesWrapper>, public OutputDataNode<TOutputDataTypesWrapper>
+        struct Node
         {
+            static constexpr auto inputDataTypes = TInputDataTypesWrapper::dataTypes;
+            static constexpr auto outputDataTypes = TOutputDataTypesWrapper::dataTypes;
 
-        public:
-
-            Node(const uint64_t nodeIndex, const bool isOutputNode = false);
-
-            uint64_t GetIndex() const override;
-            bool IsOutputNode() const override;
-
-            InputDataNode<TInputDataTypesWrapper>& GetInput();
-            const InputDataNode<TInputDataTypesWrapper>& GetInput() const;
-
-            OutputDataNode<TOutputDataTypesWrapper>& GetOutput();
-            const OutputDataNode<TOutputDataTypesWrapper>& GetOutput() const;
-
-        private:
-
-            const uint64_t m_nodeIndex;
-            const bool m_isOutputNode;
+            uint64_t nodeIndex;
+            bool isOutputNode = false;
         };
-    };
 
+    };
+    
 
     class MaterialAssetFileBuilderException : public std::logic_error
     {
@@ -116,8 +114,6 @@ namespace Molten::EditorFramework
 
         template<File::DataType ... VDataTypes>
         using DataTypesWrapper = MaterialAssetFileBuilderTypes::DataTypesWrapper<VDataTypes...>;
-
-        using NodeBase = MaterialAssetFileBuilderTypes::NodeBase;
 
         template<typename TDataTypesWrapper>
         using InputDataNode = MaterialAssetFileBuilderTypes::InputDataNode<TDataTypesWrapper>;
@@ -146,6 +142,9 @@ namespace Molten::EditorFramework
 
         template<File::DataType VDataType, File::DataType ... VInputDataTypes>
         auto AddCompositeNode();
+
+        template<File::DataType VDataType, uint8_t ... VComponentIndices>
+        auto AddComponentNode();
 
         template<File::OperatorType VOperatorType, File::DataType VLhs, File::DataType VRhs>
         auto AddOperatorNode();

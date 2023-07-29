@@ -35,7 +35,7 @@
 namespace Molten::EditorFramework
 {
    
-    struct MOLTEN_EDITOR_FRAMEWORK_API MaterialAssetFile
+    struct MaterialAssetFile
     {
         struct Sampler1D
         {
@@ -85,6 +85,7 @@ namespace Molten::EditorFramework
             Parameter,            
             Constant,
             Composite,
+            Component,
             Operator,
             Function,
             EntryPointOutput,
@@ -111,8 +112,7 @@ namespace Molten::EditorFramework
             Addition,
             Subtraction,
             Multiplication,
-            Division
-            
+            Division       
         };
 
         enum class BuiltInFunctionType : uint16_t
@@ -134,6 +134,12 @@ namespace Molten::EditorFramework
             Dot
         };
 
+        enum class NodeArgumentType : uint8_t
+        {
+            NodeLink,
+            ConstantValue
+        };
+
         enum class FunctionType : uint16_t
         {
             BuiltIn,
@@ -153,18 +159,6 @@ namespace Molten::EditorFramework
             Sampler2D,
             Sampler3D>;
 
-        using NodeArgumentValue = std::variant<
-            bool,
-            int32_t,
-            float,
-            Vector2f32,
-            Vector3f32,
-            Vector4f32,
-            Matrix4x4f32,
-            Sampler1D,
-            Sampler2D,
-            Sampler3D>;
-
         struct NodeLink
         {
             uint64_t nodeIndex;
@@ -173,7 +167,7 @@ namespace Molten::EditorFramework
 
         using NodeArgument = std::variant<
             NodeLink,
-            NodeArgumentValue>;
+            ConstantValue>;
 
         using NodeArguments = std::vector<NodeArgument>;
 
@@ -199,6 +193,16 @@ namespace Molten::EditorFramework
             DataType dataType;
             DataTypes parameters;
             NodeArguments arguments;
+        };
+
+        using ComponentIndices = std::vector<uint8_t>;
+
+        struct ComponentNode
+        {
+            DataType dataType;
+            DataType parameter;
+            NodeArgument argument;
+            ComponentIndices componentIndices;
         };
 
         struct OperatorNode
@@ -231,7 +235,7 @@ namespace Molten::EditorFramework
 
         struct FunctionOutputNode
         {
-            DataType dataType;
+            DataType parameter;
             NodeArgument argument;
         };
 
@@ -242,6 +246,7 @@ namespace Molten::EditorFramework
             ParameterNode,
             ConstantNode,
             CompositeNode,
+            ComponentNode,
             OperatorNode,
             FunctionNode>;
 
@@ -268,21 +273,14 @@ namespace Molten::EditorFramework
     };
 
 
-    struct WriteMaterialAssetFileOptions
-    {
-        bool ignoreHeader = false;
-    };
-
     struct ReadMaterialAssetFileOptions
     {
         bool ignoreHeader = false;
     };
 
-    enum class WriteMaterialAssetFileError
+    struct WriteMaterialAssetFileOptions
     {
-        OpenFileError,
-        InternalError,
-        BadNodeIndex
+        bool ignoreHeader = false;
     };
 
     enum class ReadMaterialAssetFileError
@@ -292,15 +290,11 @@ namespace Molten::EditorFramework
         BinaryFileError
     };
 
-
-    MOLTEN_EDITOR_FRAMEWORK_API Expected<void, WriteMaterialAssetFileError> WriteMaterialAssetFile(
-        const std::filesystem::path& path,
-        const MaterialAssetFile& materialAssetFile,
-        const WriteMaterialAssetFileOptions& options = {});
-    MOLTEN_EDITOR_FRAMEWORK_API Expected<void, WriteMaterialAssetFileError> WriteMaterialAssetFile(
-        std::ostream& stream,
-        const MaterialAssetFile& materialAssetFile,
-        const WriteMaterialAssetFileOptions& options = {});
+    enum class WriteMaterialAssetFileError
+    {
+        OpenFileError,
+        InternalError
+    };
 
 
     MOLTEN_EDITOR_FRAMEWORK_API Expected<MaterialAssetFile, ReadMaterialAssetFileError> ReadMaterialAssetFile(
@@ -310,6 +304,16 @@ namespace Molten::EditorFramework
     MOLTEN_EDITOR_FRAMEWORK_API Expected<MaterialAssetFile, ReadMaterialAssetFileError> ReadMaterialAssetFile(
         std::istream& stream,
         const ReadMaterialAssetFileOptions& options = {});
+
+    MOLTEN_EDITOR_FRAMEWORK_API Expected<void, WriteMaterialAssetFileError> WriteMaterialAssetFile(
+        const std::filesystem::path& path,
+        const MaterialAssetFile& materialAssetFile,
+        const WriteMaterialAssetFileOptions& options = {});
+
+    MOLTEN_EDITOR_FRAMEWORK_API Expected<void, WriteMaterialAssetFileError> WriteMaterialAssetFile(
+        std::ostream& stream,
+        const MaterialAssetFile& materialAssetFile,
+        const WriteMaterialAssetFileOptions& options = {});
 
 }
 

@@ -33,7 +33,7 @@
 namespace Molten::EditorFramework
 {
 
-    struct MOLTEN_EDITOR_FRAMEWORK_API MeshAssetFile
+    struct MeshAssetFile
     {
         struct Buffer
         {
@@ -75,22 +75,14 @@ namespace Molten::EditorFramework
     };
 
 
-    struct WriteMeshAssetFileOptions
-    {
-        bool ignoreHeader = false;
-    };
-
     struct ReadMeshAssetFileOptions
     {
         bool ignoreHeader = false;
     };
 
-    enum class WriteMeshAssetFileError
+    struct WriteMeshAssetFileOptions
     {
-        OpenFileError,
-        InternalError,
-        BadBufferIndex,
-        BadBufferViewIndex
+        bool ignoreHeader = false;
     };
 
     enum class ReadMeshAssetFileError
@@ -105,6 +97,22 @@ namespace Molten::EditorFramework
         BadBufferViewIndex
     };
 
+    enum class WriteMeshAssetFileError
+    {
+        OpenFileError,
+        InternalError,
+        BadBufferIndex,
+        BadBufferViewIndex
+    };
+
+
+    MOLTEN_EDITOR_FRAMEWORK_API Expected<MeshAssetFile, ReadMeshAssetFileError> ReadMeshAssetFile(
+        const std::filesystem::path& path,
+        const ReadMeshAssetFileOptions& options = {});
+
+    MOLTEN_EDITOR_FRAMEWORK_API Expected<MeshAssetFile, ReadMeshAssetFileError> ReadMeshAssetFile(
+        std::istream& stream,
+        const ReadMeshAssetFileOptions& options = {});
 
     MOLTEN_EDITOR_FRAMEWORK_API Expected<void, WriteMeshAssetFileError> WriteMeshAssetFile(
         const std::filesystem::path& path,
@@ -115,15 +123,6 @@ namespace Molten::EditorFramework
         std::ostream& stream,
         const MeshAssetFile& meshAssetFile,
         const WriteMeshAssetFileOptions& options = {});
-
-
-    MOLTEN_EDITOR_FRAMEWORK_API Expected<MeshAssetFile, ReadMeshAssetFileError> ReadMeshAssetFile(
-        const std::filesystem::path& path,
-        const ReadMeshAssetFileOptions& options = {});
-
-    MOLTEN_EDITOR_FRAMEWORK_API Expected<MeshAssetFile, ReadMeshAssetFileError> ReadMeshAssetFile(
-        std::istream& stream,
-        const ReadMeshAssetFileOptions& options = {});
 
 }
 

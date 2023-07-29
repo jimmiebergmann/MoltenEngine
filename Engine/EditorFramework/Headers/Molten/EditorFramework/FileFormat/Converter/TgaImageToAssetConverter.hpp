@@ -23,18 +23,27 @@
 *
 */
 
-//#ifndef MOLTEN_EDITOR_FRAMEWORK_FILEFORMAT_CONVERTER_BMPTOTEXTUREASSETCONVERTER_HPP
-//#define MOLTEN_EDITOR_FRAMEWORK_FILEFORMAT_CONVERTER_BMPTOTEXTUREASSETCONVERTER_HPP
-//
-//#include "Molten/EditorFramework/FileFormat/TextureAssetFile.hpp"
-//#include "Molten/FileFormat/Image/BmpFormat.hpp"
-//
-//namespace Molten::EditorFramework
-//{
-//
-//    MOLTEN_EDITOR_FRAMEWORK_API TextureAssetFile ConvertToTextureAssetFile(
-//        const Molten::BmpImageFile& bmpFile);
-//
-//}
-//
-//#endif
+#ifndef MOLTEN_EDITOR_FRAMEWORK_FILEFORMAT_CONVERTER_TGAIMAGETOASSETCONVERTER_HPP
+#define MOLTEN_EDITOR_FRAMEWORK_FILEFORMAT_CONVERTER_TGAIMAGETOASSETCONVERTER_HPP
+
+#include "Molten/EditorFramework/FileFormat/Asset/TextureAssetFile.hpp"
+#include "Molten/EditorFramework/FileFormat/Image/TgaImageFile.hpp"
+
+namespace Molten::EditorFramework
+{
+
+    enum class ConvertToTextureAssetFileError
+    {
+       UnsupportedImageFormat, 
+       InvalidDimensions,
+       ImageBufferUnderflow,
+       ImageBufferOverflow,
+       BadCompression
+    };
+
+    MOLTEN_EDITOR_FRAMEWORK_API Expected<TextureAssetFile, ConvertToTextureAssetFileError> ConvertToTextureAsset(
+        const TgaImageFile& tgaImageFile);
+
+}
+
+#endif

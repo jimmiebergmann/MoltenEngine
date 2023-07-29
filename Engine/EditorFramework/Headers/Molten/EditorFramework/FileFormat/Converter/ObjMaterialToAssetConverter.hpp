@@ -34,7 +34,7 @@ namespace Molten::EditorFramework
 
     struct ConvertToMaterialAssetTexture
     {
-        std::optional<ObjMaterialFile::MaterialTexture>* materialTexture = nullptr;
+        const std::optional<ObjMaterialFile::MaterialTexture>* materialTexture = nullptr;
         Uuid assetGlobalid = {};
     };
 

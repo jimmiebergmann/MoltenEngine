@@ -42,10 +42,14 @@
 
 #include "Molten/EditorFramework/Project.hpp"
 #include "Molten/EditorFramework/FileFormat/Mesh/ObjMeshFile.hpp"
+#include "Molten/EditorFramework/FileFormat/Image/TgaImageFile.hpp"
 #include "Molten/EditorFramework/FileFormat/Converter/ObjMeshToAssetConverter.hpp"
+#include "Molten/EditorFramework/FileFormat/Converter/TgaImageToAssetConverter.hpp"
 #include "Molten/EditorFramework/FileFormat/Converter/ObjMaterialToAssetConverter.hpp"
+#include "Molten/EditorFramework/FileFormat/Validator/MaterialAssetFileValidator.hpp"
 
 #include <random>
+#include <set>
 
 namespace Molten::Editor
 {
@@ -258,6 +262,97 @@ namespace Molten::Editor
             return false;
         }
 
+        auto convertTextures = [&]() -> std::vector<EditorFramework::ConvertToMaterialAssetTexture>
+        {
+            auto textureFiles = std::set<std::string>{};
+            auto result = std::vector<EditorFramework::ConvertToMaterialAssetTexture>{};
+
+            auto addIfHasValue = [&](const std::optional<EditorFramework::ObjMaterialFile::MaterialTexture>& texture)
+            {
+                if (texture.has_value() && !texture.value().filename.empty())
+                {
+                    if (textureFiles.contains(texture.value().filename))
+                    {
+                        return;
+                    }
+                    textureFiles.emplace(texture.value().filename);
+                    result.emplace_back(EditorFramework::ConvertToMaterialAssetTexture{
+                        .materialTexture = &texture
+                    });
+                }
+            };
+
+            for (const auto& objMaterial : *requiredObjMaterials)
+            {
+                addIfHasValue(objMaterial->ambientTexture);
+                addIfHasValue(objMaterial->diffuseTexture);
+                addIfHasValue(objMaterial->specularTexture);
+                addIfHasValue(objMaterial->specularExponentTexture);
+                addIfHasValue(objMaterial->dissolveTexture);
+                addIfHasValue(objMaterial->bumpTexture);
+                addIfHasValue(objMaterial->displacementTexture);
+                addIfHasValue(objMaterial->roughnessTexture);
+                addIfHasValue(objMaterial->metallicTexture);
+                addIfHasValue(objMaterial->emissiveTexture);
+            }
+
+            return result;
+        }();
+
+
+        // Read texture files.
+        size_t textureIndex = 0;
+        for (auto& convertTexture : convertTextures)
+        {
+            const auto& materialTexture = convertTexture.materialTexture->value();
+
+            auto textureFilename = std::filesystem::path{ materialTexture.filename };
+            if (!textureFilename.is_absolute())
+            {
+                textureFilename = objMeshDirectory / textureFilename;
+            }
+
+            if (!textureFilename.has_extension())
+            {
+                Logger::WriteError(m_logger.get(), "Missing file extension of material texture filename.");
+                return false;
+            }
+
+            auto textureExtension = textureFilename.extension();
+            if (textureExtension != ".tga")
+            {
+                Logger::WriteError(m_logger.get(), "Unsupported texture file format.");
+                return false;
+            }
+
+            const auto tgaFileResult = EditorFramework::ReadTgaImageFile(textureFilename);
+            if (!tgaFileResult)
+            {
+                Logger::WriteError(m_logger.get(), "Failed to read tga image file.");
+                return false;
+            }
+
+            // Convert to asset file.
+            const auto tgaImageConvertResult = EditorFramework::ConvertToTextureAsset(*tgaFileResult);
+            if (!tgaImageConvertResult)
+            {
+                Logger::WriteError(m_logger.get(), "Failed to convert tga image to texture asset.");
+                return false;
+            }
+            const auto textureAssetFile = *tgaImageConvertResult;
+
+            // Write asset file.
+            auto textureAssetPath = assetDirectory / (std::string{"texture_"} + std::to_string(textureIndex++) + ".asset");
+            auto writeTextureAssetResult = EditorFramework::WriteTextureAssetFile(textureAssetPath, textureAssetFile);
+            if (!writeTextureAssetResult)
+            {
+                Logger::WriteError(m_logger.get(), "Failed to write texture asset.");
+                return false;
+            }
+
+            convertTexture.assetGlobalid = { 1, 1 };
+        }
+
         // Convert to asset files.
         const auto objMeshConvertResult = EditorFramework::ConvertToMeshAssetFile(*objMeshFile.objects.front());
         if (!objMeshConvertResult)
@@ -266,10 +361,15 @@ namespace Molten::Editor
             return false;
         }
 
+        const auto convertToMaterialAssetFileOptions = EditorFramework::ConvertToMaterialAssetFileOptions
+        {
+            std::move(convertTextures)
+        };
+
         auto materialAssetFiles = std::vector<EditorFramework::MaterialAssetFile>{};
         for (auto& objMaterial : requiredObjMaterials.value())
         {
-            auto objMaterialConvertResult = EditorFramework::ConvertToMaterialAssetFile(*objMaterial);
+            auto objMaterialConvertResult = EditorFramework::ConvertToMaterialAssetFile(*objMaterial, convertToMaterialAssetFileOptions);
             if (!objMaterialConvertResult)
             {
                 Logger::WriteError(m_logger.get(), "Failed to convert obj material to material asset.");
@@ -319,6 +419,14 @@ namespace Molten::Editor
                 Logger::WriteError(m_logger.get(), "Failed to read material asset.");
                 return false;
             }
+
+            auto validateMaterialAssetResult = EditorFramework::ValidateMaterialAssetFile(*readMaterialAssetResult);
+            if (!validateMaterialAssetResult)
+            {
+                Logger::WriteError(m_logger.get(), "Failed to validate material asset.");
+                return false;
+            }
+
         }
 
         return true;

@@ -210,6 +210,54 @@ namespace Molten::EditorFramework
     };
 
 
+    // Component traits
+    template<>
+    struct MaterialAssetFileValidator::ComponentTraits<MaterialAssetFile::DataType::Vector2f32, 1>
+    {
+        using OutputDataType = float;
+        static constexpr auto outputDataType = DataType::Float32;
+    };
+
+    template<>
+    struct MaterialAssetFileValidator::ComponentTraits<MaterialAssetFile::DataType::Vector3f32, 1>
+    {
+        using OutputDataType = float;
+        static constexpr auto outputDataType = DataType::Float32;
+    };
+    template<>
+    struct MaterialAssetFileValidator::ComponentTraits<MaterialAssetFile::DataType::Vector3f32, 2>
+    {
+        using OutputDataType = Vector2f32;
+        static constexpr auto outputDataType = DataType::Vector2f32;
+    };
+
+    template<>
+    struct MaterialAssetFileValidator::ComponentTraits<MaterialAssetFile::DataType::Vector4f32, 1>
+    {
+        using OutputDataType = float;
+        static constexpr auto outputDataType = DataType::Float32;
+    };
+    template<>
+    struct MaterialAssetFileValidator::ComponentTraits<MaterialAssetFile::DataType::Vector4f32, 2>
+    {
+        using OutputDataType = Vector2f32;
+        static constexpr auto outputDataType = DataType::Vector2f32;
+    };
+    template<>
+    struct MaterialAssetFileValidator::ComponentTraits<MaterialAssetFile::DataType::Vector4f32, 3>
+    {
+        using OutputDataType = Vector3f32;
+        static constexpr auto outputDataType = DataType::Vector3f32;
+    };
+
+    template<>
+    struct MaterialAssetFileValidator::ComponentTraits<MaterialAssetFile::DataType::Matrix4x4f32, 1>
+    {
+        using OutputDataType = Vector4f32;
+        static constexpr auto outputDataType = DataType::Vector4f32;
+    };
+
+
     // Operator traits.
     template<>
     struct MaterialAssetFileValidator::OperatorTraits<MaterialAssetFile::OperatorType::Addition>
@@ -529,11 +577,11 @@ namespace Molten::EditorFramework
         }
     }
 
-    bool MaterialAssetFileValidator::ValidateFunctionName(const std::string& name)
+    /*constexpr bool MaterialAssetFileValidator::ValidateFunctionName(const std::string& name)
     {
-        // TODO
+        
         return true;
-    }
+    }*/
 
     constexpr bool MaterialAssetFileValidator::ValidateFunctionDuplicate(const Functions& existingFunctions, const std::string& name)
     {
@@ -541,6 +589,91 @@ namespace Molten::EditorFramework
         {
             return func.name == name;
         }) == existingFunctions.end();
+    }
+
+    constexpr bool MaterialAssetFileValidator::ValidateDataType(const DataType dataType)
+    {
+        switch (dataType)
+        {
+            case DataType::Bool:
+            case DataType::Int32:
+            case DataType::Float32:
+            case DataType::Vector2f32:
+            case DataType::Vector3f32:
+            case DataType::Vector4f32:
+            case DataType::Matrix4x4f32:
+            case DataType::Sampler1D:
+            case DataType::Sampler2D:
+            case DataType::Sampler3D: return true;
+            default: break;
+        }
+        return false;
+    }
+
+    constexpr bool MaterialAssetFileValidator::ValidateDataTypes(const DataTypes& dataTypes)
+    {
+        for (auto dataType : dataTypes)
+        {
+            if (!ValidateDataType(dataType))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    constexpr bool MaterialAssetFileValidator::ValidateVertexInputType(const VertexInputType vertexInputType)
+    {
+        switch (vertexInputType)
+        {
+            case VertexInputType::Position:
+            case VertexInputType::Uv:
+            case VertexInputType::Normal: return true;
+            default: break;
+        }
+        return false;
+    }
+
+    constexpr bool MaterialAssetFileValidator::ValidateEntryPointOutputType(const EntryPointOutputType entryPointOutputType)
+    {
+        switch (entryPointOutputType)
+        {
+            case EntryPointOutputType::Color:
+            case EntryPointOutputType::Opacity:
+            case EntryPointOutputType::Normal: return true;
+            default: break;
+        }
+        return false;
+    }
+
+    constexpr bool MaterialAssetFileValidator::ValidateOperatorType(const OperatorType operatorType)
+    {
+        switch (operatorType)
+        {
+            case OperatorType::Addition:
+            case OperatorType::Subtraction:
+            case OperatorType::Multiplication:
+            case OperatorType::Division: return true;
+            default: break;
+        }
+        return false;
+    }
+
+    constexpr bool MaterialAssetFileValidator::ValidateBuiltInFunctionType(const BuiltInFunctionType builtInFunctionType)
+    {
+        switch (builtInFunctionType)
+        {
+            case BuiltInFunctionType::SampleTexture:
+            case BuiltInFunctionType::Sin:
+            case BuiltInFunctionType::Cos:
+            case BuiltInFunctionType::Tan:
+            case BuiltInFunctionType::Min:
+            case BuiltInFunctionType::Max:
+            case BuiltInFunctionType::Cross:
+            case BuiltInFunctionType::Dot: return true;
+            default: break;
+        }
+        return false;
     }
  
 }

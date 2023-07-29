@@ -27,54 +27,24 @@ namespace Molten::EditorFramework
 {
 
     // Materia builder node implementations.
-    template<typename TInputDataTypesWrapper, typename TOutputDataTypesWrapper>
-    MaterialAssetFileBuilderTypes::Node<TInputDataTypesWrapper, TOutputDataTypesWrapper>::Node(
-        const uint64_t nodeIndex,
-        const bool isOutputNode
+    template<typename TInputDataTypesWrapper>
+    template<typename TOutputDataTypesWrapper>
+    MaterialAssetFileBuilderTypes::InputDataNode<TInputDataTypesWrapper>::InputDataNode(
+        const Node<TInputDataTypesWrapper, TOutputDataTypesWrapper>& node
     ) :
-        m_nodeIndex(nodeIndex),
-        m_isOutputNode(isOutputNode)
+        nodeIndex(node.nodeIndex),
+        isOutputNode(node.isOutputNode)
     {}
 
-    template<typename TInputDataTypesWrapper, typename TOutputDataTypesWrapper>
-    uint64_t MaterialAssetFileBuilderTypes::Node<TInputDataTypesWrapper, TOutputDataTypesWrapper>::GetIndex() const
-    {
-        return m_nodeIndex;
-    }
 
-    template<typename TInputDataTypesWrapper, typename TOutputDataTypesWrapper>
-    bool MaterialAssetFileBuilderTypes::Node<TInputDataTypesWrapper, TOutputDataTypesWrapper>::IsOutputNode() const
-    {
-        return m_isOutputNode;
-    }
-
-    template<typename TInputDataTypesWrapper, typename TOutputDataTypesWrapper>
-    MaterialAssetFileBuilderTypes::InputDataNode<TInputDataTypesWrapper>&
-        MaterialAssetFileBuilderTypes::Node<TInputDataTypesWrapper, TOutputDataTypesWrapper>::GetInput()
-    {
-        return static_cast<InputDataNode<TInputDataTypesWrapper>&>(*this);
-    }
-
-    template<typename TInputDataTypesWrapper, typename TOutputDataTypesWrapper>
-    const MaterialAssetFileBuilderTypes::InputDataNode<TInputDataTypesWrapper>&
-        MaterialAssetFileBuilderTypes::Node<TInputDataTypesWrapper, TOutputDataTypesWrapper>::GetInput() const
-    {
-        return static_cast<const InputDataNode<TInputDataTypesWrapper>&>(*this);
-    }
-
-    template<typename TInputDataTypesWrapper, typename TOutputDataTypesWrapper>
-    MaterialAssetFileBuilderTypes::OutputDataNode<TOutputDataTypesWrapper>&
-        MaterialAssetFileBuilderTypes::Node<TInputDataTypesWrapper, TOutputDataTypesWrapper>::GetOutput()
-    {
-        return static_cast<OutputDataNode<TOutputDataTypesWrapper>&>(*this);
-    }
-
-    template<typename TInputDataTypesWrapper, typename TOutputDataTypesWrapper>
-    const MaterialAssetFileBuilderTypes::OutputDataNode<TOutputDataTypesWrapper>&
-        MaterialAssetFileBuilderTypes::Node<TInputDataTypesWrapper, TOutputDataTypesWrapper>::GetOutput() const
-    {
-        return static_cast<const OutputDataNode<TOutputDataTypesWrapper>&>(*this);
-    }
+    template<typename TOutputDataTypesWrapper>
+    template<typename TInputDataTypesWrapper>
+    MaterialAssetFileBuilderTypes::OutputDataNode<TOutputDataTypesWrapper>::OutputDataNode(
+        const Node<TInputDataTypesWrapper, TOutputDataTypesWrapper>& node
+    ) :
+        nodeIndex(node.nodeIndex),
+        isOutputNode(node.isOutputNode)
+    {}
 
 
     // Material builder exception
@@ -103,8 +73,8 @@ namespace Molten::EditorFramework
     {
         using Type = typename Validator::VertexInputTypeTraits<VInputType>::Type;
         constexpr auto dataType = Validator::VertexInputTypeTraits<VInputType>::dataType;
+        
         using ResultNodeType = Node<DataTypesWrapper<>, DataTypesWrapper<dataType>>;
-
         auto node = ResultNodeType{ static_cast<uint64_t>(m_function.nodes.size()) };
 
         m_function.nodes.emplace_back(MaterialAssetFile::VertexInputNode{
@@ -120,7 +90,6 @@ namespace Molten::EditorFramework
     auto MaterialAssetFileFunctionBuilder<T>::AddParameterNode(const std::string name)
     {
         using ResultNodeType = Node<DataTypesWrapper<>, DataTypesWrapper<VDataType>>;
-
         auto node = ResultNodeType{ static_cast<uint64_t>(m_function.nodes.size()) };
 
         m_function.nodes.emplace_back(MaterialAssetFile::ParameterNode{
@@ -136,7 +105,6 @@ namespace Molten::EditorFramework
     auto MaterialAssetFileFunctionBuilder<T>::AddConstantNode(const typename MaterialAssetFileValidator::DataTypeTraits<VDataType>::Type& value)
     {
         using ResultNodeType = Node<DataTypesWrapper<>, DataTypesWrapper<VDataType>>;
-
         auto node = ResultNodeType{ static_cast<uint64_t>(m_function.nodes.size()) };
 
         m_function.nodes.emplace_back(MaterialAssetFile::ConstantNode{
@@ -153,13 +121,35 @@ namespace Molten::EditorFramework
         static_assert(Validator::CompositeHasOverride<VDataType>({ VInputDataTypes... }), "Invalid override of composite node.");
 
         using ResultNodeType = Node<DataTypesWrapper<VInputDataTypes...>, DataTypesWrapper<VDataType>>;
-
         auto node = ResultNodeType{ static_cast<uint64_t>(m_function.nodes.size()) };
 
         m_function.nodes.emplace_back(MaterialAssetFile::CompositeNode{
             .dataType = VDataType,
             .parameters = { VInputDataTypes... },
             .arguments = CreateDefaultArguments<VInputDataTypes...>()
+        });
+
+        return node;
+    }
+
+    template<typename T>
+    template<MaterialAssetFile::DataType VDataType, uint8_t ... VComponentIndices>
+    auto MaterialAssetFileFunctionBuilder<T>::AddComponentNode()
+    {
+        constexpr auto componentCount = sizeof...(VComponentIndices);
+        using ComponentTraits = MaterialAssetFileValidator::ComponentTraits<VDataType, componentCount>;
+      
+        constexpr auto outputDatatype = ComponentTraits::outputDataType;
+        using InputDataType = Validator::DataTypeTraits<VDataType>::Type;
+        
+        using ResultNodeType = Node<DataTypesWrapper<VDataType>, DataTypesWrapper<outputDatatype>>;
+        auto node = ResultNodeType{ static_cast<uint64_t>(m_function.nodes.size()) };
+
+        m_function.nodes.emplace_back(MaterialAssetFile::ComponentNode{
+            .dataType = outputDatatype,
+            .parameter = VDataType,
+            .argument = InputDataType{},
+            .componentIndices = { VComponentIndices... }
         });
 
         return node;
@@ -176,8 +166,7 @@ namespace Molten::EditorFramework
         constexpr auto returnType = operatorOverride.value().returnType;
         using ReturnType = Validator::DataTypeTraits<returnType>::Type;
 
-        using ResultNodeType = Node<DataTypesWrapper<VLhs, VRhs>, DataTypesWrapper<returnType>>;
-        
+        using ResultNodeType = Node<DataTypesWrapper<VLhs, VRhs>, DataTypesWrapper<returnType>>;      
         auto node = ResultNodeType{ static_cast<uint64_t>(m_function.nodes.size()) };
 
         m_function.nodes.emplace_back(MaterialAssetFile::OperatorNode{
@@ -202,7 +191,6 @@ namespace Molten::EditorFramework
         using ReturnType = Validator::DataTypeTraits<returnType>::Type;
 
         using ResultNodeType = Node<DataTypesWrapper<VInputDataTypes...>, DataTypesWrapper<returnType>>;
-
         auto node = ResultNodeType{ static_cast<uint64_t>(m_function.nodes.size()) };
 
         m_function.nodes.emplace_back(MaterialAssetFile::FunctionNode{
@@ -238,11 +226,10 @@ namespace Molten::EditorFramework
     {
         using Type = typename Validator::DataTypeTraits<VDataType>::Type;
         using ResultNodeType = Node<DataTypesWrapper<VDataType>, DataTypesWrapper<>>;
-
         auto node = ResultNodeType{ static_cast<uint64_t>(m_function.outputNodes.size()), true };
 
         m_function.outputNodes.emplace_back(MaterialAssetFile::FunctionOutputNode{
-            .dataType = VDataType,
+            .parameter = VDataType,
             .argument = Type{}
         });
 
@@ -262,20 +249,19 @@ namespace Molten::EditorFramework
         static_assert(TSourceNodeType::outputDataTypes[VSourceOutputIndex] == TTargetNodeType::inputDataTypes[VTargetInputIndex],
             "Mismatching data types of input and output pins.");
 
-
-        if (targetNode.IsOutputNode())
+        if (targetNode.isOutputNode)
         {
-            auto& node = m_function.outputNodes.at(targetNode.GetIndex());
+            auto& node = m_function.outputNodes.at(targetNode.nodeIndex);
             node.argument = File::NodeLink{
-                .nodeIndex = sourceNode.GetIndex(),
+                .nodeIndex = sourceNode.nodeIndex,
                 .outputIndex = VSourceOutputIndex
             };
         }
         else
         {
-            auto& node = m_function.nodes.at(targetNode.GetIndex());
+            auto& node = m_function.nodes.at(targetNode.nodeIndex);
 
-            std::visit([sourceNodeIndex = sourceNode.GetIndex()](auto& node)
+            std::visit([sourceNodeIndex = sourceNode.nodeIndex](auto& node)
             {
                 using Type = std::decay_t<decltype(node)>;
                 if constexpr (
@@ -285,6 +271,14 @@ namespace Molten::EditorFramework
                 {
                     auto& argument = node.arguments.at(VTargetInputIndex);
                     argument = File::NodeLink{
+                        .nodeIndex = sourceNodeIndex,
+                        .outputIndex = VSourceOutputIndex
+                    };
+                }
+                else if constexpr (
+                    std::is_same_v<Type, File::ComponentNode> == true)
+                {
+                    node.argument = File::NodeLink{
                         .nodeIndex = sourceNodeIndex,
                         .outputIndex = VSourceOutputIndex
                     };
@@ -317,14 +311,14 @@ namespace Molten::EditorFramework
         static_assert(Validator::TypeTraits<TValue>::dataType == TTargetNodeType::inputDataTypes[VTargetInputIndex],
             "Mismatching data types of input pin and value.");
 
-        if (targetNode.IsOutputNode())
+        if (targetNode.isOutputNode)
         {
-            auto& node = m_function.outputNodes.at(targetNode.GetIndex());
+            auto& node = m_function.outputNodes.at(targetNode.nodeIndex);
             node.argument = value;
         }
         else
         {
-            auto& node = m_function.nodes.at(targetNode.GetIndex());
+            auto& node = m_function.nodes.at(targetNode.nodeIndex);
 
             std::visit([&value](auto& node)
             {
@@ -345,9 +339,8 @@ namespace Molten::EditorFramework
     template<typename TValue, typename TTargetNodeType>
     void MaterialAssetFileFunctionBuilder<T>::SetNodeInput(TValue value, const TTargetNodeType& targetNode)
     {
-        SetNodeInput<0, TTargetNodeType, TValue>(value, targetNode);
+        SetNodeInput<0, TValue, TTargetNodeType>(value, targetNode);
     }
-
 
     template<typename T>
     template<MaterialAssetFile::DataType ... VInputDataTypes>
@@ -386,10 +379,10 @@ namespace Molten::EditorFramework
 
     auto MaterialAssetFileBuilder::AddFunction(const std::string& name)
     {
-        if (!Validator::ValidateFunctionName(name))
+        /*if (!Validator::ValidateFunctionName(name))
         {
             throw Exception(std::string{"Invalid function name: "} + name);
-        }
+        }*/
         if (!Validator::ValidateFunctionDuplicate(m_materialAssetFile.functions, name))
         {
             throw Exception(std::string{"Function name already in use: "} + name);
