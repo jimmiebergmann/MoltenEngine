@@ -40,7 +40,8 @@ namespace Molten::EditorFramework
     };
 
     MOLTEN_EDITOR_FRAMEWORK_API Expected<MeshAssetFile, ConvertToMeshAssetFileError> ConvertToMeshAssetFile(
-        const ObjMeshFile::Object& objObject);
+        const ObjMeshFile::Object& objObject,
+        const Uuid globalId);
 
 }
 

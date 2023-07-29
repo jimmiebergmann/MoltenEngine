@@ -48,16 +48,15 @@ namespace Molten::EditorFramework
         std::istream& stream,
         const ReadMeshAssetFileOptions& options)
     {
-        if (!options.ignoreHeader)
+        const auto assetFileHeader = ReadAssetFileHeader(stream);
+        if (!assetFileHeader || assetFileHeader->assetType != AssetType::Mesh)
         {
-            const auto assetFileHeader = ReadAssetFileHeader(stream);
-            if (assetFileHeader.type != AssetType::Mesh)
-            {
-                return Unexpected(ReadMeshAssetFileError::BadAssetHeader);
-            }
+            return Unexpected(ReadMeshAssetFileError::BadAssetHeader);
         }
         
-        auto meshAssetFile = MeshAssetFile{};
+        auto meshAssetFile = MeshAssetFile{
+            .globalId = assetFileHeader->globalId
+        };
 
         auto rootBlock = BinaryFile::Parser::ReadBlock(stream);
         if (!rootBlock) 
@@ -234,14 +233,14 @@ namespace Molten::EditorFramework
         const MeshAssetFile& meshAssetFile,
         const WriteMeshAssetFileOptions& options)
     {
-        if (!options.ignoreHeader)
-        {
-            const auto assetFileHeader = AssetFileHeader{
-                .type = AssetType::Mesh
-            };
+        const auto assetFileHeader = AssetFileHeader{
+            .engineVersion = MOLTEN_VERSION,
+            .assetType = AssetType::Mesh,
+            .fileVersion = Version{ 0, 1, 0 },
+            .globalId = meshAssetFile.globalId
+        };
 
-            WriteAssetFileHeader(stream, assetFileHeader);
-        }
+        WriteAssetFileHeader(stream, assetFileHeader);
 
         auto subMeshBlockResult = [&meshAssetFile]()->Expected<BinaryFile::BlockView, WriteMeshAssetFileError>
         {

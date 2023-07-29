@@ -37,25 +37,23 @@ namespace Molten::EditorFramework
         const auto path = dir / "AssetFile_ReadWrite.asset";
           
         const auto assetFile = AssetFileHeader{
-            .magic = { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', },
-            .fileVersion = Version{ 123456789, 234567890, 345678901 },
             .engineVersion = Version{ 456789012, 567890123, 678901234 },
-            .globalId = { 123456789012345ULL, 234567890123456ULL },
-            .type = AssetType::Scene
+            .assetType = AssetType::Scene,
+            .fileVersion = Version{ 123456789, 234567890, 345678901 },
+            .globalId = { 123456789012345ULL, 234567890123456ULL }
         };
 
-        std::ofstream fileStream(path, std::ios::binary);
-        ASSERT_TRUE(fileStream.is_open());
-        WriteAssetFileHeader(fileStream, assetFile);
-        fileStream.close();
+        auto writeResult = WriteAssetFileHeader(path, assetFile);
+        ASSERT_TRUE(writeResult);
 
         auto readAssetFile = ReadAssetFileHeader(path);
+        ASSERT_TRUE(readAssetFile);
 
-        EXPECT_EQ(std::memcmp(readAssetFile.magic.data(), assetFile.magic.data(), sizeof(readAssetFile.magic)), int{ 0 });
-        EXPECT_EQ(readAssetFile.fileVersion, assetFile.fileVersion);
-        EXPECT_EQ(readAssetFile.engineVersion, assetFile.engineVersion);
-        EXPECT_EQ(readAssetFile.globalId, assetFile.globalId);
-        EXPECT_EQ(readAssetFile.type, assetFile.type);
+        EXPECT_EQ(readAssetFile->engineVersion, assetFile.engineVersion);
+        EXPECT_EQ(readAssetFile->assetType, assetFile.assetType);
+        EXPECT_EQ(readAssetFile->fileVersion, assetFile.fileVersion);
+        EXPECT_EQ(readAssetFile->globalId, assetFile.globalId);
+        
     }
 
 }

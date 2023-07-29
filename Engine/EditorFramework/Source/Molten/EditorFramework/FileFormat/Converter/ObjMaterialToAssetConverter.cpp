@@ -43,10 +43,13 @@ namespace Molten::EditorFramework
 
     Expected<MaterialAssetFile, ConvertToMaterialAssetFileError> ConvertToMaterialAssetFile(
         const ObjMaterialFile::Material& objMaterial,
+        const Uuid globalId,
         const ConvertToMaterialAssetFileOptions& options)
     {
-        auto materialAssetFile = MaterialAssetFile{};
-        materialAssetFile.name = objMaterial.name;
+        auto materialAssetFile = MaterialAssetFile{
+            .globalId = globalId,
+            .name = objMaterial.name
+        };
 
         using File = MaterialAssetFile;
         using BuilderTypes = MaterialAssetFileBuilderTypes;

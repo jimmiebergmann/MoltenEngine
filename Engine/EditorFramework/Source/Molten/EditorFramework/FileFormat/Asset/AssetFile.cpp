@@ -24,12 +24,26 @@
 */
 
 #include "Molten/EditorFramework/FileFormat/Asset/AssetFile.hpp"
+#include "Molten/EditorFramework/FileFormat/Validator/AssetFileHeaderValidator.hpp"
 #include <fstream>
 
 namespace Molten::EditorFramework
 {
 
-    AssetFileHeader ReadAssetFileHeader(std::istream& stream)
+    static const auto g_assetFileSignature = std::array<char, 12>{ 'm', 'o', 'l', 't', 'e', 'n', '.', 'a', 's', 's', 'e', 't', };
+
+    Expected<AssetFileHeader, ReadAssetFileHeaderError> ReadAssetFileHeader(const std::filesystem::path& path)
+    {
+        std::ifstream file(path.c_str(), std::ifstream::binary);
+        if (!file.is_open())
+        {
+            return Unexpected(ReadAssetFileHeaderError::OpenFileError);
+        }
+
+        return ReadAssetFileHeader(file);
+    }
+
+    Expected<AssetFileHeader, ReadAssetFileHeaderError> ReadAssetFileHeader(std::istream& stream)
     {
         const auto startPos = static_cast<size_t>(stream.tellg());
         stream.seekg(0, std::ios::end);
@@ -39,38 +53,56 @@ namespace Molten::EditorFramework
         const auto size = endPos - startPos;
         if (size < 56)
         {
-            return {};
-        }  
+            return Unexpected(ReadAssetFileHeaderError::UnexpectedEndOfFile);
+        }
 
-        AssetFileHeader result = {};
-        stream.read(result.magic.data(), result.magic.size());
-        stream.read(reinterpret_cast<char*>(&result.fileVersion), sizeof(result.fileVersion));
+        auto fileSignature = std::array<char, 12>{};
+        stream.read(fileSignature.data(), fileSignature.size());
+        const auto validSignature = std::equal(fileSignature.begin(), fileSignature.end(), g_assetFileSignature.begin());
+        if (!validSignature)
+        {
+            return Unexpected(ReadAssetFileHeaderError::BadAssetFileSignature);
+        }
+
+        auto result = AssetFileHeader{};
+
         stream.read(reinterpret_cast<char*>(&result.engineVersion), sizeof(result.engineVersion));
+        stream.read(reinterpret_cast<char*>(&result.assetType), sizeof(result.assetType));
+        stream.read(reinterpret_cast<char*>(&result.fileVersion), sizeof(result.fileVersion));
         stream.read(reinterpret_cast<char*>(&result.globalId), sizeof(result.globalId));
-        stream.read(reinterpret_cast<char*>(&result.type), sizeof(result.type));
+        
+        if (!AssetFileHeaderValidator::ValidateAssetType(result.assetType))
+        {
+            return Unexpected(ReadAssetFileHeaderError::BadAssetType);
+        }
+
         return result;
     }
 
-    AssetFileHeader ReadAssetFileHeader(const std::filesystem::path& path)
+    Expected<void, WriteAssetFileHeaderError> WriteAssetFileHeader(
+        const std::filesystem::path& path,
+        const AssetFileHeader& assetFileHeader)
     {
-        std::ifstream file(path.c_str(), std::ifstream::binary);
+        std::ofstream file(path.c_str(), std::ifstream::binary);
         if (!file.is_open())
         {
-            return {};
+            return Unexpected(WriteAssetFileHeaderError::OpenFileError);
         }
 
-        return ReadAssetFileHeader(file);
+        return WriteAssetFileHeader(file, assetFileHeader);
     }
 
-    void WriteAssetFileHeader(
+    Expected<void, WriteAssetFileHeaderError> WriteAssetFileHeader(
         std::ostream& stream,
         const AssetFileHeader& assetFileHeader)
     {
-        stream.write(assetFileHeader.magic.data(), assetFileHeader.magic.size());
-        stream.write(reinterpret_cast<const char*>(&assetFileHeader.fileVersion), sizeof(assetFileHeader.fileVersion));
+        stream.write(g_assetFileSignature.data(), g_assetFileSignature.size());
         stream.write(reinterpret_cast<const char*>(&assetFileHeader.engineVersion), sizeof(assetFileHeader.engineVersion));
+        stream.write(reinterpret_cast<const char*>(&assetFileHeader.assetType), sizeof(assetFileHeader.assetType));
+        stream.write(reinterpret_cast<const char*>(&assetFileHeader.fileVersion), sizeof(assetFileHeader.fileVersion));      
         stream.write(reinterpret_cast<const char*>(&assetFileHeader.globalId), sizeof(assetFileHeader.globalId));
-        stream.write(reinterpret_cast<const char*>(&assetFileHeader.type), sizeof(assetFileHeader.type));
+
+        return {};
     }
 
 }

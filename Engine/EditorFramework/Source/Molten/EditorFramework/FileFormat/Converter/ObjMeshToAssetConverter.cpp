@@ -32,9 +32,12 @@ namespace Molten::EditorFramework
 {
 
     Expected<MeshAssetFile, ConvertToMeshAssetFileError> ConvertToMeshAssetFile(
-        const ObjMeshFile::Object& objObject)
+        const ObjMeshFile::Object& objObject,
+        const Uuid globalId)
     {
-        MeshAssetFile meshAssetFile{};
+        MeshAssetFile meshAssetFile{
+            .globalId = globalId
+        };
 
         struct VertexGroup
         {

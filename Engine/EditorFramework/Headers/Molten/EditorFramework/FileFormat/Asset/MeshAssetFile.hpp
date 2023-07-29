@@ -68,6 +68,7 @@ namespace Molten::EditorFramework
             std::vector<VertexAttribute> vertexAttributes;
         };
 
+        Uuid globalId = {};
         std::string name = {};
         std::vector<SubMesh> subMeshes = {};
         std::vector<Buffer> buffers = {};

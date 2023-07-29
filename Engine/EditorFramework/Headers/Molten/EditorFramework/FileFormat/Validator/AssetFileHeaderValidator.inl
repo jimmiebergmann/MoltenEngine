@@ -23,35 +23,21 @@
 *
 */
 
-#ifndef MOLTEN_EDITOR_FRAMEWORK_FILEFORMAT_CONVERTER_OBJMATERIALTOASSETCONVERTER_HPP
-#define MOLTEN_EDITOR_FRAMEWORK_FILEFORMAT_CONVERTER_OBJMATERIALTOASSETCONVERTER_HPP
-
-#include "Molten/EditorFramework/FileFormat/Asset/MaterialAssetFile.hpp"
-#include "Molten/EditorFramework/FileFormat/Mesh/ObjMeshFile.hpp"
-
 namespace Molten::EditorFramework
 {
-
-    struct ConvertToMaterialAssetTexture
+    constexpr bool AssetFileHeaderValidator::ValidateAssetType(const AssetType assetType)
     {
-        const std::optional<ObjMaterialFile::MaterialTexture>* materialTexture = nullptr;
-        Uuid assetGlobalid = {};
-    };
-
-    struct ConvertToMaterialAssetFileOptions
-    {
-        std::vector<ConvertToMaterialAssetTexture> textures = {};
-    };
-
-    enum class ConvertToMaterialAssetFileError
-    {
-    };
-
-    MOLTEN_EDITOR_FRAMEWORK_API Expected<MaterialAssetFile, ConvertToMaterialAssetFileError> ConvertToMaterialAssetFile(
-        const ObjMaterialFile::Material& objMaterial,
-        const Uuid globalId,
-        const ConvertToMaterialAssetFileOptions& options = {});
+        switch (assetType)
+        {
+            case AssetType::Scene:
+            case AssetType::Mesh:
+            case AssetType::Texture:
+            case AssetType::Material:
+            case AssetType::MaterialLibrary:
+            case AssetType::Audio: return true;
+            default: break;
+        }
+        return false;
+    }
 
 }
-
-#endif

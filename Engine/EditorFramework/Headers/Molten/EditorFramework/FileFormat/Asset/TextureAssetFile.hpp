@@ -63,6 +63,7 @@ namespace Molten::EditorFramework
             std::vector<uint8_t> data = {};
         };
 
+        Uuid globalId = {};
         Header header = {};
         ImageData imageData = {};
 

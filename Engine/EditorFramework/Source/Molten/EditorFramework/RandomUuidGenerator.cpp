@@ -23,35 +23,20 @@
 *
 */
 
-#ifndef MOLTEN_EDITOR_FRAMEWORK_FILEFORMAT_CONVERTER_OBJMATERIALTOASSETCONVERTER_HPP
-#define MOLTEN_EDITOR_FRAMEWORK_FILEFORMAT_CONVERTER_OBJMATERIALTOASSETCONVERTER_HPP
-
-#include "Molten/EditorFramework/FileFormat/Asset/MaterialAssetFile.hpp"
-#include "Molten/EditorFramework/FileFormat/Mesh/ObjMeshFile.hpp"
+#include "Molten/EditorFramework/RandomUuidGenerator.hpp"
 
 namespace Molten::EditorFramework
 {
 
-    struct ConvertToMaterialAssetTexture
-    {
-        const std::optional<ObjMaterialFile::MaterialTexture>* materialTexture = nullptr;
-        Uuid assetGlobalid = {};
-    };
+    RandomUuidGenerator::RandomUuidGenerator() :
+        m_mutex{},
+        m_randomEngine{ std::random_device{}() }
+    { }
 
-    struct ConvertToMaterialAssetFileOptions
+    Uuid RandomUuidGenerator::operator ()()
     {
-        std::vector<ConvertToMaterialAssetTexture> textures = {};
-    };
-
-    enum class ConvertToMaterialAssetFileError
-    {
-    };
-
-    MOLTEN_EDITOR_FRAMEWORK_API Expected<MaterialAssetFile, ConvertToMaterialAssetFileError> ConvertToMaterialAssetFile(
-        const ObjMaterialFile::Material& objMaterial,
-        const Uuid globalId,
-        const ConvertToMaterialAssetFileOptions& options = {});
+        [[maybe_unused]] const auto lock = std::lock_guard(m_mutex);
+        return Uuid::GenerateVersion4(m_randomEngine);
+    }
 
 }
-
-#endif

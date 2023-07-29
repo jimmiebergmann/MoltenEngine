@@ -30,9 +30,12 @@ namespace Molten::EditorFramework
 {
 
     Expected<TextureAssetFile, ConvertToTextureAssetFileError> ConvertToTextureAsset(
-        const TgaImageFile& tgaImageFile)
+        const TgaImageFile& tgaImageFile,
+        const Uuid globalId)
     {
-        auto assetFile = TextureAssetFile{};
+        auto assetFile = TextureAssetFile{
+            .globalId = globalId
+        };
 
         auto& header = assetFile.header;
 

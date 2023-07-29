@@ -49,16 +49,15 @@ namespace Molten::EditorFramework
         std::istream& stream,
         const ReadMaterialAssetFileOptions& options)
     {
-        if (!options.ignoreHeader)
+        const auto assetFileHeader = ReadAssetFileHeader(stream);
+        if (!assetFileHeader || assetFileHeader->assetType != AssetType::Material)
         {
-            const auto assetFileHeader = ReadAssetFileHeader(stream);
-            if (assetFileHeader.type != AssetType::Material)
-            {
-                return Unexpected(ReadMaterialAssetFileError::BadAssetHeader);
-            }
+            return Unexpected(ReadMaterialAssetFileError::BadAssetHeader);
         }
 
-        auto materialAssetFile = MaterialAssetFile{};
+        auto materialAssetFile = MaterialAssetFile{
+            .globalId = assetFileHeader->globalId
+        };
 
         auto rootBlock = BinaryFile::Parser::ReadBlock(stream);
         if (!rootBlock || rootBlock->name != "material")
@@ -820,14 +819,14 @@ namespace Molten::EditorFramework
         const MaterialAssetFile& materialAssetFile,
         const WriteMaterialAssetFileOptions& options)
     {
-        if (!options.ignoreHeader)
-        {
-            const auto assetFileHeader = AssetFileHeader{
-                .type = AssetType::Material
-            };
+        const auto assetFileHeader = AssetFileHeader{
+            .engineVersion = MOLTEN_VERSION,
+            .assetType = AssetType::Material,
+            .fileVersion = Version{ 0, 1, 0 },
+            .globalId = materialAssetFile.globalId  
+        };
 
-            WriteAssetFileHeader(stream, assetFileHeader);
-        }
+        WriteAssetFileHeader(stream, assetFileHeader);
 
         auto createConstantValueBlock = [](const MaterialAssetFile::ConstantValue& constantValue)
         {

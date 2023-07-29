@@ -35,13 +35,9 @@ namespace Molten::EditorFramework
     {
         const auto dir = Molten::Test::CreateTestDirectory("FileFormat_TextureAssetFile");
         const auto path = dir / "TextureAssetFile_ReadWrite.asset";
-          
-        const auto assetFileHeader = AssetFileHeader{
-            .globalId = { 123456789012345ULL, 234567890123456ULL },
-            .type = AssetType::Texture,
-        };
 
         const auto textureAssetFile = TextureAssetFile{
+            .globalId = { 0x0102030405060708ULL, 0x1112131415161718ULL },
             .header = TextureAssetFile::Header {
                 .dimensions = Vector3ui32{ 2, 2, 1 },
                 .imageFormat = TextureAssetFile::ImageFormat::Red8Green8Blue8Alpha8,
@@ -60,6 +56,7 @@ namespace Molten::EditorFramework
         auto readTextureAssetFile = ReadTextureAssetFile(path);
         ASSERT_TRUE(readTextureAssetFile);
 
+        EXPECT_EQ(readTextureAssetFile->globalId, textureAssetFile.globalId);
         EXPECT_EQ(readTextureAssetFile->header.dimensions, textureAssetFile.header.dimensions);
         EXPECT_EQ(readTextureAssetFile->header.imageFormat, textureAssetFile.header.imageFormat);
         EXPECT_EQ(readTextureAssetFile->header.compressionType, textureAssetFile.header.compressionType);

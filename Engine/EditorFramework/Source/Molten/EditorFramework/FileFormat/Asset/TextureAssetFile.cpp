@@ -47,16 +47,15 @@ namespace Molten::EditorFramework
         std::istream& stream,
         const ReadTextureAssetFileOptions& options)
     {
-        if (!options.ignoreHeader)
+        const auto assetFileHeader = ReadAssetFileHeader(stream);
+        if (!assetFileHeader || assetFileHeader->assetType != AssetType::Texture)
         {
-            const auto assetFileHeader = ReadAssetFileHeader(stream);
-            if (assetFileHeader.type != AssetType::Texture)
-            {
-                return Unexpected(ReadTextureAssetFileError::BadAssetHeader);
-            }
+            return Unexpected(ReadTextureAssetFileError::BadAssetHeader);
         }
 
-        auto texturehAssetFile = TextureAssetFile{};
+        auto texturehAssetFile = TextureAssetFile{
+            .globalId = assetFileHeader->globalId
+        };
 
         auto rootBlock = BinaryFile::Parser::ReadBlock(stream);
         if (!rootBlock)
@@ -126,14 +125,14 @@ namespace Molten::EditorFramework
         const TextureAssetFile& textureAssetFile,
         const WriteTextureAssetFileOptions& options)
     {
-        if (!options.ignoreHeader)
-        {
-            const auto assetFileHeader = AssetFileHeader{
-                .type = AssetType::Texture
-            };
+        const auto assetFileHeader = AssetFileHeader{
+            .engineVersion = MOLTEN_VERSION,
+            .assetType = AssetType::Texture,
+            .fileVersion = Version{ 0, 1, 0 },
+            .globalId = textureAssetFile.globalId
+        };
 
-            WriteAssetFileHeader(stream, assetFileHeader);
-        }
+        WriteAssetFileHeader(stream, assetFileHeader);
 
         const auto& header = textureAssetFile.header;
 

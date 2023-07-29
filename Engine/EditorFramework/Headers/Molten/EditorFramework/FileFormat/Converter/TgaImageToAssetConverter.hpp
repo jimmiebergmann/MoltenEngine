@@ -42,7 +42,8 @@ namespace Molten::EditorFramework
     };
 
     MOLTEN_EDITOR_FRAMEWORK_API Expected<TextureAssetFile, ConvertToTextureAssetFileError> ConvertToTextureAsset(
-        const TgaImageFile& tgaImageFile);
+        const TgaImageFile& tgaImageFile,
+        const Uuid globalId);
 
 }
 

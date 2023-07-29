@@ -38,6 +38,7 @@
 #include "Molten/Utility/FpsTracker.hpp"
 #include "Molten/System/ThreadPool.hpp"
 #include "Molten/Utility/FunctionDispatcher.hpp"
+#include "Molten/EditorFramework/RandomUuidGenerator.hpp"
 #include <filesystem>
 #include <optional>
 #include <thread>
@@ -127,6 +128,9 @@ namespace Molten::Editor
         Clock m_windowTitleUpdateClock;
 
         ThreadPool m_threadPool;
+
+        EditorFramework::RandomUuidGenerator m_randomUuidGenerator;
+
         //FunctionDispatcher m_preUpdateCallbacks;
         //FunctionDispatcher m_postUpdateCallbacks;
 

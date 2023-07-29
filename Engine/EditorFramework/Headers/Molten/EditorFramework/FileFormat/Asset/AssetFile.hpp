@@ -27,6 +27,7 @@
 #define MOLTEN_EDITOR_FRAMEWORK_FILEFORMAT_ASSET_ASSETFILE_HPP
 
 #include "Molten/EditorFramework/Build.hpp"
+#include "Molten/Utility/Expected.hpp"
 #include "Molten/Utility/Uuid.hpp"
 #include "Molten/System/Version.hpp"
 #include <array>
@@ -39,29 +40,47 @@ namespace Molten::EditorFramework
 
     enum class AssetType : uint32_t
     {
-        Unknown = 0,
-        Scene = 1,
-        Mesh = 2,
-        Texture = 3,
-        Material = 4,
-        MaterialLibrary = 5,
-        Audio = 6
+        Scene,
+        Mesh,
+        Texture,
+        Material,
+        MaterialLibrary,
+        Audio
     };
 
     struct AssetFileHeader
     {
-        std::array<char, 12> magic = { 'm', 'o', 'l', 't', 'e', 'n', '.', 'a', 's', 's', 'e', 't', };
-        Version fileVersion = Version{ 0, 1, 0 };
-        Version engineVersion = MOLTEN_VERSION;
-        Uuid globalId = {};
-        AssetType type = AssetType::Unknown;
+        Version engineVersion;
+        AssetType assetType;
+        Version fileVersion;    
+        Uuid globalId;       
     };
 
-    MOLTEN_EDITOR_FRAMEWORK_API AssetFileHeader ReadAssetFileHeader(std::istream& stream);
-    MOLTEN_EDITOR_FRAMEWORK_API AssetFileHeader ReadAssetFileHeader(const std::filesystem::path& path);
+    enum class ReadAssetFileHeaderError
+    {
+        OpenFileError,
+        UnexpectedEndOfFile,
+        BadAssetFileSignature,
+        BadAssetType
+    };
+
+    enum class WriteAssetFileHeaderError
+    {
+        OpenFileError
+    };
 
 
-    MOLTEN_EDITOR_FRAMEWORK_API void WriteAssetFileHeader(
+    MOLTEN_EDITOR_FRAMEWORK_API Expected<AssetFileHeader, ReadAssetFileHeaderError> ReadAssetFileHeader(
+        const std::filesystem::path& path);
+
+    MOLTEN_EDITOR_FRAMEWORK_API Expected<AssetFileHeader, ReadAssetFileHeaderError> ReadAssetFileHeader(
+        std::istream& stream);
+
+    MOLTEN_EDITOR_FRAMEWORK_API Expected<void, WriteAssetFileHeaderError> WriteAssetFileHeader(
+        const std::filesystem::path& path,
+        const AssetFileHeader& assetFileHeader);
+
+    MOLTEN_EDITOR_FRAMEWORK_API Expected<void, WriteAssetFileHeaderError> WriteAssetFileHeader(
         std::ostream& stream,
         const AssetFileHeader& assetFileHeader);
 

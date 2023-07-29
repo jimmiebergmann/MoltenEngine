@@ -333,7 +333,10 @@ namespace Molten::Editor
             }
 
             // Convert to asset file.
-            const auto tgaImageConvertResult = EditorFramework::ConvertToTextureAsset(*tgaFileResult);
+            const auto tgaImageConvertResult = EditorFramework::ConvertToTextureAsset(
+                *tgaFileResult,
+                m_randomUuidGenerator());
+
             if (!tgaImageConvertResult)
             {
                 Logger::WriteError(m_logger.get(), "Failed to convert tga image to texture asset.");
@@ -350,11 +353,14 @@ namespace Molten::Editor
                 return false;
             }
 
-            convertTexture.assetGlobalid = { 1, 1 };
+            convertTexture.assetGlobalid = textureAssetFile.globalId;
         }
 
         // Convert to asset files.
-        const auto objMeshConvertResult = EditorFramework::ConvertToMeshAssetFile(*objMeshFile.objects.front());
+        const auto objMeshConvertResult = EditorFramework::ConvertToMeshAssetFile(
+            *objMeshFile.objects.front(),
+            m_randomUuidGenerator());
+
         if (!objMeshConvertResult)
         {
             Logger::WriteError(m_logger.get(), "Failed to convert obj mesh to mesh asset.");
@@ -369,7 +375,11 @@ namespace Molten::Editor
         auto materialAssetFiles = std::vector<EditorFramework::MaterialAssetFile>{};
         for (auto& objMaterial : requiredObjMaterials.value())
         {
-            auto objMaterialConvertResult = EditorFramework::ConvertToMaterialAssetFile(*objMaterial, convertToMaterialAssetFileOptions);
+            auto objMaterialConvertResult = EditorFramework::ConvertToMaterialAssetFile(
+                *objMaterial,
+                m_randomUuidGenerator(),
+                convertToMaterialAssetFileOptions);
+
             if (!objMaterialConvertResult)
             {
                 Logger::WriteError(m_logger.get(), "Failed to convert obj material to material asset.");

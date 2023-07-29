@@ -267,6 +267,7 @@ namespace Molten::EditorFramework
             NodeVariants nodes = {};
         };
 
+        Uuid globalId = {};
         std::string name = {};
         EntryPoint entryPoint = {};
         Functions functions = {};
@@ -275,12 +276,10 @@ namespace Molten::EditorFramework
 
     struct ReadMaterialAssetFileOptions
     {
-        bool ignoreHeader = false;
     };
 
     struct WriteMaterialAssetFileOptions
     {
-        bool ignoreHeader = false;
     };
 
     enum class ReadMaterialAssetFileError
